@@ -1,6 +1,7 @@
-Unit tests MIST development.  
+Unit tests for MIST development.  
+___
   
-Unit tests should meet the following criteria (from [here](https://docs.python-guide.org/writing/tests/):  
+Unit tests should meet the following criteria (from [here](https://docs.python-guide.org/writing/tests/)):  
 * A testing unit should focus on one small piece of functionality & prove it correct  
 * Each test unit should be fully independent (i.e. standalone).  
 * Tests should be as fast as possible.  
