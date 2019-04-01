@@ -1,18 +1,21 @@
-name: mist 
+name: mist
 channels:
   - defaults
 dependencies:
   - appnope=0.1.0=py36hf537a9a_0
+  - atomicwrites=1.3.0=py36_1
   - attrs=19.1.0=py36_1
   - backcall=0.1.0=py36_0
   - blas=1.0=mkl
   - bleach=3.1.0=py36_0
   - ca-certificates=2019.1.23=0
   - certifi=2019.3.9=py36_0
+  - cloudpickle=0.8.0=py36_0
   - cycler=0.10.0=py36hfc81398_0
   - dbus=1.13.6=h90a0687_0
   - decorator=4.4.0=py36_1
   - defusedxml=0.5.0=py36_1
+  - doit=0.31.1=py36_0
   - entrypoints=0.3=py36_0
   - expat=2.2.6=h0a44026_0
   - freetype=2.9.1=hb4e5f40_0
@@ -43,16 +46,19 @@ dependencies:
   - libiconv=1.15=hdd342a3_7
   - libpng=1.6.36=ha441bb4_0
   - libsodium=1.0.16=h3efe00b_0
+  - macfsevents=0.8.1=py36h1de35cc_0
   - markupsafe=1.1.1=py36h1de35cc_0
   - matplotlib=3.0.3=py36h54f8f79_0
   - mistune=0.8.4=py36h1de35cc_0
   - mkl=2019.3=199
   - mkl_fft=1.0.10=py36h5e564d8_0
   - mkl_random=1.0.2=py36h27c97d8_0
+  - more-itertools=6.0.0=py36_0
   - nbconvert=5.4.1=py36_3
   - nbformat=4.4.0=py36h827af21_0
   - ncurses=6.1=h0a44026_1
   - notebook=5.7.7=py36_0
+  - numpy=1.16.2=py36hacdab7b_0
   - numpy-base=1.16.2=py36h6575580_0
   - openssl=1.1.1b=h1de35cc_1
   - pandas=0.24.2=py36h0a44026_0
@@ -63,13 +69,16 @@ dependencies:
   - pexpect=4.6.0=py36_0
   - pickleshare=0.7.5=py36_0
   - pip=19.0.3=py36_0
+  - pluggy=0.9.0=py36_0
   - prometheus_client=0.6.0=py36_0
   - prompt_toolkit=2.0.9=py36_0
   - ptyprocess=0.6.0=py36_0
+  - py=1.8.0=py36_0
   - pygments=2.3.1=py36_0
   - pyparsing=2.3.1=py36_0
   - pyqt=5.9.2=py36h655552a_2
   - pyrsistent=0.14.11=py36h1de35cc_0
+  - pytest=4.3.1=py36_0
   - python=3.6.8=haf84260_0
   - python-dateutil=2.8.0=py36_0
   - pytz=2018.9=py36_0
