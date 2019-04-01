@@ -10,7 +10,9 @@ def run_actions(actions, target=None):
 
 def task_setup():
     if not os.path.exists('config.py'):
-        for actions, name in [('cp config.default.py config.py', 'create config from default'), ('rm config.default.py', 'remove default config')]:
+        for actions, name in [
+                ('cp config.default.py config.py', 'create config from default'), 
+                ]:
             yield {
                     'name': name, 
                     'actions': [actions],
