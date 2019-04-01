@@ -1,10 +1,37 @@
 import subprocess
-import os.path
+import os
+import sys
 
 DOIT_CONFIG = {
         'default_tasks': [],
         }
 
+def setup():
+    env_on = sys.prefix.split('/')[-1] == 'mist'
+    if not os.path.exists('config.py'):
+        print('setting up config files')
+        subprocess.run('cp config.default.py config.py', shell=True)
+    else:
+        print('config.py already exists')
+        ans = input('update config file with default values? [y/n] ').lower()
+        if ans == 'y':
+            subprocess.run('cp config.defaults.py config.py', shell=True)
+        elif ans != 'n':
+            print('please input y/n')
+    if not os.path.exists(os.path.join(sys.prefix, 'envs/mist')) and not sys.prefix.split('/')[-1] == 'mist':
+        print('setting up virtual env')
+        subprocess.run('conda env create -f environment.yml', shell=True)
+    else:
+        print('mist env already exists')
+        ans = input('update env? [y/n] ').lower()
+        if ans == 'y':
+            if not env_on:
+                subprocess.run('conda activate mist', shell=True)
+            subprocess.run('conda env update -f=environment.yml', shell=True)
+        elif ans != 'n':
+            print('please input y/n.')
+      
+    
 def run_actions(actions, target=None):
     if target == None:
         subprocess.run(actions)
@@ -14,18 +41,12 @@ def run_actions(actions, target=None):
 
 def task_setup():
     """
-    Setup project from sratch. WARNING: This overwrites your config file with defaults.
+    Setup project from sratch.
     """
-        
-    for name, dep, actions, targets in [
-            ('create config from default', 'config.default.py', 'cp config.default.py config.py', 'config.py'), 
-            ]:
-        yield {
-                'name': name, 
-                'actions': [actions],
-                'file_dep': [dep],
-                'targets': [targets],
-                }
+    return {
+            'actions': [setup],
+            'verbosity': 2,
+            }
 
 def task_update_deps():
     """
