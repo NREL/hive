@@ -1,2 +1,2 @@
-# MIST
-Mobility and Infrastructure Simulation Tool (name pending)
+# hive
+Hive is a mobility services simulation platform.
