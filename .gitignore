@@ -4,6 +4,7 @@ config.py
 # Additional
 .vscode/
 .DS_Store
+*.pstats
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

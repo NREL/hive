@@ -1,6 +1,11 @@
 import subprocess
 import os
 import sys
+import glob
+import re
+
+PROFILE_OUTPUT_DIR = 'tests/profile_output/'
+PROFILE_FILES = glob.glob('hive/[!_]*.py') + ['run.py']
 
 DOIT_CONFIG = {
         'default_tasks': [],
@@ -13,7 +18,7 @@ def setup():
         subprocess.run('cp config.default.py config.py', shell=True)
     else:
         print('config.py already exists')
-        ans = input('update config file with default values? [y/n] ').lower()
+        ans = input('update config file with default values? (y/[n]) ').lower()
         if ans == 'y':
             subprocess.run('cp config.defaults.py config.py', shell=True)
         elif ans != 'n':
@@ -23,7 +28,7 @@ def setup():
         subprocess.run('conda env create -f environment.yml', shell=True)
     else:
         print('mist env already exists')
-        ans = input('update env? [y/n] ').lower()
+        ans = input('update env? (y/[n]) ').lower()
         if ans == 'y':
             if not env_on:
                 subprocess.run('conda activate mist', shell=True)
@@ -61,5 +66,19 @@ def task_update_deps():
                 'actions': [(run_actions, [actions, target])],
                 'targets': [target],
                 'clean': True,
+                }
+
+def task_profile():
+    """
+    Profile each component using cProfile.
+    """
+    for filepath in PROFILE_FILES:
+        name = re.split('[./]', filepath)[-2]
+        output_file = PROFILE_OUTPUT_DIR + name + '.pstats'
+        yield {
+                'name': filepath,
+                'actions': ['python -m cProfile -o {} {}'.format(output_file, filepath)],
+                'file_dep': [filepath],
+                'targets': [output_file],
                 }
 

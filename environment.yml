@@ -1,4 +1,4 @@
-name: mist
+name: hive 
 channels:
   - defaults
 dependencies:
@@ -106,5 +106,5 @@ dependencies:
   - pip:
     - haversine==2.0.0
     - line-profiler==2.1.2
-prefix: /anaconda3/envs/mist
+prefix: /anaconda3/envs/hive
 
