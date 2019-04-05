@@ -12,7 +12,7 @@ DOIT_CONFIG = {
         }
 
 def setup():
-    env_on = sys.prefix.split('/')[-1] == 'mist'
+    env_on = sys.prefix.split('/')[-1] == 'hive'
     if not os.path.exists('config.py'):
         print('setting up config files')
         subprocess.run('cp config.default.py config.py', shell=True)
@@ -23,15 +23,15 @@ def setup():
             subprocess.run('cp config.defaults.py config.py', shell=True)
         elif ans != 'n':
             print('please input y/n')
-    if not os.path.exists(os.path.join(sys.prefix, 'envs/mist')) and not sys.prefix.split('/')[-1] == 'mist':
+    if not os.path.exists(os.path.join(sys.prefix, 'envs/hive')) and not sys.prefix.split('/')[-1] == 'hive':
         print('setting up virtual env')
         subprocess.run('conda env create -f environment.yml', shell=True)
     else:
-        print('mist env already exists')
+        print('hive env already exists')
         ans = input('update env? (y/[n]) ').lower()
         if ans == 'y':
             if not env_on:
-                subprocess.run('conda activate mist', shell=True)
+                subprocess.run('conda activate hive', shell=True)
             subprocess.run('conda env update -f=environment.yml', shell=True)
         elif ans != 'n':
             print('please input y/n.')
@@ -58,7 +58,7 @@ def task_update_deps():
     Update conda environment.yml file and pip requirements.txt file.
     """
     for target, actions in [
-            ('environment.yml', ['conda', 'env', 'export', '-n', 'mist']),
+            ('environment.yml', ['conda', 'env', 'export', '-n', 'hive']),
             ('requirements.txt', ['pip', 'freeze']),
             ]:
         yield {
@@ -72,6 +72,8 @@ def task_profile():
     """
     Profile each component using cProfile.
     """
+    #TODO: Add functionality to generate svg call graph. gprof2dot, grpahviz
+    #python gprof2dot.py -f pstats output.pstats | dot -Tsvg -o profile_graph.svg
     for filepath in PROFILE_FILES:
         name = re.split('[./]', filepath)[-2]
         output_file = PROFILE_OUTPUT_DIR + name + '.pstats'
