@@ -13,6 +13,13 @@ DOIT_CONFIG = {
 
 def setup():
     env_on = sys.prefix.split('/')[-1] == 'hive'
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    config_path = os.path.join(
+            this_dir, 'config.py'
+            )
+    default_config_path = os.path.join(
+            this_dir, 'config.default.py'
+            )
     if not os.path.exists('config.py'):
         print('setting up config files')
         subprocess.run('cp config.default.py config.py', shell=True)
@@ -20,8 +27,9 @@ def setup():
         print('config.py already exists')
         ans = input('update config file with default values? (y/[n]) ').lower()
         if ans == 'y':
-            subprocess.run('cp config.defaults.py config.py', shell=True)
-        else:
+            print('updating config file..')
+            subprocess.run('cp {} {}'.format(default_config_path, config_path), shell=True)
+        elif ans != 'n':
             print('please input y/n')
     if not os.path.exists(os.path.join(sys.prefix, 'envs/hive')) and not sys.prefix.split('/')[-1] == 'hive':
         print('setting up virtual env')
@@ -33,7 +41,7 @@ def setup():
             if not env_on:
                 subprocess.run('conda activate hive', shell=True)
             subprocess.run('conda env update -f=environment.yml', shell=True)
-        else:
+        elif ans != 'n':
             print('please input y/n.')
       
     
