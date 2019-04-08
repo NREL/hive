@@ -1,6 +1,9 @@
 import sys
-import pandas as pd
 import os
+import glob
+
+import pandas as pd
+
 sys.path.append('../hive/')
 
 import utils
@@ -8,6 +11,9 @@ import utils
 def test_generate_input_files():
     in_path = 'test_inputs/'
     out_path = 'test_inputs/.scenarios/'
+    files = glob.glob(out_path + '*')
+    for f in files:
+        os.remove(f)
     utils.generate_input_files(in_path=in_path, out_path=out_path)
     assert(os.path.isfile(out_path + 'test1_inputs.h5'))
     assert(os.path.isfile(out_path + 'test2_inputs.h5'))

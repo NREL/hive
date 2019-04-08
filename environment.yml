@@ -1,4 +1,4 @@
-name: hive 
+name: hive
 channels:
   - defaults
 dependencies:
@@ -8,6 +8,8 @@ dependencies:
   - backcall=0.1.0=py36_0
   - blas=1.0=mkl
   - bleach=3.1.0=py36_0
+  - blosc=1.15.0=hd9629dc_0
+  - bzip2=1.0.6=h1de35cc_5
   - ca-certificates=2019.1.23=0
   - certifi=2019.3.9=py36_0
   - cloudpickle=0.8.0=py36_0
@@ -21,6 +23,7 @@ dependencies:
   - freetype=2.9.1=hb4e5f40_0
   - gettext=0.19.8.1=h15daf44_3
   - glib=2.56.2=hd9629dc_0
+  - hdf5=1.10.4=hfa1e0ec_0
   - icu=58.2=h4b95b61_1
   - intel-openmp=2019.3=199
   - ipykernel=5.1.0=py36h39e3cac_0
@@ -46,6 +49,7 @@ dependencies:
   - libiconv=1.15=hdd342a3_7
   - libpng=1.6.36=ha441bb4_0
   - libsodium=1.0.16=h3efe00b_0
+  - lzo=2.10=h362108e_2
   - macfsevents=0.8.1=py36h1de35cc_0
   - markupsafe=1.1.1=py36h1de35cc_0
   - matplotlib=3.0.3=py36h54f8f79_0
@@ -58,6 +62,7 @@ dependencies:
   - nbformat=4.4.0=py36h827af21_0
   - ncurses=6.1=h0a44026_1
   - notebook=5.7.7=py36_0
+  - numexpr=2.6.9=py36h7413580_0
   - numpy=1.16.2=py36hacdab7b_0
   - numpy-base=1.16.2=py36h6575580_0
   - openssl=1.1.1b=h1de35cc_1
@@ -78,6 +83,7 @@ dependencies:
   - pyparsing=2.3.1=py36_0
   - pyqt=5.9.2=py36h655552a_2
   - pyrsistent=0.14.11=py36h1de35cc_0
+  - pytables=3.5.1=py36h5bccee9_0
   - pytest=4.3.1=py36_0
   - python=3.6.8=haf84260_0
   - python-dateutil=2.8.0=py36_0
@@ -90,6 +96,7 @@ dependencies:
   - setuptools=40.8.0=py36_0
   - sip=4.19.8=py36h0a44026_0
   - six=1.12.0=py36_0
+  - snappy=1.1.7=he62c110_3
   - sqlite=3.27.2=ha441bb4_0
   - terminado=0.8.1=py36_1
   - testpath=0.4.2=py36_0
