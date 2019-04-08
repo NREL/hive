@@ -22,7 +22,7 @@ def setup():
             )
     if not os.path.isdir(this_dir + 'inputs/.scenarios'):
         print('creating scenarios folder for input files..')
-        subprocess.run('mkdir inputs/.scenarios', shell=True)
+        subprocess.run('mkdir {}'.format(os.path.join(this_dir, 'inputs', '.scenarios')), shell=True)
     if not os.path.exists('config.py'):
         print('setting up config files')
         subprocess.run('cp config.default.py config.py', shell=True)
