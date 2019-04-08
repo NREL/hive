@@ -21,7 +21,7 @@ def setup():
         ans = input('update config file with default values? (y/[n]) ').lower()
         if ans == 'y':
             subprocess.run('cp config.defaults.py config.py', shell=True)
-        elif ans != 'n':
+        else:
             print('please input y/n')
     if not os.path.exists(os.path.join(sys.prefix, 'envs/hive')) and not sys.prefix.split('/')[-1] == 'hive':
         print('setting up virtual env')
@@ -33,7 +33,7 @@ def setup():
             if not env_on:
                 subprocess.run('conda activate hive', shell=True)
             subprocess.run('conda env update -f=environment.yml', shell=True)
-        elif ans != 'n':
+        else:
             print('please input y/n.')
       
     
