@@ -23,30 +23,33 @@ def setup():
     if not os.path.isdir(this_dir + 'inputs/.scenarios'):
         print('creating scenarios folder for input files..')
         subprocess.run('mkdir {}'.format(os.path.join(this_dir, 'inputs', '.scenarios')), shell=True)
+        print()
     if not os.path.exists('config.py'):
         print('setting up config files')
         subprocess.run('cp config.default.py config.py', shell=True)
+        print()
     else:
         print('config.py already exists')
         ans = input('update config file with default values? (y/[n]) ').lower()
+        while ans not in ['y','n']:
+            ans = input('please input y/n ')
         if ans == 'y':
             print('updating config file..')
             subprocess.run('cp {} {}'.format(default_config_path, config_path), shell=True)
-        elif ans != 'n':
-            print('please input y/n')
+        print()
+
     if not os.path.exists(os.path.join(sys.prefix, 'envs/hive')) and not sys.prefix.split('/')[-1] == 'hive':
         print('setting up virtual env')
         subprocess.run('conda env create -f environment.yml', shell=True)
     else:
         print('hive env already exists')
         ans = input('update env? (y/[n]) ').lower()
+        while ans not in ['y','n']:
+            ans = input('please input y/n ')
         if ans == 'y':
             if not env_on:
                 subprocess.run('conda activate hive', shell=True)
             subprocess.run('conda env update -f=environment.yml', shell=True)
-        elif ans != 'n':
-            print('please input y/n.')
-      
     
 def run_actions(actions, target=None):
     if target == None:
