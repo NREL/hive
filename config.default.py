@@ -8,7 +8,7 @@ if arnaud:
 
 # In-Paths
 CHARGE_NETWORK_FILE = 'inputs/charge_network/aus_fuel_stations.csv'
-OPERATING_AREA_FILE = 'inputs/operating_area/test/rideaustin/'
+OPERATING_AREA_PATH = 'inputs/operating_area/test/rideaustin/'
 VEHICLE_PATH = 'inputs/vehicles/'
 REQUEST_PATH = 'inputs/requests/test/rideaustin/'
 

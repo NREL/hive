@@ -5,9 +5,11 @@ Functions that prepare raw data for simulation
 import sys
 import glob
 import pandas as pd
+import geopandas as gpd
 from time import mktime
 from datetime import datetime
 from haversine import haversine
+from shapely.geometry import Point
 sys.path.append('../')
 import inputs as inpt
 import random 
@@ -15,7 +17,8 @@ import numpy as np
 
 def gen_synth_pax_cnt():
     """Randomly assigns passenger count from real-world distribution measured
-    in 2016(?) in Denver, CO by Henao (NREL)."""
+    in 2016(?) in Denver, CO by Henao (NREL).
+    """
     occ_distr = [1] * 743 + [2] * 175 + [3] * 58 + [4] * 24 #from Henao
     pax = random.choice(occ_distr)
     
@@ -23,12 +26,16 @@ def gen_synth_pax_cnt():
 
 def load_requests(reqs_path):
         """Loads, combines, and sorts request csvs by pickup time 
-        into a Pandas DataFrame
+        into a Pandas DataFrame.
         """
-    
         req_files = glob.glob(reqs_path+'*.csv')
-        df_from_each_file = (pd.read_csv(f) for f in req_files)
-        reqs_df = pd.concat(df_from_each_file, ignore_index=True)
+        df_from_each_file = [pd.read_csv(f) for f in req_files]
+        assert (len(df_from_each_file) > 0), "No CSVs in {}!".format(op_area_path)
+        if len(df_from_each_file) == 1:
+            reqs_df = df_from_each_file[0]
+        else:
+            reqs_df = pd.concat(df_from_each_file, ignore_index=True)
+
         reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
         reqs_df['dropoff_time'] = reqs_df['dropoff_time'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
         reqs_df.sort_values('pickup_time', inplace=True)
@@ -38,6 +45,60 @@ def load_requests(reqs_path):
             reqs_df['passengers'] = pax
         
         return reqs_df
+
+def filter_short_trips(reqs_df, min_miles=0.05):
+    """Filters requests that are less than min_miles (default=0.05). These
+    extremely short distance trips are often measuring errors, i.e. not 
+    "actual" trips.
+    """
+    filt_reqs_df = reqs_df[reqs_df.distance_miles > min_miles]
+    filt_reqs_df = filt_reqs_df.reset_index()
+
+    return(filt_reqs_df)
+
+def filter_requests_outside_oper_area(reqs_df, op_area_path):
+    """Filters requests in reqs_df whose origin or destination location are 
+    outside of the shapefile found in op_area_path.
+    """
+    shp_files = glob.glob(op_area_path+'*.shp')
+    gdf_from_each_file = [gpd.read_file(f) for f in shp_files]
+    assert (len(gdf_from_each_file) > 0), "No shapefiles in {}!".format(op_area_path)
+    if len(gdf_from_each_file) == 1:
+        op_area_gdf = gdf_from_each_file[0]
+    else:
+        op_area_gdf = pd.concat(gdf_from_each_file, ignore_index=True)
+    
+    pickup_pts, dropoff_pts = [], []
+    for lon, lat in zip(reqs_df['pickup_lon'], reqs_df['pickup_lat']):
+        pt = Point(lon, lat)
+        pickup_pts.append(pt)
+    for lon, lat in zip(reqs_df['dropoff_lon'], reqs_df['dropoff_lat']):
+        pt = Point(lon, lat)
+        dropoff_pts.append(pt)
+    reqs_df['pickup_pts'] = pickup_pts
+    reqs_df['dropoff_pts'] = dropoff_pts
+    
+    pickup_gdf = gpd.GeoDataFrame(reqs_df, geometry='pickup_pts')
+    pickup_gdf.rename(columns={'pickup_pts': 'geometry'}, inplace=True)
+    pickup_gdf.crs = op_area_gdf.crs #convert to matching crs
+    filt_pickup_gdf = gpd.sjoin(pickup_gdf, op_area_gdf, how='inner', op='intersects')
+    
+    dropoff_gdf = gpd.GeoDataFrame(reqs_df, geometry='dropoff_pts')
+    dropoff_gdf.rename(columns={'dropoff_pts': 'geometry'}, inplace=True)
+    dropoff_gdf.crs = op_area_gdf.crs #convert to matching crs
+    filt_dropoff_gdf = gpd.sjoin(dropoff_gdf, op_area_gdf, how='inner', op='intersects')
+    
+    comb_filt_gdf = filt_pickup_gdf.index.join(filt_dropoff_gdf.index, how='inner')
+    filt_reqs_df = reqs_df.iloc[comb_filt_gdf]
+    filt_reqs_df = filt_reqs_df.drop(columns=['pickup_pts', 'dropoff_pts'])
+    filt_reqs_df = filt_reqs_df.reset_index()
+    
+    return(filt_reqs_df)
+
+
+
+
+
 
 
 
