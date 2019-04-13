@@ -1,15 +1,19 @@
 """
-Configurations for running mist over one or more scenario.
+Configurations for running hive over one or more scenario.
 """
+# System
+arnaud=False
+if arnaud:
+    n_processes = 40 #arg for multiprocessing.Pool
 
-STATION_LOCATION_FILE = 'inputs/charge_network/aus_fuel_stations.csv'
-
+# In-Paths
+CHARGE_NETWORK_FILE = 'inputs/charge_network/aus_fuel_stations.csv'
+OPERATING_AREA_FILE = 'inputs/operating_area/test/rideaustin/'
 VEHICLE_PATH = 'inputs/vehicles/'
-REQUEST_PATH = 'inputs/requests/'
+REQUEST_PATH = 'inputs/requests/test/rideaustin/'
 
-# OUTPUT - File paths
-CLUSTER_PATH = '/data/mbap_shared/honda_data/clusters/austin/'
-CLUSTER_FILES = [CLUSTER_PATH + 'austin_pools_2017_02_01_1000_10_os_2.p', #List of paths for .p request files to simulate over
-                 CLUSTER_PATH + 'austin_pools_2017_02_02_1000_10_os_2.p']
-
-LOG_PATH = '/data/mbap_shared/honda_data/sim_logs/'
+# Out-Paths
+if arnaud:
+    OUT_PATH = '/data/mbap_shared/'
+else:
+    OUT_PATH = '~/Desktop/' #local path
