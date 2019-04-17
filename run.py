@@ -10,17 +10,17 @@ import config as cfg
 
 from hive import preprocess as pp
 
-def run_simulation(input_file):
+def run_simulation(infile, outfile):
     if cfg.VERBOSE: print("Reading input files..")
-    inputs = pd.read_hdf(input_file, key="main")
+    inputs = pd.read_hdf(infile, key="main")
 
     veh_types = [v.replace('_NUM_VEHICLES', '') for v in inputs.index if 'VEH_' in v]
     vehicles = []
     for veh_type in veh_types:
-        veh = pd.read_hdf(input_file, key=veh_type)
+        veh = pd.read_hdf(infile, key=veh_type)
         vehicles.append(veh)
 
-    charge_network = pd.read_hdf(input_file, key="charge_network")
+    charge_network = pd.read_hdf(infile, key="charge_network")
 
     random.seed(22) #seed for pax distr sampling
     today = datetime.now()
@@ -45,6 +45,7 @@ def run_simulation(input_file):
     print("filtered requests outside of operating area, {} remain".format(len(reqs_df)))
 
     #Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
+    reqs_df.to_hdf(outfile, key="requests")
 
     #reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 

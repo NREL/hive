@@ -121,23 +121,21 @@ def task_profile():
                 'file_dep': [filepath],
                 'targets': [output_file],
                 }
-#TODO: Add functionality that only overwrites input files if the corresponding
-#row in main.csv has changed.
+#TODO: Add functionality that only reruns simulation if the corresponding
+#row in main.csv has changed. Right now the .to_hdf function is producing
+#unique md5 checksums for repeated runs of this fucntion with the same input.
 def task_build_input_files():
     """
     Build input files from main.csv
     """
-    if not os.path.isdir(OUT_PATH):
-        clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
     if not os.path.isdir(SCENARIO_PATH):
         clean_msg('creating scenarios folder for input files..')
         subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
     main_file = os.path.join(IN_PATH, 'main.csv')
     sim_df = pd.read_csv(main_file)
-    data = {}
-    file_deps = [main_file]
     for i, row in sim_df.iterrows():
+        data = {}
+        file_deps = [main_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
         charge_net_file = os.path.join(IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
         file_deps.append(charge_net_file)
@@ -179,17 +177,21 @@ def task_run_simulation():
     """
     Run full simulation.
     """
+    if not os.path.isdir(OUT_PATH):
+        clean_msg('creating output directory..')
+        subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
+
     scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.h5'))
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
-        save_path = os.path.join(OUT_PATH, f'{tag}.h5')
+        outfile = os.path.join(OUT_PATH, f'{tag}.h5')
         yield {
                 'name': tag,
                 'actions' : [
-                    (run.run_simulation, [src]),
+                    (run.run_simulation, [src, outfile]),
                     ],
                 'file_dep': [src],
-                'targets': [save_path],
+                'targets': [outfile],
                 'verbosity': VERBOSE,
                 }
