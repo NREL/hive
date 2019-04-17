@@ -3,6 +3,7 @@ import os
 import sys
 import glob
 import re
+import pandas as pd
 
 import run
 import config as cfg
@@ -43,9 +44,9 @@ def setup():
     default_config_path = os.path.join(
             THIS_DIR, 'config.default.py'
             )
-    if not os.path.isdir(os.path.join(THIS_DIR, SCENARIO_PATH)):
+    if not os.path.isdir(SCENARIO_PATH):
         clean_msg('creating scenarios folder for input files..')
-        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, SCENARIO_PATH)), shell=True)
+        subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
     if not os.path.isdir(OUT_PATH):
         clean_msg('creating output directory..')
         subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
@@ -129,17 +130,49 @@ def task_build_input_files():
     if not os.path.isdir(OUT_PATH):
         clean_msg('creating output directory..')
         subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
-    if not os.path.isdir(os.path.join(THIS_DIR, SCENARIO_PATH)):
+    if not os.path.isdir(SCENARIO_PATH):
         clean_msg('creating scenarios folder for input files..')
-        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, SCENARIO_PATH)), shell=True)
-    return {
-        'actions': [(
-            utils.generate_input_files,
-            [IN_PATH, SCENARIO_PATH]
-            )],
-        'file_dep': [os.path.join(IN_PATH, 'main.csv')],
-        'verbosity': VERBOSE,
-    }
+        subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
+    main_file = os.path.join(IN_PATH, 'main.csv')
+    sim_df = pd.read_csv(main_file)
+    data = {}
+    file_deps = [main_file]
+    for i, row in sim_df.iterrows():
+        outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
+        charge_net_file = os.path.join(IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
+        file_deps.append(charge_net_file)
+
+        vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""), 'num': row[c]} for c in row.index if 'VEH' in c]
+
+        num_veh_types = len(vehicle_ids)
+        assert num_veh_types > 0, 'Must have at least one vehicle type to run simulation.'
+        row['NUM_VEHICLE_TYPES'] = str(num_veh_types)
+        num_vehicles = 0
+
+        for veh in vehicle_ids:
+            num_vehicles += int(veh['num'])
+            veh_file = os.path.join(IN_PATH, 'vehicles', '{}.csv'.format(veh['name']))
+            file_deps.append(veh_file)
+            veh_df = pd.read_csv(veh_file)
+            veh_df['NUM_VEHICLES'] = veh['num']
+            data[veh['name']] = veh_df.iloc[0]
+
+        assert num_vehicles > 0, "Must have at least one vehicle to run simulation."
+        row['TOTAL_NUM_VEHICLES'] = str(num_vehicles)
+
+        data['charge_network'] = pd.read_csv(charge_net_file)
+        data['main'] = row
+
+        yield {
+            'name': row['SCENARIO_NAME'],
+            'actions': [(
+                utils.save_to_hdf,
+                [data, outfile]
+                )],
+            'file_dep': file_deps,
+            'targets': [outfile],
+            'verbosity': VERBOSE,
+        }
 
 
 def task_run_simulation():

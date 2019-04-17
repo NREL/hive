@@ -10,15 +10,17 @@ import config as cfg
 
 from hive import preprocess as pp
 
-def run_simulation(input_path):
+def run_simulation(input_file):
     if cfg.VERBOSE: print("Reading input files..")
-    inputs = pd.read_hdf(input_path, key="main")
+    inputs = pd.read_hdf(input_file, key="main")
 
-    veh_types = [v.replace('_NUM_VEHICLES') for v in inputs.index if 'VEH_' in v]
+    veh_types = [v.replace('_NUM_VEHICLES', '') for v in inputs.index if 'VEH_' in v]
     vehicles = []
     for veh_type in veh_types:
-        veh = pd.read_hdf(input_path, key=veh_type)
+        veh = pd.read_hdf(input_file, key=veh_type)
         vehicles.append(veh)
+
+    charge_network = pd.read_hdf(input_file, key="charge_network")
 
     random.seed(22) #seed for pax distr sampling
     today = datetime.now()
