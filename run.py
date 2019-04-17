@@ -1,6 +1,7 @@
 """
 Run hive w/ inputs defined in config.py
 """
+import pandas as pd
 import sys
 import random
 from datetime import datetime
@@ -9,7 +10,16 @@ import config as cfg
 
 from hive import preprocess as pp
 
-def run_simulation(input_path, save_path):
+def run_simulation(input_path):
+    if cfg.VERBOSE: print("Reading input files..")
+    inputs = pd.read_hdf(input_path, key="main")
+
+    veh_types = [v.replace('_NUM_VEHICLES') for v in inputs.index if 'VEH_' in v]
+    vehicles = []
+    for veh_type in veh_types:
+        veh = pd.read_hdf(input_path, key=veh_type)
+        vehicles.append(veh)
+
     random.seed(22) #seed for pax distr sampling
     today = datetime.now()
     date = "{0}-{1}-{2}".format(today.month, today.day, today.year)

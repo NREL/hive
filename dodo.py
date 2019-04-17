@@ -5,18 +5,21 @@ import glob
 import re
 
 import run
+import config as cfg
 
 from hive import utils
 
+VERBOSE = 2 if cfg.VERBOSE else 0
+
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
-PROFILE_OUTPUT_DIR = os.path.join('tests', 'profile_output')
+IN_PATH = os.path.join(THIS_DIR, cfg.IN_PATH)
+OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH)
+
+PROFILE_OUT_PATH = os.path.join('tests', 'profile_output')
 PROFILE_FILES = glob.glob('hive/[!_]*.py') + ['run.py']
 
-MAIN_INPUT_FILE = os.path.join('inputs', 'main.csv')
-SCENARIO_PATH = os.path.join('inputs','.scenarios')
-
-OUTPUT_DIR = 'outputs/'
+SCENARIO_PATH = os.path.join(IN_PATH, '.scenarios')
 
 DOIT_CONFIG = {
         'default_tasks': [
@@ -43,9 +46,9 @@ def setup():
     if not os.path.isdir(os.path.join(THIS_DIR, SCENARIO_PATH)):
         clean_msg('creating scenarios folder for input files..')
         subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, SCENARIO_PATH)), shell=True)
-    if not os.path.isdir(os.path.join(THIS_DIR, OUTPUT_DIR)):
+    if not os.path.isdir(OUT_PATH):
         clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, OUTPUT_DIR)), shell=True)
+        subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
     if not os.path.exists('config.py'):
         clean_msg('setting up config files')
         subprocess.run('cp config.default.py config.py', shell=True)
@@ -85,7 +88,7 @@ def task_setup():
     """
     return {
             'actions': [setup],
-            'verbosity': 2,
+            'verbosity': VERBOSE,
             }
 
 def task_update_deps():
@@ -110,7 +113,7 @@ def task_profile():
     #python gprof2dot.py -f pstats output.pstats | dot -Tsvg -o profile_graph.svg
     for filepath in PROFILE_FILES:
         name = re.split('[./]', filepath)[-2]
-        output_file = PROFILE_OUTPUT_DIR + name + '.pstats'
+        output_file = PROFILE_OUT_PATH + name + '.pstats'
         yield {
                 'name': filepath,
                 'actions': ['python -m cProfile -o {} {}'.format(output_file, filepath)],
@@ -123,18 +126,19 @@ def task_build_input_files():
     """
     Build input files from main.csv
     """
-    if not os.path.isdir(os.path.join(THIS_DIR, OUTPUT_DIR)):
+    if not os.path.isdir(OUT_PATH):
         clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, OUTPUT_DIR)), shell=True)
+        subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
     if not os.path.isdir(os.path.join(THIS_DIR, SCENARIO_PATH)):
         clean_msg('creating scenarios folder for input files..')
         subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, SCENARIO_PATH)), shell=True)
     return {
         'actions': [(
             utils.generate_input_files,
-            [MAIN_INPUT_FILE, SCENARIO_PATH]
+            [IN_PATH, SCENARIO_PATH]
             )],
-        'file_dep': [MAIN_INPUT_FILE],
+        'file_dep': [os.path.join(IN_PATH, 'main.csv')],
+        'verbosity': VERBOSE,
     }
 
 
@@ -146,12 +150,13 @@ def task_run_simulation():
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
-        save_path = os.path.join(OUTPUT_DIR, f'{tag}.h5')
+        save_path = os.path.join(OUT_PATH, f'{tag}.h5')
         yield {
                 'name': tag,
                 'actions' : [
-                    (run.run_simulation, [src, save_path]),
+                    (run.run_simulation, [src]),
                     ],
                 'file_dep': [src],
                 'targets': [save_path],
+                'verbosity': VERBOSE,
                 }
