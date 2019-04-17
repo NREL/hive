@@ -110,6 +110,7 @@ dependencies:
   - pluggy=0.9.0=py36_0
   - poppler=0.65.0=ha097c24_1
   - poppler-data=0.4.9=0
+  - progress=1.5=py36_0
   - proj4=5.2.0=h0a44026_1
   - prometheus_client=0.6.0=py36_0
   - prompt_toolkit=2.0.9=py36_0
@@ -138,7 +139,7 @@ dependencies:
   - sip=4.19.8=py36h0a44026_0
   - six=1.12.0=py36_0
   - snappy=1.1.7=he62c110_3
-  - sqlalchemy=1.3.1=py36h1de35cc_0
+  - sqlalchemy=1.3.3=py36h1de35cc_0
   - sqlite=3.27.2=ha441bb4_0
   - terminado=0.8.1=py36_1
   - testpath=0.4.2=py36_0
@@ -157,5 +158,5 @@ dependencies:
   - pip:
     - haversine==2.0.0
     - line-profiler==2.1.2
-prefix: /Users/bborlaug/anaconda3/envs/hive
+prefix: /anaconda3/envs/hive
 

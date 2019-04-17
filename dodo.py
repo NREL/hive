@@ -4,30 +4,51 @@ import sys
 import glob
 import re
 
-PROFILE_OUTPUT_DIR = 'tests/profile_output/'
+import run
+
+from hive import utils
+
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+
+PROFILE_OUTPUT_DIR = os.path.join('tests', 'profile_output')
 PROFILE_FILES = glob.glob('hive/[!_]*.py') + ['run.py']
 
+MAIN_INPUT_FILE = os.path.join('inputs', 'main.csv')
+SCENARIO_PATH = os.path.join('inputs','.scenarios')
+
+OUTPUT_DIR = 'outputs/'
+
 DOIT_CONFIG = {
-        'default_tasks': [],
+        'default_tasks': [
+            'build_input_files',
+            'run_simulation',
+            ],
         }
+
+def basename_stem(path):
+    return os.path.splitext(os.path.basename(path))[0]
+
+def clean_msg(msg):
+    print(msg)
+    print()
 
 def setup():
     env_on = sys.prefix.split('/')[-1] == 'hive'
-    this_dir = os.path.dirname(os.path.realpath(__file__))
     config_path = os.path.join(
-            this_dir, 'config.py'
+            THIS_DIR, 'config.py'
             )
     default_config_path = os.path.join(
-            this_dir, 'config.default.py'
+            THIS_DIR, 'config.default.py'
             )
-    if not os.path.isdir(this_dir + 'inputs/.scenarios'):
-        print('creating scenarios folder for input files..')
-        subprocess.run('mkdir {}'.format(os.path.join(this_dir, 'inputs', '.scenarios')), shell=True)
-        print()
+    if not os.path.isdir(os.path.join(THIS_DIR, SCENARIO_PATH)):
+        clean_msg('creating scenarios folder for input files..')
+        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, SCENARIO_PATH)), shell=True)
+    if not os.path.isdir(os.path.join(THIS_DIR, OUTPUT_DIR)):
+        clean_msg('creating output directory..')
+        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, OUTPUT_DIR)), shell=True)
     if not os.path.exists('config.py'):
-        print('setting up config files')
+        clean_msg('setting up config files')
         subprocess.run('cp config.default.py config.py', shell=True)
-        print()
     else:
         print('config.py already exists')
         ans = input('update config file with default values? (y/[n]) ').lower()
@@ -50,7 +71,7 @@ def setup():
             if not env_on:
                 subprocess.run('conda activate hive', shell=True)
             subprocess.run('conda env update -f=environment.yml', shell=True)
-    
+
 def run_actions(actions, target=None):
     if target == None:
         subprocess.run(actions)
@@ -69,11 +90,10 @@ def task_setup():
 
 def task_update_deps():
     """
-    Update conda environment.yml file and pip requirements.txt file.
+    Update conda environment.yml file
     """
     for target, actions in [
             ('environment.yml', ['conda', 'env', 'export', '-n', 'hive']),
-            ('requirements.txt', ['pip', 'freeze']),
             ]:
         yield {
                 'name': target,
@@ -97,4 +117,41 @@ def task_profile():
                 'file_dep': [filepath],
                 'targets': [output_file],
                 }
+#TODO: Add functionality that only overwrites input files if the corresponding
+#row in main.csv has changed.
+def task_build_input_files():
+    """
+    Build input files from main.csv
+    """
+    if not os.path.isdir(os.path.join(THIS_DIR, OUTPUT_DIR)):
+        clean_msg('creating output directory..')
+        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, OUTPUT_DIR)), shell=True)
+    if not os.path.isdir(os.path.join(THIS_DIR, SCENARIO_PATH)):
+        clean_msg('creating scenarios folder for input files..')
+        subprocess.run('mkdir {}'.format(os.path.join(THIS_DIR, SCENARIO_PATH)), shell=True)
+    return {
+        'actions': [(
+            utils.generate_input_files,
+            [MAIN_INPUT_FILE, SCENARIO_PATH]
+            )],
+        'file_dep': [MAIN_INPUT_FILE],
+    }
 
+
+def task_run_simulation():
+    """
+    Run full simulation.
+    """
+    scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.h5'))
+    simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
+
+    for src, tag in simulations:
+        save_path = os.path.join(OUTPUT_DIR, f'{tag}.h5')
+        yield {
+                'name': tag,
+                'actions' : [
+                    (run.run_simulation, [src, save_path]),
+                    ],
+                'file_dep': [src],
+                'targets': [save_path],
+                }

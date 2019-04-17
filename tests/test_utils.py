@@ -29,8 +29,8 @@ def test_generate_input_files():
     assert(os.path.isfile(os.path.join(out_path, 'test2_inputs.h5')))
     test1_inputs = pd.read_hdf(os.path.join(out_path, 'test1_inputs.h5'))
     test2_inputs = pd.read_hdf(os.path.join(out_path, 'test2_inputs.h5'))
-    assert(test1_inputs.MAX_FLEET_SIZE == '200')
-    assert(test2_inputs.CHARGING_SCENARIO == 'Station')
+    assert(test1_inputs.MIN_ALLOWED_SOC == '0.05')
+    assert(test2_inputs.VEH1_NUM_VEHICLES == '100')
 
     in_file_transpose = os.path.join(THIS_DIR, 'test_inputs', 'main_transpose.csv')
     remove_files(out_path)
@@ -39,10 +39,5 @@ def test_generate_input_files():
     assert(os.path.isfile(os.path.join(out_path, 'test2_inputs.h5')))
     test1_inputs = pd.read_hdf(os.path.join(out_path, 'test1_inputs.h5'))
     test2_inputs = pd.read_hdf(os.path.join(out_path, 'test2_inputs.h5'))
-    assert(test1_inputs.MAX_FLEET_SIZE == '200')
-    assert(test2_inputs.CHARGING_SCENARIO == 'Station')
-
-
-    
-
-    
+    assert(test1_inputs.MIN_ALLOWED_SOC == '0.05')
+    assert(test2_inputs.VEH1_NUM_VEHICLES == '100')
