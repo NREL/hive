@@ -1,6 +1,7 @@
 """
 Run hive w/ inputs defined in config.py
 """
+import subprocess
 import pandas as pd
 import sys
 import random
@@ -51,4 +52,6 @@ def run_simulation(infile, outfile):
 
     #Create output paths -
 
-#if __name__ == "__main__":
+if __name__ == "__main__":
+    subprocess.run('doit build_input_files', shell=True)
+    subprocess.run('doit run_simulation', shell=True)

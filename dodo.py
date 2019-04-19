@@ -10,6 +10,10 @@ import config as cfg
 
 from hive import utils
 
+if not cfg.DEBUG:
+    import warnings
+    warnings.filterwarnings("ignore")
+
 VERBOSE = 2 if cfg.VERBOSE else 0
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -36,46 +40,6 @@ def clean_msg(msg):
     print(msg)
     print()
 
-def setup():
-    env_on = sys.prefix.split('/')[-1] == 'hive'
-    config_path = os.path.join(
-            THIS_DIR, 'config.py'
-            )
-    default_config_path = os.path.join(
-            THIS_DIR, 'config.default.py'
-            )
-    if not os.path.isdir(SCENARIO_PATH):
-        clean_msg('creating scenarios folder for input files..')
-        subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
-    if not os.path.isdir(OUT_PATH):
-        clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
-    if not os.path.exists('config.py'):
-        clean_msg('setting up config files')
-        subprocess.run('cp config.default.py config.py', shell=True)
-    else:
-        print('config.py already exists')
-        ans = input('update config file with default values? (y/[n]) ').lower()
-        while ans not in ['y','n']:
-            ans = input('please input y/n ')
-        if ans == 'y':
-            print('updating config file..')
-            subprocess.run('cp {} {}'.format(default_config_path, config_path), shell=True)
-        print()
-
-    if not os.path.exists(os.path.join(sys.prefix, 'envs/hive')) and not sys.prefix.split('/')[-1] == 'hive':
-        print('setting up virtual env')
-        subprocess.run('conda env create -f environment.yml', shell=True)
-    else:
-        print('hive env already exists')
-        ans = input('update env? (y/[n]) ').lower()
-        while ans not in ['y','n']:
-            ans = input('please input y/n ')
-        if ans == 'y':
-            if not env_on:
-                subprocess.run('conda activate hive', shell=True)
-            subprocess.run('conda env update -f=environment.yml', shell=True)
-
 def run_actions(actions, target=None):
     if target == None:
         subprocess.run(actions)
@@ -83,44 +47,37 @@ def run_actions(actions, target=None):
         with open(target, 'w') as f:
             subprocess.run(actions, stdout=f)
 
-def task_setup():
-    """
-    Setup project from sratch.
-    """
-    return {
-            'actions': [setup],
-            'verbosity': VERBOSE,
-            }
+if cfg.DEV:
+    def task_dev_update_deps():
+        """
+        Update conda environment.yml file
+        """
+        for target, actions in [
+                ('environment.yml', ['conda', 'env', 'export', '-n', 'hive']),
+                ]:
+            yield {
+                    'name': target,
+                    'actions': [(run_actions, [actions, target])],
+                    'targets': [target],
+                    'clean': True,
+                    }
 
-def task_update_deps():
-    """
-    Update conda environment.yml file
-    """
-    for target, actions in [
-            ('environment.yml', ['conda', 'env', 'export', '-n', 'hive']),
-            ]:
-        yield {
-                'name': target,
-                'actions': [(run_actions, [actions, target])],
-                'targets': [target],
-                'clean': True,
-                }
+    def task_dev_profile():
+        """
+        Profile each component using cProfile.
+        """
+        #TODO: Add functionality to generate svg call graph. gprof2dot, grpahviz
+        #python gprof2dot.py -f pstats output.pstats | dot -Tsvg -o profile_graph.svg
+        for filepath in PROFILE_FILES:
+            name = re.split('[./]', filepath)[-2]
+            output_file = PROFILE_OUT_PATH + name + '.pstats'
+            yield {
+                    'name': filepath,
+                    'actions': ['python -m cProfile -o {} {}'.format(output_file, filepath)],
+                    'file_dep': [filepath],
+                    'targets': [output_file],
+                    }
 
-def task_profile():
-    """
-    Profile each component using cProfile.
-    """
-    #TODO: Add functionality to generate svg call graph. gprof2dot, grpahviz
-    #python gprof2dot.py -f pstats output.pstats | dot -Tsvg -o profile_graph.svg
-    for filepath in PROFILE_FILES:
-        name = re.split('[./]', filepath)[-2]
-        output_file = PROFILE_OUT_PATH + name + '.pstats'
-        yield {
-                'name': filepath,
-                'actions': ['python -m cProfile -o {} {}'.format(output_file, filepath)],
-                'file_dep': [filepath],
-                'targets': [output_file],
-                }
 #TODO: Add functionality that only reruns simulation if the corresponding
 #row in main.csv has changed. Right now the .to_hdf function is producing
 #unique md5 checksums for repeated runs of this fucntion with the same input.
@@ -192,6 +149,7 @@ def task_run_simulation():
                     (run.run_simulation, [src, outfile]),
                     ],
                 'file_dep': [src],
+                'task_dep': ['build_input_files'],
                 'targets': [outfile],
                 'verbosity': VERBOSE,
                 }

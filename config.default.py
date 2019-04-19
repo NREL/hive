@@ -18,3 +18,7 @@ else:
     OUT_PATH = 'outputs/' #local path
 
 VERBOSE = True
+DEBUG = True
+
+# Set to True for development.
+DEV = True
