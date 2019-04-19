@@ -16,15 +16,10 @@ if not cfg.DEBUG:
 
 VERBOSE = 2 if cfg.VERBOSE else 0
 
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-
-IN_PATH = os.path.join(THIS_DIR, cfg.IN_PATH)
-OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH)
-
 PROFILE_OUT_PATH = os.path.join('tests', 'profile_output')
-PROFILE_FILES = glob.glob('hive/[!_]*.py') + ['run.py']
+PROFILE_FILES = ['run.py']
 
-SCENARIO_PATH = os.path.join(IN_PATH, '.scenarios')
+SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
 
 DOIT_CONFIG = {
         'default_tasks': [
@@ -84,13 +79,13 @@ def task_build_input_files():
     """
     Build input files from main.csv
     """
-    main_file = os.path.join(IN_PATH, 'main.csv')
+    main_file = os.path.join(cfg.IN_PATH, 'main.csv')
     sim_df = pd.read_csv(main_file)
     for i, row in sim_df.iterrows():
         data = {}
         file_deps = [main_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
-        charge_net_file = os.path.join(IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
+        charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
         file_deps.append(charge_net_file)
 
         vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""), 'num': row[c]} for c in row.index if 'VEH' in c]
@@ -104,7 +99,7 @@ def task_build_input_files():
         for veh in vehicle_ids:
             num_vehicles += int(veh['num'])
             veh_keys.append(veh['name'])
-            veh_file = os.path.join(IN_PATH, 'vehicles', '{}.csv'.format(veh['name']))
+            veh_file = os.path.join(cfg.IN_PATH, 'vehicles', '{}.csv'.format(veh['name']))
             file_deps.append(veh_file)
             veh_df = pd.read_csv(veh_file)
             veh_df['NUM_VEHICLES'] = veh['num']
@@ -133,15 +128,15 @@ def task_run_simulation():
     """
     Run full simulation.
     """
-    if not os.path.isdir(OUT_PATH):
+    if not os.path.isdir(cfg.OUT_PATH):
         clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(OUT_PATH), shell=True)
+        subprocess.run('mkdir {}'.format(cfg.OUT_PATH), shell=True)
 
     scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.h5'))
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
-        outfile = os.path.join(OUT_PATH, f'{tag}.h5')
+        outfile = os.path.join(cfg.OUT_PATH, f'{tag}.h5')
         yield {
                 'name': tag,
                 'actions' : [

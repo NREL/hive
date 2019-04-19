@@ -58,7 +58,7 @@ def run_simulation(infile, outfile):
 
 if __name__ == "__main__":
     if not os.path.isdir(SCENARIO_PATH):
-        clean_msg('creating scenarios folder for input files..')
+        print('creating scenarios folder for input files..')
         subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
     if not os.listdir(SCENARIO_PATH):
         subprocess.run('doit build_input_files', shell=True)
