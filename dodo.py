@@ -47,36 +47,35 @@ def run_actions(actions, target=None):
         with open(target, 'w') as f:
             subprocess.run(actions, stdout=f)
 
-if cfg.DEV:
-    def task_dev_update_deps():
-        """
-        Update conda environment.yml file
-        """
-        for target, actions in [
-                ('environment.yml', ['conda', 'env', 'export', '-n', 'hive']),
-                ]:
-            yield {
-                    'name': target,
-                    'actions': [(run_actions, [actions, target])],
-                    'targets': [target],
-                    'clean': True,
-                    }
+def task_update_deps():
+    """
+    Update conda environment.yml file
+    """
+    for target, actions in [
+            ('environment.yml', ['conda', 'env', 'export', '-n', 'hive']),
+            ]:
+        yield {
+                'name': target,
+                'actions': [(run_actions, [actions, target])],
+                'targets': [target],
+                'clean': True,
+                }
 
-    def task_dev_profile():
-        """
-        Profile each component using cProfile.
-        """
-        #TODO: Add functionality to generate svg call graph. gprof2dot, grpahviz
-        #python gprof2dot.py -f pstats output.pstats | dot -Tsvg -o profile_graph.svg
-        for filepath in PROFILE_FILES:
-            name = re.split('[./]', filepath)[-2]
-            output_file = PROFILE_OUT_PATH + name + '.pstats'
-            yield {
-                    'name': filepath,
-                    'actions': ['python -m cProfile -o {} {}'.format(output_file, filepath)],
-                    'file_dep': [filepath],
-                    'targets': [output_file],
-                    }
+def task_profile():
+    """
+    Profile each component using cProfile.
+    """
+    #TODO: Add functionality to generate svg call graph. gprof2dot, grpahviz
+    #python gprof2dot.py -f pstats output.pstats | dot -Tsvg -o profile_graph.svg
+    for filepath in PROFILE_FILES:
+        name = re.split('[./]', filepath)[-2]
+        output_file = PROFILE_OUT_PATH + name + '.pstats'
+        yield {
+                'name': filepath,
+                'actions': ['python -m cProfile -o {} {}'.format(output_file, filepath)],
+                'file_dep': [filepath],
+                'targets': [output_file],
+                }
 
 #TODO: Add functionality that only reruns simulation if the corresponding
 #row in main.csv has changed. Right now the .to_hdf function is producing
@@ -85,9 +84,6 @@ def task_build_input_files():
     """
     Build input files from main.csv
     """
-    if not os.path.isdir(SCENARIO_PATH):
-        clean_msg('creating scenarios folder for input files..')
-        subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
     main_file = os.path.join(IN_PATH, 'main.csv')
     sim_df = pd.read_csv(main_file)
     for i, row in sim_df.iterrows():
@@ -103,9 +99,11 @@ def task_build_input_files():
         assert num_veh_types > 0, 'Must have at least one vehicle type to run simulation.'
         row['NUM_VEHICLE_TYPES'] = str(num_veh_types)
         num_vehicles = 0
+        veh_keys = []
 
         for veh in vehicle_ids:
             num_vehicles += int(veh['num'])
+            veh_keys.append(veh['name'])
             veh_file = os.path.join(IN_PATH, 'vehicles', '{}.csv'.format(veh['name']))
             file_deps.append(veh_file)
             veh_df = pd.read_csv(veh_file)
@@ -114,6 +112,7 @@ def task_build_input_files():
 
         assert num_vehicles > 0, "Must have at least one vehicle to run simulation."
         row['TOTAL_NUM_VEHICLES'] = str(num_vehicles)
+        row['VEH_KEYS'] = veh_keys
 
         data['charge_network'] = pd.read_csv(charge_net_file)
         data['main'] = row
@@ -149,7 +148,6 @@ def task_run_simulation():
                     (run.run_simulation, [src, outfile]),
                     ],
                 'file_dep': [src],
-                'task_dep': ['build_input_files'],
                 'targets': [outfile],
                 'verbosity': VERBOSE,
                 }

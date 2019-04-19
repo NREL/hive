@@ -2,12 +2,15 @@
 Run hive w/ inputs defined in config.py
 """
 import subprocess
-import pandas as pd
+import os
 import sys
 import random
 from datetime import datetime
+import pandas as pd
 
 import config as cfg
+
+SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
 
 from hive import preprocess as pp
 
@@ -15,10 +18,11 @@ def run_simulation(infile, outfile):
     if cfg.VERBOSE: print("Reading input files..")
     inputs = pd.read_hdf(infile, key="main")
 
-    veh_types = [v.replace('_NUM_VEHICLES', '') for v in inputs.index if 'VEH_' in v]
+    veh_keys = inputs['VEH_KEYS']
+
     vehicles = []
-    for veh_type in veh_types:
-        veh = pd.read_hdf(infile, key=veh_type)
+    for key in veh_keys:
+        veh = pd.read_hdf(infile, key=key)
         vehicles.append(veh)
 
     charge_network = pd.read_hdf(infile, key="charge_network")
@@ -53,5 +57,13 @@ def run_simulation(infile, outfile):
     #Create output paths -
 
 if __name__ == "__main__":
-    subprocess.run('doit build_input_files', shell=True)
+    if not os.path.isdir(SCENARIO_PATH):
+        clean_msg('creating scenarios folder for input files..')
+        subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
+    if not os.listdir(SCENARIO_PATH):
+        subprocess.run('doit build_input_files', shell=True)
+
+    if '--clean' in sys.argv:
+        subprocess.run('doit forget', shell=True)
+
     subprocess.run('doit run_simulation', shell=True)
