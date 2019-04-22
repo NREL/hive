@@ -20,6 +20,7 @@ PROFILE_OUT_PATH = os.path.join('tests', 'profile_output')
 PROFILE_FILES = ['run.py']
 
 SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
+LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
 
 DOIT_CONFIG = {
         'default_tasks': [
@@ -80,10 +81,12 @@ def task_build_input_files():
     Build input files from main.csv
     """
     main_file = os.path.join(cfg.IN_PATH, 'main.csv')
+    charge_file = os.path.join(LIB_PATH, 'raw_leaf_curves.csv')
+    charge_df = pd.read_csv(charge_file)
     sim_df = pd.read_csv(main_file)
     for i, row in sim_df.iterrows():
         data = {}
-        file_deps = [main_file]
+        file_deps = [main_file, charge_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
         charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
         file_deps.append(charge_net_file)
@@ -111,6 +114,7 @@ def task_build_input_files():
 
         data['charge_network'] = pd.read_csv(charge_net_file)
         data['main'] = row
+        data['charge_curves'] = charge_df
 
         yield {
             'name': row['SCENARIO_NAME'],
@@ -128,9 +132,10 @@ def task_run_simulation():
     """
     Run full simulation.
     """
-    if not os.path.isdir(cfg.OUT_PATH):
+    sim_output = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
+    if not os.path.isdir(sim_output):
         clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(cfg.OUT_PATH), shell=True)
+        subprocess.run('mkdir {}'.format(sim_output), shell=True)
 
     scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.h5'))
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]

@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 
 #%%
-def import_whmi_template():
-    whmi_template = pd.read_csv('data/wh_mi_lookup.csv')
+def import_whmi_template(infile):
+    whmi_template = pd.read_csv(infile)
 
     return whmi_template
 

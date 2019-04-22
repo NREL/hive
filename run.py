@@ -7,12 +7,22 @@ import sys
 import random
 from datetime import datetime
 import pandas as pd
+import numpy as np
 
 import config as cfg
 
 SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
+LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
+
+WHMI_LOOKUP_FILE = os.path.join(LIB_PATH, 'wh_mi_lookup.csv')
 
 from hive import preprocess as pp
+from hive import tripenergy as nrg
+from hive import charging as chrg
+from hive.vehicle import Vehicle
+
+def build_output_dir(scenario_name):
+    pass
 
 def run_simulation(infile, outfile):
     if cfg.VERBOSE: print("Reading input files..")
@@ -20,10 +30,35 @@ def run_simulation(infile, outfile):
 
     veh_keys = inputs['VEH_KEYS']
 
-    vehicles = []
+    veh_types = []
     for key in veh_keys:
         veh = pd.read_hdf(infile, key=key)
-        vehicles.append(veh)
+        veh_types.append(veh)
+
+
+    charge_curves = pd.read_hdf(infile, key="charge_curves")
+
+    if cfg.VERBOSE: print("Initializing vehicle fleet..")
+    veh_fleet = []
+    for veh_type in veh_types:
+        charge_template = chrg.construct_temporal_charge_template(
+                                                        charge_curves,
+                                                        veh_type.BATTERY_CAPACITY,
+                                                        veh_type.CHARGE_ACCEPTANCE,
+                                                        )
+        whmi_lookup = nrg.create_scaled_whmi(
+                                    pd.read_csv(WHMI_LOOKUP_FILE),
+                                    veh_type.EFFICIENCY,
+                                    )
+        for i in range(0, veh_type.NUM_VEHICLES):
+            veh = Vehicle(
+                        veh_id = i,
+                        battery_capacity = veh_type.BATTERY_CAPACITY,
+                        initial_soc = np.random.uniform(0.2, 1.0),
+                        whmi_lookup = whmi_lookup,
+                        charge_template = charge_template,
+                        logfile = "placeholder.log"
+                        )
 
     charge_network = pd.read_hdf(infile, key="charge_network")
 

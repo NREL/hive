@@ -1,6 +1,9 @@
 """
 Configurations for running hive over one or more scenario.
 """
+
+SIMULATION_NAME = "Test Simulation"
+
 # System
 ARNAUD=False
 if ARNAUD:
@@ -16,6 +19,7 @@ if ARNAUD:
     OUT_PATH = '/data/mbap_shared/'
 else:
     OUT_PATH = 'outputs/' #local path
+
 
 VERBOSE = True
 DEBUG = True

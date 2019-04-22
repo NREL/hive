@@ -1,14 +1,13 @@
 """
-Vehicle object for the mist algorithm
+Vehicle object for the hive algorithm
 """
 
 import sys
 import csv
 from haversine import haversine
-sys.path.append('../')
-import inputs as inpt
-import trip_energy as nrg
-import charge_functions as chrg
+
+from hive import tripenergy as nrg
+from hive import charging as chrg
 
 
 class Vehicle:
@@ -23,7 +22,7 @@ class Vehicle:
         Battery capacity in kWh
     initial_soc: double precision
         Initial SOC in range [0,1]
-    whmile_lookup: pd.DataFrame
+    whmi_lookup: pd.DataFrame
         Wh/mile lookup DataFrame
     charge_template: pd.DataFrame
         Charge template DataFrame
@@ -52,12 +51,12 @@ class Vehicle:
         Seconds where a vehicle is not serving a request or dispatching to request
     """
 
-    def __init__(self, veh_id, battery_capacity, initial_soc, whmile_lookup, charge_template, logfile):
+    def __init__(self, veh_id, battery_capacity, initial_soc, whmi_lookup, charge_template, logfile):
         self.veh_id = veh_id
         self.battery_capacity = battery_capacity
         self.energy_remaining = battery_capacity * initial_soc
         self.soc = initial_soc
-        self.wh_per_mile_lookup = whmile_lookup
+        self.wh_per_mile_lookup = whmi_lookup
         self.charge_template = charge_template
         self.log = logfile
         self.avail_lat = 0
@@ -245,7 +244,8 @@ class Vehicle:
         dest_time = req['dest_time']
         trip_dist = req['trip_dist']
 
-
+        #TODO: the haversine calc is relatively expensive. We should return the
+        # result to the simulation after this function is called.
         disp_dist = haversine((self.avail_lat, self.avail_lon), (origin_lat, origin_lon), unit='mi') * inpt.RN_SCALING_FACTOR
         # check max dispatch constraint
         if disp_dist > inpt.MAX_DISPATCH_MILES:
