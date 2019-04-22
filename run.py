@@ -5,6 +5,7 @@ import subprocess
 import os
 import sys
 import random
+import shutil
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -13,6 +14,7 @@ import config as cfg
 
 SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
 LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
+OUT_PATH = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
 
 WHMI_LOOKUP_FILE = os.path.join(LIB_PATH, 'wh_mi_lookup.csv')
 
@@ -22,11 +24,19 @@ from hive import charging as chrg
 from hive.vehicle import Vehicle
 
 def build_output_dir(scenario_name):
-    pass
+    scenario_output = os.path.join(OUT_PATH, scenario_name)
+    if not os.path.isdir(scenario_output):
+        os.makedirs(scenario_output)
+        os.makedirs(os.path.join(scenario_output, 'logs'))
+        os.makedirs(os.path.join(scenario_output, 'summaries'))
+
 
 def run_simulation(infile, outfile):
     if cfg.VERBOSE: print("Reading input files..")
     inputs = pd.read_hdf(infile, key="main")
+
+    if cfg.VERBOSE: print("Building scenario output directory..")
+    build_output_dir(inputs.SCENARIO_NAME.strip().replace(" ", "_"))
 
     veh_keys = inputs['VEH_KEYS']
 
@@ -59,6 +69,8 @@ def run_simulation(infile, outfile):
                         charge_template = charge_template,
                         logfile = "placeholder.log"
                         )
+            veh_fleet.append(veh)
+
 
     charge_network = pd.read_hdf(infile, key="charge_network")
 

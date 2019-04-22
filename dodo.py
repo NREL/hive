@@ -85,6 +85,7 @@ def task_build_input_files():
     charge_df = pd.read_csv(charge_file)
     sim_df = pd.read_csv(main_file)
     for i, row in sim_df.iterrows():
+        row["SCENARIO_NAME"] = row["SCENARIO_NAME"].strip().replace(" ", "_")
         data = {}
         file_deps = [main_file, charge_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
@@ -133,15 +134,21 @@ def task_run_simulation():
     Run full simulation.
     """
     sim_output = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
+    if not os.path.isdir(cfg.OUT_PATH):
+        clean_msg('creating base output directory..')
+        os.makedirs(cfg.OUT_PATH)
     if not os.path.isdir(sim_output):
-        clean_msg('creating output directory..')
-        subprocess.run('mkdir {}'.format(sim_output), shell=True)
+        clean_msg('creating simulation output directory..')
+        os.makedirs(sim_output)
 
     scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.h5'))
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
-        outfile = os.path.join(cfg.OUT_PATH, f'{tag}.h5')
+        outfile = os.path.join(
+                            sim_output,
+                            tag,
+                            f'{tag}.h5')
         yield {
                 'name': tag,
                 'actions' : [
