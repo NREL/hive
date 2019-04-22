@@ -50,10 +50,10 @@ def run_simulation(infile, outfile):
     print("filtered requests outside of operating area, {} remain".format(len(reqs_df)))
 
     #Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
-    reqs_df.to_hdf(outfile, key="requests")
 
     #reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
+    reqs_df.to_hdf(outfile, key="requests")
     #Create output paths -
 
 if __name__ == "__main__":
