@@ -78,21 +78,24 @@ def task_profile():
 #unique md5 checksums for repeated runs of this fucntion with the same input.
 def task_build_input_files():
     """
-    Build input files from main.csv
+    Build input files. 
     """
     main_file = os.path.join(cfg.IN_PATH, 'main.csv')
     charge_file = os.path.join(LIB_PATH, 'raw_leaf_curves.csv')
+    whmi_lookup_file = os.path.join(LIB_PATH, 'wh_mi_lookup.csv')
     charge_df = pd.read_csv(charge_file)
     sim_df = pd.read_csv(main_file)
+    whmi_df = pd.read_csv(whmi_lookup_file)
     for i, row in sim_df.iterrows():
         row["SCENARIO_NAME"] = row["SCENARIO_NAME"].strip().replace(" ", "_")
         data = {}
-        file_deps = [main_file, charge_file]
+        file_deps = [main_file, charge_file, whmi_lookup_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
         charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
         file_deps.append(charge_net_file)
 
-        vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""), 'num': row[c]} for c in row.index if 'VEH' in c]
+        vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""),
+                        'num': row[c]} for c in row.index if 'VEH' in c]
 
         num_veh_types = len(vehicle_ids)
         assert num_veh_types > 0, 'Must have at least one vehicle type to run simulation.'
@@ -106,6 +109,7 @@ def task_build_input_files():
             veh_file = os.path.join(cfg.IN_PATH, 'vehicles', '{}.csv'.format(veh['name']))
             file_deps.append(veh_file)
             veh_df = pd.read_csv(veh_file)
+            veh_df['VEHICLE_TYPE'] = veh['name']
             veh_df['NUM_VEHICLES'] = veh['num']
             data[veh['name']] = veh_df.iloc[0]
 
@@ -116,6 +120,7 @@ def task_build_input_files():
         data['charge_network'] = pd.read_csv(charge_net_file)
         data['main'] = row
         data['charge_curves'] = charge_df
+        data['whmi_lookup'] = whmi_df
 
         yield {
             'name': row['SCENARIO_NAME'],

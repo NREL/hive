@@ -16,8 +16,6 @@ SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
 LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
 OUT_PATH = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
 
-WHMI_LOOKUP_FILE = os.path.join(LIB_PATH, 'wh_mi_lookup.csv')
-
 from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
@@ -38,31 +36,27 @@ def run_simulation(infile, outfile):
     if cfg.VERBOSE: print("Building scenario output directory..")
     build_output_dir(inputs.SCENARIO_NAME.strip().replace(" ", "_"))
 
-    veh_keys = inputs['VEH_KEYS']
-
-    veh_types = []
-    for key in veh_keys:
-        veh = pd.read_hdf(infile, key=key)
-        veh_types.append(veh)
-
-
     charge_curves = pd.read_hdf(infile, key="charge_curves")
 
     if cfg.VERBOSE: print("Initializing vehicle fleet..")
+    veh_keys = inputs['VEH_KEYS']
     veh_fleet = []
-    for veh_type in veh_types:
+    for key in veh_keys:
+        veh_type = pd.read_hdf(infile, key=key)
         charge_template = chrg.construct_temporal_charge_template(
-                                                        charge_curves,
-                                                        veh_type.BATTERY_CAPACITY,
-                                                        veh_type.CHARGE_ACCEPTANCE,
-                                                        )
+                                                    charge_curves,
+                                                    veh_type.BATTERY_CAPACITY,
+                                                    veh_type.CHARGE_ACCEPTANCE,
+                                                    )
         whmi_lookup = nrg.create_scaled_whmi(
-                                    pd.read_csv(WHMI_LOOKUP_FILE),
+                                    pd.read_hdf(infile, key="whmi_lookup"),
                                     veh_type.EFFICIENCY,
                                     )
         for i in range(0, veh_type.NUM_VEHICLES):
             veh = Vehicle(
                         veh_id = i,
+                        name = veh_type.VEHICLE_NAME,
+                        type = veh_type.VEHICLE_TYPE,
                         battery_capacity = veh_type.BATTERY_CAPACITY,
                         initial_soc = np.random.uniform(0.2, 1.0),
                         whmi_lookup = whmi_lookup,
@@ -71,6 +65,9 @@ def run_simulation(infile, outfile):
                         )
             veh_fleet.append(veh)
 
+
+    random.seed(123)
+    random.shuffle(veh_fleet)
 
     charge_network = pd.read_hdf(infile, key="charge_network")
 

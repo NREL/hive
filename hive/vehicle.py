@@ -51,8 +51,20 @@ class Vehicle:
         Seconds where a vehicle is not serving a request or dispatching to request
     """
 
-    def __init__(self, veh_id, battery_capacity, initial_soc, whmi_lookup, charge_template, logfile):
+    def __init__(
+                self,
+                veh_id,
+                name,
+                type,
+                battery_capacity,
+                initial_soc,
+                whmi_lookup,
+                charge_template,
+                logfile
+                ):
         self.veh_id = veh_id
+        self.name = name
+        self.type = type
         self.battery_capacity = battery_capacity
         self.energy_remaining = battery_capacity * initial_soc
         self.soc = initial_soc
@@ -73,8 +85,25 @@ class Vehicle:
         self.dispatch_s = 0 #seconds where vehicle is moving w/o passengers
         self.trip_s = 0 #seconds where vehicle is serving a trip request
 
+    def __repr__(self):
+        return str(f"Vehicle(id: {self.veh_id}, name: {self.name}, type: {self.type})")
 
-    def make_trip(self, trip_id, olat, olon, otime, dlat, dlon, dtime, trip_dist, dispatch_dist, diff_s, passengers, report):
+
+    def make_trip(
+                self,
+                trip_id,
+                olat,
+                olon,
+                otime,
+                dlat,
+                dlon,
+                dtime,
+                trip_dist,
+                dispatch_dist,
+                diff_s,
+                passengers,
+                report
+                ):
         with open(self.log,'a') as f:
             writer = csv.writer(f)
 
@@ -237,6 +266,10 @@ class Vehicle:
         on availability (time-based), dispatch distance, and state
         of charge.
         """
+
+        #TODO: Need to refactor the inpt constants.
+        #IDEA: Move global constants to the main.csv/VEV.csv file. For variables
+        #that change over the simulation, pass to this function via an input dict.
 
         origin_time = req['origin_time']
         origin_lat = req['origin_lat']
