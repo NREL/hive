@@ -82,14 +82,15 @@ class Vehicle:
         self.name = name
         self.type = type
         self.battery_capacity = battery_capacity
-        self.energy_remaining = battery_capacity * initial_soc
-        self.soc = initial_soc
-        self.wh_per_mile_lookup = whmi_lookup
-        self.charge_template = charge_template
-        self.log = logfile
         self.avail_lat = 0
         self.avail_lon = 0
         self.avail_time = 0
+        self.energy_remaining = battery_capacity * initial_soc
+        self.soc = initial_soc
+
+        self._wh_per_mile_lookup = whmi_lookup
+        self._charge_template = charge_template
+        self._log = logfile
 
         self._stats = dict()
         for stat in self.STATS:
@@ -106,6 +107,8 @@ class Vehicle:
         return str(f"Vehicle(id: {self.veh_id}, name: {self.name}, type: {self.type})")
 
 
+    #IDEA: I think we could let this function take the request as an input and then
+    # just unpack the request properties internally. -NR
     def make_trip(
                 self,
                 trip_id,
@@ -121,7 +124,7 @@ class Vehicle:
                 passengers,
                 report
                 ):
-        with open(self.log,'a') as f:
+        with open(self._log,'a') as f:
             writer = csv.writer(f)
 
             if inpt.CHARGING_SCENARIO == 'Ubiq': #ubiquitous charging assumption
@@ -205,8 +208,8 @@ class Vehicle:
             if dispatch_dist > 0:
                 dispatch_time_s = otime - dispatch_start
                 if report:
-                    self.dispatch_s += dispatch_time_s
-                self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self.wh_per_mile_lookup)
+                    self._stats['dispatch_s'] += dispatch_time_s
+                self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self._wh_per_mile_lookup)
                 self.soc = self.energy_remaining/self.battery_capacity
                 writer.writerow([self.veh_id, -2, dispatch_start, self.avail_lat, self.avail_lon, otime, olat, olon, dispatch_dist, round(self.soc, 2), 0])
 
@@ -222,7 +225,7 @@ class Vehicle:
                 self._stats['trip_s'] += trip_time_s
 
             if trip_time_s > 0:
-                self.energy_remaining -= nrg.calc_trip_kwh(trip_dist, trip_time_s, self.wh_per_mile_lookup)
+                self.energy_remaining -= nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
 
             self.soc = self.energy_remaining / self.battery_capacity
             if report:
@@ -232,7 +235,7 @@ class Vehicle:
 
 
     def refuel(self, charg_stations, final_soc, report):
-        with open(self.log, 'a') as f:
+        with open(self._log, 'a') as f:
             writer = csv.writer(f)
 
             # Locate nearest station
@@ -252,10 +255,10 @@ class Vehicle:
             if dist_to_nearest > 0:
                 dispatch_time_s = dist_to_nearest / inpt.DISPATCH_SPEED * 3600
                 if report:
-                    self.dispatch_s += dispatch_time_s
+                    self._stats['dispatch_s'] += dispatch_time_s
                 dispatch_start = self.avail_time
                 dispatch_end = dispatch_start + dispatch_time_s
-                self.energy_remaining -= nrg.calc_trip_kwh(dist_to_nearest, dispatch_time_s, self.wh_per_mile_lookup)
+                self.energy_remaining -= nrg.calc_trip_kwh(dist_to_nearest, dispatch_time_s, self._wh_per_mile_lookup)
                 self.soc = max(0, self.energy_remaining/self.battery_capacity)
                 writer.writerow([self.veh_id, -2, dispatch_start, self.avail_lat, self.avail_lon, dispatch_end, nearest_station.lat, nearest_station.lon, dist_to_nearest, round(self.soc, 2), 0])
 
@@ -263,7 +266,7 @@ class Vehicle:
             self.avail_lat = nearest_station.lat
             self.avail_lon = nearest_station.lon
             soc_i = self.soc
-            charge_time = chrg.query_charge_stats(self.charge_template, soc_i=soc_i*100, soc_f=final_soc*100)[2]
+            charge_time = chrg.query_charge_stats(self._charge_template, soc_i=soc_i*100, soc_f=final_soc*100)[2]
             if report:
                 self._stats['refuel_s'] += charge_time
             start_time = dispatch_end
@@ -285,8 +288,8 @@ class Vehicle:
         """
 
         #TODO: Need to refactor the inpt constants.
-        #IDEA: Move global constants to the main.csv/VEV.csv file. For variables
-        #that change over the simulation, pass to this function via an input dict.
+        #IDEA: Move global constants to the main.csv/VEH.csv file. For variables
+        #that change over the simulation, pass to this function via an input dict. -NR
 
         origin_time = req['origin_time']
         origin_lat = req['origin_lat']
@@ -308,12 +311,12 @@ class Vehicle:
             return False
 
         if disp_time_s > 0:
-            disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self.wh_per_mile_lookup)
+            disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self._wh_per_mile_lookup)
         else:
             disp_energy = 0
 
         trip_time_s = dest_time - origin_time
-        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, self.wh_per_mile_lookup)
+        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
 
         total_dist = disp_dist + trip_dist
         total_energy = disp_energy + trip_energy

@@ -51,6 +51,10 @@ def run_simulation(infile, outfile):
                                     pd.read_hdf(infile, key="whmi_lookup"),
                                     veh_type.EFFICIENCY,
                                     )
+        veh_env_params = {
+            'MAX_DISPATCH_MILES': inputs.MAX_DISPATCH_MILES,
+            'MIN_ALLOWED_SOC': inputs.MIN_ALLOWED_SOC,
+        }
         for i in range(0, veh_type.NUM_VEHICLES):
             veh = Vehicle(
                         veh_id = i,
@@ -60,7 +64,8 @@ def run_simulation(infile, outfile):
                         initial_soc = np.random.uniform(0.2, 1.0),
                         whmi_lookup = whmi_lookup,
                         charge_template = charge_template,
-                        logfile = "placeholder.log"
+                        logfile = "placeholder.log",
+                        environment_params = veh_env_params,
                         )
             veh_fleet.append(veh)
 
