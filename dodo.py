@@ -78,7 +78,7 @@ def task_profile():
 #unique md5 checksums for repeated runs of this fucntion with the same input.
 def task_build_input_files():
     """
-    Build input files. 
+    Build input files.
     """
     main_file = os.path.join(cfg.IN_PATH, 'main.csv')
     charge_file = os.path.join(LIB_PATH, 'raw_leaf_curves.csv')
@@ -150,16 +150,24 @@ def task_run_simulation():
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
-        outfile = os.path.join(
+        outfiles = [
+                    os.path.join(
                             sim_output,
                             tag,
-                            f'{tag}.h5')
+                            'logs',
+                            'vehicle_log.csv'),
+                    os.path.join(
+                            sim_output,
+                            tag,
+                            'logs',
+                            'stations_log.csv'),
+                    ]
         yield {
                 'name': tag,
                 'actions' : [
-                    (run.run_simulation, [src, outfile]),
+                    (run.run_simulation, [src, tag]),
                     ],
                 'file_dep': [src],
-                'targets': [outfile],
+                'targets': outfiles,
                 'verbosity': VERBOSE,
                 }

@@ -28,7 +28,10 @@ def build_output_dir(scenario_name):
         os.makedirs(os.path.join(scenario_output, 'summaries'))
 
 
-def run_simulation(infile, outfile):
+def run_simulation(infile, sim_name):
+    vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
+    station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
+
     if cfg.VERBOSE: print("Reading input files..")
     inputs = pd.read_hdf(infile, key="main")
 
@@ -64,7 +67,7 @@ def run_simulation(infile, outfile):
                         initial_soc = np.random.uniform(0.2, 1.0),
                         whmi_lookup = whmi_lookup,
                         charge_template = charge_template,
-                        logfile = "placeholder.log",
+                        logfile = vehicle_log_file,
                         environment_params = veh_env_params,
                         )
             veh_fleet.append(veh)
@@ -101,13 +104,12 @@ def run_simulation(infile, outfile):
 
     #reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
-    reqs_df.to_hdf(outfile, key="requests")
     #Create output paths -
 
 if __name__ == "__main__":
     if not os.path.isdir(SCENARIO_PATH):
         print('creating scenarios folder for input files..')
-        subprocess.run('mkdir {}'.format(SCENARIO_PATH), shell=True)
+        os.makedirs(SCENARIO_PATH)
     if not os.listdir(SCENARIO_PATH):
         subprocess.run('doit build_input_files', shell=True)
 
