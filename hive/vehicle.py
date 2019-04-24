@@ -8,6 +8,7 @@ from haversine import haversine
 
 from hive import tripenergy as nrg
 from hive import charging as chrg
+from hive.constraints import ENV_PARAMS
 
 
 class Vehicle:
@@ -50,6 +51,19 @@ class Vehicle:
     idle_s:
         Seconds where a vehicle is not serving a request or dispatching to request
     """
+    # statistics tracked on a vehicle instance level over entire simulation.
+    STATS = [
+            'trip_vmt', #miles traveled servicing ride requests
+            'dispatch_vmt', #miles traveled dispatching to pickup locations
+            'total_vmt', #total miles traveled
+            'requests_filled',
+            'passengers_delivered',
+            'refuel_cnt', #number of refuel/recharge events
+            'refuel_s', #seconds where a vehicle is charging
+            'idle_s', #seconds where vehicle is not serving, dispatching to new request, or charging
+            'dispatch_s', #seconds where vehicle is moving w/o passengers
+            'trip_s', #seconds where vehicle is serving a trip request
+            ]
 
     def __init__(
                 self,
@@ -60,8 +74,10 @@ class Vehicle:
                 initial_soc,
                 whmi_lookup,
                 charge_template,
-                logfile
+                logfile,
+                environment_params = dict(),
                 ):
+
         self.veh_id = veh_id
         self.name = name
         self.type = type
@@ -74,16 +90,17 @@ class Vehicle:
         self.avail_lat = 0
         self.avail_lon = 0
         self.avail_time = 0
-        self.trip_vmt = 0 #miles traveled servicing ride requests
-        self.dispatch_vmt = 0 #miles traveled dispatching to pickup locations
-        self.total_vmt = 0 #total miles traveled
-        self.requests_filled = 0
-        self.passengers_delivered = 0
-        self.refuel_cnt = 0 #number of refuel/recharge events
-        self.refuel_s = 0 #seconds where a vehicle is charging
-        self.idle_s = 0 #seconds where vehicle is not serving, dispatching to new request, or charging
-        self.dispatch_s = 0 #seconds where vehicle is moving w/o passengers
-        self.trip_s = 0 #seconds where vehicle is serving a trip request
+
+        self._stats = dict()
+        for stat in self.STATS:
+            self._stats[stat] = 0
+
+        self._ENV = dict()
+        for param, val in environment_params.items():
+            assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
+            assert val > ENV_PARAMS[param][0], "Param {}:{} is out of bounds {}".format(param, val, ENV_PARAMS[param])
+            assert val < ENV_PARAMS[param][1], "Param {}:{} is out of bounds {}".format(param, val, ENV_PARAMS[param])
+            self._ENV[param] = val
 
     def __repr__(self):
         return str(f"Vehicle(id: {self.veh_id}, name: {self.name}, type: {self.type})")
@@ -113,7 +130,7 @@ class Vehicle:
                 if diff_s <= (inpt.MINUTES_BEFORE_CHARGE * 60):
                     idle_s = diff_s
                     if report:
-                        self.idle_s += idle_s
+                        self._stats['idle_s'] += idle_s
                     self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
                     self.soc = self.energy_remaining/self.battery_capacity
 
@@ -124,7 +141,7 @@ class Vehicle:
                 else:
                     idle_s = inpt.MINUTES_BEFORE_CHARGE * 60
                     if report:
-                        self.idle_s += idle_s
+                        self._stats['idle_s'] += idle_s
                     self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
                     self.soc = self.energy_remaining/self.battery_capacity
                     idle_end = idle_start + idle_s
@@ -137,7 +154,7 @@ class Vehicle:
                     if secs_to_full >= (diff_s - idle_s):
                         refuel_s = diff_s - idle_s
                         if report:
-                            self.refuel_s += refuel_s
+                            self._stats['refuel_s'] += refuel_s
                         self.energy_remaining = self.energy_remaining + chrg.calc_const_charge_kwh(refuel_s, kw=pwr)
                         self.soc = self.energy_remaining/self.battery_capacity
                         refuel_end = refuel_start + refuel_s
@@ -148,7 +165,7 @@ class Vehicle:
                     else:
                         refuel_s = secs_to_full
                         if report:
-                            self.refuel_s += refuel_s
+                            self._stats['refuel_s'] += refuel_s
                         self.energy_remaining = self.battery_capacity
                         self.soc = self.energy_remaining/self.battery_capacity
                         if refuel_s > 0:
@@ -161,7 +178,7 @@ class Vehicle:
                         # Update w/ second idle event after charge to full
                         idle2_s = diff_s - idle_s - refuel_s
                         if report:
-                            self.idle_s += idle2_s
+                            self._stats['idle_s'] += idle2_s
                         self.energy_remaining -= nrg.calc_idle_kwh(idle2_s)
                         self.soc = self.energy_remaining/self.battery_capacity
                         idle2_end = idle2_start + idle2_s
@@ -172,7 +189,7 @@ class Vehicle:
                 idle_start = self.avail_time
                 idle_s = diff_s
                 if report:
-                    self.idle_s += idle_s
+                    self._stats['idle_s'] += idle_s
                 self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
                 self.soc = self.energy_remaining/self.battery_capacity
                 if idle_s > 0:
@@ -182,8 +199,8 @@ class Vehicle:
 
             # Update w/ dispatch
             if report:
-                self.dispatch_vmt += dispatch_dist
-                self.total_vmt += dispatch_dist
+                self._stats['dispatch_vmt'] += dispatch_dist
+                self._stats['total_vmt'] += dispatch_dist
 
             if dispatch_dist > 0:
                 dispatch_time_s = otime - dispatch_start
@@ -198,19 +215,19 @@ class Vehicle:
             self.avail_lon = dlon
             self.avail_time = dtime
             if report:
-                self.trip_vmt += trip_dist
-                self.total_vmt += trip_dist
+                self._stats['trip_vmt'] += trip_dist
+                self._stats['total_vmt'] += trip_dist
             trip_time_s = dtime - otime
             if report:
-                self.trip_s += trip_time_s
+                self._stats['trip_s'] += trip_time_s
 
             if trip_time_s > 0:
                 self.energy_remaining -= nrg.calc_trip_kwh(trip_dist, trip_time_s, self.wh_per_mile_lookup)
 
             self.soc = self.energy_remaining / self.battery_capacity
             if report:
-                self.requests_filled += 1
-                self.passengers_delivered += passengers
+                self._stats['requests_filled'] += 1
+                self._stats['passengers_delivered'] += passengers
             writer.writerow([self.veh_id, trip_id, otime, olat, olon, dtime, dlat, dlon, trip_dist, round(self.soc, 2), passengers])
 
 
@@ -229,8 +246,8 @@ class Vehicle:
 
             # Dispatch to station
             if report:
-                self.dispatch_vmt += dist_to_nearest
-                self.total_vmt += dist_to_nearest
+                self._stats['dispatch_vmt'] += dist_to_nearest
+                self._stats['total_vmt'] += dist_to_nearest
 
             if dist_to_nearest > 0:
                 dispatch_time_s = dist_to_nearest / inpt.DISPATCH_SPEED * 3600
@@ -248,7 +265,7 @@ class Vehicle:
             soc_i = self.soc
             charge_time = chrg.query_charge_stats(self.charge_template, soc_i=soc_i*100, soc_f=final_soc*100)[2]
             if report:
-                self.refuel_s += charge_time
+                self._stats['refuel_s'] += charge_time
             start_time = dispatch_end
             end_time = dispatch_end + charge_time
             self.avail_time = end_time
@@ -281,7 +298,7 @@ class Vehicle:
         # result to the simulation after this function is called.
         disp_dist = haversine((self.avail_lat, self.avail_lon), (origin_lat, origin_lon), unit='mi') * inpt.RN_SCALING_FACTOR
         # check max dispatch constraint
-        if disp_dist > inpt.MAX_DISPATCH_MILES:
+        if disp_dist > self._ENV['MAX_DISPATCH_MILES']:
             return False
 
         disp_time_s = disp_dist/inpt.DISPATCH_SPEED * 3600
@@ -313,7 +330,7 @@ class Vehicle:
         else:
             hyp_energy_remaining = self.energy_remaining
 
-        if (hyp_energy_remaining - total_energy)/self.battery_capacity < inpt.MIN_SOC_REMAINING:
+        if (hyp_energy_remaining - total_energy)/self.battery_capacity < self._ENV['MIN_ALLOWED_SOC']:
             return False
 
         return True

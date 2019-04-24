@@ -13,7 +13,6 @@ import numpy as np
 import config as cfg
 
 SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
-LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
 OUT_PATH = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
 
 from hive import preprocess as pp
