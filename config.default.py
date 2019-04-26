@@ -9,17 +9,14 @@ ARNAUD=False
 if ARNAUD:
     N_PROCESSES = 40 #arg for multiprocessing.Pool
 
-# In-Paths
+# In-Path
 IN_PATH = 'inputs/'
-OPERATING_AREA_PATH = 'inputs/operating_area/rideaustin/'
-REQUEST_PATH = 'inputs/requests/rideaustin/'
 
-# Out-Paths
+# Out-Path
 if ARNAUD:
     OUT_PATH = '/data/mbap_shared/'
 else:
     OUT_PATH = 'outputs/' #local path
-
 
 VERBOSE = True
 DEBUG = True

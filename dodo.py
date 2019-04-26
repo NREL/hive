@@ -9,6 +9,7 @@ import run
 import config as cfg
 
 from hive import utils
+import hive.preprocess as pp
 
 if not cfg.DEBUG:
     import warnings
@@ -91,7 +92,19 @@ def task_build_input_files():
         data = {}
         file_deps = [main_file, charge_file, whmi_lookup_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
-        charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
+        
+        # Path to requests dir
+        reqs_dir = row['REQUESTS_DIR']
+        reqs_path = os.path.join(cfg.IN_PATH, 'requests', reqs_dir)
+        
+        req_files = glob.glob(reqs_path+'/*.csv')
+        for req_file in req_files:
+            file_deps.append(req_file)
+
+        # Path to charge network file
+        network_file = row['CHARGE_NET_FILE']
+        charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', network_file)
+        
         file_deps.append(charge_net_file)
 
         vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""),
@@ -117,11 +130,12 @@ def task_build_input_files():
         row['TOTAL_NUM_VEHICLES'] = str(num_vehicles)
         row['VEH_KEYS'] = veh_keys
 
+        data['requests'] = pp.load_requests(reqs_path)
         data['charge_network'] = pd.read_csv(charge_net_file)
         data['main'] = row
         data['charge_curves'] = charge_df
         data['whmi_lookup'] = whmi_df
-
+        
         yield {
             'name': row['SCENARIO_NAME'],
             'actions': [(

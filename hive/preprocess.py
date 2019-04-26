@@ -28,9 +28,9 @@ def load_requests(reqs_path):
         """Loads, combines, and sorts request csvs by pickup time 
         into a Pandas DataFrame.
         """
-        req_files = glob.glob(reqs_path+'*.csv')
+        req_files = glob.glob(reqs_path+'/*.csv')
         df_from_each_file = [pd.read_csv(f) for f in req_files]
-        assert (len(df_from_each_file) > 0), "No CSVs in {}!".format(op_area_path)
+        assert (len(df_from_each_file) > 0), "No CSVs in {}!".format(reqs_path)
         if len(df_from_each_file) == 1:
             reqs_df = df_from_each_file[0]
         else:
@@ -56,18 +56,11 @@ def filter_short_trips(reqs_df, min_miles=0.05):
 
     return(filt_reqs_df)
 
-def filter_requests_outside_oper_area(reqs_df, op_area_path):
+def filter_requests_outside_oper_area(reqs_df, shp_file):
     """Filters requests in reqs_df whose origin or destination location are 
     outside of the shapefile found in op_area_path.
     """
-    shp_files = glob.glob(op_area_path+'*.shp')
-    gdf_from_each_file = [gpd.read_file(f) for f in shp_files]
-    assert (len(gdf_from_each_file) > 0), "No shapefiles in {}!".format(op_area_path)
-    if len(gdf_from_each_file) == 1:
-        op_area_gdf = gdf_from_each_file[0]
-    else:
-        op_area_gdf = pd.concat(gdf_from_each_file, ignore_index=True)
-    
+    op_area_gdf = gpd.read_file(shp_file)
     pickup_pts, dropoff_pts = [], []
     for lon, lat in zip(reqs_df['pickup_lon'], reqs_df['pickup_lat']):
         pt = Point(lon, lat)
