@@ -15,6 +15,7 @@ import config as cfg
 from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
+from hive import rncalcs 
 from hive.vehicle import Vehicle
 
 seed = 123
@@ -58,6 +59,10 @@ def run_simulation(infile, sim_name):
 
     reqs_df = pp.filter_requests_outside_oper_area(reqs_df, oa_filepath)
     if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df)))
+
+    #Calculate network scaling factor & average dispatch speed
+    RN_SCALING_FACTOR = rncalcs.calculate_road_vmt_scaling_factor(reqs_df)
+    DISPATCH_MPH = rncalcs.calculate_average_driving_speed(reqs_df)
 
     #TODO: Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
@@ -104,6 +109,12 @@ def run_simulation(infile, sim_name):
     random.shuffle(veh_fleet)
 
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
+
+    # for req in reqs_df.itertuples(name='Request'):
+        # for veh in veh_fleet:
+        #     if veh.check_vehicle_availability(req):
+        #         veh.make_trip(req)
+
     
 
 if __name__ == "__main__":
