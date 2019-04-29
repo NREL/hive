@@ -91,12 +91,12 @@ def task_build_input_files():
         row["SCENARIO_NAME"] = row["SCENARIO_NAME"].strip().replace(" ", "_")
         data = {}
         file_deps = [main_file, charge_file, whmi_lookup_file]
-        outfile = os.path.join(SCENARIO_PATH, '{}_inputs.h5'.format(row['SCENARIO_NAME']))
-        
+        outfile = os.path.join(SCENARIO_PATH, '{}_inputs.pickle'.format(row['SCENARIO_NAME']))
+
         # Path to requests dir
         reqs_dir = row['REQUESTS_DIR']
         reqs_path = os.path.join(cfg.IN_PATH, 'requests', reqs_dir)
-        
+
         req_files = glob.glob(reqs_path+'/*.csv')
         for req_file in req_files:
             file_deps.append(req_file)
@@ -104,7 +104,7 @@ def task_build_input_files():
         # Path to charge network file
         network_file = row['CHARGE_NET_FILE']
         charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', network_file)
-        
+
         file_deps.append(charge_net_file)
 
         vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""),
@@ -135,11 +135,11 @@ def task_build_input_files():
         data['main'] = row
         data['charge_curves'] = charge_df
         data['whmi_lookup'] = whmi_df
-        
+
         yield {
             'name': row['SCENARIO_NAME'],
             'actions': [(
-                utils.save_to_hdf,
+                utils.save_to_pickle,
                 [data, outfile]
                 )],
             'file_dep': file_deps,
@@ -160,10 +160,11 @@ def task_run_simulation():
         clean_msg('creating simulation output directory..')
         os.makedirs(sim_output)
 
-    scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.h5'))
+    scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.pickle'))
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
+        print(src)
         outfiles = [
                     os.path.join(
                             sim_output,
@@ -182,6 +183,6 @@ def task_run_simulation():
                     (run.run_simulation, [src, tag]),
                     ],
                 'file_dep': [src],
-                'targets': outfiles,
+                # 'targets': outfiles,
                 'verbosity': VERBOSE,
                 }

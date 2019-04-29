@@ -9,13 +9,14 @@ import shutil
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import pickle
 
 import config as cfg
 
 from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive import rncalcs 
+from hive import rncalcs
 from hive.vehicle import Vehicle
 
 seed = 123
@@ -33,26 +34,31 @@ def build_output_dir(scenario_name):
 
 
 def run_simulation(infile, sim_name):
+    print(infile)
+    with open(infile, 'rb') as f:
+        data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
     station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
 
     if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
-    
+
     if cfg.VERBOSE: print("Reading input files..", "", sep="\n")
-    inputs = pd.read_hdf(infile, key="main")
+    # inputs = pd.read_hdf(infile, key="main")
+    inputs = data['main']
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
     build_output_dir(inputs.SCENARIO_NAME.strip().replace(" ", "_"))
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")
-    reqs_df = pd.read_hdf(infile, key='requests')
+    # reqs_df = pd.read_hdf(infile, key='requests')
+    reqs_df = data['requests']
     if cfg.VERBOSE: print("{} requests loaded".format(len(reqs_df)))
 
     #Filter requests where distance < 0.05 miles
     reqs_df = pp.filter_short_trips(reqs_df, min_miles=0.05)
     if cfg.VERBOSE: print("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
-    
+
     #Filter requests where pickup/dropoff location outside operating area
     shp_file = inputs['OPERATING_AREA_SHP']
     oa_filepath = os.path.join(cfg.IN_PATH, 'operating_area', shp_file)
@@ -66,35 +72,39 @@ def run_simulation(infile, sim_name):
 
     #TODO: Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
-    
+
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..", "", sep="\n")
-    charge_network = pd.read_hdf(infile, key="charge_network")
-    
+    # charge_network = pd.read_hdf(infile, key="charge_network")
+    charge_network = data['charge_network']
+
     #Initialize vehicle fleet
-    charge_curves = pd.read_hdf(infile, key="charge_curves")
+    # charge_curves = pd.read_hdf(infile, key="charge_curves")
+    charge_curves = data['charge_curves']
 
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
     veh_keys = inputs['VEH_KEYS']
     veh_fleet = []
     for key in veh_keys:
-        veh_type = pd.read_hdf(infile, key=key)
+        # veh_type = pd.read_hdf(infile, key=key)
+        veh_type = data[key]
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curves,
                                                     veh_type.BATTERY_CAPACITY,
                                                     veh_type.CHARGE_ACCEPTANCE,
                                                     )
         whmi_lookup = nrg.create_scaled_whmi(
-                                    pd.read_hdf(infile, key="whmi_lookup"),
+                                    data["whmi_lookup"],
                                     veh_type.EFFICIENCY,
                                     )
         veh_env_params = {
             'MAX_DISPATCH_MILES': inputs.MAX_DISPATCH_MILES,
             'MIN_ALLOWED_SOC': inputs.MIN_ALLOWED_SOC,
         }
+        id = 0
         for i in range(0, veh_type.NUM_VEHICLES):
             veh = Vehicle(
-                        veh_id = i,
+                        veh_id = id,
                         name = veh_type.VEHICLE_NAME,
                         type = veh_type.VEHICLE_TYPE,
                         battery_capacity = veh_type.BATTERY_CAPACITY,
@@ -104,6 +114,7 @@ def run_simulation(infile, sim_name):
                         logfile = vehicle_log_file,
                         environment_params = veh_env_params,
                         )
+            id += 1
             veh_fleet.append(veh)
 
     random.shuffle(veh_fleet)
@@ -115,7 +126,11 @@ def run_simulation(infile, sim_name):
         #     if veh.check_vehicle_availability(req):
         #         veh.make_trip(req)
 
-    
+    # Below is placeholder to test dodo.py targeting.
+    charge_curves.to_csv(vehicle_log_file)
+    charge_curves.to_csv(station_log_file)
+
+
 
 if __name__ == "__main__":
     if not os.path.isdir(SCENARIO_PATH):
