@@ -240,9 +240,9 @@ class Vehicle:
 
             # Locate nearest station
             nearest_station = charg_stations[0]
-            dist_to_nearest = haversine((self.avail_lat, self.avail_lon), (nearest_station.lat, nearest_station.lon), unit='mi') * inpt.RN_SCALING_FACTOR
+            dist_to_nearest = haversine((self.avail_lat, self.avail_lon), (nearest_station.lat, nearest_station.lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
             for station in charg_stations[1:]:
-                dist = haversine((self.avail_lat, self.avail_lon), (station.lat, station.lon), unit='mi') * inpt.RN_SCALING_FACTOR
+                dist = haversine((self.avail_lat, self.avail_lon), (station.lat, station.lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
                 if dist < dist_to_nearest:
                     nearest_station = station
                     dist_to_nearest = dist
@@ -253,7 +253,7 @@ class Vehicle:
                 self._stats['total_vmt'] += dist_to_nearest
 
             if dist_to_nearest > 0:
-                dispatch_time_s = dist_to_nearest / inpt.DISPATCH_SPEED * 3600
+                dispatch_time_s = dist_to_nearest / inpt.self._ENV['DISPATCH_MPH'] * 3600
                 if report:
                     self._stats['dispatch_s'] += dispatch_time_s
                 dispatch_start = self.avail_time
@@ -299,12 +299,12 @@ class Vehicle:
 
         #TODO: the haversine calc is relatively expensive. We should return the
         # result to the simulation after this function is called.
-        disp_dist = haversine((self.avail_lat, self.avail_lon), (origin_lat, origin_lon), unit='mi') * inpt.RN_SCALING_FACTOR
+        disp_dist = haversine((self.avail_lat, self.avail_lon), (origin_lat, origin_lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
         # check max dispatch constraint
         if disp_dist > self._ENV['MAX_DISPATCH_MILES']:
             return False
 
-        disp_time_s = disp_dist/inpt.DISPATCH_SPEED * 3600
+        disp_time_s = disp_dist/inpt.self._ENV['DISPATCH_MPH'] * 3600
 
         # check time constraint
         if self.avail_time + disp_time_s > origin_time:

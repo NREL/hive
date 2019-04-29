@@ -85,6 +85,7 @@ def run_simulation(infile, sim_name):
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
     veh_keys = inputs['VEH_KEYS']
     veh_fleet = []
+    id = 0
     for key in veh_keys:
         # veh_type = pd.read_hdf(infile, key=key)
         veh_type = data[key]
@@ -100,8 +101,9 @@ def run_simulation(infile, sim_name):
         veh_env_params = {
             'MAX_DISPATCH_MILES': inputs.MAX_DISPATCH_MILES,
             'MIN_ALLOWED_SOC': inputs.MIN_ALLOWED_SOC,
+            'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
+            'DISPATCH_MPH': DISPATCH_MPH,
         }
-        id = 0
         for i in range(0, veh_type.NUM_VEHICLES):
             veh = Vehicle(
                         veh_id = id,
