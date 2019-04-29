@@ -69,7 +69,6 @@ class Vehicle:
                 self,
                 veh_id,
                 name,
-                type,
                 battery_capacity,
                 initial_soc,
                 whmi_lookup,
@@ -80,7 +79,6 @@ class Vehicle:
 
         self.veh_id = veh_id
         self.name = name
-        self.type = type
         self.battery_capacity = battery_capacity
         self.avail_lat = 0
         self.avail_lon = 0
@@ -104,7 +102,7 @@ class Vehicle:
             self._ENV[param] = val
 
     def __repr__(self):
-        return str(f"Vehicle(id: {self.veh_id}, name: {self.name}, type: {self.type})")
+        return str(f"Vehicle(id: {self.veh_id}, name: {self.name})")
 
 
     #IDEA: I think we could let this function take the request as an input and then

@@ -34,7 +34,6 @@ def build_output_dir(scenario_name):
 
 
 def run_simulation(infile, sim_name):
-    print(infile)
     with open(infile, 'rb') as f:
         data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
@@ -108,7 +107,6 @@ def run_simulation(infile, sim_name):
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
-                        type = veh_type.VEHICLE_TYPE,
                         battery_capacity = veh_type.BATTERY_CAPACITY,
                         initial_soc = np.random.uniform(0.2, 1.0),
                         whmi_lookup = whmi_lookup,

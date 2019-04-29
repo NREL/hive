@@ -102,32 +102,27 @@ def task_build_input_files():
             file_deps.append(req_file)
 
         # Path to charge network file
-        network_file = row['CHARGE_NET_FILE']
-        charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', network_file)
-
+        charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
         file_deps.append(charge_net_file)
 
-        vehicle_ids = [{'name': c.replace("_NUM_VEHICLES", ""),
-                        'num': row[c]} for c in row.index if 'VEH' in c]
+        fleet_file = os.path.join(cfg.IN_PATH, 'fleets', row['FLEET_FILE'])
+        file_deps.append(fleet_file)
 
-        num_veh_types = len(vehicle_ids)
-        assert num_veh_types > 0, 'Must have at least one vehicle type to run simulation.'
-        row['NUM_VEHICLE_TYPES'] = str(num_veh_types)
-        num_vehicles = 0
+        fleet_df = pd.read_csv(fleet_file)
+        assert fleet_df.shape[0] > 0, 'Must have at least one vehicle type to run simulation.'
+        row['TOTAL_NUM_VEHICLES'] = fleet_df.NUM_VEHICLES.sum()
+        row['NUM_VEHICLE_TYPES'] = fleet_df.shape[0]
+
         veh_keys = []
 
-        for veh in vehicle_ids:
-            num_vehicles += int(veh['num'])
-            veh_keys.append(veh['name'])
-            veh_file = os.path.join(cfg.IN_PATH, 'vehicles', '{}.csv'.format(veh['name']))
-            file_deps.append(veh_file)
+        for i, veh in fleet_df.iterrows():
+            veh_file = os.path.join(cfg.IN_PATH, 'vehicles', '{}.csv'.format(veh.VEHICLE_NAME))
             veh_df = pd.read_csv(veh_file)
-            veh_df['VEHICLE_TYPE'] = veh['name']
-            veh_df['NUM_VEHICLES'] = veh['num']
-            data[veh['name']] = veh_df.iloc[0]
+            veh_df['VEHICLE_NAME'] = veh.VEHICLE_NAME
+            veh_df['NUM_VEHICLES'] = veh.NUM_VEHICLES
+            data[veh.VEHICLE_NAME] = veh_df.iloc[0]
+            veh_keys.append(veh.VEHICLE_NAME)
 
-        assert num_vehicles > 0, "Must have at least one vehicle to run simulation."
-        row['TOTAL_NUM_VEHICLES'] = str(num_vehicles)
         row['VEH_KEYS'] = veh_keys
 
         data['requests'] = pp.load_requests(reqs_path)
