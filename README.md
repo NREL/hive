@@ -1,6 +1,11 @@
-# hive
-Hive is a mobility services simulation platform.
-
+# HIVE
+**H**ighly  
+**I**ntegrated  
+**V**ehicle  
+**E**cosystem  
+  
+HIVE is a mobility services research platform.  
+  
 ### Input Descriptions
 #### FLEET - Operating characteristics
 - MAX_FLEET_SIZE: Max number of vehicles in fleet
