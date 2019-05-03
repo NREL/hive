@@ -1,9 +1,10 @@
 """
-Vehicle object for the hive algorithm
+Vehicle object for the HIVE algorithm
 """
 
 import sys
 import csv
+import datetime
 from haversine import haversine
 
 from hive import tripenergy as nrg
@@ -50,6 +51,9 @@ class Vehicle:
         Number of refuel events
     idle_s:
         Seconds where a vehicle is not serving a request or dispatching to request
+    active:
+        Boolean indicator for whether a veh is actively servicing demand. If
+        False, vehicle is sitting at depot
     """
     # statistics tracked on a vehicle instance level over entire simulation.
     STATS = [
@@ -79,13 +83,14 @@ class Vehicle:
 
         self.veh_id = veh_id
         self.name = name
-        self.battery_capacity = battery_capacity
         self.avail_lat = 0
         self.avail_lon = 0
         self.avail_time = 0
         self.energy_remaining = battery_capacity * initial_soc
         self.soc = initial_soc
+        self.active = False
 
+        self._battery_capacity = battery_capacity
         self._wh_per_mile_lookup = whmi_lookup
         self._charge_template = charge_template
         self._log = logfile
@@ -105,6 +110,41 @@ class Vehicle:
         return str(f"Vehicle(id: {self.veh_id}, name: {self.name})")
 
 
+    def return_to_depot(self, depot_lat, depot_lon):
+        with open(self._log,'a') as f:
+            writer = csv.writer(f)
+
+            dispatch_dist = haversine((self.avail_lat, self.avail_lon), (depot_lat, depot_lon), unit='mi') * self._ENV['RN_SCALING_FACTOR']
+            self._stats['dispatch_vmt'] += dispatch_dist
+            self._stats['total_vmt'] += dispatch_dist
+            dispatch_time_s = dispatch_dist / self._ENV['DISPATCH_MPH'] * 3600
+            self._stats['dispatch_s'] += dispatch_time_s
+            self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self._wh_per_mile_lookup)
+            self.soc = self.energy_remaining/self._battery_capacity
+            dtime = self.avail_time + datetime.timedelta(seconds=dispatch_time_s)
+
+            # Update log
+            writer.writerow([self.veh_id, #veh id
+                            -2, #activitycode
+                            self.avail_time, #otime
+                            self.avail_lat, #olat
+                            self.avail_lon, #olon
+                            dtime, #dtime
+                            depot_lat, #dlat
+                            depot_lon, #dlon
+                            dispatch_dist, #miles traveled
+                            round(self.soc, 2), #dsoc
+                            0]) #passengers
+            
+            # Update vehicle state
+            self.active = False
+            self.avail_lat, self.avail_lon = depot_lat, depot_lon
+            self.avail_time = dtime
+            
+
+            
+
+    
     #IDEA: I think we could let this function take the request as an input and then
     # just unpack the request properties internally. -NR
     def make_trip(
@@ -278,7 +318,7 @@ class Vehicle:
                              end_time, self.avail_lat, self.avail_lon, 0, self.soc, 0])
             nearest_station.add_recharge(self.veh_id, start_time, end_time, soc_i, final_soc)
 
-    def check_vehicle_availability(self, req):
+    def check_availability(self, req, active):
         """
         Checks if vehicle can fulfill request; This is dependent
         on availability (time-based), dispatch distance, and state
@@ -295,31 +335,36 @@ class Vehicle:
         dest_time = req['dest_time']
         trip_dist = req['trip_dist']
 
-        #TODO: the haversine calc is relatively expensive. We should return the
-        # result to the simulation after this function is called.
+        # Check 0 - Update vehicle status
+        min_idle = (origin_time - self.avail_time).total_seconds()/60
+        if active and (min_idle > self._ENV['MAX_IDLE_MIN']):
+            #TODO: Need to define depot lat/lon locations
+            self.return_to_depot(depot_lat, depot_lon) 
+            return False
+
+        
+        # Check 1 - request type matches vehicle state
+        if active != self.active:
+            return False
+
+        # Check 2 - max dispatch constraint
         disp_dist = haversine((self.avail_lat, self.avail_lon), (origin_lat, origin_lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
-        # check max dispatch constraint
         if disp_dist > self._ENV['MAX_DISPATCH_MILES']:
             return False
 
+        # Check 3 - time constraint
         disp_time_s = disp_dist/inpt.self._ENV['DISPATCH_MPH'] * 3600
-
-        # check time constraint
-        if self.avail_time + disp_time_s > origin_time:
+        if self.avail_time + datetime.timedelta(seconds=disp_time_s) > origin_time:
             return False
 
-        if disp_time_s > 0:
-            disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self._wh_per_mile_lookup)
-        else:
-            disp_energy = 0
-
+        
+         # Check 4 - SOC constraint
+        disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self._wh_per_mile_lookup)
         trip_time_s = dest_time - origin_time
         trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
-
-        total_dist = disp_dist + trip_dist
         total_energy = disp_energy + trip_energy
 
-        # check hypothetical self.energy remaining
+       
         if inpt.CHARGING_SCENARIO == 'Ubiq':
             refuel_s = origin_time - disp_time_s - self.avail_time
             pwr = inpt.UBIQUITOUS_CHARGER_POWER

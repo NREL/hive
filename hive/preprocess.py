@@ -4,16 +4,19 @@ Functions that prepare raw data for simulation
 
 import sys
 import glob
+import random 
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 from time import mktime
 from datetime import datetime
 from haversine import haversine
 from shapely.geometry import Point
+from pandas.api.types import is_string_dtype
+from pandas.api.types import is_numeric_dtype
 sys.path.append('../')
 import inputs as inpt
-import random 
-import numpy as np
+
 
 def gen_synth_pax_cnt():
     """Randomly assigns passenger count from real-world distribution measured
@@ -35,6 +38,20 @@ def load_requests(reqs_path):
             reqs_df = df_from_each_file[0]
         else:
             reqs_df = pd.concat(df_from_each_file, ignore_index=True)
+
+        #check for existence of req fields
+        req_fields = [
+        'pickup_time',
+        'dropoff_time', 
+        'distance_miles', 
+        'pickup_lat', 
+        'pickup_lon',
+        'dropoff_lat', 
+        'dropoff_lon']
+
+        for field in req_fields:
+            in not field in reqs_df.columns:
+                 raise ValueError("'{}' field required in requests input!".format(field))
 
         reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
         reqs_df['dropoff_time'] = reqs_df['dropoff_time'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))

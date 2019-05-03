@@ -63,11 +63,16 @@ def run_simulation(infile, sim_name):
     oa_filepath = os.path.join(cfg.IN_PATH, 'operating_area', shp_file)
 
     reqs_df = pp.filter_requests_outside_oper_area(reqs_df, oa_filepath)
-    if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df)))
+    if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df), "", sep="\n"))
 
     #Calculate network scaling factor & average dispatch speed
     RN_SCALING_FACTOR = rncalcs.calculate_road_vmt_scaling_factor(reqs_df)
     DISPATCH_MPH = rncalcs.calculate_average_driving_speed(reqs_df)
+
+    #Pool requests
+    if cfg.VERBOSE: print("Pooling requests..")
+    
+
 
     #TODO: Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
