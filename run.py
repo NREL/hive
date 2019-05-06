@@ -63,24 +63,23 @@ def run_simulation(infile, sim_name):
     oa_filepath = os.path.join(cfg.IN_PATH, 'operating_area', shp_file)
 
     reqs_df = pp.filter_requests_outside_oper_area(reqs_df, oa_filepath)
-    if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df), "", sep="\n"))
+    if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df)), "", sep="\n")
 
     #Calculate network scaling factor & average dispatch speed
     RN_SCALING_FACTOR = rncalcs.calculate_road_vmt_scaling_factor(reqs_df)
     DISPATCH_MPH = rncalcs.calculate_average_driving_speed(reqs_df)
 
-    #Pool requests
-    if cfg.VERBOSE: print("Pooling requests..")
-    
-
-
     #TODO: Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
     #Load charging network
-    if cfg.VERBOSE: print("Loading charge network..", "", sep="\n")
+    if cfg.VERBOSE: print("Loading charge network..")
     # charge_network = pd.read_hdf(infile, key="charge_network")
     charge_network = data['charge_network']
+    if cfg.VERBOSE: print("loaded {} stations".format(len(charge_network)))
+    depot_coords = pp.get_centroid_coords(oa_filepath)
+    if cfg.VERBOSE: print("depot sited at ({0}, {1})".format(depot_coords['lat'], depot_coords['lon']), "", sep="\n")
+    
 
     #Initialize vehicle fleet
     # charge_curves = pd.read_hdf(infile, key="charge_curves")
@@ -116,6 +115,7 @@ def run_simulation(infile, sim_name):
                         initial_soc = np.random.uniform(0.2, 1.0),
                         whmi_lookup = whmi_lookup,
                         charge_template = charge_template,
+                        depot_coords = depot_coords,
                         logfile = vehicle_log_file,
                         environment_params = veh_env_params,
                         )
@@ -126,10 +126,44 @@ def run_simulation(infile, sim_name):
 
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
 
-    # for req in reqs_df.itertuples(name='Request'):
-        # for veh in veh_fleet:
-        #     if veh.check_vehicle_availability(req):
-        #         veh.make_trip(req)
+    for req in reqs_df.itertuples(name='Request'):
+        print(req)
+        req_filled = False #default
+        for veh in veh_fleet:
+            # Check active vehicles in fleet
+            if veh.check_availability(req, depot_coords, active=True):
+                print("A:", veh.veh_id)
+                veh.make_trip(req)
+                veh_fleet.remove(veh) #pop veh from queue
+                veh_fleet.append(veh) #append veh to end of queue
+                req_filled = True
+                break
+            else:
+                continue
+        # Check inactive (depot) vehicles in fleet   
+        if not req_filled:
+            for veh in veh_fleet:
+                if veh.check_availability(req, depot_coords, active=False):
+                    print("I:", veh.veh_id)
+                    veh.make_trip(req)
+                    veh_fleet.remove(veh) #pop veh from queue
+                    veh_fleet.append(veh) #append veh to end of queue
+                    req_filled = True
+                    break
+                else:
+                    continue
+        # Log failed request
+        if not req_filled:
+            print('Failed req')
+            #TODO: log request w/ description for failure to failed requests log
+            # or we could add column to requests file in cfg.OUT_PATH with
+            # codes for success, or failed + reason for failure
+            continue
+
+
+            
+
+
 
     # Below is placeholder to test dodo.py targeting.
     charge_curves.to_csv(vehicle_log_file)

@@ -77,14 +77,15 @@ class Vehicle:
                 initial_soc,
                 whmi_lookup,
                 charge_template,
+                depot_coords,
                 logfile,
                 environment_params = dict(),
                 ):
 
         self.veh_id = veh_id
         self.name = name
-        self.avail_lat = 0
-        self.avail_lon = 0
+        self.avail_lat = depot_coords['lat']
+        self.avail_lon = depot_coords['lon']
         self.avail_time = 0
         self.energy_remaining = battery_capacity * initial_soc
         self.soc = initial_soc
@@ -145,23 +146,22 @@ class Vehicle:
             
 
     
-    #IDEA: I think we could let this function take the request as an input and then
-    # just unpack the request properties internally. -NR
-    def make_trip(
-                self,
-                trip_id,
-                olat,
-                olon,
-                otime,
-                dlat,
-                dlon,
-                dtime,
-                trip_dist,
-                dispatch_dist,
-                diff_s,
-                passengers,
-                report
-                ):
+
+    def make_trip(self, req):
+       
+        # Unpack request
+        pickup_time = req[3]
+        dropoff_time = req[4]
+        trip_dist = req[5]
+        pickup_lat = req[6]
+        pickup_lon = req[7]
+        dropoff_lat = req[8]
+        dropoff_lon = req[9]
+        passengers = req[10]
+
+        #TODO: refactor make_trip behavior
+
+
         with open(self._log,'a') as f:
             writer = csv.writer(f)
 
@@ -273,6 +273,9 @@ class Vehicle:
 
 
     def refuel(self, charg_stations, final_soc, report):
+
+        #TODO: refactor refuel behavior
+
         with open(self._log, 'a') as f:
             writer = csv.writer(f)
 
@@ -318,65 +321,87 @@ class Vehicle:
                              end_time, self.avail_lat, self.avail_lon, 0, self.soc, 0])
             nearest_station.add_recharge(self.veh_id, start_time, end_time, soc_i, final_soc)
 
-    def check_availability(self, req, active):
+    def check_availability(self, req, depot_coords, active):
         """
         Checks if vehicle can fulfill request; This is dependent
         on availability (time-based), dispatch distance, and state
         of charge.
         """
 
-        #TODO: Need to refactor the inpt constants.
         #IDEA: Move global constants to the main.csv/VEH.csv file. For variables
         #that change over the simulation, pass to this function via an input dict. -NR
-
-        origin_time = req['origin_time']
-        origin_lat = req['origin_lat']
-        origin_lon = req['origin_lon']
-        dest_time = req['dest_time']
-        trip_dist = req['trip_dist']
-
-        # Check 0 - Update vehicle status
-        min_idle = (origin_time - self.avail_time).total_seconds()/60
-        if active and (min_idle > self._ENV['MAX_IDLE_MIN']):
-            #TODO: Need to define depot lat/lon locations
-            self.return_to_depot(depot_lat, depot_lon) 
-            return False
-
         
-        # Check 1 - request type matches vehicle state
-        if active != self.active:
-            return False
+        # Unpack request
+        pickup_time = req[3]
+        dropoff_time = req[4]
+        trip_dist = req[5]
+        pickup_lat = req[6]
+        pickup_lon = req[7]
 
-        # Check 2 - max dispatch constraint
-        disp_dist = haversine((self.avail_lat, self.avail_lon), (origin_lat, origin_lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
-        if disp_dist > self._ENV['MAX_DISPATCH_MILES']:
-            return False
+        if active:
+            # Active Check 1 - veh is active
+            if not self.active:
+                return False
 
-        # Check 3 - time constraint
-        disp_time_s = disp_dist/inpt.self._ENV['DISPATCH_MPH'] * 3600
-        if self.avail_time + datetime.timedelta(seconds=disp_time_s) > origin_time:
-            return False
+            # Active Check 2 - max dispatch constraint not violated
+            disp_dist = haversine((self.avail_lat, self.avail_lon), (pickup_lat, pickup_lon), unit='mi') * self._ENV['RN_SCALING_FACTOR']
+            if disp_dist > self._ENV['MAX_DISPATCH_MILES']:
+                print('A-Dist')
+                return False
 
-        
-         # Check 4 - SOC constraint
-        disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self._wh_per_mile_lookup)
-        trip_time_s = dest_time - origin_time
-        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
-        total_energy = disp_energy + trip_energy
+            # Active Check 3 - time constraint not violated
+            disp_time_s = disp_dist/self._ENV['DISPATCH_MPH'] * 3600
+            if self.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time:
+                print('A-Time')
+                return False
 
-       
-        if inpt.CHARGING_SCENARIO == 'Ubiq':
-            refuel_s = origin_time - disp_time_s - self.avail_time
-            pwr = inpt.UBIQUITOUS_CHARGER_POWER
+            # Active Check 4 - battery soc constraint not violated
+            disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self._wh_per_mile_lookup)
+            trip_time_s = (dropoff_time - pickup_time).total_seconds()
+            trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
+            total_energy = disp_energy + trip_energy
+            hypo_energy_remaining = self.energy_remaining - total_energy
+            hypo_soc = hypo_energy_remaining / self._battery_capacity
+            if hypo_soc < self._ENV['MIN_ALLOWED_SOC']:
+                print('A-SOC')
+                return False
 
-            if refuel_s > inpt.MINUTES_BEFORE_CHARGE * 60:
-                hyp_energy_remaining = self.energy_remaining + chrg.calc_const_charge_kwh(refuel_s, kw=pwr)
-            else:
-                hyp_energy_remaining = self.energy_remaining
-        else:
-            hyp_energy_remaining = self.energy_remaining
+            # Active Check 5 - vehicle should be active for request
+            idle_time_s = ((pickup_time - datetime.timedelta(seconds=disp_time_s)) - self.avail_time).total_seconds()
+            idle_time_min = idle_time_s / 60
+            if idle_time_min > self._ENV['MAX_IDLE_MIN']:
+                self.return_to_depot(depot_coords['lat'], depot_coords['lon']) 
+                print('A-Idle')
+                return False
+            
+            return True
 
-        if (hyp_energy_remaining - total_energy)/self.battery_capacity < self._ENV['MIN_ALLOWED_SOC']:
-            return False
+        elif not active:
+            # Inactive Check 1 - veh is inactive
+            if self.active:
+                return False
+            
+            # Inactive Check 2 - time constraint not violated
+            disp_dist = haversine((self.avail_lat, self.avail_lon), (pickup_lat, pickup_lon), unit='mi') * self._ENV['RN_SCALING_FACTOR']
+            disp_time_s = disp_dist/self._ENV['DISPATCH_MPH'] * 3600
+            if self.avail_time!=0 and self.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time:
+                print('I-Time')
+                return False 
 
-        return True
+            # Inactive Check 3 - battery SOC constraint not violated
+            disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, self._wh_per_mile_lookup)
+            trip_time_s = (dropoff_time - pickup_time).total_seconds()
+            trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
+            total_energy = disp_energy + trip_energy
+            hypo_energy_remaining = self.energy_remaining - total_energy
+            hypo_soc = hypo_energy_remaining / self._battery_capacity
+            if hypo_soc < self._ENV['MIN_ALLOWED_SOC']:
+                print('I-SOC')
+                return False
+
+            return True
+
+
+
+
+

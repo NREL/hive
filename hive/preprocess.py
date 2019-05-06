@@ -50,7 +50,7 @@ def load_requests(reqs_path):
         'dropoff_lon']
 
         for field in req_fields:
-            in not field in reqs_df.columns:
+            if not field in reqs_df.columns:
                  raise ValueError("'{}' field required in requests input!".format(field))
 
         reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
@@ -104,6 +104,17 @@ def filter_requests_outside_oper_area(reqs_df, shp_file):
     filt_reqs_df = filt_reqs_df.reset_index()
     
     return(filt_reqs_df)
+
+
+def get_centroid_coords(shp_file):
+    """Returns centroid coordinates of shp_file
+    """
+    op_area_gdf = gpd.read_file(shp_file)
+    coords = {}
+    coords['lon'] = op_area_gdf['geometry'].centroid.x[0]
+    coords['lat'] = op_area_gdf['geometry'].centroid.y[0]
+    
+    return(coords)
 
 
 
