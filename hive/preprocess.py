@@ -105,24 +105,6 @@ def filter_requests_outside_oper_area(reqs_df, shp_file):
     
     return(filt_reqs_df)
 
-
-def get_centroid_coords(shp_file):
-    """Returns centroid coordinates of shp_file
-    """
-    op_area_gdf = gpd.read_file(shp_file)
-    coords = {}
-    coords['lon'] = op_area_gdf['geometry'].centroid.x[0]
-    coords['lat'] = op_area_gdf['geometry'].centroid.y[0]
-    
-    return(coords)
-
-
-
-
-
-
-
-
 # def timestamp_to_unix(ts, tz):
 #     """Converts Pandas timestamp object, ts with timezone, tz to unix time. tz
 #     should be a pytz string, e.g. - ('US/Alaska', 'US/Arizona', 'US/Central',

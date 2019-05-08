@@ -12,10 +12,16 @@ class ChargeStation:
     ------
     station_id : int
         Identifer assigned to FuelStation object
-    latitude : double precision
+    latitude : float
         Latitude of station location
-    longitude: double precision
+    longitude: float
         Longitude of station location
+    plugs: int
+        Number of plugs at location
+    plug_type: str
+        Plug type - AC or DC
+    plug_power: float
+        Plug power in kW
     logfile: str
         Path to fuel station log file
 
@@ -23,27 +29,41 @@ class ChargeStation:
      ----------
     charge_cnt:
         Number of charge events
+    instantaneous_pwr:
+        Instantaneous load in kW
+    peak_pwr:
+        Peak load in kW
+    total_energy:
+        Total energy supplied for recharging in kWh
+    avail_plugs:
+        Number of plugs that are unoccupied
     """
 
     STATS = [
-        'charge_cnt', #Number of recharge events
+        'charge_cnt',
+        'instantaneous_pwr',
+        'peak_pwr',
+        'total_energy'
         ]
 
     def __init__(
                 self,
-                id,
+                station_id,
                 latitude,
                 longitude,
-                charge_power,
-                plug_count,
+                plugs,
+                plug_type,
+                plug_power,
                 logfile
                 ):
 
-        self.id = id
+        self.id = station_id
         self.lat = latitude
         self.lon = longitude
-        self.charge_power = charge_power
-        self.plug_count = plug_count
+        self.total_plugs = plugs
+        self.avail_plugs = plugs
+        self.type = plug_type
+        self.plug_power = plug_power
 
         self._log = logfile
 
@@ -51,37 +71,9 @@ class ChargeStation:
         for stat in self.STATS:
             self._stats[stat] = 0
 
-    def add_recharge(self, veh_id, start_time, end_time, soc_i, soc_f):
+    def add_charge_event(self, veh_id, start_time, end_time, soc_i, soc_f):
+        #TODO: Update
         self._stats['charge_cnt'] += 1
         with open(self._log, 'a') as f:
             writer = csv.writer(f)
             writer.writerow([self.id, veh_id, start_time, end_time, soc_i, soc_f])
-
-class Hub(ChargeStation):
-    """
-    Class for vehicle hub. Extends ChargeStation.
-    """
-
-    HUB_STATS = [
-        'max_vehicles', #Max number of vehicles stationed during simulation.
-        ]
-
-    def __init__(
-                self,
-                id,
-                latitude,
-                longitude,
-                charge_power,
-                plug_count,
-                capacity,
-                logfile,
-                ):
-
-        super().__init__(id, latitude, longitude, charge_power, plug_count, logfile)
-        self.capacity = capacity
-
-        # Container for vehicles currently at the Hub.
-        self.vehicles = []
-
-        for stat in self.HUB_STATS:
-            self._stats[stat] = 0
