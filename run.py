@@ -86,7 +86,6 @@ def run_simulation(infile, sim_name):
         plugs = row[4]
         plug_type = row[5]
         plug_power = row[6]
-        cost_to_charge = row[7] #NULL (for now)
         
         if station_type == 'station':
             station = FuelStation(station_id, lat, lon, plugs, plug_type, plug_power, station_log_file)
