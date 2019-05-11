@@ -7,6 +7,7 @@ import datetime
 from haversine import haversine
 
 from hive import tripenergy as nrg
+from hive immport charging as chrg
 
 
 def check_active_viability(veh, request, depots, failure_log):
@@ -62,12 +63,13 @@ def check_active_viability(veh, request, depots, failure_log):
     idle_time_min = idle_time_s / 60
     if idle_time_min > veh._ENV['MAX_WAIT_TIME_MINUTES']:
         depot = find_nearest_plug(veh, depots)
-        #TODO: Dispatch vehicle to depot, begin charging
+        veh.return_to_depot(depot)
+        depot.avail_plugs -= 1
         return False, failure_log
 
     return True, failure_log
 
-def check_inactive_availability(veh, request, failure_log):
+def check_inactive_availability(veh, request, depots, failure_log):
     """
     Checks if inactive vehicle can fulfill request w/o violating several 
     constraints. Function requires a hive.Vehicle object, trip request, and 
@@ -96,11 +98,17 @@ def check_inactive_availability(veh, request, failure_log):
     trip_time_s = (dropoff_time - pickup_time).total_seconds()
     trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, veh._wh_per_mile_lookup)
     total_request_energy = disp_energy + trip_energy
-    #TODO: Update hyp_energy_remaining to include energy received from charging
-    ## veh.avail_time -> pickup_time - disp_time_s
 
+    for depot in depots:
+        if veh.avail_lat, veh.avail_lon == depot.lat, depot.lon:
+            charge_type = depot.type 
+            charge_power = depot.plug_power
+            break
 
-    #hyp_energy_remaining = self.energy_remaining - total_energy
+    #TODO: Refactor charging.py for single function that accepts charge_type,
+    ##charge power, time, and considers max_acceptance, returning soc_f
+    ###then: hyp_energy_remaining = (self.battery_capacity * soc_f) - total_energy 
+
     hyp_soc = hyp_energy_remaining / self._battery_capacity
     if hyp_soc < self._ENV['MIN_ALLOWED_SOC']:
         failure_log['inactive_battery']+=1

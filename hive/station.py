@@ -66,12 +66,11 @@ class ChargeStation:
         self.plug_power = plug_power
 
         self._log = logfile
-
         self._stats = dict()
         for stat in self.STATS:
             self._stats[stat] = 0
 
-    def add_charge_event(self, veh_id, start_time, end_time, soc_i, soc_f):
+    def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f):
         #TODO: Update
         self._stats['charge_cnt'] += 1
         with open(self._log, 'a') as f:

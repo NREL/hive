@@ -16,7 +16,6 @@ import config as cfg
 from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive import rncalcs
 from hive import dispatcher as dp
 from hive.vehicle import Vehicle
 from hive.station import FuelStation
@@ -44,7 +43,6 @@ def run_simulation(infile, sim_name):
     if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
 
     if cfg.VERBOSE: print("Reading input files..", "", sep="\n")
-    # inputs = pd.read_hdf(infile, key="main")
     inputs = data['main']
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
@@ -52,7 +50,6 @@ def run_simulation(infile, sim_name):
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")
-    # reqs_df = pd.read_hdf(infile, key='requests')
     reqs_df = data['requests']
     if cfg.VERBOSE: print("{} requests loaded".format(len(reqs_df)))
 
@@ -63,20 +60,18 @@ def run_simulation(infile, sim_name):
     #Filter requests where pickup/dropoff location outside operating area
     shp_file = inputs['OPERATING_AREA_SHP']
     oa_filepath = os.path.join(cfg.IN_PATH, 'operating_area', shp_file)
-
     reqs_df = pp.filter_requests_outside_oper_area(reqs_df, oa_filepath)
     if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df)), "", sep="\n")
 
     #Calculate network scaling factor & average dispatch speed
-    RN_SCALING_FACTOR = rncalcs.calculate_road_vmt_scaling_factor(reqs_df)
-    DISPATCH_MPH = rncalcs.calculate_average_driving_speed(reqs_df)
+    RN_SCALING_FACTOR = pp.calculate_road_vmt_scaling_factor(reqs_df)
+    DISPATCH_MPH = pp.calculate_average_driving_speed(reqs_df)
 
     #TODO: Pool requests - from hive.pool, module for various pooling types - o/d, dynamic, n/a
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
-    # charge_network = pd.read_hdf(infile, key="charge_network")
     stations, depots = [], []
     for row in data['charge_network'].itertuples():
         # Unpack row in charge_network
@@ -97,15 +92,13 @@ def run_simulation(infile, sim_name):
     if cfg.VERBOSE: print("loaded {0} stations & {1} depots".format(len(stations), len(depots)), "", sep="\n")
     
     #Initialize vehicle fleet
-    # charge_curves = pd.read_hdf(infile, key="charge_curves")
     charge_curves = data['charge_curves']
 
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
     veh_keys = inputs['VEH_KEYS']
     veh_fleet = []
-    id = 0
+    id = 1
     for key in veh_keys:
-        # veh_type = pd.read_hdf(infile, key=key)
         veh_type = data[key]
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curves,
@@ -122,7 +115,7 @@ def run_simulation(infile, sim_name):
             'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
             'DISPATCH_MPH': DISPATCH_MPH,
         }
-        for i in range(1, veh_type.NUM_VEHICLES+1):
+        for v in range(len(veh_type.NUM_VEHICLES)):
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
@@ -130,7 +123,7 @@ def run_simulation(infile, sim_name):
                         initial_soc = np.random.uniform(0.2, 1.0), #init vehs w/ uniform soc distr
                         whmi_lookup = whmi_lookup,
                         charge_template = charge_template,
-                        depot_coords = depot_coords, #@NR - Better way to make 
+                        depot_coords = depot_coords, #@NR - I don't think this should be a veh input 
                         logfile = vehicle_log_file,
                         environment_params = veh_env_params,
                         )
@@ -158,7 +151,7 @@ def run_simulation(infile, sim_name):
             for veh in veh_fleet:
                 # Check inactive (depot) vehicles in fleet
                 if not veh.active:
-                    viable, failure_log = dp.check_inactive_viability(veh, req, failure_log)
+                    viable, failure_log = dp.check_inactive_viability(veh, req, depots, failure_log)
                     if viable:
                         veh.make_trip(req)
                         veh_fleet.remove(veh) #pop veh from queue
