@@ -20,7 +20,7 @@ VERBOSE = 2 if cfg.VERBOSE else 0
 PROFILE_OUT_PATH = os.path.join('tests', 'profile_output')
 PROFILE_FILES = ['run.py']
 
-SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
+SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
 LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
 
 DOIT_CONFIG = {
@@ -74,9 +74,7 @@ def task_profile():
                 'targets': [output_file],
                 }
 
-#TODO: Add functionality that only reruns simulation if the corresponding
-#row in main.csv has changed. Right now the .to_hdf function is producing
-#unique md5 checksums for repeated runs of this fucntion with the same input.
+
 def task_build_input_files():
     """
     Build input files.
@@ -93,13 +91,8 @@ def task_build_input_files():
         file_deps = [main_file, charge_file, whmi_lookup_file]
         outfile = os.path.join(SCENARIO_PATH, '{}_inputs.pickle'.format(row['SCENARIO_NAME']))
 
-        # Path to requests dir
-        reqs_dir = row['REQUESTS_DIR']
-        reqs_path = os.path.join(cfg.IN_PATH, 'requests', reqs_dir)
-
-        req_files = glob.glob(reqs_path+'/*.csv')
-        for req_file in req_files:
-            file_deps.append(req_file)
+        req_file = os.path.join(cfg.IN_PATH, 'requests', row['REQUESTS_FILE'])
+        file_deps.append(req_file)
 
         # Path to charge network file
         charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
@@ -125,7 +118,7 @@ def task_build_input_files():
 
         row['VEH_KEYS'] = veh_keys
 
-        data['requests'] = pp.load_requests(reqs_path)
+        data['requests'] = pp.load_requests(req_file)
         data['charge_network'] = pd.read_csv(charge_net_file)
         data['main'] = row
         data['charge_curves'] = charge_df

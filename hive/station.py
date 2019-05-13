@@ -4,7 +4,7 @@ Charging station object for mist algorithm
 
 import csv
 
-class ChargeStation:
+class FuelStation:
     """
     Base class for electric vehicle charging station.
 

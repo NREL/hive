@@ -23,7 +23,7 @@ from hive.station import FuelStation
 seed = 123
 random.seed(seed)
 np.random.seed(seed)
-SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios')
+SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
 OUT_PATH = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
 
 def build_output_dir(scenario_name):
@@ -73,15 +73,15 @@ def run_simulation(infile, sim_name):
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
     stations, depots = [], []
-    for row in data['charge_network'].itertuples():
+    for i, row in data['charge_network'].iterrows():
         # Unpack row in charge_network
-        station_id = row[0]
-        station_type = row[1]
-        lon, lat = row[2], row[3]
-        plugs = row[4]
-        plug_type = row[5]
-        plug_power = row[6]
-        
+        station_id = row['station_id']
+        station_type = row['station_type']
+        lon, lat = row['longitude'], row['latitude']
+        plugs = row['plugs']
+        plug_type = row['plug_type']
+        plug_power = row['plug_power_kw']
+
         if station_type == 'station':
             station = FuelStation(station_id, lat, lon, plugs, plug_type, plug_power, station_log_file)
             stations.append(station)
@@ -90,7 +90,7 @@ def run_simulation(infile, sim_name):
             depots.append(depot)
 
     if cfg.VERBOSE: print("loaded {0} stations & {1} depots".format(len(stations), len(depots)), "", sep="\n")
-    
+
     #Initialize vehicle fleet
     charge_curves = data['charge_curves']
 
@@ -115,7 +115,12 @@ def run_simulation(infile, sim_name):
             'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
             'DISPATCH_MPH': DISPATCH_MPH,
         }
-        for v in range(len(veh_type.NUM_VEHICLES)):
+
+        #TODO: Replace depot_coords with actual values
+        depot_lat = 0
+        depot_lon = 0
+
+        for v in range(veh_type.NUM_VEHICLES):
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
@@ -123,11 +128,15 @@ def run_simulation(infile, sim_name):
                         initial_soc = np.random.uniform(0.2, 1.0), #init vehs w/ uniform soc distr
                         whmi_lookup = whmi_lookup,
                         charge_template = charge_template,
-                        depot_coords = depot_coords, #@NR - I don't think this should be a veh input 
                         logfile = vehicle_log_file,
                         environment_params = veh_env_params,
                         )
             id += 1
+
+            #Initialize vehicle location
+            veh.avail_lat = depot_lat
+            veh.avail_lon = depot_lon
+            
             veh_fleet.append(veh)
 
     random.shuffle(veh_fleet)
@@ -159,6 +168,7 @@ def run_simulation(infile, sim_name):
                         req_filled = True
                         break
         if not req_filled:
+            pass
             #TODO: Write failure log to CSV
 
     # TODO: Below is placeholder to test dodo.py targeting.

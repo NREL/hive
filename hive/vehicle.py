@@ -77,15 +77,14 @@ class Vehicle:
                 initial_soc,
                 whmi_lookup,
                 charge_template,
-                depot_coords,
                 logfile,
                 environment_params = dict(),
                 ):
 
         self.id = veh_id
         self.name = name
-        self.avail_lat = depot_coords['lat']
-        self.avail_lon = depot_coords['lon']
+        self.avail_lat = None 
+        self.avail_lon = None
         self.avail_time = 0
         self.energy_remaining = battery_capacity * initial_soc
         self.soc = initial_soc
@@ -111,7 +110,7 @@ class Vehicle:
         return str(f"Vehicle(id: {self.id}, name: {self.name})")
 
     def make_trip(self, req):
-       
+
         # Unpack request
         pickup_time = req[3]
         dropoff_time = req[4]
@@ -310,14 +309,8 @@ class Vehicle:
                             dispatch_dist, #miles traveled
                             round(self.soc, 2), #dsoc
                             0]) #passengers
-            
+
             # Update vehicle state
             self.active = False
             self.avail_lat, self.avail_lon = depot.lat, depot.lon
             self.avail_time = dtime
-
-    
-
-
-
-

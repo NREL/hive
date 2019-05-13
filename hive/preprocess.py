@@ -4,7 +4,7 @@ Functions that prepare raw data for simulation
 
 import sys
 import glob
-import random 
+import random
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -24,29 +24,30 @@ def gen_synth_pax_cnt():
     """
     occ_distr = [1] * 743 + [2] * 175 + [3] * 58 + [4] * 24 #from Henao
     pax = random.choice(occ_distr)
-    
+
     return pax
 
-def load_requests(reqs_path):
-        """Loads, combines, and sorts request csvs by pickup time 
+def load_requests(reqs_file):
+        """Loads, combines, and sorts request csvs by pickup time
         into a Pandas DataFrame.
         """
-        req_files = glob.glob(reqs_path+'/*.csv')
-        df_from_each_file = [pd.read_csv(f) for f in req_files]
-        assert (len(df_from_each_file) > 0), "No CSVs in {}!".format(reqs_path)
-        if len(df_from_each_file) == 1:
-            reqs_df = df_from_each_file[0]
-        else:
-            reqs_df = pd.concat(df_from_each_file, ignore_index=True)
+        # req_files = glob.glob(reqs_path+'/*.csv')
+        # df_from_each_file = [pd.read_csv(f) for f in req_files]
+        reqs_df = pd.read_csv(reqs_file)
+        # assert (len(df_from_each_file) > 0), "No CSVs in {}!".format(reqs_path)
+        # if len(df_from_each_file) == 1:
+        #     reqs_df = df_from_each_file[0]
+        # else:
+        #     reqs_df = pd.concat(df_from_each_file, ignore_index=True)
 
         #check for existence of req fields
         req_fields = [
         'pickup_time',
-        'dropoff_time', 
-        'distance_miles', 
-        'pickup_lat', 
+        'dropoff_time',
+        'distance_miles',
+        'pickup_lat',
         'pickup_lon',
-        'dropoff_lat', 
+        'dropoff_lat',
         'dropoff_lon']
 
         for field in req_fields:
@@ -60,12 +61,12 @@ def load_requests(reqs_path):
         if 'passengers' not in reqs_df.columns: #apply real-world pax distr
             pax = [gen_synth_pax_cnt() for i in range(len(reqs_df))]
             reqs_df['passengers'] = pax
-        
+
         return reqs_df
 
 def filter_short_trips(reqs_df, min_miles=0.05):
     """Filters requests that are less than min_miles (default=0.05). These
-    extremely short distance trips are often measuring errors, i.e. not 
+    extremely short distance trips are often measuring errors, i.e. not
     "actual" trips.
     """
     filt_reqs_df = reqs_df[reqs_df.distance_miles > min_miles]
@@ -74,7 +75,7 @@ def filter_short_trips(reqs_df, min_miles=0.05):
     return(filt_reqs_df)
 
 def filter_requests_outside_oper_area(reqs_df, shp_file):
-    """Filters requests in reqs_df whose origin or destination location are 
+    """Filters requests in reqs_df whose origin or destination location are
     outside of the shapefile found in op_area_path.
     """
     op_area_gdf = gpd.read_file(shp_file)
@@ -87,22 +88,22 @@ def filter_requests_outside_oper_area(reqs_df, shp_file):
         dropoff_pts.append(pt)
     reqs_df['pickup_pts'] = pickup_pts
     reqs_df['dropoff_pts'] = dropoff_pts
-    
+
     pickup_gdf = gpd.GeoDataFrame(reqs_df, geometry='pickup_pts')
     pickup_gdf.rename(columns={'pickup_pts': 'geometry'}, inplace=True)
     pickup_gdf.crs = op_area_gdf.crs #convert to matching crs
     filt_pickup_gdf = gpd.sjoin(pickup_gdf, op_area_gdf, how='inner', op='intersects')
-    
+
     dropoff_gdf = gpd.GeoDataFrame(reqs_df, geometry='dropoff_pts')
     dropoff_gdf.rename(columns={'dropoff_pts': 'geometry'}, inplace=True)
     dropoff_gdf.crs = op_area_gdf.crs #convert to matching crs
     filt_dropoff_gdf = gpd.sjoin(dropoff_gdf, op_area_gdf, how='inner', op='intersects')
-    
+
     comb_filt_gdf = filt_pickup_gdf.index.join(filt_dropoff_gdf.index, how='inner')
     filt_reqs_df = reqs_df.iloc[comb_filt_gdf]
     filt_reqs_df = filt_reqs_df.drop(columns=['pickup_pts', 'dropoff_pts'])
     filt_reqs_df = filt_reqs_df.reset_index()
-    
+
     return(filt_reqs_df)
 
 def calculate_road_vmt_scaling_factor(reqs_df):
@@ -114,7 +115,7 @@ def calculate_road_vmt_scaling_factor(reqs_df):
         pickup_loc = (row['pickup_lat'], row['pickup_lon'])
         dropoff_loc = (row['dropoff_lat'], row['dropoff_lon'])
         return haversine(pickup_loc, dropoff_loc, unit='mi')
-        
+
     short_path_dists = reqs_df.apply(lambda row: row_haversine(row), axis=1)
     total_vmt = reqs_df['distance_miles'].sum()
     total_short_path_dist = short_path_dists.sum()
@@ -124,7 +125,7 @@ def calculate_road_vmt_scaling_factor(reqs_df):
 def calculate_average_driving_speed(reqs_df):
     """Calculates average driving speed for all trips in dataset
     """
-    
+
     def row_hours(row):
         timedelta_s = (row['dropoff_time'] - row['pickup_time']).total_seconds()
         return timedelta_s / 3600
@@ -137,12 +138,12 @@ def calculate_average_driving_speed(reqs_df):
 # def timestamp_to_unix(ts, tz):
 #     """Converts Pandas timestamp object, ts with timezone, tz to unix time. tz
 #     should be a pytz string, e.g. - ('US/Alaska', 'US/Arizona', 'US/Central',
-#     'US/East-Indiana', 'US/Eastern', 'US/Hawaii', 'US/Indiana-Starke', 
-#     'US/Michigan', 'US/Mountain', 'US/Pacific', 'US/Pacific-New', etc.) 
+#     'US/East-Indiana', 'US/Eastern', 'US/Hawaii', 'US/Indiana-Starke',
+#     'US/Michigan', 'US/Mountain', 'US/Pacific', 'US/Pacific-New', etc.)
 #     """
 #     utc_ts = ts.tz_localize(tz)
 #     unix_ts = mktime(ts.timetuple())
-    
+
 #     return unix_ts
 
 
@@ -151,7 +152,7 @@ def calculate_average_driving_speed(reqs_df):
 #     for olat, olon, dlat, dlon in zip(olats, olons, dlats, dlons):
 #         dist = haversine((olat, olon), (dlat, dlon), unit=units) * scaling_factor
 #         scaled_hav_dists.append(dist)
-        
+
 #     return scaled_hav_dists
 
 # def generate_synth_pax_counts(request_cnt):
@@ -173,69 +174,68 @@ def calculate_average_driving_speed(reqs_df):
 #         multi_trip_df = multi_trip_df.append(multi_trip_df)
 #         multi_trip_df['passenger_count'] = pass_lst
 #         df = single_trip_df.append(multi_trip_df)
-    
+
 #     #sort & re-define trip_id
 #     df = df.sort_values('pickup_datetime').reset_index(drop=True)
 #     df['trip_id'] = df.index+1
-    
+
 #     return df
 
 
-# def process_rawtrips_file(df): 
+# def process_rawtrips_file(df):
 #     df['trip_id'] = df.index + 1
-#     df['trip_distance'] = scaled_haversine_dists(df['pickup_latitude'], 
-#                                                  df['pickup_longitude'], 
-#                                                  df['dropoff_latitude'], 
+#     df['trip_distance'] = scaled_haversine_dists(df['pickup_latitude'],
+#                                                  df['pickup_longitude'],
+#                                                  df['dropoff_latitude'],
 #                                                  df['dropoff_longitude'])
-    
-#     cols = ['trip_id', 'pickup_datetime', 'pickup_latitude', 
-#             'pickup_longitude', 'dropoff_datetime', 'dropoff_latitude', 
+
+#     cols = ['trip_id', 'pickup_datetime', 'pickup_latitude',
+#             'pickup_longitude', 'dropoff_datetime', 'dropoff_latitude',
 #             'dropoff_longitude', 'trip_distance', 'passenger_count']
-    
+
 #     #remove 0-dist trips
 #     df = df[df.trip_distance!=0]
-    
+
 #     #remove 0-time trips
 #     df = df[(df.pickup_datetime != df.dropoff_datetime)]
-    
+
 #     return df[cols]
 
 
-# def process_pooledtrips_file(df): 
+# def process_pooledtrips_file(df):
 #     df['trip_id'] = df.index + 1
-#     df['trip_distance'] = scaled_haversine_dists(df['p_lat'], 
-#                                                  df['p_lon'], 
-#                                                  df['d_lat'], 
+#     df['trip_distance'] = scaled_haversine_dists(df['p_lat'],
+#                                                  df['p_lon'],
+#                                                  df['d_lat'],
 #                                                  df['d_lon'])
-    
-#     df.rename(columns={'pax_count': 'passenger_count', 
+
+#     df.rename(columns={'pax_count': 'passenger_count',
 #                        'mean_pickup_datetime': 'pickup_datetime',
 #                        'mean_dropoff_datetime': 'dropoff_datetime'}, inplace=True)
-    
-#     cols = ['trip_id', 'pickup_datetime', 'p_lat', 
-#             'p_lon', 'dropoff_datetime', 'd_lat', 
+
+#     cols = ['trip_id', 'pickup_datetime', 'p_lat',
+#             'p_lon', 'dropoff_datetime', 'd_lat',
 #             'd_lon', 'trip_distance', 'passenger_count']
-    
+
 #     #remove 0-dist trips
 #     df = df[df.trip_distance!=0]
-    
+
 #     #remove 0-time trips
 #     df = df[(df.pickup_datetime != df.dropoff_datetime)]
-    
+
 #     return df[cols]
 
 # def label_requests_to_report(df, min_dt, max_dt):
 #     if isinstance(df['pickup_datetime'][0], str):
 #         df['pickup_datetime'] = df['pickup_datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
-        
+
 #     def report(val, min_dt=min_dt, max_dt=max_dt):
 #         if (val >= min_dt) and (val<= max_dt):
 #             report = True
 #         else:
 #             report = False
 #         return report
-    
+
 #     df['report'] = df['pickup_datetime'].apply(report)
-    
+
 #     return df
-    
