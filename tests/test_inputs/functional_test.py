@@ -32,4 +32,20 @@ class HiveTest(unittest.TestCase):
     def test_auto_setup(self):
         # run python setup.py in a sandbox with just miniconda
         ## create environment, set default configs
+
+    def test_run_with_defaults(self):
+        # User adds scenarios to the runSetup file from default input options
+
+    def test_run_with_custom(self):
+        # User defines their own inputs (i.e. vehicles, charge network, etc)
+        ## then build runSetup file with custom inputs
+    
+    def test_no_rerun(self):
+        # If user tries to re-run same scenarios in same simulation, run.py 
+        # logic should skip it automatically
+
         
+
+
+
+
