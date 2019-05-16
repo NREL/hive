@@ -9,6 +9,7 @@ CSV files that are n-rows by 7-columns go here, where n is the number of station
 * __plug_power_kw__ - Maximum plug power, in kW (before losses)  
   
 EX:  
+  
 | station_id | station_type | longitude | latitude | plugs | plug_type | plug_power_kw |
 |:----------:|:------------:| :--------:| :-------:| :----:| :--------:| :------------:|
 | d1 | depot | -97.75387 | 30.28957 | 40 | AC | 7.2 |

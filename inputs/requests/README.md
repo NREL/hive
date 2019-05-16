@@ -10,6 +10,7 @@ CSV files that are n-rows by (7 or 8)-columns go here, where n is the number of 
 * __passengers__ - Number of passengers (Optional)  
   
 EX:  
+  
 | pickup_time | dropoff_time | distance_miles | pickup_lat | pickup_lon | dropoff_lat | dropoff_lon | passengers |
 |:-----------:|:------------:|:--------------:|:----------:|:----------:|:-----------:|:-----------:|:---------:|
 | 2017-02-01 23:22:01 | 2017-02-01 23:28:21 | 1.95 | 30.2640 | -97.7453 | 30.2542 | -97.7160 | 2 |
