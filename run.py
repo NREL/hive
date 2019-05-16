@@ -136,7 +136,7 @@ def run_simulation(infile, sim_name):
             #Initialize vehicle location
             veh.avail_lat = depot_lat
             veh.avail_lon = depot_lon
-            
+
             veh_fleet.append(veh)
 
     random.shuffle(veh_fleet)
@@ -157,6 +157,8 @@ def run_simulation(infile, sim_name):
                     req_filled = True
                     break
         if not req_filled:
+            #TODO: Remove pass when check_inactive_viability() is completed.
+            break
             for veh in veh_fleet:
                 # Check inactive (depot) vehicles in fleet
                 if not veh.active:

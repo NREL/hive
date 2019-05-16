@@ -108,9 +108,10 @@ def check_inactive_viability(veh, request, depots, failure_log):
     #TODO: Refactor charging.py for single function that accepts charge_type,
     ##charge power, time, and considers max_acceptance, returning soc_f
     ###then: hyp_energy_remaining = (self.battery_capacity * soc_f) - total_energy
+    hyp_energy_remaining = 0
 
-    hyp_soc = hyp_energy_remaining / self._battery_capacity
-    if hyp_soc < self._ENV['MIN_ALLOWED_SOC']:
+    hyp_soc = hyp_energy_remaining / veh._battery_capacity
+    if hyp_soc < veh._ENV['MIN_ALLOWED_SOC']:
         failure_log['inactive_battery']+=1
         return False, failure_log
 
