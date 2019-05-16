@@ -1,1 +1,0 @@
-Drop charge network file here... To Do: Outline required format
