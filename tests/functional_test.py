@@ -37,25 +37,28 @@ class HiveTest(unittest.TestCase):
         # Cleanup all input and output directories in /tests dir
         subprocess.run("rm -r  /tests/inputs")
         subprocess.run("rm -r  /tests/outputs")
+
+
+    def test_parallel_run(self):
+        subprocess.run(["python", "run.py","n_jobs=3"])
+
+
+    def test_sequential_run(self):
+        # Also testing that "fresh run argument works"
+        subprocess.run(["python", "run.py","fresh"])
     
 
-    def test_run_with_defaults(self):
-        # User adds scenarios to the runSetup file from default input options
-        ## TODO: collapse sub directories in test_inputs/
-        ## TODO: reformat some test_inputs (i.e. main.csv)
-        subprocess.run(["python", "run.py"])
+    def test_customize_scenario(self):
+        # testing non-default inputs and cached runs
+        pass
 
-    # Parallel v sequential
 
-    # fresh runs v cached runs - within same scenario
+    def test_outputs(self):
+        # check for file presence, location, and expected sizes based on inputs
+        pass
 
-    # test outputs - file presence, location, and sizes
 
     #TODO: Add post processing capabilities (inspiration from MM)
 
 if __name__ == '__main__':
-    unittest.main(warnings='ignore')        
-
-
-
-
+    unittest.main()
