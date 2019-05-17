@@ -9,7 +9,8 @@ from haversine import haversine
 
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive.constraints import ENV_PARAMS
+from hive.constraints import ENV_PARAMS, VEH_PARAMS
+from hive.utils import assert_constraint
 
 
 class Vehicle:
@@ -84,7 +85,10 @@ class Vehicle:
         # Public Constants
         self.ID = veh_id
         self.NAME = name
+        
+        assert_constraint('BATTERY_CAPACITY', battery_capacity, VEH_PARAMS)
         self.BATTERY_CAPACITY = battery_capacity
+
         self.WH_PER_MILE_LOOKUP = whmi_lookup
         self.CHARGE_TEMPLATE = charge_template
 
@@ -104,8 +108,7 @@ class Vehicle:
         self.ENV = dict()
         for param, val in environment_params.items():
             assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
-            assert val > ENV_PARAMS[param][0], "Param {}:{} is out of bounds {}".format(param, val, ENV_PARAMS[param])
-            assert val < ENV_PARAMS[param][1], "Param {}:{} is out of bounds {}".format(param, val, ENV_PARAMS[param])
+            assert_constraint(param, val, ENV_PARAMS)
             self.ENV[param] = val
 
     def __repr__(self):
