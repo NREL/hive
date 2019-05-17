@@ -56,7 +56,7 @@ class Vehicle:
         False, vehicle is sitting at depot
     """
     # statistics tracked on a vehicle instance level over entire simulation.
-    STATS = [
+    _STATS = [
             'trip_vmt', #miles traveled servicing ride requests
             'dispatch_vmt', #miles traveled dispatching to pickup locations
             'total_vmt', #total miles traveled
@@ -81,33 +81,35 @@ class Vehicle:
                 environment_params = dict(),
                 ):
 
-        self.id = veh_id
-        self.name = name
-        self.avail_lat = None 
+        # Public Constants
+        self.ID = veh_id
+        self.NAME = name
+        self.BATTERY_CAPACITY = battery_capacity
+        self.WH_PER_MILE_LOOKUP = whmi_lookup
+        self.CHARGE_TEMPLATE = charge_template
+
+        self.avail_lat = None
         self.avail_lon = None
         self.avail_time = 0
         self.energy_remaining = battery_capacity * initial_soc
         self.soc = initial_soc
         self.active = False
 
-        self._battery_capacity = battery_capacity
-        self._wh_per_mile_lookup = whmi_lookup
-        self._charge_template = charge_template
         self._log = logfile
 
-        self._stats = dict()
-        for stat in self.STATS:
-            self._stats[stat] = 0
+        self.stats = dict()
+        for stat in self._STATS:
+            self.stats[stat] = 0
 
-        self._ENV = dict()
+        self.ENV = dict()
         for param, val in environment_params.items():
             assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
             assert val > ENV_PARAMS[param][0], "Param {}:{} is out of bounds {}".format(param, val, ENV_PARAMS[param])
             assert val < ENV_PARAMS[param][1], "Param {}:{} is out of bounds {}".format(param, val, ENV_PARAMS[param])
-            self._ENV[param] = val
+            self.ENV[param] = val
 
     def __repr__(self):
-        return str(f"Vehicle(id: {self.id}, name: {self.name})")
+        return str(f"Vehicle(id: {self.id}, name: {self.NAME})")
 
     def make_trip(self, req):
 
@@ -133,9 +135,9 @@ class Vehicle:
                 if diff_s <= (inpt.MINUTES_BEFORE_CHARGE * 60):
                     idle_s = diff_s
                     if report:
-                        self._stats['idle_s'] += idle_s
+                        self.stats['idle_s'] += idle_s
                     self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
-                    self.soc = self.energy_remaining/self._battery_capacity
+                    self.soc = self.energy_remaining/self.BATTERY_CAPACITY
 
                     if idle_s > 0:
                         idle_end = idle_start + idle_s
@@ -144,46 +146,46 @@ class Vehicle:
                 else:
                     idle_s = inpt.MINUTES_BEFORE_CHARGE * 60
                     if report:
-                        self._stats['idle_s'] += idle_s
+                        self.stats['idle_s'] += idle_s
                     self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
-                    self.soc = self.energy_remaining/self._battery_capacity
+                    self.soc = self.energy_remaining/self.BATTERY_CAPACITY
                     idle_end = idle_start + idle_s
                     refuel_start = idle_end
                     writer.writerow([self.id, -1, idle_start, self.avail_lat, self.avail_lon, idle_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0])
 
                     # Update w/ charging
                     pwr = inpt.UBIQUITOUS_CHARGER_POWER
-                    secs_to_full = chrg.calc_const_charge_secs_to_full(self.energy_remaining, self._battery_capacity, kw=pwr)
+                    secs_to_full = chrg.calc_const_charge_secs_to_full(self.energy_remaining, self.BATTERY_CAPACITY, kw=pwr)
                     if secs_to_full >= (diff_s - idle_s):
                         refuel_s = diff_s - idle_s
                         if report:
-                            self._stats['refuel_s'] += refuel_s
+                            self.stats['refuel_s'] += refuel_s
                         self.energy_remaining = self.energy_remaining + chrg.calc_const_charge_kwh(refuel_s, kw=pwr)
-                        self.soc = self.energy_remaining/self._battery_capacity
+                        self.soc = self.energy_remaining/self.BATTERY_CAPACITY
                         refuel_end = refuel_start + refuel_s
                         dispatch_start = refuel_end
                         if report:
-                            self._stats['refuel_cnt'] += 1
+                            self.stats['refuel_cnt'] += 1
                         writer.writerow([self.id, -3, refuel_start, self.avail_lat, self.avail_lon, refuel_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0])
                     else:
                         refuel_s = secs_to_full
                         if report:
-                            self._stats['refuel_s'] += refuel_s
-                        self.energy_remaining = self._battery_capacity
-                        self.soc = self.energy_remaining/self._battery_capacity
+                            self.stats['refuel_s'] += refuel_s
+                        self.energy_remaining = self.BATTERY_CAPACITY
+                        self.soc = self.energy_remaining/self.BATTERY_CAPACITY
                         if refuel_s > 0:
                             refuel_end = refuel_start + refuel_s
                             idle2_start = refuel_end
                             if report:
-                                self._stats['refuel_cnt'] += 1
+                                self.stats['refuel_cnt'] += 1
                             writer.writerow([self.id, -3, refuel_start, self.avail_lat, self.avail_lon, refuel_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0])
 
                         # Update w/ second idle event after charge to full
                         idle2_s = diff_s - idle_s - refuel_s
                         if report:
-                            self._stats['idle_s'] += idle2_s
+                            self.stats['idle_s'] += idle2_s
                         self.energy_remaining -= nrg.calc_idle_kwh(idle2_s)
-                        self.soc = self.energy_remaining/self._battery_capacity
+                        self.soc = self.energy_remaining/self.BATTERY_CAPACITY
                         idle2_end = idle2_start + idle2_s
                         dispatch_start = idle2_end
                         writer.writerow([self.id, -1, idle2_start, self.avail_lat, self.avail_lon, idle2_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0])
@@ -192,9 +194,9 @@ class Vehicle:
                 idle_start = self.avail_time
                 idle_s = diff_s
                 if report:
-                    self._stats['idle_s'] += idle_s
+                    self.stats['idle_s'] += idle_s
                 self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
-                self.soc = self.energy_remaining/self._battery_capacity
+                self.soc = self.energy_remaining/self.BATTERY_CAPACITY
                 if idle_s > 0:
                     idle_end = idle_start + idle_s
                     dispatch_start = idle_end
@@ -202,15 +204,15 @@ class Vehicle:
 
             # Update w/ dispatch
             if report:
-                self._stats['dispatch_vmt'] += dispatch_dist
-                self._stats['total_vmt'] += dispatch_dist
+                self.stats['dispatch_vmt'] += dispatch_dist
+                self.stats['total_vmt'] += dispatch_dist
 
             if dispatch_dist > 0:
                 dispatch_time_s = otime - dispatch_start
                 if report:
-                    self._stats['dispatch_s'] += dispatch_time_s
-                self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self._wh_per_mile_lookup)
-                self.soc = self.energy_remaining/self._battery_capacity
+                    self.stats['dispatch_s'] += dispatch_time_s
+                self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self.WH_PER_MILE_LOOKUP)
+                self.soc = self.energy_remaining/self.BATTERY_CAPACITY
                 writer.writerow([self.id, -2, dispatch_start, self.avail_lat, self.avail_lon, otime, olat, olon, dispatch_dist, round(self.soc, 2), 0])
 
             # Update w/ trip
@@ -218,19 +220,19 @@ class Vehicle:
             self.avail_lon = dlon
             self.avail_time = dtime
             if report:
-                self._stats['trip_vmt'] += trip_dist
-                self._stats['total_vmt'] += trip_dist
+                self.stats['trip_vmt'] += trip_dist
+                self.stats['total_vmt'] += trip_dist
             trip_time_s = dtime - otime
             if report:
-                self._stats['trip_s'] += trip_time_s
+                self.stats['trip_s'] += trip_time_s
 
             if trip_time_s > 0:
-                self.energy_remaining -= nrg.calc_trip_kwh(trip_dist, trip_time_s, self._wh_per_mile_lookup)
+                self.energy_remaining -= nrg.calc_trip_kwh(trip_dist, trip_time_s, self.WH_PER_MILE_LOOKUP)
 
-            self.soc = self.energy_remaining / self._battery_capacity
+            self.soc = self.energy_remaining / self.BATTERY_CAPACITY
             if report:
-                self._stats['requests_filled'] += 1
-                self._stats['passengers_delivered'] += passengers
+                self.stats['requests_filled'] += 1
+                self.stats['passengers_delivered'] += passengers
             writer.writerow([self.id, trip_id, otime, olat, olon, dtime, dlat, dlon, trip_dist, round(self.soc, 2), passengers])
 
 
@@ -243,42 +245,42 @@ class Vehicle:
 
             # Locate nearest station
             nearest_station = charg_stations[0]
-            dist_to_nearest = haversine((self.avail_lat, self.avail_lon), (nearest_station.lat, nearest_station.lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
+            dist_to_nearest = haversine((self.avail_lat, self.avail_lon), (nearest_station.lat, nearest_station.lon), unit='mi') * inpt.self.ENV['RN_SCALING_FACTOR']
             for station in charg_stations[1:]:
-                dist = haversine((self.avail_lat, self.avail_lon), (station.lat, station.lon), unit='mi') * inpt.self._ENV['RN_SCALING_FACTOR']
+                dist = haversine((self.avail_lat, self.avail_lon), (station.lat, station.lon), unit='mi') * inpt.self.ENV['RN_SCALING_FACTOR']
                 if dist < dist_to_nearest:
                     nearest_station = station
                     dist_to_nearest = dist
 
             # Dispatch to station
             if report:
-                self._stats['dispatch_vmt'] += dist_to_nearest
-                self._stats['total_vmt'] += dist_to_nearest
+                self.stats['dispatch_vmt'] += dist_to_nearest
+                self.stats['total_vmt'] += dist_to_nearest
 
             if dist_to_nearest > 0:
-                dispatch_time_s = dist_to_nearest / inpt.self._ENV['DISPATCH_MPH'] * 3600
+                dispatch_time_s = dist_to_nearest / inpt.self.ENV['DISPATCH_MPH'] * 3600
                 if report:
-                    self._stats['dispatch_s'] += dispatch_time_s
+                    self.stats['dispatch_s'] += dispatch_time_s
                 dispatch_start = self.avail_time
                 dispatch_end = dispatch_start + dispatch_time_s
-                self.energy_remaining -= nrg.calc_trip_kwh(dist_to_nearest, dispatch_time_s, self._wh_per_mile_lookup)
-                self.soc = max(0, self.energy_remaining/self._battery_capacity)
+                self.energy_remaining -= nrg.calc_trip_kwh(dist_to_nearest, dispatch_time_s, self.WH_PER_MILE_LOOKUP)
+                self.soc = max(0, self.energy_remaining/self.BATTERY_CAPACITY)
                 writer.writerow([self.id, -2, dispatch_start, self.avail_lat, self.avail_lon, dispatch_end, nearest_station.lat, nearest_station.lon, dist_to_nearest, round(self.soc, 2), 0])
 
             # Charge at station
             self.avail_lat = nearest_station.lat
             self.avail_lon = nearest_station.lon
             soc_i = self.soc
-            charge_time = chrg.query_charge_stats(self._charge_template, soc_i=soc_i*100, soc_f=final_soc*100)[2]
+            charge_time = chrg.query_charge_stats(self.CHARGE_TEMPLATE, soc_i=soc_i*100, soc_f=final_soc*100)[2]
             if report:
-                self._stats['refuel_s'] += charge_time
+                self.stats['refuel_s'] += charge_time
             start_time = dispatch_end
             end_time = dispatch_end + charge_time
             self.avail_time = end_time
             self.soc = final_soc
-            self.energy_remaining = self.soc * self._battery_capacity
+            self.energy_remaining = self.soc * self.BATTERY_CAPACITY
             if report:
-                self._stats['refuel_cnt'] += 1
+                self.stats['refuel_cnt'] += 1
             writer.writerow([self.id, -3, start_time, self.avail_lat, self.avail_lon,
                              end_time, self.avail_lat, self.avail_lon, 0, self.soc, 0])
             nearest_station.add_recharge(self.id, start_time, end_time, soc_i, final_soc)
@@ -288,13 +290,13 @@ class Vehicle:
         with open(self._log,'a') as f:
             writer = csv.writer(f)
 
-            dispatch_dist = haversine((self.avail_lat, self.avail_lon), (depot.lat, depot.lon), unit='mi') * self._ENV['RN_SCALING_FACTOR']
-            self._stats['dispatch_vmt'] += dispatch_dist
-            self._stats['total_vmt'] += dispatch_dist
-            dispatch_time_s = dispatch_dist / self._ENV['DISPATCH_MPH'] * 3600
-            self._stats['dispatch_s'] += dispatch_time_s
-            self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self._wh_per_mile_lookup)
-            self.soc = self.energy_remaining/self._battery_capacity
+            dispatch_dist = haversine((self.avail_lat, self.avail_lon), (depot.lat, depot.lon), unit='mi') * self.ENV['RN_SCALING_FACTOR']
+            self.stats['dispatch_vmt'] += dispatch_dist
+            self.stats['total_vmt'] += dispatch_dist
+            dispatch_time_s = dispatch_dist / self.ENV['DISPATCH_MPH'] * 3600
+            self.stats['dispatch_s'] += dispatch_time_s
+            self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist, dispatch_time_s, self.WH_PER_MILE_LOOKUP)
+            self.soc = self.energy_remaining/self.BATTERY_CAPACITY
             dtime = self.avail_time + datetime.timedelta(seconds=dispatch_time_s)
 
             # Update log w/ dispatch to depot
