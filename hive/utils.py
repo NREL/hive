@@ -21,9 +21,33 @@ def init_failure_log():
     failure_log['inactive_battery'] = 0
     return failure_log
 
-def assert_constraint(param, val, CONSTRAINTS):
+def assert_constraint(param, val, CONSTRAINTS, context=""):
+    """
+    Helper function to assert constraints at runtime.
+
+    between:        Check that value is between upper and lower bounds exclusive
+    greater_than:   Check that value is greater than lower bound exclusive
+    less_than:      Check that value is less than upper bound exclusive
+    in_set:         Check that value is in a set
+    """
     condition = CONSTRAINTS[param][0]
 
     if condition == 'between':
-        assert val > CONSTRAINTS[param][1], "Param {}:{} is out of bounds {}".format(param, val, CONSTRAINTS[param])
-        assert val < CONSTRAINTS[param][2], "Param {}:{} is out of bounds {}".format(param, val, CONSTRAINTS[param])
+        assert val > CONSTRAINTS[param][1], \
+            "Context: {} | Param {}:{} is under low limit {}"\
+            .format(context, param, val, CONSTRAINTS[param][1])
+        assert val < CONSTRAINTS[param][2], \
+            "Context: {} | Param {}:{} is over high limit {}"\
+            .format(context, param, val, CONSTRAINTS[param][2])
+    elif condition == 'greater_than':
+        assert val > CONSTRAINTS[param][1], \
+        "Context: {} | Param {}:{} is under low limit {}"\
+        .format(context, param, val, CONSTRAINTS[param][1])
+    elif condition == 'less_than':
+        assert val < CONSTRAINTS[param][1], \
+        "Context: {} | Param {}:{} is over high limit {}"\
+        .format(context, param, val, CONSTRAINTS[param][1])
+    elif condition == 'in_set':
+        assert val in CONSTRAINTS[param][1], \
+        "Context: {} | Param {}:{} must be from set {}"\
+        .format(context, param, val, CONSTRAINTS[param][1])

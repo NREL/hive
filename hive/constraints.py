@@ -14,5 +14,11 @@ ENV_PARAMS = {
 }
 
 VEH_PARAMS = {
-    'BATTERY_CAPACITY': ('between', 1, 1000), #kwh
+    'BATTERY_CAPACITY': ('between', 0, 1000), #kwh
+}
+
+STATION_PARAMS = {
+    'TOTAL_PLUGS': ('greater_than', 0),
+    'PLUG_TYPE': ('in_set', ['AC', 'DC']),
+    'PLUG_POWER': ('between', 1, 1000), #kw
 }

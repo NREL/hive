@@ -100,9 +100,9 @@ def check_inactive_viability(veh, request, depots, failure_log):
     total_request_energy = disp_energy + trip_energy
 
     for depot in depots:
-        if veh.avail_lat == depot.lat and veh.avail_lon == depot.lon:
-            charge_type = depot.type
-            charge_power = depot.plug_power
+        if veh.avail_lat == depot.LAT and veh.avail_lon == depot.LON:
+            charge_type = depot.PLUG_TYPE
+            charge_power = depot.PLUG_POWER
             break
 
     #TODO: Refactor charging.py for single function that accepts charge_type,
@@ -127,7 +127,7 @@ def find_nearest_plug(veh, fuel_stations):
     nearest, dist_to_nearest = None, None
     for station in fuel_stations:
         if station.avail_plugs != 0:
-            dist = haversine((veh.avail_lat, veh.avail_lon), (station.lat, station.lon), unit='mi') * veh.ENV['RN_SCALING_FACTOR']
+            dist = haversine((veh.avail_lat, veh.avail_lon), (station.LAT, station.LON), unit='mi') * veh.ENV['RN_SCALING_FACTOR']
             if (nearest == None) and (dist_to_nearest == None):
                 nearest = station
                 dist_to_nearest = dist

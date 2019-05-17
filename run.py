@@ -116,9 +116,6 @@ def run_simulation(infile, sim_name):
             'DISPATCH_MPH': DISPATCH_MPH,
         }
 
-        #TODO: Replace depot_coords with actual values
-        depot_lat = 0
-        depot_lon = 0
 
         for v in range(veh_type.NUM_VEHICLES):
             veh = Vehicle(
@@ -133,9 +130,10 @@ def run_simulation(infile, sim_name):
                         )
             id += 1
 
-            #Initialize vehicle location
-            veh.avail_lat = depot_lat
-            veh.avail_lon = depot_lon
+            #Initialize vehicle location to a random depot
+            depot = random.choice(depots)
+            veh.avail_lat = depot.LAT
+            veh.avail_lon = depot.LON
 
             veh_fleet.append(veh)
 

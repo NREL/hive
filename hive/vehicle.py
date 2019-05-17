@@ -85,8 +85,8 @@ class Vehicle:
         # Public Constants
         self.ID = veh_id
         self.NAME = name
-        
-        assert_constraint('BATTERY_CAPACITY', battery_capacity, VEH_PARAMS)
+
+        assert_constraint('BATTERY_CAPACITY', battery_capacity, VEH_PARAMS, context="Initialize Vehicle")
         self.BATTERY_CAPACITY = battery_capacity
 
         self.WH_PER_MILE_LOOKUP = whmi_lookup
@@ -108,7 +108,7 @@ class Vehicle:
         self.ENV = dict()
         for param, val in environment_params.items():
             assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
-            assert_constraint(param, val, ENV_PARAMS)
+            assert_constraint(param, val, ENV_PARAMS, context="Initialize Vehicle")
             self.ENV[param] = val
 
     def __repr__(self):
@@ -293,7 +293,7 @@ class Vehicle:
         with open(self._log,'a') as f:
             writer = csv.writer(f)
 
-            dispatch_dist = haversine((self.avail_lat, self.avail_lon), (depot.lat, depot.lon), unit='mi') * self.ENV['RN_SCALING_FACTOR']
+            dispatch_dist = haversine((self.avail_lat, self.avail_lon), (depot.LAT, depot.LON), unit='mi') * self.ENV['RN_SCALING_FACTOR']
             self.stats['dispatch_vmt'] += dispatch_dist
             self.stats['total_vmt'] += dispatch_dist
             dispatch_time_s = dispatch_dist / self.ENV['DISPATCH_MPH'] * 3600
@@ -309,13 +309,13 @@ class Vehicle:
                             self.avail_lat, #olat
                             self.avail_lon, #olon
                             dtime, #dtime
-                            depot.lat, #dlat
-                            depot.lon, #dlon
+                            depot.LAT, #dlat
+                            depot.LON, #dlon
                             dispatch_dist, #miles traveled
                             round(self.soc, 2), #dsoc
                             0]) #passengers
 
             # Update vehicle state
             self.active = False
-            self.avail_lat, self.avail_lon = depot.lat, depot.lon
+            self.avail_lat, self.avail_lon = depot.LAT, depot.LON
             self.avail_time = dtime
