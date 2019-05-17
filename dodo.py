@@ -58,6 +58,19 @@ def task_update_deps():
                 'clean': True,
                 }
 
+def task_unit_tests():
+    """
+    Run all unit tests.
+    """
+    tests = glob.glob('tests/test_*')
+    for test in tests:
+        yield {
+            'name': re.split('/', test)[1],
+            'actions': [f'python -m unittest {test}'],
+            'clean': True,
+        }
+
+
 def task_profile():
     """
     Profile each component using cProfile.
@@ -152,7 +165,6 @@ def task_run_simulation():
     simulations = [(s, basename_stem(s)[:-7]) for s in scenario_files]
 
     for src, tag in simulations:
-        print(src)
         outfiles = [
                     os.path.join(
                             sim_output,

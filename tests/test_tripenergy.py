@@ -8,7 +8,7 @@ from hive.tripenergy import import_whmi_template, create_scaled_whmi, \
 
 import config as cfg
 
-WHMI_LOOKUP_FILE = os.path.join('../', cfg.IN_PATH, '.lib', 'wh_mi_lookup.csv')
+WHMI_LOOKUP_FILE = os.path.join(cfg.IN_PATH, '.lib', 'wh_mi_lookup.csv')
 
 class TripEnergyTest(unittest.TestCase):
     @classmethod
