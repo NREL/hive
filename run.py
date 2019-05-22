@@ -71,25 +71,7 @@ def run_simulation(infile, sim_name):
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
     #Load charging network
-    if cfg.VERBOSE: print("Loading charge network..")
-    stations, depots = [], []
-    for i, row in data['charge_network'].iterrows():
-        # Unpack row in charge_network
-        station_id = row['station_id']
-        station_type = row['station_type']
-        lon, lat = row['longitude'], row['latitude']
-        plugs = row['plugs']
-        plug_type = row['plug_type']
-        plug_power = row['plug_power_kw']
-
-        if station_type == 'station':
-            station = FuelStation(station_id, lat, lon, plugs, plug_type, plug_power, station_log_file)
-            stations.append(station)
-        elif station_type == 'depot':
-            depot = FuelStation(station_id, lat, lon, plugs, plug_type, plug_power, station_log_file)
-            depots.append(depot)
-
-    if cfg.VERBOSE: print("loaded {0} stations & {1} depots".format(len(stations), len(depots)), "", sep="\n")
+    stations, depots = initialize_charge_network(data['charge_network'], station_log_file)
 
     #Initialize vehicle fleet
     charge_curves = data['charge_curves']

@@ -41,13 +41,13 @@ def assert_constraint(param, val, CONSTRAINTS, context=""):
             .format(context, param, val, CONSTRAINTS[param][2])
     elif condition == 'greater_than':
         assert val > CONSTRAINTS[param][1], \
-        "Context: {} | Param {}:{} is under low limit {}"\
-        .format(context, param, val, CONSTRAINTS[param][1])
+            "Context: {} | Param {}:{} is under low limit {}"\
+            .format(context, param, val, CONSTRAINTS[param][1])
     elif condition == 'less_than':
         assert val < CONSTRAINTS[param][1], \
-        "Context: {} | Param {}:{} is over high limit {}"\
-        .format(context, param, val, CONSTRAINTS[param][1])
+            "Context: {} | Param {}:{} is over high limit {}"\
+            .format(context, param, val, CONSTRAINTS[param][1])
     elif condition == 'in_set':
         assert val in CONSTRAINTS[param][1], \
-        "Context: {} | Param {}:{} must be from set {}"\
-        .format(context, param, val, CONSTRAINTS[param][1])
+            "Context: {} | Param {}:{} must be from set {}"\
+            .format(context, param, val, CONSTRAINTS[param][1])

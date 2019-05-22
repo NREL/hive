@@ -62,13 +62,10 @@ def task_unit_tests():
     """
     Run all unit tests.
     """
-    tests = glob.glob('tests/test_*')
-    for test in tests:
-        yield {
-            'name': re.split('/', test)[1],
-            'actions': [f'python -m unittest {test}'],
-            'clean': True,
-        }
+    return {
+        'actions': [f'python -m unittest discover tests/'],
+        'clean': True,
+    }
 
 
 def task_profile():
