@@ -16,11 +16,11 @@ import config as cfg
 from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive import dispatcher as dp
 from hive import utils
 from hive.initialize import initialize_charge_network, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.station import FuelStation
+from hive.dispatcher import Dispatcher
 
 seed = 123
 random.seed(seed)
@@ -80,7 +80,7 @@ def run_simulation(infile, sim_name):
     }
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
-    veh_fleet = initialize_fleet(vehicle_types = vehicle_types,
+    fleet = initialize_fleet(vehicle_types = vehicle_types,
                                 depots = depots,
                                 charge_curve = data['charge_curves'],
                                 whmi_lookup = data['whmi_lookup'],
@@ -89,35 +89,42 @@ def run_simulation(infile, sim_name):
 
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
 
+    dispatcher = Dispatcher(fleet = fleet,
+                            stations = stations,
+                            depots = depots)
+
     for req in reqs_df.itertuples(name='Request'):
-        failure_log = {}
-        req_filled = False #default
-        for veh in veh_fleet:
-            # Check active vehicles in fleet
-            if veh.active:
-                viable, failure_log = dp.check_active_viability(veh, req, depots, failure_log)
-                if viable:
-                    veh.make_trip(req)
-                    veh_fleet.remove(veh) #pop veh from queue
-                    veh_fleet.append(veh) #append veh to end of queue
-                    req_filled = True
-                    break
-        if not req_filled:
-            #TODO: Remove pass when check_inactive_viability() is completed.
-            break
-            for veh in veh_fleet:
-                # Check inactive (depot) vehicles in fleet
-                if not veh.active:
-                    viable, failure_log = dp.check_inactive_viability(veh, req, depots, failure_log)
-                    if viable:
-                        veh.make_trip(req)
-                        veh_fleet.remove(veh) #pop veh from queue
-                        veh_fleet.append(veh) #append veh to end of queue
-                        req_filled = True
-                        break
-        if not req_filled:
-            pass
-            #TODO: Write failure log to CSV
+        dispatcher.process_requests(req)
+
+    # for req in reqs_df.itertuples(name='Request'):
+    #     failure_log = {}
+    #     req_filled = False #default
+    #     for veh in veh_fleet:
+    #         # Check active vehicles in fleet
+    #         if veh.active:
+    #             viable, failure_log = dp.check_active_viability(veh, req, depots, failure_log)
+    #             if viable:
+    #                 veh.make_trip(req)
+    #                 veh_fleet.remove(veh) #pop veh from queue
+    #                 veh_fleet.append(veh) #append veh to end of queue
+    #                 req_filled = True
+    #                 break
+    #     if not req_filled:
+    #         #TODO: Remove pass when check_inactive_viability() is completed.
+    #         break
+    #         for veh in veh_fleet:
+    #             # Check inactive (depot) vehicles in fleet
+    #             if not veh.active:
+    #                 viable, failure_log = dp.check_inactive_viability(veh, req, depots, failure_log)
+    #                 if viable:
+    #                     veh.make_trip(req)
+    #                     veh_fleet.remove(veh) #pop veh from queue
+    #                     veh_fleet.append(veh) #append veh to end of queue
+    #                     req_filled = True
+    #                     break
+    #     if not req_filled:
+    #         pass
+    #         #TODO: Write failure log to CSV
 
 
 
