@@ -12,6 +12,13 @@ def save_to_pickle(data, outfile):
     with open(outfile, 'wb') as f:
         pickle.dump(data, f)
 
+def build_output_dir(scenario_name, root_path):
+    scenario_output = os.path.join(root_path, scenario_name)
+    if not os.path.isdir(scenario_output):
+        os.makedirs(scenario_output)
+        os.makedirs(os.path.join(scenario_output, 'logs'))
+        os.makedirs(os.path.join(scenario_output, 'summaries'))
+
 def init_failure_log():
     failure_log  = {}
     failure_log['active_max_dispatch'] = 0

@@ -21,5 +21,5 @@ VEH_PARAMS = {
 STATION_PARAMS = {
     'TOTAL_PLUGS': ('greater_than', 0),
     'PLUG_TYPE': ('in_set', ['AC', 'DC']),
-    'PLUG_POWER': ('between', 1, 1000), #kw
+    'PLUG_POWER': ('greater_than', 0), #kw
 }

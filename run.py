@@ -17,6 +17,7 @@ from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import dispatcher as dp
+from hive import utils
 from hive.initialize import initialize_charge_network, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.station import FuelStation
@@ -26,14 +27,6 @@ random.seed(seed)
 np.random.seed(seed)
 SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
 OUT_PATH = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
-
-def build_output_dir(scenario_name):
-    scenario_output = os.path.join(OUT_PATH, scenario_name)
-    if not os.path.isdir(scenario_output):
-        os.makedirs(scenario_output)
-        os.makedirs(os.path.join(scenario_output, 'logs'))
-        os.makedirs(os.path.join(scenario_output, 'summaries'))
-
 
 def run_simulation(infile, sim_name):
     with open(infile, 'rb') as f:
@@ -47,7 +40,7 @@ def run_simulation(infile, sim_name):
     inputs = data['main']
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
-    build_output_dir(inputs.SCENARIO_NAME.strip().replace(" ", "_"))
+    utils.build_output_dir(inputs.SCENARIO_NAME.strip().replace(" ", "_"), OUT_PATH)
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")

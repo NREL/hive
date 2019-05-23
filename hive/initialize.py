@@ -7,9 +7,6 @@ from hive import tripenergy as nrg
 from hive.station import FuelStation
 from hive.vehicle import Vehicle
 
-sys.path.append('../')
-import config as cfg
-
 def initialize_charge_network(charge_df, station_log_file):
 
     stations, depots = [], []

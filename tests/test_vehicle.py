@@ -77,6 +77,6 @@ class VehicleTest(unittest.TestCase):
                             logfile = "placeholder",
                             environment_params={'BAD_PARAM': 1})
 
-        print(str(context.exception))
+        expected_error= "Got an unexpected parameter BAD_PARAM"
 
         self.assertTrue(expected_error in str(context.exception))
