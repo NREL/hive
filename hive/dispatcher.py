@@ -1,5 +1,5 @@
 """
-Functions for high-level decision making in HIVE. Includes functions for
+Dispatcher Object for high-level decision making in HIVE. Includes functions for
 vehicle dispatching, and DCFC station/depot selection.
 """
 
@@ -39,11 +39,10 @@ class Dispatcher:
         for stat in self._STATS:
             self.stats[stat] = 0
 
-    def _check_active_viability(veh, request):
+    def _check_active_viability(self, veh, request):
         """
         Checks if active vehicle can fulfill request w/o violating several
-        constraints. Function requires a hive.Vehicle object, trip request, list of
-        self._depots (hive.stations.FuelStation objects), and a failure log dictionary.
+        constraints. Function requires a hive.Vehicle object and a trip request
         Function returns a boolean indicating the ability of the vehicle to service
         the request and the updated failure log. This function also sends vehicles
         exceeding the MAX_WAIT_TIME_MINUTES constraint to a depot for charging.
@@ -59,10 +58,9 @@ class Dispatcher:
         assert veh.active==True, "Vehicle is not active!"
 
         # Check 1 - Max Dispatch Constraint Not Violated
-
-        #@NR-Does it make sense to have these env variables be attrs of each veh object?
-        ##these are the same regardless of the vehicle...
-        disp_dist = haversine((veh.avail_lat, veh.avail_lon), (pickup_lat, pickup_lon), unit='mi') * veh.ENV['RN_SCALING_FACTOR']
+        disp_dist = haversine((veh.avail_lat, veh.avail_lon),
+                                (pickup_lat, pickup_lon), unit='mi') \
+                                * veh.ENV['RN_SCALING_FACTOR']
         if disp_dist > veh.ENV['MAX_DISPATCH_MILES']:
             self.stats['failure_active_max_dispatch']+=1
             return False
@@ -85,22 +83,23 @@ class Dispatcher:
             return False
 
         # Check 4 - Vehicle Should Not Have Been Active For Request
-        idle_time_s = ((pickup_time - datetime.timedelta(seconds=disp_time_s)) - veh.avail_time).total_seconds()
+        idle_time_s = ((pickup_time - datetime.timedelta(seconds=disp_time_s)) \
+        - veh.avail_time).total_seconds()
         idle_time_min = idle_time_s / 60
         if idle_time_min > veh.ENV['MAX_WAIT_TIME_MINUTES']:
-            depot = find_nearest_plug(veh)
+            depot = self._find_nearest_plug(veh)
             veh.return_to_depot(depot)
             depot.avail_plugs -= 1
             return False
 
         return True
 
-    def _check_inactive_viability(veh, request):
+    def _check_inactive_viability(self, veh, request):
         """
         Checks if inactive vehicle can fulfill request w/o violating several
-        constraints. Function requires a hive.Vehicle object, trip request, and
-        failure log dictionary. Function returns a boolean indicating the ability
-        of the vehicle to service the request and the updated failure log.
+        constraints. Function requires a hive.Vehicle object and a trip request.
+        Function returns a boolean indicating the ability
+        of the vehicle to service the request.
         """
 
         # Unpack request
@@ -113,7 +112,9 @@ class Dispatcher:
         assert veh.active!=True, "Vehicle is active!"
 
         # Check 1 - Time Constraint Not Violated
-        disp_dist = haversine((veh.avail_lat, veh.avail_lon), (pickup_lat, pickup_lon), unit='mi') * veh.ENV['RN_SCALING_FACTOR']
+        disp_dist = haversine((veh.avail_lat, veh.avail_lon),
+                                (pickup_lat, pickup_lon), unit='mi') \
+                                * veh.ENV['RN_SCALING_FACTOR']
         disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
         if (veh.avail_time!=0) and (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time):
             self.stats['failure_inactive_time']+=1
@@ -142,17 +143,17 @@ class Dispatcher:
 
         return True
 
-    def _find_nearest_plug(veh):
+    def _find_nearest_plug(self, veh):
         """
-        Function takes hive.vehicle.Vehicle object and list of
-        hive.station.FuelStation objects and returns the FuelStation nearest
-        Vehicle with at least one available plug. Note this function can be used
-        to locate the nearest station or depot depending on the provided list.
+        Function takes hive.vehicle.Vehicle object and returns the FuelStation nearest
+        Vehicle with at least one available plug. 
         """
         nearest, dist_to_nearest = None, None
         for station in self._stations:
             if station.avail_plugs != 0:
-                dist = haversine((veh.avail_lat, veh.avail_lon), (station.LAT, station.LON), unit='mi') * veh.ENV['RN_SCALING_FACTOR']
+                dist = haversine((veh.avail_lat, veh.avail_lon),
+                                (station.LAT, station.LON), unit='mi') \
+                                * veh.ENV['RN_SCALING_FACTOR']
                 if (nearest == None) and (dist_to_nearest == None):
                     nearest = station
                     dist_to_nearest = dist
@@ -164,7 +165,14 @@ class Dispatcher:
         return nearest
 
     def process_requests(self, requests):
-        #Catch single requests. 
+        """
+        process_requests is called for each simulation time step.
+
+        Inputs
+        ------
+        requests - one or many requests to distribute to the fleet.
+        """
+        #Catch single requests.
         if type(requests) != type(list()):
             requests = [requests]
 

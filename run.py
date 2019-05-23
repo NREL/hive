@@ -96,37 +96,6 @@ def run_simulation(infile, sim_name):
     for req in reqs_df.itertuples(name='Request'):
         dispatcher.process_requests(req)
 
-    # for req in reqs_df.itertuples(name='Request'):
-    #     failure_log = {}
-    #     req_filled = False #default
-    #     for veh in veh_fleet:
-    #         # Check active vehicles in fleet
-    #         if veh.active:
-    #             viable, failure_log = dp.check_active_viability(veh, req, depots, failure_log)
-    #             if viable:
-    #                 veh.make_trip(req)
-    #                 veh_fleet.remove(veh) #pop veh from queue
-    #                 veh_fleet.append(veh) #append veh to end of queue
-    #                 req_filled = True
-    #                 break
-    #     if not req_filled:
-    #         #TODO: Remove pass when check_inactive_viability() is completed.
-    #         break
-    #         for veh in veh_fleet:
-    #             # Check inactive (depot) vehicles in fleet
-    #             if not veh.active:
-    #                 viable, failure_log = dp.check_inactive_viability(veh, req, depots, failure_log)
-    #                 if viable:
-    #                     veh.make_trip(req)
-    #                     veh_fleet.remove(veh) #pop veh from queue
-    #                     veh_fleet.append(veh) #append veh to end of queue
-    #                     req_filled = True
-    #                     break
-    #     if not req_filled:
-    #         pass
-    #         #TODO: Write failure log to CSV
-
-
 
 if __name__ == "__main__":
     if not os.path.isdir(SCENARIO_PATH):
