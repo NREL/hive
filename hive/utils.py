@@ -26,6 +26,7 @@ def assert_constraint(param, val, CONSTRAINTS, context=""):
     Helper function to assert constraints at runtime.
 
     between:        Check that value is between upper and lower bounds exclusive
+    between_incl:   Check that value is between upper and lower bounds inclusive
     greater_than:   Check that value is greater than lower bound exclusive
     less_than:      Check that value is less than upper bound exclusive
     in_set:         Check that value is in a set
@@ -37,6 +38,13 @@ def assert_constraint(param, val, CONSTRAINTS, context=""):
             "Context: {} | Param {}:{} is under low limit {}"\
             .format(context, param, val, CONSTRAINTS[param][1])
         assert val < CONSTRAINTS[param][2], \
+            "Context: {} | Param {}:{} is over high limit {}"\
+            .format(context, param, val, CONSTRAINTS[param][2])
+    elif condition == 'between_incl':
+        assert val >= CONSTRAINTS[param][1], \
+            "Context: {} | Param {}:{} is under low limit {}"\
+            .format(context, param, val, CONSTRAINTS[param][1])
+        assert val <= CONSTRAINTS[param][2], \
             "Context: {} | Param {}:{} is over high limit {}"\
             .format(context, param, val, CONSTRAINTS[param][2])
     elif condition == 'greater_than':

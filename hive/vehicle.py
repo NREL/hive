@@ -96,6 +96,8 @@ class Vehicle:
         self.avail_lon = None
         self.avail_time = 0
         self.energy_remaining = battery_capacity * initial_soc
+
+        assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
         self.soc = initial_soc
         self.active = False
 

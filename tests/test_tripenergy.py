@@ -2,36 +2,24 @@ import unittest
 import sys
 import os
 
-sys.path.append('../')
 from hive.tripenergy import import_whmi_template, create_scaled_whmi, \
     calc_trip_kwh, calc_idle_kwh
 
-import config as cfg
+TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
 
 class TripEnergyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # self.WHMI_LOOKUP_FILE = os.path.join(cfg.IN_PATH, '.lib', 'wh_mi_lookup.csv')
-    # this will run once before any of the test methods in this class
-
-    # i.e. load or create sample dataset for the test class
-        pass
-
+        cls.WHMI_LOOKUP_FILE = os.path.join(TEST_INPUT_DIR, '.lib', 'wh_mi_lookup.csv')
 
     @classmethod
     def tearDownClass(cls):
-    # this will run once after all of the test methods in this class
-
-    # i.e. remove any files or databases that were created for testing
         pass
 
     def setUp(self):
-    # This will run before EVERY test method in the class
-        self.WHMI_LOOKUP_FILE = os.path.join(cfg.IN_PATH, '.lib', 'wh_mi_lookup.csv')
         pass
 
     def tearDown(self):
-    # This will run after EVERY test method in the class
         pass
 
     def test_import_whmi_template(self):

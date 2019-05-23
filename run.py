@@ -17,6 +17,7 @@ from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import dispatcher as dp
+from hive.initialize import initialize_charge_network, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.station import FuelStation
 
@@ -71,55 +72,27 @@ def run_simulation(infile, sim_name):
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
     #Load charging network
+    if cfg.VERBOSE: print("Loading charge network..")
     stations, depots = initialize_charge_network(data['charge_network'], station_log_file)
+    if cfg.VERBOSE: print("loaded {0} stations & {1} depots".format(len(stations), len(depots)), "", sep="\n")
 
     #Initialize vehicle fleet
-    charge_curves = data['charge_curves']
-
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
-    veh_keys = inputs['VEH_KEYS']
-    veh_fleet = []
-    id = 1
-    for key in veh_keys:
-        veh_type = data[key]
-        charge_template = chrg.construct_temporal_charge_template(
-                                                    charge_curves,
-                                                    veh_type.BATTERY_CAPACITY,
-                                                    veh_type.CHARGE_ACCEPTANCE,
-                                                    )
-        whmi_lookup = nrg.create_scaled_whmi(
-                                    data["whmi_lookup"],
-                                    veh_type.EFFICIENCY,
-                                    )
-        veh_env_params = {
-            'MAX_DISPATCH_MILES': inputs.MAX_DISPATCH_MILES,
-            'MIN_ALLOWED_SOC': inputs.MIN_ALLOWED_SOC,
-            'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
-            'DISPATCH_MPH': DISPATCH_MPH,
-        }
+    charge_curve = data['charge_curves']
+    fleet_env_params = {
+        'MAX_DISPATCH_MILES': inputs.MAX_DISPATCH_MILES,
+        'MIN_ALLOWED_SOC': inputs.MIN_ALLOWED_SOC,
+        'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
+        'DISPATCH_MPH': DISPATCH_MPH,
+    }
 
-
-        for v in range(veh_type.NUM_VEHICLES):
-            veh = Vehicle(
-                        veh_id = id,
-                        name = veh_type.VEHICLE_NAME,
-                        battery_capacity = veh_type.BATTERY_CAPACITY,
-                        initial_soc = np.random.uniform(0.2, 1.0), #init vehs w/ uniform soc distr
-                        whmi_lookup = whmi_lookup,
-                        charge_template = charge_template,
-                        logfile = vehicle_log_file,
-                        environment_params = veh_env_params,
-                        )
-            id += 1
-
-            #Initialize vehicle location to a random depot
-            depot = random.choice(depots)
-            veh.avail_lat = depot.LAT
-            veh.avail_lon = depot.LON
-
-            veh_fleet.append(veh)
-
-    random.shuffle(veh_fleet)
+    vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
+    veh_fleet = initialize_fleet(vehicle_types = vehicle_types,
+                                depots = depots,
+                                charge_curve = data['charge_curves'],
+                                whmi_lookup = data['whmi_lookup'],
+                                env_params = fleet_env_params,
+                                vehicle_log_file = vehicle_log_file)
 
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
 
@@ -153,9 +126,6 @@ def run_simulation(infile, sim_name):
             pass
             #TODO: Write failure log to CSV
 
-    # TODO: Below is placeholder to test dodo.py targeting.
-    charge_curves.to_csv(vehicle_log_file)
-    charge_curves.to_csv(station_log_file)
 
 
 if __name__ == "__main__":

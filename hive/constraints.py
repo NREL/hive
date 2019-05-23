@@ -14,7 +14,8 @@ ENV_PARAMS = {
 }
 
 VEH_PARAMS = {
-    'BATTERY_CAPACITY': ('between', 0, 1000), #kwh
+    'BATTERY_CAPACITY': ('greater_than', 0), #kwh
+    'INITIAL_SOC': ('between_incl', 0, 1)
 }
 
 STATION_PARAMS = {

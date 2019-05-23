@@ -4,31 +4,25 @@ import os
 
 from hive.initialize import initialize_charge_network, initialize_fleet
 from hive.station import FuelStation
+from hive.vehicle import Vehicle
 
 TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
 
 class InitializeChargeNetworkTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-    # this will run once before any of the test methods in this class
-    # i.e. load or create sample dataset for the test class
         cls.CHARGE_NET_FILE = os.path.join(TEST_INPUT_DIR,
                                         'charge_network',
                                         'aus_fuel_stations.csv')
 
     @classmethod
     def tearDownClass(cls):
-    # this will run once after all of the test methods in this class
-
-    # i.e. remove any files or databases that were created for testing
         pass
 
     def setUp(self):
-    # This will run before EVERY test method in the class
         pass
 
     def tearDown(self):
-    # This will run after EVERY test method in the class
         pass
 
     def test_initialize_charging_network_stations(self):
@@ -53,10 +47,6 @@ class InitializeChargeNetworkTest(unittest.TestCase):
 class InitializeFleetTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-    # this will run once before any of the test methods in this class
-    # i.e. load or create sample dataset for the test class
-        cls.MAIN_FILE = os.path.join(TEST_INPUT_DIR,
-                                        'main.csv')
         cls.CHARGE_NET_FILE = os.path.join(TEST_INPUT_DIR,
                                         'charge_network',
                                         'aus_fuel_stations.csv')
@@ -73,13 +63,9 @@ class InitializeFleetTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-    # this will run once after all of the test methods in this class
-
-    # i.e. remove any files or databases that were created for testing
         pass
 
     def setUp(self):
-    # This will run before EVERY test method in the class
         fleet_df = pd.read_csv(self.FLEET_FILE)
         charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
         _, depots = initialize_charge_network(charge_net_df,
@@ -102,7 +88,6 @@ class InitializeFleetTest(unittest.TestCase):
         }
 
     def tearDown(self):
-    # This will run after EVERY test method in the class
         pass
 
     def test_initialize_fleet_size(self):
@@ -113,6 +98,16 @@ class InitializeFleetTest(unittest.TestCase):
                                     self.env_params,
                                     vehicle_log_file = "placeholder.csv",)
         self.assertEqual(len(fleet), 130)
+
+    def test_initialize_fleet_type(self):
+        fleet = initialize_fleet(self.vehicles[0:1],
+                                    self.depots,
+                                    self.charge_curve_df,
+                                    self.whmi_df,
+                                    self.env_params,
+                                    vehicle_log_file = "placeholder.csv",)
+        self.assertIsInstance(fleet[0], Vehicle)
+
 
 
 
