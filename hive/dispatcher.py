@@ -146,8 +146,9 @@ class Dispatcher:
     def _find_nearest_plug(self, veh):
         """
         Function takes hive.vehicle.Vehicle object and returns the FuelStation nearest
-        Vehicle with at least one available plug. 
+        Vehicle with at least one available plug.
         """
+        #IDEA: Store stations in a geospatial index to elminate exhaustive search. -NR
         nearest, dist_to_nearest = None, None
         for station in self._stations:
             if station.avail_plugs != 0:
