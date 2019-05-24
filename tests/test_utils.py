@@ -1,5 +1,4 @@
 import unittest
-import sys
 import os
 import shutil
 import pandas as pd
@@ -18,6 +17,7 @@ class UtilsTest(unittest.TestCase):
         df1 = pd.DataFrame({'a': [1], 'b': [2], 'c': [3]})
         df2 = pd.DataFrame({'d': [4], 'e': [5], 'f': [6]})
         cls.test_data = {'df1': df1, 'df2': df2}
+        cls.log_columns = ['a', 'b', 'c']
         cls.CONSTRAINTS = {
                             'BETWEEN': ('between', 0, 2),
                             'BETWEEN_INCL': ('between_incl', 0, 2),
@@ -57,6 +57,24 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(data['df1'].a.iloc[0], 1)
         self.assertEqual(data['df2'].f.iloc[0], 6)
 
+    def test_initialize_log(self):
+        outfile = os.path.join(TEST_OUTPUT_DIR, 'test_init_log.csv')
+        utils.initialize_log(self.log_columns, outfile)
+
+        df = pd.read_csv(outfile)
+        jg
+        self.assertEqual(list(df.columns.values), self.log_columns)
+
+    def test_write_log(self):
+        outfile = os.path.join(TEST_OUTPUT_DIR, 'test_write_log.csv')
+        utils.initialize_log(self.log_columns, outfile)
+        data = [1,2,3]
+        utils.write_log(data, outfile)
+
+        df = pd.read_csv(outfile)
+
+        self.assertEqual(df.a.iloc[0], 1)
+
     def test_build_output_dir(self):
         utils.build_output_dir('test_scenario', TEST_OUTPUT_DIR)
         scenario_path = os.path.join(TEST_OUTPUT_DIR, 'test_scenario')
@@ -71,7 +89,7 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             utils.assert_constraint('BETWEEN', 0, self.CONSTRAINTS)
 
-        expected_error = f"Param BETWEEN:0 is under low limit 0"
+        expected_error = "Param BETWEEN:0 is under low limit 0"
 
         self.assertTrue(expected_error in str(context.exception))
 
@@ -79,7 +97,7 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             utils.assert_constraint('BETWEEN_INCL', -1, self.CONSTRAINTS)
 
-        expected_error = f"Param BETWEEN_INCL:-1 is under low limit 0"
+        expected_error = "Param BETWEEN_INCL:-1 is under low limit 0"
 
         self.assertTrue(expected_error in str(context.exception))
 
@@ -87,7 +105,7 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             utils.assert_constraint('GREATER_THAN', -1, self.CONSTRAINTS)
 
-        expected_error = f"Param GREATER_THAN:-1 is under low limit 0"
+        expected_error = "Param GREATER_THAN:-1 is under low limit 0"
 
         self.assertTrue(expected_error in str(context.exception))
 
@@ -95,7 +113,7 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             utils.assert_constraint('LESS_THAN', 3, self.CONSTRAINTS)
 
-        expected_error = f"Param LESS_THAN:3 is over high limit 2"
+        expected_error = "Param LESS_THAN:3 is over high limit 2"
 
         self.assertTrue(expected_error in str(context.exception))
 
@@ -103,6 +121,6 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             utils.assert_constraint('IN_SET', 'C', self.CONSTRAINTS)
 
-        expected_error = f"Param IN_SET:C must be from set"
+        expected_error = "Param IN_SET:C must be from set"
 
         self.assertTrue(expected_error in str(context.exception))

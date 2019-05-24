@@ -25,8 +25,9 @@ from hive.dispatcher import Dispatcher
 seed = 123
 random.seed(seed)
 np.random.seed(seed)
-SCENARIO_PATH = os.path.join(cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
-OUT_PATH = os.path.join(cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+SCENARIO_PATH = os.path.join(THIS_DIR, cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
+OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
 
 def run_simulation(infile, sim_name):
     with open(infile, 'rb') as f:
@@ -40,7 +41,7 @@ def run_simulation(infile, sim_name):
     inputs = data['main']
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
-    utils.build_output_dir(inputs.SCENARIO_NAME.strip().replace(" ", "_"), OUT_PATH)
+    utils.build_output_dir(sim_name, OUT_PATH)
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")

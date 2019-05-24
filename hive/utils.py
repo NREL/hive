@@ -3,6 +3,8 @@ import sys
 import glob
 import os
 import pickle
+import csv
+import shutil
 
 def save_to_hdf(data, outfile):
     for key, val in data.items():
@@ -12,12 +14,24 @@ def save_to_pickle(data, outfile):
     with open(outfile, 'wb') as f:
         pickle.dump(data, f)
 
+def initialize_log(columns, logfile):
+    with open(logfile, 'w+') as f:
+        writer = csv.writer(f)
+        writer.writerow(columns)
+
+def write_log(data, logfile):
+    with open(logfile, 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(data)
+
+
 def build_output_dir(scenario_name, root_path):
     scenario_output = os.path.join(root_path, scenario_name)
-    if not os.path.isdir(scenario_output):
-        os.makedirs(scenario_output)
-        os.makedirs(os.path.join(scenario_output, 'logs'))
-        os.makedirs(os.path.join(scenario_output, 'summaries'))
+    if os.path.isdir(scenario_output):
+        shutil.rmtree(scenario_output)
+    os.makedirs(scenario_output)
+    os.makedirs(os.path.join(scenario_output, 'logs'))
+    os.makedirs(os.path.join(scenario_output, 'summaries'))
 
 def assert_constraint(param, val, CONSTRAINTS, context=""):
     """

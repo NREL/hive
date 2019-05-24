@@ -5,7 +5,7 @@ Charging station object for mist algorithm
 import csv
 
 from hive.constraints import STATION_PARAMS
-from hive.utils import assert_constraint
+from hive.utils import assert_constraint, write_log, initialize_log
 
 class FuelStation:
     """
@@ -49,6 +49,15 @@ class FuelStation:
         'total_energy'
         ]
 
+    _LOG_COLUMNS = [
+        'station_id',
+        'vehicle_id',
+        'start_time',
+        'end_time',
+        'soc_i',
+        'soc_f',
+        ]
+
     def __init__(
                 self,
                 station_id,
@@ -75,7 +84,9 @@ class FuelStation:
 
         self.avail_plugs = plugs
 
-        self._log = logfile
+        self._logfile = logfile
+        initialize_log(self._LOG_COLUMNS, self._logfile)
+
         self.stats = dict()
         for stat in self._STATS:
             self.stats[stat] = 0
@@ -83,6 +94,4 @@ class FuelStation:
     def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f):
         #TODO: Update
         self.stats['charge_cnt'] += 1
-        with open(self._log, 'a') as f:
-            writer = csv.writer(f)
-            writer.writerow([self.ID, veh_id, start_time, end_time, soc_i, soc_f])
+        write_log([self.ID, veh.ID, start_time, end_time, soc_i, soc_f], self._logfile)
