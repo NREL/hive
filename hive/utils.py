@@ -14,14 +14,19 @@ def save_to_pickle(data, outfile):
     with open(outfile, 'wb') as f:
         pickle.dump(data, f)
 
-def initialize_log(columns, logfile):
+def initialize_log(fieldnames, logfile):
     with open(logfile, 'w+') as f:
-        writer = csv.writer(f)
-        writer.writerow(columns)
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
 
-def write_log(data, logfile):
+def write_log(data, fieldnames, logfile):
+    """
+    Writes data to specified logfile. Enforces specified fieldnames schema to
+    ensure writes are not improperly ordered.
+    """
+    assert type(data) == type(dict()), 'log data must be a dictionary.'
     with open(logfile, 'a') as f:
-        writer = csv.writer(f)
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writerow(data)
 
 

@@ -94,4 +94,13 @@ class FuelStation:
     def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f):
         #TODO: Update
         self.stats['charge_cnt'] += 1
-        write_log([self.ID, veh.ID, start_time, end_time, soc_i, soc_f], self._logfile)
+        write_log({
+            'station_id': self.ID,
+            'vehicle_id': veh.ID,
+            'start_time': start_time,
+            'end_time': end_time,
+            'soc_i': soc_i,
+            'soc_f': soc_f,
+            },
+            self._LOG_COLUMNS,
+            self._logfile)

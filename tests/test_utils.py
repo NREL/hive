@@ -17,7 +17,7 @@ class UtilsTest(unittest.TestCase):
         df1 = pd.DataFrame({'a': [1], 'b': [2], 'c': [3]})
         df2 = pd.DataFrame({'d': [4], 'e': [5], 'f': [6]})
         cls.test_data = {'df1': df1, 'df2': df2}
-        cls.log_columns = ['a', 'b', 'c']
+        cls.log_fieldnames = ['a', 'b', 'c']
         cls.CONSTRAINTS = {
                             'BETWEEN': ('between', 0, 2),
                             'BETWEEN_INCL': ('between_incl', 0, 2),
@@ -59,21 +59,32 @@ class UtilsTest(unittest.TestCase):
 
     def test_initialize_log(self):
         outfile = os.path.join(TEST_OUTPUT_DIR, 'test_init_log.csv')
-        utils.initialize_log(self.log_columns, outfile)
+        utils.initialize_log(self.log_fieldnames, outfile)
 
         df = pd.read_csv(outfile)
-        jg
-        self.assertEqual(list(df.columns.values), self.log_columns)
+
+        self.assertEqual(list(df.columns.values), self.log_fieldnames)
 
     def test_write_log(self):
         outfile = os.path.join(TEST_OUTPUT_DIR, 'test_write_log.csv')
-        utils.initialize_log(self.log_columns, outfile)
-        data = [1,2,3]
-        utils.write_log(data, outfile)
+        utils.initialize_log(self.log_fieldnames, outfile)
+        data = {'a': 1, 'b': 2, 'c': 3}
+        utils.write_log(data, self.log_fieldnames, outfile)
 
         df = pd.read_csv(outfile)
 
         self.assertEqual(df.a.iloc[0], 1)
+
+    def test_write_log_datatype_exception(self):
+        outfile = os.path.join(TEST_OUTPUT_DIR, 'test_write_log_exception.csv')
+        with self.assertRaises(Exception) as context:
+            data = [1,2,3]
+            utils.write_log(data, self.log_fieldnames, outfile)
+
+        expected_error = "log data must be a dictionary"
+
+        self.assertTrue(expected_error in str(context.exception))
+
 
     def test_build_output_dir(self):
         utils.build_output_dir('test_scenario', TEST_OUTPUT_DIR)
