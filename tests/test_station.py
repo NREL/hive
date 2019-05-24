@@ -15,6 +15,8 @@ class StationTest(unittest.TestCase):
     def setUpClass(cls):
         if not os.path.isdir(TEST_OUTPUT_DIR):
             os.makedirs(TEST_OUTPUT_DIR)
+        cls.log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
+
 
     @classmethod
     def tearDownClass(cls):
@@ -35,7 +37,7 @@ class StationTest(unittest.TestCase):
                                     plugs = -1,
                                     plug_type = "DC",
                                     plug_power = 150,
-                                    logfile="placeholder")
+                                    logfile=self.log_file)
 
         low_limit = STATION_PARAMS['TOTAL_PLUGS'][1]
         expected_error = f"Param TOTAL_PLUGS:-1 is under low limit {low_limit}"
@@ -50,7 +52,7 @@ class StationTest(unittest.TestCase):
                                     plugs = 1,
                                     plug_type = "XX",
                                     plug_power = 150,
-                                    logfile="placeholder")
+                                    logfile=self.log_file)
 
         expected_error = f"Param PLUG_TYPE:XX must be from set"
 
@@ -64,7 +66,7 @@ class StationTest(unittest.TestCase):
                                     plugs = 1,
                                     plug_type = "DC",
                                     plug_power = -1,
-                                    logfile="placeholder")
+                                    logfile=self.log_file)
 
         low_limit = STATION_PARAMS['PLUG_POWER'][1]
         expected_error = f"Param PLUG_POWER:-1 is under low limit {low_limit}"
@@ -86,7 +88,7 @@ class StationTest(unittest.TestCase):
                         initial_soc = 0.5,
                         whmi_lookup = "placeholder",
                         charge_template = "placeholder",
-                        logfile = "placeholder")
+                        logfile=self.log_file)
 
         start_time = datetime(2019,5,1,1)
         end_time = datetime(2019,5,1,2)

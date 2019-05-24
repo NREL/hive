@@ -1,15 +1,21 @@
 import unittest
 import os
+import shutil
 import pandas as pd
 
 from hive import initialize as init
 from hive.dispatcher import Dispatcher
 
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
+TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class DispatcherTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        if not os.path.isdir(TEST_OUTPUT_DIR):
+            os.makedirs(TEST_OUTPUT_DIR)
+
         CHARGE_NET_FILE = os.path.join(TEST_INPUT_DIR,
                                         'charge_network',
                                         'aus_fuel_stations.csv')
@@ -23,10 +29,11 @@ class DispatcherTest(unittest.TestCase):
                                             'fleets',
                                             'aus_fleet.csv')
 
+        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet_df = pd.read_csv(FLEET_FILE)
         charge_net_df = pd.read_csv(CHARGE_NET_FILE)
         stations, depots = init.initialize_charge_network(charge_net_df,
-                                            station_log_file='placeholder.csv')
+                                            station_log_file=log_file)
         charge_curve_df = pd.read_csv(CHARGE_CURVE_FILE)
         whmi_df = pd.read_csv(WHMI_LOOKUP_FILE)
         vehicles = list()
@@ -50,12 +57,13 @@ class DispatcherTest(unittest.TestCase):
                                             charge_curve_df,
                                             whmi_df,
                                             env_params,
-                                            vehicle_log_file="placeholder.csv")
+                                            vehicle_log_file=log_file)
 
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        if os.path.isdir(TEST_OUTPUT_DIR):
+            shutil.rmtree(TEST_OUTPUT_DIR)
 
     def setUp(self):
         pass
