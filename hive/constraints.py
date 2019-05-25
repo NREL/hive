@@ -7,7 +7,7 @@ ENV_PARAMS = {
     'LOWER_SOC_THRESH_DCFC': ('between', 0,100),
     'UPPER_SOC_THRESH_DCFC': ('between', 0,100),
     'MAX_DISPATCH_MILES': ('between', 0, 10000),
-    'RN_SCALING_FACTOR': ('between', 0, 5),
+    'RN_SCALING_FACTOR': ('between', 1, 5),
     'DISPATCH_MPH': ('between', 0, 100),
     'MIN_ALLOWED_SOC': ('between', 0,100),
     "TRIP_REVENUE": ('between', 0,10000),
