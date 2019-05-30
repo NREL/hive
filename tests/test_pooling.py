@@ -43,7 +43,7 @@ class PoolingTest(unittest.TestCase):
             (trips_df.dropoff_longitude < -73)
         )]
 		
-        pool_trips(trips_df, 600, 305)
+        labels, clusters = pool_trips(trips_df, time_window_seconds=600, distance_window_meters=305, max_cores=1)
         pass
         
 if __name__ == '__main__':
