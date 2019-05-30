@@ -7,9 +7,11 @@ import sys
 import random
 import unittest
 import pandas as pd
-
+import socket
+import importlib
 sys.path.append('../')
-from hive.pooling import pool_trips
+from hive import pooling
+importlib.reload(pooling)
 
 class PoolingTest(unittest.TestCase):
     @classmethod
@@ -30,8 +32,21 @@ class PoolingTest(unittest.TestCase):
     
     def test_pool_trips(self):
         random.seed(123)
-        trips_df = pd.read_csv("~/Honda/nyc_20130411_18-21.csv")
-        trips_df = trips_df[trips_df.pickup_datetime.str.contains("2013-04-11 21")]
+        
+        print("Loading trips CSV...")
+        if socket.gethostname() == "arnaud.hpc.nrel.gov":
+            max_cores = 0
+            trips_df = pd.read_csv("/data/mbap_shared/honda_data/raw_data/nyc_tlc/trip_data/trip_data_4.csv")
+        elif socket.gethostname() == "tgrushka-32011s":
+            max_cores = 1
+            trips_df = pd.read_csv("~/Honda/nyc_20130411_18-21.csv")
+            # filter NYC by hour:
+            # trips_df = trips_df[trips_df.pickup_datetime.str.contains("2013-04-11 21")]
+        else:
+            raise(ValueError, "I don't know where the CSV file is on this machine.")
+        
+        print("Filtering out invalid trips...")
+        # filter NYC for valid coordinates:
         trips_df = trips_df.loc[(
 			(trips_df.pickup_latitude > 40) &
             (trips_df.pickup_latitude < 41) &
@@ -43,7 +58,8 @@ class PoolingTest(unittest.TestCase):
             (trips_df.dropoff_longitude < -73)
         )]
 		
-        labels, clusters = pool_trips(trips_df, time_window_seconds=600, distance_window_meters=305, max_cores=1)
+        print("Calling pooling.pool_trips ...")
+        labels, clusters = pooling.pool_trips(trips_df, time_window_seconds=600, distance_window_meters=305, max_cores=max_cores)
         pass
         
 if __name__ == '__main__':

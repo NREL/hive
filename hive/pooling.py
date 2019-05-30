@@ -15,6 +15,7 @@ import logging
 import warnings
 from math import sqrt
 from datetime import datetime
+import pdb
 
 # pd.set_option('display.float_format', lambda x: '%.3f' % x)
 pd.set_option('display.max_columns', 10)
@@ -30,6 +31,12 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
         ['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude', 'pickup_datetime', 'passenger_count']
     bandwidth_reduction = multiplier to reduce bandwidth each iteration [default = 0.9]
     """
+    print("====================")
+    print("POOLING {} TRIPS:".format(len(trips_df)))
+    print("Time Window = {} s ({} min)".format(time_window_seconds, round(time_window_seconds / 60.0, 1)))
+    print("Distance Window = {} m ({} ft)".format(distance_window_meters, round(distance_window_meters * 3.28084)))
+    print("====================")
+    print("Started at: " + str(datetime.now()))
     time_multiplier = float(distance_window_meters) / float(time_window_seconds)
     
     print("Converting time to epoch (seconds since 1970)...")
@@ -80,7 +87,8 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
         'pickup_easting': pickup.easting,
         'pickup_northing': pickup.northing,
         'dropoff_easting': dropoff.easting,
-        'dropoff_northing': dropoff.northing
+        'dropoff_northing': dropoff.northing,
+        'passengers': trips_df[col_names[5]]
     })
     
     # meanshift_df
@@ -108,11 +116,11 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
         
         # setup MeanShift and fit data:
         ms = MeanShift(bandwidth=adjusted_bandwidth, n_jobs=n_cores)
-        ms.fit(unpooled_df)
+        ms.fit(unpooled_df[['scaled_time', 'pickup_easting', 'pickup_northing', 'dropoff_easting', 'dropoff_northing']])
         
         # # of clusters = # of unique labels
         n_clusters = len(np.unique(ms.labels_))
-        print("Found " + str(n_clusters) + " clusters (" + str(round(float(n_clusters) / float(len(unpooled_df)), 3)) + ") of " + str(len(unpooled_df)) + " unpooled trips...")
+        print("Found " + str(n_clusters) + " clusters of " + str(len(unpooled_df)) + " remaining unpooled trips...")
         
         # ensure new labels are unique:
         labels = ms.labels_ + starting_label
@@ -123,31 +131,29 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
         
         # the clusters should be associated with the unique labels in ascending order:
         clusters.set_index(np.unique(labels), inplace=True)
-        clusters = clusters.assign(trips = 1, passengers = 1)
         
         # assign the labels to the unpooled df
         unpooled_df.set_index(labels, inplace=True)
         
+        clusters = clusters.assign(trips = unpooled_df.groupby(unpooled_df.index).scaled_time.count())
+        
         # collect labels that exceed the window
         #exceeding_df = pd.DataFrame(columns=['label', 'count', 'max'])
         exceeding_labels = []
-        for i in np.unique(labels):
+        for i in clusters[clusters.trips > 1].index:
             x = unpooled_df[labels == i]
-            if len(x) > 1: # skip unpooled trips
-                northing_range = max(x.pickup_northing) - min(x.pickup_northing)
-                easting_range = max(x.pickup_easting) - min(x.pickup_easting)
-                distance_range = sqrt(northing_range ** 2 + easting_range ** 2)
-                time_range = max(x.scaled_time) - min(x.scaled_time)
-                max_value = max(time_range, distance_range)
-                if max_value > bandwidth:
-                    #exceeding_df = exceeding_df.append(pd.DataFrame({ 'count': len(x), 'max': int(round(max_value)) }, index=[i]), sort=False)
-                    exceeding_labels += [i]
-                else:
-                    clusters.loc[i, 'trips'] = len(x)
+            northing_range = max(x.pickup_northing) - min(x.pickup_northing)
+            easting_range = max(x.pickup_easting) - min(x.pickup_easting)
+            distance_range = sqrt(northing_range ** 2 + easting_range ** 2)
+            time_range = max(x.scaled_time) - min(x.scaled_time)
+            max_value = max(time_range, distance_range)
+            if max_value > bandwidth:
+                #exceeding_df = exceeding_df.append(pd.DataFrame({ 'count': len(x), 'max': int(round(max_value)) }, index=[i]), sort=False)
+                exceeding_labels += [i]
         
         # the labels exceeding the window are the index of the df we just created
         #exceeding_labels = np.array(exceeding_df.index)
-        print(str(len(exceeding_labels)) + " clusters exceeded window limits.")
+        print(str(len(exceeding_labels)) + " of these clusters exceeded window limits.")
         print("-------------------- " + str(datetime.now() - this_start_time))
         
         # check if we need to recurse:
@@ -178,13 +184,16 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
             total_pools = str(len(np.unique(unpooled_df.index)))
             pooling_ratio = float(total_pools) / float(len(meanshift_df))
             
-            print("Counting passengers per cluster...")
-            for i in np.unique(unpooled_df.index):
-                # get logical index of where to get pax counts:
-                pax_indices = np.isin(unpooled_df.index, i)
-                clusters.loc[i, 'passengers'] = sum(trips_df[pax_indices][col_names[5]])
-            
             print("==================== " + str(datetime.now() - start_time))
+            
+            print("Counting passengers and trips per cluster...")
+            
+            clusters = clusters.assign(
+                trips = unpooled_df.groupby(unpooled_df.index).passengers.count(),
+                passengers = unpooled_df.groupby(unpooled_df.index).passengers.sum()
+            )
+            
+            
             print("TOTAL POOLS: " + str(total_pools))
             print("POOL STATS: (# trips in pool, # pools, total pax)")
             for i in np.unique(clusters.trips):
@@ -192,7 +201,7 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
             print("POOLING RATIO: " + str(round(pooling_ratio, 3)))
         return (unpooled_df.index, clusters)
     
-    print("===== Starting MeanShift, bandwidth reduction = {} =====".format(bandwidth_reduction))
+    print("===== Starting MeanShift, cores = {}, bandwidth reduction = {} =====".format(n_cores, bandwidth_reduction))
     labels, clusters = meanshift_algo(meanshift_df)
     
     clusters = clusters.assign(pickup_epoch = (clusters.scaled_time / time_multiplier).astype(np.int64))
@@ -206,5 +215,7 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
 
     clusters = clusters.join(cluster_pickup).join(cluster_dropoff)
     clusters = clusters[['trips', 'pickup_datetime', 'pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude']]
+    
+    print("Finished at: " + str(datetime.now()))
     
     return (labels, clusters)
