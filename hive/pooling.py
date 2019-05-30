@@ -13,6 +13,8 @@ import multiprocessing
 import utm
 import logging
 import warnings
+from math import sqrt
+from datetime import datetime
 
 # pd.set_option('display.float_format', lambda x: '%.3f' % x)
 pd.set_option('display.max_columns', 10)
@@ -21,25 +23,30 @@ class ZoneError(Exception):
     """Raised when coordinates fall in different UTM zones."""
     pass
 
-def pool_trips(trips_df, time_window_seconds, distance_window_meters, require_same_utm_zone=True, max_cores=0):
+time_window_seconds=600
+distance_window_meters=305
+def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude', 'pickup_datetime'], require_same_utm_zone=True, bandwidth_reduction=0.9, max_cores=0):
     """
-    distance_window_meters = # of meters in X and Y directions (considered separately)
+    col_names = ordered names of appropriate columns in input DataFrame:
+        ['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude', 'pickup_datetime']
+    bandwidth_reduction = multiplier to reduce bandwidth each iteration [default = 0.9]
     """
     time_multiplier = float(distance_window_meters) / float(time_window_seconds)
     
     print("Converting time to epoch (seconds since 1970)...")
-    pickup_epoch = pd.to_datetime(trips_df.pickup_datetime).astype(np.int64) // 1e9
+    pickup_epoch = pd.to_datetime(trips_df[col_names[4]]).astype(np.int64) // 1e9
     
     print("Multiplying time (seconds) by {}".format(time_multiplier))
     scaled_time = pickup_epoch * time_multiplier
     
     # Transform coordinates to UTM (unit = meters)
+    # col_names[0] = name of 'pickup_latitude' column ... etc.
     print("Transforming pickup coordinates to UTM (unit = meters)...")
-    pickup = pd.DataFrame(trips_df[['pickup_latitude', 'pickup_longitude']].apply(lambda x: utm.from_latlon(x[0], x[1]), axis=1).tolist())
+    pickup = pd.DataFrame(trips_df[[col_names[0], col_names[1]]].apply(lambda x: utm.from_latlon(x[0], x[1]), axis=1).tolist())
     pickup.set_index(trips_df.index, inplace=True)
     pickup.columns = ['easting', 'northing', 'zone', 'letter']
     print("Transforming dropoff coordinates to UTM (unit = meters)...")
-    dropoff = pd.DataFrame(trips_df[['dropoff_latitude', 'dropoff_longitude']].apply(lambda x: utm.from_latlon(x[0], x[1]), axis=1).tolist())
+    dropoff = pd.DataFrame(trips_df[[col_names[2], col_names[3]]].apply(lambda x: utm.from_latlon(x[0], x[1]), axis=1).tolist())
     dropoff.set_index(trips_df.index, inplace=True)
     dropoff.columns = ['easting', 'northing', 'zone', 'letter']
     
@@ -58,7 +65,7 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, require_sa
                 all(pickup.letter == dropoff.letter))
     
     if not same_utm:
-        message = "Locations fall in different UTM zones! This may impact pooling results."
+        message = "Trip start/endpoints are in multiple UTM zones! This may impact pooling results."
         if require_same_utm_zone:
             raise ZoneError(message)
         else:
@@ -73,7 +80,11 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, require_sa
         'dropoff_northing': dropoff.northing.round().astype(np.int64)
     })
     
-    # print(meanshift_df)
+    zone = pickup.zone[0]
+    letter = pickup.letter[0]
+    
+    # meanshift_df
+    
     
     bandwidth = int(distance_window_meters)
     print("MeanShift bandwidth = {}".format(bandwidth))
@@ -81,18 +92,152 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, require_sa
     n_cores = max_cores
     if n_cores == 0:
         n_cores = multiprocessing.cpu_count()
-    n_cores = 1
-    
-    ms = MeanShift(bandwidth=bandwidth, n_jobs=n_cores)
-    ms.fit(meanshift_df)
-    
-    labels = ms.labels_
-    cluster_centers = ms.cluster_centers_
-    labels_unique = np.unique(labels)
-    n_clusters = len(labels_unique)
-    
-    print("Grouped " + str(len(trips_df)) + " trips into " + str(n_clusters) + " clusters.")
-    print("POOLING RATIO = " + str(round(float(n_clusters) / len(trips_df), 4)))
     
     
-    pass
+    # DELETE -- TESTING ONLY!
+    #n_cores = 1
+    #bandwidth=600
+    #iteration=0
+    #bandwidth_reduction = 0.9
+    
+    def meanshift_algo(unpooled_df, iteration=0, starting_label=0):
+        this_start_time = datetime.now()
+        if iteration == 0:
+            start_time = datetime.now()
+        
+        # reduce bandwidth for each iteration
+        adjusted_bandwidth = int(bandwidth * bandwidth_reduction ** iteration)
+        print("MeanShift iteration " + str(iteration + 1) + ": " + str(len(unpooled_df)) + " trips, bandwidth = " + str(adjusted_bandwidth) + " ...")
+        
+        # setup MeanShift and fit data:
+        ms = MeanShift(bandwidth=adjusted_bandwidth, n_jobs=n_cores)
+        ms.fit(unpooled_df)
+        
+        # # of clusters = # of unique labels
+        n_clusters = len(np.unique(ms.labels_))
+        print("Found " + str(n_clusters) + " clusters (" + str(round(float(n_clusters) / float(len(unpooled_df)), 3)) + ") of " + str(len(unpooled_df)) + " unpooled trips.")
+        
+        # ensure new labels are unique:
+        labels = ms.labels_ + starting_label
+        
+        # assign cluster centers to a DataFrame:
+        clusters = pd.DataFrame(ms.cluster_centers_).astype(np.int64)
+        clusters.columns = ['scaled_time', 'pickup_easting', 'pickup_northing', 'dropoff_easting', 'dropoff_northing']
+        
+        # the clusters should be associated with the unique labels in ascending order:
+        clusters.set_index(np.unique(labels), inplace=True)
+        clusters = clusters.assign(count = 1)
+        
+        # assign the labels to the unpooled df
+        unpooled_df.set_index(labels, inplace=True)
+        
+        # collect labels that exceed the window
+        #exceeding_df = pd.DataFrame(columns=['label', 'count', 'max'])
+        exceeding_labels = []
+        for i in np.unique(labels):
+            x = unpooled_df[labels == i]
+            if len(x) > 1: # skip unpooled trips
+                northing_range = max(x.pickup_northing) - min(x.pickup_northing)
+                easting_range = max(x.pickup_easting) - min(x.pickup_easting)
+                distance_range = sqrt(northing_range ** 2 + easting_range ** 2)
+                time_range = max(x.scaled_time) - min(x.scaled_time)
+                max_value = max(time_range, distance_range)
+                if max_value > bandwidth:
+                    #exceeding_df = exceeding_df.append(pd.DataFrame({ 'count': len(x), 'max': int(round(max_value)) }, index=[i]), sort=False)
+                    exceeding_labels += [i]
+                else:
+                    clusters.loc[i, 'count'] = len(x)
+        
+        # the labels exceeding the window are the index of the df we just created
+        #exceeding_labels = np.array(exceeding_df.index)
+        print(str(len(exceeding_labels)) + " clusters exceeded window limits.")
+        print("-------------------- " + str(datetime.now() - this_start_time))
+        
+        # check if we need to recurse:
+        if len(exceeding_labels) > 0:
+            # drop 'invalid' clusters that are being repooled anyway:
+            clusters.drop(exceeding_labels, inplace=True)
+            
+            # calculate safe next starting label value:
+            next_label = starting_label + n_clusters
+            print("next_label = " + str(next_label))
+            
+            # get a logical index of trips in pools exceeding the window:
+            exceeding_indices = np.isin(labels, exceeding_labels)
+            
+            # run the algorithm recursively:
+            new_labels, new_clusters = meanshift_algo(unpooled_df[exceeding_indices], iteration=(iteration + 1), starting_label=next_label)
+            
+            # relabel the repooled trips:
+            print("Relabeling...")
+            unpooled_df = unpooled_df.assign(label = unpooled_df.index)
+            unpooled_df.loc[exceeding_indices, 'label'] = new_labels
+            unpooled_df.set_index(unpooled_df.label, inplace=True)
+            unpooled_df.drop('label', axis=1, inplace=True)
+            
+            # append the new clusters:
+            clusters = clusters.append(new_clusters, sort=False)
+        if iteration == 0:
+            total_pools = str(len(np.unique(unpooled_df.index)))
+            pooling_ratio = float(total_pools) / float(len(meanshift_df))
+            
+            print("==================== " + str(datetime.now() - start_time))
+            print("TOTAL POOLS: " + str(total_pools))
+            print("POOLING RATIO: " + str(round(pooling_ratio, 3)))
+        return (unpooled_df.index, clusters)
+
+labels, clusters = meanshift_algo(meanshift_df)
+
+
+
+
+clusters = clusters.assign(pickup_epoch = (clusters.scaled_time / time_multiplier).astype(np.int64))
+clusters = clusters.assign(pickup_datetime = clusters.pickup_epoch.apply(datetime.utcfromtimestamp))
+cluster_pickup = pd.DataFrame(clusters[['pickup_easting', 'pickup_northing']].apply(lambda x: utm.to_latlon(x['pickup_easting'], x['pickup_northing'], zone, letter), axis=1).tolist())
+cluster_dropoff = pd.DataFrame(clusters[['dropoff_easting', 'dropoff_northing']].apply(lambda x: utm.to_latlon(x['dropoff_easting'], x['dropoff_northing'], zone, letter), axis=1).tolist())
+cluster_pickup.set_index(clusters.index, inplace=True)
+cluster_pickup.columns = ['pickup_latitude', 'pickup_longitude']
+cluster_dropoff.set_index(clusters.index, inplace=True)
+cluster_dropoff.columns = ['dropoff_latitude', 'dropoff_longitude']
+
+clusters = clusters.join(cluster_pickup).join(cluster_dropoff)
+
+
+clusters[['pickup_datetime', 'pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude']]
+
+
+print("")
+
+# 10 minutes / 1000 ft
+# reduction iterations  ratio   time
+# 0.5       2           0.86    39 s
+# 0.8       4           0.84    36 s
+# 0.9       7           0.83    39 s
+
+
+# 33275 unpooled trips / bandwidth=600
+# bandwidth reduction / iterations / clusters / ratio / time
+# 0.5: 3 / 26825 / 0.81 / 1:17
+# 2/3: 3 / 22503 / 0.68 / 1:27
+# 0.8: 5 / 20013 / 0.6 / 1:31
+# --> 0.9: 9 / 18400 / 0.55 / 2:03
+# 0.95: > / 17627 / 0.53 / 3:13
+# 0.99: > / 17054 / 0.51 / 9:52
+len(np.unique(x))
+
+
+
+x.describe(percentiles=[.25, .5, .75, .9, .95, .975, .99])
+sum((x > 0))
+2572
+226
+
+cluster_centers = ms.cluster_centers_
+labels_unique = np.unique(labels)
+n_clusters = len(labels_unique)
+
+print("Grouped " + str(len(trips_df)) + " trips into " + str(n_clusters) + " clusters.")
+print("POOLING RATIO = " + str(round(float(n_clusters) / len(trips_df), 4)))
+
+
+pass
