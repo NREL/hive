@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# autotest.sh
+# Bash script (Mac-specific) for watching python source
+#  for changes and re-running a specific test on save.
+# author: tgrushka
+
 runtests() {
   afplay /System/Library/Sounds/Tink.aiff
   
