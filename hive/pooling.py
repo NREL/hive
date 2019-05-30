@@ -77,8 +77,10 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
         else:
             warnings.warn(message)
     
-    zone = pickup.zone[0]
-    letter = pickup.letter[0]
+    #pdb.set_trace()
+    
+    zone = pickup.zone.iloc[0]
+    letter = pickup.letter.iloc[0]
     print("UTM zone: {} {}".format(zone, letter))
     
     print("Building MeanShift DataFrame...")
@@ -105,6 +107,9 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
     #iteration=0
     #bandwidth_reduction = 0.9
     
+    # n_jobs = int((1 + n_cores) / 2)
+    n_jobs = 1
+    
     def meanshift_algo(unpooled_df, iteration=0, starting_label=0):
         this_start_time = datetime.now()
         if iteration == 0:
@@ -115,7 +120,7 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
         print("MeanShift iteration " + str(iteration + 1) + ": " + str(len(unpooled_df)) + " trips, bandwidth = " + str(adjusted_bandwidth) + " ...")
         
         # setup MeanShift and fit data:
-        ms = MeanShift(bandwidth=adjusted_bandwidth, n_jobs=n_cores)
+        ms = MeanShift(bandwidth=adjusted_bandwidth, n_jobs=n_jobs)
         ms.fit(unpooled_df[['scaled_time', 'pickup_easting', 'pickup_northing', 'dropoff_easting', 'dropoff_northing']])
         
         # # of clusters = # of unique labels
@@ -201,7 +206,7 @@ def pool_trips(trips_df, time_window_seconds, distance_window_meters, col_names=
             print("POOLING RATIO: " + str(round(pooling_ratio, 3)))
         return (unpooled_df.index, clusters)
     
-    print("===== Starting MeanShift, cores = {}, bandwidth reduction = {} =====".format(n_cores, bandwidth_reduction))
+    print("===== Starting MeanShift, jobs = {}, bandwidth reduction = {} =====".format(n_jobs, bandwidth_reduction))
     labels, clusters = meanshift_algo(meanshift_df)
     
     clusters = clusters.assign(pickup_epoch = (clusters.scaled_time / time_multiplier).astype(np.int64))

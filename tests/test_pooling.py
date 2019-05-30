@@ -7,6 +7,7 @@ import sys
 import random
 import unittest
 import pandas as pd
+import numpy as np
 import socket
 import importlib
 sys.path.append('../')
@@ -33,17 +34,35 @@ class PoolingTest(unittest.TestCase):
     def test_pool_trips(self):
         random.seed(123)
         
-        print("Loading trips CSV...")
         if socket.gethostname() == "arnaud.hpc.nrel.gov":
             max_cores = 0
-            trips_df = pd.read_csv("/data/mbap_shared/honda_data/raw_data/nyc_tlc/trip_data/trip_data_4.csv")
+            file = "/data/mbap_shared/honda_data/raw_data/nyc_tlc/trip_data/trip_data_4.csv"
         elif socket.gethostname() == "tgrushka-32011s":
             max_cores = 1
-            trips_df = pd.read_csv("~/Honda/nyc_20130411_18-21.csv")
-            # filter NYC by hour:
-            # trips_df = trips_df[trips_df.pickup_datetime.str.contains("2013-04-11 21")]
+            file = "~/Honda/nyc_20130411_18-21.csv"
         else:
             raise(ValueError, "I don't know where the CSV file is on this machine.")
+        
+        print("Loading {} ...".format(file))
+        
+        trips_df = pd.read_csv(file, \
+            engine="c", \
+            skipinitialspace=True, \
+            usecols=['pickup_datetime', 'dropoff_datetime', 'passenger_count', 'pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude'], \
+            dtype={ \
+            'pickup_datetime': str, \
+            'dropoff_datetime': str, \
+            'passenger_count': int, \
+            'pickup_latitude': np.float64, \
+            'pickup_longitude': np.float64, \
+            'dropoff_latitude': np.float64, \
+            'dropoff_longitude': np.float64
+        })
+        
+        # filter NYC by date:
+        date_filter = "2013-04-11"
+        print("Filtering trips on date {} ...".format(date_filter))
+        trips_df = trips_df[trips_df.pickup_datetime.str.contains(date_filter)]
         
         print("Filtering out invalid trips...")
         # filter NYC for valid coordinates:
@@ -64,3 +83,4 @@ class PoolingTest(unittest.TestCase):
         
 if __name__ == '__main__':
     unittest.main()
+
