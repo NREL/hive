@@ -25,10 +25,10 @@ class ZoneError(Exception):
     pass
 
 
-def pool_locations(trips_df, distance_window_meters, col_names=['dropoff_latitude', 'dropoff_longitude'], require_same_utm_zone=True, bandwidth_reduction=0.9, max_cores=0):
+def pool_locations(trips_df, distance_window_meters, col_names=['dropoff_latitude', 'dropoff_longitude'], strict=False, require_same_utm_zone=True, bandwidth_reduction=0.9, max_cores=0):
     print("====================")
     print("POOLING {} locations:".format(len(trips_df)))
-    print("Distance Window = {} m ({} ft)".format(distance_window_meters, round(distance_window_meters * 3.28084)))
+    print("Distance Window = {} m ({} ft), Strict = {}".format(distance_window_meters, round(distance_window_meters * 3.28084), strict))
     print("====================")
     print("Started at: " + str(datetime.now()))
     
@@ -112,46 +112,50 @@ def pool_locations(trips_df, distance_window_meters, col_names=['dropoff_latitud
         
         clusters = clusters.assign(trips = unpooled_df.groupby(unpooled_df.index).location_easting.count())
         
-        # collect labels that exceed the window
-        #exceeding_df = pd.DataFrame(columns=['label', 'count', 'max'])
-        exceeding_labels = []
-        for i in clusters[clusters.trips > 1].index:
-            x = unpooled_df[labels == i]
-            northing_range = max(x.location_northing) - min(x.location_northing)
-            easting_range = max(x.location_easting) - min(x.location_easting)
-            distance_range = sqrt(northing_range ** 2 + easting_range ** 2)
-            if distance_range > bandwidth:
-                exceeding_labels += [i]
-        
-        # the labels exceeding the window are the index of the df we just created
-        #exceeding_labels = np.array(exceeding_df.index)
-        print(str(len(exceeding_labels)) + " of these clusters exceeded window limits.")
-        print("-------------------- " + str(datetime.now() - this_start_time))
-        
-        # check if we need to recurse:
-        if len(exceeding_labels) > 0:
-            # drop 'invalid' clusters that are being repooled anyway:
-            clusters.drop(exceeding_labels, inplace=True)
+        if not strict:
+            print("strict==False :. skipping further iterations.")
+        if strict: # iterate only if strict=True
+            # collect labels that exceed the window
+            #exceeding_df = pd.DataFrame(columns=['label', 'count', 'max'])
+            exceeding_labels = []
+            for i in clusters[clusters.trips > 1].index:
+                x = unpooled_df[labels == i]
+                northing_range = max(x.location_northing) - min(x.location_northing)
+                easting_range = max(x.location_easting) - min(x.location_easting)
+                distance_range = sqrt(northing_range ** 2 + easting_range ** 2)
+                if distance_range > bandwidth:
+                    exceeding_labels += [i]
             
-            # calculate safe next starting label value:
-            next_label = starting_label + n_clusters
-            #print("next_label = " + str(next_label))
+            # the labels exceeding the window are the index of the df we just created
+            #exceeding_labels = np.array(exceeding_df.index)
+            print(str(len(exceeding_labels)) + " of these clusters exceeded window limits.")
+            print("-------------------- " + str(datetime.now() - this_start_time))
             
-            # get a logical index of trips in pools exceeding the window:
-            exceeding_indices = np.isin(labels, exceeding_labels)
-            
-            # run the algorithm recursively:
-            new_labels, new_clusters = _meanshift_algo(unpooled_df[exceeding_indices], iteration=(iteration + 1), starting_label=next_label)
-            
-            # relabel the repooled trips:
-            #print("Relabeling...")
-            unpooled_df = unpooled_df.assign(label = unpooled_df.index)
-            unpooled_df.loc[exceeding_indices, 'label'] = new_labels
-            unpooled_df.set_index(unpooled_df.label, inplace=True)
-            unpooled_df.drop('label', axis=1, inplace=True)
-            
-            # append the new clusters:
-            clusters = clusters.append(new_clusters, sort=False)
+            # check if we need to recurse:
+            if len(exceeding_labels) > 0:
+                # drop 'invalid' clusters that are being repooled anyway:
+                clusters.drop(exceeding_labels, inplace=True)
+                
+                # calculate safe next starting label value:
+                next_label = starting_label + n_clusters
+                #print("next_label = " + str(next_label))
+                
+                # get a logical index of trips in pools exceeding the window:
+                exceeding_indices = np.isin(labels, exceeding_labels)
+                
+                # run the algorithm recursively:
+                new_labels, new_clusters = _meanshift_algo(unpooled_df[exceeding_indices], iteration=(iteration + 1), starting_label=next_label)
+                
+                # relabel the repooled trips:
+                #print("Relabeling...")
+                unpooled_df = unpooled_df.assign(label = unpooled_df.index)
+                unpooled_df.loc[exceeding_indices, 'label'] = new_labels
+                unpooled_df.set_index(unpooled_df.label, inplace=True)
+                unpooled_df.drop('label', axis=1, inplace=True)
+                
+                # append the new clusters:
+                clusters = clusters.append(new_clusters, sort=False)
+                
         if iteration == 0:
             total_pools = str(len(np.unique(unpooled_df.index)))
             pooling_ratio = float(total_pools) / float(len(meanshift_df))
