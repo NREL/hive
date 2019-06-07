@@ -7,8 +7,13 @@ import pandas as pd
 import numpy as np
 from numpy import mean, absolute
 from sklearn.cluster import MeanShift
-from sklearn.preprocessing import StandardScaler
-from sklearn.externals.joblib._parallel_backends import AutoBatchingMixin
+#from sklearn.preprocessing import StandardScaler
+#from sklearn.externals.joblib._parallel_backends import AutoBatchingMixin
+from sklearn.externals.joblib import parallel
+
+parallel.MIN_IDEAL_BATCH_DURATION = 1.
+parallel.MAX_IDEAL_BATCH_DURATION = parallel.MIN_IDEAL_BATCH_DURATION * 10
+
 import multiprocessing
 import utm
 import logging
@@ -72,12 +77,14 @@ def pool_locations(trips_df, distance_window_meters, col_names=['dropoff_latitud
     bandwidth = int(distance_window_meters)
     
     n_cores = max_cores
+    n_cores = 0
     if n_cores == 0:
         n_cores = multiprocessing.cpu_count()
     
-    # n_jobs = int((1 + n_cores) / 2)
+    n_jobs = int((1 + n_cores) / 2)
     # NEED TO CHANGE THIS WHEN WE GET PARALLEL WORKING!!
-    n_jobs = 1
+    #n_jobs = 1
+    n_jobs=48
     
     # YES THIS IS ALMOST A DUPLICATE OF BELOW BUT DIFFERENT -- NOT VERY DRY:
     def _meanshift_algo(unpooled_df, iteration=0, starting_label=0):

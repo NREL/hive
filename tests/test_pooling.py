@@ -77,10 +77,9 @@ class PoolingTest(unittest.TestCase):
             (trips_df.dropoff_longitude > -75) &
             (trips_df.dropoff_longitude < -73)
         )]
-        sample_df = trips_df.sample(n=10000)
 		
         print("Calling pooling.pool_locations ...")
-        labels, clusters = pooling.pool_locations(sample_df, distance_window_meters=1000, bandwidth_reduction=0.8, max_cores=max_cores)
+        labels, clusters = pooling.pool_locations(trips_df, distance_window_meters=1000, bandwidth_reduction=0.8, max_cores=max_cores)
         print(labels)
         print(clusters)
         pass
