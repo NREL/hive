@@ -87,7 +87,7 @@ class Dispatcher:
         - veh.avail_time).total_seconds()
         idle_time_min = idle_time_s / 60
         if idle_time_min > veh.ENV['MAX_WAIT_TIME_MINUTES']:
-            depot = self._find_nearest_plug(veh)
+            depot = self._find_nearest_plug(veh, type='depot')
             veh.return_to_depot(depot)
             depot.avail_plugs -= 1
             return False
@@ -143,14 +143,24 @@ class Dispatcher:
 
         return True
 
-    def _find_nearest_plug(self, veh):
+    def _find_nearest_plug(self, veh, type='station'):
         """
-        Function takes hive.vehicle.Vehicle object and returns the FuelStation nearest
-        Vehicle with at least one available plug.
+        Function takes hive.vehicle.Vehicle object and returns the FuelStation 
+        nearest Vehicle with at least one available plug. The "type" argument 
+        accepts either 'station' or 'depot', informing the search space.
         """
-        #IDEA: Store stations in a geospatial index to elminate exhaustive search. -NR
+        #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
         nearest, dist_to_nearest = None, None
-        for station in self._stations:
+
+        assert type in ['station', 'depot'], """"type" must be either 'station' 
+        or 'depot'."""
+        
+        if type == 'station':
+            stations = self._stations
+        elif type == 'depot':
+            stations = self._depots
+
+        for station in stations: 
             if station.avail_plugs != 0:
                 dist = haversine((veh.avail_lat, veh.avail_lon),
                                 (station.LAT, station.LON), unit='mi') \

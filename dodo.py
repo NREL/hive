@@ -105,8 +105,9 @@ def task_build_input_files():
         file_deps.append(req_file)
 
         # Path to charge network file
-        charge_net_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_NET_FILE'])
-        file_deps.append(charge_net_file)
+        charge_stations_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_STATIONS_FILE'])
+        veh_depots_file = os.path.join(cfg.IN_PATH, 'charge_network', row['VEH_DEPOTS_FILE'])
+        file_deps.append(charge_stations_file)
 
         fleet_file = os.path.join(cfg.IN_PATH, 'fleets', row['FLEET_FILE'])
         file_deps.append(fleet_file)
@@ -129,7 +130,8 @@ def task_build_input_files():
         row['VEH_KEYS'] = veh_keys
 
         data['requests'] = pp.load_requests(req_file)
-        data['charge_network'] = pd.read_csv(charge_net_file)
+        data['stations'] = pd.read_csv(charge_stations_file)
+        data['depots'] = pd.read_csv(veh_depots_file)
         data['main'] = row
         data['charge_curves'] = charge_df
         data['whmi_lookup'] = whmi_df
@@ -173,6 +175,11 @@ def task_run_simulation():
                             tag,
                             'logs',
                             'stations_log.csv'),
+                    os.path.join(
+                            sim_output,
+                            tag,
+                            'logs',
+                            'depots_log.csv'),
                     ]
         yield {
                 'name': tag,
