@@ -21,9 +21,16 @@ please review if you have any questions.
 
 # Auto Doc Generation
 We are using pdoc for automatic generation of documentation from the code base.
-Pdoc provides a simple solution with an aesthetically please enough result. An
+Pdoc provides a simple solution with an aesthetically pleasing enough result. An
 alternative tool is Sphinx, which requires much more upfront configuration, but 
 also offers greater flexibility.
+
+Pdoc runs in a pre-commit hook in this repo. The command line interface runs to 
+generate the html documentation, then some shell processes move the files to 
+hive/docs/html.
+
+The key convention to make pdoc useful is to include a concise and informative 
+docstring for every class, method, and function.
 
 
 
