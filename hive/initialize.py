@@ -65,6 +65,7 @@ def initialize_fleet(vehicle_types, depots, charge_curve, whmi_lookup, env_param
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
                         battery_capacity = veh_type.BATTERY_CAPACITY,
+                        max_passengers = veh_type.PASSENGERS
                         initial_soc = np.random.uniform(0.2, 1.0), #init vehs w/ uniform soc distr
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,

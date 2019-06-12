@@ -48,48 +48,48 @@ class Dispatcher:
         exceeding the MAX_WAIT_TIME_MINUTES constraint to a depot for charging.
         """
 
-        # Unpack request
-        pickup_time = request[3]
-        dropoff_time = request[4]
-        trip_dist = request[5]
-        pickup_lat = request[6]
-        pickup_lon = request[7]
-
         assert veh.active==True, "Vehicle is not active!"
 
-        # Check 1 - Max Dispatch Constraint Not Violated
+        # Calculations
         disp_dist = haversine((veh.avail_lat, veh.avail_lon),
-                                (pickup_lat, pickup_lon), unit='mi') \
+                                (request['pickup_lat'], request['pickup_lon']), unit='mi') \
                                 * veh.ENV['RN_SCALING_FACTOR']
-        if disp_dist > veh.ENV['MAX_DISPATCH_MILES']:
-            self.stats['failure_active_max_dispatch']+=1
-            return False
-
-        # Check 2 - Time Constraint Not Violated
         disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
-        if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time:
-            self.stats['failure_active_time']+=1
-            return False
-
-        # Check 3 - Battery Constraint Not Violated
+        idle_time_s = ((request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)) \
+        - veh.avail_time).total_seconds()
+        idle_time_min = idle_time_s / 60
         disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
-        trip_time_s = (dropoff_time - pickup_time).total_seconds()
+        trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
         trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, veh.WH_PER_MILE_LOOKUP)
         total_request_energy = disp_energy + trip_energy
         hyp_energy_remaining = veh.energy_remaining - total_request_energy
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
-        if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
-            self.stats['failure_active_battery']+=1
-            return False
-
-        # Check 4 - Vehicle Should Not Have Been Active For Request
-        idle_time_s = ((pickup_time - datetime.timedelta(seconds=disp_time_s)) \
-        - veh.avail_time).total_seconds()
-        idle_time_min = idle_time_s / 60
+        
+        # Check 1 - Vehicle Was Active at Time of Request
         if idle_time_min > veh.ENV['MAX_WAIT_TIME_MINUTES']:
             depot = self._find_nearest_plug(veh, type='depot')
             veh.return_to_depot(depot)
             depot.avail_plugs -= 1
+            return False
+
+        # Check 2 - Max Dispatch Constraint Not Violated
+        if disp_dist > veh.ENV['MAX_DISPATCH_MILES']:
+            self.stats['failure_active_max_dispatch']+=1
+            return False
+
+        # Check 3 - Time Constraint Not Violated
+        if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time:
+            self.stats['failure_active_time']+=1
+            return False
+
+        # Check 4 - Battery Constraint Not Violated
+        if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
+            self.stats['failure_active_battery']+=1
+            return False
+
+        # Check 5 - Max Occupancy Constraint Not Violated
+        if request['passengers'] > veh.avail_seats:
+            self.stats['failure_active_seats']+=1
             return False
 
         return True
@@ -111,14 +111,23 @@ class Dispatcher:
 
         assert veh.active!=True, "Vehicle is active!"
 
-        # Check 1 - Time Constraint Not Violated
+        # Calculations
         disp_dist = haversine((veh.avail_lat, veh.avail_lon),
-                                (pickup_lat, pickup_lon), unit='mi') \
+                                (request['pickup_lat'], request['pickup_lon']), unit='mi') \
                                 * veh.ENV['RN_SCALING_FACTOR']
         disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
+        disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
+        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, veh.WH_PER_MILE_LOOKUP)
+        total_request_energy = disp_energy + trip_energy
+        hyp_energy_remaining = veh.energy_remaining - total_request_energy
+        hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
+        
+        # Check 1 - Time Constraint Not Violated
         if (veh.avail_time!=0) and (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time):
             self.stats['failure_inactive_time']+=1
             return False
+
         # Check 2 - Battery Constraint Not Violated
         disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
         trip_time_s = (dropoff_time - pickup_time).total_seconds()
@@ -136,7 +145,6 @@ class Dispatcher:
         ###then: hyp_energy_remaining = (self.battery_capacity * soc_f) - total_energy
         hyp_energy_remaining = 0
 
-        hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
             self.stats['failure_inactive_battery']+=1
             return False
@@ -213,5 +221,18 @@ class Dispatcher:
                             req_filled = True
                             break
             if not req_filled:
+                 write_log({
+                    'start_time': self.avail_time,
+                    'start_lat': self.avail_lat,
+                    'start_lon': self.avail_lon,
+                    'end_time': dtime,
+                    'end_lat': depot.LAT,
+                    'end_lon': depot.LON,
+                    'dist_mi': dispatch_dist,
+                    'end_soc': round(self.soc, 2),
+                    'passengers': 0
+                    },
+            self._LOG_COLUMNS,
+            self._logfile)
                 pass
                 #TODO: Write failure log to CSV

@@ -38,6 +38,8 @@ class Vehicle:
         Approx. energy remaining in battery (in kWh)
     soc:
         Current battery state of charge
+    avail_seats:
+        Current number of seats available
     trip_vmt:
         Miles traveled serving ride requests
     dispatch_vmt:
@@ -89,6 +91,7 @@ class Vehicle:
                 veh_id,
                 name,
                 battery_capacity,
+                max_passengers,
                 initial_soc,
                 whmi_lookup,
                 charge_template,
@@ -103,6 +106,8 @@ class Vehicle:
         assert_constraint('BATTERY_CAPACITY', battery_capacity, VEH_PARAMS, context="Initialize Vehicle")
         self.BATTERY_CAPACITY = battery_capacity
 
+        self.avail_seats = max_passengers
+        
         self.WH_PER_MILE_LOOKUP = whmi_lookup
         self.CHARGE_TEMPLATE = charge_template
 

@@ -98,7 +98,15 @@ def run_simulation(infile, sim_name):
                             depots = depots)
 
     for req in reqs_df.itertuples(name='Request'):
-        dispatcher.process_requests(req)
+        request = {'pickup_time': req[0],
+                   'dropoff_time': req[1],
+                   'distance_miles': req[2],
+                   'pickup_lat': req[3],
+                   'pickup_lon': req[4],
+                   'dropoff_lat': req[5],
+                   'dropoff_lon': req[6],
+                   'passengers': req[7]}
+        dispatcher.process_requests(request)
 
 
 if __name__ == "__main__":
