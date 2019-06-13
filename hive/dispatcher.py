@@ -234,5 +234,5 @@ class Dispatcher:
                     },
             self._LOG_COLUMNS,
             self._logfile)
-                pass
-                #TODO: Write failure log to CSV
+            pass
+            #TODO: Write failure log to CSV

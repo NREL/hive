@@ -4,7 +4,7 @@ import random
 
 from hive import charging as chrg
 from hive import tripenergy as nrg
-from hive.station import FuelStation
+from hive.stations import FuelStation
 from hive.vehicle import Vehicle
 
 def initialize_stations(station_df, station_log_file):
@@ -65,7 +65,7 @@ def initialize_fleet(vehicle_types, depots, charge_curve, whmi_lookup, env_param
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
                         battery_capacity = veh_type.BATTERY_CAPACITY,
-                        max_passengers = veh_type.PASSENGERS
+                        max_passengers = veh_type.PASSENGERS,
                         initial_soc = np.random.uniform(0.2, 1.0), #init vehs w/ uniform soc distr
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,

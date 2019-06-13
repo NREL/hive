@@ -107,41 +107,41 @@ class FuelStation:
 
     
     class VehicleDepot:
-    """
-    Base class for fleet vehicle depot. Vehicle depots are locations that 
-    inactive vehicles return to when they are not serving demand to recharge for
-    the next peak period.
+        """
+        Base class for fleet vehicle depot. Vehicle depots are locations that 
+        inactive vehicles return to when they are not serving demand to recharge for
+        the next peak period.
 
-    Inputs
-    ------
-    depot_id : int
-        Identifer assigned to VehicleDepot object
-    latitude : float
-        Latitude of station location
-    longitude: float
-        Longitude of station location
-    plugs: int
-        Number of plugs at location
-    plug_type: str
-        Plug type - AC or DC
-    plug_power: float
-        Plug power in kW
-    logfile: str
-        Path to depot log file
+        Inputs
+        ------
+        depot_id : int
+            Identifer assigned to VehicleDepot object
+        latitude : float
+            Latitude of station location
+        longitude: float
+            Longitude of station location
+        plugs: int
+            Number of plugs at location
+        plug_type: str
+            Plug type - AC or DC
+        plug_power: float
+            Plug power in kW
+        logfile: str
+            Path to depot log file
 
-    Attributes
-     ----------
-    charge_cnt:
-        Number of charge events
-    instantaneous_pwr:
-        Instantaneous load in kW
-    peak_pwr:
-        Peak load in kW
-    total_energy:
-        Total energy supplied for recharging in kWh
-    avail_plugs:
-        Number of plugs that are unoccupied
-    """
+        Attributes
+        ----------
+        charge_cnt:
+            Number of charge events
+        instantaneous_pwr:
+            Instantaneous load in kW
+        peak_pwr:
+            Peak load in kW
+        total_energy:
+            Total energy supplied for recharging in kWh
+        avail_plugs:
+            Number of plugs that are unoccupied
+        """
 
     _STATS = [
         'charge_cnt',
