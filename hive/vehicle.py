@@ -136,7 +136,7 @@ class Vehicle:
     def __repr__(self):
         return str(f"Vehicle(id: {self.id}, name: {self.NAME})")
 
-    def make_trip(self, req):
+    def make_trip(self, request, calcs):
 
         # Unpack request
         pickup_time = req[3]
@@ -150,67 +150,10 @@ class Vehicle:
 
         #TODO: refactor make_trip behavior
 
+        idle_start = self.avail_time
+        idle_s = request['']
 
-        if inpt.CHARGING_SCENARIO == 'Ubiq': #ubiquitous charging assumption
-            # Update w/ idle
-            idle_start = self.avail_time
-            if diff_s <= (inpt.MINUTES_BEFORE_CHARGE * 60):
-                idle_s = diff_s
-                if report:
-                    self.stats['idle_s'] += idle_s
-                self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
-                self.soc = self.energy_remaining/self.BATTERY_CAPACITY
 
-                if idle_s > 0:
-                    idle_end = idle_start + idle_s
-                    dispatch_start = idle_end
-                    write_log([self.id, -1, idle_start, self.avail_lat, self.avail_lon, idle_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0], self._logfile)
-            else:
-                idle_s = inpt.MINUTES_BEFORE_CHARGE * 60
-                if report:
-                    self.stats['idle_s'] += idle_s
-                self.energy_remaining -= nrg.calc_idle_kwh(idle_s)
-                self.soc = self.energy_remaining/self.BATTERY_CAPACITY
-                idle_end = idle_start + idle_s
-                refuel_start = idle_end
-                write_log([self.id, -1, idle_start, self.avail_lat, self.avail_lon, idle_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0], self._logfile)
-
-                # Update w/ charging
-                pwr = inpt.UBIQUITOUS_CHARGER_POWER
-                secs_to_full = chrg.calc_const_charge_secs_to_full(self.energy_remaining, self.BATTERY_CAPACITY, kw=pwr)
-                if secs_to_full >= (diff_s - idle_s):
-                    refuel_s = diff_s - idle_s
-                    if report:
-                        self.stats['refuel_s'] += refuel_s
-                    self.energy_remaining = self.energy_remaining + chrg.calc_const_charge_kwh(refuel_s, kw=pwr)
-                    self.soc = self.energy_remaining/self.BATTERY_CAPACITY
-                    refuel_end = refuel_start + refuel_s
-                    dispatch_start = refuel_end
-                    if report:
-                        self.stats['refuel_cnt'] += 1
-                    write_log([self.id, -3, refuel_start, self.avail_lat, self.avail_lon, refuel_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0], self._logfile)
-                else:
-                    refuel_s = secs_to_full
-                    if report:
-                        self.stats['refuel_s'] += refuel_s
-                    self.energy_remaining = self.BATTERY_CAPACITY
-                    self.soc = self.energy_remaining/self.BATTERY_CAPACITY
-                    if refuel_s > 0:
-                        refuel_end = refuel_start + refuel_s
-                        idle2_start = refuel_end
-                        if report:
-                            self.stats['refuel_cnt'] += 1
-                        write_log([self.id, -3, refuel_start, self.avail_lat, self.avail_lon, refuel_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0], self._logfile)
-
-                    # Update w/ second idle event after charge to full
-                    idle2_s = diff_s - idle_s - refuel_s
-                    if report:
-                        self.stats['idle_s'] += idle2_s
-                    self.energy_remaining -= nrg.calc_idle_kwh(idle2_s)
-                    self.soc = self.energy_remaining/self.BATTERY_CAPACITY
-                    idle2_end = idle2_start + idle2_s
-                    dispatch_start = idle2_end
-                    write_log([self.id, -1, idle2_start, self.avail_lat, self.avail_lon, idle2_end, self.avail_lat, self.avail_lon, 0, round(self.soc, 2), 0], self._logfile)
 
         elif inpt.CHARGING_SCENARIO == 'Station': # NO ubiquitous charging assumption
             idle_start = self.avail_time

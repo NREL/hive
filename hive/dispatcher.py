@@ -51,89 +51,93 @@ class Dispatcher:
         assert veh.active==True, "Vehicle is not active!"
 
         # Calculations
-        disp_dist = haversine((veh.avail_lat, veh.avail_lon),
+        disp_dist_miles = haversine((veh.avail_lat, veh.avail_lon),
                                 (request['pickup_lat'], request['pickup_lon']), unit='mi') \
                                 * veh.ENV['RN_SCALING_FACTOR']
         disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
         idle_time_s = ((request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)) \
         - veh.avail_time).total_seconds()
         idle_time_min = idle_time_s / 60
-        disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, veh.WH_PER_MILE_LOOKUP)
-        total_request_energy = disp_energy + trip_energy
-        hyp_energy_remaining = veh.energy_remaining - total_request_energy
+        trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
+        total_energy_kwh = disp_energy_kwh + trip_energy_kwh
+        hyp_energy_remaining = veh.energy_remaining - total_energy_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
+
+        calcs = {
+            'disp_dist_miles': disp_dist_miles,
+            'disp_time_s': disp_time_s,
+            'idle_time_s': idle_time_s,
+            'battery_kwh_remains': hyp_energy_remaining,
+        }
         
-        # Check 1 - Vehicle Was Active at Time of Request
+        # Check 1 - Vehicle is Active at Time of Request
         if idle_time_min > veh.ENV['MAX_WAIT_TIME_MINUTES']:
             depot = self._find_nearest_plug(veh, type='depot')
             veh.return_to_depot(depot)
             depot.avail_plugs -= 1
-            return False
+            return False, None
 
         # Check 2 - Max Dispatch Constraint Not Violated
-        if disp_dist > veh.ENV['MAX_DISPATCH_MILES']:
+        if disp_dist_miles > veh.ENV['MAX_DISPATCH_MILES']:
             self.stats['failure_active_max_dispatch']+=1
-            return False
+            return False, None
 
         # Check 3 - Time Constraint Not Violated
-        if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time:
+        if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']:
             self.stats['failure_active_time']+=1
-            return False
+            return False, None
 
         # Check 4 - Battery Constraint Not Violated
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
             self.stats['failure_active_battery']+=1
-            return False
+            return False, None
 
         # Check 5 - Max Occupancy Constraint Not Violated
         if request['passengers'] > veh.avail_seats:
             self.stats['failure_active_seats']+=1
-            return False
+            return False, None
 
-        return True
+        return True, calcs
 
     def _check_inactive_viability(self, veh, request):
         """
         Checks if inactive vehicle can fulfill request w/o violating several
         constraints. Function requires a hive.Vehicle object and a trip request.
         Function returns a boolean indicating the ability
-        of the vehicle to service the request.
+        of the vehicle to service the request. If the vehicle is able to service
+        the request, a dict w/ calculated values are passed as output to avoid
+        recalculation in the hive.Vehicle.make_trip method.
         """
-
-        # Unpack request
-        pickup_time = request[3]
-        dropoff_time = request[4]
-        trip_dist = request[5]
-        pickup_lat = request[6]
-        pickup_lon = request[7]
-
         assert veh.active!=True, "Vehicle is active!"
 
         # Calculations
-        disp_dist = haversine((veh.avail_lat, veh.avail_lon),
+        disp_dist_miles = haversine((veh.avail_lat, veh.avail_lon),
                                 (request['pickup_lat'], request['pickup_lon']), unit='mi') \
                                 * veh.ENV['RN_SCALING_FACTOR']
         disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
-        disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, veh.WH_PER_MILE_LOOKUP)
-        total_request_energy = disp_energy + trip_energy
-        hyp_energy_remaining = veh.energy_remaining - total_request_energy
+        trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
+        total_energy_kwh = disp_energy_kwh + trip_energy_kwh
+        
+        # TODO: Account for time spent charging at depot in hyp_energy_remaining calc
+        hyp_energy_remaining = veh.energy_remaining - total_energy_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
+
+        calcs = {
+            'disp_dist_miles': disp_dist_miles,
+            'disp_time_s': disp_time_s,
+            'battery_kwh_remains': hyp_energy_remaining,
+        }
         
         # Check 1 - Time Constraint Not Violated
-        if (veh.avail_time!=0) and (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > pickup_time):
+        if (veh.avail_time!=0) and (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']):
             self.stats['failure_inactive_time']+=1
-            return False
+            return False, None
 
         # Check 2 - Battery Constraint Not Violated
-        disp_energy = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
-        trip_time_s = (dropoff_time - pickup_time).total_seconds()
-        trip_energy = nrg.calc_trip_kwh(trip_dist, trip_time_s, veh.WH_PER_MILE_LOOKUP)
-        total_request_energy = disp_energy + trip_energy
-
         for depot in self._depots:
             if veh.avail_lat == depot.LAT and veh.avail_lon == depot.LON:
                 charge_type = depot.PLUG_TYPE
@@ -147,9 +151,14 @@ class Dispatcher:
 
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
             self.stats['failure_inactive_battery']+=1
-            return False
+            return False, None
 
-        return True
+        # Check 3 - Max Occupancy Constraint Not Violated
+        if request['passengers'] > veh.avail_seats:
+            self.stats['failure_inactive_seats']+=1
+            return False, None
+
+        return True, calcs
 
     def _find_nearest_plug(self, veh, type='station'):
         """
@@ -200,9 +209,9 @@ class Dispatcher:
             for veh in self._fleet:
                 # Check active vehicles in fleet
                 if veh.active:
-                    viable = self._check_active_viability(veh, req)
+                    viable, calcs = self._check_active_viability(veh, req)
                     if viable:
-                        veh.make_trip(req)
+                        veh.make_trip(req, calcs)
                         self._fleet.remove(veh) #pop veh from queue
                         self._fleet.append(veh) #append veh to end of queue
                         req_filled = True
@@ -213,9 +222,9 @@ class Dispatcher:
                 for veh in self._fleet:
                     # Check inactive (depot) vehicles in fleet
                     if not veh.active:
-                        viable = self._check_inactive_viability(veh, req)
+                        viable, calcs = self._check_inactive_viability(veh, req)
                         if viable:
-                            veh.make_trip(req)
+                            veh.make_trip(req, calcs)
                             self._fleet.remove(veh) #pop veh from queue
                             self._fleet.append(veh) #append veh to end of queue
                             req_filled = True
