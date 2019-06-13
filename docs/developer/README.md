@@ -20,17 +20,56 @@ please review if you have any questions.
 
 
 # Auto Doc Generation
-We are using pdoc for automatic generation of documentation from the code base.
-Pdoc provides a simple solution with an aesthetically pleasing enough result. An
-alternative tool is Sphinx, which requires much more upfront configuration, but 
-also offers greater flexibility.
+We are using Sphinx for automatic generation of documentation from the code base.
+Sphinx is highly customizable and is the industry standard for documenting many
+open source projects.
 
-Pdoc runs in a pre-commit hook in this repo. The command line interface runs to 
-generate the html documentation, then some shell processes move the files to 
-hive/docs/html.
+Sphinx runs in a pre-commit hook in this repo. The command line interface runs to 
+generate the html documentation, which are created in hive/docs/build/html.
 
-The key convention to make pdoc useful is to include a concise and informative 
-docstring for every class, method, and function.
+It is critical to include docstrings in modules, classes, methods, and functions
+per the format below. Sphinx builds the documentation from these strings. Refer to the [Pandas docstrings guide](https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html)
+for direction if it is not clear from this document.
+
+Generally docstrings for functions and methods should look like this:
+
+```def add(num1, num2):
+
+    """
+    Add up two integer numbers.
+
+    This function simply wraps the `+` operator, and does not
+    do anything interesting, except for illustrating what is
+    the docstring of a very simple function.
+
+    Parameters
+    ----------
+    num1 : int
+        First number to add
+    num2 : int
+        Second number to add
+
+    Returns
+    -------
+    int
+        The sum of `num1` and `num2`
+
+    See Also
+    --------
+    subtract : Subtract one integer from another
+
+    Examples
+    --------
+    >>> add(2, 2)
+    4
+    >>> add(25, 0)
+    25
+    >>> add(10, -10)
+    0
+    """
+return num1 + num2```
+
+
 
 
 
