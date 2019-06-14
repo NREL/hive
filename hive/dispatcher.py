@@ -1,6 +1,6 @@
 """
 Dispatcher Object for high-level decision making in HIVE. Includes functions for
-vehicle dispatching, and DCFC station/depot selection.
+vehicle dispatching, and DCFC station/base selection.
 """
 
 import datetime
@@ -30,10 +30,10 @@ class Dispatcher:
         'failure_inactive_battery',
     ]
 
-    def __init__(self, fleet, stations, depots):
+    def __init__(self, fleet, stations, bases):
         self._fleet = fleet
         self._stations = stations
-        self._depots = depots
+        self._bases = bases
 
         self.stats = dict()
         for stat in self._STATS:
@@ -45,7 +45,7 @@ class Dispatcher:
         constraints. Function requires a hive.Vehicle object and a trip request
         Function returns a boolean indicating the ability of the vehicle to service
         the request and the updated failure log. This function also sends vehicles
-        exceeding the MAX_WAIT_TIME_MINUTES constraint to a depot for charging.
+        exceeding the MAX_WAIT_TIME_MINUTES constraint to a base for charging.
         """
 
         assert veh.active==True, "Vehicle is not active!"
@@ -74,9 +74,9 @@ class Dispatcher:
         
         # Check 1 - Vehicle is Active at Time of Request
         if idle_time_min > veh.ENV['MAX_WAIT_TIME_MINUTES']:
-            depot = self._find_nearest_plug(veh, type='depot')
-            veh.return_to_depot(depot)
-            depot.avail_plugs -= 1
+            base = self._find_nearest_plug(veh, type='base')
+            veh.return_to_base(base)
+            base.avail_plugs -= 1
             return False, None
 
         # Check 2 - Max Dispatch Constraint Not Violated
@@ -122,7 +122,14 @@ class Dispatcher:
         trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
         total_energy_kwh = disp_energy_kwh + trip_energy_kwh
         
-        # TODO: Account for time spent charging at depot in hyp_energy_remaining calc
+        energcalc_const_charge_kwh(time_s, kw=7.2):
+    """Function needs docstring"""
+    kwh = kw * (time_s / 3600.0)
+    
+    return kwh
+        energy_gained_kwh = chrg.query_charge_stats(veh.CHARGE_TEMPLATE, veh.soc, charge_time=-1, soc_f=-1)
+
+        # TODO: Account for time spent charging at a base in hyp_energy_remaining calc
         hyp_energy_remaining = veh.energy_remaining - total_energy_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
@@ -138,10 +145,10 @@ class Dispatcher:
             return False, None
 
         # Check 2 - Battery Constraint Not Violated
-        for depot in self._depots:
-            if veh.avail_lat == depot.LAT and veh.avail_lon == depot.LON:
-                charge_type = depot.PLUG_TYPE
-                charge_power = depot.PLUG_POWER
+        for base in self._bases:
+            if veh.avail_lat == base.LAT and veh.avail_lon == base.LON:
+                charge_type = base.PLUG_TYPE
+                charge_power = base.PLUG_POWER
                 break
 
         #TODO: Refactor charging.py for single function that accepts charge_type,
@@ -164,18 +171,18 @@ class Dispatcher:
         """
         Function takes hive.vehicle.Vehicle object and returns the FuelStation 
         nearest Vehicle with at least one available plug. The "type" argument 
-        accepts either 'station' or 'depot', informing the search space.
+        accepts either 'station' or 'base', informing the search space.
         """
         #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
         nearest, dist_to_nearest = None, None
 
-        assert type in ['station', 'depot'], """"type" must be either 'station' 
-        or 'depot'."""
+        assert type in ['station', 'base'], """"type" must be either 'station' 
+        or 'base'."""
         
         if type == 'station':
             stations = self._stations
-        elif type == 'depot':
-            stations = self._depots
+        elif type == 'base':
+            stations = self._bases
 
         for station in stations: 
             if station.avail_plugs != 0:
@@ -220,7 +227,7 @@ class Dispatcher:
                 #TODO: Remove break when check_inactive_viability() is completed.
                 break
                 for veh in self._fleet:
-                    # Check inactive (depot) vehicles in fleet
+                    # Check inactive (base) vehicles in fleet
                     if not veh.active:
                         viable, calcs = self._check_inactive_viability(veh, req)
                         if viable:
@@ -235,8 +242,8 @@ class Dispatcher:
                     'start_lat': self.avail_lat,
                     'start_lon': self.avail_lon,
                     'end_time': dtime,
-                    'end_lat': depot.LAT,
-                    'end_lon': depot.LON,
+                    'end_lat': base.LAT,
+                    'end_lon': base.LON,
                     'dist_mi': dispatch_dist,
                     'end_soc': round(self.soc, 2),
                     'passengers': 0

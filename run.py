@@ -17,7 +17,7 @@ from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import utils
-from hive.initialize import initialize_stations, initialize_depots, initialize_fleet
+from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.station import FuelStation
 from hive.dispatcher import Dispatcher
@@ -34,7 +34,7 @@ def run_simulation(infile, sim_name):
         data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
     station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
-    depot_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'depot_log.csv')
+    base_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_log.csv')
 
     if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
 
@@ -69,8 +69,8 @@ def run_simulation(infile, sim_name):
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
     stations = initialize_stations(data['charge_stations'], station_log_file)
-    depots = initialize_depots(data['veh_depots'], depot_log_file)
-    if cfg.VERBOSE: print("loaded {0} stations & {1} depots".format(len(stations), len(depots)), "", sep="\n")
+    bases = initialize_bases(data['veh_bases'], base_log_file)
+    if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
     #Initialize vehicle fleet
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
@@ -84,7 +84,7 @@ def run_simulation(infile, sim_name):
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
     fleet = initialize_fleet(vehicle_types = vehicle_types,
-                             depots = depots,
+                             bases = bases,
                              charge_curve = data['charge_curves'],
                              whmi_lookup = data['whmi_lookup'],
                              env_params = fleet_env_params,
@@ -95,7 +95,7 @@ def run_simulation(infile, sim_name):
 
     dispatcher = Dispatcher(fleet = fleet,
                             stations = stations,
-                            depots = depots)
+                            bases = bases)
 
     for req in reqs_df.itertuples(name='Request'):
         request = {'pickup_time': req[0],

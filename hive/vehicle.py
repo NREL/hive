@@ -56,7 +56,7 @@ class Vehicle:
         Seconds where a vehicle is not serving a request or dispatching to request
     active:
         Boolean indicator for whether a veh is actively servicing demand. If
-        False, vehicle is sitting at depot
+        False, vehicle is sitting at a base
     """
     # statistics tracked on a vehicle instance level over entire simulation.
     _STATS = [
@@ -248,9 +248,9 @@ class Vehicle:
         nearest_station.add_recharge(self.id, start_time, end_time, soc_i, final_soc)
 
 
-    def return_to_depot(self, depot):
+    def return_to_base(self, base):
         dispatch_dist = haversine((self.avail_lat, self.avail_lon),
-                                (depot.LAT, depot.LON), unit='mi') \
+                                (base.LAT, base.LON), unit='mi') \
                                     * self.ENV['RN_SCALING_FACTOR']
 
         dispatch_time_s = dispatch_dist / self.ENV['DISPATCH_MPH'] * 3600
@@ -261,7 +261,7 @@ class Vehicle:
         self.soc = self.energy_remaining/self.BATTERY_CAPACITY
         dtime = self.avail_time + datetime.timedelta(seconds=dispatch_time_s)
 
-        # Update log w/ dispatch to depot
+        # Update log w/ dispatch to base
         write_log({
             'veh_id': self.id,
             'activity': -2,
@@ -269,8 +269,8 @@ class Vehicle:
             'start_lat': self.avail_lat,
             'start_lon': self.avail_lon,
             'end_time': dtime,
-            'end_lat': depot.LAT,
-            'end_lon': depot.LON,
+            'end_lat': base.LAT,
+            'end_lon': base.LON,
             'dist_mi': dispatch_dist,
             'end_soc': round(self.soc, 2),
             'passengers': 0
@@ -285,5 +285,5 @@ class Vehicle:
 
         # Update vehicle state
         self.active = False
-        self.avail_lat, self.avail_lon = depot.LAT, depot.LON
+        self.avail_lat, self.avail_lon = base.LAT, base.LON
         self.avail_time = dtime

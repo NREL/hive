@@ -4,7 +4,7 @@ import random
 
 from hive import charging as chrg
 from hive import tripenergy as nrg
-from hive.stations import FuelStation
+from hive.stations import FuelStation, VehicleBase
 from hive.vehicle import Vehicle
 
 def initialize_stations(station_df, station_log_file):
@@ -26,27 +26,27 @@ def initialize_stations(station_df, station_log_file):
 
     return stations
 
-def initialize_depots(depot_df, depot_log_file):
-    depots = []
-    for i, row in depot_df.iterrows():
-        depot_id = row['depot_id']
+def initialize_bases(base_df, base_log_file):
+    bases = []
+    for i, row in base_df.iterrows():
+        base_id = row['base_id']
         lon, lat = row['longitude'], row['latitude']
         plugs = row['plugs']
         plug_type = row['plug_type']
         plug_power = row['plug_power_kw']
-        station = VehicleDepot(depot_id,
+        station = VehicleBase(base_id,
                                lat,
                                lon,
                                plugs,
                                plug_type,
                                plug_power,
-                               depot_log_file)
-        depots.append(depot)
+                               base_log_file)
+        bases.append(base)
 
-    return depots
+    return bases
 
 
-def initialize_fleet(vehicle_types, depots, charge_curve, whmi_lookup, env_params, vehicle_log_file):
+def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params, vehicle_log_file):
     id = 1
     veh_fleet = []
     for veh_type in vehicle_types:
@@ -74,10 +74,10 @@ def initialize_fleet(vehicle_types, depots, charge_curve, whmi_lookup, env_param
                         )
             id += 1
 
-            #Initialize vehicle location to a random depot
-            depot = random.choice(depots)
-            veh.avail_lat = depot.LAT
-            veh.avail_lon = depot.LON
+            #Initialize vehicle location to a random base
+            base = random.choice(bases) # @NR - are we passing a single seed throughout HIVE for reproduceability?
+            veh.avail_lat = base.LAT
+            veh.avail_lon = base.LON
 
             veh_fleet.append(veh)
 

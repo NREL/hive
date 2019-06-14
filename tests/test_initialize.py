@@ -35,21 +35,21 @@ class InitializeChargeNetworkTest(unittest.TestCase):
     def test_initialize_charging_network_stations(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        stations, depots = initialize_charge_network(charge_net_df,
+        stations, bases = initialize_charge_network(charge_net_df,
                                             station_log_file=log_file)
         self.assertEqual(len(stations), 186)
 
-    def test_initialize_charging_network_depots(self):
+    def test_initialize_charging_network_bases(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        stations, depots = initialize_charge_network(charge_net_df,
+        stations, bases = initialize_charge_network(charge_net_df,
                                             station_log_file=log_file)
-        self.assertEqual(len(depots), 2)
+        self.assertEqual(len(bases), 2)
 
     def test_initialize_charging_network_type(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        stations, depots = initialize_charge_network(charge_net_df,
+        stations, bases = initialize_charge_network(charge_net_df,
                                             station_log_file=log_file)
         self.assertIsInstance(stations[0], FuelStation)
 
@@ -84,9 +84,9 @@ class InitializeFleetTest(unittest.TestCase):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet_df = pd.read_csv(self.FLEET_FILE)
         charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        _, depots = initialize_charge_network(charge_net_df,
+        _, bases = initialize_charge_network(charge_net_df,
                                             station_log_file=log_file)
-        self.depots = depots
+        self.bases = bases
         self.charge_curve_df = pd.read_csv(self.CHARGE_CURVE_FILE)
         self.whmi_df = pd.read_csv(self.WHMI_LOOKUP_FILE)
         self.vehicles = list()
@@ -109,7 +109,7 @@ class InitializeFleetTest(unittest.TestCase):
     def test_initialize_fleet_size(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet = initialize_fleet(self.vehicles,
-                                    self.depots,
+                                    self.bases,
                                     self.charge_curve_df,
                                     self.whmi_df,
                                     self.env_params,
@@ -119,7 +119,7 @@ class InitializeFleetTest(unittest.TestCase):
     def test_initialize_fleet_type(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet = initialize_fleet(self.vehicles[0:1],
-                                    self.depots,
+                                    self.bases,
                                     self.charge_curve_df,
                                     self.whmi_df,
                                     self.env_params,

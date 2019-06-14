@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def construct_temporal_charge_template(unscaled_df, battery_kwh, battery_kw):
-    """Function needs docstring"""
     
     unscaled_df.kw = unscaled_df.kw * battery_kw / 50.0
 

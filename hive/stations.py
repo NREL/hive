@@ -106,20 +106,22 @@ class FuelStation:
             self._logfile)
 
     
-    class VehicleDepot:
+    class VehicleBase:
         """
-        Base class for fleet vehicle depot. Vehicle depots are locations that 
-        inactive vehicles return to when they are not serving demand to recharge for
-        the next peak period.
+        Base class for fleet vehicle base (home) location. Vehicle bases are 
+        locations that inactive vehicles return to when they are not serving 
+        demand to recharge for the next peak period. Vehicles can be assigned 
+        to a base (home) location or bases can accomodate many inactive vehicles
+        (similar to a fleet depot).
 
         Inputs
         ------
-        depot_id : int
-            Identifer assigned to VehicleDepot object
+        base_id : int
+            Identifer assigned to VehicleBase object
         latitude : float
-            Latitude of station location
+            Latitude of base location
         longitude: float
-            Longitude of station location
+            Longitude of base location
         plugs: int
             Number of plugs at location
         plug_type: str
@@ -127,7 +129,7 @@ class FuelStation:
         plug_power: float
             Plug power in kW
         logfile: str
-            Path to depot log file
+            Path to base log file
 
         Attributes
         ----------
@@ -151,7 +153,7 @@ class FuelStation:
         ]
 
     _LOG_COLUMNS = [
-        'depot_id',
+        'base_id',
         'vehicle_id',
         'start_time',
         'end_time',
@@ -161,7 +163,7 @@ class FuelStation:
 
     def __init__(
                 self,
-                depot_id,
+                base_id,
                 latitude,
                 longitude,
                 plugs,
@@ -170,7 +172,7 @@ class FuelStation:
                 logfile
                 ):
 
-        self.ID = depot_id
+        self.ID = base_id
         self.LAT = latitude
         self.LON = longitude
 

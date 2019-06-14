@@ -32,7 +32,7 @@ class DispatcherTest(unittest.TestCase):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet_df = pd.read_csv(FLEET_FILE)
         charge_net_df = pd.read_csv(CHARGE_NET_FILE)
-        stations, depots = init.initialize_charge_network(charge_net_df,
+        stations, bases = init.initialize_charge_network(charge_net_df,
                                             station_log_file=log_file)
         charge_curve_df = pd.read_csv(CHARGE_CURVE_FILE)
         whmi_df = pd.read_csv(WHMI_LOOKUP_FILE)
@@ -50,10 +50,10 @@ class DispatcherTest(unittest.TestCase):
             'DISPATCH_MPH': 30,
         }
 
-        cls.depots = depots
+        cls.bases = bases
         cls.stations = stations
         cls.fleet = init.initialize_fleet(vehicles,
-                                            depots,
+                                            bases,
                                             charge_curve_df,
                                             whmi_df,
                                             env_params,
@@ -74,6 +74,6 @@ class DispatcherTest(unittest.TestCase):
     def test_dispatcher(self):
         dispatcher = Dispatcher(fleet = self.fleet,
                                 stations = self.stations,
-                                depots = self.depots)
+                                bases = self.bases)
         self.assertEqual(1,0)
         #TODO: Develop unit tests for internal Dispatcher functions.
