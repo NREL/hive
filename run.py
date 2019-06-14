@@ -69,7 +69,7 @@ def run_simulation(infile, sim_name):
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
     stations = initialize_stations(data['charge_stations'], station_log_file)
-    bases = initialize_bases(data['veh_bases'], base_log_file)
+    bases, base_power_lookup = initialize_bases(data['veh_bases'], base_log_file)
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
     #Initialize vehicle fleet
@@ -95,7 +95,8 @@ def run_simulation(infile, sim_name):
 
     dispatcher = Dispatcher(fleet = fleet,
                             stations = stations,
-                            bases = bases)
+                            bases = bases,
+                            base_power_lookup = base_power_lookup)
 
     for req in reqs_df.itertuples(name='Request'):
         request = {'pickup_time': req[0],
@@ -106,7 +107,7 @@ def run_simulation(infile, sim_name):
                    'dropoff_lat': req[5],
                    'dropoff_lon': req[6],
                    'passengers': req[7]}
-        dispatcher.process_requests(request)
+        dispatcher.process_requests(request) ## <--STATUS -bb
 
 
 if __name__ == "__main__":

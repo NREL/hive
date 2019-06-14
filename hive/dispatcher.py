@@ -30,10 +30,11 @@ class Dispatcher:
         'failure_inactive_battery',
     ]
 
-    def __init__(self, fleet, stations, bases):
+    def __init__(self, fleet, stations, bases, base_power_lookup):
         self._fleet = fleet
         self._stations = stations
         self._bases = bases
+        self._base_power_lookup = base_power_lookup
 
         self.stats = dict()
         for stat in self._STATS:
@@ -47,7 +48,6 @@ class Dispatcher:
         the request and the updated failure log. This function also sends vehicles
         exceeding the MAX_WAIT_TIME_MINUTES constraint to a base for charging.
         """
-
         assert veh.active==True, "Vehicle is not active!"
 
         # Calculations
@@ -73,7 +73,7 @@ class Dispatcher:
         }
         
         # Check 1 - Vehicle is Active at Time of Request
-        if idle_time_min > veh.ENV['MAX_WAIT_TIME_MINUTES']:
+        if idle_time_min > veh.ENV['MAX_ALLOWABLE_IDLE_MINUTES']:
             base = self._find_nearest_plug(veh, type='base')
             veh.return_to_base(base)
             base.avail_plugs -= 1
@@ -121,19 +121,25 @@ class Dispatcher:
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
         trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
         total_energy_kwh = disp_energy_kwh + trip_energy_kwh
-        
-        energcalc_const_charge_kwh(time_s, kw=7.2):
-    """Function needs docstring"""
-    kwh = kw * (time_s / 3600.0)
-    
-    return kwh
-        energy_gained_kwh = chrg.query_charge_stats(veh.CHARGE_TEMPLATE, veh.soc, charge_time=-1, soc_f=-1)
 
-        # TODO: Account for time spent charging at a base in hyp_energy_remaining calc
-        hyp_energy_remaining = veh.energy_remaining - total_energy_kwh
+        disp_start_time = request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)
+        refuel_s = (disp_start_time - veh.avail_time).total_seconds()
+        
+        if self._base_power_lookup[veh.base]['type'] == 'AC':
+            kw = self._base_power_lookup[veh.base]['kw']
+            energy_gained_kwh = chrg.calc_const_charge_kwh(refuel_s, kw=kw)
+        
+        elif self._base_power_lookup[veh.base]['type'] == 'DC':
+            kw = self._base_power_lookup[veh.base]['kw']
+            energy_gained_kwh = chrg.query_charge_stats(veh.CHARGE_TEMPLATE, veh.soc, charge_time=refuel_s)
+
+        
+        hyp_energy_remaining = veh.energy_remaining + energy_gained_kwh - total_energy_kwh
+        hyp_energy_remaining = min([hyp_energy_remaining, veh.BATTERY_CAPACITY])
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
+            'disp_start_time': disp_start_time
             'disp_dist_miles': disp_dist_miles,
             'disp_time_s': disp_time_s,
             'battery_kwh_remains': hyp_energy_remaining,
@@ -145,17 +151,6 @@ class Dispatcher:
             return False, None
 
         # Check 2 - Battery Constraint Not Violated
-        for base in self._bases:
-            if veh.avail_lat == base.LAT and veh.avail_lon == base.LON:
-                charge_type = base.PLUG_TYPE
-                charge_power = base.PLUG_POWER
-                break
-
-        #TODO: Refactor charging.py for single function that accepts charge_type,
-        ##charge power, time, and considers max_acceptance, returning soc_f
-        ###then: hyp_energy_remaining = (self.battery_capacity * soc_f) - total_energy
-        hyp_energy_remaining = 0
-
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
             self.stats['failure_inactive_battery']+=1
             return False, None
@@ -218,7 +213,7 @@ class Dispatcher:
                 if veh.active:
                     viable, calcs = self._check_active_viability(veh, req)
                     if viable:
-                        veh.make_trip(req, calcs)
+                        veh.make_trip(req, calcs) #<-- STATUS -bb
                         self._fleet.remove(veh) #pop veh from queue
                         self._fleet.append(veh) #append veh to end of queue
                         req_filled = True

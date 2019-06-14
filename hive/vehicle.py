@@ -57,6 +57,8 @@ class Vehicle:
     active:
         Boolean indicator for whether a veh is actively servicing demand. If
         False, vehicle is sitting at a base
+    base:
+        base_id of vehicle's home location or base assignment. Used 
     """
     # statistics tracked on a vehicle instance level over entire simulation.
     _STATS = [
@@ -102,27 +104,27 @@ class Vehicle:
         # Public Constants
         self.ID = veh_id
         self.NAME = name
-
         assert_constraint('BATTERY_CAPACITY', battery_capacity, VEH_PARAMS, context="Initialize Vehicle")
         self.BATTERY_CAPACITY = battery_capacity
-
-        self.avail_seats = max_passengers
-        
         self.WH_PER_MILE_LOOKUP = whmi_lookup
         self.CHARGE_TEMPLATE = charge_template
 
+        # Public variables
+        self.active = False
         self.avail_lat = None
         self.avail_lon = None
+        self.base = None
         self.avail_time = 0
-        self.energy_remaining = battery_capacity * initial_soc
-
+        self.avail_seats = max_passengers
         assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
         self.soc = initial_soc
-        self.active = False
+        self.energy_remaining = battery_capacity * initial_soc
 
+        # Init logging
         self._logfile = logfile
         initialize_log(self._LOG_COLUMNS, self._logfile)
-
+        
+        # Init reporting
         self.stats = dict()
         for stat in self._STATS:
             self.stats[stat] = 0
@@ -283,7 +285,8 @@ class Vehicle:
         self.stats['dispatch_vmt'] += dispatch_dist
         self.stats['total_vmt'] += dispatch_dist
 
-        # Update vehicle state
+        # Update Vehicle object
         self.active = False
+        self.base = base.base_id
         self.avail_lat, self.avail_lon = base.LAT, base.LON
         self.avail_time = dtime

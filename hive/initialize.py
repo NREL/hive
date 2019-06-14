@@ -28,6 +28,7 @@ def initialize_stations(station_df, station_log_file):
 
 def initialize_bases(base_df, base_log_file):
     bases = []
+    base_power_dict = {}
     for i, row in base_df.iterrows():
         base_id = row['base_id']
         lon, lat = row['longitude'], row['latitude']
@@ -42,8 +43,10 @@ def initialize_bases(base_df, base_log_file):
                                plug_power,
                                base_log_file)
         bases.append(base)
+        base_power_dict[base_id] = {'type': plug_type,
+                                    'kw': plug_power}
 
-    return bases
+    return bases, base_power_dict
 
 
 def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params, vehicle_log_file):
@@ -78,6 +81,7 @@ def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params
             base = random.choice(bases) # @NR - are we passing a single seed throughout HIVE for reproduceability?
             veh.avail_lat = base.LAT
             veh.avail_lon = base.LON
+            veh.base = base.base_id
 
             veh_fleet.append(veh)
 
