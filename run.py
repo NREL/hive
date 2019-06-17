@@ -108,6 +108,8 @@ def run_simulation(infile, sim_name):
                    'dropoff_lon': req[6],
                    'passengers': req[7]}
         dispatcher.process_requests(request) ## <--STATUS -bb
+    
+    #TODO: Nick does summary stats 
 
 
 if __name__ == "__main__":

@@ -5,6 +5,8 @@ Functions for estimating energy consumption from average speed
 import pandas as pd
 import numpy as np
 
+#TODO: Jake revisit
+
 def import_whmi_template(infile):
     whmi_template = pd.read_csv(infile)
 

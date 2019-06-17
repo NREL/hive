@@ -7,6 +7,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+#TODO: Jake revisit
+
 def construct_temporal_charge_template(unscaled_df, battery_kwh, battery_kw):
     
     unscaled_df.kw = unscaled_df.kw * battery_kw / 50.0
