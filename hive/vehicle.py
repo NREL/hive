@@ -251,29 +251,68 @@ class Vehicle:
 
 
     def return_to_base(self, base):
-        dispatch_dist = haversine((self.avail_lat, self.avail_lon),
+        """
+        Function to send Vehicle to VehicleBase.
+
+        Sends Vehicle to VehicleBase base and updates vehicle reporting
+        attributes with an idle event and the dispatch event. As a result, 
+        Vehicle "active" flag is flipped to False.
+
+        Parameters
+        ----------
+        base: hive.stations.VehicleBase
+            hive VehicleBase object assigned to Vehicle
+
+        Returns
+        -------
+        None
+        """
+
+        # 1. Add idle event
+        idle_time_s = self.ENV['MAX_ALLOWABLE_IDLE_MINUTES'] * 60
+        idle_end = self.avail_time + datetime.timedelta(seconds=idle_time_s)
+        self.energy_remaining -= nrg.calc_idle_kwh(idle_time_s)
+        self.soc = self.energy_remaining / self.BATTERY_CAPACITY
+        write_log({
+            'veh_id': self.id,
+            'activity': 'idle'
+            'start_time': self.avail_time,
+            'start_lat': self.avail_lat,
+            'start_lon': self.avail_lon,
+            'end_time': idle_end,
+            'end_lat': self.avail_lat,
+            'end_lon': self.avail_lon,
+            'dist_mi': 0.0,
+            'end_soc': round(self.soc, 2),
+            'passengers': 0
+        },
+        self._LOG_COLUMNS,
+        self._logfile)
+
+        self.stats['idle_s'] += idle_time_s
+
+        # 2. Add dispatch to base
+        dispatch_dist_mi = haversine((self.avail_lat, self.avail_lon),
                                 (base.LAT, base.LON), unit='mi') \
                                     * self.ENV['RN_SCALING_FACTOR']
-
-        dispatch_time_s = dispatch_dist / self.ENV['DISPATCH_MPH'] * 3600
-        self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist,
+        dispatch_time_s = dispatch_dist_mi / self.ENV['DISPATCH_MPH'] * 3600
+        self.energy_remaining -= nrg.calc_trip_kwh(dispatch_dist_mi,
                                                     dispatch_time_s,
                                                     self.WH_PER_MILE_LOOKUP)
-
         self.soc = self.energy_remaining/self.BATTERY_CAPACITY
-        dtime = self.avail_time + datetime.timedelta(seconds=dispatch_time_s)
+        dispatch_end = idle_end + datetime.timedelta(seconds=dispatch_time_s)
 
         # Update log w/ dispatch to base
         write_log({
             'veh_id': self.id,
-            'activity': -2,
-            'start_time': self.avail_time,
+            'activity': 'dispatch-base',
+            'start_time': idle_end,
             'start_lat': self.avail_lat,
             'start_lon': self.avail_lon,
-            'end_time': dtime,
+            'end_time': dispatch_end,
             'end_lat': base.LAT,
             'end_lon': base.LON,
-            'dist_mi': dispatch_dist,
+            'dist_mi': dispatch_dist_mi,
             'end_soc': round(self.soc, 2),
             'passengers': 0
             },
@@ -282,11 +321,11 @@ class Vehicle:
 
 
         self.stats['dispatch_s'] += dispatch_time_s
-        self.stats['dispatch_vmt'] += dispatch_dist
-        self.stats['total_vmt'] += dispatch_dist
+        self.stats['dispatch_vmt'] += dispatch_dist_mi
+        self.stats['total_vmt'] += dispatch_dist_mi
 
         # Update Vehicle object
         self.active = False
         self.base = base.base_id
         self.avail_lat, self.avail_lon = base.LAT, base.LON
-        self.avail_time = dtime
+        self.avail_time = dispatch_end
