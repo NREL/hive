@@ -9,7 +9,7 @@ from hive.vehicle import Vehicle
 
 def initialize_stations(station_df, station_log_file):
     stations = []
-    for i, row in station_df.iterrows():
+    for _, row in station_df.iterrows():
         station_id = row['station_id']
         lon, lat = row['longitude'], row['latitude']
         plugs = row['plugs']
@@ -29,13 +29,13 @@ def initialize_stations(station_df, station_log_file):
 def initialize_bases(base_df, base_log_file):
     bases = []
     base_power_dict = {}
-    for i, row in base_df.iterrows():
+    for _, row in base_df.iterrows():
         base_id = row['base_id']
         lon, lat = row['longitude'], row['latitude']
         plugs = row['plugs']
         plug_type = row['plug_type']
         plug_power = row['plug_power_kw']
-        station = VehicleBase(base_id,
+        base = VehicleBase(base_id,
                                lat,
                                lon,
                                plugs,
@@ -63,7 +63,7 @@ def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params
                                     veh_type.EFFICIENCY,
                                     )
 
-        for v in range(veh_type.NUM_VEHICLES):
+        for _ in range(veh_type.NUM_VEHICLES):
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
