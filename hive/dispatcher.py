@@ -4,10 +4,10 @@ vehicle dispatching, and DCFC station/base selection.
 """
 
 import datetime
-from haversine import haversine
 
 from hive import tripenergy as nrg
 from hive import charging as chrg
+from hive import helpers as hlp
 
 class Dispatcher:
     """
@@ -36,7 +36,11 @@ class Dispatcher:
         self._bases = bases
         self._base_power_lookup = base_power_lookup
 
-        self.stats = dict()
+    def _reset_failure_tracking(self):
+        """
+        Resets internal failure type tracking log.
+        """
+        self.stats = {}
         for stat in self._STATS:
             self.stats[stat] = 0
 
@@ -51,10 +55,10 @@ class Dispatcher:
         assert veh.active==True, "Vehicle is not active!"
 
         # Calculations
-        disp_dist_miles = haversine((veh.avail_lat, veh.avail_lon),
-                                (request['pickup_lat'], request['pickup_lon']), unit='mi') \
-                                * veh.ENV['RN_SCALING_FACTOR']
-        disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
+        disp_dist_mi = hlp.estimate_vmt((veh.avail_lat, veh.avail_lon),
+                                           (request['pickup_lat'], request['pickup_lon'],
+                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+        disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
         idle_time_s = ((request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)) \
         - veh.avail_time).total_seconds()
         idle_time_min = idle_time_s / 60
@@ -113,9 +117,9 @@ class Dispatcher:
         assert veh.active!=True, "Vehicle is active!"
 
         # Calculations
-        disp_dist_miles = haversine((veh.avail_lat, veh.avail_lon),
-                                (request['pickup_lat'], request['pickup_lon']), unit='mi') \
-                                * veh.ENV['RN_SCALING_FACTOR']
+        disp_dist_mi = hlp.estimate_vmt((veh.avail_lat, veh.avail_lon),
+                                           (request['pickup_lat'], request['pickup_lon'],
+                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
         disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
         disp_energy_kwh = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
@@ -181,9 +185,9 @@ class Dispatcher:
 
         for station in stations: 
             if station.avail_plugs != 0:
-                dist = haversine((veh.avail_lat, veh.avail_lon),
-                                (station.LAT, station.LON), unit='mi') \
-                                * veh.ENV['RN_SCALING_FACTOR']
+                dist = hlp.estimate_vmt((veh.avail_lat, veh.avail_lon),
+                                           (station.LAT, station.LON,
+                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
                 if (nearest == None) and (dist_to_nearest == None):
                     nearest = station
                     dist_to_nearest = dist
@@ -209,6 +213,7 @@ class Dispatcher:
         for req in requests:
             req_filled = False #default
             for veh in self._fleet:
+                self._reset_failure_tracking()
                 # Check active vehicles in fleet
                 if veh.active:
                     viable, calcs = self._check_active_viability(veh, req)
@@ -219,8 +224,6 @@ class Dispatcher:
                         req_filled = True
                         break
             if not req_filled:
-                #TODO: Remove break when check_inactive_viability() is completed.
-                break
                 for veh in self._fleet:
                     # Check inactive (base) vehicles in fleet
                     if not veh.active:
