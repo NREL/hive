@@ -5,14 +5,16 @@ results for simulation
 
 import pandas as pd
 
-def calc_veh_stats(veh_fleet, summary_file):
+def calc_veh_stats(veh_fleet, vehicle_summary_file):
     for veh in veh_fleet:
-        veh.dump_stats(summary_file)
+        veh.dump_stats(vehicle_summary_file)
 
-def calc_fleet_stats(veh_stats_df, req_queue):
+def calc_fleet_stats(output_file, vehicle_summary_file, reqs_df):
+    veh_stats_df = pd.read_csv(vehicle_summary_file)
+
     fleet_stats = {}
 
-    total_reqs = len(req_queue)
+    total_reqs = len(reqs_df)
     fleet_stats['total_requests'] = total_reqs
     reqs_filled = veh_stats_df['requests_filled'].sum()
     fleet_stats['fleet_requests_filled'] = int(reqs_filled)
@@ -22,7 +24,7 @@ def calc_fleet_stats(veh_stats_df, req_queue):
     fleet_stats['min_requests_filled'] = int(veh_stats_df['requests_filled'].min())
     fleet_stats['std_requests_filled'] = veh_stats_df['requests_filled'].std()
 
-    total_pass = req_queue[:,8].sum()
+    total_pass = reqs_df.passengers.sum()
     fleet_stats['total_passenger_requests'] = total_pass
     pass_del = veh_stats_df['passengers_delivered'].sum()
     fleet_stats['fleet_passengers_delivered'] = int(pass_del)
@@ -55,25 +57,33 @@ def calc_fleet_stats(veh_stats_df, req_queue):
     fleet_stats['min_total_vmt'] = float(veh_stats_df['total_vmt'].min())
     fleet_stats['std_total_vmt'] = veh_stats_df['total_vmt'].std()
 
-    fleet_stats['fleet_refuel_count'] = int(veh_stats_df['refuel_count'].sum())
-    fleet_stats['mean_refuel_count'] = veh_stats_df['refuel_count'].mean()
-    fleet_stats['max_refuel_count'] = int(veh_stats_df['refuel_count'].max())
-    fleet_stats['min_refuel_count'] = int(veh_stats_df['refuel_count'].min())
-    fleet_stats['std_refuel_count'] = veh_stats_df['refuel_count'].std()
+    fleet_stats['fleet_refuel_cnt'] = int(veh_stats_df['refuel_cnt'].sum())
+    fleet_stats['mean_refuel_cnt'] = veh_stats_df['refuel_cnt'].mean()
+    fleet_stats['max_refuel_cnt'] = int(veh_stats_df['refuel_cnt'].max())
+    fleet_stats['min_refuel_cnt'] = int(veh_stats_df['refuel_cnt'].min())
+    fleet_stats['std_refuel_cnt'] = veh_stats_df['refuel_cnt'].std()
 
-    fleet_stats['fleet_refuel_hours'] = float(veh_stats_df['refuel_seconds'].sum()/3600)
-    fleet_stats['mean_refuel_hours'] = veh_stats_df['refuel_seconds'].mean()/3600
-    fleet_stats['max_refuel_hours'] = float(veh_stats_df['refuel_seconds'].max()/3600)
-    fleet_stats['min_refuel_hours'] = float(veh_stats_df['refuel_seconds'].min()/3600)
-    fleet_stats['std_refuel_hours'] = (veh_stats_df['refuel_seconds']/3600).std()
+    fleet_stats['fleet_refuel_hours'] = float(veh_stats_df['refuel_s'].sum()/3600)
+    fleet_stats['mean_refuel_hours'] = veh_stats_df['refuel_s'].mean()/3600
+    fleet_stats['max_refuel_hours'] = float(veh_stats_df['refuel_s'].max()/3600)
+    fleet_stats['min_refuel_hours'] = float(veh_stats_df['refuel_s'].min()/3600)
+    fleet_stats['std_refuel_hours'] = (veh_stats_df['refuel_s']/3600).std()
 
-    fleet_stats['fleet_idle_hours'] = float(veh_stats_df['idle_seconds'].sum()/3600)
-    fleet_stats['mean_idle_hours'] = veh_stats_df['idle_seconds'].mean()/3600
-    fleet_stats['max_idle_hours'] = float(veh_stats_df['idle_seconds'].max()/3600)
-    fleet_stats['min_idle_hours'] = float(veh_stats_df['idle_seconds'].min()/3600)
-    fleet_stats['std_idle_hours'] = (veh_stats_df['idle_seconds']/3600).std()
+    fleet_stats['fleet_idle_hours'] = float(veh_stats_df['idle_s'].sum()/3600)
+    fleet_stats['mean_idle_hours'] = veh_stats_df['idle_s'].mean()/3600
+    fleet_stats['max_idle_hours'] = float(veh_stats_df['idle_s'].max()/3600)
+    fleet_stats['min_idle_hours'] = float(veh_stats_df['idle_s'].min()/3600)
+    fleet_stats['std_idle_hours'] = (veh_stats_df['idle_s']/3600).std()
 
-    return fleet_stats
+    with open(output_file, 'w') as f:
+        def p(msg):
+            print(msg, file=f)
+
+        p("Fleet Summary")
+        p("-" * 30)
+        for key, val in fleet_stats.items():
+            p(f'{key}: {val}')
+
 
 def summarize_station_use(charg_stations):
     station_ids, refuel_cnts = [], []
@@ -82,6 +92,6 @@ def summarize_station_use(charg_stations):
         refuel_cnts.append(station.refuel_cnt)
 
     station_summary_df = pd.DataFrame(data={'station_id': station_ids,
-                                      'refuel_count': refuel_cnts})
+                                      'refuel_cnt': refuel_cnts})
 
     return station_summary_df

@@ -34,9 +34,12 @@ def run_simulation(infile, sim_name):
     with open(infile, 'rb') as f:
         data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
-    vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_summary.csv')
     station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
     base_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_log.csv')
+
+    vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'vehicle_summary.csv')
+    fleet_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'fleet_summary.txt')
+
 
     if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
 
@@ -112,8 +115,9 @@ def run_simulation(infile, sim_name):
                    'passengers': req[7]}
         dispatcher.process_requests(request) ## <--STATUS -bb
 
-    #TODO: Nick does summary stats
+    #Calculate summary statistics
     reporting.calc_veh_stats(fleet, vehicle_summary_file)
+    reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
 
 
 
