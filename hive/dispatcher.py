@@ -55,14 +55,16 @@ class Dispatcher:
         assert veh.active==True, "Vehicle is not active!"
 
         # Calculations
-        disp_dist_mi = hlp.estimate_vmt((veh.avail_lat, veh.avail_lon),
-                                           (request['pickup_lat'], request['pickup_lon'],
-                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+        disp_dist_mi = hlp.estimate_vmt(veh.avail_lat, 
+                                        veh.avail_lon,
+                                        request['pickup_lat'],
+                                        request['pickup_lon'],
+                                        scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
         disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
         idle_time_s = ((request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)) \
         - veh.avail_time).total_seconds()
         idle_time_min = idle_time_s / 60
-        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi, disp_time_s, veh.WH_PER_MILE_LOOKUP)
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
         trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
         total_energy_kwh = disp_energy_kwh + trip_energy_kwh
@@ -70,7 +72,7 @@ class Dispatcher:
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
-            'disp_dist_miles': disp_dist_miles,
+            'disp_dist_miles': disp_dist_mi,
             'disp_time_s': disp_time_s,
             'idle_time_s': idle_time_s,
             'battery_kwh_remains': hyp_energy_remaining,
@@ -84,7 +86,7 @@ class Dispatcher:
             return False, None
 
         # Check 2 - Max Dispatch Constraint Not Violated
-        if disp_dist_miles > veh.ENV['MAX_DISPATCH_MILES']:
+        if disp_dist_mi > veh.ENV['MAX_DISPATCH_MILES']:
             self.stats['failure_active_max_dispatch']+=1
             return False, None
 
@@ -117,13 +119,19 @@ class Dispatcher:
         assert veh.active!=True, "Vehicle is active!"
 
         # Calculations
-        disp_dist_mi = hlp.estimate_vmt((veh.avail_lat, veh.avail_lon),
-                                           (request['pickup_lat'], request['pickup_lon'],
-                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
-        disp_time_s = disp_dist/veh.ENV['DISPATCH_MPH'] * 3600
-        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        disp_dist_mi = hlp.estimate_vmt(veh.avail_lat, 
+                                        veh.avail_lon,
+                                        request['pickup_lat'], 
+                                        request['pickup_lon'],
+                                        scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+        disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi, 
+                                            disp_time_s, 
+                                            veh.WH_PER_MILE_LOOKUP)
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
+        trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], 
+                                            trip_time_s,
+                                            veh.WH_PER_MILE_LOOKUP)
         total_energy_kwh = disp_energy_kwh + trip_energy_kwh
 
         disp_start_time = request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)
@@ -135,7 +143,9 @@ class Dispatcher:
         
         elif self._base_power_lookup[veh.base]['type'] == 'DC':
             kw = self._base_power_lookup[veh.base]['kw']
-            energy_gained_kwh = chrg.query_charge_stats(veh.CHARGE_TEMPLATE, veh.soc, charge_time=refuel_s)
+            energy_gained_kwh = chrg.query_charge_stats(veh.CHARGE_TEMPLATE, 
+                                                        veh.soc, 
+                                                        charge_time=refuel_s)
 
         
         hyp_energy_remaining = veh.energy_remaining + energy_gained_kwh - total_energy_kwh
@@ -143,14 +153,15 @@ class Dispatcher:
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
-            'disp_start_time': disp_start_time
-            'disp_dist_miles': disp_dist_miles,
+            'disp_start_time': disp_start_time,
+            'disp_dist_miles': disp_dist_mi,
             'disp_time_s': disp_time_s,
             'battery_kwh_remains': hyp_energy_remaining,
         }
         
         # Check 1 - Time Constraint Not Violated
-        if (veh.avail_time!=0) and (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']):
+        if (veh.avail_time!=0) and /
+        (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']):
             self.stats['failure_inactive_time']+=1
             return False, None
 
@@ -185,9 +196,11 @@ class Dispatcher:
 
         for station in stations: 
             if station.avail_plugs != 0:
-                dist = hlp.estimate_vmt((veh.avail_lat, veh.avail_lon),
-                                           (station.LAT, station.LON,
-                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+                dist = hlp.estimate_vmt(veh.avail_lat, 
+                                        veh.avail_lon,
+                                        station.LAT, 
+                                        station.LON,
+                                        scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
                 if (nearest == None) and (dist_to_nearest == None):
                     nearest = station
                     dist_to_nearest = dist

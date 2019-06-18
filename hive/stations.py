@@ -145,65 +145,65 @@ class VehicleBase:
         Number of plugs that are unoccupied
     """
 
-_STATS = [
-    'charge_cnt',
-    'instantaneous_pwr',
-    'peak_pwr',
-    'total_energy'
-    ]
+    _STATS = [
+        'charge_cnt',
+        'instantaneous_pwr',
+        'peak_pwr',
+        'total_energy'
+        ]
 
-_LOG_COLUMNS = [
-    'base_id',
-    'vehicle_id',
-    'start_time',
-    'end_time',
-    'soc_i',
-    'soc_f',
-    ]
+    _LOG_COLUMNS = [
+        'base_id',
+        'vehicle_id',
+        'start_time',
+        'end_time',
+        'soc_i',
+        'soc_f',
+        ]
 
-def __init__(
-            self,
-            base_id,
-            latitude,
-            longitude,
-            plugs,
-            plug_type,
-            plug_power,
-            logfile
-            ):
+    def __init__(
+                self,
+                base_id,
+                latitude,
+                longitude,
+                plugs,
+                plug_type,
+                plug_power,
+                logfile
+                ):
 
-    self.ID = base_id
-    self.LAT = latitude
-    self.LON = longitude
+        self.ID = base_id
+        self.LAT = latitude
+        self.LON = longitude
 
-    assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
-    self.TOTAL_PLUGS = plugs
+        assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
+        self.TOTAL_PLUGS = plugs
 
-    assert_constraint("PLUG_TYPE", plug_type, STATION_PARAMS, context="Initialize FuelStation")
-    self.PLUG_TYPE = plug_type
+        assert_constraint("PLUG_TYPE", plug_type, STATION_PARAMS, context="Initialize FuelStation")
+        self.PLUG_TYPE = plug_type
 
-    assert_constraint("PLUG_POWER", plug_power, STATION_PARAMS, context="Initialize FuelStation")
-    self.PLUG_POWER = plug_power
+        assert_constraint("PLUG_POWER", plug_power, STATION_PARAMS, context="Initialize FuelStation")
+        self.PLUG_POWER = plug_power
 
-    self.avail_plugs = plugs
+        self.avail_plugs = plugs
 
-    self._logfile = logfile
-    initialize_log(self._LOG_COLUMNS, self._logfile)
+        self._logfile = logfile
+        initialize_log(self._LOG_COLUMNS, self._logfile)
 
-    self.stats = dict()
-    for stat in self._STATS:
-        self.stats[stat] = 0
+        self.stats = dict()
+        for stat in self._STATS:
+            self.stats[stat] = 0
 
-def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f):
-    #TODO: Update
-    self.stats['charge_cnt'] += 1
-    write_log({
-        'station_id': self.ID,
-        'vehicle_id': veh.ID,
-        'start_time': start_time,
-        'end_time': end_time,
-        'soc_i': soc_i,
-        'soc_f': soc_f,
-        },
-        self._LOG_COLUMNS,
-        self._logfile)
+    def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f):
+        #TODO: Update
+        self.stats['charge_cnt'] += 1
+        write_log({
+            'station_id': self.ID,
+            'vehicle_id': veh.ID,
+            'start_time': start_time,
+            'end_time': end_time,
+            'soc_i': soc_i,
+            'soc_f': soc_f,
+            },
+            self._LOG_COLUMNS,
+            self._logfile)

@@ -19,7 +19,6 @@ from hive import charging as chrg
 from hive import utils
 from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
 from hive.vehicle import Vehicle
-from hive.station import FuelStation
 from hive.dispatcher import Dispatcher
 
 seed = 123

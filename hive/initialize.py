@@ -81,7 +81,7 @@ def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params
             base = random.choice(bases) # @NR - are we passing a single seed throughout HIVE for reproduceability?
             veh.avail_lat = base.LAT
             veh.avail_lon = base.LON
-            veh.base = base.base_id
+            veh.base = base.ID
 
             veh_fleet.append(veh)
 
