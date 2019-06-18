@@ -176,7 +176,7 @@ def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=
     >>> calc_const_charge_secs(42, 60)
     9818.181818
     """
-    energy_f = battery_capacity * soc_f
-    secs_to_full = (energy_f - energy_remaining)/kw*3600
+    energy_f = battery_capacity_kwh * soc_f
+    secs = (energy_f - init_energy_kwh)/kw*3600
     
-    return secs_to_full
+    return secs
