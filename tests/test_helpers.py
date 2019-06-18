@@ -5,8 +5,9 @@ import unittest
 sys.path.append('../')
 from hive.helpers import estimate_vmt
 
-DEFAULT_INPUT_DIR = os.path.join('..', 'inputs', '.inputs_default')
-TEST_INPUT_DIR = '.tmp'
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
+TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class HelpersTest(unittest.TestCase):
     @classmethod

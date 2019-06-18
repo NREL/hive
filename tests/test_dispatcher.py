@@ -1,13 +1,15 @@
-import unittest
 import os
+import sys
 import shutil
+import unittest
 import pandas as pd
 
+sys.path.append('../')
 from hive import initialize as init
 from hive.dispatcher import Dispatcher
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
 TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class DispatcherTest(unittest.TestCase):
@@ -16,9 +18,12 @@ class DispatcherTest(unittest.TestCase):
         if not os.path.isdir(TEST_OUTPUT_DIR):
             os.makedirs(TEST_OUTPUT_DIR)
 
-        CHARGE_NET_FILE = os.path.join(TEST_INPUT_DIR,
+        CHARGE_STATIONS_FILE = os.path.join(TEST_INPUT_DIR,
                                         'charge_network',
                                         'aus_fuel_stations.csv')
+        VEHICLE_BASES_FILE = os.path.join(TEST_INPUT_DIR,
+                                          'charge_network',
+                                          'aus_veh_bases.csv')
         CHARGE_CURVE_FILE = os.path.join(TEST_INPUT_DIR,
                                             '.lib',
                                             'raw_leaf_curves.csv')
@@ -31,13 +36,16 @@ class DispatcherTest(unittest.TestCase):
 
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet_df = pd.read_csv(FLEET_FILE)
-        charge_net_df = pd.read_csv(CHARGE_NET_FILE)
-        stations, bases = init.initialize_charge_network(charge_net_df,
+        stations_df = pd.read_csv(CHARGE_STATIONS_FILE)
+        bases_df = pd.read_csv(VEHICLE_BASES_FILE)
+        stations = init.initialize_stations(stations_df,
                                             station_log_file=log_file)
+        bases, base_power_lookup = init.initialize_bases(bases_df,
+                                                         base_log_file=log_file)
         charge_curve_df = pd.read_csv(CHARGE_CURVE_FILE)
         whmi_df = pd.read_csv(WHMI_LOOKUP_FILE)
         vehicles = list()
-        for i, veh in fleet_df.iloc[0:5].iterrows():
+        for _, veh in fleet_df.iloc[0:5].iterrows():
             veh_file = os.path.join(TEST_INPUT_DIR, 'vehicles', '{}.csv'.format(veh.VEHICLE_NAME))
             veh_df = pd.read_csv(veh_file)
             veh_df['VEHICLE_NAME'] = veh.VEHICLE_NAME
@@ -51,6 +59,7 @@ class DispatcherTest(unittest.TestCase):
         }
 
         cls.bases = bases
+        cls.base_power_lookup = base_power_lookup
         cls.stations = stations
         cls.fleet = init.initialize_fleet(vehicles,
                                             bases,
@@ -58,7 +67,6 @@ class DispatcherTest(unittest.TestCase):
                                             whmi_df,
                                             env_params,
                                             vehicle_log_file=log_file)
-
 
     @classmethod
     def tearDownClass(cls):
@@ -71,9 +79,35 @@ class DispatcherTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_dispatcher(self):
-        dispatcher = Dispatcher(fleet = self.fleet,
-                                stations = self.stations,
-                                bases = self.bases)
-        self.assertEqual(1,0)
-        #TODO: Develop unit tests for internal Dispatcher functions.
+    def test_find_nearest_plug(self):
+        dispatcher = Dispatcher(self.fleet,
+                                self.stations,
+                                self.bases,
+                                self.base_power_lookup)
+        
+        veh = dispatcher._fleet[0]
+        station_lat = dispatcher._stations[0].LAT
+        station_lon = dispatcher._stations[0].LON
+        station_id = dispatcher._stations[0].ID
+        veh.avail_lat = station_lat
+        veh.avail_lon = station_lon
+
+        nearest_id = dispatcher._find_nearest_plug(veh, type='station').ID
+        self.assertEqual(station_id, nearest_id)
+
+    def test_check_active_viability(self):
+        dispatcher = Dispatcher(self.fleet,
+                                self.stations,
+                                self.bases,
+                                self.base_power_lookup)
+        self.assertEqual(1,0) #TODO - Write unit test for this class function
+
+    def test_check_inactive_viability(self):
+        dispatcher = Dispatcher(self.fleet,
+                                self.stations,
+                                self.bases,
+                                self.base_power_lookup)
+        self.assertEqual(1,0) #TODO - Write unit test for this class function
+
+if __name__ == "__main__":
+    unittest.main()

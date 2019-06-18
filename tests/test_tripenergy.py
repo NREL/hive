@@ -1,16 +1,21 @@
-import unittest
-import sys
 import os
+import sys
+import unittest
 
+sys.path.append('../')
 from hive.tripenergy import import_whmi_template, create_scaled_whmi, \
     calc_trip_kwh, calc_idle_kwh
 
-TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
+TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class TripEnergyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.WHMI_LOOKUP_FILE = os.path.join(TEST_INPUT_DIR, '.lib', 'wh_mi_lookup.csv')
+        cls.WHMI_LOOKUP_FILE = os.path.join(TEST_INPUT_DIR, 
+                                            '.lib', 
+                                            'wh_mi_lookup.csv')
 
     @classmethod
     def tearDownClass(cls):

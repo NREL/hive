@@ -1,14 +1,16 @@
-import unittest
-import pandas as pd
 import os
+import sys
+import unittest
 import shutil
+import pandas as pd
 
-from hive.initialize import initialize_charge_network, initialize_fleet
-from hive.station import FuelStation
+sys.path.append('../')
+from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
+from hive.stations import FuelStation, VehicleBase
 from hive.vehicle import Vehicle
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
 TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class InitializeChargeNetworkTest(unittest.TestCase):
@@ -17,9 +19,13 @@ class InitializeChargeNetworkTest(unittest.TestCase):
         if not os.path.isdir(TEST_OUTPUT_DIR):
             os.makedirs(TEST_OUTPUT_DIR)
 
-        cls.CHARGE_NET_FILE = os.path.join(TEST_INPUT_DIR,
-                                        'charge_network',
-                                        'aus_fuel_stations.csv')
+        cls.CHARGE_STATIONS_FILE = os.path.join(TEST_INPUT_DIR,
+                                                'charge_network',
+                                                'aus_fuel_stations.csv')
+
+        cls.VEHICLE_BASES_FILE = os.path.join(TEST_INPUT_DIR,
+                                              'charge_network',
+                                              'aus_veh_bases.csv')
 
     @classmethod
     def tearDownClass(cls):
@@ -34,25 +40,30 @@ class InitializeChargeNetworkTest(unittest.TestCase):
 
     def test_initialize_charging_network_stations(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        stations, bases = initialize_charge_network(charge_net_df,
-                                            station_log_file=log_file)
+        stations_df = pd.read_csv(self.CHARGE_STATIONS_FILE)
+        stations = initialize_stations(stations_df,
+                                       station_log_file=log_file)
         self.assertEqual(len(stations), 186)
+        self.assertIsInstance(stations[0], FuelStation)
+        self.assertEqual(stations[0]._logfile, log_file)
 
     def test_initialize_charging_network_bases(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        stations, bases = initialize_charge_network(charge_net_df,
-                                            station_log_file=log_file)
+        bases_df = pd.read_csv(self.VEHICLE_BASES_FILE)
+        bases, _ = initialize_bases(bases_df,
+                                 base_log_file=log_file)
         self.assertEqual(len(bases), 2)
+        self.assertIsInstance(bases[0], VehicleBase)
+        self.assertEqual(bases[0]._logfile, log_file)
 
-    def test_initialize_charging_network_type(self):
+    def test_initialize_base_power_dict(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        stations, bases = initialize_charge_network(charge_net_df,
-                                            station_log_file=log_file)
-        self.assertIsInstance(stations[0], FuelStation)
-
+        bases_df = pd.read_csv(self.VEHICLE_BASES_FILE)
+        _, base_power_dict = initialize_bases(bases_df,
+                                              base_log_file=log_file)
+        self.assertEqual(len(base_power_dict.keys()), 2)
+        self.assertTrue('type' in base_power_dict['b1'].keys())
+        self.assertTrue('kw' in base_power_dict['b1'].keys())
 
 class InitializeFleetTest(unittest.TestCase):
     @classmethod
@@ -60,9 +71,9 @@ class InitializeFleetTest(unittest.TestCase):
         if not os.path.isdir(TEST_OUTPUT_DIR):
             os.makedirs(TEST_OUTPUT_DIR)
 
-        cls.CHARGE_NET_FILE = os.path.join(TEST_INPUT_DIR,
-                                        'charge_network',
-                                        'aus_fuel_stations.csv')
+        cls.VEHICLE_BASES_FILE = os.path.join(TEST_INPUT_DIR,
+                                              'charge_network',
+                                              'aus_veh_bases.csv')
         cls.CHARGE_CURVE_FILE = os.path.join(TEST_INPUT_DIR,
                                             '.lib',
                                             'raw_leaf_curves.csv')
@@ -83,14 +94,14 @@ class InitializeFleetTest(unittest.TestCase):
     def setUp(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet_df = pd.read_csv(self.FLEET_FILE)
-        charge_net_df = pd.read_csv(self.CHARGE_NET_FILE)
-        _, bases = initialize_charge_network(charge_net_df,
-                                            station_log_file=log_file)
+        bases_df = pd.read_csv(self.VEHICLE_BASES_FILE)
+        bases, _ = initialize_bases(bases_df,
+                                 base_log_file=log_file)
         self.bases = bases
         self.charge_curve_df = pd.read_csv(self.CHARGE_CURVE_FILE)
         self.whmi_df = pd.read_csv(self.WHMI_LOOKUP_FILE)
         self.vehicles = list()
-        for i, veh in fleet_df.iterrows():
+        for _, veh in fleet_df.iterrows():
             veh_file = os.path.join(TEST_INPUT_DIR, 'vehicles', '{}.csv'.format(veh.VEHICLE_NAME))
             veh_df = pd.read_csv(veh_file)
             veh_df['VEHICLE_NAME'] = veh.VEHICLE_NAME
@@ -125,9 +136,6 @@ class InitializeFleetTest(unittest.TestCase):
                                     self.env_params,
                                     vehicle_log_file = log_file)
         self.assertIsInstance(fleet[0], Vehicle)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()

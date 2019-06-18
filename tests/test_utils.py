@@ -1,13 +1,16 @@
-import unittest
 import os
+import sys
 import shutil
-import pandas as pd
 import pickle
+import unittest
+import pandas as pd
 
+sys.path.append('../')
 from hive import utils
 
-TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
-TEST_OUTPUT_DIR = os.path.join('tests', '.tmp')
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
+TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class UtilsTest(unittest.TestCase):
     @classmethod
@@ -135,3 +138,6 @@ class UtilsTest(unittest.TestCase):
         expected_error = "Param IN_SET:C must be from set"
 
         self.assertTrue(expected_error in str(context.exception))
+
+if __name__ == "__main__":
+    unittest.main()

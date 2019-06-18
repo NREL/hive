@@ -1,14 +1,18 @@
-import unittest
 import os
+import sys
 import shutil
+import unittest
 from datetime import datetime
 
-from hive.station import FuelStation
+sys.path.append('../')
+from hive.stations import FuelStation, VehicleBase
 from hive.vehicle import Vehicle
 from hive.constraints import STATION_PARAMS
 
-TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
-TEST_OUTPUT_DIR = os.path.join('tests', '.tmp')
+
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
+TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class StationTest(unittest.TestCase):
     @classmethod
@@ -85,6 +89,7 @@ class StationTest(unittest.TestCase):
         veh = Vehicle(veh_id = 1,
                         name='test_veh',
                         battery_capacity = 100,
+                        max_passengers=4,
                         initial_soc = 0.5,
                         whmi_lookup = "placeholder",
                         charge_template = "placeholder",
@@ -98,3 +103,6 @@ class StationTest(unittest.TestCase):
         station.add_charge_event(veh, start_time, end_time, soc_i, soc_f)
 
         self.assertEqual(station.stats['charge_cnt'], 1)
+
+if __name__ == "__main__":
+    unittest.main()

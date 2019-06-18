@@ -1,12 +1,15 @@
-import unittest
 import os
+import sys
 import shutil
+import unittest
 
+sys.path.append('../')
 from hive.vehicle import Vehicle
 from hive.constraints import VEH_PARAMS
 
-TEST_INPUT_DIR = os.path.join('inputs', '.inputs_default')
-TEST_OUTPUT_DIR = os.path.join('tests', '.tmp')
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
+TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class VehicleTest(unittest.TestCase):
     @classmethod
@@ -31,6 +34,7 @@ class VehicleTest(unittest.TestCase):
             veh = Vehicle(veh_id = 1,
                             name='test',
                             battery_capacity = -1,
+                            max_passengers = 4,
                             initial_soc = 0.2,
                             whmi_lookup = "placeholder",
                             charge_template = "placeholder",
@@ -47,6 +51,7 @@ class VehicleTest(unittest.TestCase):
             veh = Vehicle(veh_id = 1,
                             name='test',
                             battery_capacity = 10,
+                            max_passengers = 4,
                             initial_soc = -0.1,
                             whmi_lookup = "placeholder",
                             charge_template = "placeholder",
@@ -63,6 +68,7 @@ class VehicleTest(unittest.TestCase):
             veh = Vehicle(veh_id = 1,
                             name='test',
                             battery_capacity = 10,
+                            max_passengers = 4,
                             initial_soc = 1.2,
                             whmi_lookup = "placeholder",
                             charge_template = "placeholder",
@@ -79,6 +85,7 @@ class VehicleTest(unittest.TestCase):
             veh = Vehicle(veh_id = 1,
                             name='test',
                             battery_capacity = 10,
+                            max_passengers = 4,
                             initial_soc = 0.2,
                             whmi_lookup = "placeholder",
                             charge_template = "placeholder",
@@ -88,3 +95,6 @@ class VehicleTest(unittest.TestCase):
         expected_error= "Got an unexpected parameter BAD_PARAM"
 
         self.assertTrue(expected_error in str(context.exception))
+
+if __name__ == "__main__":
+    unittest.main()
