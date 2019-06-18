@@ -88,6 +88,7 @@ def construct_charge_profile(charge_template, soc_i, charge_time=-1, soc_f=-1):
     
     return charge_df
 
+# @JH - refactor
 def query_charge_stats(charge_template, soc_i, charge_time=-1, soc_f=-1):
     """Function needs docstring"""
     
@@ -123,14 +124,59 @@ def query_charge_stats(charge_template, soc_i, charge_time=-1, soc_f=-1):
     return kwh, soc_f, charge_time, avg_kw
 
 
-def calc_const_charge_kwh(time_s, kw=7.2):
-    """Function needs docstring"""
+def calc_const_charge_kwh(time_s, kw=6.6):
+    """
+    Calculates the energy (in kWh) added to battery in time_s seconds at 
+    constant power, kw (default=6.6).
+
+    Inputs
+    ------
+    time_s: double precision
+        Seconds of charging
+    kw: double precision
+        Constant power received by battery, in kW (default: 6.6)
+
+    Returns
+    -------
+    double precision
+        kWh added to battery in time_s seconds
+
+    Examples
+    --------
+    >>> calc_const_charge_kwh(7200)
+    13.2
+    """
     kwh = kw * (time_s / 3600.0)
     
     return kwh
 
-def calc_const_charge_secs_to_full(energy_remaining, battery_capacity, kw=7.2):
-    """Function needs docstring"""
-    secs_to_full = (battery_capacity - energy_remaining)/kw*3600
+def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=1.0):
+    """
+    Calculates the time (in seconds) to charge from init_energy_kwh to 
+    battery_capacity_kwh * soc_f at constant power, kw (default=6.6).
+
+    Inputs
+    ------
+    init_energy_kwh: double precision
+        Initial battery kWh
+    battery_capacity_kwh: double precision
+        Battery capacity, in kWh
+    kw: double precision
+        Constant power received by battery, in kW (default: 6.6)
+    soc_f: double precision
+        Fractional battery state of charge at completion of charge (default: 1.0)
+
+    Returns
+    -------
+    double precision
+        Seconds needed to charge from init_energy_kwh -> battery_capacity_kwh * soc_f
+
+    Examples
+    --------
+    >>> calc_const_charge_secs(42, 60)
+    9818.181818
+    """
+    energy_f = battery_capacity * soc_f
+    secs_to_full = (energy_f - energy_remaining)/kw*3600
     
     return secs_to_full
