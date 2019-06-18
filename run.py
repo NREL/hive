@@ -17,9 +17,11 @@ from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import utils
+from hive import reporting
 from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.dispatcher import Dispatcher
+
 
 seed = 123
 random.seed(seed)
@@ -32,6 +34,7 @@ def run_simulation(infile, sim_name):
     with open(infile, 'rb') as f:
         data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
+    vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_summary.csv')
     station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
     base_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_log.csv')
 
@@ -87,7 +90,8 @@ def run_simulation(infile, sim_name):
                              charge_curve = data['charge_curves'],
                              whmi_lookup = data['whmi_lookup'],
                              env_params = fleet_env_params,
-                             vehicle_log_file = vehicle_log_file)
+                             vehicle_log_file = vehicle_log_file,
+                             vehicle_summary_file = vehicle_summary_file)
     if cfg.VERBOSE: print("{} vehicles initialized".format(len(fleet)), "", sep="\n")
 
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
@@ -107,8 +111,10 @@ def run_simulation(infile, sim_name):
                    'dropoff_lon': req[6],
                    'passengers': req[7]}
         dispatcher.process_requests(request) ## <--STATUS -bb
-    
-    #TODO: Nick does summary stats 
+
+    #TODO: Nick does summary stats
+    reporting.calc_veh_stats(fleet, vehicle_summary_file)
+
 
 
 if __name__ == "__main__":
