@@ -58,10 +58,11 @@ class Vehicle:
         Boolean indicator for whether a veh is actively servicing demand. If
         False, vehicle is sitting at a base
     base:
-        base_id of vehicle's home location or base assignment. Used 
+        base_id of vehicle's home location or base assignment. Used
     """
     # statistics tracked on a vehicle instance level over entire simulation.
     _STATS = [
+            'veh_id',
             'trip_vmt', #miles traveled servicing ride requests
             'dispatch_vmt', #miles traveled dispatching to pickup locations
             'total_vmt', #total miles traveled
@@ -72,6 +73,8 @@ class Vehicle:
             'idle_s', #seconds where vehicle is not serving, dispatching to new request, or charging
             'dispatch_s', #seconds where vehicle is moving w/o passengers
             'trip_s', #seconds where vehicle is serving a trip request
+            'pct_time_trip', #percentage of the time the vehicle was serving a trip
+            'end_soc', #soc of vehicle at end of simulation
             ]
 
     _LOG_COLUMNS = [
@@ -120,14 +123,13 @@ class Vehicle:
         self.soc = initial_soc
         self.energy_remaining = battery_capacity * initial_soc
 
-        # Init logging
         self._logfile = logfile
-        initialize_log(self._LOG_COLUMNS, self._logfile)
-        
+
         # Init reporting
         self.stats = dict()
         for stat in self._STATS:
             self.stats[stat] = 0
+        self.stats['veh_id'] = veh_id
 
         self.ENV = dict()
         for param, val in environment_params.items():
@@ -137,6 +139,17 @@ class Vehicle:
 
     def __repr__(self):
         return str(f"Vehicle(id: {self.id}, name: {self.NAME})")
+
+    def dump_stats(self, filepath):
+        self.stats['end_soc'] = self.soc
+
+        try:
+            self.stats['pct_time_trip'] = self.stats['trip_s'] / (self.stats['refuel_s'] \
+                + self.stats['idle_s'] + self.stats['dispatch_s'] + self.stats['trip_s'])
+        except ZeroDivisionError:
+            self.stats['pct_time_trip'] = 0
+
+        write_log(self.stats, self._STATS, filepath)
 
     def make_trip(self, request, calcs):
         pass
@@ -210,8 +223,8 @@ class Vehicle:
 
     #     # Locate nearest station
     #     nearest_station = charg_stations[0]
-    #     dist_to_nearest = 
-        
+    #     dist_to_nearest =
+
     #     haversine((self.avail_lat, self.avail_lon), (nearest_station.lat, nearest_station.lon), unit='mi') * inpt.self.ENV['RN_SCALING_FACTOR']
     #     for station in charg_stations[1:]:
     #         dist = haversine((self.avail_lat, self.avail_lon), (station.lat, station.lon), unit='mi') * inpt.self.ENV['RN_SCALING_FACTOR']
@@ -258,7 +271,7 @@ class Vehicle:
     #     Function to send Vehicle to VehicleBase.
 
     #     Sends Vehicle to VehicleBase base and updates vehicle reporting
-    #     attributes with an idle event and the dispatch event. As a result, 
+    #     attributes with an idle event and the dispatch event. As a result,
     #     Vehicle "active" flag is flipped to False.
 
     #     Parameters

@@ -119,12 +119,15 @@ class InitializeFleetTest(unittest.TestCase):
 
     def test_initialize_fleet_size(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
+        summary_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet = initialize_fleet(self.vehicles,
                                     self.bases,
                                     self.charge_curve_df,
                                     self.whmi_df,
                                     self.env_params,
-                                    vehicle_log_file = log_file)
+                                    vehicle_log_file = log_file,
+                                    vehicle_summary_file = summary_file)
+
         self.assertEqual(len(fleet), 130)
 
     def test_initialize_fleet_type(self):
@@ -134,7 +137,8 @@ class InitializeFleetTest(unittest.TestCase):
                                     self.charge_curve_df,
                                     self.whmi_df,
                                     self.env_params,
-                                    vehicle_log_file = log_file)
+                                    vehicle_log_file = log_file,
+                                    vehicle_summary_file = summary_file)
         self.assertIsInstance(fleet[0], Vehicle)
 
 if __name__ == '__main__':

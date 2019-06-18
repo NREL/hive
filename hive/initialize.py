@@ -49,7 +49,13 @@ def initialize_bases(base_df, base_log_file):
     return bases, base_power_dict
 
 
-def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params, vehicle_log_file):
+def initialize_fleet(vehicle_types,
+                        bases,
+                        charge_curve,
+                        whmi_lookup,
+                        env_params,
+                        vehicle_log_file,
+                        vehicle_summary_file):
     id = 1
     veh_fleet = []
     for veh_type in vehicle_types:
@@ -84,6 +90,10 @@ def initialize_fleet(vehicle_types, bases, charge_curve, whmi_lookup, env_params
             veh.base = base.ID
 
             veh_fleet.append(veh)
+
+    #Initialize vehicle and summary logs
+    initialize_log(veh._LOG_COLUMNS, vehicle_log_file)
+    initialize_log(veh._STATS, vehicle_summary_file)
 
     random.shuffle(veh_fleet)
     return veh_fleet
