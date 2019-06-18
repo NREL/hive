@@ -106,7 +106,7 @@ def task_build_input_files():
 
         # Path to charge network file
         charge_stations_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_STATIONS_FILE'])
-        veh_depots_file = os.path.join(cfg.IN_PATH, 'charge_network', row['VEH_DEPOTS_FILE'])
+        veh_bases_file = os.path.join(cfg.IN_PATH, 'charge_network', row['VEH_BASES_FILE'])
         file_deps.append(charge_stations_file)
 
         fleet_file = os.path.join(cfg.IN_PATH, 'fleets', row['FLEET_FILE'])
@@ -131,7 +131,7 @@ def task_build_input_files():
 
         data['requests'] = pp.load_requests(req_file)
         data['stations'] = pd.read_csv(charge_stations_file)
-        data['depots'] = pd.read_csv(veh_depots_file)
+        data['bases'] = pd.read_csv(veh_bases_file)
         data['main'] = row
         data['charge_curves'] = charge_df
         data['whmi_lookup'] = whmi_df

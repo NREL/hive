@@ -10,7 +10,7 @@ dependencies:
   - bleach=3.1.0=py36_0
   - blosc=1.15.0=hd9629dc_0
   - bzip2=1.0.6=h1de35cc_5
-  - ca-certificates=2019.1.23=0
+  - ca-certificates=2019.5.15=0
   - cairo=1.14.12=hc4e6be7_4
   - certifi=2019.3.9=py36_0
   - click=7.0=py36_0
@@ -46,6 +46,7 @@ dependencies:
   - ipywidgets=7.4.2=py36_0
   - jedi=0.13.3=py36_0
   - jinja2=2.10=py36_0
+  - joblib=0.13.2=py36_0
   - jpeg=9b=he5867d9_2
   - json-c=0.13.1=h3efe00b_0
   - jsonschema=3.0.1=py36_0
@@ -78,6 +79,7 @@ dependencies:
   - libssh2=1.8.0=ha12b0ac_4
   - libtiff=4.0.10=hcb84e12_2
   - libxml2=2.9.9=hab757c2_0
+  - llvm-openmp=4.0.1=hcfea43d_1
   - lzo=2.10=h362108e_2
   - macfsevents=0.8.1=py36h1de35cc_0
   - mapclassify=2.0.1=py_0
@@ -97,7 +99,7 @@ dependencies:
   - numpy=1.16.2=py36hacdab7b_0
   - numpy-base=1.16.2=py36h6575580_0
   - openjpeg=2.3.0=hb95cd4c_1
-  - openssl=1.1.1b=h1de35cc_1
+  - openssl=1.1.1c=h1de35cc_1
   - pandas=0.24.2=py36h0a44026_0
   - pandoc=2.2.3.2=0
   - pandocfilters=1.4.2=py36_1
@@ -132,6 +134,7 @@ dependencies:
   - qtconsole=4.4.3=py36_0
   - readline=7.0=h1de35cc_5
   - rtree=0.8.3=py36_0
+  - scikit-learn=0.21.1=py36h27c97d8_0
   - scipy=1.2.1=py36h1410ff5_0
   - send2trash=1.5.0=py36_0
   - setuptools=40.8.0=py36_0
@@ -158,5 +161,5 @@ dependencies:
   - pip:
     - haversine==2.0.0
     - line-profiler==2.1.2
-prefix: /anaconda3/envs/hive
+prefix: /Users/bborlaug/anaconda3/envs/hive
 
