@@ -6,6 +6,7 @@ from hive import charging as chrg
 from hive import tripenergy as nrg
 from hive.stations import FuelStation, VehicleBase
 from hive.vehicle import Vehicle
+from hive.utils import initialize_log
 
 def initialize_stations(station_df, station_log_file):
     stations = []

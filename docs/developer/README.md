@@ -4,18 +4,18 @@ the most relevant are repeated here:
 
 __Class Names__: use CapWords convention (i.e. "SampleClass")
 
-__Function and Variable Names__: lowercase with words separated by underscores 
+__Function and Variable Names__: lowercase with words separated by underscores
 (i.e. "number_of_monsters")
 
 __Funcation and Method Arguments__: If a function argument's name clashes with a
-reserved keyword, it is better to append a single trailing underscore rather 
+reserved keyword, it is better to append a single trailing underscore rather
 than an abbreviation or spelling corruption. Synonyms where possible might even
 be better (i.e. "class_" not "clss").
 
 __Constants__: Defined on a module level and written in all capital letters with
 underscores separating words (i.e. "MAX_SPEED" and "DENSITY")
 
-There are many other valuable conventions in the PEP-8 standards linked above, 
+There are many other valuable conventions in the PEP-8 standards linked above,
 please review if you have any questions.
 
 
@@ -24,7 +24,7 @@ We are using Sphinx for automatic generation of documentation from the code base
 Sphinx is highly customizable and is the industry standard for documenting many
 open source projects.
 
-Sphinx runs in a pre-commit hook in this repo. The command line interface runs to 
+Sphinx runs in a pre-commit hook in this repo. The command line interface runs to
 generate the html documentation, which are created in hive/docs/build/html.
 
 It is critical to include docstrings in modules, classes, methods, and functions
@@ -78,10 +78,16 @@ Generally docstrings for functions and methods should look like this:
 # Testing
 ## unittest
 __unittest__ is the Python standard library test module. It has a simple
-API and is a good introduction to testing for those with less familiarity. Docs 
+API and is a good introduction to testing for those with less familiarity. Docs
 are available [here](https://docs.python.org/3/library/unittest.html#module-unittest).
 
+### Running testing suite
+To run the entire testing suite, simply navigate to the `tests/` subdirectory
+and run `python -m unittest discover`.
 
+### Running individual tests
+To run individual tests, navigate to the `tests/` directory and run
+`python -m unittest name_of_test_module.py`
 
 
 ## don't test things twice (no subfunctions)

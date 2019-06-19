@@ -13,8 +13,8 @@ TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 class TripEnergyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.WHMI_LOOKUP_FILE = os.path.join(TEST_INPUT_DIR, 
-                                            '.lib', 
+        cls.WHMI_LOOKUP_FILE = os.path.join(TEST_INPUT_DIR,
+                                            '.lib',
                                             'wh_mi_lookup.csv')
 
     @classmethod

@@ -58,15 +58,6 @@ def task_update_deps():
                 'clean': True,
                 }
 
-def task_unit_tests():
-    """
-    Run all unit tests.
-    """
-    return {
-        'actions': [f'python -m unittest discover tests/'],
-        'clean': True,
-    }
-
 
 def task_profile():
     """

@@ -35,6 +35,7 @@ class DispatcherTest(unittest.TestCase):
                                             'aus_fleet.csv')
 
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
+        summary_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet_df = pd.read_csv(FLEET_FILE)
         stations_df = pd.read_csv(CHARGE_STATIONS_FILE)
         bases_df = pd.read_csv(VEHICLE_BASES_FILE)
@@ -66,7 +67,8 @@ class DispatcherTest(unittest.TestCase):
                                             charge_curve_df,
                                             whmi_df,
                                             env_params,
-                                            vehicle_log_file=log_file)
+                                            vehicle_log_file=log_file,
+                                            vehicle_summary_file=summary_file)
 
     @classmethod
     def tearDownClass(cls):
@@ -84,7 +86,7 @@ class DispatcherTest(unittest.TestCase):
                                 self.stations,
                                 self.bases,
                                 self.base_power_lookup)
-        
+
         veh = dispatcher._fleet[0]
         station_lat = dispatcher._stations[0].LAT
         station_lon = dispatcher._stations[0].LON

@@ -132,6 +132,7 @@ class InitializeFleetTest(unittest.TestCase):
 
     def test_initialize_fleet_type(self):
         log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
+        summary_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
         fleet = initialize_fleet(self.vehicles[0:1],
                                     self.bases,
                                     self.charge_curve_df,
