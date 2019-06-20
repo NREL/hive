@@ -29,7 +29,6 @@ def initialize_stations(station_df, station_log_file):
 
 def initialize_bases(base_df, base_log_file):
     bases = []
-    base_power_dict = {}
     for _, row in base_df.iterrows():
         base_id = row['base_id']
         lon, lat = row['longitude'], row['latitude']
@@ -44,10 +43,8 @@ def initialize_bases(base_df, base_log_file):
                                plug_power,
                                base_log_file)
         bases.append(base)
-        base_power_dict[base_id] = {'type': plug_type,
-                                    'kw': plug_power}
 
-    return bases, base_power_dict
+    return bases
 
 
 def initialize_fleet(vehicle_types,

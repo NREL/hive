@@ -74,17 +74,18 @@ def run_simulation(infile, sim_name):
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
     stations = initialize_stations(data['charge_stations'], station_log_file)
-    bases, base_power_lookup = initialize_bases(data['veh_bases'], base_log_file)
+    bases = initialize_bases(data['veh_bases'], base_log_file)
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
     #Initialize vehicle fleet
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
-    charge_curve = data['charge_curves']
     fleet_env_params = {
-        'MAX_DISPATCH_MILES': inputs.MAX_DISPATCH_MILES,
-        'MIN_ALLOWED_SOC': inputs.MIN_ALLOWED_SOC,
-        'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
-        'DISPATCH_MPH': DISPATCH_MPH,
+        'MAX_DISPATCH_MILES': inputs['MAX_DISPATCH_MILES'],
+        'MIN_ALLOWED_SOC': inputs['MIN_ALLOWED_SOC'],
+        'RN_SCALING_FACTOR': inputs['RN_SCALING_FACTOR'],
+        'DISPATCH_MPH': inputs['DISPATCH_MPH'],
+        'LOWER_SOC_THRESH_STATION': inputs['LOWER_SOC_THRESH_STATION'],
+        'UPPER_SOC_THRESH_STATION': inputs['UPPER_SOC_THRESH_STATION']
     }
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
@@ -101,8 +102,7 @@ def run_simulation(infile, sim_name):
 
     dispatcher = Dispatcher(fleet = fleet,
                             stations = stations,
-                            bases = bases,
-                            base_power_lookup = base_power_lookup)
+                            bases = bases)
 
     for req in reqs_df.itertuples(name='Request'):
         request = {'pickup_time': req[0],

@@ -30,11 +30,10 @@ class Dispatcher:
         'failure_inactive_battery',
     ]
 
-    def __init__(self, fleet, stations, bases, base_power_lookup):
+    def __init__(self, fleet, stations, bases, station_power_lookup, base_power_lookup):
         self._fleet = fleet
         self._stations = stations
         self._bases = bases
-        self._base_power_lookup = base_power_lookup
 
     def _reset_failure_tracking(self):
         """
@@ -61,27 +60,41 @@ class Dispatcher:
                                         request['pickup_lon'],
                                         scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
         disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
-        idle_time_s = ((request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)) \
-        - veh.avail_time).total_seconds()
-        idle_time_min = idle_time_s / 60
+        disp_start_time = request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)
         disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        
+        idle_time_s = (disp_start_time - veh.avail_time).total_seconds()
+        idle_time_min = idle_time_s / 60
+        idle_energy_kwh = nrg.calc_idle_kwh(idle_time_s)
+
         trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
         trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
-        total_energy_kwh = disp_energy_kwh + trip_energy_kwh
-        hyp_energy_remaining = veh.energy_remaining - total_energy_kwh
+        
+        total_energy_use_kwh = idle_energy_kwh + disp_energy_kwh + trip_energy_kwh
+        hyp_energy_remaining = veh.energy_remaining - total_energy_use_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
+            'idle_time_s': idle_time_s,
+            'idle_energy_kwh': idle_energy_kwh,
+            'refuel_energy_gained_kwh': energy_gained_kwh,
             'disp_dist_miles': disp_dist_mi,
             'disp_time_s': disp_time_s,
-            'idle_time_s': idle_time_s,
-            'battery_kwh_remains': hyp_energy_remaining,
+            'disp_start': disp_start_time, 
+            'disp_energy_kwh': disp_energy_kwh,
+            'trip_energy_kwh': trip_energy_kwh,
+            'reserve': False
         }
+
+        # Update Vehicles that should have charged at a station:
+        if veh.soc < veh.ENV['LOWER_SOC_THRESH_STATION']:
+            station, station_dist_mi = self._find_nearest_plug(veh, type='station')
+            veh.refuel_at_station(station, station_dist_mi)
 
         # Check 1 - Vehicle is Active at Time of Request
         if idle_time_min > veh.ENV['MAX_ALLOWABLE_IDLE_MINUTES']:
-            base = self._find_nearest_plug(veh, type='base')
-            veh.return_to_base(base)
+            base, base_dist_mi = self._find_nearest_plug(veh, type='base')
+            veh.return_to_base(base, base_dist_mi)
             base.avail_plugs -= 1
             return False, None
 
@@ -132,31 +145,43 @@ class Dispatcher:
         trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'],
                                             trip_time_s,
                                             veh.WH_PER_MILE_LOOKUP)
-        total_energy_kwh = disp_energy_kwh + trip_energy_kwh
+        total_energy_use_kwh = disp_energy_kwh + trip_energy_kwh
 
         disp_start_time = request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)
         refuel_s = (disp_start_time - veh.avail_time).total_seconds()
 
-        if self._base_power_lookup[veh.base]['type'] == 'AC':
-            kw = self._base_power_lookup[veh.base]['kw']
-            energy_gained_kwh = chrg.calc_const_charge_kwh(refuel_s, kw=kw)
+        if veh._base['plug_type'] == 'AC':
+            kw = veh._base['kw']
+            energy_gained_kwh = chrg.calc_const_charge_kwh(refuel_s, kw)
 
-        elif self._base_power_lookup[veh.base]['type'] == 'DC':
-            kw = self._base_power_lookup[veh.base]['kw']
-            energy_gained_kwh = chrg.query_charge_stats(veh.CHARGE_TEMPLATE,
-                                                        veh.soc,
-                                                        charge_time=refuel_s)
-
-
-        hyp_energy_remaining = veh.energy_remaining + energy_gained_kwh - total_energy_kwh
-        hyp_energy_remaining = min([hyp_energy_remaining, veh.BATTERY_CAPACITY])
+        elif veh._base['plug_type'] == 'DC':
+            kw = veh._base['kw']
+            energy_gained_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
+                                                   veh.energy_remaining,
+                                                   veh.BATTERY_CAPACITY,
+                                                   kw,
+                                                   refuel_s)
+        
+        battery_charge = veh.energy_remaining + energy_gained_kwh
+        if battery_charge > veh.BATTERY_CAPACITY:
+            reserve=True
+            battery_charge = veh.BATTERY_CAPACITY
+        else:
+            reserve=False
+                       
+        hyp_energy_remaining = battery_charge - total_energy_use_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
-            'disp_start_time': disp_start_time,
+            'idle_time_s': None,
+            'idle_energy_kwh': None,
+            'refuel_energy_gained_kwh': energy_gained_kwh,
             'disp_dist_miles': disp_dist_mi,
             'disp_time_s': disp_time_s,
-            'battery_kwh_remains': hyp_energy_remaining,
+            'disp_start': disp_start_time, 
+            'disp_energy_kwh': disp_energy_kwh,
+            'trip_energy_kwh': trip_energy_kwh,
+            'reserve': reserve
         }
 
         # Check 1 - Time Constraint Not Violated
@@ -196,20 +221,20 @@ class Dispatcher:
 
         for station in stations:
             if station.avail_plugs != 0:
-                dist = hlp.estimate_vmt(veh.avail_lat,
-                                        veh.avail_lon,
-                                        station.LAT,
-                                        station.LON,
-                                        scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+                dist_mi = hlp.estimate_vmt(veh.avail_lat,
+                                           veh.avail_lon,
+                                           station.LAT,
+                                           station.LON,
+                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
                 if (nearest == None) and (dist_to_nearest == None):
                     nearest = station
-                    dist_to_nearest = dist
+                    dist_to_nearest = dist_mi
                 else:
-                    if dist < dist_to_nearest:
+                    if dist_mi < dist_to_nearest:
                         nearest = station
-                        dist_to_nearest = dist
+                        dist_to_nearest = dist_mi
 
-        return nearest
+        return nearest, dist_to_nearest
 
     def process_requests(self, requests):
         """
@@ -231,7 +256,7 @@ class Dispatcher:
                 if veh.active:
                     viable, calcs = self._check_active_viability(veh, req)
                     if viable:
-                        veh.make_trip(req, calcs) #<-- STATUS -bb
+                        veh.make_trip(req, calcs)
                         self._fleet.remove(veh) #pop veh from queue
                         self._fleet.append(veh) #append veh to end of queue
                         req_filled = True
@@ -248,18 +273,4 @@ class Dispatcher:
                             req_filled = True
                             break
             if not req_filled:
-                 write_log({
-                    'start_time': self.avail_time,
-                    'start_lat': self.avail_lat,
-                    'start_lon': self.avail_lon,
-                    'end_time': dtime,
-                    'end_lat': base.LAT,
-                    'end_lon': base.LON,
-                    'dist_mi': dispatch_dist,
-                    'end_soc': round(self.soc, 2),
-                    'passengers': 0
-                    },
-            self._LOG_COLUMNS,
-            self._logfile)
-            pass
-            #TODO: Write failure log to CSV
+                #TODO: Write failure log to CSV <-- STATUS bb
