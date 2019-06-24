@@ -8,6 +8,7 @@ import datetime
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
+from hive.utils import write_log
 
 class Dispatcher:
     """
@@ -26,14 +27,42 @@ class Dispatcher:
         'failure_active_max_dispatch',
         'failure_active_time',
         'failure_active_battery',
+        'failure_active_occupancy'
         'failure_inactive_time',
         'failure_inactive_battery',
+        'failure_inactive_occupancy'
     ]
 
-    def __init__(self, fleet, stations, bases, station_power_lookup, base_power_lookup):
+    _LOG_COLUMNS = [
+        'pickup_time',
+        'dropoff_time',
+        'distance_miles',
+        'pickup_lat',
+        'pickup_lon',
+        'dropoff_lat',
+        'dropoff_lon',
+        'passengers',
+        'failure_active_max_dispatch_cnt',
+        'failure_active_time_cnt',
+        'failure_active_battery_cnt',
+        'failure_active_occupancy',
+        'failure_inactive_time_cnt',
+        'failure_inactive_battery_cnt',
+        'failure_inactive_occupancy'
+        ]
+
+    def __init__(
+                self, 
+                fleet, 
+                stations, 
+                bases, 
+                failed_requests_log
+                ):
+        
         self._fleet = fleet
         self._stations = stations
         self._bases = bases
+        self._logfile = failed_requests_log
 
     def _reset_failure_tracking(self):
         """
@@ -77,7 +106,7 @@ class Dispatcher:
         calcs = {
             'idle_time_s': idle_time_s,
             'idle_energy_kwh': idle_energy_kwh,
-            'refuel_energy_gained_kwh': energy_gained_kwh,
+            'refuel_energy_gained_kwh': 0,
             'disp_dist_miles': disp_dist_mi,
             'disp_time_s': disp_time_s,
             'disp_start': disp_start_time, 
@@ -90,6 +119,7 @@ class Dispatcher:
         if veh.soc < veh.ENV['LOWER_SOC_THRESH_STATION']:
             station, station_dist_mi = self._find_nearest_plug(veh, type='station')
             veh.refuel_at_station(station, station_dist_mi)
+            self.stats['failure_active_time']+=1
             return False, None
 
         # Check 1 - Vehicle is Active at Time of Request
@@ -115,7 +145,7 @@ class Dispatcher:
 
         # Check 5 - Max Occupancy Constraint Not Violated
         if request['passengers'] > veh.avail_seats:
-            self.stats['failure_active_seats']+=1
+            self.stats['failure_active_occupancy']+=1
             return False, None
 
         return True, calcs
@@ -197,7 +227,7 @@ class Dispatcher:
 
         # Check 3 - Max Occupancy Constraint Not Violated
         if request['passengers'] > veh.avail_seats:
-            self.stats['failure_inactive_seats']+=1
+            self.stats['failure_inactive_occupancy']+=1
             return False, None
 
         return True, calcs
@@ -250,8 +280,8 @@ class Dispatcher:
 
         for req in requests:
             req_filled = False #default
+            self._reset_failure_tracking()
             for veh in self._fleet:
-                self._reset_failure_tracking()
                 # Check active vehicles in fleet
                 if veh.active:
                     viable, calcs = self._check_active_viability(veh, req)
@@ -273,4 +303,22 @@ class Dispatcher:
                             req_filled = True
                             break
             if not req_filled:
-                #TODO: Write failure log to CSV <-- STATUS bb
+                write_log({
+                    'pickup_time': req['pickup_time'],
+                    'dropoff_time': req['dropoff_time'],
+                    'distance_miles': req['distance_miles'],
+                    'pickup_lat': req['pickup_lat'],
+                    'pickup_lon': req['pickup_lon'],
+                    'dropoff_lat': req['dropoff_lat'],
+                    'dropoff_lon': req['dropoff_lon'],
+                    'passengers': req['passengers'],
+                    'failure_active_max_dispatch_cnt': self.stats['failure_active_max_dispatch'],
+                    'failure_active_time_cnt': self.stats['failure_active_time'],
+                    'failure_active_battery_cnt': self.stats['failure_active_battery'],
+                    'failure_active_occupancy_cnt': self.stats['failure_active_occupancy'],
+                    'failure_inactive_time_cnt': self.stats['failure_inactive_time'],
+                    'failure_inactive_battery_cnt': self.stats['failure_inactive_battery'],
+                    'failure_inactive_occupancy_cnt': self.stats['failure_inactive_occupancy']
+                },
+                self._LOG_COLUMNS,
+                self._logfile)

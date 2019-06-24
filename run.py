@@ -36,6 +36,7 @@ def run_simulation(infile, sim_name):
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
     station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
     base_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_log.csv')
+    failed_requests_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'failed_requests_logs.csv')
 
     vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'vehicle_summary.csv')
     fleet_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'fleet_summary.txt')
@@ -102,7 +103,8 @@ def run_simulation(infile, sim_name):
 
     dispatcher = Dispatcher(fleet = fleet,
                             stations = stations,
-                            bases = bases)
+                            bases = bases,
+                            failed_requests_log = failed_requests_log_file)
 
     for req in reqs_df.itertuples(name='Request'):
         request = {'pickup_time': req[0],

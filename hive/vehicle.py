@@ -63,20 +63,20 @@ class Vehicle:
     # statistics tracked on a vehicle instance level over entire simulation.
     _STATS = [
             'veh_id',
-            'request_vmt', #miles w/ 1+ passenger
-            'dispatch_vmt', #empty miles
-            'total_vmt', #total miles
+            'request_vmt',
+            'dispatch_vmt',
+            'total_vmt',
             'requests_filled',
             'passengers_delivered',
-            'base_refuel_cnt', #number of refuel/recharge events at a VehicleBase
-            'station_refuel_cnt', #number of refuel/recharge events at a FuelStation
-            'base_refuel_s', #seconds where a vehicle is inactive & charging at a VehicleBase
-            'station_refuel_s', #seconds where a vehicle is active & charging at a FuelStation
-            'refuel_energy_kwh' #kWh of charging
-            'idle_s', #seconds where vehicle is active but is not moving (waiting for next action)
-            'dispatch_s', #seconds where vehicle is active & traveling w/ 0 passengers
-            'base_reserve_s', #seconds where vehicle is inactive & is in reserve
-            'request_s', #seconds where vehicle is active & is serving a trip request
+            'base_refuel_cnt',
+            'station_refuel_cnt',
+            'base_refuel_s',
+            'station_refuel_s',
+            'refuel_energy_kwh'
+            'idle_s',
+            'dispatch_s',
+            'base_reserve_s',
+            'request_s',
             ]
 
     _LOG_COLUMNS = [
@@ -255,7 +255,7 @@ class Vehicle:
 
                 write_log({
                     'veh_id': self.ID,
-                    'activity': 'refuel-base'
+                    'activity': 'refuel-base',
                     'start_time': self.avail_time,
                     'start_lat': self.avail_lat,
                     'start_lon': self.avail_lon,
@@ -328,8 +328,6 @@ class Vehicle:
             self.avail_time = request['dropoff_time']
             self.avail_lat = request['dropoff_lat']
             self.avail_lon = request['dropoff_lon']
-
-            #TODO - Update VehicleBase object w/ charge event information
 
         else: #veh prev active
             # 1. Add idle event (if appropriate)
