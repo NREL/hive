@@ -86,16 +86,16 @@ class Dispatcher:
             'reserve': False
         }
 
-        # Update Vehicles that should have charged at a station:
+        # Update Vehicles that should have charged at a FuelStation:
         if veh.soc < veh.ENV['LOWER_SOC_THRESH_STATION']:
             station, station_dist_mi = self._find_nearest_plug(veh, type='station')
             veh.refuel_at_station(station, station_dist_mi)
+            return False, None
 
         # Check 1 - Vehicle is Active at Time of Request
         if idle_time_min > veh.ENV['MAX_ALLOWABLE_IDLE_MINUTES']:
             base, base_dist_mi = self._find_nearest_plug(veh, type='base')
             veh.return_to_base(base, base_dist_mi)
-            base.avail_plugs -= 1
             return False, None
 
         # Check 2 - Max Dispatch Constraint Not Violated

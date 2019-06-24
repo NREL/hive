@@ -497,7 +497,10 @@ class Vehicle:
         self.stats['station_refuel_cnt']+=1
         self.stats['station_refuel_s']+=refuel_s
         self.stats['refuel_energy_kwh']+=refuel_energy_kwh  
-        self.avail_time = refuel_end  
+        self.avail_time = refuel_end
+
+        # Update FuelStation
+        station.avail_plugs-=1
 
     def return_to_base(self, base, dist_mi):
         """
@@ -580,4 +583,7 @@ class Vehicle:
         self._base = base_lookup
         self.avail_lat = base.LAT
         self.avail_lon = base.LON
-        self.avail_time = disp_end   
+        self.avail_time = disp_end  
+
+        # Update VehicleBase
+        base.avail_plugs-=1
