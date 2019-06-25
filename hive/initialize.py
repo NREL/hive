@@ -9,7 +9,26 @@ from hive.vehicle import Vehicle
 from hive.utils import initialize_log
 
 def initialize_stations(station_df, station_log_file):
-    stations = []
+    """
+    Initializes stations dict from DataFrame.
+
+    Function initializes stations dict from pd.DataFrame containing vehicle 
+    station network .csv (hive/inputs/charge_network/..).
+
+    Parameters
+    ----------
+    station_df: pd.DataFrame
+        DataFrame containing scenario vehicle base network
+    station_log_file: string
+        File for logging
+
+    Returns
+    -------
+    dict
+        Dictionary with station_id key and FuelStation object val for quick 
+        lookups
+    """
+    stations = {}
     for _, row in station_df.iterrows():
         station_id = row['station_id']
         lon, lat = row['longitude'], row['latitude']
@@ -23,12 +42,31 @@ def initialize_stations(station_df, station_log_file):
                               plug_type,
                               plug_power,
                               station_log_file)
-        stations.append(station)
+        stations[station_id] = station
 
     return stations
 
 def initialize_bases(base_df, base_log_file):
-    bases = []
+    """
+    Initializes bases dict from DataFrame.
+
+    Function initializes bases dict from pd.DataFrame containing vehicle base
+    network .csv (hive/inputs/charge_network/..).
+
+    Parameters
+    ----------
+    base_df: pd.DataFrame
+        DataFrame containing scenario vehicle base network
+    base_log_file: string
+        File for logging
+
+    Returns
+    -------
+    dict
+        Dictionary with base_id key and VehicleBase object val for quick lookups
+    """
+
+    bases = {}
     for _, row in base_df.iterrows():
         base_id = row['base_id']
         lon, lat = row['longitude'], row['latitude']
@@ -42,7 +80,7 @@ def initialize_bases(base_df, base_log_file):
                                plug_type,
                                plug_power,
                                base_log_file)
-        bases.append(base)
+        bases[base_id] = base
 
     return bases
 

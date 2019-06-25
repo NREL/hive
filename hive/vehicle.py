@@ -112,6 +112,7 @@ class Vehicle:
         self.NAME = name
         assert_constraint('BATTERY_CAPACITY', battery_capacity, VEH_PARAMS, context="Initialize Vehicle")
         self.BATTERY_CAPACITY = battery_capacity
+        self.MAX_CHARGE_ACCEPTANCE_KW = max_charge_acceptance
         self.WH_PER_MILE_LOOKUP = whmi_lookup
         self.CHARGE_TEMPLATE = charge_template
 
@@ -175,66 +176,55 @@ class Vehicle:
         -------
         None
         """
-        # Unpack calcs
-        idle_time_s = calcs['idle_time_s']
-        idle_energy_kwh = calcs['idle_energy_kwh']
-        refuel_energy_kwh = calcs['refuel_energy_gained_kwh']
-        disp_dist_mi = calcs['disp_dist_mi']
-        disp_time_s = calcs['disp_time_s']
-        disp_start = cals['disp_start']
-        disp_energy_kwh = calcs['disp_energy_kwh']
-        trip_energy_kwh = calcs['trip_energy_kwh']
-        reserve = calcs['reserve']
 
-        if self.active == False: #veh prev inactive
+        if self.active == False: # Vehicle previously inactive:
+            base_refuel_start_time = calcs['base_refuel_start_time']
+            base_refuel_end_time = calcs['base_refuel_end_time']
+            base_refuel_s = calcs['base_refuel_s']
+            base_refuel_energy_kwh = calcs['base_refuel_energy_kwh']
+            base_reserve_start_time = calcs['base_reserve_start_time']
+            base_reserve_end_time = calcs['base_reserve_end_time']
+            disp_start_time = calcs['dispatch_start_time']
+            disp_end_time = calcs['dispatch_end_time']
+            disp_time_s = calcs['dispatch_time_s']
+            disp_energy_kwh = calcs['dispatch_energy_kwh']
+            disp_dist_mi = calcs['dispatch_dist_miles']
+            req_energy_kwh = calcs['request_energy_kwh']
+            reserve = calcs['reserve']
+
             # 1. Add VehicleBase refuel event & reserve event (if applicable)
-            if reserve: #vehicle was put in reserve
-                #base refuel event
-                if self._base['plug_type'] == 'AC':
-                    kw = self._base['kw']
-                    refuel_s = chrg.calc_const_charge_secs(self.energy_remaining, 
-                                                           self.BATTERY_CAPACITY,
-                                                           kw)
-                elif self._base['plug_type'] == 'DC':
-                    kw = self._base['kw']
-                    refuel_s = chrg.calc_dcfc_secs(self.CHARGE_TEMPLATE, #Q: Does the charge template account for max charge acceptance?
-                                                   self.energy_remaining,
-                                                   self.BATTERY_CAPACITY,
-                                                   kw,
-                                                   soc_f = 1.0)
-                refuel_end = veh.avail_time + datetime.timedelta(seconds=refuel_s)
-                self.energy_remaining = self.BATTERY_CAPACITY
-                self.soc = self.energy_remaining/self.BATTERY_CAPACITY
+            self.energy_remaining = self.BATTERY_CAPACITY
+            self.soc = self.energy_remaining/self.BATTERY_CAPACITY
+            #refuel event
+            write_log({
+                'veh_id': self.ID,
+                'activity': 'refuel-base',
+                'start_time': base_refuel_start_time,
+                'start_lat': self.avail_lat,
+                'start_lon': self.avail_lon,
+                'end_time': base_refuel_end_time,
+                'end_lat': self.avail_lat,
+                'end_lon': self.avail_lon,
+                'dist_mi': 0.0,
+                'end_soc': round(self.soc, 2),
+                'passengers': 0
+            },
+            self._LOG_COLUMNS,
+            self._logfile)
 
-                write_log({
-                    'veh_id': self.ID,
-                    'activity': 'refuel-base',
-                    'start_time': self.avail_time,
-                    'start_lat': self.avail_lat,
-                    'start_lon': self.avail_lon,
-                    'end_time': refuel_end,
-                    'end_lat': self.avail_lat,
-                    'end_lon': self.avail_lon,
-                    'dist_mi': 0.0,
-                    'end_soc': round(self.soc, 2),
-                    'passengers': 0
-                },
-                self._LOG_COLUMNS,
-                self._logfile)
+            self.stats['base_refuel_cnt']+=1
+            self.stats['base_refuel_s']+=base_refuel_s
+            self.stats['refuel_energy_kwh']+=base_refuel_energy_kwh
 
-                self.stats['base_refuel_cnt']+=1
-                self.stats['base_refuel_s']+=refuel_s
-                self.stats['refuel_energy_kwh']+=refuel_energy_kwh
-
+            if reserve:
                 #reserve event
-                reserve_s = (dispatch_start - refuel_end).total_seconds()
                 write_log({
                     'veh_id': self.ID,
                     'activity': 'reserve-base',
-                    'start_time': refuel_end,
+                    'start_time': base_reserve_start_time,
                     'start_lat': self.avail_lat,
                     'start_lon': self.avail_lon,
-                    'end_time': disp_start,
+                    'end_time': base_reserve_end_time,
                     'end_lat': self.avail_lat,
                     'end_lon': self.avail_lon,
                     'dist_mi': 0.0,
@@ -244,34 +234,8 @@ class Vehicle:
                 self._LOG_COLUMNS,
                 self._logfile)
 
-                self.stats['base_reserve_s']+=reserve_s
-
-            else: #vehicle was not put in reserve
-                #base refuel event
-                refuel_s = (disp_start - self.avail_time).total_seconds()
-                
-                self.energy_remaining+=refuel_energy_kwh
-                self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-
-                write_log({
-                    'veh_id': self.ID,
-                    'activity': 'refuel-base',
-                    'start_time': self.avail_time,
-                    'start_lat': self.avail_lat,
-                    'start_lon': self.avail_lon,
-                    'end_time': disp_start,
-                    'end_lat': self.avail_lat,
-                    'end_lon': self.avail_lon,
-                    'dist_mi': 0.0,
-                    'end_soc': round(self.soc, 2),
-                    'passengers': 0
-                },
-                self._LOG_COLUMNS,
-                self._logfile)
-
-                self.stats['base_refuel_cnt']+=1
-                self.stats['base_refuel_s']+=refuel_s
-                self.stats['refuel_energy_kwh']+=refuel_energy_kwh           
+                base_reserve_s = (base_reserve_start_time - base_reserve_end_time).total_seconds()
+                self.stats['base_reserve_s']+=base_reserve_s
 
             # 2. Add dispatch to pickup location
             self.energy_remaining-=disp_energy_kwh
@@ -280,10 +244,10 @@ class Vehicle:
             write_log({
                 'veh_id': self.ID,
                 'activity': 'dispatch-pickup',
-                'start_time': disp_start,
+                'start_time': disp_start_time,
                 'start_lat': self.avail_lat,
                 'start_lon': self.avail_lon,
-                'end_time': request['pickup_time'],
+                'end_time': disp_end_time,
                 'end_lat': request['pickup_lat'],
                 'end_lon': request['pickup_lon'],
                 'dist_mi': disp_dist_mi,
@@ -298,10 +262,8 @@ class Vehicle:
             self.stats['dispatch_s']+=disp_time_s
 
             # 3. Add request
-            request_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-            self.energy_remaining-=trip_energy_kwh
+            self.energy_remaining-=req_energy_kwh
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-
             write_log({
                 'veh_id': self.ID,
                 'activity': 'request',
@@ -322,14 +284,28 @@ class Vehicle:
             self.stats['total_vmt']+=request['distance_miles']
             self.stats['requests_filled']+=1
             self.stats['passengers_delivered']+=request['passengers']
-            self.stats['request_s']+=request_s
+            req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
+            self.stats['request_s']+=req_time_s
             self.active = True
-            self.base = None
+            self._base = None
             self.avail_time = request['dropoff_time']
             self.avail_lat = request['dropoff_lat']
             self.avail_lon = request['dropoff_lon']
 
-        else: #veh prev active
+        else: # Vehicle previously inactive:
+            idle_start_time = calcs['idle_start_time'],
+            idle_end_time = calcs['idle_end_time'],
+            idle_time_s = calcs['idle_time_s'],
+            idle_energy_kwh = calcs['idle_energy_kwh'],
+            disp_start_time = calcs['dispatch_start_time'],
+            disp_end_time = calcs['dispatch_end_time'],
+            disp_time_s = calcs['dispatch_time_s']
+            disp_end_time = calcs['dispatch_end_time']
+            disp_time_s = calcs['dispatch_time_s']
+            disp_energy_kwh = calcs['dispatch_energy_kwh']
+            disp_dist_mi = calcs['dispatch_dist_miles']
+            req_energy_kwh = calcs['request_energy_kwh']
+
             # 1. Add idle event (if appropriate)
             if idle_time_s > 0:              
                 self.energy_remaining-=idle_energy_kwh
@@ -338,10 +314,10 @@ class Vehicle:
                 write_log({
                     'veh_id': self.ID,
                     'activity': 'idle',
-                    'start_time': self.avail_time,
+                    'start_time': idle_start_time,
                     'start_lat': self.avail_lat,
                     'start_lon': self.avail_lon,
-                    'end_time': disp_start,
+                    'end_time': idle_end_time,
                     'end_lat': self.avail_lat,
                     'end_lon': self.avail_lon,
                     'dist_mi': 0.0,
@@ -360,10 +336,10 @@ class Vehicle:
             write_log({
                 'veh_id': self.ID,
                 'activity': 'dispatch-pickup',
-                'start_time': disp_start,
+                'start_time': disp_start_time,
                 'start_lat': self.avail_lat,
                 'start_lon': self.avail_lon,
-                'end_time': request['pickup_time'],
+                'end_time': disp_end_time,
                 'end_lat': request['pickup_lat'],
                 'end_lon': request['pickup_lon'],
                 'dist_mi': disp_dist_mi,
@@ -378,8 +354,8 @@ class Vehicle:
             self.stats['dispatch_s']+=disp_time_s
 
             # 3. Add request
-            request_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-            self.energy_remaining-=trip_energy_kwh
+            
+            self.energy_remaining-=req_energy_kwh
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
             write_log({
@@ -402,6 +378,7 @@ class Vehicle:
             self.stats['total_vmt']+=request['distance_miles']
             self.stats['requests_filled']+=1
             self.stats['passengers_delivered']+=request['passengers']
+            request_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
             self.stats['request_s']+=request_s
             self.avail_time = request['dropoff_time']
             self.avail_lat, = request['dropoff_lat']
@@ -426,9 +403,10 @@ class Vehicle:
         None
         """
         # 1. Add dispatch to station
-        disp_s = dist_mi / self.ENV['DISPATCH_MPH'] * 3600
+        disp_mi = dist_mi
+        disp_s = disp_mi / self.ENV['DISPATCH_MPH'] * 3600
         disp_end = self.avail_time + datetime.timedelta(seconds=disp_s)
-        disp_energy_kwh = nrg.calc_trip_kwh(dist_mi,
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_mi,
                                             disp_s,
                                             self.WH_PER_MILE_LOOKUP)
         self.energy_remaining -= disp_energy_kwh
@@ -443,7 +421,7 @@ class Vehicle:
             'end_time': disp_end,
             'end_lat': station.LAT,
             'end_lon': station.LON,
-            'dist_mi': dist_mi,
+            'dist_mi': disp_mi,
             'end_soc': round(self.soc, 2),
             'passengers': 0
             },
@@ -459,27 +437,30 @@ class Vehicle:
 
         # 2. Add station recharge
         kw = station.plug_power
+        soc_i = self.energy_remaining
         if station.plug_type == 'AC':
-            refuel_s = chrg.calc_const_charge_secs(self.energy_remaining, 
+            refuel_s = chrg.calc_const_charge_secs(soc_i, 
                                                    self.ENV['UPPER_SOC_THRESH_STATION'],
                                                    kw)
         elif station.plug_type == 'DC':
             refuel_s = chrg.calc_dcfc_secs(self.CHARGE_TEMPLATE,
-                                          self.energy_remaining,
+                                          soc_i,
                                           self.ENV['UPPER_SOC_THRESH_STATION'],
                                           kw,
                                           soc_f = 1.0)
 
-        refuel_end = self.avail_time + datetime.timedelta(seconds=refuel_s)
+        refuel_start = self.avail_time
+        refuel_end = refuel_start + datetime.timedelta(seconds=refuel_s)
         refuel_energy_kwh = self.BATTERY_CAPACITY * (self.ENV['UPPER_SOC_THRESH_STATION'] - self.soc)
 
         self.energy_remaining = self.BATTERY_CAPACITY * self.ENV['UPPER_SOC_THRESH_STATION']
-        self.soc = self.energy_remaining / self.BATTERY_CAPACITY
+        soc_f = self.energy_remaining / self.BATTERY_CAPACITY
+        self.soc = soc_f
 
         write_log({
             'veh_id': self.ID,
-            'activity': 'refuel-station'
-            'start_time': self.avail_time,
+            'activity': 'refuel-station',
+            'start_time': refuel_start,
             'start_lat': self.avail_lat,
             'start_lon': self.avail_lon,
             'end_time': refuel_end,
@@ -498,8 +479,8 @@ class Vehicle:
         self.avail_time = refuel_end
 
         # Update FuelStation
-        station.avail_plugs-=1
-
+        station.add_charge_event(self, refuel_start, refuel_end, soc_i, soc_f, refuel_energy_kwh)
+        
     def return_to_base(self, base, dist_mi):
         """
         Function to send Vehicle to VehicleBase.
@@ -529,7 +510,7 @@ class Vehicle:
         
         write_log({
             'veh_id': self.ID,
-            'activity': 'idle'
+            'activity': 'idle',
             'start_time': self.avail_time,
             'start_lat': self.avail_lat,
             'start_lon': self.avail_lon,
@@ -547,9 +528,10 @@ class Vehicle:
         self.avail_time = idle_end
 
         # 2. Add dispatch to base
-        disp_s = dist_mi / self.ENV['DISPATCH_MPH'] * 3600
+        disp_mi = dist_mi
+        disp_s = disp_mi / self.ENV['DISPATCH_MPH'] * 3600
         disp_end = self.avail_time + datetime.timedelta(seconds=disp_s)
-        disp_energy_kwh = nrg.calc_trip_kwh(dist_mi,
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_mi,
                                             disp_s,
                                             self.WH_PER_MILE_LOOKUP)
         self.energy_remaining -= disp_energy_kwh
@@ -564,7 +546,7 @@ class Vehicle:
             'end_time': disp_end,
             'end_lat': base.LAT,
             'end_lon': base.LON,
-            'dist_mi': dist_mi,
+            'dist_mi': disp_mi,
             'end_soc': round(self.soc, 2),
             'passengers': 0
             },

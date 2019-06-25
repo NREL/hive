@@ -34,8 +34,7 @@ def run_simulation(infile, sim_name):
     with open(infile, 'rb') as f:
         data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
-    station_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_log.csv')
-    base_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_log.csv')
+    charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'charging_log.csv')
     failed_requests_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'failed_requests_logs.csv')
 
     vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'vehicle_summary.csv')
@@ -74,8 +73,8 @@ def run_simulation(infile, sim_name):
 
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
-    stations = initialize_stations(data['charge_stations'], station_log_file)
-    bases = initialize_bases(data['veh_bases'], base_log_file)
+    stations = initialize_stations(data['charge_stations'], charging_log_file)
+    bases = initialize_bases(data['veh_bases'], charging_log_file)
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
     #Initialize vehicle fleet

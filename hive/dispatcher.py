@@ -89,61 +89,67 @@ class Dispatcher:
                                         request['pickup_lon'],
                                         scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
         disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
-        disp_start_time = request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)
-        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi, disp_time_s, veh.WH_PER_MILE_LOOKUP)
+        disp_end_time = request['pickup_time']
+        disp_start_time = disp_end_time - datetime.timedelta(seconds=disp_time_s)
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi, 
+                                            disp_time_s, 
+                                            veh.WH_PER_MILE_LOOKUP)
         
-        idle_time_s = (disp_start_time - veh.avail_time).total_seconds()
+        idle_start_time = veh.avail_time
+        idle_end_time = disp_start_time
+        idle_time_s = (idle_end_time - idle_start_time).total_seconds()
         idle_time_min = idle_time_s / 60
         idle_energy_kwh = nrg.calc_idle_kwh(idle_time_s)
 
-        trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'], trip_time_s, veh.WH_PER_MILE_LOOKUP)
-        
+        req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
+        req_dist_mi = request['distance_miles']
+        req_energy_kwh = nrg.calc_trip_kwh(req_dist_mi, req_time_s, veh.WH_PER_MILE_LOOKUP)
         total_energy_use_kwh = idle_energy_kwh + disp_energy_kwh + trip_energy_kwh
         hyp_energy_remaining = veh.energy_remaining - total_energy_use_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
+            'idle_start_time': idle_start_time,
+            'idle_end_time': idle_end_time,
             'idle_time_s': idle_time_s,
             'idle_energy_kwh': idle_energy_kwh,
-            'refuel_energy_gained_kwh': 0,
-            'disp_dist_miles': disp_dist_mi,
-            'disp_time_s': disp_time_s,
-            'disp_start': disp_start_time, 
-            'disp_energy_kwh': disp_energy_kwh,
-            'trip_energy_kwh': trip_energy_kwh,
-            'reserve': False
+            'dispatch_start_time': disp_start_time,
+            'dispatch_end_time': disp_end_time,
+            'dispatch_time_s': disp_time_s, 
+            'dispatch_energy_kwh': disp_energy_kwh,
+            'dispatch_dist_miles': disp_dist_mi,
+            'request_energy_kwh': req_energy_kwh,
         }
 
-        # Update Vehicles that should have charged at a FuelStation:
+        # 0.1 Update Vehicles that should have been charging at a FuelStation
         if veh.soc < veh.ENV['LOWER_SOC_THRESH_STATION']:
             station, station_dist_mi = self._find_nearest_plug(veh, type='station')
             veh.refuel_at_station(station, station_dist_mi)
             self.stats['failure_active_time']+=1
             return False, None
 
-        # Check 1 - Vehicle is Active at Time of Request
+        # 0.2 Update Vehicles that should have returned to VehicleBase
         if idle_time_min > veh.ENV['MAX_ALLOWABLE_IDLE_MINUTES']:
             base, base_dist_mi = self._find_nearest_plug(veh, type='base')
             veh.return_to_base(base, base_dist_mi)
             return False, None
 
-        # Check 2 - Max Dispatch Constraint Not Violated
+        # Check 1 - Max Dispatch Constraint Not Violated
         if disp_dist_mi > veh.ENV['MAX_DISPATCH_MILES']:
             self.stats['failure_active_max_dispatch']+=1
             return False, None
 
-        # Check 3 - Time Constraint Not Violated
+        # Check 2 - Time Constraint Not Violated
         if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']:
             self.stats['failure_active_time']+=1
             return False, None
 
-        # Check 4 - Battery Constraint Not Violated
+        # Check 3 - Battery Constraint Not Violated
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
             self.stats['failure_active_battery']+=1
             return False, None
 
-        # Check 5 - Max Occupancy Constraint Not Violated
+        # Check 4 - Max Occupancy Constraint Not Violated
         if request['passengers'] > veh.avail_seats:
             self.stats['failure_active_occupancy']+=1
             return False, None
@@ -168,49 +174,91 @@ class Dispatcher:
                                         request['pickup_lon'],
                                         scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
         disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
+        disp_end_time = request['pickup_time']
+        disp_start_time = disp_end_time - datetime.timedelta(seconds=disp_time_s)
         disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi,
                                             disp_time_s,
                                             veh.WH_PER_MILE_LOOKUP)
-        trip_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        trip_energy_kwh = nrg.calc_trip_kwh(request['distance_miles'],
-                                            trip_time_s,
-                                            veh.WH_PER_MILE_LOOKUP)
-        total_energy_use_kwh = disp_energy_kwh + trip_energy_kwh
-
-        disp_start_time = request['pickup_time'] - datetime.timedelta(seconds=disp_time_s)
-        refuel_s = (disp_start_time - veh.avail_time).total_seconds()
-
-        if veh._base['plug_type'] == 'AC':
-            kw = veh._base['kw']
-            energy_gained_kwh = chrg.calc_const_charge_kwh(refuel_s, kw)
-
-        elif veh._base['plug_type'] == 'DC':
-            kw = veh._base['kw']
-            energy_gained_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
-                                                   veh.energy_remaining,
-                                                   veh.BATTERY_CAPACITY,
-                                                   kw,
-                                                   refuel_s)
         
-        battery_charge = veh.energy_remaining + energy_gained_kwh
-        if battery_charge > veh.BATTERY_CAPACITY:
+        req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
+        req_dist_mi = request['distance_miles']
+        req_energy_kwh = nrg.calc_trip_kwh(req_dist_mi,
+                                           req_time_s,
+                                           veh.WH_PER_MILE_LOOKUP)
+
+        base_plug_power_kw = veh._base['kw']
+        base_plug_type = veh._base['plug_type']
+        base_refuel_start = veh.avail_time
+        hyp_base_refuel_end = disp_start_time
+        hyp_refuel_s = (hyp_base_refuel_end - base_refuel_start).total_seconds()
+
+        if base_plug_type == 'AC':
+            hyp_base_refuel_energy_kwh = chrg.calc_const_charge_kwh(hyp_refuel_s, 
+                                                                    base_plug_power_kw)
+        elif base_plug_type == 'DC':
+            hyp_base_refuel_energy_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
+                                                            veh.energy_remaining,
+                                                            veh.BATTERY_CAPACITY,
+                                                            base_plug_power_kw,
+                                                            hyp_refuel_s)
+        
+        hyp_battery_charge = veh.energy_remaining + hyp_base_refuel_energy_kwh
+        if hyp_battery_charge >= veh.BATTERY_CAPACITY:
             reserve=True
             battery_charge = veh.BATTERY_CAPACITY
+            base_refuel_energy_kwh = battery_charge - veh.energy_remaining
+            if veh._base['plug_type'] == 'AC':
+                base_refuel_s = chrg.calc_const_charge_secs(veh.energy_remaining,
+                                                            veh.BATTERY_CAPACITY,
+                                                            base_plug_power_kw)
+            elif veh._base['plug_type'] == 'DC':
+                base_refuel_s = chrg.calc_dcfc_secs(veh.CHARGE_TEMPLATE,
+                                                    veh.energy_remaining,
+                                                    veh.BATTERY_CAPACITY,
+                                                    base_plug_power_kw,
+                                                    soc_f=1.0)
+            base_refuel_end = veh.avail_time + datetime.timedelta(seconds=base_refuel_s)
+            base_refuel_start_soc = veh.energy_remaining
+            base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
+            base_reserve_start = base_refuel_end
+            base_reserve_end = disp_start_time
+
+
         else:
             reserve=False
-                       
-        hyp_energy_remaining = battery_charge - total_energy_use_kwh
+            base_refuel_s = hyp_refuel_s
+            base_refuel_end = hyp_base_refuel_end
+            if veh._base['plug_type'] == 'AC':
+                base_refuel_energy_kwh = chrg.calc_const_charge_kwh(base_refuel_s,
+                                                                    base_plug_power_kw)
+            elif veh._base['plug_type'] == 'DC':
+                base_refuel_energy_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
+                                                            veh.energy_remaining,
+                                                            veh.BATTERY_CAPACITY,
+                                                            base_plug_power_kw,
+                                                            base_refuel_s)
+            battery_charge = veh.energy_remaining + base_refuel_energy_kwh
+            base_refuel_start_soc = veh.soc
+            base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
+       
+        hyp_energy_remaining = battery_charge - disp_energy_kwh - req_energy_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
         calcs = {
-            'idle_time_s': None,
-            'idle_energy_kwh': None,
-            'refuel_energy_gained_kwh': energy_gained_kwh,
-            'disp_dist_miles': disp_dist_mi,
-            'disp_time_s': disp_time_s,
-            'disp_start': disp_start_time, 
-            'disp_energy_kwh': disp_energy_kwh,
-            'trip_energy_kwh': trip_energy_kwh,
+            'base_refuel_start_soc': base_refuel_start_soc,
+            'base_refuel_start_time': base_refuel_start,
+            'base_refuel_end_soc': base_refuel_end_soc,
+            'base_refuel_end_time': base_refuel_end,
+            'base_refuel_s': base_refuel_s,
+            'base_refuel_energy_kwh': base_refuel_energy_kwh,
+            'base_reserve_start_time': base_reserve_start,
+            'base_reserve_end_time': base_reserve_end,
+            'dispatch_start_time': disp_start_time,
+            'dispatch_end_time': disp_end_time,
+            'dispatch_time_s': disp_time_s, 
+            'dispatch_energy_kwh': disp_energy_kwh,
+            'dispatch_dist_miles': disp_dist_mi,
+            'request_energy_kwh': req_energy_kwh,
             'reserve': reserve
         }
 
@@ -245,11 +293,12 @@ class Dispatcher:
         or 'base'."""
 
         if type == 'station':
-            stations = self._stations
+            network = self._stations
         elif type == 'base':
-            stations = self._bases
+            network = self._bases
 
-        for station in stations:
+        for id in network.keys():
+            station = network[id]
             if station.avail_plugs != 0:
                 dist_mi = hlp.estimate_vmt(veh.avail_lat,
                                            veh.avail_lon,
@@ -298,6 +347,14 @@ class Dispatcher:
                         viable, calcs = self._check_inactive_viability(veh, req)
                         if viable:
                             veh.make_trip(req, calcs)
+                            # With full information of charge event, update logs/tracking
+                            base = self._bases[veh._base['base_id']]
+                            base.add_charge_event(veh, 
+                                                  calcs['base_refuel_start_time'], 
+                                                  calcs['base_refuel_end_time'], 
+                                                  calcs['base_refuel_start_soc'],
+                                                  calcs['base_refuel_end_soc'],
+                                                  calcs['base_refuel_energy_kwh'])
                             self._fleet.remove(veh) #pop veh from queue
                             self._fleet.append(veh) #append veh to end of queue
                             req_filled = True
