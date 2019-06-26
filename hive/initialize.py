@@ -89,6 +89,7 @@ def initialize_fleet(vehicle_types,
                         bases,
                         charge_curve,
                         whmi_lookup,
+                        start_time,
                         env_params,
                         vehicle_log_file,
                         vehicle_summary_file):
@@ -126,7 +127,9 @@ def initialize_fleet(vehicle_types,
 
             veh.avail_lat = base.LAT
             veh.avail_lon = base.LON
-            veh.base = base_id
+            veh.base = base
+
+            veh.avail_time = start_time
 
             veh_fleet.append(veh)
 

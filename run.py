@@ -85,7 +85,8 @@ def run_simulation(infile, sim_name):
         'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
         'DISPATCH_MPH': DISPATCH_MPH,
         'LOWER_SOC_THRESH_STATION': inputs['LOWER_SOC_THRESH_STATION'],
-        'UPPER_SOC_THRESH_STATION': inputs['UPPER_SOC_THRESH_STATION']
+        'UPPER_SOC_THRESH_STATION': inputs['UPPER_SOC_THRESH_STATION'],
+        'MAX_ALLOWABLE_IDLE_MINUTES': inputs['MAX_ALLOWABLE_IDLE_MINUTES'],
     }
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
@@ -93,6 +94,7 @@ def run_simulation(infile, sim_name):
                              bases = bases,
                              charge_curve = data['charge_curves'],
                              whmi_lookup = data['whmi_lookup'],
+                             start_time = reqs_df.pickup_time.iloc[0],
                              env_params = fleet_env_params,
                              vehicle_log_file = vehicle_log_file,
                              vehicle_summary_file = vehicle_summary_file)
@@ -105,20 +107,14 @@ def run_simulation(infile, sim_name):
                             bases = bases,
                             failed_requests_log = failed_requests_log_file)
 
-    for req in reqs_df.itertuples(name='Request'):
-        request = {'pickup_time': req[0],
-                   'dropoff_time': req[1],
-                   'distance_miles': req[2],
-                   'pickup_lat': req[3],
-                   'pickup_lon': req[4],
-                   'dropoff_lat': req[5],
-                   'dropoff_lon': req[6],
-                   'passengers': req[7]}
+    for _, request in reqs_df.iterrows():
         dispatcher.process_requests(request) ## <--STATUS -bb
 
     #Calculate summary statistics
     reporting.calc_veh_stats(fleet, vehicle_summary_file)
     reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
+
+    #TODO: Write station statistics to log.
 
 
 

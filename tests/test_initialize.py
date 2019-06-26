@@ -3,6 +3,7 @@ import sys
 import unittest
 import shutil
 import pandas as pd
+import datetime
 
 sys.path.append('../')
 from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
@@ -124,6 +125,7 @@ class InitializeFleetTest(unittest.TestCase):
                                     self.bases,
                                     self.charge_curve_df,
                                     self.whmi_df,
+                                    datetime.date.today(),
                                     self.env_params,
                                     vehicle_log_file = log_file,
                                     vehicle_summary_file = summary_file)
@@ -137,6 +139,7 @@ class InitializeFleetTest(unittest.TestCase):
                                     self.bases,
                                     self.charge_curve_df,
                                     self.whmi_df,
+                                    datetime.date.today(),
                                     self.env_params,
                                     vehicle_log_file = log_file,
                                     vehicle_summary_file = summary_file)

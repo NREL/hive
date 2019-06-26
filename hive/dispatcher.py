@@ -27,7 +27,7 @@ class Dispatcher:
         'failure_active_max_dispatch',
         'failure_active_time',
         'failure_active_battery',
-        'failure_active_occupancy'
+        'failure_active_occupancy',
         'failure_inactive_time',
         'failure_inactive_battery',
         'failure_inactive_occupancy'
@@ -42,33 +42,36 @@ class Dispatcher:
         'dropoff_lat',
         'dropoff_lon',
         'passengers',
-        'failure_active_max_dispatch_cnt',
-        'failure_active_time_cnt',
-        'failure_active_battery_cnt',
+        'failure_active_max_dispatch',
+        'failure_active_time',
+        'failure_active_battery',
         'failure_active_occupancy',
-        'failure_inactive_time_cnt',
-        'failure_inactive_battery_cnt',
+        'failure_inactive_time',
+        'failure_inactive_battery',
         'failure_inactive_occupancy'
         ]
 
     def __init__(
-                self, 
-                fleet, 
-                stations, 
-                bases, 
+                self,
+                fleet,
+                stations,
+                bases,
                 failed_requests_log
                 ):
-        
+
         self._fleet = fleet
         self._stations = stations
         self._bases = bases
         self._logfile = failed_requests_log
 
+        self.stats = {}
+        for stat in self._STATS:
+            self.stats[stat] = 0
+
     def _reset_failure_tracking(self):
         """
         Resets internal failure type tracking log.
         """
-        self.stats = {}
         for stat in self._STATS:
             self.stats[stat] = 0
 
@@ -91,10 +94,10 @@ class Dispatcher:
         disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
         disp_end_time = request['pickup_time']
         disp_start_time = disp_end_time - datetime.timedelta(seconds=disp_time_s)
-        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi, 
-                                            disp_time_s, 
+        disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi,
+                                            disp_time_s,
                                             veh.WH_PER_MILE_LOOKUP)
-        
+
         idle_start_time = veh.avail_time
         idle_end_time = disp_start_time
         idle_time_s = (idle_end_time - idle_start_time).total_seconds()
@@ -104,7 +107,7 @@ class Dispatcher:
         req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
         req_dist_mi = request['distance_miles']
         req_energy_kwh = nrg.calc_trip_kwh(req_dist_mi, req_time_s, veh.WH_PER_MILE_LOOKUP)
-        total_energy_use_kwh = idle_energy_kwh + disp_energy_kwh + trip_energy_kwh
+        total_energy_use_kwh = idle_energy_kwh + disp_energy_kwh + req_energy_kwh
         hyp_energy_remaining = veh.energy_remaining - total_energy_use_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
@@ -115,7 +118,7 @@ class Dispatcher:
             'idle_energy_kwh': idle_energy_kwh,
             'dispatch_start_time': disp_start_time,
             'dispatch_end_time': disp_end_time,
-            'dispatch_time_s': disp_time_s, 
+            'dispatch_time_s': disp_time_s,
             'dispatch_energy_kwh': disp_energy_kwh,
             'dispatch_dist_miles': disp_dist_mi,
             'request_energy_kwh': req_energy_kwh,
@@ -179,21 +182,21 @@ class Dispatcher:
         disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi,
                                             disp_time_s,
                                             veh.WH_PER_MILE_LOOKUP)
-        
+
         req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
         req_dist_mi = request['distance_miles']
         req_energy_kwh = nrg.calc_trip_kwh(req_dist_mi,
                                            req_time_s,
                                            veh.WH_PER_MILE_LOOKUP)
 
-        base_plug_power_kw = veh._base['kw']
-        base_plug_type = veh._base['plug_type']
+        base_plug_power_kw = veh.base.PLUG_POWER_KW
+        base_plug_type = veh.base.PLUG_TYPE
         base_refuel_start = veh.avail_time
         hyp_base_refuel_end = disp_start_time
         hyp_refuel_s = (hyp_base_refuel_end - base_refuel_start).total_seconds()
 
         if base_plug_type == 'AC':
-            hyp_base_refuel_energy_kwh = chrg.calc_const_charge_kwh(hyp_refuel_s, 
+            hyp_base_refuel_energy_kwh = chrg.calc_const_charge_kwh(hyp_refuel_s,
                                                                     base_plug_power_kw)
         elif base_plug_type == 'DC':
             hyp_base_refuel_energy_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
@@ -201,17 +204,17 @@ class Dispatcher:
                                                             veh.BATTERY_CAPACITY,
                                                             base_plug_power_kw,
                                                             hyp_refuel_s)
-        
+
         hyp_battery_charge = veh.energy_remaining + hyp_base_refuel_energy_kwh
         if hyp_battery_charge >= veh.BATTERY_CAPACITY:
             reserve=True
             battery_charge = veh.BATTERY_CAPACITY
             base_refuel_energy_kwh = battery_charge - veh.energy_remaining
-            if veh._base['plug_type'] == 'AC':
+            if veh.base.PLUG_TYPE == 'AC':
                 base_refuel_s = chrg.calc_const_charge_secs(veh.energy_remaining,
                                                             veh.BATTERY_CAPACITY,
                                                             base_plug_power_kw)
-            elif veh._base['plug_type'] == 'DC':
+            elif veh.base.PLUG_TYPE == 'DC':
                 base_refuel_s = chrg.calc_dcfc_secs(veh.CHARGE_TEMPLATE,
                                                     veh.energy_remaining,
                                                     veh.BATTERY_CAPACITY,
@@ -228,10 +231,10 @@ class Dispatcher:
             reserve=False
             base_refuel_s = hyp_refuel_s
             base_refuel_end = hyp_base_refuel_end
-            if veh._base['plug_type'] == 'AC':
+            if veh.base.PLUG_TYPE == 'AC':
                 base_refuel_energy_kwh = chrg.calc_const_charge_kwh(base_refuel_s,
                                                                     base_plug_power_kw)
-            elif veh._base['plug_type'] == 'DC':
+            elif veh.base.PLUG_TYPE == 'DC':
                 base_refuel_energy_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
                                                             veh.energy_remaining,
                                                             veh.BATTERY_CAPACITY,
@@ -240,7 +243,12 @@ class Dispatcher:
             battery_charge = veh.energy_remaining + base_refuel_energy_kwh
             base_refuel_start_soc = veh.soc
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
-       
+
+            #TODO: Verify how to assign these variables based on Issue #23
+            base_reserve_start = -1
+            base_reserve_end = -1
+
+
         hyp_energy_remaining = battery_charge - disp_energy_kwh - req_energy_kwh
         hyp_soc = hyp_energy_remaining / veh.BATTERY_CAPACITY
 
@@ -255,7 +263,7 @@ class Dispatcher:
             'base_reserve_end_time': base_reserve_end,
             'dispatch_start_time': disp_start_time,
             'dispatch_end_time': disp_end_time,
-            'dispatch_time_s': disp_time_s, 
+            'dispatch_time_s': disp_time_s,
             'dispatch_energy_kwh': disp_energy_kwh,
             'dispatch_dist_miles': disp_dist_mi,
             'request_energy_kwh': req_energy_kwh,
@@ -348,10 +356,10 @@ class Dispatcher:
                         if viable:
                             veh.make_trip(req, calcs)
                             # With full information of charge event, update logs/tracking
-                            base = self._bases[veh._base['base_id']]
-                            base.add_charge_event(veh, 
-                                                  calcs['base_refuel_start_time'], 
-                                                  calcs['base_refuel_end_time'], 
+                            base = self._bases[veh.base.ID]
+                            base.add_charge_event(veh,
+                                                  calcs['base_refuel_start_time'],
+                                                  calcs['base_refuel_end_time'],
                                                   calcs['base_refuel_start_soc'],
                                                   calcs['base_refuel_end_soc'],
                                                   calcs['base_refuel_energy_kwh'])
@@ -369,13 +377,13 @@ class Dispatcher:
                     'dropoff_lat': req['dropoff_lat'],
                     'dropoff_lon': req['dropoff_lon'],
                     'passengers': req['passengers'],
-                    'failure_active_max_dispatch_cnt': self.stats['failure_active_max_dispatch'],
-                    'failure_active_time_cnt': self.stats['failure_active_time'],
-                    'failure_active_battery_cnt': self.stats['failure_active_battery'],
-                    'failure_active_occupancy_cnt': self.stats['failure_active_occupancy'],
-                    'failure_inactive_time_cnt': self.stats['failure_inactive_time'],
-                    'failure_inactive_battery_cnt': self.stats['failure_inactive_battery'],
-                    'failure_inactive_occupancy_cnt': self.stats['failure_inactive_occupancy']
+                    'failure_active_max_dispatch': self.stats['failure_active_max_dispatch'],
+                    'failure_active_time': self.stats['failure_active_time'],
+                    'failure_active_battery': self.stats['failure_active_battery'],
+                    'failure_active_occupancy': self.stats['failure_active_occupancy'],
+                    'failure_inactive_time': self.stats['failure_inactive_time'],
+                    'failure_inactive_battery': self.stats['failure_inactive_battery'],
+                    'failure_inactive_occupancy': self.stats['failure_inactive_occupancy']
                 },
                 self._LOG_COLUMNS,
                 self._logfile)

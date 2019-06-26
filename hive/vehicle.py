@@ -72,7 +72,7 @@ class Vehicle:
             'station_refuel_cnt',
             'base_refuel_s',
             'station_refuel_s',
-            'refuel_energy_kwh'
+            'refuel_energy_kwh',
             'idle_s',
             'dispatch_s',
             'base_reserve_s',
@@ -121,7 +121,7 @@ class Vehicle:
         self.avail_lat = None
         self.avail_lon = None
         self.base = None
-        self.avail_time = 0
+        self.avail_time = None
         self.avail_seats = max_passengers
         assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
         self.soc = initial_soc
@@ -161,7 +161,7 @@ class Vehicle:
 
         Updates Vehicle & logging with inter-trip idle, dispatch to pickup
         location, and completion of the provided request. Function requires a
-        dictionary, calcs, of precomputed values from the Dispatcher used when 
+        dictionary, calcs, of precomputed values from the Dispatcher used when
         assessing the vehicle's viability.
 
         Parameters
@@ -307,10 +307,10 @@ class Vehicle:
             req_energy_kwh = calcs['request_energy_kwh']
 
             # 1. Add idle event (if appropriate)
-            if idle_time_s > 0:              
+            if idle_time_s > 0:
                 self.energy_remaining-=idle_energy_kwh
                 self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-                
+
                 write_log({
                     'veh_id': self.ID,
                     'activity': 'idle',
@@ -354,7 +354,7 @@ class Vehicle:
             self.stats['dispatch_s']+=disp_time_s
 
             # 3. Add request
-            
+
             self.energy_remaining-=req_energy_kwh
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
@@ -388,7 +388,7 @@ class Vehicle:
         """
         Function to send Vehicle to FuelStation for refuel event.
 
-        Sends Vehicle to FuelStation station and updates vehicle reporting 
+        Sends Vehicle to FuelStation station and updates vehicle reporting
         logs/attributes with a dispatch event and charging event.
 
         Paramters
@@ -439,7 +439,7 @@ class Vehicle:
         kw = station.plug_power
         soc_i = self.energy_remaining
         if station.plug_type == 'AC':
-            refuel_s = chrg.calc_const_charge_secs(soc_i, 
+            refuel_s = chrg.calc_const_charge_secs(soc_i,
                                                    self.ENV['UPPER_SOC_THRESH_STATION'],
                                                    kw)
         elif station.plug_type == 'DC':
@@ -475,12 +475,12 @@ class Vehicle:
 
         self.stats['station_refuel_cnt']+=1
         self.stats['station_refuel_s']+=refuel_s
-        self.stats['refuel_energy_kwh']+=refuel_energy_kwh  
+        self.stats['refuel_energy_kwh']+=refuel_energy_kwh
         self.avail_time = refuel_end
 
         # Update FuelStation
         station.add_charge_event(self, refuel_start, refuel_end, soc_i, soc_f, refuel_energy_kwh)
-        
+
     def return_to_base(self, base, dist_mi):
         """
         Function to send Vehicle to VehicleBase.
@@ -507,7 +507,7 @@ class Vehicle:
         idle_energy_kwh = nrg.calc_idle_kwh(idle_s)
         self.energy_remaining-=idle_energy_kwh
         self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-        
+
         write_log({
             'veh_id': self.ID,
             'activity': 'idle',
@@ -563,7 +563,7 @@ class Vehicle:
         self._base = base_lookup
         self.avail_lat = base.LAT
         self.avail_lon = base.LON
-        self.avail_time = disp_end  
+        self.avail_time = disp_end
 
         # Update VehicleBase
         base.avail_plugs-=1

@@ -187,6 +187,7 @@ class VehicleBase:
         'end_time',
         'soc_i',
         'soc_f',
+        'total_energy_kwh'
         ]
 
     def __init__(

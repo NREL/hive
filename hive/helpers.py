@@ -7,8 +7,8 @@ from haversine import haversine
 def estimate_vmt(olat, olon, dlat, dlon, scaling_factor):
     """
     Function calculates scaled haversine distance between two sets of latitude/
-    longitude coordinates. 
-    
+    longitude coordinates.
+
     Function calculates the shortest path distance between two sets of
     coordinates then scales this value by scaling_factor to more accurately
     approximate on-road vehicle miles traveled (VMT).
