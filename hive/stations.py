@@ -88,11 +88,11 @@ class FuelStation:
             self.stats[stat] = 0
 
     def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f, total_energy_kwh):
-    
-        """ 
+
+        """
         Updates FuelStation tracking and logging w/ a new charge event.
-        
-        Updates FuelStation & logging with energy consumed (total_energy_kwh) 
+
+        Updates FuelStation & logging with energy consumed (total_energy_kwh)
         by charge event. Logs start & end time of charging event in addition to
         initial & final vehicle SOC & plug power & type to reconstruct detailed
         demand-side electical load curves.
@@ -116,7 +116,7 @@ class FuelStation:
         -------
         None
         """
-        
+
         write_log({
             'id': self.ID,
             'plug_type': self.PLUG_TYPE,
@@ -136,12 +136,12 @@ class FuelStation:
         self.stats['charge_cnt']+=1
         self.stats['total_energy_kwh']+=total_energy_kwh
 
-    
+
 class VehicleBase:
     """
-    Base class for fleet vehicle base (home) location. Vehicle bases are 
-    locations that inactive vehicles return to when they are not serving 
-    demand to recharge for the next peak period. Vehicles can be assigned 
+    Base class for fleet vehicle base (home) location. Vehicle bases are
+    locations that inactive vehicles return to when they are not serving
+    demand to recharge for the next peak period. Vehicles can be assigned
     to a base (home) location or bases can accomodate many inactive vehicles
     (similar to a fleet depot).
 
@@ -210,7 +210,7 @@ class VehicleBase:
         assert_constraint("PLUG_TYPE", plug_type, STATION_PARAMS, context="Initialize FuelStation")
         self.PLUG_TYPE = plug_type
 
-        assert_constraint("PLUG_POWER_KW", plug_power_kw, STATION_PARAMS, context="Initialize FuelStation")
+        assert_constraint("PLUG_POWER", plug_power_kw, STATION_PARAMS, context="Initialize FuelStation")
         self.PLUG_POWER_KW = plug_power_kw
 
         self.avail_plugs = plugs
@@ -223,10 +223,10 @@ class VehicleBase:
             self.stats[stat] = 0
 
     def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f, total_energy_kwh):
-        """ 
+        """
         Updates VehicleBase tracking and logging w/ a new charge event.
-        
-        Updates VehicleBase & logging with energy consumed (total_energy_kwh) 
+
+        Updates VehicleBase & logging with energy consumed (total_energy_kwh)
         by charge event. Logs start & end time of charging event in addition to
         initial & final vehicle SOC & plug power & type to reconstruct detailed
         demand-side electical load curves.
@@ -250,7 +250,7 @@ class VehicleBase:
         -------
         None
         """
-        
+
         write_log({
             'id': self.ID,
             'plug_type': self.PLUG_TYPE,

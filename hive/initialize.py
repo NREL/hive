@@ -12,7 +12,7 @@ def initialize_stations(station_df, station_log_file):
     """
     Initializes stations dict from DataFrame.
 
-    Function initializes stations dict from pd.DataFrame containing vehicle 
+    Function initializes stations dict from pd.DataFrame containing vehicle
     station network .csv (hive/inputs/charge_network/..).
 
     Parameters
@@ -25,7 +25,7 @@ def initialize_stations(station_df, station_log_file):
     Returns
     -------
     dict
-        Dictionary with station_id key and FuelStation object val for quick 
+        Dictionary with station_id key and FuelStation object val for quick
         lookups
     """
     stations = {}
@@ -97,19 +97,20 @@ def initialize_fleet(vehicle_types,
     for veh_type in vehicle_types:
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curve,
-                                                    veh_type.BATTERY_CAPACITY,
-                                                    veh_type.CHARGE_ACCEPTANCE,
+                                                    veh_type.BATTERY_CAPACITY_KWH,
+                                                    veh_type.MAX_KW_ACCEPTANCE,
                                                     )
         scaled_whmi_lookup = nrg.create_scaled_whmi(
                                     whmi_lookup,
-                                    veh_type.EFFICIENCY,
+                                    veh_type.EFFICIENCY_WHMI,
                                     )
 
         for _ in range(veh_type.NUM_VEHICLES):
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
-                        battery_capacity = veh_type.BATTERY_CAPACITY,
+                        battery_capacity = veh_type.BATTERY_CAPACITY_KWH,
+                        max_charge_acceptance = veh_type.MAX_KW_ACCEPTANCE,
                         max_passengers = veh_type.PASSENGERS,
                         initial_soc = np.random.uniform(0.2, 1.0), #init vehs w/ uniform soc distr
                         whmi_lookup = scaled_whmi_lookup,
@@ -120,10 +121,12 @@ def initialize_fleet(vehicle_types,
             id += 1
 
             #Initialize vehicle location to a random base
-            base = random.choice(bases) # @NR - are we passing a single seed throughout HIVE for reproduceability?
+            base_id = random.choice(list(bases.keys()))
+            base = bases[base_id]
+
             veh.avail_lat = base.LAT
             veh.avail_lon = base.LON
-            veh.base = base.ID
+            veh.base = base_id
 
             veh_fleet.append(veh)
 

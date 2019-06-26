@@ -4,8 +4,8 @@ respectively.
 """
 ENV_PARAMS = {
     'MAX_ALLOWABLE_IDLE_MINUTES': ('between', 0, 6000),
-    'LOWER_SOC_THRESH_DCFC': ('between', 0,100),
-    'UPPER_SOC_THRESH_DCFC': ('between', 0,100),
+    'LOWER_SOC_THRESH_STATION': ('between', 0,100),
+    'UPPER_SOC_THRESH_STATION': ('between', 0,100),
     'MAX_DISPATCH_MILES': ('between', 0, 10000),
     'RN_SCALING_FACTOR': ('between', 1, 5),
     'DISPATCH_MPH': ('between', 0, 100),
