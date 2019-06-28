@@ -77,6 +77,8 @@ class Vehicle:
             'dispatch_s',
             'base_reserve_s',
             'request_s',
+            'end_soc',
+            'pct_time_trip',
             ]
 
     _LOG_COLUMNS = [
@@ -148,8 +150,8 @@ class Vehicle:
         self.stats['end_soc'] = self.soc
 
         try:
-            self.stats['pct_time_trip'] = self.stats['trip_s'] / (self.stats['refuel_s'] \
-                + self.stats['idle_s'] + self.stats['dispatch_s'] + self.stats['trip_s'])
+            self.stats['pct_time_trip'] = self.stats['request_s'] / (self.stats['station_refuel_s'] \
+                + self.stats['idle_s'] + self.stats['dispatch_s'] + self.stats['request_s'] + self.stats['base_refuel_s'])
         except ZeroDivisionError:
             self.stats['pct_time_trip'] = 0
 
@@ -293,12 +295,12 @@ class Vehicle:
             self.avail_lon = request['dropoff_lon']
 
         else: # Vehicle previously inactive:
-            idle_start_time = calcs['idle_start_time'],
-            idle_end_time = calcs['idle_end_time'],
-            idle_time_s = calcs['idle_time_s'],
-            idle_energy_kwh = calcs['idle_energy_kwh'],
-            disp_start_time = calcs['dispatch_start_time'],
-            disp_end_time = calcs['dispatch_end_time'],
+            idle_start_time = calcs['idle_start_time']
+            idle_end_time = calcs['idle_end_time']
+            idle_time_s = calcs['idle_time_s']
+            idle_energy_kwh = calcs['idle_energy_kwh']
+            disp_start_time = calcs['dispatch_start_time']
+            disp_end_time = calcs['dispatch_end_time']
             disp_time_s = calcs['dispatch_time_s']
             disp_end_time = calcs['dispatch_end_time']
             disp_time_s = calcs['dispatch_time_s']
@@ -381,7 +383,7 @@ class Vehicle:
             request_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
             self.stats['request_s']+=request_s
             self.avail_time = request['dropoff_time']
-            self.avail_lat, = request['dropoff_lat']
+            self.avail_lat = request['dropoff_lat']
             self.avail_lon = request['dropoff_lon']
 
     def refuel_at_station(self, station, dist_mi):
@@ -557,10 +559,7 @@ class Vehicle:
         self.stats['dispatch_vmt'] += disp_mi
         self.stats['total_vmt'] += disp_mi
         self.active = False
-        base_lookup = {'base_id': base.base_id,
-                       'plug_type': base.PLUG_TYPE,
-                       'kw': base.PLUG_POWER}
-        self._base = base_lookup
+        self.base = base
         self.avail_lat = base.LAT
         self.avail_lon = base.LON
         self.avail_time = disp_end

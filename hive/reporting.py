@@ -39,11 +39,11 @@ def calc_fleet_stats(output_file, vehicle_summary_file, reqs_df):
     fleet_stats['min_pct_time_trip'] = float(veh_stats_df['pct_time_trip'].min())
     fleet_stats['std_pct_time_trip'] = float(veh_stats_df['pct_time_trip'].mean())
 
-    fleet_stats['fleet_trip_vmt'] = float(veh_stats_df['trip_vmt'].sum())
-    fleet_stats['mean_trip_vmt'] = veh_stats_df['trip_vmt'].mean()
-    fleet_stats['max_trip_vmt'] = float(veh_stats_df['trip_vmt'].max())
-    fleet_stats['min_trip_vmt'] = float(veh_stats_df['trip_vmt'].min())
-    fleet_stats['std_trip_vmt'] = veh_stats_df['trip_vmt'].std()
+    fleet_stats['fleet_request_vmt'] = float(veh_stats_df['request_vmt'].sum())
+    fleet_stats['mean_request_vmt'] = veh_stats_df['request_vmt'].mean()
+    fleet_stats['max_request_vmt'] = float(veh_stats_df['request_vmt'].max())
+    fleet_stats['min_request_vmt'] = float(veh_stats_df['request_vmt'].min())
+    fleet_stats['std_request_vmt'] = veh_stats_df['request_vmt'].std()
 
     fleet_stats['fleet_dispatch_vmt'] = float(veh_stats_df['dispatch_vmt'].sum())
     fleet_stats['mean_dispatch_vmt'] = veh_stats_df['dispatch_vmt'].mean()
@@ -57,17 +57,18 @@ def calc_fleet_stats(output_file, vehicle_summary_file, reqs_df):
     fleet_stats['min_total_vmt'] = float(veh_stats_df['total_vmt'].min())
     fleet_stats['std_total_vmt'] = veh_stats_df['total_vmt'].std()
 
-    fleet_stats['fleet_refuel_cnt'] = int(veh_stats_df['refuel_cnt'].sum())
-    fleet_stats['mean_refuel_cnt'] = veh_stats_df['refuel_cnt'].mean()
-    fleet_stats['max_refuel_cnt'] = int(veh_stats_df['refuel_cnt'].max())
-    fleet_stats['min_refuel_cnt'] = int(veh_stats_df['refuel_cnt'].min())
-    fleet_stats['std_refuel_cnt'] = veh_stats_df['refuel_cnt'].std()
+    #TODO: Revist these calculations to include base and stations.
+    fleet_stats['fleet_station_refuel_cnt'] = int(veh_stats_df['station_refuel_cnt'].sum())
+    fleet_stats['mean_station_refuel_cnt'] = veh_stats_df['station_refuel_cnt'].mean()
+    fleet_stats['max_station_refuel_cnt'] = int(veh_stats_df['station_refuel_cnt'].max())
+    fleet_stats['min_station_refuel_cnt'] = int(veh_stats_df['station_refuel_cnt'].min())
+    fleet_stats['std_station_refuel_cnt'] = veh_stats_df['station_refuel_cnt'].std()
 
-    fleet_stats['fleet_refuel_hours'] = float(veh_stats_df['refuel_s'].sum()/3600)
-    fleet_stats['mean_refuel_hours'] = veh_stats_df['refuel_s'].mean()/3600
-    fleet_stats['max_refuel_hours'] = float(veh_stats_df['refuel_s'].max()/3600)
-    fleet_stats['min_refuel_hours'] = float(veh_stats_df['refuel_s'].min()/3600)
-    fleet_stats['std_refuel_hours'] = (veh_stats_df['refuel_s']/3600).std()
+    fleet_stats['fleet_station_refuel_hours'] = float(veh_stats_df['station_refuel_s'].sum()/3600)
+    fleet_stats['mean_station_refuel_hours'] = veh_stats_df['station_refuel_s'].mean()/3600
+    fleet_stats['max_station_refuel_hours'] = float(veh_stats_df['station_refuel_s'].max()/3600)
+    fleet_stats['min_station_refuel_hours'] = float(veh_stats_df['station_refuel_s'].min()/3600)
+    fleet_stats['std_station_refuel_hours'] = (veh_stats_df['station_refuel_s']/3600).std()
 
     fleet_stats['fleet_idle_hours'] = float(veh_stats_df['idle_s'].sum()/3600)
     fleet_stats['mean_idle_hours'] = veh_stats_df['idle_s'].mean()/3600

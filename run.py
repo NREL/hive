@@ -107,7 +107,11 @@ def run_simulation(infile, sim_name):
                             bases = bases,
                             failed_requests_log = failed_requests_log_file)
 
-    for _, request in reqs_df.iterrows():
+    n_requests = len(reqs_df)
+
+    for i, request in reqs_df.iterrows():
+        if i % 1000 == 0:
+            print(f"Iteration {i} of {n_requests}")
         dispatcher.process_requests(request) ## <--STATUS -bb
 
     #Calculate summary statistics
