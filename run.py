@@ -34,7 +34,8 @@ def run_simulation(infile, sim_name):
     with open(infile, 'rb') as f:
         data = pickle.load(f)
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
-    charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'charging_log.csv')
+    station_charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_charging_log.csv')
+    base_charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_charging_log.csv')
     failed_requests_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'failed_requests_logs.csv')
 
     vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'vehicle_summary.csv')
@@ -73,8 +74,8 @@ def run_simulation(infile, sim_name):
 
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
-    stations = initialize_stations(data['stations'], charging_log_file)
-    bases = initialize_bases(data['bases'], charging_log_file)
+    stations = initialize_stations(data['stations'], station_charging_log_file)
+    bases = initialize_bases(data['bases'], base_charging_log_file)
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
     #Initialize vehicle fleet
@@ -109,10 +110,21 @@ def run_simulation(infile, sim_name):
 
     n_requests = len(reqs_df)
 
-    for i, request in reqs_df.iterrows():
+    i = 0
+    for t in reqs_df.itertuples():
         if i % 1000 == 0:
             print(f"Iteration {i} of {n_requests}")
+        request = {'pickup_time': t.pickup_time,
+                    'dropoff_time': t.dropoff_time,
+                    'distance_miles': t.distance_miles,
+                    'pickup_lat': t.pickup_lat,
+                    'pickup_lon': t.pickup_lon,
+                    'dropoff_lat': t.dropoff_lat,
+                    'dropoff_lon': t.dropoff_lon,
+                    'passengers': t.passengers,
+                    }
         dispatcher.process_requests(request) ## <--STATUS -bb
+        i += 1
 
     #Calculate summary statistics
     reporting.calc_veh_stats(fleet, vehicle_summary_file)

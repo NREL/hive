@@ -81,7 +81,6 @@ class FuelStation:
         self.avail_plugs = plugs
 
         self._logfile = logfile
-        initialize_log(self._LOG_COLUMNS, self._logfile)
 
         self.stats = dict()
         for stat in self._STATS:
@@ -217,7 +216,6 @@ class VehicleBase:
         self.avail_plugs = plugs
 
         self._logfile = logfile
-        initialize_log(self._LOG_COLUMNS, self._logfile)
 
         self.stats = dict()
         for stat in self._STATS:

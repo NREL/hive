@@ -44,6 +44,8 @@ def initialize_stations(station_df, station_log_file):
                               station_log_file)
         stations[station_id] = station
 
+    initialize_log(station._LOG_COLUMNS, station_log_file)
+
     return stations
 
 def initialize_bases(base_df, base_log_file):
@@ -81,6 +83,8 @@ def initialize_bases(base_df, base_log_file):
                                plug_power,
                                base_log_file)
         bases[base_id] = base
+
+    initialize_log(base._LOG_COLUMNS, base_log_file)
 
     return bases
 
