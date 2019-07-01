@@ -123,7 +123,6 @@ def query_charge_stats(charge_template, soc_i, charge_time=-1, soc_f=-1):
         
     return kwh, soc_f, charge_time, avg_kw
 
-
 def calc_const_charge_kwh(time_s, kw=6.6):
     """
     Calculates the energy (in kWh) added to battery in time_s seconds at 
@@ -180,3 +179,34 @@ def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=
     secs = (energy_f - init_energy_kwh)/kw*3600
     
     return secs
+
+
+#TODO (JH): build calc_dcfc_kwh() as referenced in dispatcher.py 202
+def calc_dcfc_kwh(charge_template, init_energy_kwh, battery_capacity_kwh, kw, time_s):
+    """
+    Calculates energy added to the battery over a give charge duration, for a 
+    DC fast charging at a specified average power.
+
+    Parameters
+    ----------
+    charge_template : int
+        Maximum charging power accepta as a function of current battery energy
+    init_energy_kwh : float
+        Initial battery energy, kilowatt-hours
+    battery_capacity_kwh : float
+        Second number to add
+    kw : float
+        Constant power recieved by battery, kilowatts
+    time_s : float
+        Charging duration, seconds
+
+    Returns
+    -------
+    float
+        Energy added to the battery in the give time_s, kilowatt-hours
+
+    """
+
+
+#TODO (JH): build calc_dcfc_secs() as referenced in dispatcher.py 218
+
