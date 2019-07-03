@@ -243,10 +243,8 @@ class Dispatcher:
             battery_charge = veh.energy_remaining + base_refuel_energy_kwh
             base_refuel_start_soc = veh.soc
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
-
-            #TODO: Verify how to assign these variables based on Issue #23
-            base_reserve_start = -1
-            base_reserve_end = -1
+            base_reserve_start = None
+            base_reserve_end = None
 
 
         hyp_energy_remaining = battery_charge - disp_energy_kwh - req_energy_kwh
