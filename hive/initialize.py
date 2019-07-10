@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import random
+import datetime
 
 from hive import charging as chrg
 from hive import tripenergy as nrg
@@ -133,7 +134,7 @@ def initialize_fleet(vehicle_types,
             veh.avail_lon = base.LON
             veh.base = base
 
-            veh.avail_time = start_time
+            veh.avail_time = start_time - datetime.timedelta(hours=12)
 
             veh_fleet.append(veh)
 

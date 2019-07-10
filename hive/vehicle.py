@@ -308,6 +308,7 @@ class Vehicle:
             disp_dist_mi = calcs['dispatch_dist_miles']
             req_energy_kwh = calcs['request_energy_kwh']
 
+
             # 1. Add idle event (if appropriate)
             if idle_time_s > 0:
                 self.energy_remaining-=idle_energy_kwh
@@ -386,6 +387,7 @@ class Vehicle:
             self.avail_lat = request['dropoff_lat']
             self.avail_lon = request['dropoff_lon']
 
+
     def refuel_at_station(self, station, dist_mi):
         """
         Function to send Vehicle to FuelStation for refuel event.
@@ -438,13 +440,13 @@ class Vehicle:
         self.avail_lon = station.LON
 
         # 2. Add station recharge
-        kw = station.plug_power
+        kw = station.PLUG_POWER_KW
         soc_i = self.energy_remaining
-        if station.plug_type == 'AC':
+        if station.PLUG_TYPE == 'AC':
             refuel_s = chrg.calc_const_charge_secs(soc_i,
                                                    self.ENV['UPPER_SOC_THRESH_STATION'],
                                                    kw)
-        elif station.plug_type == 'DC':
+        elif station.PLUG_TYPE == 'DC':
             refuel_s = chrg.calc_dcfc_secs(self.CHARGE_TEMPLATE,
                                           soc_i,
                                           self.ENV['UPPER_SOC_THRESH_STATION'],

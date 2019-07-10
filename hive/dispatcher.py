@@ -4,11 +4,15 @@ vehicle dispatching, and DCFC station/base selection.
 """
 
 import datetime
+import sys
 
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
 from hive.utils import write_log
+
+sys.path.append('..')
+import config as cfg
 
 class Dispatcher:
     """
@@ -126,6 +130,7 @@ class Dispatcher:
 
         # 0.1 Update Vehicles that should have been charging at a FuelStation
         if veh.soc < veh.ENV['LOWER_SOC_THRESH_STATION']:
+            if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I need to charge")
             station, station_dist_mi = self._find_nearest_plug(veh, type='station')
             veh.refuel_at_station(station, station_dist_mi)
             self.stats['failure_active_time']+=1
@@ -133,27 +138,35 @@ class Dispatcher:
 
         # 0.2 Update Vehicles that should have returned to VehicleBase
         if idle_time_min > veh.ENV['MAX_ALLOWABLE_IDLE_MINUTES']:
+            if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I need to return to base")
             base, base_dist_mi = self._find_nearest_plug(veh, type='base')
             veh.return_to_base(base, base_dist_mi)
             return False, None
 
         # Check 1 - Max Dispatch Constraint Not Violated
         if disp_dist_mi > veh.ENV['MAX_DISPATCH_MILES']:
+            if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I am too far away")
             self.stats['failure_active_max_dispatch']+=1
             return False, None
 
         # Check 2 - Time Constraint Not Violated
         if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']:
+            if cfg.DEBUG:
+                print(f"ACTIVE: I am vehicle {veh.ID} and I can't make it in time")
+                print(f"Time to get there: {disp_time_s} seconds")
+                print(f"avail time: {veh.avail_time}, request time: {request['pickup_time']}")
             self.stats['failure_active_time']+=1
             return False, None
 
         # Check 3 - Battery Constraint Not Violated
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
+            if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I don't have enough power")
             self.stats['failure_active_battery']+=1
             return False, None
 
         # Check 4 - Max Occupancy Constraint Not Violated
         if request['passengers'] > veh.avail_seats:
+            if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I don't have enough seats")
             self.stats['failure_active_occupancy']+=1
             return False, None
 
@@ -221,7 +234,7 @@ class Dispatcher:
                                                     base_plug_power_kw,
                                                     soc_f=1.0)
             base_refuel_end = veh.avail_time + datetime.timedelta(seconds=base_refuel_s)
-            base_refuel_start_soc = veh.energy_remaining
+            base_refuel_start_soc = veh.energy_remaining / veh.BATTERY_CAPACITY 
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
             base_reserve_start = base_refuel_end
             base_reserve_end = disp_start_time
@@ -269,18 +282,25 @@ class Dispatcher:
         }
 
         # Check 1 - Time Constraint Not Violated
-        if (veh.avail_time!=0) and \
+        if (veh.avail_time!=None) and \
         (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']):
+            if cfg.DEBUG:
+                print(f"INACTIVE: I am vehicle {veh.ID} and I can't make it in time")
+                print(f"Time to get there: {disp_time_s} seconds")
+                print(f"avail time: {veh.avail_time}, request time: {request['pickup_time']}")
+
             self.stats['failure_inactive_time']+=1
             return False, None
 
         # Check 2 - Battery Constraint Not Violated
         if hyp_soc < veh.ENV['MIN_ALLOWED_SOC']:
+            if cfg.DEBUG: print(f"INACTIVE: I am vehicle {veh.ID} and I don't have enough power")
             self.stats['failure_inactive_battery']+=1
             return False, None
 
         # Check 3 - Max Occupancy Constraint Not Violated
         if request['passengers'] > veh.avail_seats:
+            if cfg.DEBUG: print(f"INACTIVE: I am vehicle {veh.ID} and I don't have enough seats")
             self.stats['failure_inactive_occupancy']+=1
             return False, None
 
@@ -366,6 +386,7 @@ class Dispatcher:
                             req_filled = True
                             break
             if not req_filled:
+                if cfg.DEBUG: print('Dropped request.')
                 write_log({
                     'pickup_time': req['pickup_time'],
                     'dropoff_time': req['dropoff_time'],

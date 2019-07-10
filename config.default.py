@@ -2,21 +2,17 @@
 Configurations for running hive over one or more scenario.
 """
 
+# Each simulation gets a sub directory in the outputs folder. If you don't
+# to overwrite outputs, specify a new simulation name here.
 SIMULATION_NAME = "Test Simulation"
 
-# System
-ARNAUD=False
-if ARNAUD:
-    N_PROCESSES = 40 #arg for multiprocessing.Pool
+#NOTE: all paths are relative to the root hive directory.
 
-# In-Path
+# Where hive will look for inputs. We don't recommend changing this.
 IN_PATH = 'inputs/'
 
-# Out-Path
-if ARNAUD:
-    OUT_PATH = '/data/mbap_shared/'
-else:
-    OUT_PATH = 'outputs/' #local path
+# Where hive will write outputs to.
+OUT_PATH = 'outputs/'
 
 VERBOSE = True
-DEBUG = True
+DEBUG = False 

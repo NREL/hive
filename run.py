@@ -108,6 +108,8 @@ def run_simulation(infile, sim_name):
                             bases = bases,
                             failed_requests_log = failed_requests_log_file)
 
+    utils.initialize_log(dispatcher._LOG_COLUMNS, failed_requests_log_file)
+
     n_requests = len(reqs_df)
 
     i = 0
@@ -144,5 +146,6 @@ if __name__ == "__main__":
 
     if '--clean' in sys.argv:
         subprocess.run('doit forget', shell=True)
+        subprocess.run('doit build_input_files', shell=True)
 
     subprocess.run('doit run_simulation', shell=True)
