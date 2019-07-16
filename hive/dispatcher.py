@@ -63,7 +63,8 @@ class Dispatcher:
                 failed_requests_log
                 ):
 
-        self._fleet = fleet
+        self._inactive_fleet = fleet
+        self._active_fleet = []
         self._stations = stations
         self._bases = bases
         self._logfile = failed_requests_log
@@ -141,6 +142,8 @@ class Dispatcher:
             if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I need to return to base")
             base, base_dist_mi = self._find_nearest_plug(veh, type='base')
             veh.return_to_base(base, base_dist_mi)
+            self._active_fleet.remove(veh) #pop veh from active queue
+            self._inactive_fleet.append(veh) #append veh to end of inactive queue
             return False, None
 
         # Check 1 - Max Dispatch Constraint Not Violated
@@ -356,35 +359,31 @@ class Dispatcher:
         for req in requests:
             req_filled = False #default
             self._reset_failure_tracking()
-            for veh in self._fleet:
-                # Check active vehicles in fleet
-                if veh.active:
-                    viable, calcs = self._check_active_viability(veh, req)
+            for veh in self._active_fleet: #check active fleet vehicles 1st
+                viable, calcs = self._check_active_viability(veh, req)
+                if viable:
+                    veh.make_trip(req, calcs)
+                    self._active_fleet.remove(veh) #pop veh from active queue
+                    self._active_fleet.append(veh) #append veh to end of active queue
+                    req_filled = True
+                    break
+            if not req_filled:
+                for veh in self._inactive_fleet: #check inactive fleet vehicles 2nd
+                    viable, calcs = self._check_inactive_viability(veh, req)
                     if viable:
                         veh.make_trip(req, calcs)
-                        self._fleet.remove(veh) #pop veh from queue
-                        self._fleet.append(veh) #append veh to end of queue
+                        # With full information of charge event, update logs/tracking
+                        base = self._bases[veh.base.ID]
+                        base.add_charge_event(veh,
+                                                calcs['base_refuel_start_time'],
+                                                calcs['base_refuel_end_time'],
+                                                calcs['base_refuel_start_soc'],
+                                                calcs['base_refuel_end_soc'],
+                                                calcs['base_refuel_energy_kwh'])
+                        self._inactive_fleet.remove(veh) #pop veh from inactive queue
+                        self._active_fleet.append(veh) #append veh to end of active queue
                         req_filled = True
                         break
-            if not req_filled:
-                for veh in self._fleet:
-                    # Check inactive (base) vehicles in fleet
-                    if not veh.active:
-                        viable, calcs = self._check_inactive_viability(veh, req)
-                        if viable:
-                            veh.make_trip(req, calcs)
-                            # With full information of charge event, update logs/tracking
-                            base = self._bases[veh.base.ID]
-                            base.add_charge_event(veh,
-                                                  calcs['base_refuel_start_time'],
-                                                  calcs['base_refuel_end_time'],
-                                                  calcs['base_refuel_start_soc'],
-                                                  calcs['base_refuel_end_soc'],
-                                                  calcs['base_refuel_energy_kwh'])
-                            self._fleet.remove(veh) #pop veh from queue
-                            self._fleet.append(veh) #append veh to end of queue
-                            req_filled = True
-                            break
             if not req_filled:
                 if cfg.DEBUG: print('Dropped request.')
                 write_log({
