@@ -40,7 +40,7 @@ def run_simulation(infile, sim_name):
 
     vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'vehicle_summary.csv')
     fleet_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'fleet_summary.txt')
-
+    station_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'station_summary.csv')
 
     if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
 
@@ -132,10 +132,7 @@ def run_simulation(infile, sim_name):
     fleet = dispatcher.get_fleet()
     reporting.calc_veh_stats(fleet, vehicle_summary_file)
     reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
-
-    #TODO: Write station statistics to log.
-
-
+    reporting.summarize_station_use(stations, bases, station_summary_file)
 
 if __name__ == "__main__":
     if not os.path.isdir(SCENARIO_PATH):

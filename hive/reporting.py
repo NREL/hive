@@ -103,7 +103,10 @@ def calc_fleet_stats(output_file, vehicle_summary_file, reqs_df):
             p(f'{key}: {val}')
 
 
-def summarize_station_use(charg_stations):
+def summarize_station_use(stations_dict, bases_dict, station_summary_file):
+    stations = list(stations_dict.values())
+    bases = list(bases_dict.values())
+    charg_stations = stations + bases
     station_ids, refuel_cnts, refuel_energy_kwh = [], [], []
     for station in charg_stations:
         station_ids.append(station.ID)
@@ -114,4 +117,4 @@ def summarize_station_use(charg_stations):
                                             'refuel_cnt': refuel_cnts,
                                             'refuel_energy_kwh': refuel_energy_kwh})
 
-    return station_summary_df
+    station_summary_df.to_csv(station_summary_file, index=False)
