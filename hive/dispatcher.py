@@ -405,3 +405,12 @@ class Dispatcher:
                 },
                 self._LOG_COLUMNS,
                 self._logfile)
+
+    def get_fleet(self):
+        """
+        Function recombines internal _active_fleet and _inactive_fleet objects
+        into a single list.
+        """
+        full_fleet = self._active_fleet + self._inactive_fleet
+        
+        return full_fleet

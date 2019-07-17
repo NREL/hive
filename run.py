@@ -125,10 +125,11 @@ def run_simulation(infile, sim_name):
                     'dropoff_lon': t.dropoff_lon,
                     'passengers': t.passengers,
                     }
-        dispatcher.process_requests(request) ## <--STATUS -bb
+        dispatcher.process_requests(request)
         i += 1
 
     #Calculate summary statistics
+    fleet = dispatcher.get_fleet()
     reporting.calc_veh_stats(fleet, vehicle_summary_file)
     reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
 

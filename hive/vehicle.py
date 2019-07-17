@@ -236,7 +236,7 @@ class Vehicle:
                 self._LOG_COLUMNS,
                 self._logfile)
 
-                base_reserve_s = (base_reserve_start_time - base_reserve_end_time).total_seconds()
+                base_reserve_s = (base_reserve_end_time - base_reserve_start_time).total_seconds()
                 self.stats['base_reserve_s']+=base_reserve_s
 
             # 2. Add dispatch to pickup location
@@ -357,7 +357,6 @@ class Vehicle:
             self.stats['dispatch_s']+=disp_time_s
 
             # 3. Add request
-
             self.energy_remaining-=req_energy_kwh
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 

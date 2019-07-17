@@ -134,7 +134,7 @@ def initialize_fleet(vehicle_types,
             veh.avail_lon = base.LON
             veh.base = base
 
-            veh.avail_time = start_time - datetime.timedelta(hours=0.5)
+            veh.avail_time = start_time - datetime.timedelta(hours=1)
 
             veh_fleet.append(veh)
 
