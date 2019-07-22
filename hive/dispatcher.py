@@ -342,6 +342,9 @@ class Dispatcher:
                         nearest = station
                         dist_to_nearest = dist_mi
 
+        if dist_to_nearest == None:
+            #TO DO, logic when no plugs are available on the entire network
+        
         return nearest, dist_to_nearest
 
     def process_requests(self, requests):
@@ -371,6 +374,7 @@ class Dispatcher:
                 for veh in self._inactive_fleet: #check inactive fleet vehicles 2nd
                     viable, calcs = self._check_inactive_viability(veh, req)
                     if viable:
+                        
                         veh.make_trip(req, calcs)
                         # With full information of charge event, update logs/tracking
                         base = self._bases[veh.base.ID]
@@ -382,6 +386,7 @@ class Dispatcher:
                                                 calcs['base_refuel_energy_kwh'])
                         self._inactive_fleet.remove(veh) #pop veh from inactive queue
                         self._active_fleet.append(veh) #append veh to end of active queue
+                        base.avail_plugs += 1 # Freeing up plug for others to use
                         req_filled = True
                         break
             if not req_filled:
