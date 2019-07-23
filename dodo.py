@@ -3,6 +3,7 @@ import os
 import sys
 import glob
 import re
+import shutil
 import pandas as pd
 
 import run
@@ -147,8 +148,12 @@ def task_run_simulation():
     if not os.path.isdir(cfg.OUT_PATH):
         clean_msg('creating base output directory..')
         os.makedirs(cfg.OUT_PATH)
+
+    clean_msg('creating simulation output directory..')
     if not os.path.isdir(sim_output):
-        clean_msg('creating simulation output directory..')
+        os.makedirs(sim_output)
+    else:
+        shutil.rmtree(sim_output)
         os.makedirs(sim_output)
 
     scenario_files = glob.glob(os.path.join(SCENARIO_PATH, '*.pickle'))

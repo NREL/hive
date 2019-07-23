@@ -10,6 +10,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import pickle
+import glob
 
 import config as cfg
 
@@ -29,10 +30,73 @@ np.random.seed(seed)
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 SCENARIO_PATH = os.path.join(THIS_DIR, cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
 OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
+LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
 
-def run_simulation(infile, sim_name):
-    with open(infile, 'rb') as f:
-        data = pickle.load(f)
+def build_input_files():
+    scenarios = dict()
+
+    main_file = os.path.join(cfg.IN_PATH, 'main.csv')
+    charge_file = os.path.join(LIB_PATH, 'raw_leaf_curves.csv')
+    whmi_lookup_file = os.path.join(LIB_PATH, 'wh_mi_lookup.csv')
+    charge_df = pd.read_csv(charge_file)
+    sim_df = pd.read_csv(main_file)
+    whmi_df = pd.read_csv(whmi_lookup_file)
+
+    scenario_names = list()
+
+    for i, row in sim_df.iterrows():
+        row["SCENARIO_NAME"] = row["SCENARIO_NAME"].strip().replace(" ", "_")
+        scenario_names.append(row['SCENARIO_NAME'])
+        data = {}
+        file_deps = [main_file, charge_file, whmi_lookup_file]
+
+        req_file = os.path.join(cfg.IN_PATH, 'requests', row['REQUESTS_FILE'])
+        file_deps.append(req_file)
+
+        # Path to charge network file
+        charge_stations_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_STATIONS_FILE'])
+        veh_bases_file = os.path.join(cfg.IN_PATH, 'charge_network', row['VEH_BASES_FILE'])
+        file_deps.append(charge_stations_file)
+
+        fleet_file = os.path.join(cfg.IN_PATH, 'fleets', row['FLEET_FILE'])
+        file_deps.append(fleet_file)
+
+        fleet_df = pd.read_csv(fleet_file)
+        assert fleet_df.shape[0] > 0, 'Must have at least one vehicle type to run simulation.'
+        row['TOTAL_NUM_VEHICLES'] = fleet_df.NUM_VEHICLES.sum()
+        row['NUM_VEHICLE_TYPES'] = fleet_df.shape[0]
+
+        veh_keys = []
+
+        for i, veh in fleet_df.iterrows():
+            veh_file = os.path.join(cfg.IN_PATH, 'vehicles', '{}.csv'.format(veh.VEHICLE_NAME))
+            veh_df = pd.read_csv(veh_file)
+            veh_df['VEHICLE_NAME'] = veh.VEHICLE_NAME
+            veh_df['NUM_VEHICLES'] = veh.NUM_VEHICLES
+            data[veh.VEHICLE_NAME] = veh_df.iloc[0]
+            veh_keys.append(veh.VEHICLE_NAME)
+
+        row['VEH_KEYS'] = veh_keys
+
+        data['requests'] = pp.load_requests(req_file)
+        data['stations'] = pd.read_csv(charge_stations_file)
+        data['bases'] = pd.read_csv(veh_bases_file)
+        data['main'] = row
+        data['charge_curves'] = charge_df
+        data['whmi_lookup'] = whmi_df
+
+        scenarios[row['SCENARIO_NAME']] = data
+
+    assert len(scenario_names) == len(set(scenario_names)), 'Scenario names must be unique.'
+
+    return scenarios
+
+
+def run_simulation(data, sim_name, infile=None):
+    if infile is not None:
+        with open(infile, 'rb') as f:
+            data = pickle.load(f)
+
     vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
     station_charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_charging_log.csv')
     base_charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_charging_log.csv')
@@ -135,15 +199,38 @@ def run_simulation(infile, sim_name):
     reporting.summarize_station_use(stations, bases, station_summary_file)
 
 if __name__ == "__main__":
-    if not os.path.isdir(SCENARIO_PATH):
-        print('creating scenarios folder for input files..')
-        os.makedirs(SCENARIO_PATH)
+    #TODO: Fix cached functionality. Current functionality does not cache runs.
+    # def clean_scenarios_folder():
+    #     files = glob.glob(os.path.join(SCENARIO_PATH, '*'))
+    #     print(files)
+    #     for f in files:
+    #         os.remove(f)
+    #
+    # if not os.path.isdir(SCENARIO_PATH):
+    #     print('creating scenarios folder for input files..')
+    #     os.makedirs(SCENARIO_PATH)
+    #
+    # if not os.listdir(SCENARIO_PATH):
+    #     subprocess.run('doit build_input_files', shell=True)
+    #
+    # if '--cached' in sys.argv:
+    #     subprocess.run('doit run_simulation', shell=True)
+    # else:
+    #     clean_scenarios_folder()
+    #     subprocess.run('doit forget', shell=True)
+    #     subprocess.run('doit build_input_files', shell=True)
+    #     subprocess.run('doit run_simulation', shell=True)
+    if not os.path.isdir(cfg.OUT_PATH):
+        print('Building base output directory..')
+        os.makedirs(cfg.OUT_PATH)
 
-    if not os.listdir(SCENARIO_PATH):
-        subprocess.run('doit build_input_files', shell=True)
+    print('Building simulation output directory..')
+    if not os.path.isdir(OUT_PATH):
+        os.makedirs(OUT_PATH)
+    else:
+        shutil.rmtree(OUT_PATH)
+        os.makedirs(OUT_PATH)
 
-    if '--clean' in sys.argv:
-        subprocess.run('doit forget', shell=True)
-        subprocess.run('doit build_input_files', shell=True)
-
-    subprocess.run('doit run_simulation', shell=True)
+    scenarios = build_input_files()
+    for scenario_name, data in scenarios.items():
+        run_simulation(data, scenario_name)

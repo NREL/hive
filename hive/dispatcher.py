@@ -237,7 +237,7 @@ class Dispatcher:
                                                     base_plug_power_kw,
                                                     soc_f=1.0)
             base_refuel_end = veh.avail_time + datetime.timedelta(seconds=base_refuel_s)
-            base_refuel_start_soc = veh.energy_remaining / veh.BATTERY_CAPACITY 
+            base_refuel_start_soc = veh.energy_remaining / veh.BATTERY_CAPACITY
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
             base_reserve_start = base_refuel_end
             base_reserve_end = disp_start_time
@@ -342,9 +342,9 @@ class Dispatcher:
                         nearest = station
                         dist_to_nearest = dist_mi
 
-        if dist_to_nearest == None:
-            #TO DO, logic when no plugs are available on the entire network
-        
+        # if dist_to_nearest == None:
+            #TODO: logic when no plugs are available on the entire network
+
         return nearest, dist_to_nearest
 
     def process_requests(self, requests):
@@ -374,7 +374,7 @@ class Dispatcher:
                 for veh in self._inactive_fleet: #check inactive fleet vehicles 2nd
                     viable, calcs = self._check_inactive_viability(veh, req)
                     if viable:
-                        
+
                         veh.make_trip(req, calcs)
                         # With full information of charge event, update logs/tracking
                         base = self._bases[veh.base.ID]
@@ -417,5 +417,5 @@ class Dispatcher:
         into a single list.
         """
         full_fleet = self._active_fleet + self._inactive_fleet
-        
+
         return full_fleet

@@ -110,8 +110,8 @@ def summarize_station_use(stations_dict, bases_dict, station_summary_file):
     station_ids, refuel_cnts, refuel_energy_kwh = [], [], []
     for station in charg_stations:
         station_ids.append(station.ID)
-        refuel_cnts.append(station.stats.charge_cnt)
-        refuel_energy_kwh.append(station.stats.total_energy_kwh)
+        refuel_cnts.append(station.stats['charge_cnt'])
+        refuel_energy_kwh.append(station.stats['total_energy_kwh'])
 
     station_summary_df = pd.DataFrame(data={'station_id': station_ids,
                                             'refuel_cnt': refuel_cnts,
