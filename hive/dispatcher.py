@@ -316,7 +316,7 @@ class Dispatcher:
         accepts either 'station' or 'base', informing the search space.
         """
         #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
-        nearest, dist_to_nearest = None, None
+        INF = 1000000000
 
         assert type in ['station', 'base'], """"type" must be either 'station'
         or 'base'."""
@@ -326,24 +326,28 @@ class Dispatcher:
         elif type == 'base':
             network = self._bases
 
-        for id in network.keys():
-            station = network[id]
-            if station.avail_plugs != 0:
+        i = 0
+        num_stations = len(network)
+        nearest = None
+        while nearest == None:
+            dist_to_nearest = INF
+            for id in network.keys():
+                station = network[id]
                 dist_mi = hlp.estimate_vmt(veh.avail_lat,
                                            veh.avail_lon,
                                            station.LAT,
                                            station.LON,
                                            scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
-                if (nearest == None) and (dist_to_nearest == None):
-                    nearest = station
+                if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
-                else:
-                    if dist_mi < dist_to_nearest:
-                        nearest = station
-                        dist_to_nearest = dist_mi
-
-        # if dist_to_nearest == None:
-            #TODO: logic when no plugs are available on the entire network
+                    nearest = station
+            if nearest.avail_plugs < 1:
+                del network[nearest.ID]
+                nearest == None
+            i += 1
+            if i >= num_stations:
+                raise NotImplementedError("""No plugs are available on the
+                    entire {} network.""".format(type))
 
         return nearest, dist_to_nearest
 
