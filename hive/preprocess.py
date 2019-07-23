@@ -10,6 +10,7 @@ import pandas as pd
 import geopandas as gpd
 from time import mktime
 from datetime import datetime
+from dateutil import parser
 from haversine import haversine
 from shapely.geometry import Point
 from pandas.api.types import is_string_dtype
@@ -33,7 +34,7 @@ def load_requests(reqs_file):
         """
         reqs_df = pd.read_csv(reqs_file)
         assert len(reqs_df) > 0, "No requests in file!"
-        
+
         #check for existence of req fields
         req_fields = [
         'pickup_time',
@@ -49,27 +50,30 @@ def load_requests(reqs_file):
                  raise ValueError("'{}' field required in requests input!".format(field))
 
         #check data types of req fields
-        assert is_string_dtype(reqs_df['pickup_time']), """'pickup_time' in 
+        assert is_string_dtype(reqs_df['pickup_time']), """'pickup_time' in
         requests file not of str data type!"""
-        assert is_string_dtype(reqs_df['dropoff_time']), """'dropoff_time' in 
+        assert is_string_dtype(reqs_df['dropoff_time']), """'dropoff_time' in
         requests file not of str data type!"""
-        assert is_numeric_dtype(reqs_df['distance_miles']), """'distance_miles' 
-        in requests file not of numeric data type!""" 
-        assert is_numeric_dtype(reqs_df['pickup_lat']), """'pickup_lat' 
+        assert is_numeric_dtype(reqs_df['distance_miles']), """'distance_miles'
         in requests file not of numeric data type!"""
-        assert is_numeric_dtype(reqs_df['pickup_lon']), """'pickup_lon' 
+        assert is_numeric_dtype(reqs_df['pickup_lat']), """'pickup_lat'
         in requests file not of numeric data type!"""
-        assert is_numeric_dtype(reqs_df['dropoff_lat']), """'dropoff_lat' 
+        assert is_numeric_dtype(reqs_df['pickup_lon']), """'pickup_lon'
         in requests file not of numeric data type!"""
-        assert is_numeric_dtype(reqs_df['dropoff_lon']), """'dropoff_lon' 
-        in requests file not of numeric data type!""" 
+        assert is_numeric_dtype(reqs_df['dropoff_lat']), """'dropoff_lat'
+        in requests file not of numeric data type!"""
+        assert is_numeric_dtype(reqs_df['dropoff_lon']), """'dropoff_lon'
+        in requests file not of numeric data type!"""
 
         #convert time strings to datetime objects
-        reqs_df['pickup_time'] = reqs_df['pickup_time'] \
-        .apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
-        reqs_df['dropoff_time'] = reqs_df['dropoff_time'] \
-        .apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
-        reqs_df.sort_values('pickup_time', inplace=True)
+        # reqs_df['pickup_time'] = reqs_df['pickup_time'] \
+        # .apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
+        # reqs_df['dropoff_time'] = reqs_df['dropoff_time'] \
+        # .apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
+        # reqs_df.sort_values('pickup_time', inplace=True)
+
+        reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: parser.parse(x))
+        reqs_df['dropoff_time'] = reqs_df['dropoff_time'].apply(lambda x: parser.parse(x))
 
         if 'passengers' not in reqs_df.columns: #apply real-world pax distr
             pax = [gen_synth_pax_cnt() for i in range(len(reqs_df))]
@@ -80,8 +84,8 @@ def load_requests(reqs_file):
             reqs_df = reqs_df[req_fields]
 
         #check data type of 'passengers' field
-        assert is_numeric_dtype(reqs_df['passengers']), """'passengers' 
-        in requests file not of numeric data type!"""  
+        assert is_numeric_dtype(reqs_df['passengers']), """'passengers'
+        in requests file not of numeric data type!"""
 
         return reqs_df
 
@@ -150,7 +154,7 @@ def calculate_road_vmt_scaling_factor(reqs_df):
     total_short_path_dist = short_path_dists.sum()
     haversine_scaling_factor = total_vmt/total_short_path_dist
     assert_constraint('RN_SCALING_FACTOR', haversine_scaling_factor, ENV_PARAMS, context="Calculate Haversine Scaling Factor")
-    
+
     return haversine_scaling_factor
 
 
@@ -167,5 +171,5 @@ def calculate_average_driving_speed(reqs_df):
     total_vmt = reqs_df['distance_miles'].sum()
     avg_driving_mph = total_vmt/total_hrs
     assert_constraint('DISPATCH_MPH', avg_driving_mph, ENV_PARAMS, context="Calculate Dispatch Speed")
-    
+
     return avg_driving_mph
