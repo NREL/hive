@@ -15,11 +15,11 @@ def setup():
             THIS_DIR, 'config.py'
             )
     default_config_path = os.path.join(
-            THIS_DIR, 'config.default.py'
+            THIS_DIR, '.config.default.py'
             )
     if not os.path.exists('config.py'):
         clean_msg('Setting up config files..')
-        subprocess.run('cp config.default.py config.py', shell=True)
+        subprocess.run('cp .config.default.py config.py', shell=True)
     else:
         print('config.py already exists')
         ans = input('Update config file with default values? (y/[n]) ').lower()
