@@ -7,7 +7,7 @@ __Class Names__: use CapWords convention (i.e. "SampleClass")
 __Function and Variable Names__: lowercase with words separated by underscores
 (i.e. "number_of_monsters")
 
-__Funcation and Method Arguments__: If a function argument's name clashes with a
+__Function and Method Arguments__: If a function argument's name clashes with a
 reserved keyword, it is better to append a single trailing underscore rather
 than an abbreviation or spelling corruption. Synonyms where possible might even
 be better (i.e. "class_" not "clss").

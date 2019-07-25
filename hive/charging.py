@@ -7,10 +7,46 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-#TODO: Jake revisit
-
 def construct_temporal_charge_template(unscaled_df, battery_kwh, battery_kw):
-    
+    """
+    Builds a scaled charging template based on battery specifications. 
+    The original template is for a Nissan Leaf and was provided by Idaho 
+    National Laboratory. 
+
+    Inputs
+    ------
+    unscaled_df: DataFrame
+        The DataFrame describes the charge template (likely from Nissan Leaf) 
+        with columns [soc, kw]. Presently the source file for that profile is 
+        here: '../inputs/.lib/raw_leaf_curves.csv'
+    battery_kwh: double precision
+        Battery capacity, in kWh
+    battery_kw: double precision
+        Maximum power that cna be received by battery, in kW
+
+    Returns
+    -------
+    DataFrame
+        Scaled charging template based on the input template, containing 
+        columns: [time_i, soc_i, kwh_i, kw, soc_f, kwh_f]
+
+    Examples
+    --------
+    >>> PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+    >>> leaf_df = pd.read_csv(PATH_TO_LEAF)
+    >>> construct_temporal_charge_template(leaf_df,
+                                           battery_kwh = 30, 
+                                           battery_kw = 100)
+
+            time_i      soc_i      kwh_i         kw      soc_f      kwh_f
+    0          1   0.000000   0.000000  20.000000   0.018519   0.005556
+    1          2   0.018519   0.005556  20.430222   0.037435   0.011231
+    2          3   0.037435   0.011231  20.869699   0.056759   0.017028
+    3          4   0.056759   0.017028  21.318629   0.076499   0.022950
+    4          5   0.076499   0.022950  21.777217   0.096663   0.028999
+        ...
+    """
+
     unscaled_df.kw = unscaled_df.kw * battery_kw / 50.0
 
     time_i = 0
@@ -59,7 +95,49 @@ def construct_temporal_charge_template(unscaled_df, battery_kwh, battery_kw):
     return charge_template
 
 def construct_charge_profile(charge_template, soc_i, charge_time=-1, soc_f=-1):
-    """Function needs docstring"""
+    """
+    Selects a portion of the scaled charging template that applies to a
+    particular charge event based on initial conditions and event duration or 
+    final state of charge. The function determines the appropriate calculation
+    based on the set of inputs provided.
+
+    Inputs
+    ------
+    charge_template: DataFrame
+        Scaled charging template based on the input template, containing 
+        columns: [time_i, soc_i, kwh_i, kw, soc_f, kwh_f]
+    soc_i: double precision
+        Initial battery state of charge, in percent (0 to 100)
+    charge_time: double precision
+        Charge event duration, in seconds (default = -1)
+    soc_f: double precision
+        Final state of charge, in percent (0 to 100, default = -1)
+
+    Returns
+    -------
+    DataFrame
+        The portion of the charge_template input DataFrame that characterizes
+        the charging event described by the input conditions. 'abs_time' column
+        is appended to the dataframe as well.
+
+    Examples
+    --------
+    >>> PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+    >>> leaf_df = pd.read_csv(PATH_TO_LEAF)
+    >>> scaled_df = construct_temporal_charge_template(leaf_df,
+                                           battery_kwh = 30, 
+                                           battery_kw = 100)
+    >>> construct_charge_profile(scaled_df,
+                                 soc_i = 20,
+                                 soc_f = 80)
+
+            time_i      soc_i     kwh_i         kw      soc_f     kwh_f  abs_time
+    293     294  20.028729  6.008619  86.258619  20.108598  6.032579         0
+    294     295  20.108598  6.032579  86.282579  20.188489  6.056547         1
+    295     296  20.188489  6.056547  86.306547  20.268403  6.080521         2
+    296     297  20.268403  6.080521  86.330521  20.348338  6.104501         3
+    297     298  20.348338  6.104501  86.354501  20.428296  6.128489         4
+    """
     
     start_row = np.argmax(charge_template.soc_i>soc_i)
     start_time = charge_template.time_i[start_row]
@@ -185,7 +263,8 @@ def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=
 def calc_dcfc_kwh(charge_template, init_energy_kwh, battery_capacity_kwh, kw, time_s):
     """
     Calculates energy added to the battery over a give charge duration, for a 
-    DC fast charging at a specified average power.
+    DC fast charging event at a specified average power. The function uses assumptions
+    to create a realistic charge profile with power tapering at higer SOC.
 
     Parameters
     ----------
@@ -206,7 +285,6 @@ def calc_dcfc_kwh(charge_template, init_energy_kwh, battery_capacity_kwh, kw, ti
         Energy added to the battery in the give time_s, kilowatt-hours
 
     """
-
 
 #TODO (JH): build calc_dcfc_secs() as referenced in dispatcher.py 218
 
