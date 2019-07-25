@@ -45,7 +45,6 @@ class ChargingTest(unittest.TestCase):
 
         self.assertEqual(kwh_out, 3.3)    
 
-
     def test_calc_const_charge_secs(self):
 
         secs_out = charging.calc_const_charge_secs(init_energy_kwh = 8, 
@@ -56,7 +55,11 @@ class ChargingTest(unittest.TestCase):
         self.assertEqual(secs_out, 17454.545454545456)   
 
     def test_calc_dcfc_kwh(self):
-        print(charging.calc_dcfc_kwh(30, 50, 20, 600))
+        kwh_out = charging.calc_dcfc_kwh(30, 50, 20, 600)
+
+        self.assertEqual(kwh_out, 7.416102385193484)
 
     def test_calc_dcfc_secs(self):
-        print(charging.calc_dcfc_secs(30, 50, 20, 80))
+        secs_out = charging.calc_dcfc_secs(30, 50, 20, 80)
+
+        self.assertEqual(secs_out, 1713.0)
