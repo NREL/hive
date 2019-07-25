@@ -139,8 +139,9 @@ def construct_charge_profile(charge_template, soc_i, charge_time=-1, soc_f=-1):
     297     298  20.348338  6.104501  86.354501  20.428296  6.128489         4
     """
     
-    start_row = np.argmax(charge_template.soc_i>soc_i)
-    start_time = charge_template.time_i[start_row]
+    charge_df = charge_template[charge_template.soc_i > soc_i].copy()
+    # start_row = np.argmax(charge_template.soc_i>soc_i)
+    start_time = float(charge_df.iloc[0].time_i)
     
     if charge_time != -1:
         end_time = start_time + charge_time
@@ -150,18 +151,20 @@ def construct_charge_profile(charge_template, soc_i, charge_time=-1, soc_f=-1):
         else:
             end_time = start_time + charge_time
         
-        end_row = np.argmax(charge_template.time_i>=end_time)
+        charge_df = charge_df[charge_df.time_i <= end_time]
+        # end_row = np.argmax(charge_template.time_i>=end_time)
         
-        charge_df = charge_template.iloc[start_row:end_row, :]
+        # charge_df = charge_template.iloc[start_row:end_row, :]
         charge_df['abs_time'] = range(len(charge_df))
         
     elif soc_f != -1:
+
+        charge_df = charge_df[charge_df.soc_f <= soc_f]
+        # end_row = np.argmax(charge_template.soc_f>=soc_f)
+        # end_time = charge_template.time_i[end_row]
+        # charge_time = end_time - start_time
         
-        end_row = np.argmax(charge_template.soc_f>=soc_f)
-        end_time = charge_template.time_i[end_row]
-        charge_time = end_time - start_time
-        
-        charge_df = charge_template.iloc[start_row:end_row, :]
+        # charge_df = charge_template.iloc[start_row:end_row, :]
         charge_df['abs_time'] = range(len(charge_df))        
     
     return charge_df
@@ -259,25 +262,23 @@ def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=
     return secs
 
 
-#TODO (JH): build calc_dcfc_kwh() as referenced in dispatcher.py 202
-def calc_dcfc_kwh(charge_template, init_energy_kwh, battery_capacity_kwh, kw, time_s):
+#TODO (JH): currently assuming DCFC can provide whatever max accepted battery power is, should allow DCFC power to be less (or more)
+def calc_dcfc_kwh(battery_kwh, battery_kw, soc_i, charge_time):
     """
-    Calculates energy added to the battery over a give charge duration, for a 
+    Calculates energy added to the battery over a given charge duration, for a 
     DC fast charging event at a specified average power. The function uses assumptions
     to create a realistic charge profile with power tapering at higer SOC.
 
     Parameters
     ----------
-    charge_template : int
-        Maximum charging power accepta as a function of current battery energy
-    init_energy_kwh : float
-        Initial battery energy, kilowatt-hours
-    battery_capacity_kwh : float
-        Second number to add
-    kw : float
-        Constant power recieved by battery, kilowatts
-    time_s : float
-        Charging duration, seconds
+    battery_kwh: double precision
+        Battery capacity, in kWh
+    battery_kw: double precision
+        Maximum power that cna be received by battery, in kW
+    soc_i: double precision
+        Initial battery state of charge, in percent (0 to 100)
+    charge_time: double precision
+        Charge event duration, in seconds 
 
     Returns
     -------
@@ -286,5 +287,59 @@ def calc_dcfc_kwh(charge_template, init_energy_kwh, battery_capacity_kwh, kw, ti
 
     """
 
-#TODO (JH): build calc_dcfc_secs() as referenced in dispatcher.py 218
+    PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+    leaf_df = pd.read_csv(PATH_TO_LEAF)
+
+    # TODO: move scaling into the dispatcher to only perform once per vehicle type
+    scaled_df = construct_temporal_charge_template(leaf_df,
+                                           battery_kwh, 
+                                           battery_kw)
+
+    charge_df = construct_charge_profile(scaled_df,
+                                        soc_i = soc_i, 
+                                        charge_time = charge_time)
+    
+    kwh_net = charge_df.iloc[-1]['kwh_f'] - charge_df.iloc[0]['kwh_i']
+
+    return float(kwh_net)
+
+def calc_dcfc_secs(battery_kwh, battery_kw, soc_i, soc_f):
+    """
+    Calculates time required to charge from initial to final soc, for a 
+    DC fast charging event. The function uses assumptions to create a realistic 
+    charge profile with power tapering at higer SOC.
+
+    Parameters
+    ----------
+    battery_kwh: double precision
+        Battery capacity, in kWh
+    battery_kw: double precision
+        Maximum power that cna be received by battery, in kW
+    soc_i: double precision
+        Initial battery state of charge, in percent (0 to 100)
+    soc_i: double precision
+        Initial battery state of charge, in percent (0 to 100)
+
+    Returns
+    -------
+    float
+        Energy added to the battery in the give time_s, kilowatt-hours
+
+    """
+
+    PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+    leaf_df = pd.read_csv(PATH_TO_LEAF)
+
+    # TODO: move scaling into the dispatcher to only perform once per vehicle type
+    scaled_df = construct_temporal_charge_template(leaf_df,
+                                           battery_kwh, 
+                                           battery_kw)
+
+    charge_df = construct_charge_profile(scaled_df,
+                                        soc_i = soc_i, 
+                                        soc_f = soc_f)
+    
+    time_secs = charge_df.iloc[-1]['abs_time']
+
+    return float(time_secs)
 

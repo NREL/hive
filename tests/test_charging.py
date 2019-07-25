@@ -34,16 +34,10 @@ class ChargingTest(unittest.TestCase):
                                                                 battery_kw)
 
         charge_df = charging.construct_charge_profile(scaled_df, 
-                                                        soc_i, 
-                                                        soc_f)
-
-        print(charge_df)
+                                                        soc_i = soc_i, 
+                                                        soc_f = soc_f)
 
         # TODO: add some assertion to test scaled_df and charge_df
-
-        # fig, ax = plt.subplots()
-        # scaled_df.plot(x='soc_i',y='kw', ax=ax)
-        # plt.show()
 
     def test_calc_const_charge_kwh(self):
 
@@ -61,4 +55,8 @@ class ChargingTest(unittest.TestCase):
         
         self.assertEqual(secs_out, 17454.545454545456)   
 
-    
+    def test_calc_dcfc_kwh(self):
+        print(charging.calc_dcfc_kwh(30, 50, 20, 600))
+
+    def test_calc_dcfc_secs(self):
+        print(charging.calc_dcfc_secs(30, 50, 20, 80))
