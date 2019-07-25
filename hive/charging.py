@@ -169,7 +169,6 @@ def construct_charge_profile(charge_template, soc_i, charge_time=-1, soc_f=-1):
     
     return charge_df
 
-# @JH - refactor
 def query_charge_stats(charge_template, soc_i, charge_time=-1, soc_f=-1):
     """Function needs docstring"""
     
@@ -261,8 +260,8 @@ def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=
     
     return secs
 
-
-#TODO (JH): currently assuming DCFC can provide whatever max accepted battery power is, should allow DCFC power to be less (or more)
+#TODO (JH): currently assuming DCFC can provide whatever max accepted battery 
+# power is, should allow DCFC power to be less (or more)
 def calc_dcfc_kwh(battery_kwh, battery_kw, soc_i, charge_time):
     """
     Calculates energy added to the battery over a given charge duration, for a 
