@@ -75,13 +75,14 @@ def load_requests(reqs_file):
         reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: parser.parse(x))
         reqs_df['dropoff_time'] = reqs_df['dropoff_time'].apply(lambda x: parser.parse(x))
 
+        #synthesize 'passengers' if not exists
         if 'passengers' not in reqs_df.columns: #apply real-world pax distr
             pax = [gen_synth_pax_cnt() for i in range(len(reqs_df))]
             reqs_df['passengers'] = pax
-            fields = req_fields + ['passengers']
-            reqs_df = reqs_df[fields]
-        else:
-            reqs_df = reqs_df[req_fields]
+
+        fields = req_fields + ['passengers']
+        reqs_df = reqs_df[fields]
+
 
         #check data type of 'passengers' field
         assert is_numeric_dtype(reqs_df['passengers']), """'passengers'
