@@ -215,10 +215,11 @@ class Dispatcher:
             hyp_base_refuel_energy_kwh = chrg.calc_const_charge_kwh(hyp_refuel_s,
                                                                     base_plug_power_kw)
         elif base_plug_type == 'DC':
+            soc_i = veh.soc
             hyp_base_refuel_energy_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
-                                                            veh.energy_remaining,
                                                             veh.BATTERY_CAPACITY,
-                                                            base_plug_power_kw,
+                                                            veh.MAX_CHARGE_ACCEPTANCE_KW,
+                                                            soc_i * 100,
                                                             hyp_refuel_s)
 
         hyp_battery_charge = veh.energy_remaining + hyp_base_refuel_energy_kwh
@@ -227,16 +228,19 @@ class Dispatcher:
             reserve=True
             battery_charge = veh.BATTERY_CAPACITY
             base_refuel_energy_kwh = battery_charge - veh.energy_remaining
+            soc_f = 1.0
             if veh.base.PLUG_TYPE == 'AC':
                 base_refuel_s = chrg.calc_const_charge_secs(veh.energy_remaining,
                                                             veh.BATTERY_CAPACITY,
-                                                            base_plug_power_kw)
+                                                            base_plug_power_kw,
+                                                            soc_f)
             elif veh.base.PLUG_TYPE == 'DC':
+                soc_i = veh.soc
                 base_refuel_s = chrg.calc_dcfc_secs(veh.CHARGE_TEMPLATE,
-                                                    veh.energy_remaining,
                                                     veh.BATTERY_CAPACITY,
-                                                    base_plug_power_kw,
-                                                    soc_f=1.0)
+                                                    veh.MAX_CHARGE_ACCEPTANCE_KW,
+                                                    soc_i * 100,
+                                                    soc_f * 100)
             base_refuel_end = veh.avail_time + datetime.timedelta(seconds=base_refuel_s)
             base_refuel_start_soc = veh.energy_remaining / veh.BATTERY_CAPACITY
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
@@ -244,17 +248,11 @@ class Dispatcher:
             base_reserve_end = disp_start_time
         else:
             reserve=False
+            #set actual values == hypothetical values calculated initially
             base_refuel_s = hyp_refuel_s
             base_refuel_end = hyp_base_refuel_end
-            if veh.base.PLUG_TYPE == 'AC':
-                base_refuel_energy_kwh = chrg.calc_const_charge_kwh(base_refuel_s,
-                                                                    base_plug_power_kw)
-            elif veh.base.PLUG_TYPE == 'DC':
-                base_refuel_energy_kwh = chrg.calc_dcfc_kwh(veh.CHARGE_TEMPLATE,
-                                                            veh.energy_remaining,
-                                                            veh.BATTERY_CAPACITY,
-                                                            base_plug_power_kw,
-                                                            base_refuel_s)
+            base_refuel_energy_kwh = hyp_base_refuel_energy_kwh
+            
             battery_charge = veh.energy_remaining + base_refuel_energy_kwh
             base_refuel_start_soc = veh.soc
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY

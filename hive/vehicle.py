@@ -439,25 +439,24 @@ class Vehicle:
         self.avail_lon = station.LON
 
         # 2. Add station recharge
-        kw = station.PLUG_POWER_KW
-        soc_i = self.energy_remaining
+        soc_i = self.soc
         if station.PLUG_TYPE == 'AC':
-            refuel_s = chrg.calc_const_charge_secs(soc_i,
-                                                   self.ENV['UPPER_SOC_THRESH_STATION'],
-                                                   kw)
+            soc_f = 1.0 #Q- Should this be an input parameter?
+            refuel_s = chrg.calc_const_charge_secs(self.energy_remaining,
+                                                   self.BATTERY_CAPACITY,
+                                                   station.PLUG_POWER_KW,
+                                                   soc_f)
         elif station.PLUG_TYPE == 'DC':
+            soc_f = self.ENV['UPPER_SOC_THRESH_STATION']
             refuel_s = chrg.calc_dcfc_secs(self.CHARGE_TEMPLATE,
-                                          soc_i,
-                                          self.ENV['UPPER_SOC_THRESH_STATION'],
-                                          kw,
-                                          soc_f = 1.0)
-
+                                          self.BATTERY_CAPACITY,
+                                          self.MAX_CHARGE_ACCEPTANCE_KW,
+                                          soc_i * 100,
+                                          soc_f * 100)
         refuel_start = self.avail_time
         refuel_end = refuel_start + datetime.timedelta(seconds=refuel_s)
-        refuel_energy_kwh = self.BATTERY_CAPACITY * (self.ENV['UPPER_SOC_THRESH_STATION'] - self.soc)
-
-        self.energy_remaining = self.BATTERY_CAPACITY * self.ENV['UPPER_SOC_THRESH_STATION']
-        soc_f = self.energy_remaining / self.BATTERY_CAPACITY
+        refuel_energy_kwh = self.BATTERY_CAPACITY * (soc_f - soc_i)
+        self.energy_remaining += refuel_energy_kwh
         self.soc = soc_f
 
         write_log({

@@ -262,7 +262,7 @@ def calc_const_charge_secs(init_energy_kwh, battery_capacity_kwh, kw=6.6, soc_f=
 
 #TODO (JH): currently assuming DCFC can provide whatever max accepted battery 
 # power is, should allow DCFC power to be less (or more)
-def calc_dcfc_kwh(battery_kwh, battery_kw, soc_i, charge_time):
+def calc_dcfc_kwh(charge_template, battery_kwh, battery_kw, soc_i, charge_time):
     """
     Calculates energy added to the battery over a given charge duration, for a 
     DC fast charging event at a specified average power. The function uses assumptions
@@ -270,6 +270,8 @@ def calc_dcfc_kwh(battery_kwh, battery_kw, soc_i, charge_time):
 
     Parameters
     ----------
+    charge_template: pd.DataFrame
+        veh charge template from construct_temporal_charge_template()
     battery_kwh: double precision
         Battery capacity, in kWh
     battery_kw: double precision
@@ -286,15 +288,15 @@ def calc_dcfc_kwh(battery_kwh, battery_kw, soc_i, charge_time):
 
     """
 
-    PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
-    leaf_df = pd.read_csv(PATH_TO_LEAF)
+    # PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+    # leaf_df = pd.read_csv(PATH_TO_LEAF)
 
-    # TODO: move scaling into the dispatcher to only perform once per vehicle type
-    scaled_df = construct_temporal_charge_template(leaf_df,
-                                           battery_kwh, 
-                                           battery_kw)
+    # # TODO: move scaling into the dispatcher to only perform once per vehicle type
+    # scaled_df = construct_temporal_charge_template(leaf_df,
+    #                                        battery_kwh, 
+    #                                        battery_kw)
 
-    charge_df = construct_charge_profile(scaled_df,
+    charge_df = construct_charge_profile(charge_template,
                                         soc_i = soc_i, 
                                         charge_time = charge_time)
     
@@ -302,7 +304,7 @@ def calc_dcfc_kwh(battery_kwh, battery_kw, soc_i, charge_time):
 
     return float(kwh_net)
 
-def calc_dcfc_secs(battery_kwh, battery_kw, soc_i, soc_f):
+def calc_dcfc_secs(charge_template, battery_kwh, battery_kw, soc_i, soc_f):
     """
     Calculates time required to charge from initial to final soc, for a 
     DC fast charging event. The function uses assumptions to create a realistic 
@@ -310,10 +312,12 @@ def calc_dcfc_secs(battery_kwh, battery_kw, soc_i, soc_f):
 
     Parameters
     ----------
+    charge_template: pd.DataFrame
+        veh charge template from construct_temporal_charge_template()
     battery_kwh: double precision
         Battery capacity, in kWh
     battery_kw: double precision
-        Maximum power that cna be received by battery, in kW
+        Maximum power that can be received by battery, in kW
     soc_i: double precision
         Initial battery state of charge, in percent (0 to 100)
     soc_i: double precision
@@ -326,15 +330,15 @@ def calc_dcfc_secs(battery_kwh, battery_kw, soc_i, soc_f):
 
     """
 
-    PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
-    leaf_df = pd.read_csv(PATH_TO_LEAF)
+    #PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+    #leaf_df = pd.read_csv(PATH_TO_LEAF)
 
     # TODO: move scaling into the dispatcher to only perform once per vehicle type
-    scaled_df = construct_temporal_charge_template(leaf_df,
-                                           battery_kwh, 
-                                           battery_kw)
+    # scaled_df = construct_temporal_charge_template(leaf_df,
+    #                                        battery_kwh, 
+    #                                        battery_kw)
 
-    charge_df = construct_charge_profile(scaled_df,
+    charge_df = construct_charge_profile(charge_template,
                                         soc_i = soc_i, 
                                         soc_f = soc_f)
     
