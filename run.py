@@ -119,9 +119,13 @@ def run_simulation(data, sim_name, infile=None):
     reqs_df = data['requests']
     if cfg.VERBOSE: print("{} requests loaded".format(len(reqs_df)))
 
-    #Filter requests where distance < 0.05 miles
-    reqs_df = pp.filter_short_trips(reqs_df, min_miles=0.05)
+    #Filter requests where distance < min_miles
+    reqs_df = pp.filter_short_distance_trips(reqs_df, min_miles=0.05)
     if cfg.VERBOSE: print("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
+
+    #Filter requests where total time < min_time_s
+    reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
+    if cfg.VERBOSE: print("filtered requests violating min time req, {} remain".format(len(reqs_df)))
 
     #Filter requests where pickup/dropoff location outside operating area
     shp_file = inputs['OPERATING_AREA_SHP']

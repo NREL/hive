@@ -93,18 +93,30 @@ def load_requests(reqs_file):
 def filter_nulls(reqs_df):
     """Filters requests that contain null values.
     """
-    reqs_df = reqs_df.dropna()
+    filt_reqs_df = reqs_df.dropna()
+    filt_reqs_df.reset_index(inplace=True, drop=True)
 
-    return reqs_df
+    return filt_reqs_df
 
-def filter_short_trips(reqs_df, min_miles=0.05):
+def filter_short_distance_trips(reqs_df, min_miles=0.05):
     """Filters requests that are less than min_miles (default=0.05). These
     extremely short distance trips are often measuring errors, i.e. not
     "actual" trips.
     """
     filt_reqs_df = reqs_df[reqs_df.distance_miles > min_miles].reset_index()
+    filt_reqs_df.reset_index(inplace=True, drop=True)
 
-    return(filt_reqs_df)
+    return filt_reqs_df
+
+def filter_short_time_trips(reqs_df, min_time_s=1):
+    """Filters requests that are less than min_time_s (default=1). These 
+    extremely short time trips are often measuring errors, i.e. not "acual" 
+    trips.
+    """
+    filt_reqs_df = reqs_df[(reqs_df['dropoff_time'] - reqs_df['pickup_time']).dt.total_seconds() >= min_time_s]
+    filt_reqs_df.reset_index(inplace=True, drop=True)
+
+    return filt_reqs_df
 
 def filter_requests_outside_oper_area(reqs_df, geojson_file):
     """Filters requests in reqs_df whose origin or destination location are
@@ -137,6 +149,7 @@ def filter_requests_outside_oper_area(reqs_df, geojson_file):
     filt_reqs_df = filt_reqs_df.reset_index(drop=True)
 
     assert len(filt_reqs_df) > 0, "No requests within operating area!"
+    filt_reqs_df.reset_index(inplace=True, drop=True)
 
     return(filt_reqs_df)
 
