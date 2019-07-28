@@ -222,6 +222,7 @@ class Dispatcher:
                                                             hyp_refuel_s)
 
         hyp_battery_charge = veh.energy_remaining + hyp_base_refuel_energy_kwh
+        
         if hyp_battery_charge >= veh.BATTERY_CAPACITY:
             reserve=True
             battery_charge = veh.BATTERY_CAPACITY
@@ -241,8 +242,6 @@ class Dispatcher:
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY
             base_reserve_start = base_refuel_end
             base_reserve_end = disp_start_time
-
-
         else:
             reserve=False
             base_refuel_s = hyp_refuel_s
@@ -366,7 +365,7 @@ class Dispatcher:
         for req in requests:
             req_filled = False #default
             self._reset_failure_tracking()
-            for veh in self._active_fleet: #check active fleet vehicles 1st
+            for veh in self._active_fleet: #check active fleet vehicles first
                 viable, calcs = self._check_active_viability(veh, req)
                 if viable:
                     veh.make_trip(req, calcs)
@@ -375,10 +374,9 @@ class Dispatcher:
                     req_filled = True
                     break
             if not req_filled:
-                for veh in self._inactive_fleet: #check inactive fleet vehicles 2nd
+                for veh in self._inactive_fleet: #check inactive fleet vehicles second
                     viable, calcs = self._check_inactive_viability(veh, req)
                     if viable:
-
                         veh.make_trip(req, calcs)
                         # With full information of charge event, update logs/tracking
                         base = self._bases[veh.base.ID]

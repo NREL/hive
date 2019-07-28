@@ -195,7 +195,7 @@ class Vehicle:
             reserve = calcs['reserve']
 
             # 1. Add VehicleBase refuel event & reserve event (if applicable)
-            self.energy_remaining = self.BATTERY_CAPACITY
+            self.energy_remaining += base_refuel_energy_kwh
             self.soc = self.energy_remaining/self.BATTERY_CAPACITY
             #refuel event
             write_log({
