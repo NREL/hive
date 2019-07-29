@@ -44,7 +44,7 @@ class FuelStation:
     _LOG_COLUMNS = [
         'id',
         'plug_type',
-        'plug_power_kw'
+        'plug_power_kw',
         'vehicle_id',
         'max_veh_acceptance_kw',
         'start_time',
