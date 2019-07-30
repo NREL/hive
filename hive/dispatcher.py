@@ -5,6 +5,7 @@ vehicle dispatching, and DCFC station/base selection.
 
 import datetime
 import sys
+import numpy as np
 
 from hive import tripenergy as nrg
 from hive import charging as chrg
@@ -223,7 +224,7 @@ class Dispatcher:
                                                             hyp_refuel_s)
 
         hyp_battery_charge = veh.energy_remaining + hyp_base_refuel_energy_kwh
-        
+
         if hyp_battery_charge >= veh.BATTERY_CAPACITY:
             reserve=True
             battery_charge = veh.BATTERY_CAPACITY
@@ -252,7 +253,7 @@ class Dispatcher:
             base_refuel_s = hyp_refuel_s
             base_refuel_end = hyp_base_refuel_end
             base_refuel_energy_kwh = hyp_base_refuel_energy_kwh
-            
+
             battery_charge = veh.energy_remaining + base_refuel_energy_kwh
             base_refuel_start_soc = veh.soc
             base_refuel_end_soc = battery_charge / veh.BATTERY_CAPACITY

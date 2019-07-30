@@ -5,6 +5,7 @@ Vehicle object for the HIVE platform
 import sys
 import csv
 import datetime
+import numpy as np
 
 from hive import helpers as hlp
 from hive import tripenergy as nrg
@@ -91,6 +92,7 @@ class Vehicle:
                 'end_lat',
                 'end_lon',
                 'dist_mi',
+                'start_soc',
                 'end_soc',
                 'passengers'
                 ]
@@ -196,6 +198,7 @@ class Vehicle:
 
             # 1. Add VehicleBase refuel event & reserve event (if applicable)
             self.energy_remaining += base_refuel_energy_kwh
+            start_soc = round(self.soc, 2)
             self.soc = self.energy_remaining/self.BATTERY_CAPACITY
             #refuel event
             write_log({
@@ -208,6 +211,7 @@ class Vehicle:
                 'end_lat': self.avail_lat,
                 'end_lon': self.avail_lon,
                 'dist_mi': 0.0,
+                'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
                 'passengers': 0
             },
@@ -230,6 +234,7 @@ class Vehicle:
                     'end_lat': self.avail_lat,
                     'end_lon': self.avail_lon,
                     'dist_mi': 0.0,
+                    'start_soc': round(self.soc, 2),
                     'end_soc': round(self.soc, 2),
                     'passengers': 0
                 },
@@ -241,6 +246,7 @@ class Vehicle:
 
             # 2. Add dispatch to pickup location
             self.energy_remaining-=disp_energy_kwh
+            start_soc = round(self.soc, 2)
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
             write_log({
@@ -253,6 +259,7 @@ class Vehicle:
                 'end_lat': request['pickup_lat'],
                 'end_lon': request['pickup_lon'],
                 'dist_mi': disp_dist_mi,
+                'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
                 'passengers': 0
             },
@@ -265,6 +272,7 @@ class Vehicle:
 
             # 3. Add request
             self.energy_remaining-=req_energy_kwh
+            start_soc = round(self.soc, 2)
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
             write_log({
                 'veh_id': self.ID,
@@ -276,6 +284,7 @@ class Vehicle:
                 'end_lat': request['dropoff_lat'],
                 'end_lon': request['dropoff_lon'],
                 'dist_mi': request['distance_miles'],
+                'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
                 'passengers': request['passengers']
             },
@@ -312,6 +321,7 @@ class Vehicle:
             # 1. Add idle event (if appropriate)
             if idle_time_s > 0:
                 self.energy_remaining-=idle_energy_kwh
+                start_soc = round(self.soc, 2)
                 self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
                 write_log({
@@ -324,6 +334,7 @@ class Vehicle:
                     'end_lat': self.avail_lat,
                     'end_lon': self.avail_lon,
                     'dist_mi': 0.0,
+                    'start_soc': start_soc,
                     'end_soc': round(self.soc,2),
                     'passengers': 0
                 },
@@ -334,6 +345,7 @@ class Vehicle:
 
             # 2. Add dispatch to pickup location
             self.energy_remaining-=disp_energy_kwh
+            start_soc = round(self.soc, 2)
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
             write_log({
@@ -346,6 +358,7 @@ class Vehicle:
                 'end_lat': request['pickup_lat'],
                 'end_lon': request['pickup_lon'],
                 'dist_mi': disp_dist_mi,
+                'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
                 'passengers': 0
             },
@@ -358,6 +371,7 @@ class Vehicle:
 
             # 3. Add request
             self.energy_remaining-=req_energy_kwh
+            start_soc = round(self.soc, 2)
             self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
             write_log({
@@ -370,6 +384,7 @@ class Vehicle:
                 'end_lat': request['dropoff_lat'],
                 'end_lon': request['dropoff_lon'],
                 'dist_mi': request['distance_miles'],
+                'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
                 'passengers': request['passengers']
             },
@@ -413,6 +428,7 @@ class Vehicle:
                                             disp_s,
                                             self.WH_PER_MILE_LOOKUP)
         self.energy_remaining -= disp_energy_kwh
+        start_soc = round(self.soc, 2)
         self.soc = self.energy_remaining/self.BATTERY_CAPACITY
 
         write_log({
@@ -425,6 +441,7 @@ class Vehicle:
             'end_lat': station.LAT,
             'end_lon': station.LON,
             'dist_mi': disp_mi,
+            'start_soc': start_soc,
             'end_soc': round(self.soc, 2),
             'passengers': 0
             },
@@ -469,6 +486,7 @@ class Vehicle:
             'end_lat': self.avail_lat,
             'end_lon': self.avail_lon,
             'dist_mi': 0.0,
+            'start_soc': round(soc_i, 2),
             'end_soc': round(self.soc, 2),
             'passengers': 0
         },
@@ -508,6 +526,7 @@ class Vehicle:
         idle_end = self.avail_time + datetime.timedelta(seconds=idle_s)
         idle_energy_kwh = nrg.calc_idle_kwh(idle_s)
         self.energy_remaining-=idle_energy_kwh
+        start_soc = round(self.soc, 2)
         self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
         write_log({
@@ -520,6 +539,7 @@ class Vehicle:
             'end_lat': self.avail_lat,
             'end_lon': self.avail_lon,
             'dist_mi': 0.0,
+            'start_soc': start_soc,
             'end_soc': round(self.soc, 2),
             'passengers': 0
         },
@@ -537,6 +557,7 @@ class Vehicle:
                                             disp_s,
                                             self.WH_PER_MILE_LOOKUP)
         self.energy_remaining -= disp_energy_kwh
+        start_soc = round(self.soc, 2)
         self.soc = self.energy_remaining/self.BATTERY_CAPACITY
 
         write_log({
@@ -549,6 +570,7 @@ class Vehicle:
             'end_lat': base.LAT,
             'end_lon': base.LON,
             'dist_mi': disp_mi,
+            'start_soc': start_soc,
             'end_soc': round(self.soc, 2),
             'passengers': 0
             },

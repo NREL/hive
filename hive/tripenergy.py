@@ -22,6 +22,9 @@ def create_scaled_whmi(whmi_template, nominal_whmi):
 
 def calc_trip_kwh(dist_mi, time_s, scaled_whmi_lookup):
 
+    if dist_mi == 0 or time_s == 0:
+        return 0
+
     avg_spd_mph = float(dist_mi) / time_s * 3600
     trip_kwh_mi = (np.interp(avg_spd_mph, scaled_whmi_lookup['avg_spd_mph'],
                         scaled_whmi_lookup['whmi']))/1000.0
@@ -32,6 +35,9 @@ def calc_trip_kwh(dist_mi, time_s, scaled_whmi_lookup):
 
 def calc_idle_kwh(time_s):
 
+    if time_s == 0:
+        return 0
+         
     idle_kwh = 0.8 * (time_s / 3600.0)
 
     return idle_kwh
