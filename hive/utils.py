@@ -6,6 +6,12 @@ import pickle
 import csv
 import shutil
 
+class Clock:
+    def __init__(self):
+        self.now = 0
+    def __next__(self):
+        self.now += 1
+
 def save_to_hdf(data, outfile):
     for key, val in data.items():
         val.to_hdf(outfile, key=key)

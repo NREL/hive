@@ -146,6 +146,8 @@ def run_simulation(data, sim_name, infile=None):
     bases = initialize_bases(data['bases'], base_charging_log_file)
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
+    sim_clock = utils.Clock()
+
     #Initialize vehicle fleet
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
     fleet_env_params = {
@@ -159,12 +161,13 @@ def run_simulation(data, sim_name, infile=None):
     }
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
-    fleet = initialize_fleet(vehicle_types = vehicle_types,
+    fleet, fleet_state = initialize_fleet(vehicle_types = vehicle_types,
                              bases = bases,
                              charge_curve = data['charge_curves'],
                              whmi_lookup = data['whmi_lookup'],
                              start_time = reqs_df.pickup_time.iloc[0],
                              env_params = fleet_env_params,
+                             clock = sim_clock,
                              vehicle_log_file = vehicle_log_file,
                              vehicle_summary_file = vehicle_summary_file)
     if cfg.VERBOSE: print("{} vehicles initialized".format(len(fleet)), "", sep="\n")
@@ -172,20 +175,29 @@ def run_simulation(data, sim_name, infile=None):
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
 
     dispatcher = Dispatcher(fleet = fleet,
+                            fleet_state = fleet_state,
                             stations = stations,
                             bases = bases,
+                            clock = sim_clock,
                             failed_requests_log = failed_requests_log_file)
 
     utils.initialize_log(dispatcher._LOG_COLUMNS, failed_requests_log_file)
 
-    n_requests = len(reqs_df)
+    sim_start_time = reqs_df.pickup_time.min()
+    sim_end_time = reqs_df.dropoff_time.max()
+    sim_time_steps = pd.date_range(sim_start_time, sim_end_time, freq='{}S'.format(cfg.SIMULATION_PERIOD_SECONDS))
 
+    total_iterations = len(sim_time_steps)
     i = 0
-    for request in reqs_df.itertuples():
-        if i % 1000 == 0:
-            print(f"Iteration {i} of {n_requests}")
-        dispatcher.process_requests(request)
-        i += 1
+    for timestep in sim_time_steps:
+        i+=1
+        if i%100 == 0:
+            print("{} of {} iterations completed.".format(i, total_iterations))
+        requests = reqs_df[(timestep < reqs_df.pickup_time) & (reqs_df.pickup_time < (timestep + datetime.timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
+        dispatcher.process_requests(requests)
+        for veh in fleet_ls:
+            veh.step()
+        next(clock)
 
     #Calculate summary statistics
     fleet = dispatcher.get_fleet()

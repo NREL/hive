@@ -95,11 +95,13 @@ def initialize_fleet(vehicle_types,
                         charge_curve,
                         whmi_lookup,
                         start_time,
+                        clock,
                         env_params,
                         vehicle_log_file,
                         vehicle_summary_file):
-    id = 1
+    id = 0
     veh_fleet = []
+    fleet_state_constructor = []
     for veh_type in vehicle_types:
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curve,
@@ -122,8 +124,10 @@ def initialize_fleet(vehicle_types,
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,
                         logfile = vehicle_log_file,
+                        clock = clock,
                         environment_params = env_params,
                         )
+
             id += 1
 
             #Initialize vehicle location to a random base
@@ -136,10 +140,12 @@ def initialize_fleet(vehicle_types,
             veh.avail_time = start_time - datetime.timedelta(hours=1)
 
             veh_fleet.append(veh)
+            fleet_state_constructor.append((veh.x, veh.y, 1))
 
     #Initialize vehicle and summary logs
     initialize_log(veh._LOG_COLUMNS, vehicle_log_file)
     initialize_log(veh._STATS, vehicle_summary_file)
 
-    random.shuffle(veh_fleet)
-    return veh_fleet
+    fleet_state = np.array(fleet_state_constructor)
+
+    return veh_fleet, fleet_state
