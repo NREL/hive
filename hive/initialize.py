@@ -5,7 +5,7 @@ import datetime
 
 from hive import charging as chrg
 from hive import tripenergy as nrg
-from hive.stations import FuelStation, VehicleBase
+from hive.stations import FuelStation
 from hive.vehicle import Vehicle
 from hive.utils import initialize_log
 
@@ -66,7 +66,7 @@ def initialize_bases(base_df, base_log_file):
     Returns
     -------
     dict
-        Dictionary with base_id key and VehicleBase object val for quick lookups
+        Dictionary with base_id key and FuelStation object val for quick lookups
     """
 
     bases = {}
@@ -76,7 +76,7 @@ def initialize_bases(base_df, base_log_file):
         plugs = row['plugs']
         plug_type = row['plug_type']
         plug_power = row['plug_power_kw']
-        base = VehicleBase(base_id,
+        base = FuelStation(base_id,
                                lat,
                                lon,
                                plugs,
