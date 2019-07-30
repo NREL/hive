@@ -181,18 +181,9 @@ def run_simulation(data, sim_name, infile=None):
     n_requests = len(reqs_df)
 
     i = 0
-    for t in reqs_df.itertuples():
+    for request in reqs_df.itertuples():
         if i % 1000 == 0:
             print(f"Iteration {i} of {n_requests}")
-        request = {'pickup_time': t.pickup_time,
-                    'dropoff_time': t.dropoff_time,
-                    'distance_miles': t.distance_miles,
-                    'pickup_lat': t.pickup_lat,
-                    'pickup_lon': t.pickup_lon,
-                    'dropoff_lat': t.dropoff_lat,
-                    'dropoff_lon': t.dropoff_lon,
-                    'passengers': t.passengers,
-                    }
         dispatcher.process_requests(request)
         i += 1
 

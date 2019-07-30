@@ -92,13 +92,13 @@ class Dispatcher:
         assert veh.active==True, "Vehicle is not active!"
 
         # Calculations
-        disp_dist_mi = hlp.estimate_vmt(veh.avail_lat,
-                                        veh.avail_lon,
-                                        request['pickup_lat'],
-                                        request['pickup_lon'],
+        disp_dist_mi = hlp.estimate_vmt_2D(veh.x,
+                                        veh.y,
+                                        request.pickup_x,
+                                        request.pickup_y,
                                         scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
         disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
-        disp_end_time = request['pickup_time']
+        disp_end_time = request.pickup_time
         disp_start_time = disp_end_time - datetime.timedelta(seconds=disp_time_s)
         disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi,
                                             disp_time_s,
@@ -110,8 +110,8 @@ class Dispatcher:
         idle_time_min = idle_time_s / 60
         idle_energy_kwh = nrg.calc_idle_kwh(idle_time_s)
 
-        req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        req_dist_mi = request['distance_miles']
+        req_time_s = (request.dropoff_time - request.pickup_time).total_seconds()
+        req_dist_mi = request.distance_miles
         req_energy_kwh = nrg.calc_trip_kwh(req_dist_mi, req_time_s, veh.WH_PER_MILE_LOOKUP)
         total_energy_use_kwh = idle_energy_kwh + disp_energy_kwh + req_energy_kwh
         hyp_energy_remaining = veh.energy_remaining - total_energy_use_kwh
@@ -154,11 +154,11 @@ class Dispatcher:
             return False, None
 
         # Check 2 - Time Constraint Not Violated
-        if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']:
+        if veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request.pickup_time:
             if cfg.DEBUG:
                 print(f"ACTIVE: I am vehicle {veh.ID} and I can't make it in time")
                 print(f"Time to get there: {disp_time_s} seconds")
-                print(f"avail time: {veh.avail_time}, request time: {request['pickup_time']}")
+                print(f"avail time: {veh.avail_time}, request time: {request.pickup_time}")
             self.stats['failure_active_time']+=1
             return False, None
 
@@ -169,7 +169,7 @@ class Dispatcher:
             return False, None
 
         # Check 4 - Max Occupancy Constraint Not Violated
-        if request['passengers'] > veh.avail_seats:
+        if request.passengers > veh.avail_seats:
             if cfg.DEBUG: print(f"ACTIVE: I am vehicle {veh.ID} and I don't have enough seats")
             self.stats['failure_active_occupancy']+=1
             return False, None
@@ -188,20 +188,20 @@ class Dispatcher:
         assert veh.active!=True, "Vehicle is active!"
 
         # Calculations
-        disp_dist_mi = hlp.estimate_vmt(veh.avail_lat,
-                                        veh.avail_lon,
-                                        request['pickup_lat'],
-                                        request['pickup_lon'],
+        disp_dist_mi = hlp.estimate_vmt_2D(veh.x,
+                                        veh.y,
+                                        request.pickup_x,
+                                        request.pickup_y,
                                         scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
-        disp_time_s = disp_dist_mi/veh.ENV['DISPATCH_MPH'] * 3600
-        disp_end_time = request['pickup_time']
+        disp_time_s = (disp_dist_mi/veh.ENV['DISPATCH_MPH']) * 3600
+        disp_end_time = request.pickup_time
         disp_start_time = disp_end_time - datetime.timedelta(seconds=disp_time_s)
         disp_energy_kwh = nrg.calc_trip_kwh(disp_dist_mi,
                                             disp_time_s,
                                             veh.WH_PER_MILE_LOOKUP)
 
-        req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
-        req_dist_mi = request['distance_miles']
+        req_time_s = (request.dropoff_time - request.pickup_time).total_seconds()
+        req_dist_mi = request.distance_miles
         req_energy_kwh = nrg.calc_trip_kwh(req_dist_mi,
                                            req_time_s,
                                            veh.WH_PER_MILE_LOOKUP)
@@ -284,11 +284,11 @@ class Dispatcher:
 
         # Check 1 - Time Constraint Not Violated
         if (veh.avail_time!=None) and \
-        (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request['pickup_time']):
+        (veh.avail_time + datetime.timedelta(seconds=disp_time_s) > request.pickup_time):
             if cfg.DEBUG:
                 print(f"INACTIVE: I am vehicle {veh.ID} and I can't make it in time")
                 print(f"Time to get there: {disp_time_s} seconds")
-                print(f"avail time: {veh.avail_time}, request time: {request['pickup_time']}")
+                print(f"avail time: {veh.avail_time}, request time: {request.pickup_time}")
 
             self.stats['failure_inactive_time']+=1
             return False, None
@@ -300,7 +300,7 @@ class Dispatcher:
             return False, None
 
         # Check 3 - Max Occupancy Constraint Not Violated
-        if request['passengers'] > veh.avail_seats:
+        if request.passengers > veh.avail_seats:
             if cfg.DEBUG: print(f"INACTIVE: I am vehicle {veh.ID} and I don't have enough seats")
             self.stats['failure_inactive_occupancy']+=1
             return False, None
@@ -331,11 +331,11 @@ class Dispatcher:
             dist_to_nearest = INF
             for id in network.keys():
                 station = network[id]
-                dist_mi = hlp.estimate_vmt(veh.avail_lat,
-                                           veh.avail_lon,
-                                           station.LAT,
-                                           station.LON,
-                                           scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+                dist_mi = hlp.estimate_vmt_2D(veh.x,
+                                               veh.y,
+                                               station.X,
+                                               station.Y,
+                                               scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
                 if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
                     nearest = station
@@ -391,16 +391,16 @@ class Dispatcher:
                         req_filled = True
                         break
             if not req_filled:
-                if cfg.DEBUG: print('Dropped request.')
+                if cfg.DEBUG: print('Dropped req.')
                 write_log({
-                    'pickup_time': req['pickup_time'],
-                    'dropoff_time': req['dropoff_time'],
-                    'distance_miles': req['distance_miles'],
-                    'pickup_lat': req['pickup_lat'],
-                    'pickup_lon': req['pickup_lon'],
-                    'dropoff_lat': req['dropoff_lat'],
-                    'dropoff_lon': req['dropoff_lon'],
-                    'passengers': req['passengers'],
+                    'pickup_time': req.pickup_time,
+                    'dropoff_time': req.dropoff_time,
+                    'distance_miles': req.distance_miles,
+                    'pickup_lat': req.pickup_lat,
+                    'pickup_lon': req.pickup_lon,
+                    'dropoff_lat': req.dropoff_lat,
+                    'dropoff_lon': req.dropoff_lon,
+                    'passengers': req.passengers,
                     'failure_active_max_dispatch': self.stats['failure_active_max_dispatch'],
                     'failure_active_time': self.stats['failure_active_time'],
                     'failure_active_battery': self.stats['failure_active_battery'],

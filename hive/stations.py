@@ -5,6 +5,8 @@ Charging station objects used in the HIVE simulation platform.
 from hive.constraints import STATION_PARAMS
 from hive.utils import assert_constraint, write_log, initialize_log
 
+import utm
+
 class FuelStation:
     """
     Base class for electric vehicle charging station.
@@ -68,6 +70,13 @@ class FuelStation:
         self.ID = station_id
         self.LAT = latitude
         self.LON = longitude
+
+        x, y, zone_letter, zone_number = utm.from_latlon(latitude, longitude)
+
+        self.X = x
+        self.Y = y
+        self.ZONE_NUMBER = zone_number
+        self.ZONE_LETTER = zone_letter
 
         assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
         self.TOTAL_PLUGS = plugs
@@ -204,6 +213,13 @@ class VehicleBase:
         self.LAT = latitude
         self.LON = longitude
 
+        x, y, zone_letter, zone_number = utm.from_latlon(latitude, longitude)
+
+        self.X = x
+        self.Y = y
+        self.ZONE_NUMBER = zone_number
+        self.ZONE_LETTER = zone_letter
+        
         assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
         self.TOTAL_PLUGS = plugs
 

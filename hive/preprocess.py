@@ -8,6 +8,7 @@ import random
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import utm
 from time import mktime
 from datetime import datetime
 from dateutil import parser
@@ -83,6 +84,12 @@ def load_requests(reqs_file):
         fields = req_fields + ['passengers']
         reqs_df = reqs_df[fields]
 
+        #convert latitude and longitude to utm
+        reqs_df['pickup_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)
+        reqs_df['pickup_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)
+        reqs_df['dropoff_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)
+        reqs_df['dropoff_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[1], axis=1)
+
 
         #check data type of 'passengers' field
         assert is_numeric_dtype(reqs_df['passengers']), """'passengers'
@@ -109,8 +116,8 @@ def filter_short_distance_trips(reqs_df, min_miles=0.05):
     return filt_reqs_df
 
 def filter_short_time_trips(reqs_df, min_time_s=1):
-    """Filters requests that are less than min_time_s (default=1). These 
-    extremely short time trips are often measuring errors, i.e. not "acual" 
+    """Filters requests that are less than min_time_s (default=1). These
+    extremely short time trips are often measuring errors, i.e. not "acual"
     trips.
     """
     filt_reqs_df = reqs_df[(reqs_df['dropoff_time'] - reqs_df['pickup_time']).dt.total_seconds() >= min_time_s]

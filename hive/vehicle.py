@@ -6,6 +6,7 @@ import sys
 import csv
 import datetime
 import numpy as np
+import utm
 
 from hive import helpers as hlp
 from hive import tripenergy as nrg
@@ -122,8 +123,6 @@ class Vehicle:
 
         # Public variables
         self.active = False
-        self.avail_lat = None
-        self.avail_lon = None
         self.base = None
         self.avail_time = None
         self.avail_seats = max_passengers
@@ -132,6 +131,10 @@ class Vehicle:
         self.energy_remaining = battery_capacity * initial_soc
 
         self._logfile = logfile
+
+        # Postition variables
+        self._x = None
+        self._y = None
 
         # Init reporting
         self.stats = dict()
@@ -145,8 +148,44 @@ class Vehicle:
             assert_constraint(param, val, ENV_PARAMS, context="Initialize Vehicle")
             self.ENV[param] = val
 
+    @property
+    def latlon(self):
+        return utm.to_latlon(self._x, self._y, self._zone_number, self._zone_letter)
+
+    @latlon.setter
+    def latlon(self, val):
+        try:
+            lat, lon = val
+        except ValueError:
+            raise ValueError('Pass iterable with lat lon pair')
+        else:
+            x, y, zone_number, zone_letter = utm.from_latlon(lat, lon)
+            self._x = x
+            self._y = y
+            self._zone_number = zone_number
+            self._zone_letter = zone_letter
+
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self, val):
+        #TODO: Add fleet state matrix
+        self._x = val
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, val):
+        #TODO: Add fleet state matrix
+        self._y = val
+
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
+
 
     def dump_stats(self, filepath):
         self.stats['end_soc'] = self.soc
@@ -200,16 +239,17 @@ class Vehicle:
             self.energy_remaining += base_refuel_energy_kwh
             start_soc = round(self.soc, 2)
             self.soc = self.energy_remaining/self.BATTERY_CAPACITY
+            lat, lon = self.latlon
             #refuel event
             write_log({
                 'veh_id': self.ID,
                 'activity': 'refuel-base',
                 'start_time': base_refuel_start_time,
-                'start_lat': self.avail_lat,
-                'start_lon': self.avail_lon,
+                'start_lat': lat,
+                'start_lon': lon,
                 'end_time': base_refuel_end_time,
-                'end_lat': self.avail_lat,
-                'end_lon': self.avail_lon,
+                'end_lat': lat,
+                'end_lon': lon,
                 'dist_mi': 0.0,
                 'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
@@ -228,11 +268,11 @@ class Vehicle:
                     'veh_id': self.ID,
                     'activity': 'reserve-base',
                     'start_time': base_reserve_start_time,
-                    'start_lat': self.avail_lat,
-                    'start_lon': self.avail_lon,
+                    'start_lat': lat,
+                    'start_lon': lon,
                     'end_time': base_reserve_end_time,
-                    'end_lat': self.avail_lat,
-                    'end_lon': self.avail_lon,
+                    'end_lat': lat,
+                    'end_lon': lon,
                     'dist_mi': 0.0,
                     'start_soc': round(self.soc, 2),
                     'end_soc': round(self.soc, 2),
@@ -253,11 +293,11 @@ class Vehicle:
                 'veh_id': self.ID,
                 'activity': 'dispatch-pickup',
                 'start_time': disp_start_time,
-                'start_lat': self.avail_lat,
-                'start_lon': self.avail_lon,
+                'start_lat': lat,
+                'start_lon': lon,
                 'end_time': disp_end_time,
-                'end_lat': request['pickup_lat'],
-                'end_lon': request['pickup_lon'],
+                'end_lat': request.pickup_lat,
+                'end_lon': request.pickup_lon,
                 'dist_mi': disp_dist_mi,
                 'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
@@ -277,31 +317,30 @@ class Vehicle:
             write_log({
                 'veh_id': self.ID,
                 'activity': 'request',
-                'start_time': request['pickup_time'],
-                'start_lat': request['pickup_lat'],
-                'start_lon': request['pickup_lon'],
-                'end_time': request['dropoff_time'],
-                'end_lat': request['dropoff_lat'],
-                'end_lon': request['dropoff_lon'],
-                'dist_mi': request['distance_miles'],
+                'start_time': request.pickup_time,
+                'start_lat': request.pickup_lat,
+                'start_lon': request.pickup_lon,
+                'end_time': request.dropoff_time,
+                'end_lat': request.dropoff_lat,
+                'end_lon': request.dropoff_lon,
+                'dist_mi': request.distance_miles,
                 'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
-                'passengers': request['passengers']
+                'passengers': request.passengers
             },
             self._LOG_COLUMNS,
             self._logfile)
 
-            self.stats['request_vmt']+=request['distance_miles']
-            self.stats['total_vmt']+=request['distance_miles']
+            self.stats['request_vmt']+=request.distance_miles
+            self.stats['total_vmt']+=request.distance_miles
             self.stats['requests_filled']+=1
-            self.stats['passengers_delivered']+=request['passengers']
-            req_time_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
+            self.stats['passengers_delivered']+=request.passengers
+            req_time_s = (request.dropoff_time - request.pickup_time).total_seconds()
             self.stats['request_s']+=req_time_s
             self.active = True
             self._base = None
-            self.avail_time = request['dropoff_time']
-            self.avail_lat = request['dropoff_lat']
-            self.avail_lon = request['dropoff_lon']
+            self.avail_time = request.dropoff_time
+            self.latlon = (request.dropoff_lat, request.dropoff_lon)
 
         else: # Vehicle previously inactive:
             idle_start_time = calcs['idle_start_time']
@@ -317,6 +356,7 @@ class Vehicle:
             disp_dist_mi = calcs['dispatch_dist_miles']
             req_energy_kwh = calcs['request_energy_kwh']
 
+            lat, lon = self.latlon
 
             # 1. Add idle event (if appropriate)
             if idle_time_s > 0:
@@ -328,11 +368,11 @@ class Vehicle:
                     'veh_id': self.ID,
                     'activity': 'idle',
                     'start_time': idle_start_time,
-                    'start_lat': self.avail_lat,
-                    'start_lon': self.avail_lon,
+                    'start_lat': lat,
+                    'start_lon': lon,
                     'end_time': idle_end_time,
-                    'end_lat': self.avail_lat,
-                    'end_lon': self.avail_lon,
+                    'end_lat': lat,
+                    'end_lon': lon,
                     'dist_mi': 0.0,
                     'start_soc': start_soc,
                     'end_soc': round(self.soc,2),
@@ -352,11 +392,11 @@ class Vehicle:
                 'veh_id': self.ID,
                 'activity': 'dispatch-pickup',
                 'start_time': disp_start_time,
-                'start_lat': self.avail_lat,
-                'start_lon': self.avail_lon,
+                'start_lat': lat,
+                'start_lon': lon,
                 'end_time': disp_end_time,
-                'end_lat': request['pickup_lat'],
-                'end_lon': request['pickup_lon'],
+                'end_lat': request.pickup_lat,
+                'end_lon': request.pickup_lon,
                 'dist_mi': disp_dist_mi,
                 'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
@@ -377,29 +417,28 @@ class Vehicle:
             write_log({
                 'veh_id': self.ID,
                 'activity': 'request',
-                'start_time': request['pickup_time'],
-                'start_lat': request['pickup_lat'],
-                'start_lon': request['pickup_lon'],
-                'end_time': request['dropoff_time'],
-                'end_lat': request['dropoff_lat'],
-                'end_lon': request['dropoff_lon'],
-                'dist_mi': request['distance_miles'],
+                'start_time': request.pickup_time,
+                'start_lat': request.pickup_lat,
+                'start_lon': request.pickup_lon,
+                'end_time': request.dropoff_time,
+                'end_lat': request.dropoff_lat,
+                'end_lon': request.dropoff_lon,
+                'dist_mi': request.distance_miles,
                 'start_soc': start_soc,
                 'end_soc': round(self.soc, 2),
-                'passengers': request['passengers']
+                'passengers': request.passengers
             },
             self._LOG_COLUMNS,
             self._logfile)
 
-            self.stats['request_vmt']+=request['distance_miles']
-            self.stats['total_vmt']+=request['distance_miles']
+            self.stats['request_vmt']+=request.distance_miles
+            self.stats['total_vmt']+=request.distance_miles
             self.stats['requests_filled']+=1
-            self.stats['passengers_delivered']+=request['passengers']
-            request_s = (request['dropoff_time'] - request['pickup_time']).total_seconds()
+            self.stats['passengers_delivered']+=request.passengers
+            request_s = (request.dropoff_time - request.pickup_time).total_seconds()
             self.stats['request_s']+=request_s
-            self.avail_time = request['dropoff_time']
-            self.avail_lat = request['dropoff_lat']
-            self.avail_lon = request['dropoff_lon']
+            self.avail_time = request.dropoff_time
+            self.latlon = (request.dropoff_lat, request.dropoff_lon)
 
 
     def refuel_at_station(self, station, dist_mi):
@@ -431,12 +470,14 @@ class Vehicle:
         start_soc = round(self.soc, 2)
         self.soc = self.energy_remaining/self.BATTERY_CAPACITY
 
+        lat, lon = self.latlon
+
         write_log({
             'veh_id': self.ID,
             'activity': 'dispatch-station',
             'start_time': self.avail_time,
-            'start_lat': self.avail_lat,
-            'start_lon': self.avail_lon,
+            'start_lat': lat,
+            'start_lon': lon,
             'end_time': disp_end,
             'end_lat': station.LAT,
             'end_lon': station.LON,
@@ -452,8 +493,7 @@ class Vehicle:
         self.stats['dispatch_vmt'] += disp_mi
         self.stats['total_vmt'] += disp_mi
         self.avail_time = disp_end
-        self.avail_lat = station.LAT
-        self.avail_lon = station.LON
+        self.latlon = (station.LAT, station.LON)
 
         # 2. Add station recharge
         soc_i = self.soc
@@ -480,11 +520,11 @@ class Vehicle:
             'veh_id': self.ID,
             'activity': 'refuel-station',
             'start_time': refuel_start,
-            'start_lat': self.avail_lat,
-            'start_lon': self.avail_lon,
+            'start_lat': station.LAT,
+            'start_lon': station.LON,
             'end_time': refuel_end,
-            'end_lat': self.avail_lat,
-            'end_lon': self.avail_lon,
+            'end_lat': station.LAT,
+            'end_lon': station.LON,
             'dist_mi': 0.0,
             'start_soc': round(soc_i, 2),
             'end_soc': round(self.soc, 2),
@@ -529,15 +569,17 @@ class Vehicle:
         start_soc = round(self.soc, 2)
         self.soc = self.energy_remaining / self.BATTERY_CAPACITY
 
+        lat, lon = self.latlon
+
         write_log({
             'veh_id': self.ID,
             'activity': 'idle',
             'start_time': self.avail_time,
-            'start_lat': self.avail_lat,
-            'start_lon': self.avail_lon,
+            'start_lat': lat,
+            'start_lon': lon,
             'end_time': idle_end,
-            'end_lat': self.avail_lat,
-            'end_lon': self.avail_lon,
+            'end_lat': lat,
+            'end_lon': lon,
             'dist_mi': 0.0,
             'start_soc': start_soc,
             'end_soc': round(self.soc, 2),
@@ -564,8 +606,8 @@ class Vehicle:
             'veh_id': self.ID,
             'activity': 'dispatch-base',
             'start_time': self.avail_time,
-            'start_lat': self.avail_lat,
-            'start_lon': self.avail_lon,
+            'start_lat': lat,
+            'start_lon': lon,
             'end_time': disp_end,
             'end_lat': base.LAT,
             'end_lon': base.LON,
@@ -582,9 +624,7 @@ class Vehicle:
         self.stats['total_vmt'] += disp_mi
         self.active = False
         self.base = base
-        self.avail_lat = base.LAT
-        self.avail_lon = base.LON
-        self.avail_time = disp_end
+        self.latlon = (base.LAT, base.LON)
 
         # Update VehicleBase
         base.avail_plugs-=1

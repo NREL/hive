@@ -130,8 +130,7 @@ def initialize_fleet(vehicle_types,
             base_id = random.choice(list(bases.keys()))
             base = bases[base_id]
 
-            veh.avail_lat = base.LAT
-            veh.avail_lon = base.LON
+            veh.latlon = (base.LAT, base.LON)
             veh.base = base
 
             veh.avail_time = start_time - datetime.timedelta(hours=1)
