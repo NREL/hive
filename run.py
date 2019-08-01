@@ -6,7 +6,7 @@ import os
 import sys
 import random
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import pickle
@@ -193,18 +193,18 @@ def run_simulation(data, sim_name, infile=None):
         i+=1
         if i%100 == 0:
             print("{} of {} iterations completed.".format(i, total_iterations))
-        requests = reqs_df[(timestep < reqs_df.pickup_time) & (reqs_df.pickup_time < (timestep + datetime.timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
+        requests = reqs_df[(timestep <= reqs_df.pickup_time) & (reqs_df.pickup_time < (timestep + timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
         dispatcher.process_requests(requests)
-        for veh in fleet_ls:
+        for veh in fleet:
             veh.step()
-        next(clock)
+        next(sim_clock)
 
     #Calculate summary statistics
-    fleet = dispatcher.get_fleet()
-    reporting.calc_veh_stats(fleet, vehicle_summary_file)
-    reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
-    reporting.summarize_station_use(stations, bases, station_summary_file)
-
+    # fleet = dispatcher.get_fleet()
+    # reporting.calc_veh_stats(fleet, vehicle_summary_file)
+    # reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
+    # reporting.summarize_station_use(stations, bases, station_summary_file)
+    #
 if __name__ == "__main__":
     #TODO: Fix cached functionality. Current functionality does not cache runs.
     # def clean_scenarios_folder():

@@ -84,6 +84,8 @@ def load_requests(reqs_file):
         fields = req_fields + ['passengers']
         reqs_df = reqs_df[fields]
 
+        reqs_df['seconds'] = reqs_df.apply(lambda row: (row.dropoff_time - row.pickup_time).total_seconds(), axis=1)
+
         #convert latitude and longitude to utm
         reqs_df['pickup_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)
         reqs_df['pickup_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)

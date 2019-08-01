@@ -14,6 +14,7 @@ from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive.constraints import ENV_PARAMS, VEH_PARAMS
 from hive.utils import assert_constraint, initialize_log, write_log
+from hive.units import METERS_TO_MILES, HOURS_TO_SECONDS
 
 sys.path.append('..')
 from config import SIMULATION_PERIOD_SECONDS
@@ -184,8 +185,9 @@ class Vehicle:
 
     @x.setter
     def x(self, val):
-        #TODO: Add fleet state matrix
+        #TODO: Add lookup for fleet state column
         self._x = val
+        self.fleet_state[self.ID, 0] = val
 
     @property
     def y(self):
@@ -193,7 +195,8 @@ class Vehicle:
 
     @y.setter
     def y(self, val):
-        #TODO: Add fleet state matrix
+        #TODO: Add lookup for fleet state column
+        self.fleet_state[self.ID, 1] = val
         self._y = val
 
     def __repr__(self):
@@ -220,6 +223,8 @@ class Vehicle:
                 self.y = location[1]
             except StopIteration:
                 self._route = None
+                #TODO: Add lookup for fleet state column
+                self.fleet_state[self.ID, 2] = 1
 
     def _generate_route(self, x0, y0, x1, y1, trip_time_s, sim_time):
         steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
@@ -244,14 +249,17 @@ class Vehicle:
                  trip_time_s=None):
 
         current_sim_time = self._clock.now
+        # print(f"Vehicle {self.ID} making trip from ({origin_x}, {origin_y}) to ({destination_x}, {destination_y})")
 
         if trip_dist_mi is None:
-            trip_dist_mi = math.hypot(destination_x - origin_x, destination_y - origin_y) * METERS_TO_MILES * RN_SCALING_FACTOR
+            trip_dist_mi = math.hypot(destination_x - origin_x, destination_y - origin_y)\
+                * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
         if trip_time_s is None:
-            trip_time_s = (trip_dist_mi / VEH_AVG_MPH) * HOURS_TO_SECONDS
+            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * HOURS_TO_SECONDS
 
-        disp_dist_mi = math.hypot(origin_x - self.x, origin_y - self.y) * METERS_TO_MILES * RN_SCALING_FACTOR
-        disp_time_s = (disp_dist_mi / VEH_AVG_MPH) * HOURS_TO_SECONDS
+        disp_dist_mi = math.hypot(origin_x - self.x, origin_y - self.y) \
+                * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.ENV['DISPATCH_MPH']) * HOURS_TO_SECONDS
         disp_route = self._generate_route(self.x, self.y, origin_x, origin_y, disp_time_s, current_sim_time)
 
         trip_sim_time = disp_route[-1][0]
@@ -259,7 +267,9 @@ class Vehicle:
 
         del disp_route[-1]
         self._route = disp_route + trip_route
-        self._route_iter = iter(self.route)
+        self._route_iter = iter(self._route)
+        #TODO: Add lookup for fleet state column
+        self.fleet_state[self.ID, 2] = 0
         next(self._route_iter)
 
     def cmd_travel_to(self,
@@ -271,12 +281,13 @@ class Vehicle:
         current_sim_time = self._clock.now
 
         if trip_dist_mi is None:
-            trip_dist_mi = math.hypot(destination_x - self.x, destination_y - self.y) * METERS_TO_MILES * RN_SCALING_FACTOR
+            trip_dist_mi = math.hypot(destination_x - self.x, destination_y - self.y) \
+                    * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
         if trip_time_s is None:
-            trip_time_s = (trip_dist_mi / VEH_AVG_MPH) * HOURS_TO_SECONDS
+            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * HOURS_TO_SECONDS
 
         self._route = self.generate_route(self.x, self.y, destination_x, destination_y, trip_time_s, current_sim_time)
-        self._route_iter = iter(self.route)
+        self._route_iter = iter(self._route)
         next(self._route_iter)
 
     def step(self):
