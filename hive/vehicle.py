@@ -152,6 +152,8 @@ class Vehicle:
         self._route = None
         self._route_iter = None
 
+        self._station = None
+
         self._clock = clock
 
         self.fleet_state = None
@@ -269,11 +271,19 @@ class Vehicle:
                 new_y = location[1]
                 assert(time == (self._clock.now+1))
                 dist_mi = self._distance(self.x, self.y, new_x, new_y)
+                self._update_charge(dist_mi)
                 self.x = new_x
                 self.y = new_y
             except StopIteration:
                 self._route = None
                 self.active = True
+
+    def _charge(self):
+        # Make sure we're not still traveling to charge station
+        if self._route is None:
+            #TODO: add incremental charge for each timestep until soc is at 1
+            pass
+
 
     def _generate_route(self, x0, y0, x1, y1, trip_time_s, sim_time):
         steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
@@ -338,6 +348,14 @@ class Vehicle:
         self._route_iter = iter(self._route)
         next(self._route_iter)
 
+    def cmd_charge(self, station):
+        self.active = False
+        self._station = station
+        self.cmd_travel_to(station.X, station.Y)
+
+
     def step(self):
         self._move()
-        self.history.append((self.x, self.y))
+        if self._station is not None:
+            self._charge()
+        self.history.append((self.x, self.y, self.active, self.soc))

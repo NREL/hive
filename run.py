@@ -151,7 +151,7 @@ def run_simulation(data, sim_name, infile=None):
 
     #Initialize vehicle fleet
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
-    fleet_env_params = {
+    env_params = {
         'MAX_DISPATCH_MILES': inputs['MAX_DISPATCH_MILES'],
         'MIN_ALLOWED_SOC': inputs['MIN_ALLOWED_SOC'],
         'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
@@ -161,7 +161,7 @@ def run_simulation(data, sim_name, infile=None):
         'MAX_ALLOWABLE_IDLE_MINUTES': inputs['MAX_ALLOWABLE_IDLE_MINUTES'],
     }
 
-    for param, val in fleet_env_params.items():
+    for param, val in env_params.items():
         utils.assert_constraint(param, val, ENV_PARAMS, context="Environment Parameters")
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
@@ -170,7 +170,7 @@ def run_simulation(data, sim_name, infile=None):
                              charge_curve = data['charge_curves'],
                              whmi_lookup = data['whmi_lookup'],
                              start_time = reqs_df.pickup_time.iloc[0],
-                             env_params = fleet_env_params,
+                             env_params = env_params,
                              clock = sim_clock,
                              vehicle_log_file = vehicle_log_file,
                              vehicle_summary_file = vehicle_summary_file)
@@ -182,6 +182,7 @@ def run_simulation(data, sim_name, infile=None):
                             fleet_state = fleet_state,
                             stations = stations,
                             bases = bases,
+                            env_params = env_params,
                             clock = sim_clock,
                             failed_requests_log = failed_requests_log_file)
 
@@ -203,6 +204,7 @@ def run_simulation(data, sim_name, infile=None):
             veh.step()
         next(sim_clock)
 
+    print(fleet[0].history)
     #Calculate summary statistics
     # fleet = dispatcher.get_fleet()
     # reporting.calc_veh_stats(fleet, vehicle_summary_file)
