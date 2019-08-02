@@ -114,13 +114,14 @@ def initialize_fleet(vehicle_types,
                                     )
 
         for _ in range(veh_type.NUM_VEHICLES):
+            initial_soc = np.random.uniform(0.05, 1.0)
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
                         battery_capacity = veh_type.BATTERY_CAPACITY_KWH,
                         max_charge_acceptance = veh_type.MAX_KW_ACCEPTANCE,
                         max_passengers = veh_type.PASSENGERS,
-                        initial_soc = np.random.uniform(0.05, 1.0), #init vehs w/ uniform soc distr
+                        initial_soc = initial_soc,
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,
                         logfile = vehicle_log_file,
@@ -140,7 +141,7 @@ def initialize_fleet(vehicle_types,
             veh.avail_time = start_time - datetime.timedelta(hours=1)
 
             veh_fleet.append(veh)
-            fleet_state_constructor.append((veh.x, veh.y, 1))
+            fleet_state_constructor.append((veh.x, veh.y, 1, initial_soc))
 
     #Initialize vehicle and summary logs
     initialize_log(veh._LOG_COLUMNS, vehicle_log_file)

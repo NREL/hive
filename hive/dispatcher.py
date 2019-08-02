@@ -89,7 +89,7 @@ class Dispatcher:
         for stat in self._STATS:
             self.stats[stat] = 0
 
-    def _get_n_best_vehicles(self, fleet_state, request, n):
+    def _get_n_closest_vehicles(self, fleet_state, request, n):
         mask = fleet_state[:,2] == 1
         point = np.array([(request.pickup_x, request.pickup_y)])
         dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
@@ -106,7 +106,7 @@ class Dispatcher:
         """
 
         for request in requests.itertuples():
-            best_vehicle = self._get_n_best_vehicles(self._fleet_state, request, 1)
+            best_vehicle = self._get_n_closest_vehicles(self._fleet_state, request, 1)
             if len(best_vehicle) < 1:
                 # print("Dropped request at time {}".format(request.pickup_time))
                 continue

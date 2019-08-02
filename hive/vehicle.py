@@ -12,7 +12,7 @@ import math
 from hive import helpers as hlp
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive.constraints import ENV_PARAMS, VEH_PARAMS
+from hive.constraints import VEH_PARAMS
 from hive.utils import assert_constraint, initialize_log, write_log
 from hive.units import METERS_TO_MILES, HOURS_TO_SECONDS
 
@@ -103,6 +103,13 @@ class Vehicle:
                 'passengers'
                 ]
 
+    _FLEET_STATE_IDX = {
+        'x': 0,
+        'y': 1,
+        'active': 2,
+        'soc': 3,
+    }
+
     def __init__(
                 self,
                 veh_id,
@@ -115,7 +122,7 @@ class Vehicle:
                 charge_template,
                 logfile,
                 clock,
-                environment_params = dict(),
+                environment_params,
                 ):
 
         # Public Constants
@@ -128,14 +135,13 @@ class Vehicle:
         self.CHARGE_TEMPLATE = charge_template
 
         # Public variables
-        self.active = False
         self.base = None
         self.avail_time = None
         self.avail_seats = max_passengers
-        assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
-        self.soc = initial_soc
-        self.energy_remaining = battery_capacity * initial_soc
         self.history = []
+
+        assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
+        self._energy_kwh = battery_capacity * initial_soc
 
         self._logfile = logfile
 
@@ -156,11 +162,11 @@ class Vehicle:
             self.stats[stat] = 0
         self.stats['veh_id'] = veh_id
 
-        self.ENV = dict()
-        for param, val in environment_params.items():
-            assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
-            assert_constraint(param, val, ENV_PARAMS, context="Initialize Vehicle")
-            self.ENV[param] = val
+        self.ENV = environment_params
+        # for param, val in environment_params.items():
+        #     assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
+        #     assert_constraint(param, val, ENV_PARAMS, context="Initialize Vehicle")
+        #     self.ENV[param] = val
 
     @property
     def latlon(self):
@@ -185,9 +191,8 @@ class Vehicle:
 
     @x.setter
     def x(self, val):
-        #TODO: Add lookup for fleet state column
         self._x = val
-        self.fleet_state[self.ID, 0] = val
+        self._set_fleet_state('x', val)
 
     @property
     def y(self):
@@ -195,9 +200,37 @@ class Vehicle:
 
     @y.setter
     def y(self, val):
-        #TODO: Add lookup for fleet state column
-        self.fleet_state[self.ID, 1] = val
         self._y = val
+        self._set_fleet_state('y', val)
+
+    @property
+    def active(self):
+        col = self._FLEET_STATE_IDX['active']
+        return bool(self.fleet_state[self.ID, col])
+
+    @active.setter
+    def active(self, val):
+        assert type(val) is bool, "This variable must be boolean"
+        self._set_fleet_state('active', int(val))
+
+    @property
+    def soc(self):
+        col = self._FLEET_STATE_IDX['soc']
+        return self.fleet_state[self.ID, col]
+
+    @soc.setter
+    def soc(self, val):
+        raise NotImplementedError('Please do not update soc directly. Use energy_kwh.')
+
+    @property
+    def energy_kwh(self):
+        return self._energy_kwh
+
+    @energy_kwh.setter
+    def energy_kwh(self, val):
+        soc = val / self.BATTERY_CAPACITY
+        self._set_fleet_state('soc', soc)
+        self._energy_kwh = val
 
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
@@ -214,17 +247,33 @@ class Vehicle:
 
         write_log(self.stats, self._STATS, filepath)
 
-    def _update_location(self):
+    def _set_fleet_state(self, param, val):
+        col = self._FLEET_STATE_IDX[param]
+        self.fleet_state[self.ID, col] = val
+
+    def _distance(self, x0, y0, x1, y1):
+        return math.hypot(x1-x0, y1-y0) * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+
+    def _update_charge(self, dist_mi):
+        spd = self.ENV['DISPATCH_MPH']
+        lookup = self.WH_PER_MILE_LOOKUP
+        kwh__mi = (np.interp(spd, lookup['avg_spd_mph'], lookup['whmi']))/1000.0
+        energy_used_kwh = dist_mi * kwh__mi
+        self.energy_kwh -= energy_used_kwh
+
+    def _move(self):
         if self._route is not None:
             try:
                 time, location = next(self._route_iter)
+                new_x = location[0]
+                new_y = location[1]
                 assert(time == (self._clock.now+1))
-                self.x = location[0]
-                self.y = location[1]
+                dist_mi = self._distance(self.x, self.y, new_x, new_y)
+                self.x = new_x
+                self.y = new_y
             except StopIteration:
                 self._route = None
-                #TODO: Add lookup for fleet state column
-                self.fleet_state[self.ID, 2] = 1
+                self.active = True
 
     def _generate_route(self, x0, y0, x1, y1, trip_time_s, sim_time):
         steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
@@ -268,8 +317,7 @@ class Vehicle:
         del disp_route[-1]
         self._route = disp_route + trip_route
         self._route_iter = iter(self._route)
-        #TODO: Add lookup for fleet state column
-        self.fleet_state[self.ID, 2] = 0
+        self.active = False
         next(self._route_iter)
 
     def cmd_travel_to(self,
@@ -291,5 +339,5 @@ class Vehicle:
         next(self._route_iter)
 
     def step(self):
-        self._update_location()
+        self._move()
         self.history.append((self.x, self.y))

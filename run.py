@@ -22,6 +22,7 @@ from hive import reporting
 from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.dispatcher import Dispatcher
+from hive.constraints import ENV_PARAMS
 
 
 seed = 123
@@ -159,6 +160,9 @@ def run_simulation(data, sim_name, infile=None):
         'UPPER_SOC_THRESH_STATION': inputs['UPPER_SOC_THRESH_STATION'],
         'MAX_ALLOWABLE_IDLE_MINUTES': inputs['MAX_ALLOWABLE_IDLE_MINUTES'],
     }
+
+    for param, val in fleet_env_params.items():
+        utils.assert_constraint(param, val, ENV_PARAMS, context="Environment Parameters")
 
     vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
     fleet, fleet_state = initialize_fleet(vehicle_types = vehicle_types,
