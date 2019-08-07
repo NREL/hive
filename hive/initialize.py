@@ -140,8 +140,10 @@ def initialize_fleet(vehicle_types,
 
             veh.avail_time = start_time - datetime.timedelta(hours=1)
 
+            avg_kwh__mi = np.average(scaled_whmi_lookup['whmi']) / 1000
+
             veh_fleet.append(veh)
-            fleet_state_constructor.append((veh.x, veh.y, 1, initial_soc))
+            fleet_state_constructor.append((veh.x, veh.y, 1, 1, 0, initial_soc, avg_kwh__mi, veh.BATTERY_CAPACITY))
 
     #Initialize vehicle and summary logs
     initialize_log(veh._LOG_COLUMNS, vehicle_log_file)

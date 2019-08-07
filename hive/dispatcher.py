@@ -116,11 +116,11 @@ class Dispatcher:
             dist_to_nearest = INF
             for id in network.keys():
                 station = network[id]
-                dist_mi = hlp.estimate_vmt_2D(veh.x,
-                                               veh.y,
+                dist_mi = hlp.estimate_vmt_2D(vehicle.x,
+                                               vehicle.y,
                                                station.X,
                                                station.Y,
-                                               scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+                                               scaling_factor = vehicle.ENV['RN_SCALING_FACTOR'])
                 if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
                     nearest = station
@@ -134,18 +134,29 @@ class Dispatcher:
 
         return nearest, dist_to_nearest
 
-    def _get_n_closest_vehicles(self, fleet_state, request, n):
-        # Filter out non active vehicles
-        # TODO: Add lookup for fleet state to environment parameters.
-        mask = (fleet_state[:,2] == 1)
+    def _get_n_best_vehicles(self, fleet_state, request, n):
+        # TODO: Add mask for available seats in vehicle
         point = np.array([(request.pickup_x, request.pickup_y)])
         dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
         best_vehs_idx = np.argsort(dist)
+        dist_mask = dist < self._ENV['MAX_DISPATCH_MILES']
+
+        available_col = self._ENV['FLEET_STATE_IDX']['available']
+        available_mask = (fleet_state[:,available_col] == 1)
+
+        soc_col = self._ENV['FLEET_STATE_IDX']['soc']
+        KWH__MI_col = self._ENV['FLEET_STATE_IDX']['KWH__MI']
+        BATTERY_CAPACITY_KWH_col = self._ENV['FLEET_STATE_IDX']['BATTERY_CAPACITY_KWH']
+        min_soc_mask = (fleet_state[:, soc_col] \
+            - ((dist + request.distance_miles) * fleet_state[:, KWH__MI_col]) \
+            /fleet_state[:, BATTERY_CAPACITY_KWH_col] > self._ENV['MIN_ALLOWED_SOC'])
+
+        mask = dist_mask & available_mask & min_soc_mask
         return best_vehs_idx[mask[best_vehs_idx]][:n]
 
     def _dispatch_vehicles(self, requests):
         for request in requests.itertuples():
-            best_vehicle = self._get_n_closest_vehicles(self._fleet_state, request, 1)
+            best_vehicle = self._get_n_best_vehicles(self._fleet_state, request, 1)
             if len(best_vehicle) < 1:
                 # print("Dropped request at time {}".format(request.pickup_time))
                 continue
@@ -161,12 +172,30 @@ class Dispatcher:
                         trip_time_s=request.seconds)
 
     def _charge_vehicles(self):
-        mask = fleet_state[:, 3] < self._ENV['MIN_ALLOWED_SOC']
+        soc_col = self._ENV['FLEET_STATE_IDX']['soc']
+        available_col = self._ENV['FLEET_STATE_IDX']['available']
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        mask = (self._fleet_state[:, soc_col] < self._ENV['LOWER_SOC_THRESH_STATION']) \
+            & (self._fleet_state[:,available_col] == 1) & (self._fleet_state[:, active_col] == 1)
         vehicles = np.argwhere(mask)
-        for vehid in vehicles:
+
+        for veh in vehicles:
+            vehid = veh[0]
             vehicle = self._fleet[vehid]
-            station, dist = self._find_closest_plug(vehicle)
-            vehicle.cmd_charge(station, dist)
+            station, _ = self._find_closest_plug(vehicle)
+            vehicle.cmd_charge(station)
+
+    def _check_idle_vehicles(self):
+        idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
+        idle_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
+        vehicles = np.argwhere(idle_mask)
+
+        for veh in vehicles:
+            vehid = veh[0]
+            vehicle = self._fleet[vehid]
+            base, _ = self._find_closest_plug(vehicle, type='base')
+            vehicle.cmd_return_to_base(base)
+
 
 
     def process_requests(self, requests):
@@ -177,5 +206,6 @@ class Dispatcher:
         ------
         requests - one or many requests to distribute to the fleet.
         """
-        self._charge_vehilces(requests)
+        self._charge_vehicles()
         self._dispatch_vehicles(requests)
+        self._check_idle_vehicles()

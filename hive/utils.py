@@ -7,8 +7,9 @@ import csv
 import shutil
 
 class Clock:
-    def __init__(self):
+    def __init__(self, timestep_s):
         self.now = 0
+        self.TIMESTEP_S = timestep_s
     def __next__(self):
         self.now += 1
 

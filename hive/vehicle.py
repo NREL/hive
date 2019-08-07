@@ -12,9 +12,9 @@ import math
 from hive import helpers as hlp
 from hive import tripenergy as nrg
 from hive import charging as chrg
+from hive import units
 from hive.constraints import VEH_PARAMS
 from hive.utils import assert_constraint, initialize_log, write_log
-from hive.units import METERS_TO_MILES, HOURS_TO_SECONDS
 
 sys.path.append('..')
 from config import SIMULATION_PERIOD_SECONDS
@@ -103,12 +103,6 @@ class Vehicle:
                 'passengers'
                 ]
 
-    _FLEET_STATE_IDX = {
-        'x': 0,
-        'y': 1,
-        'active': 2,
-        'soc': 3,
-    }
 
     def __init__(
                 self,
@@ -135,8 +129,6 @@ class Vehicle:
         self.CHARGE_TEMPLATE = charge_template
 
         # Public variables
-        self.base = None
-        self.avail_time = None
         self.avail_seats = max_passengers
         self.history = []
 
@@ -153,6 +145,9 @@ class Vehicle:
         self._route_iter = None
 
         self._station = None
+        self._base = None
+
+        self._idle_counter = 0
 
         self._clock = clock
 
@@ -163,6 +158,8 @@ class Vehicle:
         for stat in self._STATS:
             self.stats[stat] = 0
         self.stats['veh_id'] = veh_id
+
+        self.activity = None
 
         self.ENV = environment_params
         # for param, val in environment_params.items():
@@ -207,7 +204,7 @@ class Vehicle:
 
     @property
     def active(self):
-        col = self._FLEET_STATE_IDX['active']
+        col = self.ENV['FLEET_STATE_IDX']['active']
         return bool(self.fleet_state[self.ID, col])
 
     @active.setter
@@ -216,8 +213,18 @@ class Vehicle:
         self._set_fleet_state('active', int(val))
 
     @property
+    def available(self):
+        col = self.ENV['FLEET_STATE_IDX']['available']
+        return bool(self.fleet_state[self.ID, col])
+
+    @available.setter
+    def available(self, val):
+        assert type(val) is bool, "This variable must be boolean"
+        self._set_fleet_state('available', int(val))
+
+    @property
     def soc(self):
-        col = self._FLEET_STATE_IDX['soc']
+        col = self.ENV['FLEET_STATE_IDX']['soc']
         return self.fleet_state[self.ID, col]
 
     @soc.setter
@@ -234,6 +241,15 @@ class Vehicle:
         self._set_fleet_state('soc', soc)
         self._energy_kwh = val
 
+    @property
+    def idle_min(self):
+        col = self.ENV['FLEET_STATE_IDX']['idle_min']
+        return self.fleet_state[self.ID, col]
+
+    @available.setter
+    def idle_min(self, val):
+        self._set_fleet_state('idle_min', int(val))
+
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
 
@@ -249,12 +265,13 @@ class Vehicle:
 
         write_log(self.stats, self._STATS, filepath)
 
+
     def _set_fleet_state(self, param, val):
-        col = self._FLEET_STATE_IDX[param]
+        col = self.ENV['FLEET_STATE_IDX'][param]
         self.fleet_state[self.ID, col] = val
 
     def _distance(self, x0, y0, x1, y1):
-        return math.hypot(x1-x0, y1-y0) * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+        return math.hypot(x1-x0, y1-y0) * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
 
     def _update_charge(self, dist_mi):
         spd = self.ENV['DISPATCH_MPH']
@@ -263,10 +280,19 @@ class Vehicle:
         energy_used_kwh = dist_mi * kwh__mi
         self.energy_kwh -= energy_used_kwh
 
+    def _update_idle(self):
+        if self.activity == 'Idle':
+            self._idle_counter += 1
+            self.idle_min = self._idle_counter * SIMULATION_PERIOD_SECONDS * units.SECONDS_TO_MINUTES
+        else:
+            self._idle_counter = 0
+            self.idle_min = 0
+
     def _move(self):
         if self._route is not None:
             try:
-                time, location = next(self._route_iter)
+                time, location, activity = next(self._route_iter)
+                self.activity = activity
                 new_x = location[0]
                 new_y = location[1]
                 assert(time == (self._clock.now+1))
@@ -276,19 +302,35 @@ class Vehicle:
                 self.y = new_y
             except StopIteration:
                 self._route = None
-                self.active = True
+                if self._station is None:
+                    self.available = True
+                self.activity = "Idle"
 
     def _charge(self):
         # Make sure we're not still traveling to charge station
         if self._route is None:
-            #TODO: add incremental charge for each timestep until soc is at 1
-            pass
+            self.activity = f"Charging at Station {self._station.ID}"
+            plug_power_kw = self._station.PLUG_POWER_KW
+            timestep_h = self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS
+            energy_gained_kwh = plug_power_kw * timestep_h
+            hyp_soc = (self._energy_kwh + energy_gained_kwh) / self.BATTERY_CAPACITY
+            if hyp_soc <= 1:
+                self.energy_kwh += energy_gained_kwh
+            else:
+                # Done charging,
+                if self._base is None:
+                    self.activity = "Idle"
+                else:
+                    self.activity = "Reserve"
+                self.available = True
+                self._station = None
 
 
-    def _generate_route(self, x0, y0, x1, y1, trip_time_s, sim_time):
+
+    def _generate_route(self, x0, y0, x1, y1, trip_time_s, sim_time, activity="NULL"):
         steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
         if steps <= 1:
-            return [(sim_time, (x0, y0)), (sim_time+1, (x1, y1))]
+            return [(sim_time, (x0, y0), activity), (sim_time+1, (x1, y1), activity)]
         route_range = np.arange(sim_time, sim_time + steps + 1)
         route = []
         for i, time in enumerate(route_range):
@@ -296,7 +338,7 @@ class Vehicle:
             xt = (1-t)*x0 + t*x1
             yt = (1-t)*y0 + t*y1
             point = (xt, yt)
-            route.append((int(time), point))
+            route.append((int(time), point, activity))
         return route
 
     def cmd_make_trip(self,
@@ -307,55 +349,102 @@ class Vehicle:
                  trip_dist_mi=None,
                  trip_time_s=None):
 
+        self.active = True
+        self.available = False
+        self._base = None
+        self._station = None
+
         current_sim_time = self._clock.now
         # print(f"Vehicle {self.ID} making trip from ({origin_x}, {origin_y}) to ({destination_x}, {destination_y})")
 
         if trip_dist_mi is None:
             trip_dist_mi = math.hypot(destination_x - origin_x, destination_y - origin_y)\
-                * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+                * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
         if trip_time_s is None:
-            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * HOURS_TO_SECONDS
+            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
         disp_dist_mi = math.hypot(origin_x - self.x, origin_y - self.y) \
-                * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
-        disp_time_s = (disp_dist_mi / self.ENV['DISPATCH_MPH']) * HOURS_TO_SECONDS
-        disp_route = self._generate_route(self.x, self.y, origin_x, origin_y, disp_time_s, current_sim_time)
+                * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+        disp_route = self._generate_route(
+                                    self.x,
+                                    self.y,
+                                    origin_x,
+                                    origin_y,
+                                    disp_time_s,
+                                    current_sim_time,
+                                    activity="Dispatch to Request")
 
         trip_sim_time = disp_route[-1][0]
-        trip_route = self._generate_route(origin_x, origin_y, destination_x, destination_y, trip_time_s, trip_sim_time)
+
+        trip_route = self._generate_route(
+                                    origin_x,
+                                    origin_y,
+                                    destination_x,
+                                    destination_y,
+                                    trip_time_s,
+                                    trip_sim_time,
+                                    activity="Serving Trip")
 
         del disp_route[-1]
         self._route = disp_route + trip_route
         self._route_iter = iter(self._route)
-        self.active = False
         next(self._route_iter)
 
     def cmd_travel_to(self,
                   destination_x,
                   destination_y,
                   trip_dist_mi=None,
-                  trip_time_s=None):
+                  trip_time_s=None,
+                  activity=None):
 
         current_sim_time = self._clock.now
 
         if trip_dist_mi is None:
             trip_dist_mi = math.hypot(destination_x - self.x, destination_y - self.y) \
-                    * METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+                    * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
         if trip_time_s is None:
-            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * HOURS_TO_SECONDS
+            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-        self._route = self.generate_route(self.x, self.y, destination_x, destination_y, trip_time_s, current_sim_time)
+        self._route = self._generate_route(
+                                    self.x,
+                                    self.y,
+                                    destination_x,
+                                    destination_y,
+                                    trip_time_s,
+                                    current_sim_time,
+                                    activity=activity)
+
         self._route_iter = iter(self._route)
         next(self._route_iter)
 
     def cmd_charge(self, station):
-        self.active = False
+        self.available = False
         self._station = station
-        self.cmd_travel_to(station.X, station.Y)
+        self.cmd_travel_to(station.X, station.Y, activity=f"Moving to Station {self._station.ID}")
+
+    def cmd_return_to_base(self, base):
+        self.active = False
+        self.available = True
+        self._base = base
+        self._station = base
+        self.cmd_travel_to(base.X, base.Y, activity=f"Moving to Base {self._base.ID}")
 
 
     def step(self):
         self._move()
+
         if self._station is not None:
             self._charge()
-        self.history.append((self.x, self.y, self.active, self.soc))
+
+        self._update_idle()
+
+        self.history.append((
+                    self.x,
+                    self.y,
+                    self.active,
+                    self.available,
+                    self.soc,
+                    self.activity,
+                    self._idle_counter,
+                    ))
