@@ -125,20 +125,20 @@ def run_simulation(data, sim_name, infile=None):
     inputs = data['main']
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
-    utils.build_output_dir(sim_name, OUT_PATH)
+    log_path, summary_path = utils.build_output_dir(sim_name, OUT_PATH)
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")
     reqs_df = data['requests']
     if cfg.VERBOSE: print("{} requests loaded".format(len(reqs_df)))
 
-    # #Filter requests where distance < min_miles
-    # reqs_df = pp.filter_short_distance_trips(reqs_df, min_miles=0.05)
-    # if cfg.VERBOSE: print("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
+    #Filter requests where distance < min_miles
+    reqs_df = pp.filter_short_distance_trips(reqs_df, min_miles=0.05)
+    if cfg.VERBOSE: print("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
     #
-    # #Filter requests where total time < min_time_s
-    # reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
-    # if cfg.VERBOSE: print("filtered requests violating min time req, {} remain".format(len(reqs_df)))
+    #Filter requests where total time < min_time_s
+    reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
+    if cfg.VERBOSE: print("filtered requests violating min time req, {} remain".format(len(reqs_df)))
     #
     # #Filter requests where pickup/dropoff location outside operating area
     # shp_file = inputs['OPERATING_AREA_SHP']
@@ -225,8 +225,15 @@ def run_simulation(data, sim_name, infile=None):
         print(f"Scenario: {scenario_name}, Time: {time_s} seconds", file=f)
 
     #
-    # for entry in fleet[0].history:
-    #     print(entry)
+    import csv
+    keys = fleet[0].history[0].keys()
+    for veh in fleet:
+        filename = os.path.join(log_path, f'veh_{veh.ID}_history.csv')
+        with open(filename, 'w') as f:
+            writer = csv.DictWriter(f, keys)
+            writer.writeheader()
+            writer.writerows(veh.history)
+
     #Calculate summary statistics
     # fleet = dispatcher.get_fleet()
     # reporting.calc_veh_stats(fleet, vehicle_summary_file)

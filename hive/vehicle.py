@@ -111,7 +111,6 @@ class Vehicle:
                 battery_capacity,
                 max_charge_acceptance,
                 max_passengers,
-                initial_soc,
                 whmi_lookup,
                 charge_template,
                 logfile,
@@ -131,9 +130,6 @@ class Vehicle:
         # Public variables
         self.avail_seats = max_passengers
         self.history = []
-
-        assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
-        self._energy_kwh = battery_capacity * initial_soc
 
         self._logfile = logfile
 
@@ -159,7 +155,7 @@ class Vehicle:
             self.stats[stat] = 0
         self.stats['veh_id'] = veh_id
 
-        self.activity = None
+        self.activity = "Idle"
 
         self.ENV = environment_params
         # for param, val in environment_params.items():
@@ -291,11 +287,10 @@ class Vehicle:
     def _move(self):
         if self._route is not None:
             try:
-                time, location, activity = next(self._route_iter)
+                location, activity = next(self._route_iter)
                 self.activity = activity
                 new_x = location[0]
                 new_y = location[1]
-                assert(time == (self._clock.now+1))
                 dist_mi = self._distance(self.x, self.y, new_x, new_y)
                 self._update_charge(dist_mi)
                 self.x = new_x
@@ -327,18 +322,18 @@ class Vehicle:
 
 
 
-    def _generate_route(self, x0, y0, x1, y1, trip_time_s, sim_time, activity="NULL"):
+    def _generate_route(self, x0, y0, x1, y1, trip_time_s, activity="NULL"):
         steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
         if steps <= 1:
-            return [(sim_time, (x0, y0), activity), (sim_time+1, (x1, y1), activity)]
-        route_range = np.arange(sim_time, sim_time + steps + 1)
+            return [((x0, y0), activity), ((x1, y1), activity)]
+        route_range = np.arange(0, steps + 1)
         route = []
         for i, time in enumerate(route_range):
             t = i/steps
             xt = (1-t)*x0 + t*x1
             yt = (1-t)*y0 + t*y1
             point = (xt, yt)
-            route.append((int(time), point, activity))
+            route.append((point, activity))
         return route
 
     def cmd_make_trip(self,
@@ -347,7 +342,8 @@ class Vehicle:
                  destination_x,
                  destination_y,
                  trip_dist_mi=None,
-                 trip_time_s=None):
+                 trip_time_s=None,
+                 route=None):
 
         self.active = True
         self.available = False
@@ -372,19 +368,18 @@ class Vehicle:
                                     origin_x,
                                     origin_y,
                                     disp_time_s,
-                                    current_sim_time,
                                     activity="Dispatch to Request")
 
-        trip_sim_time = disp_route[-1][0]
-
-        trip_route = self._generate_route(
-                                    origin_x,
-                                    origin_y,
-                                    destination_x,
-                                    destination_y,
-                                    trip_time_s,
-                                    trip_sim_time,
-                                    activity="Serving Trip")
+        if route is not None:
+            trip_route = [(p, "Serving Trip") for p in route]
+        else:
+            trip_route = self._generate_route(
+                                        origin_x,
+                                        origin_y,
+                                        destination_x,
+                                        destination_y,
+                                        trip_time_s,
+                                        activity="Serving Trip")
 
         del disp_route[-1]
         self._route = disp_route + trip_route
@@ -412,7 +407,6 @@ class Vehicle:
                                     destination_x,
                                     destination_y,
                                     trip_time_s,
-                                    current_sim_time,
                                     activity=activity)
 
         self._route_iter = iter(self._route)
@@ -439,12 +433,12 @@ class Vehicle:
 
         self._update_idle()
 
-        self.history.append((
-                    self.x,
-                    self.y,
-                    self.active,
-                    self.available,
-                    self.soc,
-                    self.activity,
-                    self._idle_counter,
-                    ))
+        self.history.append({
+                    'sim_time': self._clock.now,
+                    'position_x': self.x,
+                    'position_y': self.y,
+                    'active': self.active,
+                    'available': self.available,
+                    'soc': self.soc,
+                    'activity': self.activity,
+                    })

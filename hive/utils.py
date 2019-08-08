@@ -42,8 +42,11 @@ def build_output_dir(scenario_name, root_path):
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
     os.makedirs(scenario_output)
-    os.makedirs(os.path.join(scenario_output, 'logs'))
-    os.makedirs(os.path.join(scenario_output, 'summaries'))
+    log_path = os.path.join(scenario_output, 'logs')
+    summary_path = os.path.join(scenario_output, 'summaries')
+    os.makedirs(log_path)
+    os.makedirs(summary_path)
+    return log_path, summary_path
 
 def assert_constraint(param, val, CONSTRAINTS, context=""):
     """

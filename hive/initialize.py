@@ -121,7 +121,6 @@ def initialize_fleet(vehicle_types,
                         battery_capacity = veh_type.BATTERY_CAPACITY_KWH,
                         max_charge_acceptance = veh_type.MAX_KW_ACCEPTANCE,
                         max_passengers = veh_type.PASSENGERS,
-                        initial_soc = initial_soc,
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,
                         logfile = vehicle_log_file,
@@ -150,5 +149,9 @@ def initialize_fleet(vehicle_types,
     initialize_log(veh._STATS, vehicle_summary_file)
 
     fleet_state = np.array(fleet_state_constructor)
+
+    for veh in veh_fleet:
+        veh.fleet_state = fleet_state
+        veh.energy_kwh = np.random.uniform(0.05, 1.0) * veh.BATTERY_CAPACITY
 
     return veh_fleet, fleet_state
