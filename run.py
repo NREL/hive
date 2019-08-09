@@ -226,13 +226,19 @@ def run_simulation(data, sim_name, infile=None):
 
     #
     import csv
-    keys = fleet[0].history[0].keys()
-    for veh in fleet:
-        filename = os.path.join(log_path, f'veh_{veh.ID}_history.csv')
-        with open(filename, 'w') as f:
-            writer = csv.DictWriter(f, keys)
-            writer.writeheader()
-            writer.writerows(veh.history)
+    # keys = fleet[0].history[0].keys()
+    # for veh in fleet:
+    #     filename = os.path.join(log_path, f'veh_{veh.ID}_history.csv')
+    #     with open(filename, 'w') as f:
+    #         writer = csv.DictWriter(f, keys)
+    #         writer.writeheader()
+    #         writer.writerows(veh.history)
+    keys = dispatcher.history[0].keys()
+    filename = os.path.join(log_path, 'dispatcher_log.csv')
+    with open(filename, 'w') as f:
+        writer = csv.DictWriter(f, keys)
+        writer.writeheader()
+        writer.writerows(dispatcher.history)
 
     #Calculate summary statistics
     # fleet = dispatcher.get_fleet()

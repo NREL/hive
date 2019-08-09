@@ -79,6 +79,9 @@ class Dispatcher:
         self._bases = bases
         self._logfile = failed_requests_log
 
+        self.history = []
+        self._dropped_requests = 0
+
         self._ENV = env_params
 
         self.stats = {}
@@ -155,11 +158,12 @@ class Dispatcher:
         return best_vehs_idx[mask[best_vehs_idx]][:n]
 
     def _dispatch_vehicles(self, requests):
+        self._dropped_requests = 0
         for request in requests.itertuples():
             best_vehicle = self._get_n_best_vehicles(self._fleet_state, request, 1)
             if len(best_vehicle) < 1:
                 # print("Dropped request at time {}".format(request.pickup_time))
-                continue
+                self._dropped_requests += 1
             else:
                 vehid = best_vehicle[0]
                 veh = self._fleet[vehid]
@@ -210,3 +214,8 @@ class Dispatcher:
         self._charge_vehicles()
         self._dispatch_vehicles(requests)
         self._check_idle_vehicles()
+
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        active_vehicles = self._fleet_state[:, active_col].sum()
+
+        self.history.append({'active_vehicles': active_vehicles, 'dropped_requests': self._dropped_requests})
