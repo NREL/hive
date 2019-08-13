@@ -1,5 +1,6 @@
 import os
 from distutils.dir_util import copy_tree
+from shutil import copyfile
 import subprocess
 import sys
 
@@ -19,7 +20,8 @@ def setup():
             )
     if not os.path.exists('config.py'):
         clean_msg('Setting up config files..')
-        subprocess.run('cp .config.default.py config.py', shell=True)
+        copyfile('.config.default.py', 'config.py') #os-agnostic cp
+        #subprocess.run('cp .config.default.py config.py', shell=True)
     else:
         print('config.py already exists')
         ans = input('Update config file with default values? (y/[n]) ').lower()
@@ -27,7 +29,8 @@ def setup():
             ans = input('please input y/n ')
         if ans == 'y':
             print('Updating config file..')
-            subprocess.run('cp {} {}'.format(default_config_path, config_path), shell=True)
+            copyfile('.config.default.py', 'config.py')
+            #subprocess.run('cp {} {}'.format(default_config_path, config_path), shell=True)
         print()
 
     #TODO: Make environment setup more robust for cross platform deployment.
