@@ -95,11 +95,13 @@ def initialize_fleet(vehicle_types,
                         charge_curve,
                         whmi_lookup,
                         start_time,
+                        clock,
                         env_params,
                         vehicle_log_file,
                         vehicle_summary_file):
-    id = 1
+    id = 0
     veh_fleet = []
+    fleet_state_constructor = []
     for veh_type in vehicle_types:
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curve,
@@ -112,18 +114,20 @@ def initialize_fleet(vehicle_types,
                                     )
 
         for _ in range(veh_type.NUM_VEHICLES):
+            initial_soc = np.random.uniform(0.05, 1.0)
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
                         battery_capacity = veh_type.BATTERY_CAPACITY_KWH,
                         max_charge_acceptance = veh_type.MAX_KW_ACCEPTANCE,
                         max_passengers = veh_type.PASSENGERS,
-                        initial_soc = np.random.uniform(0.05, 1.0), #init vehs w/ uniform soc distr
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,
                         logfile = vehicle_log_file,
+                        clock = clock,
                         environment_params = env_params,
                         )
+
             id += 1
 
             #Initialize vehicle location to a random base
@@ -135,11 +139,19 @@ def initialize_fleet(vehicle_types,
 
             veh.avail_time = start_time - datetime.timedelta(hours=1)
 
+            avg_kwh__mi = np.average(scaled_whmi_lookup['whmi']) / 1000
+
             veh_fleet.append(veh)
+            fleet_state_constructor.append((veh.x, veh.y, 1, 1, 0, initial_soc, avg_kwh__mi, veh.BATTERY_CAPACITY))
 
     #Initialize vehicle and summary logs
     initialize_log(veh._LOG_COLUMNS, vehicle_log_file)
     initialize_log(veh._STATS, vehicle_summary_file)
 
-    random.shuffle(veh_fleet)
-    return veh_fleet
+    fleet_state = np.array(fleet_state_constructor)
+
+    for veh in veh_fleet:
+        veh.fleet_state = fleet_state
+        veh.energy_kwh = np.random.uniform(0.05, 1.0) * veh.BATTERY_CAPACITY
+
+    return veh_fleet, fleet_state

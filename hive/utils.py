@@ -6,6 +6,13 @@ import pickle
 import csv
 import shutil
 
+class Clock:
+    def __init__(self, timestep_s):
+        self.now = 0
+        self.TIMESTEP_S = timestep_s
+    def __next__(self):
+        self.now += 1
+
 def save_to_hdf(data, outfile):
     for key, val in data.items():
         val.to_hdf(outfile, key=key)
@@ -35,8 +42,11 @@ def build_output_dir(scenario_name, root_path):
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
     os.makedirs(scenario_output)
-    os.makedirs(os.path.join(scenario_output, 'logs'))
-    os.makedirs(os.path.join(scenario_output, 'summaries'))
+    log_path = os.path.join(scenario_output, 'logs')
+    summary_path = os.path.join(scenario_output, 'summaries')
+    os.makedirs(log_path)
+    os.makedirs(summary_path)
+    return log_path, summary_path
 
 def assert_constraint(param, val, CONSTRAINTS, context=""):
     """
