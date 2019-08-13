@@ -45,11 +45,23 @@ def calc_fleet_stats(output_file, vehicle_summary_file, reqs_df):
     fleet_stats['min_request_vmt'] = float(veh_stats_df['request_vmt'].min())
     fleet_stats['std_request_vmt'] = veh_stats_df['request_vmt'].std()
 
-    fleet_stats['fleet_dispatch_vmt'] = float(veh_stats_df['dispatch_vmt'].sum())
-    fleet_stats['mean_dispatch_vmt'] = veh_stats_df['dispatch_vmt'].mean()
-    fleet_stats['max_dispatch_vmt'] = float(veh_stats_df['dispatch_vmt'].max())
-    fleet_stats['min_dispatch_vmt'] = float(veh_stats_df['dispatch_vmt'].min())
-    fleet_stats['std_dispatch_vmt'] = veh_stats_df['dispatch_vmt'].std()
+    fleet_stats['fleet_dispatch_request_vmt'] = float(veh_stats_df['dispatch_request_vmt'].sum())
+    fleet_stats['mean_dispatch_request_vmt'] = veh_stats_df['dispatch_request_vmt'].mean()
+    fleet_stats['max_dispatch_request_vmt'] = float(veh_stats_df['dispatch_request_vmt'].max())
+    fleet_stats['min_dispatch_request_vmt'] = float(veh_stats_df['dispatch_request_vmt'].min())
+    fleet_stats['std_dispatch_request_vmt'] = veh_stats_df['dispatch_request_vmt'].std()
+
+    fleet_stats['fleet_dispatch_station_refuel_vmt'] = float(veh_stats_df['dispatch_station_refuel_vmt'].sum())
+    fleet_stats['mean_dispatch_station_refuel_vmt'] = veh_stats_df['dispatch_station_refuel_vmt'].mean()
+    fleet_stats['max_dispatch_station_refuel_vmt'] = float(veh_stats_df['dispatch_station_refuel_vmt'].max())
+    fleet_stats['min_dispatch_station_refuel_vmt'] = float(veh_stats_df['dispatch_station_refuel_vmt'].min())
+    fleet_stats['std_dispatch_station_refuel_vmt'] = veh_stats_df['dispatch_station_refuel_vmt'].std()
+
+    fleet_stats['fleet_dispatch_base_refuel_vmt'] = float(veh_stats_df['dispatch_base_refuel_vmt'].sum())
+    fleet_stats['mean_dispatch_base_refuel_vmt'] = veh_stats_df['dispatch_base_refuel_vmt'].mean()
+    fleet_stats['max_dispatch_base_refuel_vmt'] = float(veh_stats_df['dispatch_base_refuel_vmt'].max())
+    fleet_stats['min_dispatch_base_refuel_vmt'] = float(veh_stats_df['dispatch_base_refuel_vmt'].min())
+    fleet_stats['std_dispatch_base_refuel_vmt'] = veh_stats_df['dispatch_base_refuel_vmt'].std()
 
     fleet_stats['fleet_total_vmt'] = float(veh_stats_df['total_vmt'].sum())
     fleet_stats['mean_total_vmt'] = veh_stats_df['total_vmt'].mean()

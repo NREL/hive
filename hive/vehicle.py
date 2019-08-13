@@ -42,20 +42,6 @@ class Vehicle:
         Current battery state of charge
     avail_seats: int
         Current number of seats available
-    trip_vmt: double precision
-        Miles traveled serving ride requests
-    dispatch_vmt: double precision
-        Miles traveled dispatching to pickup locations
-    total_vmt: double precision
-        Total miles traveled
-    requests_filled: int
-        Total requests filled
-    passengers_delivered: int
-        Total passengers delivered
-    refuel_cnt: int
-        Number of refuel events
-    idle_s: double precision
-        Seconds where a vehicle is not serving a request or dispatching to request
     active: boolean
         Boolean indicator for whether a veh is actively servicing demand. If
         False, vehicle is sitting at a base
@@ -66,7 +52,9 @@ class Vehicle:
     _STATS = [
             'veh_id',
             'request_vmt',
-            'dispatch_vmt',
+            'dispatch_request_vmt',
+            'dispatch_base_refuel_vmt',
+            'dispatch_station_refuel_vmt',
             'total_vmt',
             'requests_filled',
             'passengers_delivered',
@@ -74,13 +62,15 @@ class Vehicle:
             'station_refuel_cnt',
             'base_refuel_s',
             'station_refuel_s',
-            'refuel_energy_kwh',
             'idle_s',
-            'dispatch_s',
+            'dispatch_request_s',
+            'dispatch_base_refuel_s',
+            'dispatch_station_refuel_s',
             'base_reserve_s',
             'request_s',
+            'refuel_energy_kwh',
             'end_soc',
-            'pct_time_trip',
+            'pct_time_trip'
             ]
 
     _LOG_COLUMNS = [
@@ -191,8 +181,11 @@ class Vehicle:
         self.stats['end_soc'] = self.soc
 
         try:
-            self.stats['pct_time_trip'] = self.stats['request_s'] / (self.stats['station_refuel_s'] \
-                + self.stats['idle_s'] + self.stats['dispatch_s'] + self.stats['request_s'] + self.stats['base_refuel_s'])
+            self.stats['pct_time_trip'] = self.stats['request_s'] / (self.stats['base_refuel_s'] \
+                + self.stats['station_refuel_s'] + self.stats['idle_s'] + self.stats['dispatch_request_s'] \
+                + self.stats['dispatch_base_refuel_s'] + self.stats['dispatch_station_refuel_s'] \
+                + self.stats['base_reserve_s'] + self.stats['request_s'])
+            
         except ZeroDivisionError:
             self.stats['pct_time_trip'] = 0
 
@@ -306,9 +299,9 @@ class Vehicle:
             self._LOG_COLUMNS,
             self._logfile)
 
-            self.stats['dispatch_vmt']+=disp_dist_mi
+            self.stats['dispatch_request_vmt']+=disp_dist_mi
             self.stats['total_vmt']+=disp_dist_mi
-            self.stats['dispatch_s']+=disp_time_s
+            self.stats['dispatch_request_s']+=disp_time_s
 
             # 3. Add request
             self.energy_remaining-=req_energy_kwh
@@ -405,9 +398,9 @@ class Vehicle:
             self._LOG_COLUMNS,
             self._logfile)
 
-            self.stats['dispatch_vmt']+=disp_dist_mi
+            self.stats['dispatch_request_vmt']+=disp_dist_mi
             self.stats['total_vmt']+=disp_dist_mi
-            self.stats['dispatch_s']+=disp_time_s
+            self.stats['dispatch_request_s']+=disp_time_s
 
             # 3. Add request
             self.energy_remaining-=req_energy_kwh
@@ -489,8 +482,8 @@ class Vehicle:
             self._LOG_COLUMNS,
             self._logfile)
 
-        self.stats['dispatch_s'] += disp_s
-        self.stats['dispatch_vmt'] += disp_mi
+        self.stats['dispatch_station_refuel_s'] += disp_s
+        self.stats['dispatch_station_refuel_vmt'] += disp_mi
         self.stats['total_vmt'] += disp_mi
         self.avail_time = disp_end
         self.latlon = (station.LAT, station.LON)
@@ -619,8 +612,8 @@ class Vehicle:
             self._LOG_COLUMNS,
             self._logfile)
 
-        self.stats['dispatch_s'] += disp_s
-        self.stats['dispatch_vmt'] += disp_mi
+        self.stats['dispatch_base_refuel_s'] += disp_s
+        self.stats['dispatch_base_refuel_vmt'] += disp_mi
         self.stats['total_vmt'] += disp_mi
         self.active = False
         self.base = base
