@@ -129,6 +129,7 @@ class Vehicle:
 
         self._route = None
         self._route_iter = None
+        self._step_distance = 0
 
         self._station = None
         self._base = None
@@ -280,12 +281,12 @@ class Vehicle:
     def _move(self):
         if self._route is not None:
             try:
-                location, activity = next(self._route_iter)
+                location, dist_mi, activity = next(self._route_iter)
                 self.activity = activity
                 new_x = location[0]
                 new_y = location[1]
-                dist_mi = self._distance(self.x, self.y, new_x, new_y)
                 self._update_charge(dist_mi)
+                self._step_distance = dist_mi
                 self.x = new_x
                 self.y = new_y
             except StopIteration:
@@ -293,11 +294,14 @@ class Vehicle:
                 if self._station is None:
                     self.available = True
                 self.activity = "Idle"
+                self._step_distance = 0
+        else:
+            self._step_distance = 0
 
     def _charge(self):
         # Make sure we're not still traveling to charge station
         if self._route is None:
-            self.activity = f"Charging at Station {self._station.ID}"
+            self.activity = f"Charging at Station"
             plug_power_kw = self._station.PLUG_POWER_KW
             timestep_h = self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS
             energy_gained_kwh = plug_power_kw * timestep_h
@@ -315,10 +319,11 @@ class Vehicle:
 
 
 
-    def _generate_route(self, x0, y0, x1, y1, trip_time_s, activity="NULL"):
+    def _generate_route(self, x0, y0, x1, y1, trip_dist_mi, trip_time_s, activity="NULL"):
         steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
         if steps <= 1:
-            return [((x0, y0), activity), ((x1, y1), activity)]
+            return [((x0, y0), trip_dist_mi, activity), ((x1, y1), trip_dist_mi, activity)]
+        step_distance_mi = trip_dist_mi/steps
         route_range = np.arange(0, steps + 1)
         route = []
         for i, time in enumerate(route_range):
@@ -326,8 +331,34 @@ class Vehicle:
             xt = (1-t)*x0 + t*x1
             yt = (1-t)*y0 + t*y1
             point = (xt, yt)
-            route.append((point, activity))
+            route.append((point, step_distance_mi, activity))
         return route
+
+    def _log(self):
+        if self._station is None:
+            station = None
+        else:
+            station = self._station.ID
+
+        if self._base is None:
+            base = None
+        else:
+            base = self._base.ID
+
+
+        self.history.append({
+                    'ID': self.ID,
+                    'sim_time': self._clock.now,
+                    'position_x': self.x,
+                    'position_y': self.y,
+                    'step_distance_mi': self._step_distance,
+                    'active': self.active,
+                    'available': self.available,
+                    'soc': self.soc,
+                    'activity': self.activity,
+                    'station': station,
+                    'base': base,
+                    })
 
     def cmd_make_trip(self,
                  origin_x,
@@ -360,10 +391,13 @@ class Vehicle:
                                     self.y,
                                     origin_x,
                                     origin_y,
+                                    disp_dist_mi,
                                     disp_time_s,
                                     activity="Dispatch to Request")
 
         if route is not None:
+            #TODO: Add distance to route.
+            raise NotImplementedError("Routing not implemented yet.")
             trip_route = [(p, "Serving Trip") for p in route]
         else:
             trip_route = self._generate_route(
@@ -371,6 +405,7 @@ class Vehicle:
                                         origin_y,
                                         destination_x,
                                         destination_y,
+                                        trip_dist_mi,
                                         trip_time_s,
                                         activity="Serving Trip")
 
@@ -399,6 +434,7 @@ class Vehicle:
                                     self.y,
                                     destination_x,
                                     destination_y,
+                                    trip_dist_mi,
                                     trip_time_s,
                                     activity=activity)
 
@@ -408,14 +444,14 @@ class Vehicle:
     def cmd_charge(self, station):
         self.available = False
         self._station = station
-        self.cmd_travel_to(station.X, station.Y, activity=f"Moving to Station {self._station.ID}")
+        self.cmd_travel_to(station.X, station.Y, activity=f"Moving to Station")
 
     def cmd_return_to_base(self, base):
         self.active = False
         self.available = True
         self._base = base
         self._station = base
-        self.cmd_travel_to(base.X, base.Y, activity=f"Moving to Base {self._base.ID}")
+        self.cmd_travel_to(base.X, base.Y, activity=f"Moving to Base")
 
 
     def step(self):
@@ -426,12 +462,4 @@ class Vehicle:
 
         self._update_idle()
 
-        self.history.append({
-                    'sim_time': self._clock.now,
-                    'position_x': self.x,
-                    'position_y': self.y,
-                    'active': self.active,
-                    'available': self.available,
-                    'soc': self.soc,
-                    'activity': self.activity,
-                    })
+        self._log()

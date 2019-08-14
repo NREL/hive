@@ -174,7 +174,8 @@ class Dispatcher:
                         request.dropoff_y,
                         trip_dist_mi=request.distance_miles,
                         trip_time_s=request.seconds,
-                        route=request.route_utm)
+                        # route=request.route_utm)
+                        )
 
     def _charge_vehicles(self):
         soc_col = self._ENV['FLEET_STATE_IDX']['soc']

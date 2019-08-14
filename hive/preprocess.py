@@ -37,6 +37,7 @@ def load_requests(reqs_file):
         assert len(reqs_df) > 0, "No requests in file!"
 
         #check for existence of req fields
+        #TODO: Make route optional
         req_fields = [
         'pickup_time',
         'dropoff_time',
@@ -45,7 +46,7 @@ def load_requests(reqs_file):
         'pickup_lon',
         'dropoff_lat',
         'dropoff_lon',
-        'route_utm',
+        # 'route_utm',
         ]
 
         for field in req_fields:
@@ -94,7 +95,7 @@ def load_requests(reqs_file):
         reqs_df['dropoff_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)
         reqs_df['dropoff_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[1], axis=1)
 
-        reqs_df['route_utm'] = reqs_df.route_utm.apply(lambda x: eval(x))
+        # reqs_df['route_utm'] = reqs_df.route_utm.apply(lambda x: eval(x))
 
 
         #check data type of 'passengers' field
