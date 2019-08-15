@@ -140,6 +140,6 @@ class FuelStation:
             self._LOG_COLUMNS,
             self._logfile)
 
-        self.avail_plugs-=1
+        # self.avail_plugs-=1
         self.stats['charge_cnt']+=1
         self.stats['total_energy_kwh']+=total_energy_kwh
