@@ -53,46 +53,6 @@ class Vehicle:
     _base: dict
         Lookup for base charging information.
     """
-    # statistics tracked on a vehicle instance level over entire simulation.
-    _STATS = [
-            'veh_id',
-            'request_vmt',
-            'dispatch_request_vmt',
-            'dispatch_base_refuel_vmt',
-            'dispatch_station_refuel_vmt',
-            'total_vmt',
-            'requests_filled',
-            'passengers_delivered',
-            'base_refuel_cnt',
-            'station_refuel_cnt',
-            'base_refuel_s',
-            'station_refuel_s',
-            'idle_s',
-            'dispatch_request_s',
-            'dispatch_base_refuel_s',
-            'dispatch_station_refuel_s',
-            'base_reserve_s',
-            'request_s',
-            'refuel_energy_kwh',
-            'end_soc',
-            'pct_time_trip'
-            ]
-
-    _LOG_COLUMNS = [
-                'veh_id',
-                'activity',
-                'start_time',
-                'start_lat',
-                'start_lon',
-                'end_time',
-                'end_lat',
-                'end_lon',
-                'dist_mi',
-                'start_soc',
-                'end_soc',
-                'passengers'
-                ]
-
 
     def __init__(
                 self,
@@ -103,7 +63,6 @@ class Vehicle:
                 max_passengers,
                 whmi_lookup,
                 charge_template,
-                logfile,
                 clock,
                 environment_params,
                 ):
@@ -121,8 +80,6 @@ class Vehicle:
         self.avail_seats = max_passengers
         self.history = []
 
-        self._logfile = logfile
-
         # Postition variables
         self._x = None
         self._y = None
@@ -139,12 +96,6 @@ class Vehicle:
         self._clock = clock
 
         self.fleet_state = None
-
-        # Init reporting
-        self.stats = dict()
-        for stat in self._STATS:
-            self.stats[stat] = 0
-        self.stats['veh_id'] = veh_id
 
         self.activity = "Idle"
 
@@ -240,21 +191,31 @@ class Vehicle:
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
 
+    def _log(self):
+        if self._station is None:
+            station = None
+        else:
+            station = self._station.ID
 
-    def dump_stats(self, filepath):
-        self.stats['end_soc'] = self.soc
+        if self._base is None:
+            base = None
+        else:
+            base = self._base.ID
 
-        try:
-            self.stats['pct_time_trip'] = self.stats['request_s'] / (self.stats['base_refuel_s'] \
-                + self.stats['station_refuel_s'] + self.stats['idle_s'] + self.stats['dispatch_request_s'] \
-                + self.stats['dispatch_base_refuel_s'] + self.stats['dispatch_station_refuel_s'] \
-                + self.stats['base_reserve_s'] + self.stats['request_s'])
 
-        except ZeroDivisionError:
-            self.stats['pct_time_trip'] = 0
-
-        write_log(self.stats, self._STATS, filepath)
-
+        self.history.append({
+                    'ID': self.ID,
+                    'sim_time': self._clock.now,
+                    'position_x': self.x,
+                    'position_y': self.y,
+                    'step_distance_mi': self._step_distance,
+                    'active': self.active,
+                    'available': self.available,
+                    'soc': self.soc,
+                    'activity': self.activity,
+                    'station': station,
+                    'base': base,
+                    })
 
     def _set_fleet_state(self, param, val):
         col = self.ENV['FLEET_STATE_IDX'][param]
@@ -334,31 +295,6 @@ class Vehicle:
             route.append((point, step_distance_mi, activity))
         return route
 
-    def _log(self):
-        if self._station is None:
-            station = None
-        else:
-            station = self._station.ID
-
-        if self._base is None:
-            base = None
-        else:
-            base = self._base.ID
-
-
-        self.history.append({
-                    'ID': self.ID,
-                    'sim_time': self._clock.now,
-                    'position_x': self.x,
-                    'position_y': self.y,
-                    'step_distance_mi': self._step_distance,
-                    'active': self.active,
-                    'available': self.available,
-                    'soc': self.soc,
-                    'activity': self.activity,
-                    'station': station,
-                    'base': base,
-                    })
 
     def cmd_make_trip(self,
                  origin_x,

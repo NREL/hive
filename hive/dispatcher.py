@@ -4,7 +4,6 @@ vehicle dispatching, and DCFC station/base selection.
 """
 
 import datetime
-import sys
 import numpy as np
 
 from hive import tripenergy as nrg
@@ -12,9 +11,6 @@ from hive import charging as chrg
 from hive import helpers as hlp
 from hive.utils import write_log
 from hive.units import METERS_TO_MILES
-
-sys.path.append('..')
-import config as cfg
 
 class Dispatcher:
     """
@@ -29,33 +25,7 @@ class Dispatcher:
     -------
 
     """
-    _STATS = [
-        'failure_active_max_dispatch',
-        'failure_active_time',
-        'failure_active_battery',
-        'failure_active_occupancy',
-        'failure_inactive_time',
-        'failure_inactive_battery',
-        'failure_inactive_occupancy'
-    ]
 
-    _LOG_COLUMNS = [
-        'pickup_time',
-        'dropoff_time',
-        'distance_miles',
-        'pickup_lat',
-        'pickup_lon',
-        'dropoff_lat',
-        'dropoff_lon',
-        'passengers',
-        'failure_active_max_dispatch',
-        'failure_active_time',
-        'failure_active_battery',
-        'failure_active_occupancy',
-        'failure_inactive_time',
-        'failure_inactive_battery',
-        'failure_inactive_occupancy'
-        ]
 
     def __init__(
                 self,
@@ -65,7 +35,6 @@ class Dispatcher:
                 bases,
                 env_params,
                 clock,
-                failed_requests_log
                 ):
 
         self._fleet = fleet
@@ -77,23 +46,24 @@ class Dispatcher:
 
         self._stations = stations
         self._bases = bases
-        self._logfile = failed_requests_log
 
         self.history = []
         self._dropped_requests = 0
 
         self._ENV = env_params
 
-        self.stats = {}
-        for stat in self._STATS:
-            self.stats[stat] = 0
 
-    def _reset_failure_tracking(self):
-        """
-        Resets internal failure type tracking log.
-        """
-        for stat in self._STATS:
-            self.stats[stat] = 0
+    def _log(self):
+
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        active_vehicles = self._fleet_state[:, active_col].sum()
+
+        self.history.append({
+                        'sim_time': self._clock.now,
+                        'active_vehicles': active_vehicles,
+                        'dropped_requests': self._dropped_requests,
+                        })
+
 
     def _find_closest_plug(self, vehicle, type='station'):
         """
@@ -215,8 +185,4 @@ class Dispatcher:
         self._charge_vehicles()
         self._dispatch_vehicles(requests)
         self._check_idle_vehicles()
-
-        active_col = self._ENV['FLEET_STATE_IDX']['active']
-        active_vehicles = self._fleet_state[:, active_col].sum()
-
-        self.history.append({'active_vehicles': active_vehicles, 'dropped_requests': self._dropped_requests})
+        self._log()

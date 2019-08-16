@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 import random
 import datetime
@@ -9,7 +10,7 @@ from hive.stations import FuelStation
 from hive.vehicle import Vehicle
 from hive.utils import initialize_log
 
-def initialize_stations(station_df, station_log_file):
+def initialize_stations(station_df):
     """
     Initializes stations dict from DataFrame.
 
@@ -42,14 +43,12 @@ def initialize_stations(station_df, station_log_file):
                               plugs,
                               plug_type,
                               plug_power,
-                              station_log_file)
+                              )
         stations[station_id] = station
-
-    initialize_log(station._LOG_COLUMNS, station_log_file)
 
     return stations
 
-def initialize_bases(base_df, base_log_file):
+def initialize_bases(base_df):
     """
     Initializes bases dict from DataFrame.
 
@@ -82,10 +81,8 @@ def initialize_bases(base_df, base_log_file):
                                plugs,
                                plug_type,
                                plug_power,
-                               base_log_file)
+                               )
         bases[base_id] = base
-
-    initialize_log(base._LOG_COLUMNS, base_log_file)
 
     return bases
 
@@ -95,10 +92,9 @@ def initialize_fleet(vehicle_types,
                         charge_curve,
                         whmi_lookup,
                         start_time,
-                        clock,
                         env_params,
-                        vehicle_log_file,
-                        vehicle_summary_file):
+                        clock,
+                        ):
     id = 0
     veh_fleet = []
     fleet_state_constructor = []
@@ -123,7 +119,6 @@ def initialize_fleet(vehicle_types,
                         max_passengers = veh_type.PASSENGERS,
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,
-                        logfile = vehicle_log_file,
                         clock = clock,
                         environment_params = env_params,
                         )
@@ -143,10 +138,6 @@ def initialize_fleet(vehicle_types,
 
             veh_fleet.append(veh)
             fleet_state_constructor.append((veh.x, veh.y, 1, 1, 0, initial_soc, avg_kwh__mi, veh.BATTERY_CAPACITY))
-
-    #Initialize vehicle and summary logs
-    initialize_log(veh._LOG_COLUMNS, vehicle_log_file)
-    initialize_log(veh._STATS, vehicle_summary_file)
 
     fleet_state = np.array(fleet_state_constructor)
 
