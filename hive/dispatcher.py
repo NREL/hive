@@ -82,13 +82,14 @@ class Dispatcher:
         elif type == 'base':
             network = self._bases
 
-        i = 0
-        num_stations = len(network)
-        nearest = None
-        while nearest == None:
+        def recursive_search(search_space):
+            if len(search_space) < 1:
+                raise NotImplementedError("""No plugs are available on the
+                    entire network.""")
+
             dist_to_nearest = INF
-            for id in network.keys():
-                station = network[id]
+            for id in search_space.keys():
+                station = search_space[id]
                 dist_mi = hlp.estimate_vmt_2D(vehicle.x,
                                                vehicle.y,
                                                station.X,
@@ -97,15 +98,16 @@ class Dispatcher:
                 if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
                     nearest = station
+                    ID = station.ID
             if nearest.avail_plugs < 1:
-                del network[nearest.ID]
-                nearest == None
-            i += 1
-            if i >= num_stations:
-                raise NotImplementedError("""No plugs are available on the
-                    entire {} network.""".format(type))
+                search_space = {k:v for k,v in search_space.items() if k != nearest.ID}
+                ID = recursive_search(search_space)
 
-        return nearest, dist_to_nearest
+            return ID
+
+        ID = recursive_search(network)
+
+        return ID
 
     def _get_n_best_vehicles(self, fleet_state, request, n):
         # TODO: Add mask for available seats in vehicle
@@ -158,8 +160,8 @@ class Dispatcher:
         for veh in vehicles:
             vehid = veh[0]
             vehicle = self._fleet[vehid]
-            station, _ = self._find_closest_plug(vehicle)
-            vehicle.cmd_charge(station)
+            station_id = self._find_closest_plug(vehicle)
+            vehicle.cmd_charge(self._stations[station_id])
 
     def _check_idle_vehicles(self):
         idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
@@ -169,8 +171,8 @@ class Dispatcher:
         for veh in vehicles:
             vehid = veh[0]
             vehicle = self._fleet[vehid]
-            base, _ = self._find_closest_plug(vehicle, type='base')
-            vehicle.cmd_return_to_base(base)
+            base_id = self._find_closest_plug(vehicle, type='base')
+            vehicle.cmd_return_to_base(self._bases[base_id])
 
 
 

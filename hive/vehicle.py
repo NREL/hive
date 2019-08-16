@@ -276,6 +276,7 @@ class Vehicle:
                 else:
                     self.activity = "Reserve"
                 self.available = True
+                self._station.avail_plugs += 1
                 self._station = None
 
 
@@ -308,7 +309,9 @@ class Vehicle:
         self.active = True
         self.available = False
         self._base = None
-        self._station = None
+        if self._station is not None:
+            self._station.avail_plugs += 1
+            self._station = None
 
         current_sim_time = self._clock.now
         # print(f"Vehicle {self.ID} making trip from ({origin_x}, {origin_y}) to ({destination_x}, {destination_y})")
@@ -380,6 +383,7 @@ class Vehicle:
     def cmd_charge(self, station):
         self.available = False
         self._station = station
+        self._station.avail_plugs -= 1
         self.cmd_travel_to(station.X, station.Y, activity=f"Moving to Station")
 
     def cmd_return_to_base(self, base):
@@ -387,6 +391,7 @@ class Vehicle:
         self.available = True
         self._base = base
         self._station = base
+        self._station.avail_plugs -= 1
         self.cmd_travel_to(base.X, base.Y, activity=f"Moving to Base")
 
 
