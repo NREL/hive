@@ -43,6 +43,7 @@ FLEET_STATE_IDX ={
     'idle_min': 5,
     'KWH__MI': 6,
     'BATTERY_CAPACITY_KWH': 7,
+    'avail_seats': 8,
 }
 
 def build_input_files():
@@ -110,15 +111,6 @@ def run_simulation(data, sim_name, infile=None):
         with open(infile, 'rb') as f:
             data = pickle.load(f)
 
-    vehicle_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'vehicle_log.csv')
-    station_charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'station_charging_log.csv')
-    base_charging_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'base_charging_log.csv')
-    failed_requests_log_file = os.path.join(OUT_PATH, sim_name, 'logs', 'failed_requests_logs.csv')
-
-    vehicle_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'vehicle_summary.csv')
-    fleet_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'fleet_summary.txt')
-    station_summary_file = os.path.join(OUT_PATH, sim_name, 'summaries', 'station_summary.csv')
-
     if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
 
     if cfg.VERBOSE: print("Reading input files..", "", sep="\n")
@@ -126,6 +118,10 @@ def run_simulation(data, sim_name, infile=None):
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
     log_path, summary_path = utils.build_output_dir(sim_name, OUT_PATH)
+
+    vehicle_summary_file = os.path.join(summary_path, 'vehicle_summary.csv')
+    fleet_summary_file = os.path.join(summary_path, 'fleet_summary.txt')
+    station_summary_file = os.path.join(summary_path, 'station_summary.csv')
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")
@@ -140,11 +136,6 @@ def run_simulation(data, sim_name, infile=None):
     reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
     if cfg.VERBOSE: print("filtered requests violating min time req, {} remain".format(len(reqs_df)))
     #
-    # #Filter requests where pickup/dropoff location outside operating area
-    # shp_file = inputs['OPERATING_AREA_SHP']
-    # oa_filepath = os.path.join(cfg.IN_PATH, 'operating_area', shp_file)
-    # reqs_df = pp.filter_requests_outside_oper_area(reqs_df, oa_filepath)
-    # if cfg.VERBOSE: print("filtered requests outside of operating area, {} remain".format(len(reqs_df)), "", sep="\n")
 
     #Calculate network scaling factor & average dispatch speed
     RN_SCALING_FACTOR = pp.calculate_road_vmt_scaling_factor(reqs_df)
@@ -155,8 +146,8 @@ def run_simulation(data, sim_name, infile=None):
 
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
-    stations = initialize_stations(data['stations'], station_charging_log_file)
-    bases = initialize_bases(data['bases'], base_charging_log_file)
+    stations = initialize_stations(data['stations'])
+    bases = initialize_bases(data['bases'])
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
     sim_clock = utils.Clock(timestep_s = cfg.SIMULATION_PERIOD_SECONDS)
@@ -185,9 +176,7 @@ def run_simulation(data, sim_name, infile=None):
                              whmi_lookup = data['whmi_lookup'],
                              start_time = reqs_df.pickup_time.iloc[0],
                              env_params = env_params,
-                             clock = sim_clock,
-                             vehicle_log_file = vehicle_log_file,
-                             vehicle_summary_file = vehicle_summary_file)
+                             clock = sim_clock)
     if cfg.VERBOSE: print("{} vehicles initialized".format(len(fleet)), "", sep="\n")
 
     if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
@@ -197,10 +186,7 @@ def run_simulation(data, sim_name, infile=None):
                             stations = stations,
                             bases = bases,
                             env_params = env_params,
-                            clock = sim_clock,
-                            failed_requests_log = failed_requests_log_file)
-
-    utils.initialize_log(dispatcher._LOG_COLUMNS, failed_requests_log_file)
+                            clock = sim_clock)
 
     sim_start_time = reqs_df.pickup_time.min()
     sim_end_time = reqs_df.dropoff_time.max()
@@ -208,44 +194,23 @@ def run_simulation(data, sim_name, infile=None):
 
     total_iterations = len(sim_time_steps)
     i = 0
-    with open('performance.txt', 'a') as f:
-        start = time.time()
-        for timestep in sim_time_steps:
-            i+=1
-            if i%100 == 0:
-                print("{} of {} iterations completed.".format(i, total_iterations))
-            requests = reqs_df[(timestep <= reqs_df.pickup_time) \
-                & (reqs_df.pickup_time < (timestep + timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
-            dispatcher.process_requests(requests)
-            for veh in fleet:
-                veh.step()
-            next(sim_clock)
-        end = time.time()
-        time_s = end-start
-        print(f"Scenario: {scenario_name}, Time: {time_s} seconds", file=f)
 
-    #
-    import csv
-    keys = fleet[0].history[0].keys()
-    for veh in fleet:
-        filename = os.path.join(log_path, f'veh_{veh.ID}_history.csv')
-        with open(filename, 'w') as f:
-            writer = csv.DictWriter(f, keys)
-            writer.writeheader()
-            writer.writerows(veh.history)
-    keys = dispatcher.history[0].keys()
-    filename = os.path.join(log_path, 'dispatcher_log.csv')
-    with open(filename, 'w') as f:
-        writer = csv.DictWriter(f, keys)
-        writer.writeheader()
-        writer.writerows(dispatcher.history)
 
-    #Calculate summary statistics
-    # fleet = dispatcher.get_fleet()
-    # reporting.calc_veh_stats(fleet, vehicle_summary_file)
-    # reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, reqs_df)
-    # reporting.summarize_station_use(stations, bases, station_summary_file)
-    #
+    for timestep in sim_time_steps:
+        i+=1
+        if i%100 == 0:
+            print("{} of {} iterations completed.".format(i, total_iterations))
+        requests = reqs_df[(timestep <= reqs_df.pickup_time) \
+            & (reqs_df.pickup_time < (timestep + timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
+        dispatcher.process_requests(requests)
+        for veh in fleet:
+            veh.step()
+        next(sim_clock)
+
+    if cfg.VERBOSE: print("Generating logs and summary statistics..")
+    reporting.generate_vehicle_logs(fleet, log_path)
+    reporting.generate_dispatcher_log(dispatcher, log_path)
+
 if __name__ == "__main__":
     #TODO: Fix cached functionality. Current functionality does not cache runs.
     # def clean_scenarios_folder():

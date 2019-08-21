@@ -75,9 +75,9 @@ class Vehicle:
         self.MAX_CHARGE_ACCEPTANCE_KW = max_charge_acceptance
         self.WH_PER_MILE_LOOKUP = whmi_lookup
         self.CHARGE_TEMPLATE = charge_template
+        self.MAX_PASSENGERS = max_passengers
 
         # Public variables
-        self.avail_seats = max_passengers
         self.history = []
 
         # Postition variables
@@ -188,6 +188,15 @@ class Vehicle:
     def idle_min(self, val):
         self._set_fleet_state('idle_min', int(val))
 
+    @property
+    def avail_seats(self):
+        col = self.ENV['FLEET_STATE_IDX']['avail_seats']
+        return self.fleet_state[self.ID, col]
+
+    @avail_seats.setter
+    def avail_seats(self, val):
+        self._set_fleet_state('avail_seats', int(val))
+
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
 
@@ -215,6 +224,7 @@ class Vehicle:
                     'activity': self.activity,
                     'station': station,
                     'base': base,
+                    'passengers': self.MAX_PASSENGERS - self.avail_seats, 
                     })
 
     def _set_fleet_state(self, param, val):
@@ -255,6 +265,7 @@ class Vehicle:
                 if self._station is None:
                     self.available = True
                 self.activity = "Idle"
+                self.avail_seats = self.MAX_PASSENGERS
                 self._step_distance = 0
         else:
             self._step_distance = 0
@@ -302,12 +313,14 @@ class Vehicle:
                  origin_y,
                  destination_x,
                  destination_y,
+                 passengers,
                  trip_dist_mi=None,
                  trip_time_s=None,
                  route=None):
 
         self.active = True
         self.available = False
+        self.avail_seats -= passengers
         self._base = None
         if self._station is not None:
             self._station.avail_plugs += 1

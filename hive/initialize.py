@@ -137,7 +137,17 @@ def initialize_fleet(vehicle_types,
             avg_kwh__mi = np.average(scaled_whmi_lookup['whmi']) / 1000
 
             veh_fleet.append(veh)
-            fleet_state_constructor.append((veh.x, veh.y, 1, 1, 0, initial_soc, avg_kwh__mi, veh.BATTERY_CAPACITY))
+
+            #TODO: Make this more explicit
+            fleet_state_constructor.append((veh.x,
+                                            veh.y,
+                                            1,
+                                            1,
+                                            0,
+                                            initial_soc,
+                                            avg_kwh__mi,
+                                            veh.BATTERY_CAPACITY,
+                                            veh.MAX_PASSENGERS))
 
     fleet_state = np.array(fleet_state_constructor)
 

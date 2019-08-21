@@ -110,7 +110,6 @@ class Dispatcher:
         return ID
 
     def _get_n_best_vehicles(self, fleet_state, request, n):
-        # TODO: Add mask for available seats in vehicle
         point = np.array([(request.pickup_x, request.pickup_y)])
         dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
         best_vehs_idx = np.argsort(dist)
@@ -126,7 +125,10 @@ class Dispatcher:
             - ((dist + request.distance_miles) * fleet_state[:, KWH__MI_col]) \
             /fleet_state[:, BATTERY_CAPACITY_KWH_col] > self._ENV['MIN_ALLOWED_SOC'])
 
-        mask = dist_mask & available_mask & min_soc_mask
+        avail_seats_col = self._ENV['FLEET_STATE_IDX']['avail_seats']
+        avail_seats_mask = fleet_state[:, avail_seats_col] >= request.passengers
+
+        mask = dist_mask & available_mask & min_soc_mask & avail_seats_mask
         return best_vehs_idx[mask[best_vehs_idx]][:n]
 
     def _dispatch_vehicles(self, requests):
@@ -144,6 +146,7 @@ class Dispatcher:
                         request.pickup_y,
                         request.dropoff_x,
                         request.dropoff_y,
+                        passengers = request.passengers,
                         trip_dist_mi=request.distance_miles,
                         trip_time_s=request.seconds,
                         # route=request.route_utm)
