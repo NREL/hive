@@ -4,8 +4,11 @@ Charging station objects used in the HIVE simulation platform.
 
 from hive.constraints import STATION_PARAMS
 from hive.utils import assert_constraint, write_log, initialize_log
+from hive import units
 
 import utm
+import sys
+
 
 class FuelStation:
     """
@@ -46,6 +49,7 @@ class FuelStation:
                 plugs,
                 plug_type,
                 plug_power_kw,
+                clock,
                 ):
 
         self.ID = station_id
@@ -68,4 +72,33 @@ class FuelStation:
         assert_constraint("PLUG_POWER", plug_power_kw, STATION_PARAMS, context="Initialize FuelStation")
         self.PLUG_POWER_KW = plug_power_kw
 
+        self._clock = clock
+
+        self.history = []
+
         self.avail_plugs = plugs
+
+        self._energy_dispensed_kwh = 0
+
+    def _log(self):
+        power_usage_kw = self._energy_dispensed_kwh / (self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS)
+        vehicles_charging = round(power_usage_kw/self.PLUG_POWER_KW)
+        self.history.append({
+                        'ID': self.ID,
+                        'sim_time': self._clock.now,
+                        'vehicles_charging': vehicles_charging,
+                        'power_usage_kw': power_usage_kw,
+                        'energy_dispensed_kwh': self._energy_dispensed_kwh,
+                        })
+
+    def dispense_energy(self):
+        timestep_h = self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS
+        energy_kwh = self.PLUG_POWER_KW * timestep_h
+
+        self._energy_dispensed_kwh += energy_kwh
+
+        return energy_kwh
+
+    def step(self):
+        self._log()
+        self._energy_dispensed_kwh = 0

@@ -10,7 +10,8 @@ from hive.stations import FuelStation
 from hive.vehicle import Vehicle
 from hive.utils import initialize_log
 
-def initialize_stations(station_df):
+
+def initialize_stations(station_df, clock):
     """
     Initializes stations dict from DataFrame.
 
@@ -26,66 +27,22 @@ def initialize_stations(station_df):
 
     Returns
     -------
-    dict
-        Dictionary with station_id key and FuelStation object val for quick
-        lookups
+    stations
+        list of initialized stations.
     """
-    stations = {}
-    for _, row in station_df.iterrows():
-        station_id = row['station_id']
-        lon, lat = row['longitude'], row['latitude']
-        plugs = row['plugs']
-        plug_type = row['plug_type']
-        plug_power = row['plug_power_kw']
-        station = FuelStation(station_id,
-                              lat,
-                              lon,
-                              plugs,
-                              plug_type,
-                              plug_power,
+    stations = []
+    for station in station_df.itertuples():
+        station = FuelStation(station.id,
+                              station.latitude,
+                              station.longitude,
+                              station.plugs,
+                              station.plug_type,
+                              station.plug_power_kw,
+                              clock,
                               )
-        stations[station_id] = station
+        stations.append(station)
 
     return stations
-
-def initialize_bases(base_df):
-    """
-    Initializes bases dict from DataFrame.
-
-    Function initializes bases dict from pd.DataFrame containing vehicle base
-    network .csv (hive/inputs/charge_network/..).
-
-    Parameters
-    ----------
-    base_df: pd.DataFrame
-        DataFrame containing scenario vehicle base network
-    base_log_file: string
-        File for logging
-
-    Returns
-    -------
-    dict
-        Dictionary with base_id key and FuelStation object val for quick lookups
-    """
-
-    bases = {}
-    for _, row in base_df.iterrows():
-        base_id = row['base_id']
-        lon, lat = row['longitude'], row['latitude']
-        plugs = row['plugs']
-        plug_type = row['plug_type']
-        plug_power = row['plug_power_kw']
-        base = FuelStation(base_id,
-                               lat,
-                               lon,
-                               plugs,
-                               plug_type,
-                               plug_power,
-                               )
-        bases[base_id] = base
-
-    return bases
-
 
 def initialize_fleet(vehicle_types,
                         bases,
@@ -110,7 +67,6 @@ def initialize_fleet(vehicle_types,
                                     )
 
         for _ in range(veh_type.NUM_VEHICLES):
-            initial_soc = np.random.uniform(0.05, 1.0)
             veh = Vehicle(
                         veh_id = id,
                         name = veh_type.VEHICLE_NAME,
@@ -126,8 +82,7 @@ def initialize_fleet(vehicle_types,
             id += 1
 
             #Initialize vehicle location to a random base
-            base_id = random.choice(list(bases.keys()))
-            base = bases[base_id]
+            base = random.choice(bases)
 
             veh.latlon = (base.LAT, base.LON)
             veh.base = base
@@ -144,7 +99,7 @@ def initialize_fleet(vehicle_types,
                                             1,
                                             1,
                                             0,
-                                            initial_soc,
+                                            0,
                                             avg_kwh__mi,
                                             veh.BATTERY_CAPACITY,
                                             veh.MAX_PASSENGERS))

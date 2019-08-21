@@ -42,11 +42,22 @@ def build_output_dir(scenario_name, root_path):
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
     os.makedirs(scenario_output)
+    file_paths = {}
     log_path = os.path.join(scenario_output, 'logs')
-    summary_path = os.path.join(scenario_output, 'summaries')
-    os.makedirs(log_path)
-    os.makedirs(summary_path)
-    return log_path, summary_path
+    file_paths['log_path'] = log_path
+    file_paths['summary_path'] = os.path.join(scenario_output, 'summaries')
+    file_paths['vehicle_path'] = os.path.join(log_path, 'vehicles')
+    file_paths['station_path'] = os.path.join(log_path, 'stations')
+    file_paths['base_path'] = os.path.join(log_path, 'bases')
+    file_paths['dispatcher_path'] = os.path.join(log_path, 'dispatcher')
+    os.makedirs(file_paths['log_path'])
+    os.makedirs(file_paths['vehicle_path'])
+    os.makedirs(file_paths['station_path'])
+    os.makedirs(file_paths['base_path'])
+    os.makedirs(file_paths['dispatcher_path'])
+    os.makedirs(file_paths['summary_path'])
+
+    return file_paths
 
 def assert_constraint(param, val, CONSTRAINTS, context=""):
     """

@@ -7,24 +7,14 @@ import pandas as pd
 import csv
 import os
 
-def generate_vehicle_logs(fleet, log_path):
-    keys = fleet[0].history[0].keys()
-    for veh in fleet:
-        filename = os.path.join(log_path, f'veh_{veh.ID}_history.csv')
+def generate_logs(objects, log_path, context):
+    keys = objects[0].history[0].keys()
+    for item in objects:
+        filename = os.path.join(log_path, f'{context}_{item.ID}_history.csv')
         with open(filename, 'w') as f:
             writer = csv.DictWriter(f, keys)
             writer.writeheader()
-            writer.writerows(veh.history)
-
-def generate_dispatcher_log(dispatcher, log_path):
-    keys = dispatcher.history[0].keys()
-    filename = os.path.join(log_path, 'dispatcher_log.csv')
-    with open(filename, 'w') as f:
-        writer = csv.DictWriter(f, keys)
-        writer.writeheader()
-        writer.writerows(dispatcher.history)
-
-
+            writer.writerows(item.history)
 
 
 def summarize_station_use(stations_dict, bases_dict, station_summary_file):

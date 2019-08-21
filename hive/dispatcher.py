@@ -37,6 +37,8 @@ class Dispatcher:
                 clock,
                 ):
 
+        self.ID = 0
+
         self._fleet = fleet
         self._fleet_state = fleet_state
         for veh in self._fleet:
@@ -74,9 +76,6 @@ class Dispatcher:
         #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
         INF = 1000000000
 
-        assert type in ['station', 'base'], """"type" must be either 'station'
-        or 'base'."""
-
         if type == 'station':
             network = self._stations
         elif type == 'base':
@@ -88,8 +87,7 @@ class Dispatcher:
                     entire network.""")
 
             dist_to_nearest = INF
-            for id in search_space.keys():
-                station = search_space[id]
+            for station in search_space:
                 dist_mi = hlp.estimate_vmt_2D(vehicle.x,
                                                vehicle.y,
                                                station.X,
@@ -98,16 +96,15 @@ class Dispatcher:
                 if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
                     nearest = station
-                    ID = station.ID
             if nearest.avail_plugs < 1:
-                search_space = {k:v for k,v in search_space.items() if k != nearest.ID}
-                ID = recursive_search(search_space)
+                search_space = [s for s in search_space if s.ID != nearest.ID]
+                nearest = recursive_search(search_space)
 
-            return ID
+            return nearest
 
-        ID = recursive_search(network)
+        nearest = recursive_search(network)
 
-        return ID
+        return nearest
 
     def _get_n_best_vehicles(self, fleet_state, request, n):
         point = np.array([(request.pickup_x, request.pickup_y)])
@@ -163,8 +160,8 @@ class Dispatcher:
         for veh in vehicles:
             vehid = veh[0]
             vehicle = self._fleet[vehid]
-            station_id = self._find_closest_plug(vehicle)
-            vehicle.cmd_charge(self._stations[station_id])
+            station = self._find_closest_plug(vehicle)
+            vehicle.cmd_charge(station)
 
     def _check_idle_vehicles(self):
         idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
@@ -174,8 +171,8 @@ class Dispatcher:
         for veh in vehicles:
             vehid = veh[0]
             vehicle = self._fleet[vehid]
-            base_id = self._find_closest_plug(vehicle, type='base')
-            vehicle.cmd_return_to_base(self._bases[base_id])
+            base = self._find_closest_plug(vehicle, type='base')
+            vehicle.cmd_return_to_base(base)
 
 
 

@@ -16,9 +16,6 @@ from hive import units
 from hive.constraints import VEH_PARAMS
 from hive.utils import assert_constraint, initialize_log, write_log
 
-sys.path.append('..')
-from config import SIMULATION_PERIOD_SECONDS
-
 
 class Vehicle:
     """
@@ -224,7 +221,7 @@ class Vehicle:
                     'activity': self.activity,
                     'station': station,
                     'base': base,
-                    'passengers': self.MAX_PASSENGERS - self.avail_seats, 
+                    'passengers': self.MAX_PASSENGERS - self.avail_seats,
                     })
 
     def _set_fleet_state(self, param, val):
@@ -244,7 +241,7 @@ class Vehicle:
     def _update_idle(self):
         if self.activity == 'Idle':
             self._idle_counter += 1
-            self.idle_min = self._idle_counter * SIMULATION_PERIOD_SECONDS * units.SECONDS_TO_MINUTES
+            self.idle_min = self._idle_counter * self._clock.TIMESTEP_S * units.SECONDS_TO_MINUTES
         else:
             self._idle_counter = 0
             self.idle_min = 0
@@ -274,9 +271,7 @@ class Vehicle:
         # Make sure we're not still traveling to charge station
         if self._route is None:
             self.activity = f"Charging at Station"
-            plug_power_kw = self._station.PLUG_POWER_KW
-            timestep_h = self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS
-            energy_gained_kwh = plug_power_kw * timestep_h
+            energy_gained_kwh = self._station.dispense_energy()
             hyp_soc = (self._energy_kwh + energy_gained_kwh) / self.BATTERY_CAPACITY
             if hyp_soc <= 1:
                 self.energy_kwh += energy_gained_kwh
@@ -293,7 +288,7 @@ class Vehicle:
 
 
     def _generate_route(self, x0, y0, x1, y1, trip_dist_mi, trip_time_s, activity="NULL"):
-        steps = round(trip_time_s/SIMULATION_PERIOD_SECONDS)
+        steps = round(trip_time_s/self._clock.TIMESTEP_S)
         if steps <= 1:
             return [((x0, y0), trip_dist_mi, activity), ((x1, y1), trip_dist_mi, activity)]
         step_distance_mi = trip_dist_mi/steps
@@ -327,7 +322,6 @@ class Vehicle:
             self._station = None
 
         current_sim_time = self._clock.now
-        # print(f"Vehicle {self.ID} making trip from ({origin_x}, {origin_y}) to ({destination_x}, {destination_y})")
 
         if trip_dist_mi is None:
             trip_dist_mi = math.hypot(destination_x - origin_x, destination_y - origin_y)\

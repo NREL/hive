@@ -20,7 +20,7 @@ from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import utils
 from hive import reporting
-from hive.initialize import initialize_stations, initialize_bases, initialize_fleet
+from hive.initialize import initialize_stations, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.dispatcher import Dispatcher
 from hive.constraints import ENV_PARAMS
@@ -117,11 +117,11 @@ def run_simulation(data, sim_name, infile=None):
     inputs = data['main']
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
-    log_path, summary_path = utils.build_output_dir(sim_name, OUT_PATH)
+    output_file_paths = utils.build_output_dir(sim_name, OUT_PATH)
 
-    vehicle_summary_file = os.path.join(summary_path, 'vehicle_summary.csv')
-    fleet_summary_file = os.path.join(summary_path, 'fleet_summary.txt')
-    station_summary_file = os.path.join(summary_path, 'station_summary.csv')
+    vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
+    fleet_summary_file = os.path.join(output_file_paths['summary_path'], 'fleet_summary.txt')
+    station_summary_file = os.path.join(output_file_paths['summary_path'], 'station_summary.csv')
 
     #Load requests
     if cfg.VERBOSE: print("Processing requests..")
@@ -137,6 +137,8 @@ def run_simulation(data, sim_name, infile=None):
     if cfg.VERBOSE: print("filtered requests violating min time req, {} remain".format(len(reqs_df)))
     #
 
+    sim_clock = utils.Clock(timestep_s = cfg.SIMULATION_PERIOD_SECONDS)
+
     #Calculate network scaling factor & average dispatch speed
     RN_SCALING_FACTOR = pp.calculate_road_vmt_scaling_factor(reqs_df)
     DISPATCH_MPH = pp.calculate_average_driving_speed(reqs_df)
@@ -146,11 +148,10 @@ def run_simulation(data, sim_name, infile=None):
 
     #Load charging network
     if cfg.VERBOSE: print("Loading charge network..")
-    stations = initialize_stations(data['stations'])
-    bases = initialize_bases(data['bases'])
+    stations = initialize_stations(data['stations'], sim_clock)
+    bases = initialize_stations(data['bases'], sim_clock)
     if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
 
-    sim_clock = utils.Clock(timestep_s = cfg.SIMULATION_PERIOD_SECONDS)
 
     #Initialize vehicle fleet
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
@@ -203,13 +204,23 @@ def run_simulation(data, sim_name, infile=None):
         requests = reqs_df[(timestep <= reqs_df.pickup_time) \
             & (reqs_df.pickup_time < (timestep + timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
         dispatcher.process_requests(requests)
+
         for veh in fleet:
             veh.step()
+
+        for station in stations:
+            station.step()
+
+        for base in bases:
+            base.step()
+
         next(sim_clock)
 
     if cfg.VERBOSE: print("Generating logs and summary statistics..")
-    reporting.generate_vehicle_logs(fleet, log_path)
-    reporting.generate_dispatcher_log(dispatcher, log_path)
+    reporting.generate_logs(fleet, output_file_paths['vehicle_path'], 'vehicle')
+    reporting.generate_logs(stations, output_file_paths['station_path'], 'station')
+    reporting.generate_logs(bases, output_file_paths['base_path'], 'base')
+    reporting.generate_logs([dispatcher], output_file_paths['dispatcher_path'], 'dispatcher')
 
 if __name__ == "__main__":
     #TODO: Fix cached functionality. Current functionality does not cache runs.
