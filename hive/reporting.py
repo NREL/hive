@@ -6,6 +6,7 @@ results for simulation
 import pandas as pd
 import csv
 import os
+import glob
 
 def generate_logs(objects, log_path, context):
     keys = objects[0].history[0].keys()
@@ -32,3 +33,11 @@ def summarize_station_use(stations_dict, bases_dict, station_summary_file):
                                             'refuel_energy_kwh': refuel_energy_kwh})
 
     station_summary_df.to_csv(station_summary_file, index=False)
+
+def summarize_fleet_stats(vehicle_log_path, summary_path):
+    drop_columns = ['Charging at Station', 'Idle', 'Reserve']
+    all_vehicle_logs = glob.glob(os.path.join(vehicle_log_path, '*.csv'))
+    fleet_df = pd.concat((pd.read_csv(file) for file in all_vehicle_logs))
+    outfile = os.path.join(summary_path, 'fleet_vmt_summary.csv')
+    fleet_df.groupby('activity').sum()['step_distance_mi']\
+        .drop(drop_columns).to_csv(outfile, header=True)

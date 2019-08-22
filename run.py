@@ -217,10 +217,13 @@ def run_simulation(data, sim_name, infile=None):
         next(sim_clock)
 
     if cfg.VERBOSE: print("Generating logs and summary statistics..")
+
     reporting.generate_logs(fleet, output_file_paths['vehicle_path'], 'vehicle')
     reporting.generate_logs(stations, output_file_paths['station_path'], 'station')
     reporting.generate_logs(bases, output_file_paths['base_path'], 'base')
     reporting.generate_logs([dispatcher], output_file_paths['dispatcher_path'], 'dispatcher')
+
+    reporting.summarize_fleet_stats(output_file_paths['vehicle_path'], output_file_paths['summary_path'])
 
 if __name__ == "__main__":
     #TODO: Fix cached functionality. Current functionality does not cache runs.

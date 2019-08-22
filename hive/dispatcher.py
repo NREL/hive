@@ -133,7 +133,6 @@ class Dispatcher:
         for request in requests.itertuples():
             best_vehicle = self._get_n_best_vehicles(self._fleet_state, request, 1)
             if len(best_vehicle) < 1:
-                # print("Dropped request at time {}".format(request.pickup_time))
                 self._dropped_requests += 1
             else:
                 vehid = best_vehicle[0]

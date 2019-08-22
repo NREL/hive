@@ -87,8 +87,6 @@ def initialize_fleet(vehicle_types,
             veh.latlon = (base.LAT, base.LON)
             veh.base = base
 
-            veh.avail_time = start_time - datetime.timedelta(hours=1)
-
             avg_kwh__mi = np.average(scaled_whmi_lookup['whmi']) / 1000
 
             veh_fleet.append(veh)
