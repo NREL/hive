@@ -4,8 +4,11 @@ Charging station objects used in the HIVE simulation platform.
 
 from hive.constraints import STATION_PARAMS
 from hive.utils import assert_constraint, write_log, initialize_log
+from hive import units
 
 import utm
+import sys
+
 
 class FuelStation:
     """
@@ -38,24 +41,6 @@ class FuelStation:
         Number of plugs that are unoccupied
     """
 
-    _STATS = [
-        'charge_cnt',
-        'total_energy_kwh'
-        ]
-
-    _LOG_COLUMNS = [
-        'id',
-        'plug_type',
-        'plug_power_kw',
-        'vehicle_id',
-        'max_veh_acceptance_kw',
-        'start_time',
-        'end_time',
-        'soc_i',
-        'soc_f',
-        'total_energy_kwh'
-        ]
-
     def __init__(
                 self,
                 station_id,
@@ -64,7 +49,7 @@ class FuelStation:
                 plugs,
                 plug_type,
                 plug_power_kw,
-                logfile
+                clock,
                 ):
 
         self.ID = station_id
@@ -87,59 +72,33 @@ class FuelStation:
         assert_constraint("PLUG_POWER", plug_power_kw, STATION_PARAMS, context="Initialize FuelStation")
         self.PLUG_POWER_KW = plug_power_kw
 
+        self._clock = clock
+
+        self.history = []
+
         self.avail_plugs = plugs
 
-        self._logfile = logfile
+        self._energy_dispensed_kwh = 0
 
-        self.stats = dict()
-        for stat in self._STATS:
-            self.stats[stat] = 0
+    def _log(self):
+        power_usage_kw = self._energy_dispensed_kwh / (self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS)
+        vehicles_charging = round(power_usage_kw/self.PLUG_POWER_KW)
+        self.history.append({
+                        'ID': self.ID,
+                        'sim_time': self._clock.now,
+                        'vehicles_charging': vehicles_charging,
+                        'power_usage_kw': power_usage_kw,
+                        'energy_dispensed_kwh': self._energy_dispensed_kwh,
+                        })
 
-    def add_charge_event(self, veh, start_time, end_time, soc_i, soc_f, total_energy_kwh):
+    def dispense_energy(self):
+        timestep_h = self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS
+        energy_kwh = self.PLUG_POWER_KW * timestep_h
 
-        """
-        Updates FuelStation tracking and logging w/ a new charge event.
+        self._energy_dispensed_kwh += energy_kwh
 
-        Updates FuelStation & logging with energy consumed (total_energy_kwh)
-        by charge event. Logs start & end time of charging event in addition to
-        initial & final vehicle SOC & plug power & type to reconstruct detailed
-        demand-side electical load curves.
+        return energy_kwh
 
-        Parameters
-        ----------
-        veh: hive.vehicle.Vehicle
-            Vehicle that completed the recharge event
-        start_time: datetime.datetime
-            Datetime that charge_event began
-        end_time: datetime.datetime
-            Datetime that charge_event concluded
-        soc_i: double precision
-            Initial fractional state of charge of vehicle's battery
-        soc_f: double precision
-            Final fractional state of charge of vehicle's battery
-        total_energy_kwh: double precision
-            Energy (in kWh) consumed during charge event
-
-        Returns
-        -------
-        None
-        """
-
-        write_log({
-            'id': self.ID,
-            'plug_type': self.PLUG_TYPE,
-            'plug_power_kw': self.PLUG_POWER_KW,
-            'vehicle_id': veh.ID,
-            'max_veh_acceptance_kw': veh.MAX_CHARGE_ACCEPTANCE_KW,
-            'start_time': start_time,
-            'end_time': end_time,
-            'soc_i': soc_i,
-            'soc_f': soc_f,
-            'total_energy_kwh': total_energy_kwh
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
-
-        # self.avail_plugs-=1
-        self.stats['charge_cnt']+=1
-        self.stats['total_energy_kwh']+=total_energy_kwh
+    def step(self):
+        self._log()
+        self._energy_dispensed_kwh = 0

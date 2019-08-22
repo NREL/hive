@@ -6,6 +6,13 @@ import pickle
 import csv
 import shutil
 
+class Clock:
+    def __init__(self, timestep_s):
+        self.now = 0
+        self.TIMESTEP_S = timestep_s
+    def __next__(self):
+        self.now += 1
+
 def save_to_hdf(data, outfile):
     for key, val in data.items():
         val.to_hdf(outfile, key=key)
@@ -35,8 +42,22 @@ def build_output_dir(scenario_name, root_path):
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
     os.makedirs(scenario_output)
-    os.makedirs(os.path.join(scenario_output, 'logs'))
-    os.makedirs(os.path.join(scenario_output, 'summaries'))
+    file_paths = {}
+    log_path = os.path.join(scenario_output, 'logs')
+    file_paths['log_path'] = log_path
+    file_paths['summary_path'] = os.path.join(scenario_output, 'summaries')
+    file_paths['vehicle_path'] = os.path.join(log_path, 'vehicles')
+    file_paths['station_path'] = os.path.join(log_path, 'stations')
+    file_paths['base_path'] = os.path.join(log_path, 'bases')
+    file_paths['dispatcher_path'] = os.path.join(log_path, 'dispatcher')
+    os.makedirs(file_paths['log_path'])
+    os.makedirs(file_paths['vehicle_path'])
+    os.makedirs(file_paths['station_path'])
+    os.makedirs(file_paths['base_path'])
+    os.makedirs(file_paths['dispatcher_path'])
+    os.makedirs(file_paths['summary_path'])
+
+    return file_paths
 
 def assert_constraint(param, val, CONSTRAINTS, context=""):
     """

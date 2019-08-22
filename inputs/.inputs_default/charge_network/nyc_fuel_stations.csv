@@ -1,4 +1,4 @@
-station_id,longitude,latitude,plugs,plug_type,plug_power_kw
+id,longitude,latitude,plugs,plug_type,plug_power_kw
 s1,-73.87975,40.70222,10,DC,50
 s2,-73.82576,40.74796,10,DC,50
 s3,-73.81476,40.73936,10,DC,50

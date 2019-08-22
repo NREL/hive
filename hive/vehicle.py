@@ -7,11 +7,13 @@ import csv
 import datetime
 import numpy as np
 import utm
+import math
 
 from hive import helpers as hlp
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive.constraints import ENV_PARAMS, VEH_PARAMS
+from hive import units
+from hive.constraints import VEH_PARAMS
 from hive.utils import assert_constraint, initialize_log, write_log
 
 
@@ -48,45 +50,6 @@ class Vehicle:
     _base: dict
         Lookup for base charging information.
     """
-    # statistics tracked on a vehicle instance level over entire simulation.
-    _STATS = [
-            'veh_id',
-            'request_vmt',
-            'dispatch_request_vmt',
-            'dispatch_base_refuel_vmt',
-            'dispatch_station_refuel_vmt',
-            'total_vmt',
-            'requests_filled',
-            'passengers_delivered',
-            'base_refuel_cnt',
-            'station_refuel_cnt',
-            'base_refuel_s',
-            'station_refuel_s',
-            'idle_s',
-            'dispatch_request_s',
-            'dispatch_base_refuel_s',
-            'dispatch_station_refuel_s',
-            'base_reserve_s',
-            'request_s',
-            'refuel_energy_kwh',
-            'end_soc',
-            'pct_time_trip'
-            ]
-
-    _LOG_COLUMNS = [
-                'veh_id',
-                'activity',
-                'start_time',
-                'start_lat',
-                'start_lon',
-                'end_time',
-                'end_lat',
-                'end_lon',
-                'dist_mi',
-                'start_soc',
-                'end_soc',
-                'passengers'
-                ]
 
     def __init__(
                 self,
@@ -95,11 +58,10 @@ class Vehicle:
                 battery_capacity,
                 max_charge_acceptance,
                 max_passengers,
-                initial_soc,
                 whmi_lookup,
                 charge_template,
-                logfile,
-                environment_params = dict(),
+                clock,
+                environment_params,
                 ):
 
         # Public Constants
@@ -110,33 +72,35 @@ class Vehicle:
         self.MAX_CHARGE_ACCEPTANCE_KW = max_charge_acceptance
         self.WH_PER_MILE_LOOKUP = whmi_lookup
         self.CHARGE_TEMPLATE = charge_template
+        self.MAX_PASSENGERS = max_passengers
 
         # Public variables
-        self.active = False
-        self.base = None
-        self.avail_time = None
-        self.avail_seats = max_passengers
-        assert_constraint('INITIAL_SOC', initial_soc, VEH_PARAMS, context="Initialize Vehicle")
-        self.soc = initial_soc
-        self.energy_remaining = battery_capacity * initial_soc
-
-        self._logfile = logfile
+        self.history = []
 
         # Postition variables
         self._x = None
         self._y = None
 
-        # Init reporting
-        self.stats = dict()
-        for stat in self._STATS:
-            self.stats[stat] = 0
-        self.stats['veh_id'] = veh_id
+        self._route = None
+        self._route_iter = None
+        self._step_distance = 0
 
-        self.ENV = dict()
-        for param, val in environment_params.items():
-            assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
-            assert_constraint(param, val, ENV_PARAMS, context="Initialize Vehicle")
-            self.ENV[param] = val
+        self._station = None
+        self._base = None
+
+        self._idle_counter = 0
+
+        self._clock = clock
+
+        self.fleet_state = None
+
+        self.activity = "Idle"
+
+        self.ENV = environment_params
+        # for param, val in environment_params.items():
+        #     assert param in ENV_PARAMS.keys(), "Got an unexpected parameter {}.".format(param)
+        #     assert_constraint(param, val, ENV_PARAMS, context="Initialize Vehicle")
+        #     self.ENV[param] = val
 
     @property
     def latlon(self):
@@ -161,8 +125,8 @@ class Vehicle:
 
     @x.setter
     def x(self, val):
-        #TODO: Add fleet state matrix
         self._x = val
+        self._set_fleet_state('x', val)
 
     @property
     def y(self):
@@ -170,454 +134,280 @@ class Vehicle:
 
     @y.setter
     def y(self, val):
-        #TODO: Add fleet state matrix
         self._y = val
+        self._set_fleet_state('y', val)
+
+    @property
+    def active(self):
+        col = self.ENV['FLEET_STATE_IDX']['active']
+        return bool(self.fleet_state[self.ID, col])
+
+    @active.setter
+    def active(self, val):
+        assert type(val) is bool, "This variable must be boolean"
+        self._set_fleet_state('active', int(val))
+
+    @property
+    def available(self):
+        col = self.ENV['FLEET_STATE_IDX']['available']
+        return bool(self.fleet_state[self.ID, col])
+
+    @available.setter
+    def available(self, val):
+        assert type(val) is bool, "This variable must be boolean"
+        self._set_fleet_state('available', int(val))
+
+    @property
+    def soc(self):
+        col = self.ENV['FLEET_STATE_IDX']['soc']
+        return self.fleet_state[self.ID, col]
+
+    @soc.setter
+    def soc(self, val):
+        raise NotImplementedError('Please do not update soc directly. Use energy_kwh.')
+
+    @property
+    def energy_kwh(self):
+        return self._energy_kwh
+
+    @energy_kwh.setter
+    def energy_kwh(self, val):
+        soc = val / self.BATTERY_CAPACITY
+        self._set_fleet_state('soc', soc)
+        self._energy_kwh = val
+
+    @property
+    def idle_min(self):
+        col = self.ENV['FLEET_STATE_IDX']['idle_min']
+        return self.fleet_state[self.ID, col]
+
+    @available.setter
+    def idle_min(self, val):
+        self._set_fleet_state('idle_min', int(val))
+
+    @property
+    def avail_seats(self):
+        col = self.ENV['FLEET_STATE_IDX']['avail_seats']
+        return self.fleet_state[self.ID, col]
+
+    @avail_seats.setter
+    def avail_seats(self, val):
+        self._set_fleet_state('avail_seats', int(val))
 
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
 
+    def _log(self):
+        if self._station is None:
+            station = None
+        else:
+            station = self._station.ID
 
-    def dump_stats(self, filepath):
-        self.stats['end_soc'] = self.soc
-
-        try:
-            self.stats['pct_time_trip'] = self.stats['request_s'] / (self.stats['base_refuel_s'] \
-                + self.stats['station_refuel_s'] + self.stats['idle_s'] + self.stats['dispatch_request_s'] \
-                + self.stats['dispatch_base_refuel_s'] + self.stats['dispatch_station_refuel_s'] \
-                + self.stats['base_reserve_s'] + self.stats['request_s'])
-            
-        except ZeroDivisionError:
-            self.stats['pct_time_trip'] = 0
-
-        write_log(self.stats, self._STATS, filepath)
-
-    def make_trip(self, request, calcs):
-        """
-        Function that completes a ride request.
-
-        Updates Vehicle & logging with inter-trip idle, dispatch to pickup
-        location, and completion of the provided request. Function requires a
-        dictionary, calcs, of precomputed values from the Dispatcher used when
-        assessing the vehicle's viability.
-
-        Parameters
-        ----------
-        request: dict
-            Dictionary of parameters related to the specific request
-        calcs: dict
-            Dictionary of additional metrics precomputed by the hive.Dispatcher
-            object when assessing the vehicle's viability for fulfilling request
-
-        Returns
-        -------
-        None
-        """
-
-        if self.active == False: # Vehicle previously inactive:
-            base_refuel_start_time = calcs['base_refuel_start_time']
-            base_refuel_end_time = calcs['base_refuel_end_time']
-            base_refuel_s = calcs['base_refuel_s']
-            base_refuel_energy_kwh = calcs['base_refuel_energy_kwh']
-            base_reserve_start_time = calcs['base_reserve_start_time']
-            base_reserve_end_time = calcs['base_reserve_end_time']
-            disp_start_time = calcs['dispatch_start_time']
-            disp_end_time = calcs['dispatch_end_time']
-            disp_time_s = calcs['dispatch_time_s']
-            disp_energy_kwh = calcs['dispatch_energy_kwh']
-            disp_dist_mi = calcs['dispatch_dist_miles']
-            req_energy_kwh = calcs['request_energy_kwh']
-            reserve = calcs['reserve']
-
-            # 1. Add VehicleBase refuel event & reserve event (if applicable)
-            self.energy_remaining += base_refuel_energy_kwh
-            start_soc = round(self.soc, 2)
-            self.soc = self.energy_remaining/self.BATTERY_CAPACITY
-            lat, lon = self.latlon
-            #refuel event
-            write_log({
-                'veh_id': self.ID,
-                'activity': 'refuel-base',
-                'start_time': base_refuel_start_time,
-                'start_lat': lat,
-                'start_lon': lon,
-                'end_time': base_refuel_end_time,
-                'end_lat': lat,
-                'end_lon': lon,
-                'dist_mi': 0.0,
-                'start_soc': start_soc,
-                'end_soc': round(self.soc, 2),
-                'passengers': 0
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
-
-            self.stats['base_refuel_cnt']+=1
-            self.stats['base_refuel_s']+=base_refuel_s
-            self.stats['refuel_energy_kwh']+=base_refuel_energy_kwh
-
-            if reserve:
-                #reserve event
-                write_log({
-                    'veh_id': self.ID,
-                    'activity': 'reserve-base',
-                    'start_time': base_reserve_start_time,
-                    'start_lat': lat,
-                    'start_lon': lon,
-                    'end_time': base_reserve_end_time,
-                    'end_lat': lat,
-                    'end_lon': lon,
-                    'dist_mi': 0.0,
-                    'start_soc': round(self.soc, 2),
-                    'end_soc': round(self.soc, 2),
-                    'passengers': 0
-                },
-                self._LOG_COLUMNS,
-                self._logfile)
-
-                base_reserve_s = (base_reserve_end_time - base_reserve_start_time).total_seconds()
-                self.stats['base_reserve_s']+=base_reserve_s
-
-            # 2. Add dispatch to pickup location
-            self.energy_remaining-=disp_energy_kwh
-            start_soc = round(self.soc, 2)
-            self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-
-            write_log({
-                'veh_id': self.ID,
-                'activity': 'dispatch-pickup',
-                'start_time': disp_start_time,
-                'start_lat': lat,
-                'start_lon': lon,
-                'end_time': disp_end_time,
-                'end_lat': request.pickup_lat,
-                'end_lon': request.pickup_lon,
-                'dist_mi': disp_dist_mi,
-                'start_soc': start_soc,
-                'end_soc': round(self.soc, 2),
-                'passengers': 0
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
-
-            self.stats['dispatch_request_vmt']+=disp_dist_mi
-            self.stats['total_vmt']+=disp_dist_mi
-            self.stats['dispatch_request_s']+=disp_time_s
-
-            # 3. Add request
-            self.energy_remaining-=req_energy_kwh
-            start_soc = round(self.soc, 2)
-            self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-            write_log({
-                'veh_id': self.ID,
-                'activity': 'request',
-                'start_time': request.pickup_time,
-                'start_lat': request.pickup_lat,
-                'start_lon': request.pickup_lon,
-                'end_time': request.dropoff_time,
-                'end_lat': request.dropoff_lat,
-                'end_lon': request.dropoff_lon,
-                'dist_mi': request.distance_miles,
-                'start_soc': start_soc,
-                'end_soc': round(self.soc, 2),
-                'passengers': request.passengers
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
-
-            self.stats['request_vmt']+=request.distance_miles
-            self.stats['total_vmt']+=request.distance_miles
-            self.stats['requests_filled']+=1
-            self.stats['passengers_delivered']+=request.passengers
-            req_time_s = (request.dropoff_time - request.pickup_time).total_seconds()
-            self.stats['request_s']+=req_time_s
-            self.active = True
-            self._base = None
-            self.avail_time = request.dropoff_time
-            self.latlon = (request.dropoff_lat, request.dropoff_lon)
-
-        else: # Vehicle previously inactive:
-            idle_start_time = calcs['idle_start_time']
-            idle_end_time = calcs['idle_end_time']
-            idle_time_s = calcs['idle_time_s']
-            idle_energy_kwh = calcs['idle_energy_kwh']
-            disp_start_time = calcs['dispatch_start_time']
-            disp_end_time = calcs['dispatch_end_time']
-            disp_time_s = calcs['dispatch_time_s']
-            disp_end_time = calcs['dispatch_end_time']
-            disp_time_s = calcs['dispatch_time_s']
-            disp_energy_kwh = calcs['dispatch_energy_kwh']
-            disp_dist_mi = calcs['dispatch_dist_miles']
-            req_energy_kwh = calcs['request_energy_kwh']
-
-            lat, lon = self.latlon
-
-            # 1. Add idle event (if appropriate)
-            if idle_time_s > 0:
-                self.energy_remaining-=idle_energy_kwh
-                start_soc = round(self.soc, 2)
-                self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-
-                write_log({
-                    'veh_id': self.ID,
-                    'activity': 'idle',
-                    'start_time': idle_start_time,
-                    'start_lat': lat,
-                    'start_lon': lon,
-                    'end_time': idle_end_time,
-                    'end_lat': lat,
-                    'end_lon': lon,
-                    'dist_mi': 0.0,
-                    'start_soc': start_soc,
-                    'end_soc': round(self.soc,2),
-                    'passengers': 0
-                },
-                self._LOG_COLUMNS,
-                self._logfile)
-
-                self.stats['idle_s'] += idle_time_s
-
-            # 2. Add dispatch to pickup location
-            self.energy_remaining-=disp_energy_kwh
-            start_soc = round(self.soc, 2)
-            self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-
-            write_log({
-                'veh_id': self.ID,
-                'activity': 'dispatch-pickup',
-                'start_time': disp_start_time,
-                'start_lat': lat,
-                'start_lon': lon,
-                'end_time': disp_end_time,
-                'end_lat': request.pickup_lat,
-                'end_lon': request.pickup_lon,
-                'dist_mi': disp_dist_mi,
-                'start_soc': start_soc,
-                'end_soc': round(self.soc, 2),
-                'passengers': 0
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
-
-            self.stats['dispatch_request_vmt']+=disp_dist_mi
-            self.stats['total_vmt']+=disp_dist_mi
-            self.stats['dispatch_request_s']+=disp_time_s
-
-            # 3. Add request
-            self.energy_remaining-=req_energy_kwh
-            start_soc = round(self.soc, 2)
-            self.soc = self.energy_remaining / self.BATTERY_CAPACITY
-
-            write_log({
-                'veh_id': self.ID,
-                'activity': 'request',
-                'start_time': request.pickup_time,
-                'start_lat': request.pickup_lat,
-                'start_lon': request.pickup_lon,
-                'end_time': request.dropoff_time,
-                'end_lat': request.dropoff_lat,
-                'end_lon': request.dropoff_lon,
-                'dist_mi': request.distance_miles,
-                'start_soc': start_soc,
-                'end_soc': round(self.soc, 2),
-                'passengers': request.passengers
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
-
-            self.stats['request_vmt']+=request.distance_miles
-            self.stats['total_vmt']+=request.distance_miles
-            self.stats['requests_filled']+=1
-            self.stats['passengers_delivered']+=request.passengers
-            request_s = (request.dropoff_time - request.pickup_time).total_seconds()
-            self.stats['request_s']+=request_s
-            self.avail_time = request.dropoff_time
-            self.latlon = (request.dropoff_lat, request.dropoff_lon)
+        if self._base is None:
+            base = None
+        else:
+            base = self._base.ID
 
 
-    def refuel_at_station(self, station, dist_mi):
-        """
-        Function to send Vehicle to FuelStation for refuel event.
+        self.history.append({
+                    'ID': self.ID,
+                    'sim_time': self._clock.now,
+                    'position_x': self.x,
+                    'position_y': self.y,
+                    'step_distance_mi': self._step_distance,
+                    'active': self.active,
+                    'available': self.available,
+                    'soc': self.soc,
+                    'activity': self.activity,
+                    'station': station,
+                    'base': base,
+                    'passengers': self.MAX_PASSENGERS - self.avail_seats,
+                    })
 
-        Sends Vehicle to FuelStation station and updates vehicle reporting
-        logs/attributes with a dispatch event and charging event.
+    def _set_fleet_state(self, param, val):
+        col = self.ENV['FLEET_STATE_IDX'][param]
+        self.fleet_state[self.ID, col] = val
 
-        Paramters
-        ---------
-        station: hive.stations.FuelStation
-            hive FuelStation object assigned to Vehicle
-        dist_mi: double precision
-            Approx. driving distance to station
+    def _distance(self, x0, y0, x1, y1):
+        return math.hypot(x1-x0, y1-y0) * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
 
-        Returns
-        -------
-        None
-        """
-        # 1. Add dispatch to station
-        disp_mi = dist_mi
-        disp_s = disp_mi / self.ENV['DISPATCH_MPH'] * 3600
-        disp_end = self.avail_time + datetime.timedelta(seconds=disp_s)
-        disp_energy_kwh = nrg.calc_trip_kwh(disp_mi,
-                                            disp_s,
-                                            self.WH_PER_MILE_LOOKUP)
-        self.energy_remaining -= disp_energy_kwh
-        start_soc = round(self.soc, 2)
-        self.soc = self.energy_remaining/self.BATTERY_CAPACITY
+    def _update_charge(self, dist_mi):
+        spd = self.ENV['DISPATCH_MPH']
+        lookup = self.WH_PER_MILE_LOOKUP
+        kwh__mi = (np.interp(spd, lookup['avg_spd_mph'], lookup['whmi']))/1000.0
+        energy_used_kwh = dist_mi * kwh__mi
+        self.energy_kwh -= energy_used_kwh
 
-        lat, lon = self.latlon
+    def _update_idle(self):
+        if self.activity == 'Idle':
+            self._idle_counter += 1
+            self.idle_min = self._idle_counter * self._clock.TIMESTEP_S * units.SECONDS_TO_MINUTES
+        else:
+            self._idle_counter = 0
+            self.idle_min = 0
 
-        write_log({
-            'veh_id': self.ID,
-            'activity': 'dispatch-station',
-            'start_time': self.avail_time,
-            'start_lat': lat,
-            'start_lon': lon,
-            'end_time': disp_end,
-            'end_lat': station.LAT,
-            'end_lon': station.LON,
-            'dist_mi': disp_mi,
-            'start_soc': start_soc,
-            'end_soc': round(self.soc, 2),
-            'passengers': 0
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
+    def _move(self):
+        if self._route is not None:
+            try:
+                location, dist_mi, activity = next(self._route_iter)
+                self.activity = activity
+                new_x = location[0]
+                new_y = location[1]
+                self._update_charge(dist_mi)
+                self._step_distance = dist_mi
+                self.x = new_x
+                self.y = new_y
+            except StopIteration:
+                self._route = None
+                if self._station is None:
+                    self.available = True
+                self.activity = "Idle"
+                self.avail_seats = self.MAX_PASSENGERS
+                self._step_distance = 0
+        else:
+            self._step_distance = 0
 
-        self.stats['dispatch_station_refuel_s'] += disp_s
-        self.stats['dispatch_station_refuel_vmt'] += disp_mi
-        self.stats['total_vmt'] += disp_mi
-        self.avail_time = disp_end
-        self.latlon = (station.LAT, station.LON)
+    def _charge(self):
+        # Make sure we're not still traveling to charge station
+        if self._route is None:
+            self.activity = f"Charging at Station"
+            energy_gained_kwh = self._station.dispense_energy()
+            hyp_soc = (self._energy_kwh + energy_gained_kwh) / self.BATTERY_CAPACITY
+            if hyp_soc <= 1:
+                self.energy_kwh += energy_gained_kwh
+            else:
+                # Done charging,
+                if self._base is None:
+                    self.activity = "Idle"
+                else:
+                    self.activity = "Reserve"
+                self.available = True
+                self._station.avail_plugs += 1
+                self._station = None
 
-        # 2. Add station recharge
-        soc_i = self.soc
-        if station.PLUG_TYPE == 'AC':
-            soc_f = 1.0 #Q- Should this be an input parameter?
-            refuel_s = chrg.calc_const_charge_secs(self.energy_remaining,
-                                                   self.BATTERY_CAPACITY,
-                                                   station.PLUG_POWER_KW,
-                                                   soc_f)
-        elif station.PLUG_TYPE == 'DC':
-            soc_f = self.ENV['UPPER_SOC_THRESH_STATION']
-            refuel_s = chrg.calc_dcfc_secs(self.CHARGE_TEMPLATE,
-                                          self.BATTERY_CAPACITY,
-                                          self.MAX_CHARGE_ACCEPTANCE_KW,
-                                          soc_i * 100,
-                                          soc_f * 100)
-        refuel_start = self.avail_time
-        refuel_end = refuel_start + datetime.timedelta(seconds=refuel_s)
-        refuel_energy_kwh = self.BATTERY_CAPACITY * (soc_f - soc_i)
-        self.energy_remaining += refuel_energy_kwh
-        self.soc = soc_f
 
-        write_log({
-            'veh_id': self.ID,
-            'activity': 'refuel-station',
-            'start_time': refuel_start,
-            'start_lat': station.LAT,
-            'start_lon': station.LON,
-            'end_time': refuel_end,
-            'end_lat': station.LAT,
-            'end_lon': station.LON,
-            'dist_mi': 0.0,
-            'start_soc': round(soc_i, 2),
-            'end_soc': round(self.soc, 2),
-            'passengers': 0
-        },
-        self._LOG_COLUMNS,
-        self._logfile)
 
-        self.stats['station_refuel_cnt']+=1
-        self.stats['station_refuel_s']+=refuel_s
-        self.stats['refuel_energy_kwh']+=refuel_energy_kwh
-        self.avail_time = refuel_end
+    def _generate_route(self, x0, y0, x1, y1, trip_dist_mi, trip_time_s, activity="NULL"):
+        steps = round(trip_time_s/self._clock.TIMESTEP_S)
+        if steps <= 1:
+            return [((x0, y0), trip_dist_mi, activity), ((x1, y1), trip_dist_mi, activity)]
+        step_distance_mi = trip_dist_mi/steps
+        route_range = np.arange(0, steps + 1)
+        route = []
+        for i, time in enumerate(route_range):
+            t = i/steps
+            xt = (1-t)*x0 + t*x1
+            yt = (1-t)*y0 + t*y1
+            point = (xt, yt)
+            route.append((point, step_distance_mi, activity))
+        return route
 
-        # Update FuelStation
-        station.add_charge_event(self, refuel_start, refuel_end, soc_i, soc_f, refuel_energy_kwh)
 
-    def return_to_base(self, base, dist_mi):
-        """
-        Function to send Vehicle to VehicleBase.
+    def cmd_make_trip(self,
+                 origin_x,
+                 origin_y,
+                 destination_x,
+                 destination_y,
+                 passengers,
+                 trip_dist_mi=None,
+                 trip_time_s=None,
+                 route=None):
 
-        Sends Vehicle to VehicleBase base and updates vehicle reporting
-        logs/attributes with an idle event and the dispatch event. As a result,
-        Vehicle "active" flag is flipped to False.
+        self.active = True
+        self.available = False
+        self.avail_seats -= passengers
+        self._base = None
+        if self._station is not None:
+            self._station.avail_plugs += 1
+            self._station = None
 
-        Parameters
-        ----------
-        base: hive.stations.VehicleBase
-            hive VehicleBase object assigned to Vehicle
-        dist_mi: double precision
-            Approx. driving distance to base
+        current_sim_time = self._clock.now
 
-        Returns
-        -------
-        None
-        """
+        if trip_dist_mi is None:
+            trip_dist_mi = math.hypot(destination_x - origin_x, destination_y - origin_y)\
+                * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+        if trip_time_s is None:
+            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-        # 1. Add idle event
-        idle_s = self.ENV['MAX_ALLOWABLE_IDLE_MINUTES'] * 60
-        idle_end = self.avail_time + datetime.timedelta(seconds=idle_s)
-        idle_energy_kwh = nrg.calc_idle_kwh(idle_s)
-        self.energy_remaining-=idle_energy_kwh
-        start_soc = round(self.soc, 2)
-        self.soc = self.energy_remaining / self.BATTERY_CAPACITY
+        disp_dist_mi = math.hypot(origin_x - self.x, origin_y - self.y) \
+                * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+        disp_route = self._generate_route(
+                                    self.x,
+                                    self.y,
+                                    origin_x,
+                                    origin_y,
+                                    disp_dist_mi,
+                                    disp_time_s,
+                                    activity="Dispatch to Request")
 
-        lat, lon = self.latlon
+        if route is not None:
+            #TODO: Add distance to route.
+            raise NotImplementedError("Routing not implemented yet.")
+            trip_route = [(p, "Serving Trip") for p in route]
+        else:
+            trip_route = self._generate_route(
+                                        origin_x,
+                                        origin_y,
+                                        destination_x,
+                                        destination_y,
+                                        trip_dist_mi,
+                                        trip_time_s,
+                                        activity="Serving Trip")
 
-        write_log({
-            'veh_id': self.ID,
-            'activity': 'idle',
-            'start_time': self.avail_time,
-            'start_lat': lat,
-            'start_lon': lon,
-            'end_time': idle_end,
-            'end_lat': lat,
-            'end_lon': lon,
-            'dist_mi': 0.0,
-            'start_soc': start_soc,
-            'end_soc': round(self.soc, 2),
-            'passengers': 0
-        },
-        self._LOG_COLUMNS,
-        self._logfile)
+        del disp_route[-1]
+        self._route = disp_route + trip_route
+        self._route_iter = iter(self._route)
+        next(self._route_iter)
 
-        self.stats['idle_s'] += idle_s
-        self.avail_time = idle_end
+    def cmd_travel_to(self,
+                  destination_x,
+                  destination_y,
+                  trip_dist_mi=None,
+                  trip_time_s=None,
+                  activity=None):
 
-        # 2. Add dispatch to base
-        disp_mi = dist_mi
-        disp_s = disp_mi / self.ENV['DISPATCH_MPH'] * 3600
-        disp_end = self.avail_time + datetime.timedelta(seconds=disp_s)
-        disp_energy_kwh = nrg.calc_trip_kwh(disp_mi,
-                                            disp_s,
-                                            self.WH_PER_MILE_LOOKUP)
-        self.energy_remaining -= disp_energy_kwh
-        start_soc = round(self.soc, 2)
-        self.soc = self.energy_remaining/self.BATTERY_CAPACITY
+        current_sim_time = self._clock.now
 
-        write_log({
-            'veh_id': self.ID,
-            'activity': 'dispatch-base',
-            'start_time': self.avail_time,
-            'start_lat': lat,
-            'start_lon': lon,
-            'end_time': disp_end,
-            'end_lat': base.LAT,
-            'end_lon': base.LON,
-            'dist_mi': disp_mi,
-            'start_soc': start_soc,
-            'end_soc': round(self.soc, 2),
-            'passengers': 0
-            },
-            self._LOG_COLUMNS,
-            self._logfile)
+        if trip_dist_mi is None:
+            trip_dist_mi = math.hypot(destination_x - self.x, destination_y - self.y) \
+                    * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
+        if trip_time_s is None:
+            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-        self.stats['dispatch_base_refuel_s'] += disp_s
-        self.stats['dispatch_base_refuel_vmt'] += disp_mi
-        self.stats['total_vmt'] += disp_mi
+        self._route = self._generate_route(
+                                    self.x,
+                                    self.y,
+                                    destination_x,
+                                    destination_y,
+                                    trip_dist_mi,
+                                    trip_time_s,
+                                    activity=activity)
+
+        self._route_iter = iter(self._route)
+        next(self._route_iter)
+
+    def cmd_charge(self, station):
+        self.available = False
+        self._station = station
+        self._station.avail_plugs -= 1
+        self.cmd_travel_to(station.X, station.Y, activity=f"Moving to Station")
+
+    def cmd_return_to_base(self, base):
         self.active = False
-        self.base = base
-        self.latlon = (base.LAT, base.LON)
+        self.available = True
+        self._base = base
+        self._station = base
+        self._station.avail_plugs -= 1
+        self.cmd_travel_to(base.X, base.Y, activity=f"Moving to Base")
 
-        # Update VehicleBase
-        base.avail_plugs-=1
+
+    def step(self):
+        self._move()
+
+        if self._station is not None:
+            self._charge()
+
+        self._update_idle()
+
+        self._log()

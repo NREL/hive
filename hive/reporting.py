@@ -4,115 +4,18 @@ results for simulation
 """
 
 import pandas as pd
+import csv
+import os
+import glob
 
-def calc_veh_stats(veh_fleet, vehicle_summary_file):
-    for veh in veh_fleet:
-        veh.dump_stats(vehicle_summary_file)
-
-def calc_fleet_stats(output_file, vehicle_summary_file, reqs_df):
-    veh_stats_df = pd.read_csv(vehicle_summary_file)
-
-    fleet_stats = {}
-
-    total_reqs = len(reqs_df)
-    fleet_stats['total_requests'] = total_reqs
-    reqs_filled = veh_stats_df['requests_filled'].sum()
-    fleet_stats['fleet_requests_filled'] = int(reqs_filled)
-    fleet_stats['pct_requests_filled'] = float(reqs_filled) / total_reqs * 100
-    fleet_stats['mean_requests_filled'] = veh_stats_df['requests_filled'].mean()
-    fleet_stats['max_requests_filled'] = int(veh_stats_df['requests_filled'].max())
-    fleet_stats['min_requests_filled'] = int(veh_stats_df['requests_filled'].min())
-    fleet_stats['std_requests_filled'] = veh_stats_df['requests_filled'].std()
-
-    total_pass = reqs_df.passengers.sum()
-    fleet_stats['total_passenger_requests'] = total_pass
-    pass_del = veh_stats_df['passengers_delivered'].sum()
-    fleet_stats['fleet_passengers_delivered'] = int(pass_del)
-    fleet_stats['pct_passengers_delivered'] = float(pass_del) / total_pass * 100
-    fleet_stats['mean_passengers_delivered'] = veh_stats_df['passengers_delivered'].mean()
-    fleet_stats['max_passengers_delivered'] = int(veh_stats_df['passengers_delivered'].max())
-    fleet_stats['min_passengers_delivered'] = int(veh_stats_df['passengers_delivered'].min())
-    fleet_stats['std_passengers_delivered'] = veh_stats_df['passengers_delivered'].std()
-
-    fleet_stats['mean_pct_time_trip'] = veh_stats_df['pct_time_trip'].mean()
-    fleet_stats['max_pct_time_trip'] = float(veh_stats_df['pct_time_trip'].max())
-    fleet_stats['min_pct_time_trip'] = float(veh_stats_df['pct_time_trip'].min())
-    fleet_stats['std_pct_time_trip'] = float(veh_stats_df['pct_time_trip'].mean())
-
-    fleet_stats['fleet_request_vmt'] = float(veh_stats_df['request_vmt'].sum())
-    fleet_stats['mean_request_vmt'] = veh_stats_df['request_vmt'].mean()
-    fleet_stats['max_request_vmt'] = float(veh_stats_df['request_vmt'].max())
-    fleet_stats['min_request_vmt'] = float(veh_stats_df['request_vmt'].min())
-    fleet_stats['std_request_vmt'] = veh_stats_df['request_vmt'].std()
-
-    fleet_stats['fleet_dispatch_request_vmt'] = float(veh_stats_df['dispatch_request_vmt'].sum())
-    fleet_stats['mean_dispatch_request_vmt'] = veh_stats_df['dispatch_request_vmt'].mean()
-    fleet_stats['max_dispatch_request_vmt'] = float(veh_stats_df['dispatch_request_vmt'].max())
-    fleet_stats['min_dispatch_request_vmt'] = float(veh_stats_df['dispatch_request_vmt'].min())
-    fleet_stats['std_dispatch_request_vmt'] = veh_stats_df['dispatch_request_vmt'].std()
-
-    fleet_stats['fleet_dispatch_station_refuel_vmt'] = float(veh_stats_df['dispatch_station_refuel_vmt'].sum())
-    fleet_stats['mean_dispatch_station_refuel_vmt'] = veh_stats_df['dispatch_station_refuel_vmt'].mean()
-    fleet_stats['max_dispatch_station_refuel_vmt'] = float(veh_stats_df['dispatch_station_refuel_vmt'].max())
-    fleet_stats['min_dispatch_station_refuel_vmt'] = float(veh_stats_df['dispatch_station_refuel_vmt'].min())
-    fleet_stats['std_dispatch_station_refuel_vmt'] = veh_stats_df['dispatch_station_refuel_vmt'].std()
-
-    fleet_stats['fleet_dispatch_base_refuel_vmt'] = float(veh_stats_df['dispatch_base_refuel_vmt'].sum())
-    fleet_stats['mean_dispatch_base_refuel_vmt'] = veh_stats_df['dispatch_base_refuel_vmt'].mean()
-    fleet_stats['max_dispatch_base_refuel_vmt'] = float(veh_stats_df['dispatch_base_refuel_vmt'].max())
-    fleet_stats['min_dispatch_base_refuel_vmt'] = float(veh_stats_df['dispatch_base_refuel_vmt'].min())
-    fleet_stats['std_dispatch_base_refuel_vmt'] = veh_stats_df['dispatch_base_refuel_vmt'].std()
-
-    fleet_stats['fleet_total_vmt'] = float(veh_stats_df['total_vmt'].sum())
-    fleet_stats['mean_total_vmt'] = veh_stats_df['total_vmt'].mean()
-    fleet_stats['max_total_vmt'] = float(veh_stats_df['total_vmt'].max())
-    fleet_stats['min_total_vmt'] = float(veh_stats_df['total_vmt'].min())
-    fleet_stats['std_total_vmt'] = veh_stats_df['total_vmt'].std()
-
-    fleet_stats['fleet_station_refuel_cnt'] = int(veh_stats_df['station_refuel_cnt'].sum())
-    fleet_stats['mean_station_refuel_cnt'] = veh_stats_df['station_refuel_cnt'].mean()
-    fleet_stats['max_station_refuel_cnt'] = int(veh_stats_df['station_refuel_cnt'].max())
-    fleet_stats['min_station_refuel_cnt'] = int(veh_stats_df['station_refuel_cnt'].min())
-    fleet_stats['std_station_refuel_cnt'] = veh_stats_df['station_refuel_cnt'].std()
-
-    fleet_stats['fleet_station_refuel_hours'] = float(veh_stats_df['station_refuel_s'].sum()/3600)
-    fleet_stats['mean_station_refuel_hours'] = veh_stats_df['station_refuel_s'].mean()/3600
-    fleet_stats['max_station_refuel_hours'] = float(veh_stats_df['station_refuel_s'].max()/3600)
-    fleet_stats['min_station_refuel_hours'] = float(veh_stats_df['station_refuel_s'].min()/3600)
-    fleet_stats['std_station_refuel_hours'] = (veh_stats_df['station_refuel_s']/3600).std()
-
-    fleet_stats['fleet_base_refuel_cnt'] = int(veh_stats_df['base_refuel_cnt'].sum())
-    fleet_stats['mean_base_refuel_cnt'] = veh_stats_df['base_refuel_cnt'].mean()
-    fleet_stats['max_base_refuel_cnt'] = int(veh_stats_df['base_refuel_cnt'].max())
-    fleet_stats['min_base_refuel_cnt'] = int(veh_stats_df['base_refuel_cnt'].min())
-    fleet_stats['std_base_refuel_cnt'] = veh_stats_df['base_refuel_cnt'].std()
-
-    fleet_stats['fleet_base_refuel_hours'] = float(veh_stats_df['base_refuel_s'].sum()/3600)
-    fleet_stats['mean_base_refuel_hours'] = veh_stats_df['base_refuel_s'].mean()/3600
-    fleet_stats['max_base_refuel_hours'] = float(veh_stats_df['base_refuel_s'].max()/3600)
-    fleet_stats['min_base_refuel_hours'] = float(veh_stats_df['base_refuel_s'].min()/3600)
-    fleet_stats['std_base_refuel_hours'] = (veh_stats_df['base_refuel_s']/3600).std()
-
-    fleet_stats['fleet_base_reserve_hours'] = float(veh_stats_df['base_reserve_s'].sum()/3600)
-    fleet_stats['mean_base_reserve_hours'] = veh_stats_df['base_reserve_s'].mean()/3600
-    fleet_stats['max_base_reserve_hours'] = float(veh_stats_df['base_reserve_s'].max()/3600)
-    fleet_stats['min_base_reserve_hours'] = float(veh_stats_df['base_reserve_s'].min()/3600)
-    fleet_stats['std_base_reserve_hours'] = (veh_stats_df['base_reserve_s']/3600).std()
-
-    fleet_stats['fleet_idle_hours'] = float(veh_stats_df['idle_s'].sum()/3600)
-    fleet_stats['mean_idle_hours'] = veh_stats_df['idle_s'].mean()/3600
-    fleet_stats['max_idle_hours'] = float(veh_stats_df['idle_s'].max()/3600)
-    fleet_stats['min_idle_hours'] = float(veh_stats_df['idle_s'].min()/3600)
-    fleet_stats['std_idle_hours'] = (veh_stats_df['idle_s']/3600).std()
-
-    with open(output_file, 'w') as f:
-        def p(msg):
-            print(msg, file=f)
-
-        p("Fleet Summary")
-        p("-" * 30)
-        for key, val in fleet_stats.items():
-            p(f'{key}: {val}')
+def generate_logs(objects, log_path, context):
+    keys = objects[0].history[0].keys()
+    for item in objects:
+        filename = os.path.join(log_path, f'{context}_{item.ID}_history.csv')
+        with open(filename, 'w') as f:
+            writer = csv.DictWriter(f, keys)
+            writer.writeheader()
+            writer.writerows(item.history)
 
 
 def summarize_station_use(stations_dict, bases_dict, station_summary_file):
@@ -130,3 +33,17 @@ def summarize_station_use(stations_dict, bases_dict, station_summary_file):
                                             'refuel_energy_kwh': refuel_energy_kwh})
 
     station_summary_df.to_csv(station_summary_file, index=False)
+
+def summarize_fleet_stats(vehicle_log_path, summary_path):
+
+    # VMT Summary
+    drop_columns = ['Charging at Station', 'Idle', 'Reserve']
+    all_vehicle_logs = glob.glob(os.path.join(vehicle_log_path, '*.csv'))
+    fleet_df = pd.concat((pd.read_csv(file) for file in all_vehicle_logs))
+    outfile = os.path.join(summary_path, 'fleet_vmt_summary.csv')
+    fleet_df.groupby('activity').sum()['step_distance_mi']\
+        .drop(drop_columns).to_csv(outfile, header=True)
+
+    # Time Summary
+    outfile = os.path.join(summary_path, 'fleet_time_summary.csv')
+    fleet_df.groupby('activity').count()['sim_time'].to_csv(outfile, header=True)
