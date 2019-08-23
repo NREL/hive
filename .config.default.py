@@ -1,10 +1,19 @@
-"""
-Configurations for running hive over one or more scenario.
-"""
+r"""
 
-# Each simulation gets a sub directory in the outputs folder. If you don't
-# to overwrite outputs, specify a new simulation name here.
-SIMULATION_NAME = "Test Simulation"
+##     ##  ####  ##     ##  #######
+##     ##   ##   ##     ##  ##
+#########   ##   ##     ##  ######
+##     ##   ##    ##   ##   ##
+##     ##  ####     ###     #######
+
+                .' '.            __
+       .        .   .           (__\_
+        .         .         . -{{_(|8)
+          ' .  . ' ' .  . '     (__/
+
+
+Configurations for running hive
+"""
 
 SIMULATION_PERIOD_SECONDS = 60
 
@@ -18,3 +27,9 @@ OUT_PATH = 'outputs/'
 
 VERBOSE = True
 DEBUG = False
+
+# Include all scenarios to run.
+SCENARIOS = [
+    'aus-test',
+    'nyc-test',
+]

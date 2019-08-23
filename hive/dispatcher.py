@@ -154,22 +154,20 @@ class Dispatcher:
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         mask = (self._fleet_state[:, soc_col] < self._ENV['LOWER_SOC_THRESH_STATION']) \
             & (self._fleet_state[:,available_col] == 1) & (self._fleet_state[:, active_col] == 1)
-        vehicles = np.argwhere(mask)
+        veh_ids = np.argwhere(mask)
 
-        for veh in vehicles:
-            vehid = veh[0]
-            vehicle = self._fleet[vehid]
+        for veh_id in veh_ids:
+            vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
             vehicle.cmd_charge(station)
 
     def _check_idle_vehicles(self):
         idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
         idle_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
-        vehicles = np.argwhere(idle_mask)
+        veh_ids = np.argwhere(idle_mask)
 
-        for veh in vehicles:
-            vehid = veh[0]
-            vehicle = self._fleet[vehid]
+        for veh_id in veh_ids:
+            vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
             vehicle.cmd_return_to_base(base)
 

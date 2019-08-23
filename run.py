@@ -12,6 +12,7 @@ import numpy as np
 import pickle
 import glob
 import time
+import yaml
 
 import config as cfg
 
@@ -30,9 +31,11 @@ seed = 123
 random.seed(seed)
 np.random.seed(seed)
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-SCENARIO_PATH = os.path.join(THIS_DIR, cfg.IN_PATH, '.scenarios', cfg.SIMULATION_NAME.replace(" ", "_"))
-OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH, cfg.SIMULATION_NAME.replace(" ", "_"))
-LIB_PATH = os.path.join(cfg.IN_PATH, '.lib')
+LIB_PATH = os.path.join(THIS_DIR, cfg.IN_PATH, 'library')
+SCENARIO_PATH = os.path.join(THIS_DIR, cfg.IN_PATH, 'scenarios')
+STATIC_PATH = os.path.join(LIB_PATH, '.static')
+
+OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH)
 
 FLEET_STATE_IDX ={
     'x': 0,
@@ -46,62 +49,54 @@ FLEET_STATE_IDX ={
     'avail_seats': 8,
 }
 
-def build_input_files():
-    scenarios = dict()
+def load_scenarios():
 
-    main_file = os.path.join(cfg.IN_PATH, 'main.csv')
-    charge_file = os.path.join(LIB_PATH, 'raw_leaf_curves.csv')
-    whmi_lookup_file = os.path.join(LIB_PATH, 'wh_mi_lookup.csv')
+    scenarios = {}
+
+    def name(path):
+        return os.path.splitext(os.path.basename(path))[0]
+
+    charge_file = os.path.join(STATIC_PATH, 'raw_leaf_curves.csv')
+    whmi_lookup_file = os.path.join(STATIC_PATH, 'wh_mi_lookup.csv')
     charge_df = pd.read_csv(charge_file)
-    sim_df = pd.read_csv(main_file)
     whmi_df = pd.read_csv(whmi_lookup_file)
 
-    scenario_names = list()
+    all_scenarios = glob.glob(os.path.join(SCENARIO_PATH, '*.yaml'))
+    scenario_files = [file for file in all_scenarios if name(file) in cfg.SCENARIOS]
 
-    for i, row in sim_df.iterrows():
-        row["SCENARIO_NAME"] = row["SCENARIO_NAME"].strip().replace(" ", "_")
-        scenario_names.append(row['SCENARIO_NAME'])
-        data = {}
-        file_deps = [main_file, charge_file, whmi_lookup_file]
+    for scenario_file in scenario_files:
+        scenario_name = name(scenario_file)
+        with open(scenario_file, 'r') as f:
+            yaml_data = yaml.safe_load(f)
 
-        req_file = os.path.join(cfg.IN_PATH, 'requests', row['REQUESTS_FILE'])
-        file_deps.append(req_file)
+            data = {}
 
-        # Path to charge network file
-        charge_stations_file = os.path.join(cfg.IN_PATH, 'charge_network', row['CHARGE_STATIONS_FILE'])
-        veh_bases_file = os.path.join(cfg.IN_PATH, 'charge_network', row['VEH_BASES_FILE'])
-        file_deps.append(charge_stations_file)
+            filepaths = yaml_data['filepaths']
+            data['requests'] = pp.load_requests(filepaths['requests_file_path'])
+            data['main'] = yaml_data['parameters']
+            #TODO: Rewrite so as to not need dataframe for stations and bases
+            network_dtype = {
+                            'longitude': "float64",
+                            'latitude': "float64",
+                            'plugs': "int64",
+                            'plug_power_kw': "float64",
+                            }
+            data['stations'] = pd.DataFrame(yaml_data['stations']).astype(dtype=network_dtype)
+            data['bases'] = pd.DataFrame(yaml_data['bases']).astype(dtype=network_dtype)
 
-        fleet_file = os.path.join(cfg.IN_PATH, 'fleets', row['FLEET_FILE'])
-        file_deps.append(fleet_file)
+            vehicle_dtype = {
+                            'BATTERY_CAPACITY_KWH': 'float64',
+                            'PASSENGERS': 'int64',
+                            'EFFICIENCY_WHMI': 'float64',
+                            'MAX_KW_ACCEPTANCE': 'float64',
+                            'NUM_VEHICLES': 'int64',
+                            }
+            data['vehicles'] = pd.DataFrame(yaml_data['vehicles']).astype(dtype=vehicle_dtype)
 
-        fleet_df = pd.read_csv(fleet_file)
-        assert fleet_df.shape[0] > 0, 'Must have at least one vehicle type to run simulation.'
-        row['TOTAL_NUM_VEHICLES'] = fleet_df.NUM_VEHICLES.sum()
-        row['NUM_VEHICLE_TYPES'] = fleet_df.shape[0]
+            data['charge_curves'] = charge_df
+            data['whmi_lookup'] = whmi_df
 
-        veh_keys = []
-
-        for veh in fleet_df.itertuples():
-            veh_file = os.path.join(cfg.IN_PATH, 'vehicles', '{}.csv'.format(veh.VEHICLE_NAME))
-            veh_df = pd.read_csv(veh_file)
-            veh_df['VEHICLE_NAME'] = veh.VEHICLE_NAME
-            veh_df['NUM_VEHICLES'] = veh.NUM_VEHICLES
-            data[veh.VEHICLE_NAME] = veh_df.iloc[0]
-            veh_keys.append(veh.VEHICLE_NAME)
-
-        row['VEH_KEYS'] = veh_keys
-
-        data['requests'] = pp.load_requests(req_file)
-        data['stations'] = pd.read_csv(charge_stations_file)
-        data['bases'] = pd.read_csv(veh_bases_file)
-        data['main'] = row
-        data['charge_curves'] = charge_df
-        data['whmi_lookup'] = whmi_df
-
-        scenarios[row['SCENARIO_NAME']] = data
-
-    assert len(scenario_names) == len(set(scenario_names)), 'Scenario names must be unique.'
+            scenarios[scenario_name] = data
 
     return scenarios
 
@@ -156,13 +151,13 @@ def run_simulation(data, sim_name, infile=None):
     #Initialize vehicle fleet
     if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
     env_params = {
-        'MAX_DISPATCH_MILES': inputs['MAX_DISPATCH_MILES'],
-        'MIN_ALLOWED_SOC': inputs['MIN_ALLOWED_SOC'],
+        'MAX_DISPATCH_MILES': float(inputs['MAX_DISPATCH_MILES']),
+        'MIN_ALLOWED_SOC': float(inputs['MIN_ALLOWED_SOC']),
         'RN_SCALING_FACTOR': RN_SCALING_FACTOR,
         'DISPATCH_MPH': DISPATCH_MPH,
-        'LOWER_SOC_THRESH_STATION': inputs['LOWER_SOC_THRESH_STATION'],
-        'UPPER_SOC_THRESH_STATION': inputs['UPPER_SOC_THRESH_STATION'],
-        'MAX_ALLOWABLE_IDLE_MINUTES': inputs['MAX_ALLOWABLE_IDLE_MINUTES'],
+        'LOWER_SOC_THRESH_STATION': float(inputs['LOWER_SOC_THRESH_STATION']),
+        'UPPER_SOC_THRESH_STATION': float(inputs['UPPER_SOC_THRESH_STATION']),
+        'MAX_ALLOWABLE_IDLE_MINUTES': float(inputs['MAX_ALLOWABLE_IDLE_MINUTES']),
     }
 
     for param, val in env_params.items():
@@ -170,7 +165,7 @@ def run_simulation(data, sim_name, infile=None):
 
     env_params['FLEET_STATE_IDX'] = FLEET_STATE_IDX
 
-    vehicle_types = [data[key] for key in inputs['VEH_KEYS']]
+    vehicle_types = [veh for veh in data['vehicles'].itertuples()]
     fleet, fleet_state = initialize_fleet(vehicle_types = vehicle_types,
                              bases = bases,
                              charge_curve = data['charge_curves'],
@@ -247,18 +242,13 @@ if __name__ == "__main__":
     #     subprocess.run('doit forget', shell=True)
     #     subprocess.run('doit build_input_files', shell=True)
     #     subprocess.run('doit run_simulation', shell=True)
-    if not os.path.isdir(cfg.OUT_PATH):
+    if not os.path.isdir(OUT_PATH):
         print('Building base output directory..')
         os.makedirs(cfg.OUT_PATH)
 
-    print('Building simulation output directory..')
-    if not os.path.isdir(OUT_PATH):
-        os.makedirs(OUT_PATH)
-    else:
-        shutil.rmtree(OUT_PATH)
-        os.makedirs(OUT_PATH)
+    assert len(cfg.SCENARIOS) == len(set(cfg.SCENARIOS)), 'Scenario names must be unique.'
 
-    scenarios = build_input_files()
+    scenarios = load_scenarios()
 
     for scenario_name, data in scenarios.items():
         run_simulation(data, scenario_name)

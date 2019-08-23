@@ -273,7 +273,7 @@ class Vehicle:
             self.activity = f"Charging at Station"
             energy_gained_kwh = self._station.dispense_energy()
             hyp_soc = (self._energy_kwh + energy_gained_kwh) / self.BATTERY_CAPACITY
-            if hyp_soc <= 1:
+            if hyp_soc <= self.ENV['UPPER_SOC_THRESH_STATION']:
                 self.energy_kwh += energy_gained_kwh
             else:
                 # Done charging,
@@ -391,7 +391,7 @@ class Vehicle:
         self.available = False
         self._station = station
         self._station.avail_plugs -= 1
-        self.cmd_travel_to(station.X, station.Y, activity=f"Moving to Station")
+        self.cmd_travel_to(station.X, station.Y, activity="Moving to Station")
 
     def cmd_return_to_base(self, base):
         self.active = False
@@ -399,7 +399,7 @@ class Vehicle:
         self._base = base
         self._station = base
         self._station.avail_plugs -= 1
-        self.cmd_travel_to(base.X, base.Y, activity=f"Moving to Base")
+        self.cmd_travel_to(base.X, base.Y, activity="Moving to Base")
 
 
     def step(self):
