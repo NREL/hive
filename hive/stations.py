@@ -3,7 +3,7 @@ Charging station objects used in the HIVE simulation platform.
 """
 
 from hive.constraints import STATION_PARAMS
-from hive.utils import assert_constraint, write_log, initialize_log
+from hive.utils import assert_constraint
 from hive import units
 
 import utm

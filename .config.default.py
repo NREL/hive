@@ -33,3 +33,5 @@ SCENARIOS = [
     'aus-test',
     'nyc-test',
 ]
+
+RANDOM_SEED = 123

@@ -3,6 +3,8 @@ import yaml
 import json
 import os
 
+import pandas as pd
+
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 LIB_PATH = os.path.join(THIS_DIR, 'library')
 STATIC_PATH = os.path.join(LIB_PATH, '.static')
@@ -10,16 +12,15 @@ SCENARIO_PATH = os.path.join(THIS_DIR, 'scenarios')
 GENERATOR_FILE = 'scenario_generator.csv'
 
 
-def load_csv(filepath, id_field):
+def load_csv(filepath):
     result = []
     with open(filepath, encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            # key = row[id_field]
-            # result.append({f'{key}': dict(row)})
             result.append(dict(row))
 
     return result
+
 
 def load_vehicles(fleet):
     vehicles = []
@@ -56,6 +57,9 @@ def build_scenarios():
         for scenario in reader:
             config = {}
 
+            charge_profile_file = os.path.join(STATIC_PATH, 'raw_leaf_curves.csv')
+            whmi_lookup_file = os.path.join(STATIC_PATH, 'wh_mi_lookup.csv')
+
             filepaths = {}
             requests_file = os.path.join(LIB_PATH,
                                         'requests',
@@ -78,16 +82,29 @@ def build_scenarios():
             parameters = read_parameters(scenario)
             config['parameters'] = parameters
 
-            fleet = load_csv(fleet_file, id_field="fleet_entry")
+            fleet = load_csv(fleet_file)
 
             vehicles = load_vehicles(fleet)
             config['vehicles'] = vehicles
 
-            bases = load_csv(vehicle_bases_file, id_field="base")
+            bases = load_csv(vehicle_bases_file)
             config['bases'] = bases
 
-            stations = load_csv(charge_stations_file, id_field="station_id")
+            stations = load_csv(charge_stations_file)
             config['stations'] = stations
+
+            charge_profile_df = pd.read_csv(charge_profile_file)
+            config['charge_profile'] = {
+                                'soc': charge_profile_df.soc.to_list(),
+                                'kw': charge_profile_df.kw.to_list(),
+                                }
+
+            whmi_df = pd.read_csv(whmi_lookup_file)
+            config['whmi_lookup'] = {
+                                'mph': whmi_df.mph.to_list(),
+                                'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
+                                }
+
 
             name = scenario['SCENARIO_NAME']
             outfile = os.path.join(SCENARIO_PATH, f'{name}.yaml')

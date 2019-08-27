@@ -9,7 +9,6 @@ import numpy as np
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
-from hive.utils import write_log
 from hive.units import METERS_TO_MILES
 
 class Dispatcher:

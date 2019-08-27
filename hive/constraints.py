@@ -15,11 +15,25 @@ ENV_PARAMS = {
 
 VEH_PARAMS = {
     'BATTERY_CAPACITY': ('greater_than', 0), #kwh
-    'INITIAL_SOC': ('between_incl', 0, 1)
+    'INITIAL_SOC': ('between_incl', 0, 1),
+    'MAX_PASSENGERS': ('greater_than', 0),
+    'MAX_CHARGE_ACCEPTANCE_KW': ('greater_than', 0),
 }
 
 STATION_PARAMS = {
     'TOTAL_PLUGS': ('greater_than', 0),
     'PLUG_TYPE': ('in_set', ['AC', 'DC']),
     'PLUG_POWER': ('greater_than', 0), #kw
+}
+
+FLEET_STATE_IDX ={
+    'x': 0,
+    'y': 1,
+    'active': 2,
+    'available': 3,
+    'soc': 4,
+    'idle_min': 5,
+    'KWH__MI': 6,
+    'BATTERY_CAPACITY_KWH': 7,
+    'avail_seats': 8,
 }
