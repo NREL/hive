@@ -9,7 +9,7 @@ from hive import charging
 class ChargingTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        PATH_TO_LEAF = '../inputs/.lib/raw_leaf_curves.csv'
+        PATH_TO_LEAF = '../inputs/library/.static/raw_leaf_curves.csv'
         cls.leaf_df = pd.read_csv(PATH_TO_LEAF)
 
     @classmethod
@@ -28,13 +28,13 @@ class ChargingTest(unittest.TestCase):
         charge_time = 3600
         soc_i = 20
         soc_f = 80
-        
+
         scaled_df = charging.construct_temporal_charge_template(self.leaf_df,
-                                                                battery_kwh, 
+                                                                battery_kwh,
                                                                 battery_kw)
 
-        charge_df = charging.construct_charge_profile(scaled_df, 
-                                                        soc_i = soc_i, 
+        charge_df = charging.construct_charge_profile(scaled_df,
+                                                        soc_i = soc_i,
                                                         soc_f = soc_f)
 
         # TODO: add some assertion to test scaled_df and charge_df
@@ -43,16 +43,16 @@ class ChargingTest(unittest.TestCase):
 
         kwh_out = charging.calc_const_charge_kwh(1800, kw=6.6)
 
-        self.assertEqual(kwh_out, 3.3)    
+        self.assertEqual(kwh_out, 3.3)
 
     def test_calc_const_charge_secs(self):
 
-        secs_out = charging.calc_const_charge_secs(init_energy_kwh = 8, 
-                                                 battery_capacity_kwh = 40, 
-                                                 kw=6.6, 
+        secs_out = charging.calc_const_charge_secs(init_energy_kwh = 8,
+                                                 battery_capacity_kwh = 40,
+                                                 kw=6.6,
                                                  soc_f=1.0)
-        
-        self.assertEqual(secs_out, 17454.545454545456)   
+
+        self.assertEqual(secs_out, 17454.545454545456)
 
     def test_calc_dcfc_kwh(self):
         kwh_out = charging.calc_dcfc_kwh(30, 50, 20, 600)
