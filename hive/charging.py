@@ -4,7 +4,6 @@ Functions for estimating charge curves
 """
 
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 
 def construct_temporal_charge_template(unscaled_df, battery_kwh, battery_kw):
