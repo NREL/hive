@@ -9,6 +9,7 @@ import os
 import glob
 
 def generate_logs(objects, log_path, context):
+    #TODO: Make this function more robust by ensuring all objects have same keys. 
     keys = objects[0].history[0].keys()
     for item in objects:
         filename = os.path.join(log_path, f'{context}_{item.ID}_history.csv')

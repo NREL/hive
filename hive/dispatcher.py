@@ -105,7 +105,8 @@ class Dispatcher:
 
         return nearest
 
-    def _get_n_best_vehicles(self, fleet_state, request, n):
+    def _get_n_best_vehicles(self, request, n):
+        fleet_state = self._fleet_state
         point = np.array([(request.pickup_x, request.pickup_y)])
         dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
         best_vehs_idx = np.argsort(dist)
@@ -130,7 +131,7 @@ class Dispatcher:
     def _dispatch_vehicles(self, requests):
         self._dropped_requests = 0
         for request in requests.itertuples():
-            best_vehicle = self._get_n_best_vehicles(self._fleet_state, request, 1)
+            best_vehicle = self._get_n_best_vehicles(request, n=1)
             if len(best_vehicle) < 1:
                 self._dropped_requests += 1
             else:
