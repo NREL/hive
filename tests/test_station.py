@@ -4,28 +4,24 @@ import shutil
 import unittest
 from datetime import datetime
 
+from build_test_env import load_test_scenario
+
 sys.path.append('../')
-from hive.stations import FuelStation, VehicleBase
-from hive.vehicle import Vehicle
-from hive.constraints import STATION_PARAMS
+from hive.initialize import initialize_stations
+from hive.utils import Clock
+from hive.units import SECONDS_TO_HOURS
 
-
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
-TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class StationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if not os.path.isdir(TEST_OUTPUT_DIR):
-            os.makedirs(TEST_OUTPUT_DIR)
-        cls.log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-
+        cls.TIMESTEP_S = 60
+        data = load_test_scenario()
+        cls.stations = initialize_stations(data['stations'], clock=Clock(cls.TIMESTEP_S))
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.isdir(TEST_OUTPUT_DIR):
-            shutil.rmtree(TEST_OUTPUT_DIR)
+        pass
 
     def setUp(self):
         pass
@@ -33,76 +29,14 @@ class StationTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_station_plug_exception(self):
-        with self.assertRaises(Exception) as context:
-            station = FuelStation(station_id = 1,
-                                    latitude = 0,
-                                    longitude = 0,
-                                    plugs = -1,
-                                    plug_type = "DC",
-                                    plug_power = 150,
-                                    logfile=self.log_file)
+    def test_station_dispense_energy(self):
+        test_station = self.stations[0]
+        test_station.PLUG_POWER_KW = 50
+        expected_energy_kwh = test_station.PLUG_POWER_KW * (self.TIMESTEP_S * SECONDS_TO_HOURS)
+        station_energy_kwh = test_station.dispense_energy()
+        self.assertTrue(expected_energy_kwh == station_energy_kwh)
 
-        low_limit = STATION_PARAMS['TOTAL_PLUGS'][1]
-        expected_error = f"Param TOTAL_PLUGS:-1 is under low limit {low_limit}"
 
-        self.assertTrue(expected_error in str(context.exception))
-
-    def test_station_plug_type_exception(self):
-        with self.assertRaises(Exception) as context:
-            station = FuelStation(station_id = 1,
-                                    latitude = 0,
-                                    longitude = 0,
-                                    plugs = 1,
-                                    plug_type = "XX",
-                                    plug_power = 150,
-                                    logfile=self.log_file)
-
-        expected_error = f"Param PLUG_TYPE:XX must be from set"
-
-        self.assertTrue(expected_error in str(context.exception))
-
-    def test_station_plug_power_exception(self):
-        with self.assertRaises(Exception) as context:
-            station = FuelStation(station_id = 1,
-                                    latitude = 0,
-                                    longitude = 0,
-                                    plugs = 1,
-                                    plug_type = "DC",
-                                    plug_power = -1,
-                                    logfile=self.log_file)
-
-        low_limit = STATION_PARAMS['PLUG_POWER'][1]
-        expected_error = f"Param PLUG_POWER:-1 is under low limit {low_limit}"
-
-        self.assertTrue(expected_error in str(context.exception))
-
-    def test_station_add_charge_event(self):
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'test_station_log.csv')
-        station = FuelStation(station_id = 1,
-                                latitude = 0,
-                                longitude = 0,
-                                plugs = 1,
-                                plug_type = "DC",
-                                plug_power = 150,
-                                logfile=log_file)
-        veh = Vehicle(veh_id = 1,
-                        name='test_veh',
-                        battery_capacity = 100,
-                        max_passengers=4,
-                        initial_soc = 0.5,
-                        whmi_lookup = "placeholder",
-                        charge_template = "placeholder",
-                        logfile=self.log_file)
-
-        start_time = datetime(2019,5,1,1)
-        end_time = datetime(2019,5,1,2)
-        soc_i = 0.5
-        soc_f = 1
-
-        station.add_charge_event(veh, start_time, end_time, soc_i, soc_f)
-
-        self.assertEqual(station.stats['charge_cnt'], 1)
 
 if __name__ == "__main__":
     unittest.main()

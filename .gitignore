@@ -6,10 +6,6 @@ config.py
 .DS_Store
 *.pstats
 outputs/
-inputs/*
-!inputs/.inputs_default/
-!inputs/.lib/
-!inputs/.scenarios/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,17 +1,13 @@
 import os
-import sys
 import shutil
-import pickle
+import sys
 import unittest
-import pandas as pd
+import csv
 
 sys.path.append('../')
 from hive import reporting
-from hive.utils import initialize_log
-from hive.vehicle import Vehicle
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
 TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
 
 class ReportingTest(unittest.TestCase):
@@ -19,7 +15,6 @@ class ReportingTest(unittest.TestCase):
     def setUpClass(cls):
         if not os.path.isdir(TEST_OUTPUT_DIR):
             os.makedirs(TEST_OUTPUT_DIR)
-        cls.reqs_df = pd.DataFrame({'passengers': [1, 2]})
 
     @classmethod
     def tearDownClass(cls):
@@ -32,39 +27,29 @@ class ReportingTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_calc_fleet_stats(self):
-        vehicle_summary_file = os.path.join(TEST_OUTPUT_DIR, 'vehicle_summary.csv')
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        fleet_summary_file = os.path.join(TEST_OUTPUT_DIR, 'fleet_summary.txt')
+    def test_generate_logs(self):
+        class TestObj:
+            def __init__(self, id, data):
+                self.ID = id
+                self.history = data
 
-        veh1 = Vehicle(veh_id = 1,
-                        name='test1',
-                        battery_capacity = 10,
-                        max_passengers = 4,
-                        initial_soc = 0.2,
-                        whmi_lookup = "placeholder",
-                        charge_template = "placeholder",
-                        logfile = log_file)
-        veh2 = Vehicle(veh_id = 2,
-                        name='test2',
-                        battery_capacity = 10,
-                        max_passengers = 4,
-                        initial_soc = 0.2,
-                        whmi_lookup = "placeholder",
-                        charge_template = "placeholder",
-                        logfile = log_file)
+        data = [
+            {'a': 1, 'b': 'a', 'c': 1.1},
+            {'a': 2, 'b': 'b', 'c': 2.2},
+            {'a': 3, 'b': 'c', 'c': 3.3},
+        ]
 
-        initialize_log(veh1._STATS, vehicle_summary_file)
+        objects = []
+        for id in range(10):
+            objects.append(TestObj(id, data))
 
-        veh1.dump_stats(vehicle_summary_file)
-        veh2.dump_stats(vehicle_summary_file)
+        reporting.generate_logs(objects, TEST_OUTPUT_DIR, context="TEST")
 
-        reporting.calc_fleet_stats(fleet_summary_file, vehicle_summary_file, self.reqs_df)
-
-        self.assertTrue(os.path.isfile(vehicle_summary_file))
-
-        #TODO: make test more robust by checking accurate calculations.
-
+        test_file = os.path.join(TEST_OUTPUT_DIR, 'TEST_1_history.csv')
+        with open(test_file, encoding='utf-8-sig') as f:
+            reader = csv.DictReader(f)
+            for i, row in enumerate(reader):
+                self.assertEqual(dict(row), {k: str(v) for k, v in data[i].items()})
 
 
 if __name__ == "__main__":

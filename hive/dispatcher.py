@@ -9,7 +9,6 @@ import numpy as np
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
-from hive.utils import write_log
 from hive.units import METERS_TO_MILES
 
 class Dispatcher:
@@ -106,7 +105,8 @@ class Dispatcher:
 
         return nearest
 
-    def _get_n_best_vehicles(self, fleet_state, request, n):
+    def _get_n_best_vehicles(self, request, n):
+        fleet_state = self._fleet_state
         point = np.array([(request.pickup_x, request.pickup_y)])
         dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
         best_vehs_idx = np.argsort(dist)
@@ -131,7 +131,7 @@ class Dispatcher:
     def _dispatch_vehicles(self, requests):
         self._dropped_requests = 0
         for request in requests.itertuples():
-            best_vehicle = self._get_n_best_vehicles(self._fleet_state, request, 1)
+            best_vehicle = self._get_n_best_vehicles(request, n=1)
             if len(best_vehicle) < 1:
                 self._dropped_requests += 1
             else:
@@ -154,22 +154,20 @@ class Dispatcher:
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         mask = (self._fleet_state[:, soc_col] < self._ENV['LOWER_SOC_THRESH_STATION']) \
             & (self._fleet_state[:,available_col] == 1) & (self._fleet_state[:, active_col] == 1)
-        vehicles = np.argwhere(mask)
+        veh_ids = np.argwhere(mask)
 
-        for veh in vehicles:
-            vehid = veh[0]
-            vehicle = self._fleet[vehid]
+        for veh_id in veh_ids:
+            vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
             vehicle.cmd_charge(station)
 
     def _check_idle_vehicles(self):
         idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
         idle_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
-        vehicles = np.argwhere(idle_mask)
+        veh_ids = np.argwhere(idle_mask)
 
-        for veh in vehicles:
-            vehid = veh[0]
-            vehicle = self._fleet[vehid]
+        for veh_id in veh_ids:
+            vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
             vehicle.cmd_return_to_base(base)
 
