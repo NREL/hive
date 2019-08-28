@@ -68,8 +68,8 @@ class VehicleTest(unittest.TestCase):
         self.assertTrue(test_vehicle._route == None)
 
     def test_vehicle_cmd_charge(self):
-        test_vehicle = self.SIM_ENV['fleet'][0]
-        test_station = self.SIM_ENV['stations'][0]
+        test_vehicle = self.SIM_ENV['fleet'][2]
+        test_station = self.SIM_ENV['stations'][2]
 
         pre_avail_plugs = test_station.avail_plugs
 
@@ -81,7 +81,7 @@ class VehicleTest(unittest.TestCase):
 
         sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
 
-        for t in range(sim_steps):
+        for t in range(sim_steps+1):
             test_vehicle.step()
 
         self.assertTrue(test_vehicle.x == test_station.X)
@@ -103,7 +103,34 @@ class VehicleTest(unittest.TestCase):
 
         self.assertTrue(test_vehicle.soc > self.SIM_ENV['env_params']['UPPER_SOC_THRESH_STATION'] - 0.1)
         self.assertTrue(test_vehicle.soc < self.SIM_ENV['env_params']['UPPER_SOC_THRESH_STATION'])
-        self.assertTrue(test_station.avail_plugs == pre_avail_plugs)
+        self.assertEqual(test_station.avail_plugs, pre_avail_plugs)
+
+    def test_vehicle_cmd_return_to_base(self):
+        test_vehicle = self.SIM_ENV['fleet'][3]
+        test_base = self.SIM_ENV['bases'][0]
+
+        pre_avail_plugs = test_base.avail_plugs
+
+        test_vehicle.cmd_return_to_base(test_base)
+
+        disp_dist_mi = math.hypot(test_base.X - test_vehicle.x, test_base.Y - test_vehicle.y)\
+                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+
+        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
+
+        for t in range(sim_steps+1):
+            test_vehicle.step()
+
+        test_vehicle.energy_kwh = test_vehicle.BATTERY_CAPACITY * 0.5
+        test_vehicle.step()
+
+        self.assertEqual(test_vehicle.x, test_base.X)
+        self.assertEqual(test_vehicle.y, test_base.Y)
+        self.assertEqual(test_vehicle._base, test_base)
+        self.assertEqual(test_vehicle._station, test_base)
+        self.assertEqual(test_base.avail_plugs, pre_avail_plugs - 1)
+        self.assertEqual(test_vehicle.activity,  "Charging at Station")
 
 
 
