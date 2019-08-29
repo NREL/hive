@@ -10,73 +10,25 @@ NREL's Highly Integrated Vehicle Ecosystem (HIVE) framework simulates the
 operations of mobility-service-provider fleets.
 
 .. toctree::
-   :maxdepth: 2
-   :hidden:
-   setup
+   :maxdepth: 3
 
 * :doc:`setup`
+* :doc:`user_guide/getting_started`
 
-Charging
+Modules
 =================
-.. automodule:: hive.charging
-   :members:
 
-Constraints
-=================
-.. automodule:: hive.constraints
-   :members:
-
-Dispatcher
-=================
-.. automodule:: hive.dispatcher
-   :members:
-
-Initialize
-=================
-.. automodule:: hive.initialize
-   :members:
-
-Pooling
-=================
-.. automodule:: hive.pooling
-   :members:
-
-Preprocess
-=================
-.. automodule:: hive.preprocess
-   :members:
-
-Reporting
-=================
-.. automodule:: hive.reporting
-   :members:
-
-Stations
-=================
-.. automodule:: hive.stations
-   :members:
-
-Trip Energy
-=================
-.. automodule:: hive.tripenergy
-   :members:
-
-Utilities
-=================
-.. automodule:: hive.utils
-   :members:
-
-Vehicle
-=================
-.. automodule:: hive.vehicle
-   :members:
-
-Visualize
-=================
-.. automodule:: hive.visualize
-   :members:
-
-
+* :doc:`reference/charging`
+* :doc:`reference/constraints`
+* :doc:`reference/dispatcher`
+* :doc:`reference/initialize`
+* :doc:`reference/pooling`
+* :doc:`reference/preprocess`
+* :doc:`reference/reporting`
+* :doc:`reference/stations`
+* :doc:`reference/trip_energy`
+* :doc:`reference/utilities`
+* :doc:`reference/vehicle`
 
 
 Indices and tables
