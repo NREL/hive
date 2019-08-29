@@ -213,7 +213,6 @@ if __name__ == "__main__":
 
     assert len(cfg.SCENARIOS) == len(set(cfg.SCENARIOS)), 'Scenario names must be unique.'
 
-
     all_scenarios = glob.glob(os.path.join(SCENARIO_PATH, '*.yaml'))
 
     for scenario_file in all_scenarios:

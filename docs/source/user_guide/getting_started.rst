@@ -89,3 +89,59 @@ Each vehicle file represents a unique vehicle type and must have at least the fo
 * :code:`PASSENGERS`: The maximum number of passengers the vehicle can hold.
 * :code:`EFFICIENCY_WHMI`: The energy efficiency of the vehicle in watt-hours/mile.
 * :code:`MAX_KW_ACCEPTANCE`: The maximum power acceptance of the vehicle in kilowatts.
+
+Building scenarios from input library
+-------------------------------------
+
+In order to run a scenario, you need to generate a :code:`scenario.yaml` file. These files should be located in the :code:`inputs/scenarios` directory.
+
+Hive comes with two sample scenario files but if you want to generate your own, you'll need to use the :code:`generate_scenarios.py` tool.
+
+This tool looks at the :code:`scenario_generator.csv` file. For each row within this file, the tool will generate a unique scenario. The :code:`scenario_generator.csv` file must have at least the following columns:
+
+* :code:`SCENARIO_NAME`: A unique name for the scenario.
+* :code:`REQUESTS_FILE`: The name of the requests file for the scenario. Hive looks for this file in the :code:`inputs/library/requests/` directory.
+* :code:`CHARGE_STATIONS_FILE`: The name of the station network file for the scenario. Hive looks for this file in the :code:`inputs/library/charge_network/` directory.
+* :code:`VEH_BASES_FILE`: The name of the base network file for the scenario. Hive looks for this file in the :code:`inputs/library/charge_network/` directory.
+* :code:`FLEET_FILE`: The name of the fleet file for the scenario. Hive looks for this file in the :code:`inputs/library/fleet/` directory.
+* :code:`MAX_DISPATCH_MILES`: The maximum distance that a vehicle can travel to service a trip.
+* :code:`MAX_ALLOWABLE_IDLE_MINUTES`: The maximum amount of time that a vehicle can idle after serving a trip before returning to its respective base.
+* :code:`LOWER_SOC_THRESH_STATION`: The threshold for vehicle SOC that indicates when they should seek charging.
+* :code:`UPPER_SOC_THRESH_STATION`: The threshold for which a vehicle will consider a full charge.
+* :code:`MIN_ALLOWED_SOC`: The minimum allowable SOC for a vehicle to maintain. The dispatcher will not allow vehicles to take a trip if their SOC is projected to fall below this value.
+
+Now, to generate the scenarios, simply run:
+
+.. code-block::
+
+    > python generate_scenarios.py
+
+Running your first scenario
+---------------------------
+
+We're finally ready to run our first scenarios. We'll demonstrate this process with the two scenarios included with the package.
+
+We can define the scenarios that hive will run in the :code:`config.py` file that lives in the root directory. Within it is a list titled :code:`SCENARIOS`. Here you should see the names of the two scenario files :code:`aus-test` and :code:`nyc-test`.
+
+Now, simply navigate to the root directory and run the command:
+
+.. code-block:
+
+    > python run.py
+
+If you've set the :code:`VERBOSE` flag to :code:`True` in :code:`config.py`, you'll see hive describing the runtime process.
+
+Understanding the outputs
+-------------------------
+
+After the two scenarios have finished running, we will find that the scenario names now appear in the :code:`outputs` directory. Within this directory we'll find two subdirectories: :code:`logs` and :code:`summaries`.
+
+The :code:`logs` directory contains additional subdirectories for the bases, stations, dispatcher, and vehicles. Each of the objects within the simulation record their state at each time step. These steps are collected and written to csv at the end of the simulation.
+
+The :code:`summaries` directory contains select aggregations that with respect to various metrics. While these are not exhaustive summaries, you can generate your own by running an analysis over the detailed logs.
+
+.. warning::
+
+    Each time hive runs a scenario it will overwrite its corresponding output subdirectory.
+
+Congrats! You've made it to the end of Getting Started. You should be able to start using hive 🐝
