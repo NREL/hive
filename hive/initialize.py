@@ -12,21 +12,18 @@ from hive.vehicle import Vehicle
 
 def initialize_stations(station_df, clock):
     """
-    Initializes stations dict from DataFrame.
-
-    Function initializes stations dict from pd.DataFrame containing vehicle
-    station network .csv (hive/inputs/charge_network/..).
+    Initializes stations list from DataFrame.
 
     Parameters
     ----------
     station_df: pd.DataFrame
-        DataFrame containing scenario vehicle base network
-    station_log_file: string
-        File for logging
+        DataFrame containing scenario vehicle station or base network
+    clock: hive.utils.Clock
+        simulation clock shared across the simulation to track simulation time steps.
 
     Returns
     -------
-    stations
+    stations: list
         list of initialized stations.
     """
     stations = []
@@ -51,6 +48,31 @@ def initialize_fleet(vehicle_types,
                         env_params,
                         clock,
                         ):
+    """
+    Initializes the fleet and the fleet_state matrix.
+
+    Parameters
+    ----------
+    vehicle_types: list
+        list of vehicle types and number of vehicles for each type.
+    bases: list
+        list of bases objects.
+    charge_curve: pd.DataFrame
+        Dataframe containing a charge curve for all vehicles.
+    whmi_lookup: pd.DataFrame
+        Dataframe containing a watt-hour per mile lookup for all vehicles.
+    env_params: dict
+        dictionary of all of the constant environment parameters shared across the simulation.
+    clock: hive.utils.Clock
+        simulation clock shared across the simulation to track simulation time steps.
+
+    Returns
+    -------
+    veh_fleet: list
+        list of all initialized vehicles
+    fleet_state: np.ndarray
+        matrix that represents the state of the fleet. Used for quick numpy vectorized operations.
+    """
     id = 0
     veh_fleet = []
     fleet_state_constructor = []

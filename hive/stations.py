@@ -14,8 +14,8 @@ class FuelStation:
     """
     Base class for electric vehicle charging station.
 
-    Inputs
-    ------
+    Parameters
+    ----------
     station_id : int
         Identifer assigned to FuelStation object
     latitude : float
@@ -26,19 +26,10 @@ class FuelStation:
         Number of plugs at location
     plug_type: str
         Plug type - AC or DC
-    plug_power: float
+    plug_power_kw: float
         Plug power in kW
-    logfile: str
-        Path to fuel station log file
-
-    Attributes
-     ----------
-    charge_cnt:
-        Number of charge events
-    total_energy:
-        Total energy supplied for recharging in kWh
-    avail_plugs:
-        Number of plugs that are unoccupied
+    clock: hive.utils.Clock
+        simulation clock shared across the simulation to track simulation time steps.
     """
 
     def __init__(
@@ -92,6 +83,15 @@ class FuelStation:
                         })
 
     def dispense_energy(self):
+        """
+        Returns the amount of energy that the station dispenses during one simulation
+        time step.
+
+        Returns
+        -------
+        energy_kwh: float
+            Amount of energy dispensed in a time step. Units are kilowatt-hours.
+        """
         timestep_h = self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS
         energy_kwh = self.PLUG_POWER_KW * timestep_h
 
@@ -100,5 +100,8 @@ class FuelStation:
         return energy_kwh
 
     def step(self):
+        """
+        Called each time step. Station updates its state and log history.
+        """
         self._log()
         self._energy_dispensed_kwh = 0

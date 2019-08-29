@@ -7,6 +7,14 @@ import csv
 import shutil
 
 class Clock:
+    """
+    Iterator to store simulation time information.
+
+    Parameters
+    ----------
+    timestep_s: int
+        amount of seconds that one simulation time step represents.
+    """
     def __init__(self, timestep_s):
         self.now = 0
         self.TIMESTEP_S = timestep_s
@@ -14,15 +22,24 @@ class Clock:
         self.now += 1
 
 def save_to_hdf(data, outfile):
+    """
+    Function to save data to hdf5.
+    """
     for key, val in data.items():
         val.to_hdf(outfile, key=key)
 
 def save_to_pickle(data, outfile):
+    """
+    Function to save data to pickle.
+    """
     with open(outfile, 'wb') as f:
         pickle.dump(data, f)
 
 
 def build_output_dir(scenario_name, root_path):
+    """
+    Function to build scenario level output directory in root output directory.
+    """
     scenario_output = os.path.join(root_path, scenario_name)
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
@@ -48,11 +65,27 @@ def assert_constraint(param, val, CONSTRAINTS, context=""):
     """
     Helper function to assert constraints at runtime.
 
-    between:        Check that value is between upper and lower bounds exclusive
-    between_incl:   Check that value is between upper and lower bounds inclusive
-    greater_than:   Check that value is greater than lower bound exclusive
-    less_than:      Check that value is less than upper bound exclusive
-    in_set:         Check that value is in a set
+    Parameters
+    ----------
+    param: str
+        parameter of interest to check against constraint.
+    val: int, float, str
+        value of parameter that needs checking.
+    CONSTRAINTS: dict
+        dictionary of the constraints from hive.constraints.
+    context: str
+        context to inform the function what time of checking to perform.
+
+    Notes
+    -----
+    
+    Valid values for context:
+
+    * between:        Check that value is between upper and lower bounds exclusive
+    * between_incl:   Check that value is between upper and lower bounds inclusive
+    * greater_than:   Check that value is greater than lower bound exclusive
+    * less_than:      Check that value is less than upper bound exclusive
+    * in_set:         Check that value is in a set
     """
     condition = CONSTRAINTS[param][0]
 

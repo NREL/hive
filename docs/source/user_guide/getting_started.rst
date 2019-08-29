@@ -131,7 +131,7 @@ Now, simply navigate to the root directory and run the command:
 
 If you've set the :code:`VERBOSE` flag to :code:`True` in :code:`config.py`, you'll see hive describing the runtime process.
 
-Understanding the outputs
+Finding the outputs
 -------------------------
 
 After the two scenarios have finished running, we will find that the scenario names now appear in the :code:`outputs` directory. Within this directory we'll find two subdirectories: :code:`logs` and :code:`summaries`.

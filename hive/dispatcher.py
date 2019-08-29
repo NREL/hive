@@ -1,6 +1,6 @@
 """
 Dispatcher Object for high-level decision making in HIVE. Includes functions for
-vehicle dispatching, and DCFC station/base selection.
+vehicle dispatching, and station/base selection.
 """
 
 import datetime
@@ -13,16 +13,22 @@ from hive.units import METERS_TO_MILES
 
 class Dispatcher:
     """
-    Base class for dispatcher.
+    The Dispatcher object is responsible for coordinating the actions of the fleet.
 
-    Inputs
-    ------
-    requests : list
-        List of requests for simulation timestep
-
-    Outputs
-    -------
-
+    Parameters
+    ----------
+    fleet: list
+        list of all vehicles in the fleet.
+    fleet_state: np.ndarray
+        matrix that represents the state of the fleet. Used for quick numpy vectorized operations.
+    stations: list
+        list of all charging stations.
+    bases: list
+        list of all bases
+    env_params: dict
+        dictionary of all of the constant environment parameters shared across the simulation.
+    clock: hive.utils.Clock
+        simulation clock shared across the simulation to track simulation time steps.
     """
 
 
@@ -55,6 +61,9 @@ class Dispatcher:
 
 
     def _log(self):
+        """
+        Function stores the partial state of the object at each time step.
+        """
 
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         active_vehicles = self._fleet_state[:, active_col].sum()
@@ -71,6 +80,18 @@ class Dispatcher:
         Function takes hive.vehicle.Vehicle object and returns the FuelStation
         nearest Vehicle with at least one available plug. The "type" argument
         accepts either 'station' or 'base', informing the search space.
+
+        Parameters
+        ----------
+        vehicle: hive.vehicle.Vehicle
+            vehicle to which the closest plug is relative to.
+        type: str
+            string to indicate which type of plug is being searched for.
+
+        Returns
+        -------
+        nearest: hive.stations.FuelStation
+            the station or bases that is the closest to the vehicle
         """
         #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
         INF = 1000000000
@@ -106,6 +127,23 @@ class Dispatcher:
         return nearest
 
     def _get_n_best_vehicles(self, request, n):
+        """
+        Function takes a single request and returns the n best vehicles with respect
+        to that request.
+
+        Parameters
+        ----------
+        request: NamedTuple
+            request named tuple to match n vehicles to.
+        n: int
+            how many vehicles to return.
+
+        Returns
+        -------
+        best_vehs_ids: np.ndarray
+            array of the best n vehicle ids in sorted order from best -> worst.
+
+        """
         fleet_state = self._fleet_state
         point = np.array([(request.pickup_x, request.pickup_y)])
         dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
@@ -126,9 +164,19 @@ class Dispatcher:
         avail_seats_mask = fleet_state[:, avail_seats_col] >= request.passengers
 
         mask = dist_mask & available_mask & min_soc_mask & avail_seats_mask
-        return best_vehs_idx[mask[best_vehs_idx]][:n]
+        best_vehs_ids = best_vehs_idx[mask[best_vehs_idx]][:n]
+        return best_vehs_ids
 
     def _dispatch_vehicles(self, requests):
+        """
+        Function coordinates vehicle dispatch actions for a single timestep given
+        one or more requests.
+
+        Parameters
+        ----------
+        requests: list
+            list of requests that occur in a single time step.
+        """
         self._dropped_requests = 0
         for request in requests.itertuples():
             best_vehicle = self._get_n_best_vehicles(request, n=1)
@@ -149,6 +197,10 @@ class Dispatcher:
                         )
 
     def _charge_vehicles(self):
+        """
+        Function commands vehicles to charge if their SOC dips beneath the
+        LOWER_SOC_THRESH_STATION environment variable.
+        """
         soc_col = self._ENV['FLEET_STATE_IDX']['soc']
         available_col = self._ENV['FLEET_STATE_IDX']['available']
         active_col = self._ENV['FLEET_STATE_IDX']['active']
@@ -162,6 +214,11 @@ class Dispatcher:
             vehicle.cmd_charge(station)
 
     def _check_idle_vehicles(self):
+        """
+        Function checks for any vehicles that have been idling for longer than
+        MAX_ALLOWABLE_IDLE_MINUTES and commands those vehicles to return to their
+        respective base.
+        """
         idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
         idle_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
         veh_ids = np.argwhere(idle_mask)
@@ -171,57 +228,15 @@ class Dispatcher:
             base = self._find_closest_plug(vehicle, type='base')
             vehicle.cmd_return_to_base(base)
 
-
-
-    # def _find_nearest_plug(self, veh, type='station'):
-    #     """
-    #     Function takes hive.vehicle.Vehicle object and returns the FuelStation
-    #     nearest Vehicle with at least one available plug. The "type" argument
-    #     accepts either 'station' or 'base', informing the search space.
-    #     """
-    #     #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
-    #     INF = 1000000000
-    #
-    #     assert type in ['station', 'base'], """"type" must be either 'station'
-    #     or 'base'."""
-    #
-    #     if type == 'station':
-    #         network = self._stations
-    #     elif type == 'base':
-    #         network = self._bases
-    #
-    #     i = 0
-    #     num_stations = len(network)
-    #     nearest = None
-    #     while nearest == None:
-    #         dist_to_nearest = INF
-    #         for id in network.keys():
-    #             station = network[id]
-    #             dist_mi = hlp.estimate_vmt_2D(veh.x,
-    #                                            veh.y,
-    #                                            station.X,
-    #                                            station.Y,
-    #                                            scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
-    #             if dist_mi < dist_to_nearest:
-    #                 dist_to_nearest = dist_mi
-    #                 nearest = station
-    #         if nearest.avail_plugs < 1:
-    #             del network[nearest.ID]
-    #             nearest == None
-    #         i += 1
-    #         if i >= num_stations:
-    #             raise NotImplementedError("""No plugs are available on the
-    #                 entire {} network.""".format(type))
-    #
-    #     return nearest, dist_to_nearest
-
     def process_requests(self, requests):
         """
-        process_requests is called for each simulation time step.
+        process_requests is called for each simulation time step. Function takes
+        a list of requests and coordinates vehicle actions for that step.
 
-        Inputs
-        ------
-        requests - one or many requests to distribute to the fleet.
+        Parameters
+        ----------
+        requests: list
+            one or many requests to distribute to the fleet.
         """
         self._charge_vehicles()
         self._dispatch_vehicles(requests)

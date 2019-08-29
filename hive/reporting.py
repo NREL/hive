@@ -9,7 +9,19 @@ import os
 import glob
 
 def generate_logs(objects, log_path, context):
-    #TODO: Make this function more robust by ensuring all objects have same keys. 
+    """
+    Generates logs for a list of hive objects.
+
+    Parameters
+    ----------
+    objects: list
+        list of hive objects for which to write logs.
+    lob_path: str
+        filepath for where to write the logs to.
+    context: str
+        string representing the type of object that is being passed.
+    """
+    #TODO: Make this function more robust by ensuring all objects have same keys.
     keys = objects[0].history[0].keys()
     for item in objects:
         filename = os.path.join(log_path, f'{context}_{item.ID}_history.csv')
@@ -19,9 +31,21 @@ def generate_logs(objects, log_path, context):
             writer.writerows(item.history)
 
 
-def summarize_station_use(stations_dict, bases_dict, station_summary_file):
-    stations = list(stations_dict.values())
-    bases = list(bases_dict.values())
+def summarize_station_use(stations, bases, station_summary_file):
+    """
+    Generates station level summary statistics.
+
+    Parameters
+    ----------
+    stations: list
+        list of station objects.
+    bases: list
+        list of bases objects.
+    station_summary_file: str
+        filepath for where to write station summary stats.
+    """
+
+    #TODO: Make this rely on station and base log files so it can be run after a sim.
     charg_stations = stations + bases
     station_ids, refuel_cnts, refuel_energy_kwh = [], [], []
     for station in charg_stations:
@@ -36,6 +60,16 @@ def summarize_station_use(stations_dict, bases_dict, station_summary_file):
     station_summary_df.to_csv(station_summary_file, index=False)
 
 def summarize_fleet_stats(vehicle_log_path, summary_path):
+    """
+    Generates fleet level summary statistics.
+
+    Parameters
+    ----------
+    vehicle_log_path: str
+        filepath to where vehicle logs are written.
+    summary_path: str
+        path to where to write the fleet summary stats.
+    """
 
     # VMT Summary
     drop_columns = ['Charging at Station', 'Idle', 'Reserve']

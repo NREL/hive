@@ -19,36 +19,28 @@ from hive.utils import assert_constraint
 
 class Vehicle:
     """
-    Base class for vehicle in ride sharing fleet.
+    Base class for vehicle in mobility fleet.
 
-    Inputs
-    ------
-    veh_id : int
+    Parameters
+    ----------
+    veh_id: int
         Identifer assigned to vehicle object
-    battery_capacity : double precision
-        Battery capacity in kWh
-    initial_soc: double precision
-        Initial SOC in range [0,1]
+    name: str
+        Name of vehicle type.
+    battery_capacity: float
+        Battery capacity in kWh.
+    max_charge_acceptance: float
+        Maximum charge acceptace for the vehicle in kW.
+    max_passengers: int
+        Maximum number of passengers the vehicle can hold.
     whmi_lookup: pd.DataFrame
         Wh/mile lookup DataFrame
     charge_template: pd.DataFrame
         Charge template DataFrame
-    logfile: str
-        Path to vehicle log file
-
-    Attributes
-     ----------
-    energy_remaining: double precision
-        Approx. energy remaining in battery (in kWh)
-    soc: double precision
-        Current battery state of charge
-    avail_seats: int
-        Current number of seats available
-    active: boolean
-        Boolean indicator for whether a veh is actively servicing demand. If
-        False, vehicle is sitting at a base
-    _base: dict
-        Lookup for base charging information.
+    clock: hive.utils.Clock
+        simulation clock shared across the simulation to track simulation time steps.
+    env_params: dict
+        dictionary of all of the constant environment parameters shared across the simulation.
     """
 
     def __init__(
@@ -61,7 +53,7 @@ class Vehicle:
                 whmi_lookup,
                 charge_template,
                 clock,
-                environment_params,
+                env_params,
                 ):
 
         # Public Constants
@@ -116,7 +108,7 @@ class Vehicle:
 
         self.activity = "Idle"
 
-        self.ENV = environment_params
+        self.ENV = env_params
 
     @property
     def latlon(self):
@@ -329,6 +321,29 @@ class Vehicle:
                  trip_time_s=None,
                  route=None):
 
+        """
+        Commands a vehicle to service a trip.
+
+        Parameters
+        ----------
+        origin_x: float
+            x coordinate (utm) of the trip origin location.
+        origin_y: float
+            y coordinate (utm) of the trip origin location.
+        destination_x: float
+            x coordinate (utm) of the trip destination location.
+        destination_y: float
+            y coordinate (utm) of the trip destination location.
+        passengers: int
+            the number of passengers associated with this trip.
+        trip_dist_mi: float
+            (optional) trip distance in miles.
+        trip_time_s: float
+            (optional) trip time in seconds.
+        route: LineString
+            (optional) (NotImplemented) line string representing route.
+        """
+
         self.active = True
         self.available = False
         self.avail_seats -= passengers
@@ -383,6 +398,22 @@ class Vehicle:
                   trip_time_s=None,
                   activity=None):
 
+        """
+        Commands a vehicle to relocate to a new location.
+
+        Parameters
+        ----------
+        destination_x: float
+            x coordinate (utm) of the destination location.
+        destination_y: float
+            y coordinate (utm) of the destination location.
+        trip_dist_mi: float
+            (optional) trip distance in miles.
+        trip_time_s: float
+            (optional) trip time in seconds.
+        activity: str
+            (optional) string representing why the vehicle is moving.
+        """
         current_sim_time = self._clock.now
 
         if trip_dist_mi is None:
@@ -404,12 +435,28 @@ class Vehicle:
         next(self._route_iter)
 
     def cmd_charge(self, station):
+        """
+        Commands the vehicle to charge at a station.
+
+        Parameters
+        ----------
+        station: hive.stations.FuelStation
+            station object for the vehicle to charge at.
+        """
         self.available = False
         self._station = station
         self._station.avail_plugs -= 1
         self.cmd_travel_to(station.X, station.Y, activity="Moving to Station")
 
     def cmd_return_to_base(self, base):
+        """
+        Commands the vehicle to return to a base.
+
+        Parameters
+        ----------
+        base: hive.stations.FuelStation
+            base object for the vehicle to return to and charge at.
+        """
         self.active = False
         self.available = True
         self._base = base
@@ -419,6 +466,10 @@ class Vehicle:
 
 
     def step(self):
+        """
+        Function is called for each simulation time step. Vehicle updates its state
+        and performs and actions that have been assigned to it.
+        """
         self._move()
 
         if self._station is not None:
