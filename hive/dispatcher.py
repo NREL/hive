@@ -173,6 +173,48 @@ class Dispatcher:
 
 
 
+    # def _find_nearest_plug(self, veh, type='station'):
+    #     """
+    #     Function takes hive.vehicle.Vehicle object and returns the FuelStation
+    #     nearest Vehicle with at least one available plug. The "type" argument
+    #     accepts either 'station' or 'base', informing the search space.
+    #     """
+    #     #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
+    #     INF = 1000000000
+    #
+    #     assert type in ['station', 'base'], """"type" must be either 'station'
+    #     or 'base'."""
+    #
+    #     if type == 'station':
+    #         network = self._stations
+    #     elif type == 'base':
+    #         network = self._bases
+    #
+    #     i = 0
+    #     num_stations = len(network)
+    #     nearest = None
+    #     while nearest == None:
+    #         dist_to_nearest = INF
+    #         for id in network.keys():
+    #             station = network[id]
+    #             dist_mi = hlp.estimate_vmt_2D(veh.x,
+    #                                            veh.y,
+    #                                            station.X,
+    #                                            station.Y,
+    #                                            scaling_factor = veh.ENV['RN_SCALING_FACTOR'])
+    #             if dist_mi < dist_to_nearest:
+    #                 dist_to_nearest = dist_mi
+    #                 nearest = station
+    #         if nearest.avail_plugs < 1:
+    #             del network[nearest.ID]
+    #             nearest == None
+    #         i += 1
+    #         if i >= num_stations:
+    #             raise NotImplementedError("""No plugs are available on the
+    #                 entire {} network.""".format(type))
+    #
+    #     return nearest, dist_to_nearest
+
     def process_requests(self, requests):
         """
         process_requests is called for each simulation time step.
