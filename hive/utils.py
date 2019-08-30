@@ -11,11 +11,11 @@ def save_to_hdf(data, outfile):
         val.to_hdf(outfile, key=key)
 
 def save_to_pickle(data, outfile):
-    with open(outfile, 'wb') as f:
+    with open(outfile, 'wb', newline='') as f:
         pickle.dump(data, f)
 
 def initialize_log(fieldnames, logfile):
-    with open(logfile, 'w+') as f:
+    with open(logfile, 'w+', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -25,7 +25,7 @@ def write_log(data, fieldnames, logfile):
     ensure writes are not improperly ordered.
     """
     assert type(data) == type(dict()), 'log data must be a dictionary.'
-    with open(logfile, 'a') as f:
+    with open(logfile, 'a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writerow(data)
 
