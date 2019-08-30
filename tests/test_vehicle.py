@@ -1,28 +1,18 @@
 import os
 import sys
-import shutil
 import unittest
-import csv
+import math
+
+from build_test_env import setup_env
 
 sys.path.append('../')
 from hive.vehicle import Vehicle
-from hive.constraints import VEH_PARAMS
-from hive.utils import initialize_log
-
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
-TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
+from hive import units
 
 class VehicleTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if not os.path.isdir(TEST_OUTPUT_DIR):
-            os.makedirs(TEST_OUTPUT_DIR)
-
-    @classmethod
-    def tearDownClass(cls):
-        if os.path.isdir(TEST_OUTPUT_DIR):
-            shutil.rmtree(TEST_OUTPUT_DIR)
+        cls.SIM_ENV = setup_env()
 
     def setUp(self):
         pass
@@ -30,126 +20,121 @@ class VehicleTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_vehicle_battery_exception(self):
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        with self.assertRaises(Exception) as context:
-            veh = Vehicle(veh_id = 1,
-                            name='test',
-                            battery_capacity = -1,
-                            max_passengers = 4,
-                            initial_soc = 0.2,
-                            whmi_lookup = "placeholder",
-                            charge_template = "placeholder",
-                            logfile = log_file)
+    def test_vehicle_cmd_make_trip(self):
+        test_request = self.SIM_ENV['requests'].iloc[0]
+        test_vehicle = self.SIM_ENV['fleet'][0]
+        test_vehicle.cmd_make_trip(
+                            origin_x = test_request.pickup_x,
+                            origin_y = test_request.pickup_y,
+                            destination_x = test_request.dropoff_x,
+                            destination_y = test_request.dropoff_y,
+                            passengers = test_request.passengers,
+                            trip_dist_mi = test_request.distance_miles,
+                            trip_time_s = test_request.seconds,
+                            )
+        disp_dist_mi = math.hypot(test_request.dropoff_x - test_vehicle.x, test_request.dropoff_y - test_vehicle.y)\
+                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-        low_limit = VEH_PARAMS['BATTERY_CAPACITY'][1]
-        expected_error = f"Param BATTERY_CAPACITY:-1 is under low limit {low_limit}"
+        sim_steps = math.ceil((test_request.seconds + disp_time_s)/self.SIM_ENV['sim_clock'].TIMESTEP_S)
+        for t in range(sim_steps):
+            test_vehicle.step()
+            next(self.SIM_ENV['sim_clock'])
 
-        self.assertTrue(expected_error in str(context.exception))
+        self.assertTrue(test_vehicle.x == test_request.dropoff_x)
+        self.assertTrue(test_vehicle.y == test_request.dropoff_y)
+        self.assertTrue(test_vehicle._route == None)
+        self.assertTrue(test_vehicle.activity == 'Idle')
 
-    def test_vehicle_soc_exception_low(self):
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        with self.assertRaises(Exception) as context:
-            veh = Vehicle(veh_id = 1,
-                            name='test',
-                            battery_capacity = 10,
-                            max_passengers = 4,
-                            initial_soc = -0.1,
-                            whmi_lookup = "placeholder",
-                            charge_template = "placeholder",
-                            logfile = log_file)
+    def test_vehicle_cmd_travel_to(self):
+        test_request = self.SIM_ENV['requests'].iloc[1]
+        test_vehicle = self.SIM_ENV['fleet'][1]
 
-        low_limit = VEH_PARAMS['INITIAL_SOC'][1]
-        expected_error = f"Param INITIAL_SOC:-0.1 is under low limit {low_limit}"
+        test_vehicle.cmd_travel_to(
+                            destination_x = test_request.pickup_x,
+                            destination_y = test_request.pickup_y,
+                            )
 
-        self.assertTrue(expected_error in str(context.exception))
+        disp_dist_mi = math.hypot(test_request.pickup_x - test_vehicle.x, test_request.pickup_y - test_vehicle.y)\
+                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-    def test_vehicle_soc_exception_high(self):
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        with self.assertRaises(Exception) as context:
-            veh = Vehicle(veh_id = 1,
-                            name='test',
-                            battery_capacity = 10,
-                            max_passengers = 4,
-                            initial_soc = 1.2,
-                            whmi_lookup = "placeholder",
-                            charge_template = "placeholder",
-                            logfile = log_file)
+        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
+        for t in range(sim_steps):
+            test_vehicle.step()
 
-        high_limit = VEH_PARAMS['INITIAL_SOC'][2]
-        expected_error = f"Param INITIAL_SOC:1.2 is over high limit {high_limit}"
+        self.assertTrue(test_vehicle.x == test_request.pickup_x)
+        self.assertTrue(test_vehicle.y == test_request.pickup_y)
+        self.assertTrue(test_vehicle._route == None)
 
-        self.assertTrue(expected_error in str(context.exception))
+    def test_vehicle_cmd_charge(self):
+        test_vehicle = self.SIM_ENV['fleet'][2]
+        test_station = self.SIM_ENV['stations'][2]
 
-    def test_vehicle_bad_env_param(self):
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        with self.assertRaises(Exception) as context:
-            veh = Vehicle(veh_id = 1,
-                            name='test',
-                            battery_capacity = 10,
-                            max_passengers = 4,
-                            initial_soc = 0.2,
-                            whmi_lookup = "placeholder",
-                            charge_template = "placeholder",
-                            logfile = log_file,
-                            environment_params={'BAD_PARAM': 1})
+        pre_avail_plugs = test_station.avail_plugs
 
-        expected_error= "Got an unexpected parameter BAD_PARAM"
+        test_vehicle.cmd_charge(test_station)
 
-        self.assertTrue(expected_error in str(context.exception))
+        disp_dist_mi = math.hypot(test_station.X - test_vehicle.x, test_station.Y - test_vehicle.y)\
+                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-    def test_vehicle_dump_stats_init(self):
-        summary_file = os.path.join(TEST_OUTPUT_DIR, 'vehicle_summary.csv')
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        veh = Vehicle(veh_id = 1,
-                        name='test',
-                        battery_capacity = 10,
-                        max_passengers = 4,
-                        initial_soc = 0.2,
-                        whmi_lookup = "placeholder",
-                        charge_template = "placeholder",
-                        logfile = log_file)
-        initialize_log(veh._STATS, summary_file)
+        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
 
-        veh.dump_stats(summary_file)
-        self.assertTrue(os.path.isfile(summary_file))
-        with open(summary_file, 'r') as f:
-            reader = csv.reader(f)
-            header = next(reader)
-            self.assertTrue(header == veh._STATS)
+        for t in range(sim_steps+1):
+            test_vehicle.step()
 
-    def test_vehicle_dump_stats_content(self):
-        summary_file = os.path.join(TEST_OUTPUT_DIR, 'vehicle_summary.csv')
-        log_file = os.path.join(TEST_OUTPUT_DIR, 'placeholder.csv')
-        veh1 = Vehicle(veh_id = 1,
-                        name='test1',
-                        battery_capacity = 10,
-                        max_passengers = 4,
-                        initial_soc = 0.2,
-                        whmi_lookup = "placeholder",
-                        charge_template = "placeholder",
-                        logfile = log_file)
-        veh2 = Vehicle(veh_id = 2,
-                        name='test2',
-                        battery_capacity = 10,
-                        max_passengers = 4,
-                        initial_soc = 0.2,
-                        whmi_lookup = "placeholder",
-                        charge_template = "placeholder",
-                        logfile = log_file)
-        initialize_log(veh1._STATS, summary_file)
+        self.assertTrue(test_vehicle.x == test_station.X)
+        self.assertTrue(test_vehicle.y == test_station.Y)
+        self.assertTrue(test_vehicle._station == test_station)
+        self.assertTrue(test_station.avail_plugs == pre_avail_plugs - 1)
 
-        veh1.dump_stats(summary_file)
-        veh2.dump_stats(summary_file)
+        test_vehicle.energy_kwh = test_vehicle.BATTERY_CAPACITY * 0.5
 
-        with open(summary_file, 'r') as f:
-            reader = csv.DictReader(f)
-            veh_ids = list()
-            for row in reader:
-                veh_ids.append(row['veh_id'])
+        max_s = test_vehicle.BATTERY_CAPACITY / test_station.PLUG_POWER_KW * units.HOURS_TO_SECONDS
+        max_iter = max_s / self.SIM_ENV['sim_clock'].TIMESTEP_S
 
-        self.assertTrue('1' in veh_ids)
-        self.assertTrue('2' in veh_ids)
+        i = 0
+        while test_vehicle.activity == 'Charging at Station':
+            i += 1
+            if i > max_iter:
+                raise RuntimeError("Vehicle charging too long")
+            test_vehicle.step()
+
+        self.assertTrue(test_vehicle.soc > self.SIM_ENV['env_params']['UPPER_SOC_THRESH_STATION'] - 0.1)
+        self.assertTrue(test_vehicle.soc < self.SIM_ENV['env_params']['UPPER_SOC_THRESH_STATION'])
+        self.assertEqual(test_station.avail_plugs, pre_avail_plugs)
+
+    def test_vehicle_cmd_return_to_base(self):
+        test_vehicle = self.SIM_ENV['fleet'][3]
+        test_base = self.SIM_ENV['bases'][0]
+
+        pre_avail_plugs = test_base.avail_plugs
+
+        test_vehicle.cmd_return_to_base(test_base)
+
+        disp_dist_mi = math.hypot(test_base.X - test_vehicle.x, test_base.Y - test_vehicle.y)\
+                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
+        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+
+        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
+
+        for t in range(sim_steps+1):
+            test_vehicle.step()
+
+        test_vehicle.energy_kwh = test_vehicle.BATTERY_CAPACITY * 0.5
+        test_vehicle.step()
+
+        self.assertEqual(test_vehicle.x, test_base.X)
+        self.assertEqual(test_vehicle.y, test_base.Y)
+        self.assertEqual(test_vehicle._base, test_base)
+        self.assertEqual(test_vehicle._station, test_base)
+        self.assertEqual(test_base.avail_plugs, pre_avail_plugs - 1)
+        self.assertEqual(test_vehicle.activity,  "Charging at Station")
+
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

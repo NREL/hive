@@ -6,15 +6,13 @@ sys.path.append('../')
 from hive.tripenergy import import_whmi_template, create_scaled_whmi, \
     calc_trip_kwh, calc_idle_kwh
 
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_INPUT_DIR = os.path.join('../', 'inputs', '.inputs_default')
-TEST_OUTPUT_DIR = os.path.join(THIS_DIR, '.tmp')
+TEST_INPUT_DIR = os.path.join('../', 'inputs', 'library')
 
 class TripEnergyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.WHMI_LOOKUP_FILE = os.path.join(TEST_INPUT_DIR,
-                                            '.lib',
+                                            '.static',
                                             'wh_mi_lookup.csv')
 
     @classmethod

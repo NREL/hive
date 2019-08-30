@@ -6,47 +6,86 @@ import pickle
 import csv
 import shutil
 
+class Clock:
+    """
+    Iterator to store simulation time information.
+
+    Parameters
+    ----------
+    timestep_s: int
+        amount of seconds that one simulation time step represents.
+    """
+    def __init__(self, timestep_s):
+        self.now = 0
+        self.TIMESTEP_S = timestep_s
+    def __next__(self):
+        self.now += 1
+
 def save_to_hdf(data, outfile):
+    """
+    Function to save data to hdf5.
+    """
     for key, val in data.items():
         val.to_hdf(outfile, key=key)
 
 def save_to_pickle(data, outfile):
-    with open(outfile, 'wb', newline='') as f:
+    """
+    Function to save data to pickle.
+    """
+    with open(outfile, 'wb') as f:
         pickle.dump(data, f)
-
-def initialize_log(fieldnames, logfile):
-    with open(logfile, 'w+', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-
-def write_log(data, fieldnames, logfile):
-    """
-    Writes data to specified logfile. Enforces specified fieldnames schema to
-    ensure writes are not improperly ordered.
-    """
-    assert type(data) == type(dict()), 'log data must be a dictionary.'
-    with open(logfile, 'a', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writerow(data)
 
 
 def build_output_dir(scenario_name, root_path):
+    """
+    Function to build scenario level output directory in root output directory.
+    """
     scenario_output = os.path.join(root_path, scenario_name)
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
     os.makedirs(scenario_output)
-    os.makedirs(os.path.join(scenario_output, 'logs'))
-    os.makedirs(os.path.join(scenario_output, 'summaries'))
+    file_paths = {}
+    log_path = os.path.join(scenario_output, 'logs')
+    file_paths['log_path'] = log_path
+    file_paths['summary_path'] = os.path.join(scenario_output, 'summaries')
+    file_paths['vehicle_path'] = os.path.join(log_path, 'vehicles')
+    file_paths['station_path'] = os.path.join(log_path, 'stations')
+    file_paths['base_path'] = os.path.join(log_path, 'bases')
+    file_paths['dispatcher_path'] = os.path.join(log_path, 'dispatcher')
+    os.makedirs(file_paths['log_path'])
+    os.makedirs(file_paths['vehicle_path'])
+    os.makedirs(file_paths['station_path'])
+    os.makedirs(file_paths['base_path'])
+    os.makedirs(file_paths['dispatcher_path'])
+    os.makedirs(file_paths['summary_path'])
+
+    return file_paths
 
 def assert_constraint(param, val, CONSTRAINTS, context=""):
     """
     Helper function to assert constraints at runtime.
 
-    between:        Check that value is between upper and lower bounds exclusive
-    between_incl:   Check that value is between upper and lower bounds inclusive
-    greater_than:   Check that value is greater than lower bound exclusive
-    less_than:      Check that value is less than upper bound exclusive
-    in_set:         Check that value is in a set
+    Parameters
+    ----------
+    param: str
+        parameter of interest to check against constraint.
+    val: int, float, str
+        value of parameter that needs checking.
+    CONSTRAINTS: dict
+        dictionary of the constraints from hive.constraints.
+    context: str
+        context to inform the function what time of checking to perform.
+
+    Notes
+    -----
+
+    Valid values for context:
+
+    * between:        Check that value is between upper and lower bounds exclusive
+    * between_incl:   Check that value is between upper and lower bounds inclusive
+    * greater_than:   Check that value is greater than lower bound exclusive
+    * less_than:      Check that value is less than upper bound exclusive
+    * in_set:         Check that value is in a set
     """
     condition = CONSTRAINTS[param][0]
 
