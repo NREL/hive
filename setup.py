@@ -1,10 +1,13 @@
 import os
-from distutils.dir_util import copy_tree
 from shutil import copyfile
-import subprocess
 import sys
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+INPUT_PATH = os.path.join(THIS_DIR, 'inputs')
+GENERATOR_FILE = os.path.join(INPUT_PATH, 'scenario_generator.csv')
+
+sys.path.append(INPUT_PATH)
+from generate_scenarios import build_scenarios
 
 def clean_msg(msg):
     print(msg)
@@ -32,15 +35,9 @@ def setup():
 
     #TODO: Add code to download default inputs from remote S3 bucket
 
-    # print('Hive ships with a set of default inputs.')
-    # ans = input('Should we copy these into the inputs directory? (y/n) ')
-    # while ans not in ['y', 'n']:
-    #     ans = input('please input y/n ')
-    # if ans == 'y':
-    #     print('Setting up default inputs..')
-    #     input_path = os.path.join(THIS_DIR, 'inputs')
-    #     default_input_path = os.path.join(input_path, '.inputs_default')
-    #     copy_tree(default_input_path, input_path)
+    print('Generating default scenarios..')
+    build_scenarios(GENERATOR_FILE)
+
 
 if __name__ == "__main__":
     setup()

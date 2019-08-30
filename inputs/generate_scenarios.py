@@ -51,8 +51,8 @@ def read_parameters(scenario):
 
     return result
 
-def build_scenarios():
-    with open(GENERATOR_FILE, encoding='utf-8-sig') as f:
+def build_scenarios(generator_file):
+    with open(generator_file, encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for scenario in reader:
             config = {}
@@ -116,4 +116,4 @@ def build_scenarios():
 
 
 if __name__ == "__main__":
-    build_scenarios()
+    build_scenarios(GENERATOR_FILE)
