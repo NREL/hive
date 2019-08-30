@@ -25,7 +25,7 @@ def generate_logs(objects, log_path, context):
     keys = objects[0].history[0].keys()
     for item in objects:
         filename = os.path.join(log_path, f'{context}_{item.ID}_history.csv')
-        with open(filename, 'w') as f:
+        with open(filename, 'w', newline='') as f:
             writer = csv.DictWriter(f, keys)
             writer.writeheader()
             writer.writerows(item.history)
