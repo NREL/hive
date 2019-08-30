@@ -1,0 +1,473 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.pooling &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.pooling</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for pooling trips with Mean-Shift Clustering</span>
+<span class="sd">author: tgrushka</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">mean</span><span class="p">,</span> <span class="n">absolute</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="k">import</span> <span class="n">MeanShift</span>
+<span class="c1">#from sklearn.preprocessing import StandardScaler</span>
+<span class="c1">#from sklearn.externals.joblib._parallel_backends import AutoBatchingMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.externals.joblib</span> <span class="k">import</span> <span class="n">parallel</span>
+
+<span class="n">parallel</span><span class="o">.</span><span class="n">MIN_IDEAL_BATCH_DURATION</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">parallel</span><span class="o">.</span><span class="n">MAX_IDEAL_BATCH_DURATION</span> <span class="o">=</span> <span class="n">parallel</span><span class="o">.</span><span class="n">MIN_IDEAL_BATCH_DURATION</span> <span class="o">*</span> <span class="mi">10</span>
+
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">utm</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">pdb</span>
+
+<span class="c1"># pd.set_option(&#39;display.float_format&#39;, lambda x: &#39;%.3f&#39; % x)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_columns&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ZoneError"><a class="viewcode-back" href="../../reference/pooling.html#hive.pooling.ZoneError">[docs]</a><span class="k">class</span> <span class="nc">ZoneError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when coordinates fall in different UTM zones.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<span class="k">def</span> <span class="nf">pool_locations</span><span class="p">(</span><span class="n">trips_df</span><span class="p">,</span> <span class="n">distance_window_meters</span><span class="p">,</span> <span class="n">col_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dropoff_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_longitude&#39;</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">require_same_utm_zone</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bandwidth_reduction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">max_cores</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;====================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOLING </span><span class="si">{}</span><span class="s2"> locations:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trips_df</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Distance Window = </span><span class="si">{}</span><span class="s2"> m (</span><span class="si">{}</span><span class="s2"> ft), Strict = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">distance_window_meters</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">distance_window_meters</span> <span class="o">*</span> <span class="mf">3.28084</span><span class="p">),</span> <span class="n">strict</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;====================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Started at: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()))</span>
+    
+    <span class="c1"># Not very DRY: Copied transform code from pool_trips;</span>
+    <span class="c1"># Should refactor:</span>
+    
+    <span class="c1"># Transform coordinates to UTM (unit = meters)</span>
+    <span class="c1"># col_names[0] = name of &#39;pickup_latitude&#39; column ... etc.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transforming location coordinates to UTM...&quot;</span><span class="p">)</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">trips_df</span><span class="p">[[</span><span class="n">col_names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col_names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">location</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">trips_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">location</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;easting&#39;</span><span class="p">,</span> <span class="s1">&#39;northing&#39;</span><span class="p">,</span> <span class="s1">&#39;zone&#39;</span><span class="p">,</span> <span class="s1">&#39;letter&#39;</span><span class="p">]</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    We need to check that all coordinates are in the same UTM zone.</span>
+<span class="sd">    Otherwise, the pooling results will be incorrect.</span>
+<span class="sd">    Handle edge cases later. For now, ignore the zone and just</span>
+<span class="sd">    check all are in same zone, and raise exception / warning if not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">same_utm</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">location</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">location</span><span class="o">.</span><span class="n">letter</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">same_utm</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Locations fall in multiple UTM zones! This will result in incorrect pooling results.&quot;</span>
+        <span class="k">if</span> <span class="n">require_same_utm_zone</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ZoneError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    
+    <span class="n">zone</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">letter</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">letter</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;UTM zone: </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">zone</span><span class="p">,</span> <span class="n">letter</span><span class="p">))</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building MeanShift DataFrame...&quot;</span><span class="p">)</span>
+    <span class="n">meanshift_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s1">&#39;location_easting&#39;</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">easting</span><span class="p">,</span>
+        <span class="s1">&#39;location_northing&#39;</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">northing</span>
+    <span class="p">})</span>
+    
+    <span class="n">bandwidth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">distance_window_meters</span><span class="p">)</span>
+    
+    <span class="n">n_cores</span> <span class="o">=</span> <span class="n">max_cores</span>
+    <span class="n">n_cores</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">n_cores</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">n_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    
+    <span class="n">n_jobs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">n_cores</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># NEED TO CHANGE THIS WHEN WE GET PARALLEL WORKING!!</span>
+    <span class="c1">#n_jobs = 1</span>
+    <span class="n">n_jobs</span><span class="o">=</span><span class="mi">48</span>
+    
+    <span class="c1"># YES THIS IS ALMOST A DUPLICATE OF BELOW BUT DIFFERENT -- NOT VERY DRY:</span>
+    <span class="k">def</span> <span class="nf">_meanshift_algo</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">,</span> <span class="n">iteration</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">starting_label</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">this_start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">iteration</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        
+        <span class="c1"># reduce bandwidth for each iteration</span>
+        <span class="n">adjusted_bandwidth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">bandwidth_reduction</span> <span class="o">**</span> <span class="n">iteration</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MeanShift iteration &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; trips, bandwidth = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">adjusted_bandwidth</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; ...&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># setup MeanShift and fit data:</span>
+        <span class="n">ms</span> <span class="o">=</span> <span class="n">MeanShift</span><span class="p">(</span><span class="n">bandwidth</span><span class="o">=</span><span class="n">adjusted_bandwidth</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">[[</span><span class="s1">&#39;location_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;location_northing&#39;</span><span class="p">]])</span>
+        
+        <span class="c1"># # of clusters = # of unique labels</span>
+        <span class="n">n_clusters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">labels_</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; clusters of &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; remaining unpooled trips...&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># ensure new labels are unique:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">labels_</span> <span class="o">+</span> <span class="n">starting_label</span>
+        
+        <span class="c1"># assign cluster centers to a DataFrame:</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">clusters</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;location_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;location_northing&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># the clusters should be associated with the unique labels in ascending order:</span>
+        <span class="n">clusters</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># assign the labels to the unpooled df</span>
+        <span class="n">unpooled_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">trips</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">location_easting</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">strict</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;strict==False :. skipping further iterations.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">strict</span><span class="p">:</span> <span class="c1"># iterate only if strict=True</span>
+            <span class="c1"># collect labels that exceed the window</span>
+            <span class="c1">#exceeding_df = pd.DataFrame(columns=[&#39;label&#39;, &#39;count&#39;, &#39;max&#39;])</span>
+            <span class="n">exceeding_labels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="p">[</span><span class="n">labels</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">northing_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">location_northing</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">location_northing</span><span class="p">)</span>
+                <span class="n">easting_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">location_easting</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">location_easting</span><span class="p">)</span>
+                <span class="n">distance_range</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">northing_range</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">easting_range</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">distance_range</span> <span class="o">&gt;</span> <span class="n">bandwidth</span><span class="p">:</span>
+                    <span class="n">exceeding_labels</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            
+            <span class="c1"># the labels exceeding the window are the index of the df we just created</span>
+            <span class="c1">#exceeding_labels = np.array(exceeding_df.index)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">exceeding_labels</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; of these clusters exceeded window limits.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-------------------- &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">this_start_time</span><span class="p">))</span>
+            
+            <span class="c1"># check if we need to recurse:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exceeding_labels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># drop &#39;invalid&#39; clusters that are being repooled anyway:</span>
+                <span class="n">clusters</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">exceeding_labels</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                
+                <span class="c1"># calculate safe next starting label value:</span>
+                <span class="n">next_label</span> <span class="o">=</span> <span class="n">starting_label</span> <span class="o">+</span> <span class="n">n_clusters</span>
+                <span class="c1">#print(&quot;next_label = &quot; + str(next_label))</span>
+                
+                <span class="c1"># get a logical index of trips in pools exceeding the window:</span>
+                <span class="n">exceeding_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">exceeding_labels</span><span class="p">)</span>
+                
+                <span class="c1"># run the algorithm recursively:</span>
+                <span class="n">new_labels</span><span class="p">,</span> <span class="n">new_clusters</span> <span class="o">=</span> <span class="n">_meanshift_algo</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">[</span><span class="n">exceeding_indices</span><span class="p">],</span> <span class="n">iteration</span><span class="o">=</span><span class="p">(</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">starting_label</span><span class="o">=</span><span class="n">next_label</span><span class="p">)</span>
+                
+                <span class="c1"># relabel the repooled trips:</span>
+                <span class="c1">#print(&quot;Relabeling...&quot;)</span>
+                <span class="n">unpooled_df</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">label</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">unpooled_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">exceeding_indices</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_labels</span>
+                <span class="n">unpooled_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">unpooled_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                
+                <span class="c1"># append the new clusters:</span>
+                <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_clusters</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="n">iteration</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">total_pools</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+            <span class="n">pooling_ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_pools</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meanshift_df</span><span class="p">))</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==================== &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">))</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TOTAL POOLS: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">total_pools</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOL STATS: (# locations in pool, # pools)&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="se">\t</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span> <span class="o">==</span> <span class="n">i</span><span class="p">])))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOLING RATIO: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">pooling_ratio</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===== Starting MeanShift, jobs = </span><span class="si">{}</span><span class="s2">, bandwidth reduction = </span><span class="si">{}</span><span class="s2"> =====&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">bandwidth_reduction</span><span class="p">))</span>
+    <span class="n">labels</span><span class="p">,</span> <span class="n">clusters</span> <span class="o">=</span> <span class="n">_meanshift_algo</span><span class="p">(</span><span class="n">meanshift_df</span><span class="p">)</span>
+    
+    <span class="n">cluster_location</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters</span><span class="p">[[</span><span class="s1">&#39;location_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;location_northing&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">to_latlon</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;location_easting&#39;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;location_northing&#39;</span><span class="p">],</span> <span class="n">zone</span><span class="p">,</span> <span class="n">letter</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">cluster_location</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cluster_location</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;location_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;location_longitude&#39;</span><span class="p">]</span>
+    
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cluster_location</span><span class="p">)</span>
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="p">[[</span><span class="s1">&#39;trips&#39;</span><span class="p">,</span> <span class="s1">&#39;location_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;location_longitude&#39;</span><span class="p">]]</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished at: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()))</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="pool_trips"><a class="viewcode-back" href="../../reference/pooling.html#hive.pooling.pool_trips">[docs]</a><span class="k">def</span> <span class="nf">pool_trips</span><span class="p">(</span><span class="n">trips_df</span><span class="p">,</span> <span class="n">time_window_seconds</span><span class="p">,</span> <span class="n">distance_window_meters</span><span class="p">,</span> <span class="n">col_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;pickup_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_longitude&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_longitude&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_datetime&#39;</span><span class="p">,</span> <span class="s1">&#39;passenger_count&#39;</span><span class="p">],</span> <span class="n">require_same_utm_zone</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bandwidth_reduction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">max_cores</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    col_names = ordered names of appropriate columns in input DataFrame:</span>
+<span class="sd">        [&#39;pickup_latitude&#39;, &#39;pickup_longitude&#39;, &#39;dropoff_latitude&#39;, &#39;dropoff_longitude&#39;, &#39;pickup_datetime&#39;, &#39;passenger_count&#39;]</span>
+<span class="sd">    bandwidth_reduction = multiplier to reduce bandwidth each iteration [default = 0.9]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;====================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOLING </span><span class="si">{}</span><span class="s2"> TRIPS:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trips_df</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time Window = </span><span class="si">{}</span><span class="s2"> s (</span><span class="si">{}</span><span class="s2"> min)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_window_seconds</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">time_window_seconds</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Distance Window = </span><span class="si">{}</span><span class="s2"> m (</span><span class="si">{}</span><span class="s2"> ft)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">distance_window_meters</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">distance_window_meters</span> <span class="o">*</span> <span class="mf">3.28084</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;====================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Started at: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()))</span>
+    <span class="n">time_multiplier</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">distance_window_meters</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">time_window_seconds</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Converting time to epoch (seconds since 1970)...&quot;</span><span class="p">)</span>
+    <span class="n">pickup_epoch</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">trips_df</span><span class="p">[</span><span class="n">col_names</span><span class="p">[</span><span class="mi">4</span><span class="p">]])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="o">//</span> <span class="mf">1e9</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scaling time epoch by </span><span class="si">{}</span><span class="s2"> such that </span><span class="si">{}</span><span class="s2"> seconds ≍ </span><span class="si">{}</span><span class="s2"> meters&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time_multiplier</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">time_window_seconds</span><span class="p">,</span> <span class="n">distance_window_meters</span><span class="p">))</span>
+    <span class="n">scaled_time</span> <span class="o">=</span> <span class="n">pickup_epoch</span> <span class="o">*</span> <span class="n">time_multiplier</span>
+    
+    <span class="c1"># Transform coordinates to UTM (unit = meters)</span>
+    <span class="c1"># col_names[0] = name of &#39;pickup_latitude&#39; column ... etc.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transforming pickup coordinates to UTM...&quot;</span><span class="p">)</span>
+    <span class="n">pickup</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">trips_df</span><span class="p">[[</span><span class="n">col_names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col_names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">pickup</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">trips_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">pickup</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;easting&#39;</span><span class="p">,</span> <span class="s1">&#39;northing&#39;</span><span class="p">,</span> <span class="s1">&#39;zone&#39;</span><span class="p">,</span> <span class="s1">&#39;letter&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transforming dropoff coordinates to UTM...&quot;</span><span class="p">)</span>
+    <span class="n">dropoff</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">trips_df</span><span class="p">[[</span><span class="n">col_names</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">col_names</span><span class="p">[</span><span class="mi">3</span><span class="p">]]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">dropoff</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">trips_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">dropoff</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;easting&#39;</span><span class="p">,</span> <span class="s1">&#39;northing&#39;</span><span class="p">,</span> <span class="s1">&#39;zone&#39;</span><span class="p">,</span> <span class="s1">&#39;letter&#39;</span><span class="p">]</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    We need to check that all coordinates are in the same UTM zone.</span>
+<span class="sd">    Otherwise, the pooling results will be incorrect.</span>
+<span class="sd">    Handle edge cases later. For now, ignore the zone and just</span>
+<span class="sd">    check all are in same zone, and raise exception / warning if not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">same_utm</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pickup</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">pickup</span><span class="o">.</span><span class="n">letter</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">dropoff</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">dropoff</span><span class="o">.</span><span class="n">letter</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">pickup</span><span class="o">.</span><span class="n">zone</span> <span class="o">==</span> <span class="n">dropoff</span><span class="o">.</span><span class="n">zone</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">pickup</span><span class="o">.</span><span class="n">letter</span> <span class="o">==</span> <span class="n">dropoff</span><span class="o">.</span><span class="n">letter</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">same_utm</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Trip start/endpoints are in multiple UTM zones! This will result in incorrect pooling results.&quot;</span>
+        <span class="k">if</span> <span class="n">require_same_utm_zone</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ZoneError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    
+    <span class="c1">#pdb.set_trace()</span>
+    
+    <span class="n">zone</span> <span class="o">=</span> <span class="n">pickup</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">letter</span> <span class="o">=</span> <span class="n">pickup</span><span class="o">.</span><span class="n">letter</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;UTM zone: </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">zone</span><span class="p">,</span> <span class="n">letter</span><span class="p">))</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building MeanShift DataFrame...&quot;</span><span class="p">)</span>
+    <span class="n">meanshift_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s1">&#39;scaled_time&#39;</span><span class="p">:</span> <span class="n">scaled_time</span><span class="p">,</span>
+        <span class="s1">&#39;pickup_easting&#39;</span><span class="p">:</span> <span class="n">pickup</span><span class="o">.</span><span class="n">easting</span><span class="p">,</span>
+        <span class="s1">&#39;pickup_northing&#39;</span><span class="p">:</span> <span class="n">pickup</span><span class="o">.</span><span class="n">northing</span><span class="p">,</span>
+        <span class="s1">&#39;dropoff_easting&#39;</span><span class="p">:</span> <span class="n">dropoff</span><span class="o">.</span><span class="n">easting</span><span class="p">,</span>
+        <span class="s1">&#39;dropoff_northing&#39;</span><span class="p">:</span> <span class="n">dropoff</span><span class="o">.</span><span class="n">northing</span><span class="p">,</span>
+        <span class="s1">&#39;passengers&#39;</span><span class="p">:</span> <span class="n">trips_df</span><span class="p">[</span><span class="n">col_names</span><span class="p">[</span><span class="mi">5</span><span class="p">]]</span>
+    <span class="p">})</span>
+    
+    <span class="c1"># meanshift_df</span>
+    
+    <span class="n">bandwidth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">distance_window_meters</span><span class="p">)</span>
+    
+    <span class="n">n_cores</span> <span class="o">=</span> <span class="n">max_cores</span>
+    <span class="k">if</span> <span class="n">n_cores</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">n_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    
+    <span class="c1"># DELETE -- TESTING ONLY!</span>
+    <span class="c1">#n_cores = 1</span>
+    <span class="c1">#bandwidth=600</span>
+    <span class="c1">#iteration=0</span>
+    <span class="c1">#bandwidth_reduction = 0.9</span>
+    
+    <span class="c1"># n_jobs = int((1 + n_cores) / 2)</span>
+    <span class="c1"># NEED TO CHANGE THIS WHEN WE GET PARALLEL WORKING!!</span>
+    <span class="n">n_jobs</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="k">def</span> <span class="nf">_meanshift_algo</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">,</span> <span class="n">iteration</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">starting_label</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">this_start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">iteration</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        
+        <span class="c1"># reduce bandwidth for each iteration</span>
+        <span class="n">adjusted_bandwidth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">bandwidth_reduction</span> <span class="o">**</span> <span class="n">iteration</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MeanShift iteration &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; trips, bandwidth = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">adjusted_bandwidth</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; ...&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># setup MeanShift and fit data:</span>
+        <span class="n">ms</span> <span class="o">=</span> <span class="n">MeanShift</span><span class="p">(</span><span class="n">bandwidth</span><span class="o">=</span><span class="n">adjusted_bandwidth</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">[[</span><span class="s1">&#39;scaled_time&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_northing&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_northing&#39;</span><span class="p">]])</span>
+        
+        <span class="c1"># # of clusters = # of unique labels</span>
+        <span class="n">n_clusters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">labels_</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; clusters of &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; remaining unpooled trips...&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># ensure new labels are unique:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">labels_</span> <span class="o">+</span> <span class="n">starting_label</span>
+        
+        <span class="c1"># assign cluster centers to a DataFrame:</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">clusters</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;scaled_time&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_northing&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_northing&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># the clusters should be associated with the unique labels in ascending order:</span>
+        <span class="n">clusters</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># assign the labels to the unpooled df</span>
+        <span class="n">unpooled_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">trips</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">scaled_time</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+        
+        <span class="c1"># collect labels that exceed the window</span>
+        <span class="c1">#exceeding_df = pd.DataFrame(columns=[&#39;label&#39;, &#39;count&#39;, &#39;max&#39;])</span>
+        <span class="n">exceeding_labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="p">[</span><span class="n">labels</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">northing_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pickup_northing</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pickup_northing</span><span class="p">)</span>
+            <span class="n">easting_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pickup_easting</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pickup_easting</span><span class="p">)</span>
+            <span class="n">pickup_distance_range</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">northing_range</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">easting_range</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">northing_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dropoff_northing</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dropoff_northing</span><span class="p">)</span>
+            <span class="n">easting_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dropoff_easting</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dropoff_easting</span><span class="p">)</span>
+            <span class="n">dropoff_distance_range</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">northing_range</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">easting_range</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">time_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">scaled_time</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">scaled_time</span><span class="p">)</span>
+            <span class="n">max_value</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">time_range</span><span class="p">,</span> <span class="n">pickup_distance_range</span><span class="p">,</span> <span class="n">dropoff_distance_range</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">max_value</span> <span class="o">&gt;</span> <span class="n">bandwidth</span><span class="p">:</span>
+                <span class="c1">#exceeding_df = exceeding_df.append(pd.DataFrame({ &#39;count&#39;: len(x), &#39;max&#39;: int(round(max_value)) }, index=[i]), sort=False)</span>
+                <span class="n">exceeding_labels</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="c1"># the labels exceeding the window are the index of the df we just created</span>
+        <span class="c1">#exceeding_labels = np.array(exceeding_df.index)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">exceeding_labels</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; of these clusters exceeded window limits.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-------------------- &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">this_start_time</span><span class="p">))</span>
+        
+        <span class="c1"># check if we need to recurse:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exceeding_labels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># drop &#39;invalid&#39; clusters that are being repooled anyway:</span>
+            <span class="n">clusters</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">exceeding_labels</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+            <span class="c1"># calculate safe next starting label value:</span>
+            <span class="n">next_label</span> <span class="o">=</span> <span class="n">starting_label</span> <span class="o">+</span> <span class="n">n_clusters</span>
+            <span class="c1">#print(&quot;next_label = &quot; + str(next_label))</span>
+            
+            <span class="c1"># get a logical index of trips in pools exceeding the window:</span>
+            <span class="n">exceeding_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">exceeding_labels</span><span class="p">)</span>
+            
+            <span class="c1"># run the algorithm recursively:</span>
+            <span class="n">new_labels</span><span class="p">,</span> <span class="n">new_clusters</span> <span class="o">=</span> <span class="n">_meanshift_algo</span><span class="p">(</span><span class="n">unpooled_df</span><span class="p">[</span><span class="n">exceeding_indices</span><span class="p">],</span> <span class="n">iteration</span><span class="o">=</span><span class="p">(</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">starting_label</span><span class="o">=</span><span class="n">next_label</span><span class="p">)</span>
+            
+            <span class="c1"># relabel the repooled trips:</span>
+            <span class="c1">#print(&quot;Relabeling...&quot;)</span>
+            <span class="n">unpooled_df</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">label</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">unpooled_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">exceeding_indices</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_labels</span>
+            <span class="n">unpooled_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">unpooled_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+            <span class="c1"># append the new clusters:</span>
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_clusters</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">iteration</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">total_pools</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+            <span class="n">pooling_ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_pools</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meanshift_df</span><span class="p">))</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==================== &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">))</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Counting passengers and trips per cluster...&quot;</span><span class="p">)</span>
+            
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+                <span class="n">trips</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">passengers</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span>
+                <span class="n">passengers</span> <span class="o">=</span> <span class="n">unpooled_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">passengers</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="p">)</span>
+            
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TOTAL POOLS: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">total_pools</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOL STATS: (# trips in pool, # pools, total pax)&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="se">\t</span><span class="si">{}</span><span class="se">\t</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span> <span class="o">==</span> <span class="n">i</span><span class="p">]),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span><span class="o">.</span><span class="n">trips</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">passengers</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOLING RATIO: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">pooling_ratio</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">unpooled_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===== Starting MeanShift, jobs = </span><span class="si">{}</span><span class="s2">, bandwidth reduction = </span><span class="si">{}</span><span class="s2"> =====&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">bandwidth_reduction</span><span class="p">))</span>
+    <span class="n">labels</span><span class="p">,</span> <span class="n">clusters</span> <span class="o">=</span> <span class="n">_meanshift_algo</span><span class="p">(</span><span class="n">meanshift_df</span><span class="p">)</span>
+    
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">pickup_epoch</span> <span class="o">=</span> <span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">scaled_time</span> <span class="o">/</span> <span class="n">time_multiplier</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">pickup_datetime</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">pickup_epoch</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">))</span>
+    <span class="n">cluster_pickup</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters</span><span class="p">[[</span><span class="s1">&#39;pickup_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_northing&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">to_latlon</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;pickup_easting&#39;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;pickup_northing&#39;</span><span class="p">],</span> <span class="n">zone</span><span class="p">,</span> <span class="n">letter</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">cluster_dropoff</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters</span><span class="p">[[</span><span class="s1">&#39;dropoff_easting&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_northing&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">to_latlon</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;dropoff_easting&#39;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;dropoff_northing&#39;</span><span class="p">],</span> <span class="n">zone</span><span class="p">,</span> <span class="n">letter</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">cluster_pickup</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cluster_pickup</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;pickup_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_longitude&#39;</span><span class="p">]</span>
+    <span class="n">cluster_dropoff</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cluster_dropoff</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dropoff_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_longitude&#39;</span><span class="p">]</span>
+
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cluster_pickup</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cluster_dropoff</span><span class="p">)</span>
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span><span class="p">[[</span><span class="s1">&#39;trips&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_datetime&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;pickup_longitude&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;dropoff_longitude&#39;</span><span class="p">]]</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished at: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()))</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

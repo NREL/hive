@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stations &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hive.stations">
+<span id="stations"></span><h1>Stations<a class="headerlink" href="#module-hive.stations" title="Permalink to this headline">¶</a></h1>
+<p>Charging station objects used in the HIVE simulation platform.</p>
+<dl class="class">
+<dt id="hive.stations.FuelStation">
+<em class="property">class </em><code class="sig-prename descclassname">hive.stations.</code><code class="sig-name descname">FuelStation</code><span class="sig-paren">(</span><em class="sig-param">station_id</em>, <em class="sig-param">latitude</em>, <em class="sig-param">longitude</em>, <em class="sig-param">plugs</em>, <em class="sig-param">plug_type</em>, <em class="sig-param">plug_power_kw</em>, <em class="sig-param">clock</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/stations.html#FuelStation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.stations.FuelStation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for electric vehicle charging station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>station_id</strong> (<em>int</em>) – Identifer assigned to FuelStation object</p></li>
+<li><p><strong>latitude</strong> (<em>float</em>) – Latitude of station location</p></li>
+<li><p><strong>longitude</strong> (<em>float</em>) – Longitude of station location</p></li>
+<li><p><strong>plugs</strong> (<em>int</em>) – Number of plugs at location</p></li>
+<li><p><strong>plug_type</strong> (<em>str</em>) – Plug type - AC or DC</p></li>
+<li><p><strong>plug_power_kw</strong> (<em>float</em>) – Plug power in kW</p></li>
+<li><p><strong>clock</strong> (<a class="reference internal" href="utilities.html#hive.utils.Clock" title="hive.utils.Clock"><em>hive.utils.Clock</em></a>) – simulation clock shared across the simulation to track simulation time steps.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="hive.stations.FuelStation.dispense_energy">
+<code class="sig-name descname">dispense_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/stations.html#FuelStation.dispense_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.stations.FuelStation.dispense_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the amount of energy that the station dispenses during one simulation
+time step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>energy_kwh</strong> – Amount of energy dispensed in a time step. Units are kilowatt-hours.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.stations.FuelStation.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/stations.html#FuelStation.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.stations.FuelStation.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called each time step. Station updates its state and log history.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/stations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
