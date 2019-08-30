@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reporting &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hive.reporting">
+<span id="reporting"></span><h1>Reporting<a class="headerlink" href="#module-hive.reporting" title="Permalink to this headline">¶</a></h1>
+<p>Functions for reporting vehicle-, fleet-, charge station-, &amp; grid-level
+results for simulation</p>
+<dl class="function">
+<dt id="hive.reporting.generate_logs">
+<code class="sig-prename descclassname">hive.reporting.</code><code class="sig-name descname">generate_logs</code><span class="sig-paren">(</span><em class="sig-param">objects</em>, <em class="sig-param">log_path</em>, <em class="sig-param">context</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/reporting.html#generate_logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.reporting.generate_logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates logs for a list of hive objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>objects</strong> (<em>list</em>) – list of hive objects for which to write logs.</p></li>
+<li><p><strong>lob_path</strong> (<em>str</em>) – filepath for where to write the logs to.</p></li>
+<li><p><strong>context</strong> (<em>str</em>) – string representing the type of object that is being passed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hive.reporting.summarize_fleet_stats">
+<code class="sig-prename descclassname">hive.reporting.</code><code class="sig-name descname">summarize_fleet_stats</code><span class="sig-paren">(</span><em class="sig-param">vehicle_log_path</em>, <em class="sig-param">summary_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/reporting.html#summarize_fleet_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.reporting.summarize_fleet_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates fleet level summary statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vehicle_log_path</strong> (<em>str</em>) – filepath to where vehicle logs are written.</p></li>
+<li><p><strong>summary_path</strong> (<em>str</em>) – path to where to write the fleet summary stats.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hive.reporting.summarize_station_use">
+<code class="sig-prename descclassname">hive.reporting.</code><code class="sig-name descname">summarize_station_use</code><span class="sig-paren">(</span><em class="sig-param">stations</em>, <em class="sig-param">bases</em>, <em class="sig-param">station_summary_file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/reporting.html#summarize_station_use"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.reporting.summarize_station_use" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates station level summary statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stations</strong> (<em>list</em>) – list of station objects.</p></li>
+<li><p><strong>bases</strong> (<em>list</em>) – list of bases objects.</p></li>
+<li><p><strong>station_summary_file</strong> (<em>str</em>) – filepath for where to write station summary stats.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/reporting.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

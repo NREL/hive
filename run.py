@@ -215,6 +215,14 @@ if __name__ == "__main__":
 
     all_scenarios = glob.glob(os.path.join(SCENARIO_PATH, '*.yaml'))
 
+    if len(all_scenarios) == 0:
+        print('')
+        print('Looks like there are no scenarios in your inputs/scenarios folder.')
+        print('To generate scenarios, navigate to the inputs directory and run:')
+        print('')
+        print('python generate_scenarios.py')
+        print('')
+
     for scenario_file in all_scenarios:
         scenario_name, data = load_scenario(scenario_file)
         if scenario_name in cfg.SCENARIOS:

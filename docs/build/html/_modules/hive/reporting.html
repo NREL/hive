@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.reporting &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.reporting</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for reporting vehicle-, fleet-, charge station-, &amp; grid-level</span>
+<span class="sd">results for simulation</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+
+<div class="viewcode-block" id="generate_logs"><a class="viewcode-back" href="../../reference/reporting.html#hive.reporting.generate_logs">[docs]</a><span class="k">def</span> <span class="nf">generate_logs</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates logs for a list of hive objects.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    objects: list</span>
+<span class="sd">        list of hive objects for which to write logs.</span>
+<span class="sd">    lob_path: str</span>
+<span class="sd">        filepath for where to write the logs to.</span>
+<span class="sd">    context: str</span>
+<span class="sd">        string representing the type of object that is being passed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#TODO: Make this function more robust by ensuring all objects have same keys.</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{context}</span><span class="s1">_</span><span class="si">{item.ID}</span><span class="s1">_history.csv&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">history</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="summarize_station_use"><a class="viewcode-back" href="../../reference/reporting.html#hive.reporting.summarize_station_use">[docs]</a><span class="k">def</span> <span class="nf">summarize_station_use</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">station_summary_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates station level summary statistics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stations: list</span>
+<span class="sd">        list of station objects.</span>
+<span class="sd">    bases: list</span>
+<span class="sd">        list of bases objects.</span>
+<span class="sd">    station_summary_file: str</span>
+<span class="sd">        filepath for where to write station summary stats.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#TODO: Make this rely on station and base log files so it can be run after a sim.</span>
+    <span class="n">charg_stations</span> <span class="o">=</span> <span class="n">stations</span> <span class="o">+</span> <span class="n">bases</span>
+    <span class="n">station_ids</span><span class="p">,</span> <span class="n">refuel_cnts</span><span class="p">,</span> <span class="n">refuel_energy_kwh</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">charg_stations</span><span class="p">:</span>
+        <span class="n">station_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+        <span class="n">refuel_cnts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;charge_cnt&#39;</span><span class="p">])</span>
+        <span class="n">refuel_energy_kwh</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;total_energy_kwh&#39;</span><span class="p">])</span>
+
+    <span class="n">station_summary_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;station_id&#39;</span><span class="p">:</span> <span class="n">station_ids</span><span class="p">,</span>
+                                            <span class="s1">&#39;refuel_cnt&#39;</span><span class="p">:</span> <span class="n">refuel_cnts</span><span class="p">,</span>
+                                            <span class="s1">&#39;refuel_energy_kwh&#39;</span><span class="p">:</span> <span class="n">refuel_energy_kwh</span><span class="p">})</span>
+
+    <span class="n">station_summary_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">station_summary_file</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="summarize_fleet_stats"><a class="viewcode-back" href="../../reference/reporting.html#hive.reporting.summarize_fleet_stats">[docs]</a><span class="k">def</span> <span class="nf">summarize_fleet_stats</span><span class="p">(</span><span class="n">vehicle_log_path</span><span class="p">,</span> <span class="n">summary_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates fleet level summary statistics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vehicle_log_path: str</span>
+<span class="sd">        filepath to where vehicle logs are written.</span>
+<span class="sd">    summary_path: str</span>
+<span class="sd">        path to where to write the fleet summary stats.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># VMT Summary</span>
+    <span class="n">drop_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Charging at Station&#39;</span><span class="p">,</span> <span class="s1">&#39;Idle&#39;</span><span class="p">,</span> <span class="s1">&#39;Reserve&#39;</span><span class="p">]</span>
+    <span class="n">all_vehicle_logs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vehicle_log_path</span><span class="p">,</span> <span class="s1">&#39;*.csv&#39;</span><span class="p">))</span>
+    <span class="n">fleet_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">all_vehicle_logs</span><span class="p">))</span>
+    <span class="n">outfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_path</span><span class="p">,</span> <span class="s1">&#39;fleet_vmt_summary.csv&#39;</span><span class="p">)</span>
+    <span class="n">fleet_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;activity&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()[</span><span class="s1">&#39;step_distance_mi&#39;</span><span class="p">]</span>\
+        <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">drop_columns</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Time Summary</span>
+    <span class="n">outfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_path</span><span class="p">,</span> <span class="s1">&#39;fleet_time_summary.csv&#39;</span><span class="p">)</span>
+    <span class="n">fleet_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;activity&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()[</span><span class="s1">&#39;sim_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

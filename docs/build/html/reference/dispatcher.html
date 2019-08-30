@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dispatcher &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hive.dispatcher">
+<span id="dispatcher"></span><h1>Dispatcher<a class="headerlink" href="#module-hive.dispatcher" title="Permalink to this headline">¶</a></h1>
+<p>Dispatcher Object for high-level decision making in HIVE. Includes functions for
+vehicle dispatching, and station/base selection.</p>
+<dl class="class">
+<dt id="hive.dispatcher.Dispatcher">
+<em class="property">class </em><code class="sig-prename descclassname">hive.dispatcher.</code><code class="sig-name descname">Dispatcher</code><span class="sig-paren">(</span><em class="sig-param">fleet</em>, <em class="sig-param">fleet_state</em>, <em class="sig-param">stations</em>, <em class="sig-param">bases</em>, <em class="sig-param">env_params</em>, <em class="sig-param">clock</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher.html#Dispatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.Dispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Dispatcher object is responsible for coordinating the actions of the fleet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fleet</strong> (<em>list</em>) – list of all vehicles in the fleet.</p></li>
+<li><p><strong>fleet_state</strong> (<em>np.ndarray</em>) – matrix that represents the state of the fleet. Used for quick numpy vectorized operations.</p></li>
+<li><p><strong>stations</strong> (<em>list</em>) – list of all charging stations.</p></li>
+<li><p><strong>bases</strong> (<em>list</em>) – list of all bases</p></li>
+<li><p><strong>env_params</strong> (<em>dict</em>) – dictionary of all of the constant environment parameters shared across the simulation.</p></li>
+<li><p><strong>clock</strong> (<em>hive.utils.Clock</em>) – simulation clock shared across the simulation to track simulation time steps.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="hive.dispatcher.Dispatcher.process_requests">
+<code class="sig-name descname">process_requests</code><span class="sig-paren">(</span><em class="sig-param">requests</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher.html#Dispatcher.process_requests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.Dispatcher.process_requests" title="Permalink to this definition">¶</a></dt>
+<dd><p>process_requests is called for each simulation time step. Function takes
+a list of requests and coordinates vehicle actions for that step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>requests</strong> (<em>list</em>) – one or many requests to distribute to the fleet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/dispatcher.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

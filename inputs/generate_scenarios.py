@@ -9,7 +9,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 LIB_PATH = os.path.join(THIS_DIR, 'library')
 STATIC_PATH = os.path.join(LIB_PATH, '.static')
 SCENARIO_PATH = os.path.join(THIS_DIR, 'scenarios')
-GENERATOR_FILE = 'scenario_generator.csv'
+GENERATOR_FILE = os.path.join(THIS_DIR, 'scenario_generator.csv')
 
 
 def load_csv(filepath):

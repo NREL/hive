@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.utils &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<div class="viewcode-block" id="Clock"><a class="viewcode-back" href="../../reference/utilities.html#hive.utils.Clock">[docs]</a><span class="k">class</span> <span class="nc">Clock</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterator to store simulation time information.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timestep_s: int</span>
+<span class="sd">        amount of seconds that one simulation time step represents.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestep_s</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TIMESTEP_S</span> <span class="o">=</span> <span class="n">timestep_s</span>
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="save_to_hdf"><a class="viewcode-back" href="../../reference/utilities.html#hive.utils.save_to_hdf">[docs]</a><span class="k">def</span> <span class="nf">save_to_hdf</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to save data to hdf5.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">val</span><span class="o">.</span><span class="n">to_hdf</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="save_to_pickle"><a class="viewcode-back" href="../../reference/utilities.html#hive.utils.save_to_pickle">[docs]</a><span class="k">def</span> <span class="nf">save_to_pickle</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to save data to pickle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="build_output_dir"><a class="viewcode-back" href="../../reference/utilities.html#hive.utils.build_output_dir">[docs]</a><span class="k">def</span> <span class="nf">build_output_dir</span><span class="p">(</span><span class="n">scenario_name</span><span class="p">,</span> <span class="n">root_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to build scenario level output directory in root output directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scenario_output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">scenario_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">scenario_output</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">scenario_output</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">scenario_output</span><span class="p">)</span>
+    <span class="n">file_paths</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">log_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scenario_output</span><span class="p">,</span> <span class="s1">&#39;logs&#39;</span><span class="p">)</span>
+    <span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;log_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log_path</span>
+    <span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;summary_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scenario_output</span><span class="p">,</span> <span class="s1">&#39;summaries&#39;</span><span class="p">)</span>
+    <span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;vehicle_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;vehicles&#39;</span><span class="p">)</span>
+    <span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;station_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;stations&#39;</span><span class="p">)</span>
+    <span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;base_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;bases&#39;</span><span class="p">)</span>
+    <span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;dispatcher_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">&#39;dispatcher&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;log_path&#39;</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;vehicle_path&#39;</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;station_path&#39;</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;base_path&#39;</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;dispatcher_path&#39;</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="s1">&#39;summary_path&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">file_paths</span></div>
+
+<div class="viewcode-block" id="assert_constraint"><a class="viewcode-back" href="../../reference/utilities.html#hive.utils.assert_constraint">[docs]</a><span class="k">def</span> <span class="nf">assert_constraint</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to assert constraints at runtime.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    param: str</span>
+<span class="sd">        parameter of interest to check against constraint.</span>
+<span class="sd">    val: int, float, str</span>
+<span class="sd">        value of parameter that needs checking.</span>
+<span class="sd">    CONSTRAINTS: dict</span>
+<span class="sd">        dictionary of the constraints from hive.constraints.</span>
+<span class="sd">    context: str</span>
+<span class="sd">        context to inform the function what time of checking to perform.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    Valid values for context:</span>
+
+<span class="sd">    * between:        Check that value is between upper and lower bounds exclusive</span>
+<span class="sd">    * between_incl:   Check that value is between upper and lower bounds inclusive</span>
+<span class="sd">    * greater_than:   Check that value is greater than lower bound exclusive</span>
+<span class="sd">    * less_than:      Check that value is less than upper bound exclusive</span>
+<span class="sd">    * in_set:         Check that value is in a set</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">condition</span> <span class="o">=</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">condition</span> <span class="o">==</span> <span class="s1">&#39;between&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> is under low limit </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> is over high limit </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s1">&#39;between_incl&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="o">&gt;=</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> is under low limit </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="o">&lt;=</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> is over high limit </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s1">&#39;greater_than&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> is under low limit </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s1">&#39;less_than&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> is over high limit </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s1">&#39;in_set&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> \
+            <span class="s2">&quot;Context: </span><span class="si">{}</span><span class="s2"> | Param </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> must be from set </span><span class="si">{}</span><span class="s2">&quot;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

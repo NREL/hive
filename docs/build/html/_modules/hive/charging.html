@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.charging &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.charging</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for estimating charge curves</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="construct_temporal_charge_template"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.construct_temporal_charge_template">[docs]</a><span class="k">def</span> <span class="nf">construct_temporal_charge_template</span><span class="p">(</span><span class="n">unscaled_df</span><span class="p">,</span> <span class="n">battery_kwh</span><span class="p">,</span> <span class="n">battery_kw</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Builds a scaled charging template based on battery specifications.</span>
+<span class="sd">    The original template is for a Nissan Leaf and was provided by Idaho</span>
+<span class="sd">    National Laboratory.</span>
+
+<span class="sd">    Inputs</span>
+<span class="sd">    ------</span>
+<span class="sd">    unscaled_df: DataFrame</span>
+<span class="sd">        The DataFrame describes the charge template (likely from Nissan Leaf)</span>
+<span class="sd">        with columns [soc, kw]. Presently the source file for that profile is</span>
+<span class="sd">        here: &#39;../inputs/.lib/raw_leaf_curves.csv&#39;</span>
+<span class="sd">    battery_kwh: double precision</span>
+<span class="sd">        Battery capacity, in kWh</span>
+<span class="sd">    battery_kw: double precision</span>
+<span class="sd">        Maximum power that cna be received by battery, in kW</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DataFrame</span>
+<span class="sd">        Scaled charging template based on the input template, containing</span>
+<span class="sd">        columns: [time_i, soc_i, kwh_i, kw, soc_f, kwh_f]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; PATH_TO_LEAF = &#39;../inputs/library/.static/raw_leaf_curves.csv&#39;</span>
+<span class="sd">    &gt;&gt;&gt; leaf_df = pd.read_csv(PATH_TO_LEAF)</span>
+<span class="sd">    &gt;&gt;&gt; construct_temporal_charge_template(leaf_df,</span>
+<span class="sd">                                           battery_kwh = 30,</span>
+<span class="sd">                                           battery_kw = 100)</span>
+
+<span class="sd">            time_i      soc_i      kwh_i         kw      soc_f      kwh_f</span>
+<span class="sd">    0          1   0.000000   0.000000  20.000000   0.018519   0.005556</span>
+<span class="sd">    1          2   0.018519   0.005556  20.430222   0.037435   0.011231</span>
+<span class="sd">    2          3   0.037435   0.011231  20.869699   0.056759   0.017028</span>
+<span class="sd">    3          4   0.056759   0.017028  21.318629   0.076499   0.022950</span>
+<span class="sd">    4          5   0.076499   0.022950  21.777217   0.096663   0.028999</span>
+<span class="sd">        ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">unscaled_df</span><span class="o">.</span><span class="n">kw</span> <span class="o">=</span> <span class="n">unscaled_df</span><span class="o">.</span><span class="n">kw</span> <span class="o">*</span> <span class="n">battery_kw</span> <span class="o">/</span> <span class="mf">50.0</span>
+
+    <span class="n">time_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">soc_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">kwh_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">kw_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">soc_f</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">kwh_f</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">charge_template</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;time_i&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">time_i</span><span class="p">],</span>
+                                  <span class="s1">&#39;soc_i&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">soc_i</span><span class="p">],</span>
+                                  <span class="s1">&#39;kwh_i&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">kwh_i</span><span class="p">],</span>
+                                  <span class="s1">&#39;kw&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">kw_i</span><span class="p">],</span>
+                                  <span class="s1">&#39;soc_f&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">soc_f</span><span class="p">],</span>
+                                  <span class="s1">&#39;kwh_f&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">kwh_f</span><span class="p">]})</span>
+
+    <span class="n">time_i_lst</span><span class="p">,</span> <span class="n">soc_i_lst</span><span class="p">,</span> <span class="n">kwh_i_lst</span><span class="p">,</span> <span class="n">kw_lst</span><span class="p">,</span> <span class="n">soc_f_lst</span><span class="p">,</span> <span class="n">kwh_f_lst</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">soc_i</span> <span class="o">&lt;=</span> <span class="mf">99.50</span><span class="p">:</span>
+
+        <span class="n">time_i</span> <span class="o">=</span> <span class="n">time_i</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">soc_i</span> <span class="o">=</span> <span class="n">soc_f</span>
+        <span class="n">kwh_i</span> <span class="o">=</span> <span class="n">kwh_f</span>
+
+        <span class="n">kw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">soc_i</span><span class="p">,</span> <span class="n">unscaled_df</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span> <span class="n">unscaled_df</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="n">kwh_f</span> <span class="o">=</span> <span class="n">kwh_i</span> <span class="o">+</span> <span class="n">kw</span><span class="o">/</span><span class="mf">3600.0</span>
+        <span class="n">soc_f</span> <span class="o">=</span> <span class="n">kwh_f</span> <span class="o">/</span> <span class="n">battery_kwh</span> <span class="o">*</span> <span class="mf">100.0</span>
+
+        <span class="n">time_i_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_i</span><span class="p">)</span>
+        <span class="n">soc_i_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">soc_i</span><span class="p">)</span>
+        <span class="n">kwh_i_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwh_i</span><span class="p">)</span>
+        <span class="n">kw_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">soc_f_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">soc_f</span><span class="p">)</span>
+        <span class="n">kwh_f_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwh_f</span><span class="p">)</span>
+
+    <span class="n">charge_template</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;time_i&#39;</span><span class="p">:</span> <span class="n">time_i_lst</span><span class="p">,</span>
+                                         <span class="s1">&#39;soc_i&#39;</span><span class="p">:</span> <span class="n">soc_i_lst</span><span class="p">,</span>
+                                         <span class="s1">&#39;kwh_i&#39;</span><span class="p">:</span> <span class="n">kwh_i_lst</span><span class="p">,</span>
+                                         <span class="s1">&#39;kw&#39;</span><span class="p">:</span> <span class="n">kw_lst</span><span class="p">,</span>
+                                         <span class="s1">&#39;soc_f&#39;</span><span class="p">:</span> <span class="n">soc_f_lst</span><span class="p">,</span>
+                                         <span class="s1">&#39;kwh_f&#39;</span><span class="p">:</span> <span class="n">kwh_f_lst</span>
+                                        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">charge_template</span></div>
+
+<div class="viewcode-block" id="construct_charge_profile"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.construct_charge_profile">[docs]</a><span class="k">def</span> <span class="nf">construct_charge_profile</span><span class="p">(</span><span class="n">charge_template</span><span class="p">,</span> <span class="n">soc_i</span><span class="p">,</span> <span class="n">charge_time</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">soc_f</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Selects a portion of the scaled charging template that applies to a</span>
+<span class="sd">    particular charge event based on initial conditions and event duration or</span>
+<span class="sd">    final state of charge. The function determines the appropriate calculation</span>
+<span class="sd">    based on the set of inputs provided.</span>
+
+<span class="sd">    Inputs</span>
+<span class="sd">    ------</span>
+<span class="sd">    charge_template: DataFrame</span>
+<span class="sd">        Scaled charging template based on the input template, containing</span>
+<span class="sd">        columns: [time_i, soc_i, kwh_i, kw, soc_f, kwh_f]</span>
+<span class="sd">    soc_i: double precision</span>
+<span class="sd">        Initial battery state of charge, in percent (0 to 100)</span>
+<span class="sd">    charge_time: double precision</span>
+<span class="sd">        Charge event duration, in seconds (default = -1)</span>
+<span class="sd">    soc_f: double precision</span>
+<span class="sd">        Final state of charge, in percent (0 to 100, default = -1)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DataFrame</span>
+<span class="sd">        The portion of the charge_template input DataFrame that characterizes</span>
+<span class="sd">        the charging event described by the input conditions. &#39;abs_time&#39; column</span>
+<span class="sd">        is appended to the dataframe as well.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; PATH_TO_LEAF = &#39;../inputs/.lib/raw_leaf_curves.csv&#39;</span>
+<span class="sd">    &gt;&gt;&gt; leaf_df = pd.read_csv(PATH_TO_LEAF)</span>
+<span class="sd">    &gt;&gt;&gt; scaled_df = construct_temporal_charge_template(leaf_df,</span>
+<span class="sd">                                           battery_kwh = 30,</span>
+<span class="sd">                                           battery_kw = 100)</span>
+<span class="sd">    &gt;&gt;&gt; construct_charge_profile(scaled_df,</span>
+<span class="sd">                                 soc_i = 20,</span>
+<span class="sd">                                 soc_f = 80)</span>
+
+<span class="sd">            time_i      soc_i     kwh_i         kw      soc_f     kwh_f  abs_time</span>
+<span class="sd">    293     294  20.028729  6.008619  86.258619  20.108598  6.032579         0</span>
+<span class="sd">    294     295  20.108598  6.032579  86.282579  20.188489  6.056547         1</span>
+<span class="sd">    295     296  20.188489  6.056547  86.306547  20.268403  6.080521         2</span>
+<span class="sd">    296     297  20.268403  6.080521  86.330521  20.348338  6.104501         3</span>
+<span class="sd">    297     298  20.348338  6.104501  86.354501  20.428296  6.128489         4</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">charge_df</span> <span class="o">=</span> <span class="n">charge_template</span><span class="p">[</span><span class="n">charge_template</span><span class="o">.</span><span class="n">soc_i</span> <span class="o">&gt;</span> <span class="n">soc_i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># start_row = np.argmax(charge_template.soc_i&gt;soc_i)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">charge_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time_i</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">charge_time</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">charge_time</span>
+
+        <span class="k">if</span> <span class="n">end_time</span> <span class="o">&gt;</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="o">.</span><span class="n">max</span><span class="p">():</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">charge_time</span>
+
+        <span class="n">charge_df</span> <span class="o">=</span> <span class="n">charge_df</span><span class="p">[</span><span class="n">charge_df</span><span class="o">.</span><span class="n">time_i</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">]</span>
+        <span class="c1"># end_row = np.argmax(charge_template.time_i&gt;=end_time)</span>
+
+        <span class="c1"># charge_df = charge_template.iloc[start_row:end_row, :]</span>
+        <span class="n">charge_df</span><span class="p">[</span><span class="s1">&#39;abs_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">charge_df</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">soc_f</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+
+        <span class="n">charge_df</span> <span class="o">=</span> <span class="n">charge_df</span><span class="p">[</span><span class="n">charge_df</span><span class="o">.</span><span class="n">soc_f</span> <span class="o">&lt;=</span> <span class="n">soc_f</span><span class="p">]</span>
+        <span class="c1"># end_row = np.argmax(charge_template.soc_f&gt;=soc_f)</span>
+        <span class="c1"># end_time = charge_template.time_i[end_row]</span>
+        <span class="c1"># charge_time = end_time - start_time</span>
+
+        <span class="c1"># charge_df = charge_template.iloc[start_row:end_row, :]</span>
+        <span class="n">charge_df</span><span class="p">[</span><span class="s1">&#39;abs_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">charge_df</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">charge_df</span></div>
+
+<div class="viewcode-block" id="query_charge_stats"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.query_charge_stats">[docs]</a><span class="k">def</span> <span class="nf">query_charge_stats</span><span class="p">(</span><span class="n">charge_template</span><span class="p">,</span> <span class="n">soc_i</span><span class="p">,</span> <span class="n">charge_time</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">soc_f</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function needs docstring&quot;&quot;&quot;</span>
+
+    <span class="n">start_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">charge_template</span><span class="o">.</span><span class="n">soc_i</span><span class="o">&gt;</span><span class="n">soc_i</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="p">[</span><span class="n">start_row</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">charge_time</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">charge_time</span>
+
+        <span class="k">if</span> <span class="n">end_time</span> <span class="o">&gt;</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="o">.</span><span class="n">max</span><span class="p">():</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">charge_time</span>
+
+        <span class="n">end_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="o">&gt;=</span><span class="n">end_time</span><span class="p">)</span>
+
+        <span class="n">charge_df</span> <span class="o">=</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_row</span><span class="p">:</span><span class="n">end_row</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">kwh</span> <span class="o">=</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">kwh_f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">kwh_i</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">soc_f</span> <span class="o">=</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">soc_f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">avg_kw</span> <span class="o">=</span> <span class="n">kwh</span> <span class="o">/</span> <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span>
+
+    <span class="k">elif</span> <span class="n">soc_f</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+
+        <span class="n">end_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">charge_template</span><span class="o">.</span><span class="n">soc_f</span><span class="o">&gt;=</span><span class="n">soc_f</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">time_i</span><span class="p">[</span><span class="n">end_row</span><span class="p">]</span>
+        <span class="n">charge_time</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+
+        <span class="n">charge_df</span> <span class="o">=</span> <span class="n">charge_template</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_row</span><span class="p">:</span><span class="n">end_row</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">kwh</span> <span class="o">=</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">kwh_f</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">kwh_i</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">avg_kw</span> <span class="o">=</span> <span class="n">kwh</span> <span class="o">/</span> <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span>
+
+    <span class="k">return</span> <span class="n">kwh</span><span class="p">,</span> <span class="n">soc_f</span><span class="p">,</span> <span class="n">charge_time</span><span class="p">,</span> <span class="n">avg_kw</span></div>
+
+<div class="viewcode-block" id="calc_const_charge_kwh"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.calc_const_charge_kwh">[docs]</a><span class="k">def</span> <span class="nf">calc_const_charge_kwh</span><span class="p">(</span><span class="n">time_s</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="mf">6.6</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the energy (in kWh) added to battery in time_s seconds at</span>
+<span class="sd">    constant power, kw (default=6.6).</span>
+
+<span class="sd">    Inputs</span>
+<span class="sd">    ------</span>
+<span class="sd">    time_s: double precision</span>
+<span class="sd">        Seconds of charging</span>
+<span class="sd">    kw: double precision</span>
+<span class="sd">        Constant power received by battery, in kW (default: 6.6)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    double precision</span>
+<span class="sd">        kWh added to battery in time_s seconds</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; calc_const_charge_kwh(7200)</span>
+<span class="sd">    13.2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwh</span> <span class="o">=</span> <span class="n">kw</span> <span class="o">*</span> <span class="p">(</span><span class="n">time_s</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kwh</span></div>
+
+<div class="viewcode-block" id="calc_const_charge_secs"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.calc_const_charge_secs">[docs]</a><span class="k">def</span> <span class="nf">calc_const_charge_secs</span><span class="p">(</span><span class="n">init_energy_kwh</span><span class="p">,</span> <span class="n">battery_capacity_kwh</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="mf">6.6</span><span class="p">,</span> <span class="n">soc_f</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the time (in seconds) to charge from init_energy_kwh to</span>
+<span class="sd">    battery_capacity_kwh * soc_f at constant power, kw (default=6.6).</span>
+
+<span class="sd">    Inputs</span>
+<span class="sd">    ------</span>
+<span class="sd">    init_energy_kwh: double precision</span>
+<span class="sd">        Initial battery kWh</span>
+<span class="sd">    battery_capacity_kwh: double precision</span>
+<span class="sd">        Battery capacity, in kWh</span>
+<span class="sd">    kw: double precision</span>
+<span class="sd">        Constant power received by battery, in kW (default: 6.6)</span>
+<span class="sd">    soc_f: double precision</span>
+<span class="sd">        Fractional battery state of charge at completion of charge (default: 1.0)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    double precision</span>
+<span class="sd">        Seconds needed to charge from init_energy_kwh -&gt; battery_capacity_kwh * soc_f</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; calc_const_charge_secs(42, 60)</span>
+<span class="sd">    9818.181818</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energy_f</span> <span class="o">=</span> <span class="n">battery_capacity_kwh</span> <span class="o">*</span> <span class="n">soc_f</span>
+    <span class="n">secs</span> <span class="o">=</span> <span class="p">(</span><span class="n">energy_f</span> <span class="o">-</span> <span class="n">init_energy_kwh</span><span class="p">)</span><span class="o">/</span><span class="n">kw</span><span class="o">*</span><span class="mi">3600</span>
+
+    <span class="k">return</span> <span class="n">secs</span></div>
+
+<span class="c1">#TODO (JH): currently assuming DCFC can provide whatever max accepted battery</span>
+<span class="c1"># power is, should allow DCFC power to be less (or more)</span>
+<div class="viewcode-block" id="calc_dcfc_kwh"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.calc_dcfc_kwh">[docs]</a><span class="k">def</span> <span class="nf">calc_dcfc_kwh</span><span class="p">(</span><span class="n">charge_template</span><span class="p">,</span> <span class="n">battery_kwh</span><span class="p">,</span> <span class="n">battery_kw</span><span class="p">,</span> <span class="n">soc_i</span><span class="p">,</span> <span class="n">charge_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates energy added to the battery over a given charge duration, for a</span>
+<span class="sd">    DC fast charging event at a specified average power. The function uses assumptions</span>
+<span class="sd">    to create a realistic charge profile with power tapering at higer SOC.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    charge_template: pd.DataFrame</span>
+<span class="sd">        veh charge template from construct_temporal_charge_template()</span>
+<span class="sd">    battery_kwh: double precision</span>
+<span class="sd">        Battery capacity, in kWh</span>
+<span class="sd">    battery_kw: double precision</span>
+<span class="sd">        Maximum power that cna be received by battery, in kW</span>
+<span class="sd">    soc_i: double precision</span>
+<span class="sd">        Initial battery state of charge, in percent (0 to 100)</span>
+<span class="sd">    charge_time: double precision</span>
+<span class="sd">        Charge event duration, in seconds</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Energy added to the battery in the give time_s, kilowatt-hours</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># PATH_TO_LEAF = &#39;../inputs/.lib/raw_leaf_curves.csv&#39;</span>
+    <span class="c1"># leaf_df = pd.read_csv(PATH_TO_LEAF)</span>
+
+    <span class="c1"># # TODO: move scaling into the dispatcher to only perform once per vehicle type</span>
+    <span class="c1"># scaled_df = construct_temporal_charge_template(leaf_df,</span>
+    <span class="c1">#                                        battery_kwh,</span>
+    <span class="c1">#                                        battery_kw)</span>
+
+    <span class="n">charge_df</span> <span class="o">=</span> <span class="n">construct_charge_profile</span><span class="p">(</span><span class="n">charge_template</span><span class="p">,</span>
+                                        <span class="n">soc_i</span> <span class="o">=</span> <span class="n">soc_i</span><span class="p">,</span>
+                                        <span class="n">charge_time</span> <span class="o">=</span> <span class="n">charge_time</span><span class="p">)</span>
+
+    <span class="n">kwh_net</span> <span class="o">=</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;kwh_f&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;kwh_i&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">kwh_net</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="calc_dcfc_secs"><a class="viewcode-back" href="../../reference/charging.html#hive.charging.calc_dcfc_secs">[docs]</a><span class="k">def</span> <span class="nf">calc_dcfc_secs</span><span class="p">(</span><span class="n">charge_template</span><span class="p">,</span> <span class="n">battery_kwh</span><span class="p">,</span> <span class="n">battery_kw</span><span class="p">,</span> <span class="n">soc_i</span><span class="p">,</span> <span class="n">soc_f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates time required to charge from initial to final soc, for a</span>
+<span class="sd">    DC fast charging event. The function uses assumptions to create a realistic</span>
+<span class="sd">    charge profile with power tapering at higer SOC.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    charge_template: pd.DataFrame</span>
+<span class="sd">        veh charge template from construct_temporal_charge_template()</span>
+<span class="sd">    battery_kwh: double precision</span>
+<span class="sd">        Battery capacity, in kWh</span>
+<span class="sd">    battery_kw: double precision</span>
+<span class="sd">        Maximum power that can be received by battery, in kW</span>
+<span class="sd">    soc_i: double precision</span>
+<span class="sd">        Initial battery state of charge, in percent (0 to 100)</span>
+<span class="sd">    soc_i: double precision</span>
+<span class="sd">        Initial battery state of charge, in percent (0 to 100)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Energy added to the battery in the give time_s, kilowatt-hours</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#PATH_TO_LEAF = &#39;../inputs/.lib/raw_leaf_curves.csv&#39;</span>
+    <span class="c1">#leaf_df = pd.read_csv(PATH_TO_LEAF)</span>
+
+    <span class="c1"># TODO: move scaling into the dispatcher to only perform once per vehicle type</span>
+    <span class="c1"># scaled_df = construct_temporal_charge_template(leaf_df,</span>
+    <span class="c1">#                                        battery_kwh,</span>
+    <span class="c1">#                                        battery_kw)</span>
+
+    <span class="n">charge_df</span> <span class="o">=</span> <span class="n">construct_charge_profile</span><span class="p">(</span><span class="n">charge_template</span><span class="p">,</span>
+                                        <span class="n">soc_i</span> <span class="o">=</span> <span class="n">soc_i</span><span class="p">,</span>
+                                        <span class="n">soc_f</span> <span class="o">=</span> <span class="n">soc_f</span><span class="p">)</span>
+
+    <span class="n">time_secs</span> <span class="o">=</span> <span class="n">charge_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;abs_time&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">time_secs</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
