@@ -4,7 +4,6 @@ import sys
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 INPUT_PATH = os.path.join(THIS_DIR, 'inputs')
-GENERATOR_FILE = os.path.join(INPUT_PATH, 'scenario_generator.csv')
 
 sys.path.append(INPUT_PATH)
 from generate_scenarios import build_scenarios
@@ -36,7 +35,7 @@ def setup():
     #TODO: Add code to download default inputs from remote S3 bucket
 
     print('Generating default scenarios..')
-    build_scenarios(GENERATOR_FILE)
+    build_scenarios()
 
 
 if __name__ == "__main__":

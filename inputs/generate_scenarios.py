@@ -9,7 +9,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 LIB_PATH = os.path.join(THIS_DIR, 'library')
 STATIC_PATH = os.path.join(LIB_PATH, '.static')
 SCENARIO_PATH = os.path.join(THIS_DIR, 'scenarios')
-GENERATOR_FILE = 'scenario_generator.csv'
+GENERATOR_FILE = os.path.join(THIS_DIR, 'scenario_generator.csv')
 
 
 def load_csv(filepath):
@@ -51,8 +51,8 @@ def read_parameters(scenario):
 
     return result
 
-def build_scenarios(generator_file):
-    with open(generator_file, encoding='utf-8-sig') as f:
+def build_scenarios():
+    with open(GENERATOR_FILE, encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for scenario in reader:
             config = {}
@@ -116,4 +116,4 @@ def build_scenarios(generator_file):
 
 
 if __name__ == "__main__":
-    build_scenarios(GENERATOR_FILE)
+    build_scenarios()
