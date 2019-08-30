@@ -78,7 +78,7 @@ def assert_constraint(param, val, CONSTRAINTS, context=""):
 
     Notes
     -----
-    
+
     Valid values for context:
 
     * between:        Check that value is between upper and lower bounds exclusive
