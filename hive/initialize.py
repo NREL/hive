@@ -97,7 +97,7 @@ def initialize_fleet(vehicle_types,
                         whmi_lookup = scaled_whmi_lookup,
                         charge_template = charge_template,
                         clock = clock,
-                        environment_params = env_params,
+                        env_params = env_params,
                         )
 
             id += 1
