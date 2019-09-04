@@ -36,21 +36,24 @@ STATIC_PATH = os.path.join(LIB_PATH, '.static')
 
 OUT_PATH = os.path.join(THIS_DIR, cfg.OUT_PATH)
 
+def name(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 
 def load_scenario(scenario_file):
 
-    def name(path):
-        return os.path.splitext(os.path.basename(path))[0]
-
     scenario_name = name(scenario_file)
     with open(scenario_file, 'r') as f:
+        if cfg.VERBOSE: print(f'Loading scenario {name(scenario_file)}..')
         yaml_data = yaml.safe_load(f)
 
         data = {}
 
         filepaths = yaml_data['filepaths']
-        data['requests'] = pp.load_requests(filepaths['requests_file_path'])
+
+        data['requests'] = pp.load_requests(filepaths['requests_file_path'],
+                                            verbose = cfg.VERBOSE,
+                                            )
         data['main'] = yaml_data['parameters']
         network_dtype = {
                         'longitude': "float64",
@@ -74,7 +77,7 @@ def load_scenario(scenario_file):
         data['whmi_lookup'] = pd.DataFrame(yaml_data['whmi_lookup'])
 
 
-    return scenario_name, data
+    return data
 
 def build_simulation_env(data):
     SIM_ENV = {}
@@ -223,7 +226,8 @@ if __name__ == "__main__":
         print('python generate_scenarios.py')
         print('')
 
-    for scenario_file in all_scenarios:
-        scenario_name, data = load_scenario(scenario_file)
-        if scenario_name in cfg.SCENARIOS:
-            run_simulation(data, scenario_name)
+    run_scenarios = [s for s in all_scenarios if name(s) in cfg.SCENARIOS]
+
+    for scenario_file in run_scenarios:
+        data = load_scenario(scenario_file)
+        run_simulation(data, name(scenario_file))

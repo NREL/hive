@@ -125,7 +125,7 @@ We can define the scenarios that hive will run in the :code:`config.py` file tha
 
 Now, simply navigate to the root directory and run the command:
 
-.. code-block:
+.. code-block::
 
     > python run.py
 
