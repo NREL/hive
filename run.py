@@ -54,6 +54,9 @@ def load_scenario(scenario_file):
         data['requests'] = pp.load_requests(filepaths['requests_file_path'],
                                             verbose = cfg.VERBOSE,
                                             )
+        data['network'] = pp.load_network(filepaths['road_network_file'],
+                                            verbose = cfg.VERBOSE)
+
         data['main'] = yaml_data['parameters']
         network_dtype = {
                         'longitude': "float64",
@@ -151,6 +154,7 @@ def build_simulation_env(data):
                             fleet_state = fleet_state,
                             stations = stations,
                             bases = bases,
+                            network = data['network'],
                             env_params = env_params,
                             clock = sim_clock)
     SIM_ENV['dispatcher'] = dispatcher

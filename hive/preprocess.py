@@ -9,8 +9,10 @@ import random
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import osmnx as ox
 import utm
-from time import mktime
+from ast import literal_eval
+from time import time
 from datetime import datetime
 from dateutil import parser
 from haversine import haversine
@@ -29,6 +31,14 @@ def gen_synth_pax_cnt():
     pax = random.choice(occ_distr)
 
     return pax
+
+def load_network(network_file, verbose=True):
+    if verbose: print("Loading road network..")
+    G = ox.graph_from_file(network_file)
+    
+    return G
+
+
 
 def load_requests(reqs_file, verbose=True, save_path=None):
         """Loads, combines, and sorts request csvs by pickup time

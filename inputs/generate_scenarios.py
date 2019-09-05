@@ -65,6 +65,14 @@ def build_scenarios():
                                         'requests',
                                         scenario['REQUESTS_FILE'])
             filepaths['requests_file_path'] = requests_file
+            operating_area_file = os.path.join(LIB_PATH,
+                                                'operating_area',
+                                                scenario['OPERATING_AREA_FILE'])
+            filepaths['operating_area_file'] = operating_area_file
+            road_network_file = os.path.join(LIB_PATH,
+                                                'road_networks',
+                                                scenario['ROAD_NETWORK_FILE'])
+            filepaths['road_network_file'] = road_network_file
             config['filepaths'] =  filepaths
 
             charge_stations_file = os.path.join(LIB_PATH,
