@@ -5,6 +5,9 @@ import pickle
 import csv
 import shutil
 
+sys.path.append('..')
+import config as cfg
+
 class Clock:
     """
     Iterator to store simulation time information.
@@ -19,6 +22,26 @@ class Clock:
         self.TIMESTEP_S = timestep_s
     def __next__(self):
         self.now += 1
+
+def info(msg):
+    if cfg.VERBOSE:
+        print(f"[info] {msg}")
+
+def progress_bar(
+            iteration,
+            total,
+            prefix = '[info] Progress:',
+            suffix = 'Complete',
+            decimals = 1,
+            length = 50,
+            fill = '█'):
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    sys.stdout.write('%s |%s| %s%% %s\r' % (prefix, bar, percent, suffix))
+    sys.stdout.flush()
+    if iteration == total:
+        sys.stdout.write('\n')
 
 
 def save_to_hdf(data, outfile):

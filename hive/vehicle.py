@@ -10,11 +10,6 @@ import utm
 import math
 import os
 
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-LIB_PATH = os.path.join(THIS_DIR, '.lib')
-sys.path.append(LIB_PATH)
-from c_haversine import single_haversine
-
 from hive import helpers as hlp
 from hive import tripenergy as nrg
 from hive import charging as chrg
@@ -226,9 +221,6 @@ class Vehicle:
         col = self.ENV['FLEET_STATE_IDX'][param]
         self.fleet_state[self.ID, col] = val
 
-    def _crow_distance(self, x0, y0, x1, y1):
-        return single_haversine(x0, y0, x1, y1) * units.KILOMETERS_TO_MILES
-
     def _update_charge(self, dist_mi):
         spd = self.ENV['DISPATCH_MPH']
         lookup = self.WH_PER_MILE_LOOKUP
@@ -360,7 +352,7 @@ class Vehicle:
         """
         if route is None:
             return
-            
+
         self._route = route
         self._route_iter = iter(self._route)
         next(self._route_iter)

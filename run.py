@@ -19,9 +19,9 @@ import config as cfg
 from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
-from hive import utils
 from hive import router
 from hive import reporting
+from hive.utils import Clock, assert_constraint, build_output_dir, info, progress_bar
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.dispatcher import Dispatcher
@@ -43,11 +43,11 @@ def name(path):
 
 def load_scenario(scenario_file):
 
-    if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(name(scenario_file)), "#"*30, "", sep="\n")
+    info(f"Preparing {name(scenario_file)}")
 
     scenario_name = name(scenario_file)
     with open(scenario_file, 'r') as f:
-        if cfg.VERBOSE: print(f'Loading scenario file..')
+        info('Loading scenario file..')
         yaml_data = yaml.safe_load(f)
 
         data = {}
@@ -86,22 +86,22 @@ def build_simulation_env(data):
     SIM_ENV = {}
 
     #Load requests
-    if cfg.VERBOSE: print("Processing requests..")
+    info("Processing requests..")
     reqs_df = data['requests']
-    if cfg.VERBOSE: print("{} requests loaded".format(len(reqs_df)))
+    info("{} requests loaded".format(len(reqs_df)))
 
     #Filter requests where distance < min_miles
     reqs_df = pp.filter_short_distance_trips(reqs_df, min_miles=0.05)
-    if cfg.VERBOSE: print("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
+    info("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
     #
     #Filter requests where total time < min_time_s
     reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
-    if cfg.VERBOSE: print("filtered requests violating min time req, {} remain".format(len(reqs_df)))
+    info("filtered requests violating min time req, {} remain".format(len(reqs_df)))
     #
 
     SIM_ENV['requests'] = reqs_df
 
-    sim_clock = utils.Clock(timestep_s = cfg.SIMULATION_PERIOD_SECONDS)
+    sim_clock = Clock(timestep_s = cfg.SIMULATION_PERIOD_SECONDS)
     SIM_ENV['sim_clock'] = sim_clock
 
     #Calculate network scaling factor & average dispatch speed
@@ -112,17 +112,17 @@ def build_simulation_env(data):
     #TODO: reqs_df.to_csv(cfg.OUT_PATH + sim_name + 'requests/' + requests_filename, index=False)
 
     #Load charging network
-    if cfg.VERBOSE: print("Loading charge network..")
+    info("Loading charge network..")
     stations = initialize_stations(data['stations'], sim_clock)
     SIM_ENV['stations'] = stations
 
     bases = initialize_stations(data['bases'], sim_clock)
     SIM_ENV['bases'] = bases
-    if cfg.VERBOSE: print("loaded {0} stations & {1} bases".format(len(stations), len(bases)), "", sep="\n")
+    info("loaded {0} stations & {1} bases".format(len(stations), len(bases)))
 
 
     #Initialize vehicle fleet
-    if cfg.VERBOSE: print("Initializing vehicle fleet..", "", sep="\n")
+    info("Initializing vehicle fleet..")
     env_params = {
         'MAX_DISPATCH_MILES': float(data['main']['MAX_DISPATCH_MILES']),
         'MIN_ALLOWED_SOC': float(data['main']['MIN_ALLOWED_SOC']),
@@ -134,7 +134,7 @@ def build_simulation_env(data):
     }
 
     for param, val in env_params.items():
-        utils.assert_constraint(param, val, ENV_PARAMS, context="Environment Parameters")
+        assert_constraint(param, val, ENV_PARAMS, context="Environment Parameters")
 
     env_params['FLEET_STATE_IDX'] = FLEET_STATE_IDX
     SIM_ENV['env_params'] = env_params
@@ -147,10 +147,10 @@ def build_simulation_env(data):
                              start_time = reqs_df.pickup_time.iloc[0],
                              env_params = env_params,
                              clock = sim_clock)
-    if cfg.VERBOSE: print("{} vehicles initialized".format(len(fleet)), "", sep="\n")
+    info("{} vehicles initialized".format(len(fleet)))
     SIM_ENV['fleet'] = fleet
 
-    if cfg.VERBOSE: print("Initializing route engine..", "", sep="\n")
+    info("Initializing route engine..")
     if cfg.USE_OSRM:
         route_engine = router.OSRMRouteEngine(cfg.OSRM_SERVER, cfg.SIMULATION_PERIOD_SECONDS)
     else:
@@ -160,7 +160,7 @@ def build_simulation_env(data):
                                         env_params['DISPATCH_MPH'],
                                         )
 
-    if cfg.VERBOSE: print("Initializing dispatcher..", "", sep="\n")
+    info("Initializing dispatcher..")
     dispatcher = Dispatcher(fleet = fleet,
                             fleet_state = fleet_state,
                             stations = stations,
@@ -183,8 +183,8 @@ def build_simulation_env(data):
 def run_simulation(data, sim_name):
 
 
-    if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
-    output_file_paths = utils.build_output_dir(sim_name, OUT_PATH)
+    info("Building scenario output directory..")
+    output_file_paths = build_output_dir(sim_name, OUT_PATH)
 
     vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
     fleet_summary_file = os.path.join(output_file_paths['summary_path'], 'fleet_summary.txt')
@@ -192,15 +192,15 @@ def run_simulation(data, sim_name):
 
     SIM_ENV = build_simulation_env(data)
 
-    total_iterations = len(SIM_ENV['sim_time_steps'])
+    total_iterations = len(SIM_ENV['sim_time_steps'])-1
     i = 0
 
-    if cfg.VERBOSE: print("#"*30, "Simulating {}".format(sim_name), "#"*30, "", sep="\n")
+    info("Simulating {}..".format(sim_name))
     reqs_df = SIM_ENV['requests']
+
     for timestep in SIM_ENV['sim_time_steps']:
+        progress_bar(i, total_iterations)
         i+=1
-        if i%100 == 0:
-            print("{} of {} iterations completed.".format(i, total_iterations))
         requests = reqs_df[(timestep <= reqs_df.pickup_time) \
             & (reqs_df.pickup_time < (timestep + timedelta(seconds=cfg.SIMULATION_PERIOD_SECONDS)))]
         SIM_ENV['dispatcher'].process_requests(requests)
@@ -216,7 +216,8 @@ def run_simulation(data, sim_name):
 
         next(SIM_ENV['sim_clock'])
 
-    if cfg.VERBOSE: print("Generating logs and summary statistics..")
+    info("Done Simulating")
+    info("Generating logs and summary statistics..")
 
     reporting.generate_logs(SIM_ENV['fleet'], output_file_paths['vehicle_path'], 'vehicle')
     reporting.generate_logs(SIM_ENV['stations'], output_file_paths['station_path'], 'station')
@@ -227,7 +228,7 @@ def run_simulation(data, sim_name):
 
 if __name__ == "__main__":
     if not os.path.isdir(OUT_PATH):
-        print('Building base output directory..')
+        info('Building base output directory..')
         os.makedirs(cfg.OUT_PATH)
 
     assert len(cfg.SCENARIOS) == len(set(cfg.SCENARIOS)), 'Scenario names must be unique.'
