@@ -10,11 +10,6 @@ import os
 import utm
 import numpy as np
 
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-LIB_PATH = os.path.join(THIS_DIR, '.lib')
-sys.path.append(LIB_PATH)
-from c_haversine import vector_haversine
-
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
@@ -157,16 +152,13 @@ class Dispatcher:
         """
         fleet_state = self._fleet_state
         point = np.array([request.pickup_lat, request.pickup_lon])
-        # dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
         x_col = self._ENV['FLEET_STATE_IDX']['x']
         y_col = self._ENV['FLEET_STATE_IDX']['y']
-        dist = vector_haversine(
-                            fleet_state[:,x_col].astype('double'),
-                            fleet_state[:,y_col].astype('double'),
-                            point.astype('double'),
-                            np.int64(len(self._fleet)),
-                            )
-        dist = np.asarray(dist) * units.KILOMETERS_TO_MILES
+        dist = hlp.haversine_np(
+                        fleet_state[:, x_col].astype(np.float64),
+                        fleet_state[:, y_col].astype(np.float64),
+                        point,
+                        )
 
         best_vehs_idx = np.argsort(dist)
         dist_mask = dist < self._ENV['MAX_DISPATCH_MILES']

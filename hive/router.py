@@ -3,7 +3,7 @@ import utm
 import requests
 
 from hive import units
-from hive.helpers import estimate_vmt_2D
+from hive.helpers import estimate_vmt_latlon
 
 
 class OSRMRouteEngine:
@@ -41,10 +41,8 @@ class DefaultRouteEngine:
         self.RN_SCALING_FACTOR = rn_scaling_factor
         self.DISPATCH_MPH = dispatch_mph
     def route(self, olat, olon, dlat, dlon, activity, trip_dist_mi=None, trip_time_s=None):
-        x0, y0, zone_number, zone_letter = utm.from_latlon(olat, olon)
-        x1, y1, _, _ = utm.from_latlon(dlat, dlon)
         if trip_dist_mi is None:
-            trip_dist_mi = estimate_vmt_2D(x0, y0, x1, y1, self.RN_SCALING_FACTOR)
+            trip_dist_mi = estimate_vmt_latlon(olat, olon, dlat, dlon, self.RN_SCALING_FACTOR)
         if trip_time_s is None:
             trip_time_s = (trip_dist_mi / self.DISPATCH_MPH) * units.HOURS_TO_SECONDS
 
@@ -57,8 +55,8 @@ class DefaultRouteEngine:
         route = []
         for i, time in enumerate(route_range):
             t = i/steps
-            xt = (1-t)*x0 + t*x1
-            yt = (1-t)*y0 + t*y1
-            point = utm.to_latlon(xt, yt, zone_number, zone_letter)
+            xt = (1-t)*olat + t*dlat
+            yt = (1-t)*olon + t*dlon
+            point = (xt, yt)
             route.append((point, step_distance_mi, activity))
         return route

@@ -5,10 +5,13 @@ import math
 from haversine import haversine
 import numpy as np
 
-from hive.units import METERS_TO_MILES
+from hive.units import METERS_TO_MILES, KILOMETERS_TO_MILES
 
-def haversine_np(lat1, lon1, lat2, lon2):
-    lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
+def haversine_np(lat1, lon1, point):
+    lon1 = np.radians(lon1)
+    lat1 = np.radians(lat1)
+    lat2 = np.radians(point[0])
+    lon2 = np.radians(point[1])
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1
@@ -17,7 +20,7 @@ def haversine_np(lat1, lon1, lat2, lon2):
 
     c = 2 * np.arcsin(np.sqrt(a))
     km = 6367 * c
-    return km
+    return km * KILOMETERS_TO_MILES
 
 def estimate_vmt_latlon(olat, olon, dlat, dlon, scaling_factor):
     """
