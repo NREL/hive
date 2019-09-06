@@ -20,6 +20,7 @@ from hive import preprocess as pp
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import utils
+from hive import router
 from hive import reporting
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.vehicle import Vehicle
@@ -151,9 +152,9 @@ def build_simulation_env(data):
 
     if cfg.VERBOSE: print("Initializing route engine..", "", sep="\n")
     if cfg.USE_OSRM:
-        route_engine = utils.OSRMRouteEngine(cfg.OSRM_SERVER, cfg.SIMULATION_PERIOD_SECONDS)
+        route_engine = router.OSRMRouteEngine(cfg.OSRM_SERVER, cfg.SIMULATION_PERIOD_SECONDS)
     else:
-        route_engine = utils.DefaultRouteEngine(
+        route_engine = router.DefaultRouteEngine(
                                         cfg.SIMULATION_PERIOD_SECONDS,
                                         env_params['RN_SCALING_FACTOR'],
                                         env_params['DISPATCH_MPH'],
