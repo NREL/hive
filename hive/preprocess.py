@@ -9,8 +9,10 @@ import random
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import osmnx as ox
 import utm
-from time import mktime
+from ast import literal_eval
+from time import time
 from datetime import datetime
 from dateutil import parser
 from haversine import haversine
@@ -29,6 +31,7 @@ def gen_synth_pax_cnt():
     pax = random.choice(occ_distr)
 
     return pax
+
 
 def load_requests(reqs_file, verbose=True, save_path=None):
         """Loads, combines, and sorts request csvs by pickup time
@@ -97,22 +100,22 @@ def load_requests(reqs_file, verbose=True, save_path=None):
             reqs_df['seconds'] = reqs_df.apply(lambda row: (row.dropoff_time - row.pickup_time).total_seconds(), axis=1)
 
         #convert latitude and longitude to utm
-        if all(x not in reqs_df.columns for x in ['pickup_x', 'pickup_y', 'dropoff_x', 'dropoff_y']):
-            if verbose: print("    - converting coordinate system to utm")
-            reqs_df['pickup_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)
-            reqs_df['pickup_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)
-            reqs_df['dropoff_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)
-            reqs_df['dropoff_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[1], axis=1)
+        # if all(x not in reqs_df.columns for x in ['pickup_x', 'pickup_y', 'dropoff_x', 'dropoff_y']):
+        #     if verbose: print("    - converting coordinate system to utm")
+        #     reqs_df['pickup_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)
+        #     reqs_df['pickup_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)
+        #     reqs_df['dropoff_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)
+        #     reqs_df['dropoff_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[1], axis=1)
 
         # reqs_df['route_utm'] = reqs_df.route_utm.apply(lambda x: eval(x))
 
         fields = req_fields + [
                                 'passengers',
                                 'seconds',
-                                'pickup_x',
-                                'pickup_y',
-                                'dropoff_x',
-                                'dropoff_y',
+                                # 'pickup_x',
+                                # 'pickup_y',
+                                # 'dropoff_x',
+                                # 'dropoff_y',
                             ]
 
         #check data type of 'passengers' field

@@ -44,15 +44,9 @@ class FuelStation:
                 ):
 
         self.ID = station_id
-        self.LAT = latitude
-        self.LON = longitude
 
-        x, y, zone_letter, zone_number = utm.from_latlon(latitude, longitude)
-
-        self.X = x
-        self.Y = y
-        self.ZONE_NUMBER = zone_number
-        self.ZONE_LETTER = zone_letter
+        self.X = latitude
+        self.Y = longitude
 
         assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
         self.TOTAL_PLUGS = plugs

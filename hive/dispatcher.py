@@ -4,12 +4,16 @@ vehicle dispatching, and station/base selection.
 """
 
 import datetime
+import requests
+import sys
+import os
+import utm
 import numpy as np
 
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
-from hive.units import METERS_TO_MILES
+from hive import units
 
 class Dispatcher:
     """
@@ -39,6 +43,7 @@ class Dispatcher:
                 stations,
                 bases,
                 env_params,
+                route_engine,
                 clock,
                 ):
 
@@ -53,6 +58,8 @@ class Dispatcher:
 
         self._stations = stations
         self._bases = bases
+
+        self._route_engine = route_engine
 
         self.history = []
         self._dropped_requests = 0
@@ -73,7 +80,6 @@ class Dispatcher:
                         'active_vehicles': active_vehicles,
                         'dropped_requests': self._dropped_requests,
                         })
-
 
     def _find_closest_plug(self, vehicle, type='station'):
         """
@@ -108,7 +114,7 @@ class Dispatcher:
 
             dist_to_nearest = INF
             for station in search_space:
-                dist_mi = hlp.estimate_vmt_2D(vehicle.x,
+                dist_mi = hlp.estimate_vmt_latlon(vehicle.x,
                                                vehicle.y,
                                                station.X,
                                                station.Y,
@@ -145,8 +151,15 @@ class Dispatcher:
 
         """
         fleet_state = self._fleet_state
-        point = np.array([(request.pickup_x, request.pickup_y)])
-        dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
+        point = np.array([request.pickup_lat, request.pickup_lon])
+        x_col = self._ENV['FLEET_STATE_IDX']['x']
+        y_col = self._ENV['FLEET_STATE_IDX']['y']
+        dist = hlp.haversine_np(
+                        fleet_state[:, x_col].astype(np.float64),
+                        fleet_state[:, y_col].astype(np.float64),
+                        point,
+                        )
+
         best_vehs_idx = np.argsort(dist)
         dist_mask = dist < self._ENV['MAX_DISPATCH_MILES']
 
@@ -185,15 +198,31 @@ class Dispatcher:
             else:
                 vehid = best_vehicle[0]
                 veh = self._fleet[vehid]
+                disp_route = self._route_engine.route(
+                                        veh.x,
+                                        veh.y,
+                                        request.pickup_lat,
+                                        request.pickup_lon,
+                                        activity = "Dispatch to Request")
+                if hasattr(request, 'route'):
+                    trip_route = request.route
+                else:
+                    trip_route = self._route_engine.route(
+                                            request.pickup_lat,
+                                            request.pickup_lon,
+                                            request.dropoff_lat,
+                                            request.dropoff_lon,
+                                            activity = "Serving Trip",
+                                            trip_dist_mi = request.distance_miles,
+                                            trip_time_s = request.seconds,
+                                            )
+
+                del disp_route[-1]
+                route = disp_route + trip_route
+
                 veh.cmd_make_trip(
-                        request.pickup_x,
-                        request.pickup_y,
-                        request.dropoff_x,
-                        request.dropoff_y,
+                        route = route,
                         passengers = request.passengers,
-                        trip_dist_mi=request.distance_miles,
-                        trip_time_s=request.seconds,
-                        # route=request.route_utm)
                         )
 
     def _charge_vehicles(self):
@@ -211,7 +240,8 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
-            vehicle.cmd_charge(station)
+            route = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            vehicle.cmd_charge(station, route)
 
     def _check_idle_vehicles(self):
         """
@@ -226,7 +256,8 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            vehicle.cmd_return_to_base(base)
+            route = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            vehicle.cmd_return_to_base(base, route)
 
     def process_requests(self, requests):
         """

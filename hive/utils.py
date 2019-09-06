@@ -1,4 +1,3 @@
-import pandas as pd
 import sys
 import glob
 import os
@@ -20,6 +19,7 @@ class Clock:
         self.TIMESTEP_S = timestep_s
     def __next__(self):
         self.now += 1
+
 
 def save_to_hdf(data, outfile):
     """
