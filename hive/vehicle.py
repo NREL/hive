@@ -325,6 +325,8 @@ class Vehicle:
         route: LineString
             (optional) (NotImplemented) line string representing route.
         """
+        if route is None:
+            return
 
         self.active = True
         self.available = False
@@ -356,6 +358,9 @@ class Vehicle:
         activity: str
             (optional) string representing why the vehicle is moving.
         """
+        if route is None:
+            return
+            
         self._route = route
         self._route_iter = iter(self._route)
         next(self._route_iter)

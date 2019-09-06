@@ -9,6 +9,7 @@ import osmnx as ox
 import networkx as nx
 import sys
 import os
+import utm
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 LIB_PATH = os.path.join(THIS_DIR, '.lib')
@@ -89,10 +90,34 @@ class Dispatcher:
                         'dropped_requests': self._dropped_requests,
                         })
 
+    def _generate_route_crow(self, olat, olon, dlat, dlon, activity="NULL"):
+        x0, y0, zone_number, zone_letter = utm.from_latlon(olat, olon)
+        x1, y1, _, _ = utm.from_latlon(dlat, dlon)
+        trip_dist_mi = hlp.estimate_vmt_2D(x0, y0, x1, y1, self._ENV['RN_SCALING_FACTOR'])
+        trip_time_s = (trip_dist_mi / self._ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+
+        steps = round(trip_time_s/self._clock.TIMESTEP_S)
+
+        if steps <= 1:
+            return [((olat, olon), trip_dist_mi, activity), ((dlat, dlon), trip_dist_mi, activity)]
+        step_distance_mi = trip_dist_mi/steps
+        route_range = np.arange(0, steps + 1)
+        route = []
+        for i, time in enumerate(route_range):
+            t = i/steps
+            xt = (1-t)*x0 + t*x1
+            yt = (1-t)*y0 + t*y1
+            point = utm.to_latlon(xt, yt, zone_number, zone_letter)
+            route.append((point, step_distance_mi, activity))
+        return route
+
     def _generate_route(self, olat, olon, dlat, dlon, activity):
         origin = ox.get_nearest_node(self._network, (olat, olon))
         dest = ox.get_nearest_node(self._network, (dlat, dlon))
-        raw_route = nx.shortest_path(self._network, origin, dest)
+        try:
+            raw_route = nx.shortest_path(self._network, origin, dest)
+        except nx.exception.NetworkXNoPath:
+            return self._generate_route_crow(olat, olon, dlat, dlon, activity)
 
         dists = []
         durations = []
@@ -117,7 +142,7 @@ class Dispatcher:
         route_dist = np.cumsum(dists)
         bins = np.arange(0,max(route_time), self._clock.TIMESTEP_S)
         route_index = np.digitize(route_time, bins)
-        route = [(points[0], dists[0])]
+        route = [(points[0], dists[0], activity)]
         prev_index = 0
         for i in range(1, len(bins)+1):
             try:
@@ -202,16 +227,17 @@ class Dispatcher:
 
         """
         fleet_state = self._fleet_state
-        point = np.array([(request.pickup_x, request.pickup_y)])
+        point = np.array([request.pickup_lat, request.pickup_lon])
         # dist = np.linalg.norm(fleet_state[:, :2] - point, axis=1) * METERS_TO_MILES
         x_col = self._ENV['FLEET_STATE_IDX']['x']
         y_col = self._ENV['FLEET_STATE_IDX']['y']
         dist = vector_haversine(
-                            fleet_state[:,x_col],
-                            fleet_state[:,y_col],
-                            np.float64(request.pickup_x),
-                            np.float64(request.pickup_y),
-                            N = np.int64(len(self._fleet)) * units.KILOMETERS_TO_MILES)
+                            fleet_state[:,x_col].astype('double'),
+                            fleet_state[:,y_col].astype('double'),
+                            point.astype('double'),
+                            np.int64(len(self._fleet)),
+                            )
+        dist = np.asarray(dist) * units.KILOMETERS_TO_MILES
 
         best_vehs_idx = np.argsort(dist)
         dist_mask = dist < self._ENV['MAX_DISPATCH_MILES']
@@ -254,8 +280,8 @@ class Dispatcher:
                 disp_route = self._generate_route(
                                         veh.x,
                                         veh.y,
-                                        request.pickup_x,
-                                        request.pickup_y,
+                                        request.pickup_lat,
+                                        request.pickup_lon,
                                         activity = "Dispatch to Request")
                 trip_route = self._generate_route(
                                         request.pickup_lat,
@@ -303,7 +329,7 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            route = self._generate_route(veh.x, veh.y, base.X, base.Y, 'Moving to Base')
+            route = self._generate_route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
             vehicle.cmd_return_to_base(base, route)
 
     def process_requests(self, requests):

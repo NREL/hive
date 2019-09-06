@@ -42,9 +42,11 @@ def name(path):
 
 def load_scenario(scenario_file):
 
+    if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(name(scenario_file)), "#"*30, "", sep="\n")
+
     scenario_name = name(scenario_file)
     with open(scenario_file, 'r') as f:
-        if cfg.VERBOSE: print(f'Loading scenario {name(scenario_file)}..')
+        if cfg.VERBOSE: print(f'Loading scenario file..')
         yaml_data = yaml.safe_load(f)
 
         data = {}
@@ -150,6 +152,7 @@ def build_simulation_env(data):
     if cfg.VERBOSE: print("{} vehicles initialized".format(len(fleet)), "", sep="\n")
     SIM_ENV['fleet'] = fleet
 
+    if cfg.VERBOSE: print("Initializing dispatcher..", "", sep="\n")
     dispatcher = Dispatcher(fleet = fleet,
                             fleet_state = fleet_state,
                             stations = stations,
@@ -158,6 +161,8 @@ def build_simulation_env(data):
                             env_params = env_params,
                             clock = sim_clock)
     SIM_ENV['dispatcher'] = dispatcher
+
+
 
     sim_start_time = reqs_df.pickup_time.min()
     sim_end_time = reqs_df.dropoff_time.max()
@@ -169,7 +174,6 @@ def build_simulation_env(data):
 
 def run_simulation(data, sim_name):
 
-    if cfg.VERBOSE: print("", "#"*30, "Preparing {}".format(sim_name), "#"*30, "", sep="\n")
 
     if cfg.VERBOSE: print("Building scenario output directory..", "", sep="\n")
     output_file_paths = utils.build_output_dir(sim_name, OUT_PATH)
