@@ -19,12 +19,12 @@ def setup_env():
     random.seed(config.RANDOM_SEED)
     np.random.seed(config.RANDOM_SEED)
 
-    _, data = load_scenario(TEST_SCENARIO)
+    data = load_scenario(TEST_SCENARIO)
 
     SIM_ENV = build_simulation_env(data)
 
     return SIM_ENV
 
 def load_test_scenario():
-    _, data = load_scenario(TEST_SCENARIO)
+    data = load_scenario(TEST_SCENARIO)
     return data

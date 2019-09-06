@@ -56,9 +56,6 @@ def load_scenario(scenario_file):
         data['requests'] = pp.load_requests(filepaths['requests_file_path'],
                                             verbose = cfg.VERBOSE,
                                             )
-        data['network'] = pp.load_network(filepaths['road_network_file'],
-                                            verbose = cfg.VERBOSE)
-
         data['main'] = yaml_data['parameters']
         network_dtype = {
                         'longitude': "float64",
@@ -152,13 +149,23 @@ def build_simulation_env(data):
     if cfg.VERBOSE: print("{} vehicles initialized".format(len(fleet)), "", sep="\n")
     SIM_ENV['fleet'] = fleet
 
+    if cfg.VERBOSE: print("Initializing route engine..", "", sep="\n")
+    if cfg.USE_OSRM:
+        route_engine = utils.OSRMRouteEngine(cfg.OSRM_SERVER, cfg.SIMULATION_PERIOD_SECONDS)
+    else:
+        route_engine = utils.DefaultRouteEngine(
+                                        cfg.SIMULATION_PERIOD_SECONDS,
+                                        env_params['RN_SCALING_FACTOR'],
+                                        env_params['DISPATCH_MPH'],
+                                        )
+
     if cfg.VERBOSE: print("Initializing dispatcher..", "", sep="\n")
     dispatcher = Dispatcher(fleet = fleet,
                             fleet_state = fleet_state,
                             stations = stations,
                             bases = bases,
-                            network = data['network'],
                             env_params = env_params,
+                            route_engine = route_engine,
                             clock = sim_clock)
     SIM_ENV['dispatcher'] = dispatcher
 

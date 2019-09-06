@@ -32,13 +32,6 @@ def gen_synth_pax_cnt():
 
     return pax
 
-def load_network(network_file, verbose=True):
-    if verbose: print("Loading road network..")
-    G = ox.graph_from_file(network_file)
-
-    return G
-
-
 
 def load_requests(reqs_file, verbose=True, save_path=None):
         """Loads, combines, and sorts request csvs by pickup time
