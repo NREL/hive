@@ -63,6 +63,7 @@ class Dispatcher:
 
         self.history = []
         self._dropped_requests = 0
+        self._total_requests = 0
 
         self._ENV = env_params
 
@@ -79,6 +80,7 @@ class Dispatcher:
                         'sim_time': self._clock.now,
                         'active_vehicles': active_vehicles,
                         'dropped_requests': self._dropped_requests,
+                        'total_requests': self._total_requests,
                         })
 
     def _find_closest_plug(self, vehicle, type='station'):
@@ -191,6 +193,7 @@ class Dispatcher:
             list of requests that occur in a single time step.
         """
         self._dropped_requests = 0
+        self._total_requests = len(requests)
         for request in requests.itertuples():
             best_vehicle = self._get_n_best_vehicles(request, n=1)
             if len(best_vehicle) < 1:
