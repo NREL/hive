@@ -123,7 +123,7 @@ def initialize_fleet(vehicle_types,
         #Initialize vehicle location to a random base
         base = random.choice(bases)
         veh.fleet_state = fleet_state
-        veh.energy_kwh = np.random.uniform(0.05, 1.0) * veh.BATTERY_CAPACITY
+        veh.energy_kwh = np.random.uniform(0.2, 1.0) * veh.BATTERY_CAPACITY
         veh.x = base.X
         veh.y = base.Y
         veh.base = base
