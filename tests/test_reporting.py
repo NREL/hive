@@ -45,10 +45,11 @@ class ReportingTest(unittest.TestCase):
 
         reporting.generate_logs(objects, TEST_OUTPUT_DIR, context="TEST")
 
-        test_file = os.path.join(TEST_OUTPUT_DIR, 'TEST_1_history.csv')
+        test_file = os.path.join(TEST_OUTPUT_DIR, 'TEST_history.csv')
         with open(test_file, encoding='utf-8-sig') as f:
             reader = csv.DictReader(f)
-            for i, row in enumerate(reader):
+            for i in range(3):
+                row = next(reader)
                 self.assertEqual(dict(row), {k: str(v) for k, v in data[i].items()})
 
 
