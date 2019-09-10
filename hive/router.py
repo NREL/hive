@@ -7,6 +7,19 @@ from hive.helpers import estimate_vmt_latlon
 
 
 class OSRMRouteEngine:
+    """
+    Wrapper for OSRM routing engine.
+
+    This engine expects that an OSRM server is running and that the address is given
+    through the :code:`server` argument.
+
+    Parameters
+    ----------
+    server: string
+        The https address of the OSRM server.
+    timestep_s: int
+        The amount of seconds that each time step represents.
+    """
     def __init__(self, server, timestep_s):
         self.server = server
         self.TIMESTEP_S = timestep_s
@@ -36,6 +49,21 @@ class OSRMRouteEngine:
         return route
 
 class DefaultRouteEngine:
+    """
+    Default routing engine for hive.
+
+    Using a calculated road network scaling factor and an average driving speed,
+    the engine produces a scaled 'as the crow flies' path between the two points.
+
+    Parameters
+    ----------
+    timestep_s: int
+        The amount of seconds that each time step represents.
+    rn_scaling_factor: float
+        The calculated road network scaling factor
+    dispatch_mph: float
+        The calculated average driving speed
+    """
     def __init__(self, timestep_s, rn_scaling_factor, dispatch_mph):
         self.TIMESTEP_S = timestep_s
         self.RN_SCALING_FACTOR = rn_scaling_factor

@@ -139,12 +139,6 @@
 
             <span class="nb">id</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="c1">#Initialize vehicle location to a random base</span>
-            <span class="n">base</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span>
-
-            <span class="n">veh</span><span class="o">.</span><span class="n">latlon</span> <span class="o">=</span> <span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">LAT</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">LON</span><span class="p">)</span>
-            <span class="n">veh</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
-
             <span class="n">avg_kwh__mi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">scaled_whmi_lookup</span><span class="p">[</span><span class="s1">&#39;whmi&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="mi">1000</span>
 
             <span class="n">veh_fleet</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">veh</span><span class="p">)</span>
@@ -163,8 +157,13 @@
     <span class="n">fleet_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fleet_state_constructor</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">veh</span> <span class="ow">in</span> <span class="n">veh_fleet</span><span class="p">:</span>
+        <span class="c1">#Initialize vehicle location to a random base</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span>
         <span class="n">veh</span><span class="o">.</span><span class="n">fleet_state</span> <span class="o">=</span> <span class="n">fleet_state</span>
         <span class="n">veh</span><span class="o">.</span><span class="n">energy_kwh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">veh</span><span class="o">.</span><span class="n">BATTERY_CAPACITY</span>
+        <span class="n">veh</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">X</span>
+        <span class="n">veh</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">Y</span>
+        <span class="n">veh</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
 
     <span class="k">return</span> <span class="n">veh_fleet</span><span class="p">,</span> <span class="n">fleet_state</span></div>
 </pre></div>

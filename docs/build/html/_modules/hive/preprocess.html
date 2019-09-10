@@ -40,13 +40,16 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">import</span> <span class="nn">osmnx</span> <span class="k">as</span> <span class="nn">ox</span>
 <span class="kn">import</span> <span class="nn">utm</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">mktime</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="k">import</span> <span class="n">literal_eval</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">dateutil</span> <span class="k">import</span> <span class="n">parser</span>
 <span class="kn">from</span> <span class="nn">haversine</span> <span class="k">import</span> <span class="n">haversine</span>
@@ -55,7 +58,7 @@
 <span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="k">import</span> <span class="n">is_numeric_dtype</span>
 
 <span class="kn">from</span> <span class="nn">hive.constraints</span> <span class="k">import</span> <span class="n">ENV_PARAMS</span>
-<span class="kn">from</span> <span class="nn">hive.utils</span> <span class="k">import</span> <span class="n">assert_constraint</span>
+<span class="kn">from</span> <span class="nn">hive.utils</span> <span class="k">import</span> <span class="n">assert_constraint</span><span class="p">,</span> <span class="n">info</span>
 
 <div class="viewcode-block" id="gen_synth_pax_cnt"><a class="viewcode-back" href="../../reference/preprocess.html#hive.preprocess.gen_synth_pax_cnt">[docs]</a><span class="k">def</span> <span class="nf">gen_synth_pax_cnt</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Randomly assigns passenger count from real-world distribution measured</span>
@@ -66,10 +69,16 @@
 
     <span class="k">return</span> <span class="n">pax</span></div>
 
-<div class="viewcode-block" id="load_requests"><a class="viewcode-back" href="../../reference/preprocess.html#hive.preprocess.load_requests">[docs]</a><span class="k">def</span> <span class="nf">load_requests</span><span class="p">(</span><span class="n">reqs_file</span><span class="p">):</span>
+
+<div class="viewcode-block" id="load_requests"><a class="viewcode-back" href="../../reference/preprocess.html#hive.preprocess.load_requests">[docs]</a><span class="k">def</span> <span class="nf">load_requests</span><span class="p">(</span><span class="n">reqs_file</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Loads, combines, and sorts request csvs by pickup time</span>
 <span class="sd">        into a Pandas DataFrame.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading requests file..&quot;</span><span class="p">)</span>
         <span class="n">reqs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">reqs_file</span><span class="p">)</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;No requests in file!&quot;</span>
 
@@ -83,7 +92,7 @@
         <span class="s1">&#39;pickup_lon&#39;</span><span class="p">,</span>
         <span class="s1">&#39;dropoff_lat&#39;</span><span class="p">,</span>
         <span class="s1">&#39;dropoff_lon&#39;</span><span class="p">,</span>
-        <span class="c1"># &#39;route_utm&#39;,</span>
+            <span class="c1"># &#39;route_utm&#39;,</span>
         <span class="p">]</span>
 
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">req_fields</span><span class="p">:</span>
@@ -113,33 +122,48 @@
         <span class="c1"># .apply(lambda x: datetime.strptime(x, &quot;%Y-%m-%d %H:%M:%S&quot;))</span>
         <span class="c1"># reqs_df.sort_values(&#39;pickup_time&#39;, inplace=True)</span>
 
+        <span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - parsing datetime&quot;</span><span class="p">)</span>
         <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;pickup_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;pickup_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;dropoff_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;dropoff_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
         <span class="c1">#synthesize &#39;passengers&#39; if not exists</span>
         <span class="k">if</span> <span class="s1">&#39;passengers&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span> <span class="c1">#apply real-world pax distr</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - synthesizing passenger counts&quot;</span><span class="p">)</span>
             <span class="n">pax</span> <span class="o">=</span> <span class="p">[</span><span class="n">gen_synth_pax_cnt</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">))]</span>
             <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;passengers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pax</span>
 
-        <span class="n">fields</span> <span class="o">=</span> <span class="n">req_fields</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;passengers&#39;</span><span class="p">]</span>
-        <span class="n">reqs_df</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="n">fields</span><span class="p">]</span>
-
-        <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;seconds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">dropoff_time</span> <span class="o">-</span> <span class="n">row</span><span class="o">.</span><span class="n">pickup_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;seconds&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - calculating trip times&quot;</span><span class="p">)</span>
+            <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;seconds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">dropoff_time</span> <span class="o">-</span> <span class="n">row</span><span class="o">.</span><span class="n">pickup_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1">#convert latitude and longitude to utm</span>
-        <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;pickup_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;pickup_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;dropoff_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dropoff_lat</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">dropoff_lon</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;dropoff_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dropoff_lat</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">dropoff_lon</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># if all(x not in reqs_df.columns for x in [&#39;pickup_x&#39;, &#39;pickup_y&#39;, &#39;dropoff_x&#39;, &#39;dropoff_y&#39;]):</span>
+        <span class="c1">#     info(&quot;    - converting coordinate system to utm&quot;)</span>
+        <span class="c1">#     reqs_df[&#39;pickup_x&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)</span>
+        <span class="c1">#     reqs_df[&#39;pickup_y&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)</span>
+        <span class="c1">#     reqs_df[&#39;dropoff_x&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)</span>
+        <span class="c1">#     reqs_df[&#39;dropoff_y&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[1], axis=1)</span>
 
         <span class="c1"># reqs_df[&#39;route_utm&#39;] = reqs_df.route_utm.apply(lambda x: eval(x))</span>
 
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">req_fields</span> <span class="o">+</span> <span class="p">[</span>
+                                <span class="s1">&#39;passengers&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;seconds&#39;</span><span class="p">,</span>
+                                <span class="c1"># &#39;pickup_x&#39;,</span>
+                                <span class="c1"># &#39;pickup_y&#39;,</span>
+                                <span class="c1"># &#39;dropoff_x&#39;,</span>
+                                <span class="c1"># &#39;dropoff_y&#39;,</span>
+                            <span class="p">]</span>
 
         <span class="c1">#check data type of &#39;passengers&#39; field</span>
         <span class="k">assert</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;passengers&#39;</span><span class="p">]),</span> <span class="s2">&quot;&quot;&quot;&#39;passengers&#39;</span>
 <span class="s2">        in requests file not of numeric data type!&quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">reqs_df</span></div>
+        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">outfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{name(reqs_file)}_HIVE_preprocessed.csv&#39;</span><span class="p">)</span>
+            <span class="n">reqs_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reqs_df</span><span class="p">[</span><span class="n">fields</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="filter_nulls"><a class="viewcode-back" href="../../reference/preprocess.html#hive.preprocess.filter_nulls">[docs]</a><span class="k">def</span> <span class="nf">filter_nulls</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Filters requests that contain null values.</span>

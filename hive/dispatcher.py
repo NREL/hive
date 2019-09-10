@@ -159,7 +159,8 @@ class Dispatcher:
         dist = hlp.haversine_np(
                         fleet_state[:, x_col].astype(np.float64),
                         fleet_state[:, y_col].astype(np.float64),
-                        point,
+                        point[0],
+                        point[1],
                         )
 
         best_vehs_idx = np.argsort(dist)

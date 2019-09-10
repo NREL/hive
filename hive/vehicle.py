@@ -300,25 +300,20 @@ class Vehicle:
 
         Parameters
         ----------
-        origin_x: float
-            x coordinate (utm) of the trip origin location.
-        origin_y: float
-            y coordinate (utm) of the trip origin location.
-        destination_x: float
-            x coordinate (utm) of the trip destination location.
-        destination_y: float
-            y coordinate (utm) of the trip destination location.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         passengers: int
             the number of passengers associated with this trip.
-        trip_dist_mi: float
-            (optional) trip distance in miles.
-        trip_time_s: float
-            (optional) trip time in seconds.
-        route: LineString
-            (optional) (NotImplemented) line string representing route.
         """
         if route is None:
             return
+
+        start_x = route[0][0][0]
+        start_y = route[0][0][1]
+
+        assert (self.x, self.y) == (start_x, start_y), \
+            "Route must start at current vehicle location"
 
         self.active = True
         self.available = False
@@ -339,19 +334,18 @@ class Vehicle:
 
         Parameters
         ----------
-        destination_x: float
-            x coordinate (utm) of the destination location.
-        destination_y: float
-            y coordinate (utm) of the destination location.
-        trip_dist_mi: float
-            (optional) trip distance in miles.
-        trip_time_s: float
-            (optional) trip time in seconds.
-        activity: str
-            (optional) string representing why the vehicle is moving.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         """
         if route is None:
             return
+
+        start_x = route[0][0][0]
+        start_y = route[0][0][1]
+
+        assert (self.x, self.y) == (start_x, start_y), \
+            "Route must start at current vehicle location"
 
         self._route = route
         self._route_iter = iter(self._route)
@@ -365,6 +359,9 @@ class Vehicle:
         ----------
         station: hive.stations.FuelStation
             station object for the vehicle to charge at.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         """
         self.available = False
         self._station = station
@@ -379,6 +376,9 @@ class Vehicle:
         ----------
         base: hive.stations.FuelStation
             base object for the vehicle to return to and charge at.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         """
         self.active = False
         self.available = True

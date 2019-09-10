@@ -57,58 +57,56 @@
 </dl>
 <dl class="method">
 <dt id="hive.vehicle.Vehicle.cmd_charge">
-<code class="sig-name descname">cmd_charge</code><span class="sig-paren">(</span><em class="sig-param">station</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_charge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_charge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cmd_charge</code><span class="sig-paren">(</span><em class="sig-param">station</em>, <em class="sig-param">route</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_charge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_charge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commands the vehicle to charge at a station.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>station</strong> (<a class="reference internal" href="stations.html#hive.stations.FuelStation" title="hive.stations.FuelStation"><em>hive.stations.FuelStation</em></a>) – station object for the vehicle to charge at.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="hive.vehicle.Vehicle.cmd_make_trip">
-<code class="sig-name descname">cmd_make_trip</code><span class="sig-paren">(</span><em class="sig-param">origin_x</em>, <em class="sig-param">origin_y</em>, <em class="sig-param">destination_x</em>, <em class="sig-param">destination_y</em>, <em class="sig-param">passengers</em>, <em class="sig-param">trip_dist_mi=None</em>, <em class="sig-param">trip_time_s=None</em>, <em class="sig-param">route=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_make_trip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_make_trip" title="Permalink to this definition">¶</a></dt>
-<dd><p>Commands a vehicle to service a trip.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>origin_x</strong> (<em>float</em>) – x coordinate (utm) of the trip origin location.</p></li>
-<li><p><strong>origin_y</strong> (<em>float</em>) – y coordinate (utm) of the trip origin location.</p></li>
-<li><p><strong>destination_x</strong> (<em>float</em>) – x coordinate (utm) of the trip destination location.</p></li>
-<li><p><strong>destination_y</strong> (<em>float</em>) – y coordinate (utm) of the trip destination location.</p></li>
-<li><p><strong>passengers</strong> (<em>int</em>) – the number of passengers associated with this trip.</p></li>
-<li><p><strong>trip_dist_mi</strong> (<em>float</em>) – (optional) trip distance in miles.</p></li>
-<li><p><strong>trip_time_s</strong> (<em>float</em>) – (optional) trip time in seconds.</p></li>
-<li><p><strong>route</strong> (<em>LineString</em>) – (optional) (NotImplemented) line string representing route.</p></li>
+<li><p><strong>station</strong> (<a class="reference internal" href="stations.html#hive.stations.FuelStation" title="hive.stations.FuelStation"><em>hive.stations.FuelStation</em></a>) – station object for the vehicle to charge at.</p></li>
+<li><p><strong>route</strong> (<em>list</em>) – list containing location, distnace and activity information representing
+a route.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="hive.vehicle.Vehicle.cmd_return_to_base">
-<code class="sig-name descname">cmd_return_to_base</code><span class="sig-paren">(</span><em class="sig-param">base</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_return_to_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_return_to_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Commands the vehicle to return to a base.</p>
+<dt id="hive.vehicle.Vehicle.cmd_make_trip">
+<code class="sig-name descname">cmd_make_trip</code><span class="sig-paren">(</span><em class="sig-param">route</em>, <em class="sig-param">passengers</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_make_trip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_make_trip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commands a vehicle to service a trip.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>base</strong> (<a class="reference internal" href="stations.html#hive.stations.FuelStation" title="hive.stations.FuelStation"><em>hive.stations.FuelStation</em></a>) – base object for the vehicle to return to and charge at.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>route</strong> (<em>list</em>) – list containing location, distnace and activity information representing
+a route.</p></li>
+<li><p><strong>passengers</strong> (<em>int</em>) – the number of passengers associated with this trip.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="hive.vehicle.Vehicle.cmd_travel_to">
-<code class="sig-name descname">cmd_travel_to</code><span class="sig-paren">(</span><em class="sig-param">destination_x</em>, <em class="sig-param">destination_y</em>, <em class="sig-param">trip_dist_mi=None</em>, <em class="sig-param">trip_time_s=None</em>, <em class="sig-param">activity=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_travel_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_travel_to" title="Permalink to this definition">¶</a></dt>
+<dt id="hive.vehicle.Vehicle.cmd_move">
+<code class="sig-name descname">cmd_move</code><span class="sig-paren">(</span><em class="sig-param">route</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_move" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commands a vehicle to relocate to a new location.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>route</strong> (<em>list</em>) – list containing location, distnace and activity information representing
+a route.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.vehicle.Vehicle.cmd_return_to_base">
+<code class="sig-name descname">cmd_return_to_base</code><span class="sig-paren">(</span><em class="sig-param">base</em>, <em class="sig-param">route</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_return_to_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_return_to_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commands the vehicle to return to a base.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>destination_x</strong> (<em>float</em>) – x coordinate (utm) of the destination location.</p></li>
-<li><p><strong>destination_y</strong> (<em>float</em>) – y coordinate (utm) of the destination location.</p></li>
-<li><p><strong>trip_dist_mi</strong> (<em>float</em>) – (optional) trip distance in miles.</p></li>
-<li><p><strong>trip_time_s</strong> (<em>float</em>) – (optional) trip time in seconds.</p></li>
-<li><p><strong>activity</strong> (<em>str</em>) – (optional) string representing why the vehicle is moving.</p></li>
+<li><p><strong>base</strong> (<a class="reference internal" href="stations.html#hive.stations.FuelStation" title="hive.stations.FuelStation"><em>hive.stations.FuelStation</em></a>) – base object for the vehicle to return to and charge at.</p></li>
+<li><p><strong>route</strong> (<em>list</em>) – list containing location, distnace and activity information representing
+a route.</p></li>
 </ul>
 </dd>
 </dl>

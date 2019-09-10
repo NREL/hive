@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.helpers &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.helpers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Helper functions for the HIVE platform</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">haversine</span> <span class="k">import</span> <span class="n">haversine</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">hive.units</span> <span class="k">import</span> <span class="n">METERS_TO_MILES</span><span class="p">,</span> <span class="n">KILOMETERS_TO_MILES</span>
+
+<div class="viewcode-block" id="haversine_np"><a class="viewcode-back" href="../../reference/helpers.html#hive.helpers.haversine_np">[docs]</a><span class="k">def</span> <span class="nf">haversine_np</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lon1</span><span class="p">,</span> <span class="n">lat2</span><span class="p">,</span> <span class="n">lon2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function calculates the haversine distance between one or many points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lat1: np.ndarray</span>
+<span class="sd">        Array of latitudes</span>
+<span class="sd">    lon1: np.ndarray</span>
+<span class="sd">        Array of longitudes</span>
+<span class="sd">    lat2: np.ndarray</span>
+<span class="sd">        Array of latitudes</span>
+<span class="sd">    lon2: np.ndarray</span>
+<span class="sd">        Array of longitudes</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    distance_mi: np.ndarray</span>
+<span class="sd">        Array of distances in miles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon1</span><span class="p">)</span>
+    <span class="n">lat1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span>
+    <span class="n">lat2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span>
+    <span class="n">lon2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon2</span><span class="p">)</span>
+
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span>
+    <span class="n">dlat</span> <span class="o">=</span> <span class="n">lat2</span> <span class="o">-</span> <span class="n">lat1</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlat</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlon</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+    <span class="n">distance_mi</span> <span class="o">=</span> <span class="mi">6367</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="n">KILOMETERS_TO_MILES</span>
+    <span class="k">return</span> <span class="n">distance_mi</span></div>
+
+<div class="viewcode-block" id="estimate_vmt_latlon"><a class="viewcode-back" href="../../reference/helpers.html#hive.helpers.estimate_vmt_latlon">[docs]</a><span class="k">def</span> <span class="nf">estimate_vmt_latlon</span><span class="p">(</span><span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">,</span> <span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function calculates scaled haversine distance between two sets of latitude/</span>
+<span class="sd">    longitude coordinates.</span>
+
+<span class="sd">    Function calculates the shortest path distance between two sets of</span>
+<span class="sd">    coordinates then scales this value by scaling_factor to more accurately</span>
+<span class="sd">    approximate on-road vehicle miles traveled (VMT).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    olat: double precision</span>
+<span class="sd">        Latitude of origin</span>
+<span class="sd">    olon: double precision</span>
+<span class="sd">        Longitude of origin</span>
+<span class="sd">    dlat: double precision</span>
+<span class="sd">        Latitude of destination</span>
+<span class="sd">    dlon: double precision</span>
+<span class="sd">        Longitude of destination</span>
+<span class="sd">    scaling_factor: double precision</span>
+<span class="sd">        Scaling factor for estimating on-road VMT from shortest path distance</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    double precision</span>
+<span class="sd">        Estimated VMT between two sets of coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">shortest_path_mi</span> <span class="o">=</span> <span class="n">haversine</span><span class="p">((</span><span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">),</span> <span class="p">(</span><span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;mi&#39;</span><span class="p">)</span>
+    <span class="n">estimated_vmt_mi</span> <span class="o">=</span> <span class="n">shortest_path_mi</span> <span class="o">*</span> <span class="n">scaling_factor</span>
+
+    <span class="k">return</span> <span class="n">estimated_vmt_mi</span></div>
+
+<div class="viewcode-block" id="estimate_vmt_2D"><a class="viewcode-back" href="../../reference/helpers.html#hive.helpers.estimate_vmt_2D">[docs]</a><span class="k">def</span> <span class="nf">estimate_vmt_2D</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function calculates euclidian distance between two sets of x,y coordinates.</span>
+
+<span class="sd">    Function calculates the shortest path distance between two sets of</span>
+<span class="sd">    coordinates then scales this value by scaling_factor to more accurately</span>
+<span class="sd">    approximate on-road vehicle miles traveled (VMT).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x1: double precision</span>
+<span class="sd">        x position of origin</span>
+<span class="sd">    y1: double precision</span>
+<span class="sd">        y position of origin</span>
+<span class="sd">    x2: double precision</span>
+<span class="sd">        x position of destination</span>
+<span class="sd">    y2: double precision</span>
+<span class="sd">        y position of destination</span>
+<span class="sd">    scaling_factor: double precision</span>
+<span class="sd">        Scaling factor for estimating on-road VMT from shortest path distance</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    double precision</span>
+<span class="sd">        Estimated VMT between two sets of coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">shortest_path_mi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span> <span class="o">*</span> <span class="n">METERS_TO_MILES</span>
+    <span class="n">estimated_vmt_mi</span> <span class="o">=</span> <span class="n">shortest_path_mi</span> <span class="o">*</span> <span class="n">scaling_factor</span>
+
+    <span class="k">return</span> <span class="n">estimated_vmt_mi</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
