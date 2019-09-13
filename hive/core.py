@@ -14,6 +14,15 @@ from hive.dispatcher import Dispatcher
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
 
 class SimulationEngine:
+    """
+    Simulation engine for running hive simulations.
+
+    Parameters
+    ----------
+    input_data: dict
+        Dictionary containing all of the input data hive needs to run scenario.
+        Use hive.helpers.load_scenario to generate this from scenario.yaml file
+    """
 
     def __init__(self, input_data):
         self._SIM_ENV = None
@@ -121,6 +130,16 @@ class SimulationEngine:
         self._SIM_ENV = SIM_ENV
 
     def run_simulation(self, sim_name, out_path = ''):
+        """
+        Runs a single hive simulation.
+
+        Parameters
+        ----------
+        sim_name: string
+            Name of simulation
+        out_path: string
+            Where this function will write output logs.
+        """
         info("Building scenario output directory..")
         output_file_paths = build_output_dir(sim_name, out_path)
 
