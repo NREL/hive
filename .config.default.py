@@ -37,4 +37,4 @@ SCENARIOS = [
 RANDOM_SEED = 123
 
 USE_OSRM = False
-OSRM_SERVER = 'http://0.0.0.0:5000' 
+OSRM_SERVER = 'http://0.0.0.0:5000'

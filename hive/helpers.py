@@ -4,8 +4,16 @@ Helper functions for the HIVE platform
 import math
 from haversine import haversine
 import numpy as np
+import pandas as pd
+import sys
+import yaml
+
+sys.path.append('..')
+import config as cfg
 
 from hive.units import METERS_TO_MILES, KILOMETERS_TO_MILES
+from hive.utils import info, name
+from hive import preprocess as pp
 
 def haversine_np(lat1, lon1, lat2, lon2):
     """
@@ -105,3 +113,54 @@ def estimate_vmt_2D(x1, y1, x2, y2, scaling_factor):
     estimated_vmt_mi = shortest_path_mi * scaling_factor
 
     return estimated_vmt_mi
+
+
+def load_scenario(scenario_file):
+    scenario_name = name(scenario_file)
+    with open(scenario_file, 'r') as f:
+        info('Loading scenario file..')
+        yaml_data = yaml.safe_load(f)
+
+        data = {}
+
+        filepaths = yaml_data['filepaths']
+
+        data['requests'] = pp.load_requests(filepaths['requests_file_path'],
+                                            verbose = cfg.VERBOSE,
+                                            )
+        data['main'] = yaml_data['parameters']
+        network_dtype = {
+                        'longitude': "float64",
+                        'latitude': "float64",
+                        'plugs': "int64",
+                        'plug_power_kw': "float64",
+                        }
+        station_df = pd.DataFrame(yaml_data['stations']).astype(dtype=network_dtype)
+        station_df.index = station_df.id
+        data['stations'] = station_df
+        bases_df = pd.DataFrame(yaml_data['bases']).astype(dtype=network_dtype)
+        bases_df.index = bases_df.id
+        data['bases'] = bases_df
+
+        vehicle_dtype = {
+                        'BATTERY_CAPACITY_KWH': 'float64',
+                        'PASSENGERS': 'int64',
+                        'EFFICIENCY_WHMI': 'float64',
+                        'MAX_KW_ACCEPTANCE': 'float64',
+                        'NUM_VEHICLES': 'int64',
+                        }
+        vehicles_df = pd.DataFrame(yaml_data['vehicles']).astype(dtype=vehicle_dtype)
+        vehicles_df.index = vehicles_df.VEHICLE_NAME
+        data['vehicles'] = vehicles_df
+
+        data['charge_curves'] = pd.DataFrame(yaml_data['charge_profile'])
+        data['whmi_lookup'] = pd.DataFrame(yaml_data['whmi_lookup'])
+
+        #Config
+        data['SIMULATION_PERIOD_SECONDS'] = cfg.SIMULATION_PERIOD_SECONDS
+        data['USE_OSRM'] = cfg.USE_OSRM
+        data['OSRM_SERVER'] = cfg.OSRM_SERVER
+
+    info('Done.')
+
+    return data

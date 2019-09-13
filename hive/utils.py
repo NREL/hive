@@ -8,6 +8,8 @@ import shutil
 sys.path.append('..')
 import config as cfg
 
+import hive.preprocess as pp
+
 class Clock:
     """
     Iterator to store simulation time information.
@@ -26,6 +28,9 @@ class Clock:
 def info(msg):
     if cfg.VERBOSE:
         print(f"[info] {msg}")
+
+def name(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 def progress_bar(
             iteration,
