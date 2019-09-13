@@ -71,6 +71,7 @@ class FuelStation:
         self.history.append({
                         'ID': self.ID,
                         'sim_time': self._clock.now,
+                        'time': self._clock.get_time(),
                         'vehicles_charging': vehicles_charging,
                         'power_usage_kw': power_usage_kw,
                         'energy_dispensed_kwh': self._energy_dispensed_kwh,

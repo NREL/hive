@@ -57,7 +57,7 @@ class InitializeFleetTest(unittest.TestCase):
                                     whmi_lookup = self.DATA['whmi_lookup'],
                                     start_time = datetime.date.today(),
                                     env_params = self.ENV_PARAMS,
-                                    clock = Clock(60),
+                                    clock = Clock(60, None),
                                     )
 
         self.assertEqual(len(fleet), 130)

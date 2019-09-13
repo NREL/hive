@@ -49,7 +49,19 @@ class SimulationEngine:
 
         SIM_ENV['requests'] = reqs_df
 
-        sim_clock = Clock(timestep_s = self.input_data['SIMULATION_PERIOD_SECONDS'])
+        sim_start_time = reqs_df.pickup_time.min()
+        sim_end_time = reqs_df.dropoff_time.max()
+        sim_time_steps = pd.date_range(
+                                sim_start_time,
+                                sim_end_time,
+                                freq='{}S'.format(self.input_data['SIMULATION_PERIOD_SECONDS'])
+                                )
+        SIM_ENV['sim_time_steps'] = sim_time_steps
+
+        sim_clock = Clock(
+                        timestep_s = self.input_data['SIMULATION_PERIOD_SECONDS'],
+                        datetime_steps = sim_time_steps,
+                        )
         SIM_ENV['sim_clock'] = sim_clock
 
         #Calculate network scaling factor & average dispatch speed
@@ -122,10 +134,6 @@ class SimulationEngine:
 
 
 
-        sim_start_time = reqs_df.pickup_time.min()
-        sim_end_time = reqs_df.dropoff_time.max()
-        sim_time_steps = pd.date_range(sim_start_time, sim_end_time, freq='{}S'.format(self.input_data['SIMULATION_PERIOD_SECONDS']))
-        SIM_ENV['sim_time_steps'] = sim_time_steps
 
         self._SIM_ENV = SIM_ENV
 
