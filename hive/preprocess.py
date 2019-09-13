@@ -21,7 +21,7 @@ from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 
 from hive.constraints import ENV_PARAMS
-from hive.utils import assert_constraint, info
+from hive import utils
 
 def gen_synth_pax_cnt():
     """Randomly assigns passenger count from real-world distribution measured
@@ -41,7 +41,7 @@ def load_requests(reqs_file, verbose=True, save_path=None):
         def name(path):
             return os.path.splitext(os.path.basename(path))[0]
 
-        info("Loading requests file..")
+        utils.info("Loading requests file..")
         reqs_df = pd.read_csv(reqs_file)
         assert len(reqs_df) > 0, "No requests in file!"
 
@@ -85,23 +85,23 @@ def load_requests(reqs_file, verbose=True, save_path=None):
         # .apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
         # reqs_df.sort_values('pickup_time', inplace=True)
 
-        info("    - parsing datetime")
+        utils.info("    - parsing datetime")
         reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: parser.parse(x))
         reqs_df['dropoff_time'] = reqs_df['dropoff_time'].apply(lambda x: parser.parse(x))
 
         #synthesize 'passengers' if not exists
         if 'passengers' not in reqs_df.columns: #apply real-world pax distr
-            info("    - synthesizing passenger counts")
+            utils.info("    - synthesizing passenger counts")
             pax = [gen_synth_pax_cnt() for i in range(len(reqs_df))]
             reqs_df['passengers'] = pax
 
         if 'seconds' not in reqs_df.columns:
-            info("    - calculating trip times")
+            utils.info("    - calculating trip times")
             reqs_df['seconds'] = reqs_df.apply(lambda row: (row.dropoff_time - row.pickup_time).total_seconds(), axis=1)
 
         #convert latitude and longitude to utm
         # if all(x not in reqs_df.columns for x in ['pickup_x', 'pickup_y', 'dropoff_x', 'dropoff_y']):
-        #     info("    - converting coordinate system to utm")
+        #     utils.info("    - converting coordinate system to utm")
         #     reqs_df['pickup_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)
         #     reqs_df['pickup_y'] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)
         #     reqs_df['dropoff_x'] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)
@@ -205,7 +205,7 @@ def calculate_road_vmt_scaling_factor(reqs_df):
     total_vmt = reqs_df['distance_miles'].sum()
     total_short_path_dist = short_path_dists.sum()
     haversine_scaling_factor = total_vmt/total_short_path_dist
-    assert_constraint('RN_SCALING_FACTOR', haversine_scaling_factor, ENV_PARAMS, context="Calculate Haversine Scaling Factor")
+    utils.assert_constraint('RN_SCALING_FACTOR', haversine_scaling_factor, ENV_PARAMS, context="Calculate Haversine Scaling Factor")
 
     return haversine_scaling_factor
 
@@ -222,6 +222,6 @@ def calculate_average_driving_speed(reqs_df):
     total_hrs = hrs.sum()
     total_vmt = reqs_df['distance_miles'].sum()
     avg_driving_mph = total_vmt/total_hrs
-    assert_constraint('DISPATCH_MPH', avg_driving_mph, ENV_PARAMS, context="Calculate Dispatch Speed")
+    utils.assert_constraint('DISPATCH_MPH', avg_driving_mph, ENV_PARAMS, context="Calculate Dispatch Speed")
 
     return avg_driving_mph

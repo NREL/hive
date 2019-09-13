@@ -58,7 +58,7 @@
 <span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="k">import</span> <span class="n">is_numeric_dtype</span>
 
 <span class="kn">from</span> <span class="nn">hive.constraints</span> <span class="k">import</span> <span class="n">ENV_PARAMS</span>
-<span class="kn">from</span> <span class="nn">hive.utils</span> <span class="k">import</span> <span class="n">assert_constraint</span><span class="p">,</span> <span class="n">info</span>
+<span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">utils</span>
 
 <div class="viewcode-block" id="gen_synth_pax_cnt"><a class="viewcode-back" href="../../reference/preprocess.html#hive.preprocess.gen_synth_pax_cnt">[docs]</a><span class="k">def</span> <span class="nf">gen_synth_pax_cnt</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Randomly assigns passenger count from real-world distribution measured</span>
@@ -78,7 +78,7 @@
         <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading requests file..&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading requests file..&quot;</span><span class="p">)</span>
         <span class="n">reqs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">reqs_file</span><span class="p">)</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;No requests in file!&quot;</span>
 
@@ -122,23 +122,23 @@
         <span class="c1"># .apply(lambda x: datetime.strptime(x, &quot;%Y-%m-%d %H:%M:%S&quot;))</span>
         <span class="c1"># reqs_df.sort_values(&#39;pickup_time&#39;, inplace=True)</span>
 
-        <span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - parsing datetime&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - parsing datetime&quot;</span><span class="p">)</span>
         <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;pickup_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;pickup_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;dropoff_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;dropoff_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
         <span class="c1">#synthesize &#39;passengers&#39; if not exists</span>
         <span class="k">if</span> <span class="s1">&#39;passengers&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span> <span class="c1">#apply real-world pax distr</span>
-            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - synthesizing passenger counts&quot;</span><span class="p">)</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - synthesizing passenger counts&quot;</span><span class="p">)</span>
             <span class="n">pax</span> <span class="o">=</span> <span class="p">[</span><span class="n">gen_synth_pax_cnt</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">))]</span>
             <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;passengers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pax</span>
 
         <span class="k">if</span> <span class="s1">&#39;seconds&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - calculating trip times&quot;</span><span class="p">)</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;    - calculating trip times&quot;</span><span class="p">)</span>
             <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;seconds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">dropoff_time</span> <span class="o">-</span> <span class="n">row</span><span class="o">.</span><span class="n">pickup_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1">#convert latitude and longitude to utm</span>
         <span class="c1"># if all(x not in reqs_df.columns for x in [&#39;pickup_x&#39;, &#39;pickup_y&#39;, &#39;dropoff_x&#39;, &#39;dropoff_y&#39;]):</span>
-        <span class="c1">#     info(&quot;    - converting coordinate system to utm&quot;)</span>
+        <span class="c1">#     utils.info(&quot;    - converting coordinate system to utm&quot;)</span>
         <span class="c1">#     reqs_df[&#39;pickup_x&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[0], axis=1)</span>
         <span class="c1">#     reqs_df[&#39;pickup_y&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.pickup_lat, x.pickup_lon)[1], axis=1)</span>
         <span class="c1">#     reqs_df[&#39;dropoff_x&#39;] = reqs_df.apply(lambda x: utm.from_latlon(x.dropoff_lat, x.dropoff_lon)[0], axis=1)</span>
@@ -242,7 +242,7 @@
     <span class="n">total_vmt</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;distance_miles&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">total_short_path_dist</span> <span class="o">=</span> <span class="n">short_path_dists</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">haversine_scaling_factor</span> <span class="o">=</span> <span class="n">total_vmt</span><span class="o">/</span><span class="n">total_short_path_dist</span>
-    <span class="n">assert_constraint</span><span class="p">(</span><span class="s1">&#39;RN_SCALING_FACTOR&#39;</span><span class="p">,</span> <span class="n">haversine_scaling_factor</span><span class="p">,</span> <span class="n">ENV_PARAMS</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;Calculate Haversine Scaling Factor&quot;</span><span class="p">)</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">assert_constraint</span><span class="p">(</span><span class="s1">&#39;RN_SCALING_FACTOR&#39;</span><span class="p">,</span> <span class="n">haversine_scaling_factor</span><span class="p">,</span> <span class="n">ENV_PARAMS</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;Calculate Haversine Scaling Factor&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">haversine_scaling_factor</span></div>
 
@@ -259,7 +259,7 @@
     <span class="n">total_hrs</span> <span class="o">=</span> <span class="n">hrs</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">total_vmt</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="p">[</span><span class="s1">&#39;distance_miles&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">avg_driving_mph</span> <span class="o">=</span> <span class="n">total_vmt</span><span class="o">/</span><span class="n">total_hrs</span>
-    <span class="n">assert_constraint</span><span class="p">(</span><span class="s1">&#39;DISPATCH_MPH&#39;</span><span class="p">,</span> <span class="n">avg_driving_mph</span><span class="p">,</span> <span class="n">ENV_PARAMS</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;Calculate Dispatch Speed&quot;</span><span class="p">)</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">assert_constraint</span><span class="p">(</span><span class="s1">&#39;DISPATCH_MPH&#39;</span><span class="p">,</span> <span class="n">avg_driving_mph</span><span class="p">,</span> <span class="n">ENV_PARAMS</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;Calculate Dispatch Speed&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">avg_driving_mph</span></div>
 </pre></div>

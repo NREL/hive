@@ -78,6 +78,7 @@ class Dispatcher:
 
         self.history.append({
                         'sim_time': self._clock.now,
+                        'time': self._clock.get_time(),
                         'active_vehicles': active_vehicles,
                         'dropped_requests': self._dropped_requests,
                         'total_requests': self._total_requests,

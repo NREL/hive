@@ -205,6 +205,7 @@ class Vehicle:
         self.history.append({
                     'ID': self.ID,
                     'sim_time': self._clock.now,
+                    'time': self._clock.get_time(),
                     'position_x': self.x,
                     'position_y': self.y,
                     'step_distance_mi': self._step_distance,

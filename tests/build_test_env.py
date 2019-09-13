@@ -4,7 +4,8 @@ import random
 import numpy as np
 
 sys.path.append('..')
-from run import load_scenario, build_simulation_env
+from hive.core import SimulationEngine
+from hive.helpers import load_scenario
 import config
 
 #TODO: Think about more robust way to load inputs for testing.
@@ -21,9 +22,11 @@ def setup_env():
 
     data = load_scenario(TEST_SCENARIO)
 
-    SIM_ENV = build_simulation_env(data)
+    sim_eng = SimulationEngine(data)
 
-    return SIM_ENV
+    sim_eng._build_simulation_env()
+
+    return sim_eng._SIM_ENV
 
 def load_test_scenario():
     data = load_scenario(TEST_SCENARIO)

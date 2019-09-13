@@ -17,15 +17,21 @@ class Clock:
     timestep_s: int
         amount of seconds that one simulation time step represents.
     """
-    def __init__(self, timestep_s):
+    def __init__(self, timestep_s, datetime_steps):
         self.now = 0
         self.TIMESTEP_S = timestep_s
+        self._DATETIME_STEPS = datetime_steps
     def __next__(self):
         self.now += 1
+    def get_time(self):
+        return self._DATETIME_STEPS[self.now]
 
 def info(msg):
     if cfg.VERBOSE:
         print(f"[info] {msg}")
+
+def name(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 def progress_bar(
             iteration,

@@ -14,12 +14,14 @@ operations of mobility-service-provider fleets.
 
 * :doc:`setup`
 * :doc:`user_guide/getting_started`
+* :doc:`user_guide/api_interaction`
 
 Modules
 =================
 
 * :doc:`reference/charging`
 * :doc:`reference/constraints`
+* :doc:`reference/core`
 * :doc:`reference/dispatcher`
 * :doc:`reference/helpers`
 * :doc:`reference/initialize`

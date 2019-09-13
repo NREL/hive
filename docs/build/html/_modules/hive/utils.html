@@ -54,15 +54,21 @@
 <span class="sd">    timestep_s: int</span>
 <span class="sd">        amount of seconds that one simulation time step represents.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestep_s</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestep_s</span><span class="p">,</span> <span class="n">datetime_steps</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">TIMESTEP_S</span> <span class="o">=</span> <span class="n">timestep_s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_DATETIME_STEPS</span> <span class="o">=</span> <span class="n">datetime_steps</span>
     <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">+=</span> <span class="mi">1</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">now</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">get_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DATETIME_STEPS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">now</span><span class="p">]</span></div>
 
 <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;[info] </span><span class="si">{msg}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">progress_bar</span><span class="p">(</span>
             <span class="n">iteration</span><span class="p">,</span>

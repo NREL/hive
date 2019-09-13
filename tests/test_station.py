@@ -4,7 +4,7 @@ import shutil
 import unittest
 from datetime import datetime
 
-from build_test_env import load_test_scenario
+from build_test_env import setup_env
 
 sys.path.append('../')
 from hive.initialize import initialize_stations
@@ -15,9 +15,8 @@ from hive.units import SECONDS_TO_HOURS
 class StationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.TIMESTEP_S = 60
-        data = load_test_scenario()
-        cls.stations = initialize_stations(data['stations'], clock=Clock(cls.TIMESTEP_S))
+        SIM_ENV = setup_env()
+        cls.stations = SIM_ENV['stations']
 
     @classmethod
     def tearDownClass(cls):
@@ -32,7 +31,8 @@ class StationTest(unittest.TestCase):
     def test_station_dispense_energy(self):
         test_station = self.stations[0]
         test_station.PLUG_POWER_KW = 50
-        expected_energy_kwh = test_station.PLUG_POWER_KW * (self.TIMESTEP_S * SECONDS_TO_HOURS)
+        timestep_s = test_station._clock.TIMESTEP_S
+        expected_energy_kwh = test_station.PLUG_POWER_KW * (timestep_s * SECONDS_TO_HOURS)
         station_energy_kwh = test_station.dispense_energy()
         self.assertTrue(expected_energy_kwh == station_energy_kwh)
 
