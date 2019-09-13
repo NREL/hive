@@ -8,8 +8,6 @@ import shutil
 sys.path.append('..')
 import config as cfg
 
-import hive.preprocess as pp
-
 class Clock:
     """
     Iterator to store simulation time information.
