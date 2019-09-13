@@ -41,8 +41,16 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">haversine</span> <span class="k">import</span> <span class="n">haversine</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">config</span> <span class="k">as</span> <span class="nn">cfg</span>
 
 <span class="kn">from</span> <span class="nn">hive.units</span> <span class="k">import</span> <span class="n">METERS_TO_MILES</span><span class="p">,</span> <span class="n">KILOMETERS_TO_MILES</span>
+<span class="kn">from</span> <span class="nn">hive.utils</span> <span class="k">import</span> <span class="n">info</span><span class="p">,</span> <span class="n">name</span>
+<span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">preprocess</span> <span class="k">as</span> <span class="n">pp</span>
 
 <div class="viewcode-block" id="haversine_np"><a class="viewcode-back" href="../../reference/helpers.html#hive.helpers.haversine_np">[docs]</a><span class="k">def</span> <span class="nf">haversine_np</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lon1</span><span class="p">,</span> <span class="n">lat2</span><span class="p">,</span> <span class="n">lon2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -142,6 +150,57 @@
     <span class="n">estimated_vmt_mi</span> <span class="o">=</span> <span class="n">shortest_path_mi</span> <span class="o">*</span> <span class="n">scaling_factor</span>
 
     <span class="k">return</span> <span class="n">estimated_vmt_mi</span></div>
+
+
+<span class="k">def</span> <span class="nf">load_scenario</span><span class="p">(</span><span class="n">scenario_file</span><span class="p">):</span>
+    <span class="n">scenario_name</span> <span class="o">=</span> <span class="n">name</span><span class="p">(</span><span class="n">scenario_file</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">scenario_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loading scenario file..&#39;</span><span class="p">)</span>
+        <span class="n">yaml_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">filepaths</span> <span class="o">=</span> <span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;filepaths&#39;</span><span class="p">]</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;requests&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">load_requests</span><span class="p">(</span><span class="n">filepaths</span><span class="p">[</span><span class="s1">&#39;requests_file_path&#39;</span><span class="p">],</span>
+                                            <span class="n">verbose</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">,</span>
+                                            <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;main&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+        <span class="n">network_dtype</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+                        <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+                        <span class="s1">&#39;plugs&#39;</span><span class="p">:</span> <span class="s2">&quot;int64&quot;</span><span class="p">,</span>
+                        <span class="s1">&#39;plug_power_kw&#39;</span><span class="p">:</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+                        <span class="p">}</span>
+        <span class="n">station_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;stations&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">network_dtype</span><span class="p">)</span>
+        <span class="n">station_df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">station_df</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;stations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">station_df</span>
+        <span class="n">bases_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;bases&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">network_dtype</span><span class="p">)</span>
+        <span class="n">bases_df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">bases_df</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;bases&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bases_df</span>
+
+        <span class="n">vehicle_dtype</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;BATTERY_CAPACITY_KWH&#39;</span><span class="p">:</span> <span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;PASSENGERS&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;EFFICIENCY_WHMI&#39;</span><span class="p">:</span> <span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;MAX_KW_ACCEPTANCE&#39;</span><span class="p">:</span> <span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;NUM_VEHICLES&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">,</span>
+                        <span class="p">}</span>
+        <span class="n">vehicles_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;vehicles&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">vehicle_dtype</span><span class="p">)</span>
+        <span class="n">vehicles_df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">vehicles_df</span><span class="o">.</span><span class="n">VEHICLE_NAME</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vehicles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vehicles_df</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;charge_curves&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;charge_profile&#39;</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;whmi_lookup&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">yaml_data</span><span class="p">[</span><span class="s1">&#39;whmi_lookup&#39;</span><span class="p">])</span>
+
+        <span class="c1">#Config</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;SIMULATION_PERIOD_SECONDS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">SIMULATION_PERIOD_SECONDS</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;USE_OSRM&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">USE_OSRM</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;OSRM_SERVER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">OSRM_SERVER</span>
+
+    <span class="n">info</span><span class="p">(</span><span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span>
 </pre></div>
 
           </div>
