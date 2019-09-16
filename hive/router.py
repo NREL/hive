@@ -1,5 +1,4 @@
 import numpy as np
-import utm
 import requests
 
 from hive import units
