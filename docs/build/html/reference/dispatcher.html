@@ -39,7 +39,7 @@
 vehicle dispatching, and station/base selection.</p>
 <dl class="class">
 <dt id="hive.dispatcher.Dispatcher">
-<em class="property">class </em><code class="sig-prename descclassname">hive.dispatcher.</code><code class="sig-name descname">Dispatcher</code><span class="sig-paren">(</span><em class="sig-param">fleet</em>, <em class="sig-param">fleet_state</em>, <em class="sig-param">stations</em>, <em class="sig-param">bases</em>, <em class="sig-param">env_params</em>, <em class="sig-param">clock</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher.html#Dispatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.Dispatcher" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.dispatcher.</code><code class="sig-name descname">Dispatcher</code><span class="sig-paren">(</span><em class="sig-param">fleet</em>, <em class="sig-param">fleet_state</em>, <em class="sig-param">stations</em>, <em class="sig-param">bases</em>, <em class="sig-param">env_params</em>, <em class="sig-param">route_engine</em>, <em class="sig-param">clock</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher.html#Dispatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.Dispatcher" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Dispatcher object is responsible for coordinating the actions of the fleet.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -49,7 +49,7 @@ vehicle dispatching, and station/base selection.</p>
 <li><p><strong>stations</strong> (<em>list</em>) – list of all charging stations.</p></li>
 <li><p><strong>bases</strong> (<em>list</em>) – list of all bases</p></li>
 <li><p><strong>env_params</strong> (<em>dict</em>) – dictionary of all of the constant environment parameters shared across the simulation.</p></li>
-<li><p><strong>clock</strong> (<em>hive.utils.Clock</em>) – simulation clock shared across the simulation to track simulation time steps.</p></li>
+<li><p><strong>clock</strong> (<a class="reference internal" href="utilities.html#hive.utils.Clock" title="hive.utils.Clock"><em>hive.utils.Clock</em></a>) – simulation clock shared across the simulation to track simulation time steps.</p></li>
 </ul>
 </dd>
 </dl>

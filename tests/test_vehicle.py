@@ -13,6 +13,35 @@ class VehicleTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.SIM_ENV = setup_env()
+        cls.test_route = [
+                 ((30.202783, -97.666996), 0.07102958574108299, 'Dispatch to Request'),
+                 ((30.208332, -97.662686), 0.493413042415615, 'Dispatch to Request'),
+                 ((30.213601, -97.66001), 0.5533686206813949, 'Dispatch to Request'),
+                 ((30.21996, -97.671558), 0.833339376843311, 'Dispatch to Request'),
+                 ((30.224305, -97.680064), 0.5935336394729871, 'Serving Trip'),
+                 ((30.232749, -97.683968), 0.630330923757084, 'Serving Trip'),
+                 ((30.244267, -97.69055), 0.8694615030109061, 'Serving Trip'),
+                 ((30.251038, -97.682555), 0.8056719805472987, 'Serving Trip'),
+                 ((30.251642, -97.682966), 0.5294079882310436, 'Serving Trip'),
+                 ((30.250266, -97.690443), 0.42695224167341106, 'Serving Trip'),
+                 ((30.25596, -97.692917), 0.4757713994751649, 'Serving Trip'),
+                 ((30.26561, -97.695509), 0.7007186438184752, 'Serving Trip'),
+                 ((30.275509, -97.699186), 0.694840492799603, 'Serving Trip'),
+                 ((30.283419, -97.70453), 0.6628251622923864, 'Serving Trip'),
+                 ((30.291561, -97.707424), 0.5641935018816682, 'Serving Trip'),
+                 ((30.300444, -97.712642), 0.7402605716551385, 'Serving Trip'),
+                 ((30.30841, -97.71562), 0.6912386337771323, 'Serving Trip'),
+                 ((30.318853, -97.712776), 0.7062616633594612, 'Serving Trip'),
+                 ((30.321547, -97.717621), 0.4580678953234347, 'Serving Trip'),
+                 ((30.326714, -97.727055), 0.6993308732057084, 'Serving Trip'),
+                 ((30.332404, -97.734766), 0.6373112489855863, 'Serving Trip'),
+                 ((30.338078, -97.739318), 0.59537288582694, 'Serving Trip'),
+                 ((30.34189, -97.737495), 0.2661897347404363, 'Serving Trip'),
+                 ((30.342606, -97.737133), 0.10273534051690625, 'Serving Trip')
+                 ]
+        cls.test_route_distance = 0
+        for step in cls.test_route:
+            cls.test_route_distance += step[1]
 
     def setUp(self):
         pass
@@ -21,50 +50,43 @@ class VehicleTest(unittest.TestCase):
         pass
 
     def test_vehicle_cmd_make_trip(self):
-        test_request = self.SIM_ENV['requests'].iloc[0]
-        test_vehicle = self.SIM_ENV['fleet'][0]
+        test_vehicle = self.SIM_ENV['fleet'][2]
+        test_vehicle.x = self.test_route[0][0][0]
+        test_vehicle.y = self.test_route[0][0][1]
+
         test_vehicle.cmd_make_trip(
-                            origin_x = test_request.pickup_x,
-                            origin_y = test_request.pickup_y,
-                            destination_x = test_request.dropoff_x,
-                            destination_y = test_request.dropoff_y,
-                            passengers = test_request.passengers,
-                            trip_dist_mi = test_request.distance_miles,
-                            trip_time_s = test_request.seconds,
+                            route = self.test_route,
+                            passengers = 1,
                             )
-        disp_dist_mi = math.hypot(test_request.dropoff_x - test_vehicle.x, test_request.dropoff_y - test_vehicle.y)\
-                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
-        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
 
-        sim_steps = math.ceil((test_request.seconds + disp_time_s)/self.SIM_ENV['sim_clock'].TIMESTEP_S)
-        for t in range(sim_steps):
+        sim_steps = len(self.test_route)
+        for t in range(sim_steps+1):
             test_vehicle.step()
-            next(self.SIM_ENV['sim_clock'])
 
-        self.assertTrue(test_vehicle.x == test_request.dropoff_x)
-        self.assertTrue(test_vehicle.y == test_request.dropoff_y)
+        end_x = self.test_route[-1][0][0]
+        end_y = self.test_route[-1][0][1]
+
+        self.assertTrue(test_vehicle.x == end_x)
+        self.assertTrue(test_vehicle.y == end_y)
         self.assertTrue(test_vehicle._route == None)
         self.assertTrue(test_vehicle.activity == 'Idle')
 
-    def test_vehicle_cmd_travel_to(self):
-        test_request = self.SIM_ENV['requests'].iloc[1]
-        test_vehicle = self.SIM_ENV['fleet'][1]
+    def test_vehicle_cmd_move(self):
+        test_vehicle = self.SIM_ENV['fleet'][2]
+        test_vehicle.x = self.test_route[0][0][0]
+        test_vehicle.y = self.test_route[0][0][1]
 
-        test_vehicle.cmd_travel_to(
-                            destination_x = test_request.pickup_x,
-                            destination_y = test_request.pickup_y,
-                            )
+        end_x = self.test_route[-1][0][0]
+        end_y = self.test_route[-1][0][1]
 
-        disp_dist_mi = math.hypot(test_request.pickup_x - test_vehicle.x, test_request.pickup_y - test_vehicle.y)\
-                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
-        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+        test_vehicle.cmd_move(self.test_route)
 
-        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
-        for t in range(sim_steps):
+        sim_steps = len(self.test_route)
+        for t in range(sim_steps+1):
             test_vehicle.step()
 
-        self.assertTrue(test_vehicle.x == test_request.pickup_x)
-        self.assertTrue(test_vehicle.y == test_request.pickup_y)
+        self.assertTrue(test_vehicle.x == end_x)
+        self.assertTrue(test_vehicle.y == end_y)
         self.assertTrue(test_vehicle._route == None)
 
     def test_vehicle_cmd_charge(self):
@@ -73,13 +95,17 @@ class VehicleTest(unittest.TestCase):
 
         pre_avail_plugs = test_station.avail_plugs
 
-        test_vehicle.cmd_charge(test_station)
+        router = self.SIM_ENV['dispatcher']._route_engine
+        route = router.route(
+                        test_vehicle.x,
+                        test_vehicle.y,
+                        test_station.X,
+                        test_station.Y,
+                        activity='Moving to Station')
 
-        disp_dist_mi = math.hypot(test_station.X - test_vehicle.x, test_station.Y - test_vehicle.y)\
-                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
-        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+        test_vehicle.cmd_charge(test_station, route)
 
-        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
+        sim_steps = len(route)
 
         for t in range(sim_steps+1):
             test_vehicle.step()
@@ -111,13 +137,17 @@ class VehicleTest(unittest.TestCase):
 
         pre_avail_plugs = test_base.avail_plugs
 
-        test_vehicle.cmd_return_to_base(test_base)
+        router = self.SIM_ENV['dispatcher']._route_engine
+        route = router.route(
+            test_vehicle.x,
+            test_vehicle.y,
+            test_base.X,
+            test_base.Y,
+            activity = "Returning to Base")
 
-        disp_dist_mi = math.hypot(test_base.X - test_vehicle.x, test_base.Y - test_vehicle.y)\
-                * units.METERS_TO_MILES * self.SIM_ENV['env_params']['RN_SCALING_FACTOR']
-        disp_time_s = (disp_dist_mi / self.SIM_ENV['env_params']['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+        test_vehicle.cmd_return_to_base(test_base, route)
 
-        sim_steps = math.ceil(disp_time_s/self.SIM_ENV['sim_clock'].TIMESTEP_S)
+        sim_steps = len(route)
 
         for t in range(sim_steps+1):
             test_vehicle.step()

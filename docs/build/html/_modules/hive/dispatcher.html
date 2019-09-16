@@ -41,12 +41,16 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">utm</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">tripenergy</span> <span class="k">as</span> <span class="n">nrg</span>
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">charging</span> <span class="k">as</span> <span class="n">chrg</span>
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">helpers</span> <span class="k">as</span> <span class="n">hlp</span>
-<span class="kn">from</span> <span class="nn">hive.units</span> <span class="k">import</span> <span class="n">METERS_TO_MILES</span>
+<span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">units</span>
 
 <div class="viewcode-block" id="Dispatcher"><a class="viewcode-back" href="../../reference/dispatcher.html#hive.dispatcher.Dispatcher">[docs]</a><span class="k">class</span> <span class="nc">Dispatcher</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -76,6 +80,7 @@
                 <span class="n">stations</span><span class="p">,</span>
                 <span class="n">bases</span><span class="p">,</span>
                 <span class="n">env_params</span><span class="p">,</span>
+                <span class="n">route_engine</span><span class="p">,</span>
                 <span class="n">clock</span><span class="p">,</span>
                 <span class="p">):</span>
 
@@ -91,8 +96,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_stations</span> <span class="o">=</span> <span class="n">stations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bases</span> <span class="o">=</span> <span class="n">bases</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span> <span class="o">=</span> <span class="n">route_engine</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dropped_requests</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_requests</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span> <span class="o">=</span> <span class="n">env_params</span>
 
@@ -107,10 +115,11 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                         <span class="s1">&#39;sim_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
+                        <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">get_time</span><span class="p">(),</span>
                         <span class="s1">&#39;active_vehicles&#39;</span><span class="p">:</span> <span class="n">active_vehicles</span><span class="p">,</span>
                         <span class="s1">&#39;dropped_requests&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dropped_requests</span><span class="p">,</span>
+                        <span class="s1">&#39;total_requests&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_requests</span><span class="p">,</span>
                         <span class="p">})</span>
-
 
     <span class="k">def</span> <span class="nf">_find_closest_plug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;station&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -145,7 +154,7 @@
 
             <span class="n">dist_to_nearest</span> <span class="o">=</span> <span class="n">INF</span>
             <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">search_space</span><span class="p">:</span>
-                <span class="n">dist_mi</span> <span class="o">=</span> <span class="n">hlp</span><span class="o">.</span><span class="n">estimate_vmt_2D</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                <span class="n">dist_mi</span> <span class="o">=</span> <span class="n">hlp</span><span class="o">.</span><span class="n">estimate_vmt_latlon</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
                                                <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
                                                <span class="n">station</span><span class="o">.</span><span class="n">X</span><span class="p">,</span>
                                                <span class="n">station</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span>
@@ -182,8 +191,16 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fleet_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet_state</span>
-        <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">request</span><span class="o">.</span><span class="n">pickup_x</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">pickup_y</span><span class="p">)])</span>
-        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">fleet_state</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">point</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">METERS_TO_MILES</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">request</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">])</span>
+        <span class="n">x_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+        <span class="n">y_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">hlp</span><span class="o">.</span><span class="n">haversine_np</span><span class="p">(</span>
+                        <span class="n">fleet_state</span><span class="p">[:,</span> <span class="n">x_col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                        <span class="n">fleet_state</span><span class="p">[:,</span> <span class="n">y_col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                        <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="p">)</span>
+
         <span class="n">best_vehs_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
         <span class="n">dist_mask</span> <span class="o">=</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;MAX_DISPATCH_MILES&#39;</span><span class="p">]</span>
 
@@ -215,6 +232,7 @@
 <span class="sd">            list of requests that occur in a single time step.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dropped_requests</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_requests</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">requests</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
             <span class="n">best_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_n_best_vehicles</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_vehicle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -222,15 +240,31 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">vehid</span> <span class="o">=</span> <span class="n">best_vehicle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">veh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">[</span><span class="n">vehid</span><span class="p">]</span>
+                <span class="n">disp_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span>
+                                        <span class="n">veh</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                        <span class="n">veh</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                                        <span class="n">request</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span>
+                                        <span class="n">request</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">,</span>
+                                        <span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Dispatch to Request&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;route&#39;</span><span class="p">):</span>
+                    <span class="n">trip_route</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">route</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">trip_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span>
+                                            <span class="n">request</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span>
+                                            <span class="n">request</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">,</span>
+                                            <span class="n">request</span><span class="o">.</span><span class="n">dropoff_lat</span><span class="p">,</span>
+                                            <span class="n">request</span><span class="o">.</span><span class="n">dropoff_lon</span><span class="p">,</span>
+                                            <span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Serving Trip&quot;</span><span class="p">,</span>
+                                            <span class="n">trip_dist_mi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">distance_miles</span><span class="p">,</span>
+                                            <span class="n">trip_time_s</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
+                                            <span class="p">)</span>
+
+                <span class="k">del</span> <span class="n">disp_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">route</span> <span class="o">=</span> <span class="n">disp_route</span> <span class="o">+</span> <span class="n">trip_route</span>
+
                 <span class="n">veh</span><span class="o">.</span><span class="n">cmd_make_trip</span><span class="p">(</span>
-                        <span class="n">request</span><span class="o">.</span><span class="n">pickup_x</span><span class="p">,</span>
-                        <span class="n">request</span><span class="o">.</span><span class="n">pickup_y</span><span class="p">,</span>
-                        <span class="n">request</span><span class="o">.</span><span class="n">dropoff_x</span><span class="p">,</span>
-                        <span class="n">request</span><span class="o">.</span><span class="n">dropoff_y</span><span class="p">,</span>
+                        <span class="n">route</span> <span class="o">=</span> <span class="n">route</span><span class="p">,</span>
                         <span class="n">passengers</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">passengers</span><span class="p">,</span>
-                        <span class="n">trip_dist_mi</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">distance_miles</span><span class="p">,</span>
-                        <span class="n">trip_time_s</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
-                        <span class="c1"># route=request.route_utm)</span>
                         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_charge_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -248,7 +282,8 @@
         <span class="k">for</span> <span class="n">veh_id</span> <span class="ow">in</span> <span class="n">veh_ids</span><span class="p">:</span>
             <span class="n">vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">[</span><span class="n">veh_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">station</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_closest_plug</span><span class="p">(</span><span class="n">vehicle</span><span class="p">)</span>
-            <span class="n">vehicle</span><span class="o">.</span><span class="n">cmd_charge</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
+            <span class="n">route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Moving to Station&#39;</span><span class="p">)</span>
+            <span class="n">vehicle</span><span class="o">.</span><span class="n">cmd_charge</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">route</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_idle_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -263,7 +298,8 @@
         <span class="k">for</span> <span class="n">veh_id</span> <span class="ow">in</span> <span class="n">veh_ids</span><span class="p">:</span>
             <span class="n">vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">[</span><span class="n">veh_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_closest_plug</span><span class="p">(</span><span class="n">vehicle</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
-            <span class="n">vehicle</span><span class="o">.</span><span class="n">cmd_return_to_base</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Moving to Base&#39;</span><span class="p">)</span>
+            <span class="n">vehicle</span><span class="o">.</span><span class="n">cmd_return_to_base</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">route</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Dispatcher.process_requests"><a class="viewcode-back" href="../../reference/dispatcher.html#hive.dispatcher.Dispatcher.process_requests">[docs]</a>    <span class="k">def</span> <span class="nf">process_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

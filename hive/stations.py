@@ -44,15 +44,9 @@ class FuelStation:
                 ):
 
         self.ID = station_id
-        self.LAT = latitude
-        self.LON = longitude
 
-        x, y, zone_letter, zone_number = utm.from_latlon(latitude, longitude)
-
-        self.X = x
-        self.Y = y
-        self.ZONE_NUMBER = zone_number
-        self.ZONE_LETTER = zone_letter
+        self.X = latitude
+        self.Y = longitude
 
         assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
         self.TOTAL_PLUGS = plugs
@@ -77,6 +71,7 @@ class FuelStation:
         self.history.append({
                         'ID': self.ID,
                         'sim_time': self._clock.now,
+                        'time': self._clock.get_time(),
                         'vehicles_charging': vehicles_charging,
                         'power_usage_kw': power_usage_kw,
                         'energy_dispensed_kwh': self._energy_dispensed_kwh,

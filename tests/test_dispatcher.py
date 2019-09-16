@@ -39,8 +39,8 @@ class DispatcherTest(unittest.TestCase):
         test_request = self.SIM_ENV['requests'].iloc[0]
 
         #Make test vehicle the best vehicle
-        test_vehicle.x = test_request.pickup_x
-        test_vehicle.y = test_request.pickup_y
+        test_vehicle.x = test_request.pickup_lat
+        test_vehicle.y = test_request.pickup_lon
         test_vehicle.available = True
         test_vehicle.energy_kwh = test_vehicle.BATTERY_CAPACITY
         test_vehicle.avail_seats = test_vehicle.MAX_PASSENGERS

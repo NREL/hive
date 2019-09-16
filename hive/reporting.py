@@ -23,11 +23,11 @@ def generate_logs(objects, log_path, context):
     """
     #TODO: Make this function more robust by ensuring all objects have same keys.
     keys = objects[0].history[0].keys()
-    for item in objects:
-        filename = os.path.join(log_path, f'{context}_{item.ID}_history.csv')
-        with open(filename, 'w', newline='') as f:
-            writer = csv.DictWriter(f, keys)
-            writer.writeheader()
+    filename = os.path.join(log_path, f'{context}_history.csv')
+    with open(filename, 'w', newline='') as f:
+        writer = csv.DictWriter(f, keys)
+        writer.writeheader()
+        for item in objects:
             writer.writerows(item.history)
 
 
@@ -82,3 +82,27 @@ def summarize_fleet_stats(vehicle_log_path, summary_path):
     # Time Summary
     outfile = os.path.join(summary_path, 'fleet_time_summary.csv')
     fleet_df.groupby('activity').count()['sim_time'].to_csv(outfile, header=True)
+
+def summarize_dispatcher(dispatcher_log_path, summary_path):
+    """
+    Generates dispatcher summary statistics.
+
+    Parameters
+    ----------
+    dispathcer_log_path: str
+        filepath to where dispatcher logs are written.
+    summary_path: str
+        path to where to write the dispatcher summary stats.
+    """
+
+    all_dispatcher_logs = glob.glob(os.path.join(dispatcher_log_path, '*.csv'))
+    dispatcher_df = pd.concat((pd.read_csv(file) for file in all_dispatcher_logs))
+
+    demand = dispatcher_df.total_requests.sum()
+    served = demand - dispatcher_df.dropped_requests.sum()
+    demand_served_percent = (served/demand) * 100
+
+    outfile = os.path.join(summary_path, 'dispatcher_summary.csv')
+
+    out_df = pd.DataFrame({'demand_served_percent': [demand_served_percent]})
+    out_df.to_csv(outfile, index=False)

@@ -45,6 +45,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">utm</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">helpers</span> <span class="k">as</span> <span class="n">hlp</span>
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">tripenergy</span> <span class="k">as</span> <span class="n">nrg</span>
@@ -147,22 +148,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span> <span class="o">=</span> <span class="n">env_params</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">latlon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">utm</span><span class="o">.</span><span class="n">to_latlon</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zone_number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zone_letter</span><span class="p">)</span>
-
-    <span class="nd">@latlon</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">latlon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Pass iterable with lat lon pair&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">zone_number</span><span class="p">,</span> <span class="n">zone_letter</span> <span class="o">=</span> <span class="n">utm</span><span class="o">.</span><span class="n">from_latlon</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_zone_number</span> <span class="o">=</span> <span class="n">zone_number</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_zone_letter</span> <span class="o">=</span> <span class="n">zone_letter</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -257,6 +242,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                     <span class="s1">&#39;ID&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span>
                     <span class="s1">&#39;sim_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
+                    <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">get_time</span><span class="p">(),</span>
                     <span class="s1">&#39;position_x&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
                     <span class="s1">&#39;position_y&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
                     <span class="s1">&#39;step_distance_mi&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_distance</span><span class="p">,</span>
@@ -272,9 +258,6 @@
     <span class="k">def</span> <span class="nf">_set_fleet_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fleet_state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-
-    <span class="k">def</span> <span class="nf">_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">x1</span><span class="o">-</span><span class="n">x0</span><span class="p">,</span> <span class="n">y1</span><span class="o">-</span><span class="n">y0</span><span class="p">)</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">METERS_TO_MILES</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;RN_SCALING_FACTOR&#39;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_update_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_mi</span><span class="p">):</span>
         <span class="n">spd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;DISPATCH_MPH&#39;</span><span class="p">]</span>
@@ -348,38 +331,27 @@
         <span class="k">return</span> <span class="n">route</span>
 
 
-<div class="viewcode-block" id="Vehicle.cmd_make_trip"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_make_trip">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_make_trip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">origin_x</span><span class="p">,</span>
-                 <span class="n">origin_y</span><span class="p">,</span>
-                 <span class="n">destination_x</span><span class="p">,</span>
-                 <span class="n">destination_y</span><span class="p">,</span>
-                 <span class="n">passengers</span><span class="p">,</span>
-                 <span class="n">trip_dist_mi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">trip_time_s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">route</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Vehicle.cmd_make_trip"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_make_trip">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_make_trip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">,</span> <span class="n">passengers</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Commands a vehicle to service a trip.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        origin_x: float</span>
-<span class="sd">            x coordinate (utm) of the trip origin location.</span>
-<span class="sd">        origin_y: float</span>
-<span class="sd">            y coordinate (utm) of the trip origin location.</span>
-<span class="sd">        destination_x: float</span>
-<span class="sd">            x coordinate (utm) of the trip destination location.</span>
-<span class="sd">        destination_y: float</span>
-<span class="sd">            y coordinate (utm) of the trip destination location.</span>
+<span class="sd">        route: list</span>
+<span class="sd">            list containing location, distnace and activity information representing</span>
+<span class="sd">            a route.</span>
 <span class="sd">        passengers: int</span>
 <span class="sd">            the number of passengers associated with this trip.</span>
-<span class="sd">        trip_dist_mi: float</span>
-<span class="sd">            (optional) trip distance in miles.</span>
-<span class="sd">        trip_time_s: float</span>
-<span class="sd">            (optional) trip time in seconds.</span>
-<span class="sd">        route: LineString</span>
-<span class="sd">            (optional) (NotImplemented) line string representing route.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">route</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">start_x</span> <span class="o">=</span> <span class="n">route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">start_y</span> <span class="o">=</span> <span class="n">route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">start_x</span><span class="p">,</span> <span class="n">start_y</span><span class="p">),</span> \
+            <span class="s2">&quot;Route must start at current vehicle location&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">False</span>
@@ -389,89 +361,35 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="n">current_sim_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">now</span>
-
-        <span class="k">if</span> <span class="n">trip_dist_mi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">trip_dist_mi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">destination_x</span> <span class="o">-</span> <span class="n">origin_x</span><span class="p">,</span> <span class="n">destination_y</span> <span class="o">-</span> <span class="n">origin_y</span><span class="p">)</span>\
-                <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">METERS_TO_MILES</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;RN_SCALING_FACTOR&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">trip_time_s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">trip_time_s</span> <span class="o">=</span> <span class="p">(</span><span class="n">trip_dist_mi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;DISPATCH_MPH&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">HOURS_TO_SECONDS</span>
-
-        <span class="n">disp_dist_mi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">origin_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">origin_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> \
-                <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">METERS_TO_MILES</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;RN_SCALING_FACTOR&#39;</span><span class="p">]</span>
-        <span class="n">disp_time_s</span> <span class="o">=</span> <span class="p">(</span><span class="n">disp_dist_mi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;DISPATCH_MPH&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">HOURS_TO_SECONDS</span>
-        <span class="n">disp_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_route</span><span class="p">(</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-                                    <span class="n">origin_x</span><span class="p">,</span>
-                                    <span class="n">origin_y</span><span class="p">,</span>
-                                    <span class="n">disp_dist_mi</span><span class="p">,</span>
-                                    <span class="n">disp_time_s</span><span class="p">,</span>
-                                    <span class="n">activity</span><span class="o">=</span><span class="s2">&quot;Dispatch to Request&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">route</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1">#TODO: Add distance to route.</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Routing not implemented yet.&quot;</span><span class="p">)</span>
-            <span class="n">trip_route</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;Serving Trip&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">route</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">trip_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_route</span><span class="p">(</span>
-                                        <span class="n">origin_x</span><span class="p">,</span>
-                                        <span class="n">origin_y</span><span class="p">,</span>
-                                        <span class="n">destination_x</span><span class="p">,</span>
-                                        <span class="n">destination_y</span><span class="p">,</span>
-                                        <span class="n">trip_dist_mi</span><span class="p">,</span>
-                                        <span class="n">trip_time_s</span><span class="p">,</span>
-                                        <span class="n">activity</span><span class="o">=</span><span class="s2">&quot;Serving Trip&quot;</span><span class="p">)</span>
-
-        <span class="k">del</span> <span class="n">disp_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_route</span> <span class="o">=</span> <span class="n">disp_route</span> <span class="o">+</span> <span class="n">trip_route</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_route</span> <span class="o">=</span> <span class="n">route</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">)</span>
         <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_iter</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Vehicle.cmd_travel_to"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_travel_to">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_travel_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">destination_x</span><span class="p">,</span>
-                  <span class="n">destination_y</span><span class="p">,</span>
-                  <span class="n">trip_dist_mi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">trip_time_s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">activity</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Vehicle.cmd_move"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_move">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Commands a vehicle to relocate to a new location.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        destination_x: float</span>
-<span class="sd">            x coordinate (utm) of the destination location.</span>
-<span class="sd">        destination_y: float</span>
-<span class="sd">            y coordinate (utm) of the destination location.</span>
-<span class="sd">        trip_dist_mi: float</span>
-<span class="sd">            (optional) trip distance in miles.</span>
-<span class="sd">        trip_time_s: float</span>
-<span class="sd">            (optional) trip time in seconds.</span>
-<span class="sd">        activity: str</span>
-<span class="sd">            (optional) string representing why the vehicle is moving.</span>
+<span class="sd">        route: list</span>
+<span class="sd">            list containing location, distnace and activity information representing</span>
+<span class="sd">            a route.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">current_sim_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">now</span>
+        <span class="k">if</span> <span class="n">route</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
 
-        <span class="k">if</span> <span class="n">trip_dist_mi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">trip_dist_mi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">destination_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">destination_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> \
-                    <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">METERS_TO_MILES</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;RN_SCALING_FACTOR&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">trip_time_s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">trip_time_s</span> <span class="o">=</span> <span class="p">(</span><span class="n">trip_dist_mi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;DISPATCH_MPH&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">HOURS_TO_SECONDS</span>
+        <span class="n">start_x</span> <span class="o">=</span> <span class="n">route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">start_y</span> <span class="o">=</span> <span class="n">route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_route</span><span class="p">(</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-                                    <span class="n">destination_x</span><span class="p">,</span>
-                                    <span class="n">destination_y</span><span class="p">,</span>
-                                    <span class="n">trip_dist_mi</span><span class="p">,</span>
-                                    <span class="n">trip_time_s</span><span class="p">,</span>
-                                    <span class="n">activity</span><span class="o">=</span><span class="n">activity</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">start_x</span><span class="p">,</span> <span class="n">start_y</span><span class="p">),</span> \
+            <span class="s2">&quot;Route must start at current vehicle location&quot;</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_route</span> <span class="o">=</span> <span class="n">route</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">)</span>
         <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_iter</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Vehicle.cmd_charge"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_charge">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">):</span>
+<div class="viewcode-block" id="Vehicle.cmd_charge"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_charge">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">route</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Commands the vehicle to charge at a station.</span>
 
@@ -479,13 +397,16 @@
 <span class="sd">        ----------</span>
 <span class="sd">        station: hive.stations.FuelStation</span>
 <span class="sd">            station object for the vehicle to charge at.</span>
+<span class="sd">        route: list</span>
+<span class="sd">            list containing location, distnace and activity information representing</span>
+<span class="sd">            a route.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="n">station</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cmd_travel_to</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">activity</span><span class="o">=</span><span class="s2">&quot;Moving to Station&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmd_move</span><span class="p">(</span><span class="n">route</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Vehicle.cmd_return_to_base"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_return_to_base">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_return_to_base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+<div class="viewcode-block" id="Vehicle.cmd_return_to_base"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_return_to_base">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_return_to_base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">route</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Commands the vehicle to return to a base.</span>
 
@@ -493,13 +414,16 @@
 <span class="sd">        ----------</span>
 <span class="sd">        base: hive.stations.FuelStation</span>
 <span class="sd">            base object for the vehicle to return to and charge at.</span>
+<span class="sd">        route: list</span>
+<span class="sd">            list containing location, distnace and activity information representing</span>
+<span class="sd">            a route.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base</span> <span class="o">=</span> <span class="n">base</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="n">base</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cmd_travel_to</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">activity</span><span class="o">=</span><span class="s2">&quot;Moving to Base&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmd_move</span><span class="p">(</span><span class="n">route</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Vehicle.step"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

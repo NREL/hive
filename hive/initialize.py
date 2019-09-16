@@ -102,12 +102,6 @@ def initialize_fleet(vehicle_types,
 
             id += 1
 
-            #Initialize vehicle location to a random base
-            base = random.choice(bases)
-
-            veh.latlon = (base.LAT, base.LON)
-            veh.base = base
-
             avg_kwh__mi = np.average(scaled_whmi_lookup['whmi']) / 1000
 
             veh_fleet.append(veh)
@@ -126,7 +120,12 @@ def initialize_fleet(vehicle_types,
     fleet_state = np.array(fleet_state_constructor)
 
     for veh in veh_fleet:
+        #Initialize vehicle location to a random base
+        base = random.choice(bases)
         veh.fleet_state = fleet_state
-        veh.energy_kwh = np.random.uniform(0.05, 1.0) * veh.BATTERY_CAPACITY
+        veh.energy_kwh = np.random.uniform(0.2, 1.0) * veh.BATTERY_CAPACITY
+        veh.x = base.X
+        veh.y = base.Y
+        veh.base = base
 
     return veh_fleet, fleet_state

@@ -8,6 +8,7 @@ import datetime
 import numpy as np
 import utm
 import math
+import os
 
 from hive import helpers as hlp
 from hive import tripenergy as nrg
@@ -110,22 +111,6 @@ class Vehicle:
 
         self.ENV = env_params
 
-    @property
-    def latlon(self):
-        return utm.to_latlon(self._x, self._y, self._zone_number, self._zone_letter)
-
-    @latlon.setter
-    def latlon(self, val):
-        try:
-            lat, lon = val
-        except ValueError:
-            raise ValueError('Pass iterable with lat lon pair')
-        else:
-            x, y, zone_number, zone_letter = utm.from_latlon(lat, lon)
-            self._x = x
-            self._y = y
-            self._zone_number = zone_number
-            self._zone_letter = zone_letter
 
     @property
     def x(self):
@@ -220,6 +205,7 @@ class Vehicle:
         self.history.append({
                     'ID': self.ID,
                     'sim_time': self._clock.now,
+                    'time': self._clock.get_time(),
                     'position_x': self.x,
                     'position_y': self.y,
                     'step_distance_mi': self._step_distance,
@@ -235,9 +221,6 @@ class Vehicle:
     def _set_fleet_state(self, param, val):
         col = self.ENV['FLEET_STATE_IDX'][param]
         self.fleet_state[self.ID, col] = val
-
-    def _distance(self, x0, y0, x1, y1):
-        return math.hypot(x1-x0, y1-y0) * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
 
     def _update_charge(self, dist_mi):
         spd = self.ENV['DISPATCH_MPH']
@@ -311,38 +294,27 @@ class Vehicle:
         return route
 
 
-    def cmd_make_trip(self,
-                 origin_x,
-                 origin_y,
-                 destination_x,
-                 destination_y,
-                 passengers,
-                 trip_dist_mi=None,
-                 trip_time_s=None,
-                 route=None):
+    def cmd_make_trip(self, route, passengers):
 
         """
         Commands a vehicle to service a trip.
 
         Parameters
         ----------
-        origin_x: float
-            x coordinate (utm) of the trip origin location.
-        origin_y: float
-            y coordinate (utm) of the trip origin location.
-        destination_x: float
-            x coordinate (utm) of the trip destination location.
-        destination_y: float
-            y coordinate (utm) of the trip destination location.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         passengers: int
             the number of passengers associated with this trip.
-        trip_dist_mi: float
-            (optional) trip distance in miles.
-        trip_time_s: float
-            (optional) trip time in seconds.
-        route: LineString
-            (optional) (NotImplemented) line string representing route.
         """
+        if route is None:
+            return
+
+        start_x = route[0][0][0]
+        start_y = route[0][0][1]
+
+        assert (self.x, self.y) == (start_x, start_y), \
+            "Route must start at current vehicle location"
 
         self.active = True
         self.available = False
@@ -352,89 +324,35 @@ class Vehicle:
             self._station.avail_plugs += 1
             self._station = None
 
-        current_sim_time = self._clock.now
-
-        if trip_dist_mi is None:
-            trip_dist_mi = math.hypot(destination_x - origin_x, destination_y - origin_y)\
-                * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
-        if trip_time_s is None:
-            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
-
-        disp_dist_mi = math.hypot(origin_x - self.x, origin_y - self.y) \
-                * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
-        disp_time_s = (disp_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
-        disp_route = self._generate_route(
-                                    self.x,
-                                    self.y,
-                                    origin_x,
-                                    origin_y,
-                                    disp_dist_mi,
-                                    disp_time_s,
-                                    activity="Dispatch to Request")
-
-        if route is not None:
-            #TODO: Add distance to route.
-            raise NotImplementedError("Routing not implemented yet.")
-            trip_route = [(p, "Serving Trip") for p in route]
-        else:
-            trip_route = self._generate_route(
-                                        origin_x,
-                                        origin_y,
-                                        destination_x,
-                                        destination_y,
-                                        trip_dist_mi,
-                                        trip_time_s,
-                                        activity="Serving Trip")
-
-        del disp_route[-1]
-        self._route = disp_route + trip_route
+        self._route = route
         self._route_iter = iter(self._route)
         next(self._route_iter)
 
-    def cmd_travel_to(self,
-                  destination_x,
-                  destination_y,
-                  trip_dist_mi=None,
-                  trip_time_s=None,
-                  activity=None):
+    def cmd_move(self, route):
 
         """
         Commands a vehicle to relocate to a new location.
 
         Parameters
         ----------
-        destination_x: float
-            x coordinate (utm) of the destination location.
-        destination_y: float
-            y coordinate (utm) of the destination location.
-        trip_dist_mi: float
-            (optional) trip distance in miles.
-        trip_time_s: float
-            (optional) trip time in seconds.
-        activity: str
-            (optional) string representing why the vehicle is moving.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         """
-        current_sim_time = self._clock.now
+        if route is None:
+            return
 
-        if trip_dist_mi is None:
-            trip_dist_mi = math.hypot(destination_x - self.x, destination_y - self.y) \
-                    * units.METERS_TO_MILES * self.ENV['RN_SCALING_FACTOR']
-        if trip_time_s is None:
-            trip_time_s = (trip_dist_mi / self.ENV['DISPATCH_MPH']) * units.HOURS_TO_SECONDS
+        start_x = route[0][0][0]
+        start_y = route[0][0][1]
 
-        self._route = self._generate_route(
-                                    self.x,
-                                    self.y,
-                                    destination_x,
-                                    destination_y,
-                                    trip_dist_mi,
-                                    trip_time_s,
-                                    activity=activity)
+        assert (self.x, self.y) == (start_x, start_y), \
+            "Route must start at current vehicle location"
 
+        self._route = route
         self._route_iter = iter(self._route)
         next(self._route_iter)
 
-    def cmd_charge(self, station):
+    def cmd_charge(self, station, route):
         """
         Commands the vehicle to charge at a station.
 
@@ -442,13 +360,16 @@ class Vehicle:
         ----------
         station: hive.stations.FuelStation
             station object for the vehicle to charge at.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         """
         self.available = False
         self._station = station
         self._station.avail_plugs -= 1
-        self.cmd_travel_to(station.X, station.Y, activity="Moving to Station")
+        self.cmd_move(route)
 
-    def cmd_return_to_base(self, base):
+    def cmd_return_to_base(self, base, route):
         """
         Commands the vehicle to return to a base.
 
@@ -456,13 +377,16 @@ class Vehicle:
         ----------
         base: hive.stations.FuelStation
             base object for the vehicle to return to and charge at.
+        route: list
+            list containing location, distnace and activity information representing
+            a route.
         """
         self.active = False
         self.available = True
         self._base = base
         self._station = base
         self._station.avail_plugs -= 1
-        self.cmd_travel_to(base.X, base.Y, activity="Moving to Base")
+        self.cmd_move(route)
 
 
     def step(self):
