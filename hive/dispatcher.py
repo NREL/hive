@@ -7,7 +7,6 @@ import datetime
 import requests
 import sys
 import os
-import utm
 import numpy as np
 
 from hive import tripenergy as nrg
@@ -170,6 +169,8 @@ class Dispatcher:
         available_col = self._ENV['FLEET_STATE_IDX']['available']
         available_mask = (fleet_state[:,available_col] == 1)
 
+        #TODO: Update this to include energy required to dispatch and get to
+        #      nearest charger.
         soc_col = self._ENV['FLEET_STATE_IDX']['soc']
         KWH__MI_col = self._ENV['FLEET_STATE_IDX']['KWH__MI']
         BATTERY_CAPACITY_KWH_col = self._ENV['FLEET_STATE_IDX']['BATTERY_CAPACITY_KWH']

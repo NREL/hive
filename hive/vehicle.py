@@ -6,7 +6,6 @@ import sys
 import csv
 import datetime
 import numpy as np
-import utm
 import math
 import os
 

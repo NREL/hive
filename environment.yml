@@ -10,5 +10,6 @@ dependencies:
   - pytz=2018.9
   - pip:
     - utm==0.5
+    - requests==2.21
     - haversine==2.0
     - PyYAML==5.1
