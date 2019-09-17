@@ -9,8 +9,6 @@ import random
 import numpy as np
 import pandas as pd
 import geopandas as gpd
-import osmnx as ox
-import utm
 from ast import literal_eval
 from time import time
 from datetime import datetime

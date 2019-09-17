@@ -6,7 +6,6 @@ from hive.constraints import STATION_PARAMS
 from hive.utils import assert_constraint
 from hive import units
 
-import utm
 import sys
 
 
