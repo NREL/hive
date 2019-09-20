@@ -66,8 +66,14 @@ class Dispatcher:
 
         self._ENV = env_params
 
+        self._charge_matrix = np.zeros((4,3))
+        self._calc_charge_matrix()
 
-    def _log(self):
+    def _get_fleet_state_col(self, param):
+        col = self._ENV['FLEET_STATE_IDX'][param]
+        return self._fleet_state[:, col]
+
+    def log(self):
         """
         Function stores the partial state of the object at each time step.
         """
@@ -75,13 +81,55 @@ class Dispatcher:
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         active_vehicles = self._fleet_state[:, active_col].sum()
 
+        self._calc_charge_matrix()
+
         self.history.append({
                         'sim_time': self._clock.now,
                         'time': self._clock.get_time(),
                         'active_vehicles': active_vehicles,
                         'dropped_requests': self._dropped_requests,
                         'total_requests': self._total_requests,
+                        'cm_in_service_high_range': self._charge_matrix[0,0],
+                        'cm_in_service_med_range': self._charge_matrix[0,1],
+                        'cm_in_service_low_range': self._charge_matrix[0,2],
+                        'cm_fast_charge_high_range': self._charge_matrix[1,0],
+                        'cm_fast_charge_med_range': self._charge_matrix[1,1],
+                        'cm_fast_charge_low_range': self._charge_matrix[1,2],
+                        'cm_slow_charge_high_range': self._charge_matrix[2,0],
+                        'cm_slow_charge_med_range': self._charge_matrix[2,1],
+                        'cm_slow_charge_low_range': self._charge_matrix[2,2],
+                        'cm_out_service_high_range': self._charge_matrix[3,0],
+                        'cm_out_service_med_range': self._charge_matrix[3,1],
+                        'cm_out_service_low_range': self._charge_matrix[3,2],
                         })
+
+    def _calc_charge_matrix(self):
+        soc = self._get_fleet_state_col('soc')
+        battery_capacity_kwh = self._get_fleet_state_col('BATTERY_CAPACITY_KWH')
+        energy_kwh = soc * battery_capacity_kwh
+        kwh__mi = self._get_fleet_state_col('KWH__MI')
+
+        range_mi = energy_kwh / kwh__mi
+
+        active = self._get_fleet_state_col('active')
+        charging = self._get_fleet_state_col('charging')
+        reserve = self._get_fleet_state_col('reserve')
+
+        self._charge_matrix[0,0] = np.sum((range_mi >= 150) & (active == 1) & (charging == 0))
+        self._charge_matrix[0,1] = np.sum((range_mi < 150) & (range_mi > 50) & (active == 1) & (charging == 0))
+        self._charge_matrix[0,2] = np.sum((range_mi <= 50) & (active == 1) & (charging == 0))
+
+        self._charge_matrix[1,0] = np.sum((range_mi >= 150) & (charging >= 50))
+        self._charge_matrix[1,1] = np.sum((range_mi < 150) & (range_mi > 50) & (charging >= 50))
+        self._charge_matrix[1,2] = np.sum((range_mi <= 50) & (charging >= 50))
+
+        self._charge_matrix[2,0] = np.sum((range_mi >= 150) & (charging > 0) & (charging < 50))
+        self._charge_matrix[2,1] = np.sum((range_mi < 150) & (range_mi > 50) & (charging > 0) & (charging < 50))
+        self._charge_matrix[2,2] = np.sum((range_mi <= 50) & (charging > 0) & (charging < 50))
+
+        self._charge_matrix[3,0] = np.sum((range_mi >= 150) & (reserve == 1))
+        self._charge_matrix[3,1] = np.sum((range_mi < 150) & (range_mi > 50) & (reserve == 1))
+        self._charge_matrix[3,2] = np.sum((range_mi <= 50) & (reserve == 1))
 
     def _find_closest_plug(self, vehicle, type='station'):
         """
@@ -278,4 +326,3 @@ class Dispatcher:
         self._charge_vehicles()
         self._dispatch_vehicles(requests)
         self._check_idle_vehicles()
-        self._log()

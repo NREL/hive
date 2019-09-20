@@ -84,6 +84,10 @@ class Vehicle:
         self.MAX_PASSENGERS = max_passengers
 
         self.WH_PER_MILE_LOOKUP = whmi_lookup
+
+        #TODO: Replace this with KWH__MI in fleet state
+        self.AVG_WH_PER_MILE = np.mean(whmi_lookup['whmi'])
+
         self.CHARGE_TEMPLATE = charge_template
 
         # Public variables
@@ -151,8 +155,7 @@ class Vehicle:
 
     @property
     def soc(self):
-        col = self.ENV['FLEET_STATE_IDX']['soc']
-        return self.fleet_state[self.ID, col]
+        return self._get_fleet_state('soc')
 
     @soc.setter
     def soc(self, val):
@@ -170,8 +173,7 @@ class Vehicle:
 
     @property
     def idle_min(self):
-        col = self.ENV['FLEET_STATE_IDX']['idle_min']
-        return self.fleet_state[self.ID, col]
+        return self._get_fleet_state('idle_min')
 
     @available.setter
     def idle_min(self, val):
@@ -179,12 +181,43 @@ class Vehicle:
 
     @property
     def avail_seats(self):
-        col = self.ENV['FLEET_STATE_IDX']['avail_seats']
-        return self.fleet_state[self.ID, col]
+        return self._get_fleet_state('avail_seats')
 
     @avail_seats.setter
     def avail_seats(self, val):
         self._set_fleet_state('avail_seats', int(val))
+
+    @property
+    def range_remaining(self):
+        range_miles = self.energy_kwh / self._get_fleet_state('KWH__MI')
+        return range_miles
+
+    @range_remaining.setter
+    def range_remaining(self, val):
+        raise NotImplementedError('Please do not set range_remaining directly. Use energy_kwh.')
+
+    @property
+    def charging(self):
+        """
+        This variable represents if a vehicle is charging. If the value is 0,
+        the vehicle is not charging. If the value is greater than 0, the vehicle
+        is charging with a power equal to the value of the charging variable.
+        """
+        return self._get_fleet_state('charging')
+
+    @charging.setter
+    def charging(self, val):
+        self._set_fleet_state('charging', val)
+
+    @property
+    def reserve(self):
+        col = self.ENV['FLEET_STATE_IDX']['reserve']
+        return bool(self.fleet_state[self.ID, col])
+
+    @reserve.setter
+    def reserve(self, val):
+        assert type(val) is bool, "This variable must be boolean"
+        self._set_fleet_state('reserve', int(val))
 
     def __repr__(self):
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
@@ -200,7 +233,6 @@ class Vehicle:
         else:
             base = self._base.ID
 
-
         self.history.append({
                     'ID': self.ID,
                     'sim_time': self._clock.now,
@@ -215,7 +247,14 @@ class Vehicle:
                     'station': station,
                     'base': base,
                     'passengers': self.MAX_PASSENGERS - self.avail_seats,
+                    'range_remaining': self.range_remaining,
+                    'charging': self.charging,
+                    'reserve': self.reserve,
                     })
+
+    def _get_fleet_state(self, param):
+        col = self.ENV['FLEET_STATE_IDX'][param]
+        return self.fleet_state[self.ID, col]
 
     def _set_fleet_state(self, param, val):
         col = self.ENV['FLEET_STATE_IDX'][param]
@@ -271,9 +310,11 @@ class Vehicle:
                     self.activity = "Idle"
                 else:
                     self.activity = "Reserve"
+                    self.reserve = True
                 self.available = True
                 self._station.avail_plugs += 1
                 self._station = None
+                self.charging = 0
 
 
 
@@ -317,11 +358,13 @@ class Vehicle:
 
         self.active = True
         self.available = False
+        self.reserve = False
         self.avail_seats -= passengers
         self._base = None
         if self._station is not None:
             self._station.avail_plugs += 1
             self._station = None
+            self.charging = 0
 
         self._route = route
         self._route_iter = iter(self._route)
@@ -366,6 +409,7 @@ class Vehicle:
         self.available = False
         self._station = station
         self._station.avail_plugs -= 1
+        self.charging = station.PLUG_POWER_KW
         self.cmd_move(route)
 
     def cmd_return_to_base(self, base, route):
@@ -380,11 +424,12 @@ class Vehicle:
             list containing location, distnace and activity information representing
             a route.
         """
-        self.active = False
         self.available = True
+        self.active = False
         self._base = base
         self._station = base
         self._station.avail_plugs -= 1
+        self.charging = base.PLUG_POWER_KW
         self.cmd_move(route)
 
 

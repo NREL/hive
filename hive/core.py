@@ -179,6 +179,8 @@ class SimulationEngine:
             for base in self._SIM_ENV['bases']:
                 base.step()
 
+            self._SIM_ENV['dispatcher'].log()
+
             next(self._SIM_ENV['sim_clock'])
 
         info("Done Simulating")

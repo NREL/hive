@@ -113,9 +113,12 @@ def initialize_fleet(vehicle_types,
                                             1,
                                             0,
                                             0,
+                                            veh.MAX_PASSENGERS,
+                                            0,
+                                            0,
                                             avg_kwh__mi,
                                             veh.BATTERY_CAPACITY,
-                                            veh.MAX_PASSENGERS))
+                                            ))
 
     fleet_state = np.array(fleet_state_constructor)
 
