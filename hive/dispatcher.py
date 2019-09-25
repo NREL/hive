@@ -63,6 +63,7 @@ class Dispatcher:
         self.history = []
         self._dropped_requests = 0
         self._total_requests = 0
+        self._wait_time_min = 0
 
         self._ENV = env_params
 
@@ -89,6 +90,7 @@ class Dispatcher:
                         'active_vehicles': active_vehicles,
                         'dropped_requests': self._dropped_requests,
                         'total_requests': self._total_requests,
+                        '_wait_time_min': self._wait_time_min,
                         'cm_in_service_high_range': self._charge_matrix[0,0],
                         'cm_in_service_med_range': self._charge_matrix[0,1],
                         'cm_in_service_low_range': self._charge_matrix[0,2],
@@ -245,6 +247,7 @@ class Dispatcher:
         """
         self._dropped_requests = 0
         self._total_requests = len(requests)
+        self._wait_time_min = 0
         for request in requests.itertuples():
             best_vehicle = self._get_n_best_vehicles(request, n=1)
             if len(best_vehicle) < 1:
@@ -252,16 +255,19 @@ class Dispatcher:
             else:
                 vehid = best_vehicle[0]
                 veh = self._fleet[vehid]
-                disp_route = self._route_engine.route(
+                disp_route_summary = self._route_engine.route(
                                         veh.x,
                                         veh.y,
                                         request.pickup_lat,
                                         request.pickup_lon,
                                         activity = "Dispatch to Request")
+                disp_route = disp_route_summary['route']
+                self._wait_time_min += disp_route_summary['trip_time_s'] * units.SECONDS_TO_MINUTES
+
                 if hasattr(request, 'route'):
                     trip_route = request.route
                 else:
-                    trip_route = self._route_engine.route(
+                    trip_route_summary = self._route_engine.route(
                                             request.pickup_lat,
                                             request.pickup_lon,
                                             request.dropoff_lat,
@@ -270,6 +276,7 @@ class Dispatcher:
                                             trip_dist_mi = request.distance_miles,
                                             trip_time_s = request.seconds,
                                             )
+                    trip_route = trip_route_summary['route']
 
                 del disp_route[-1]
                 route = disp_route + trip_route
@@ -294,7 +301,8 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
-            route = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            route_summary = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            route = route_summary['route']
             vehicle.cmd_charge(station, route)
 
     def _check_idle_vehicles(self):
@@ -310,7 +318,8 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            route = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            route_summary = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            route = route_summary['route']
             vehicle.cmd_return_to_base(base, route)
 
     def process_requests(self, requests):
