@@ -44,6 +44,7 @@
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">charging</span> <span class="k">as</span> <span class="n">chrg</span>
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">router</span>
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">reporting</span>
+<span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">units</span>
 <span class="kn">from</span> <span class="nn">hive.utils</span> <span class="k">import</span> <span class="n">Clock</span><span class="p">,</span> <span class="n">assert_constraint</span><span class="p">,</span> <span class="n">build_output_dir</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">progress_bar</span>
 <span class="kn">from</span> <span class="nn">hive.initialize</span> <span class="k">import</span> <span class="n">initialize_stations</span><span class="p">,</span> <span class="n">initialize_fleet</span>
 <span class="kn">from</span> <span class="nn">hive.vehicle</span> <span class="k">import</span> <span class="n">Vehicle</span>
@@ -61,10 +62,17 @@
 <span class="sd">        Use hive.helpers.load_scenario to generate this from scenario.yaml file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">out_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">dispatcher</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_SIM_ENV</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">input_data</span> <span class="o">=</span> <span class="n">input_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">out_path</span>
+
+        <span class="k">if</span> <span class="n">dispatcher</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span> <span class="o">=</span> <span class="n">dispatcher</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span> <span class="o">=</span> <span class="n">Dispatcher</span><span class="p">()</span>
+
 
 
     <span class="k">def</span> <span class="nf">_build_simulation_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -78,13 +86,16 @@
         <span class="c1">#Filter requests where distance &lt; min_miles</span>
         <span class="n">reqs_df</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">filter_short_distance_trips</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">,</span> <span class="n">min_miles</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
         <span class="n">info</span><span class="p">(</span><span class="s2">&quot;filtered requests violating min distance req, </span><span class="si">{}</span><span class="s2"> remain&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">)))</span>
-        <span class="c1">#</span>
+
         <span class="c1">#Filter requests where total time &lt; min_time_s</span>
         <span class="n">reqs_df</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">filter_short_time_trips</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">,</span> <span class="n">min_time_s</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">info</span><span class="p">(</span><span class="s2">&quot;filtered requests violating min time req, </span><span class="si">{}</span><span class="s2"> remain&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">)))</span>
-        <span class="c1">#</span>
 
         <span class="n">SIM_ENV</span><span class="p">[</span><span class="s1">&#39;requests&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reqs_df</span>
+
+        <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating demand..&quot;</span><span class="p">)</span>
+        <span class="n">demand</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calculate_demand</span><span class="p">(</span><span class="n">reqs_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;SIMULATION_PERIOD_SECONDS&#39;</span><span class="p">])</span>
+        <span class="n">SIM_ENV</span><span class="p">[</span><span class="s1">&#39;demand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">demand</span>
 
         <span class="n">sim_start_time</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">pickup_time</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
         <span class="n">sim_end_time</span> <span class="o">=</span> <span class="n">reqs_df</span><span class="o">.</span><span class="n">dropoff_time</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
@@ -160,21 +171,20 @@
                                             <span class="p">)</span>
 
         <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing dispatcher..&quot;</span><span class="p">)</span>
-        <span class="n">dispatcher</span> <span class="o">=</span> <span class="n">Dispatcher</span><span class="p">(</span><span class="n">fleet</span> <span class="o">=</span> <span class="n">fleet</span><span class="p">,</span>
-                                <span class="n">fleet_state</span> <span class="o">=</span> <span class="n">fleet_state</span><span class="p">,</span>
-                                <span class="n">stations</span> <span class="o">=</span> <span class="n">stations</span><span class="p">,</span>
-                                <span class="n">bases</span> <span class="o">=</span> <span class="n">bases</span><span class="p">,</span>
-                                <span class="n">env_params</span> <span class="o">=</span> <span class="n">env_params</span><span class="p">,</span>
-                                <span class="n">route_engine</span> <span class="o">=</span> <span class="n">route_engine</span><span class="p">,</span>
-                                <span class="n">clock</span> <span class="o">=</span> <span class="n">sim_clock</span><span class="p">)</span>
-        <span class="n">SIM_ENV</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dispatcher</span>
-
-
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">spin_up</span><span class="p">(</span>
+                            <span class="n">fleet</span> <span class="o">=</span> <span class="n">fleet</span><span class="p">,</span>
+                            <span class="n">fleet_state</span> <span class="o">=</span> <span class="n">fleet_state</span><span class="p">,</span>
+                            <span class="n">stations</span> <span class="o">=</span> <span class="n">stations</span><span class="p">,</span>
+                            <span class="n">bases</span> <span class="o">=</span> <span class="n">bases</span><span class="p">,</span>
+                            <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span><span class="p">,</span>
+                            <span class="n">env_params</span> <span class="o">=</span> <span class="n">env_params</span><span class="p">,</span>
+                            <span class="n">route_engine</span> <span class="o">=</span> <span class="n">route_engine</span><span class="p">,</span>
+                            <span class="n">clock</span> <span class="o">=</span> <span class="n">sim_clock</span><span class="p">)</span>
+        <span class="n">SIM_ENV</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_SIM_ENV</span> <span class="o">=</span> <span class="n">SIM_ENV</span>
 
-<div class="viewcode-block" id="SimulationEngine.run_simulation"><a class="viewcode-back" href="../../reference/core.html#hive.core.SimulationEngine.run_simulation">[docs]</a>    <span class="k">def</span> <span class="nf">run_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_name</span><span class="p">,</span> <span class="n">out_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="SimulationEngine.run_simulation"><a class="viewcode-back" href="../../reference/core.html#hive.core.SimulationEngine.run_simulation">[docs]</a>    <span class="k">def</span> <span class="nf">run_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs a single hive simulation.</span>
 
@@ -186,7 +196,7 @@
 <span class="sd">            Where this function will write output logs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Building scenario output directory..&quot;</span><span class="p">)</span>
-        <span class="n">output_file_paths</span> <span class="o">=</span> <span class="n">build_output_dir</span><span class="p">(</span><span class="n">sim_name</span><span class="p">,</span> <span class="n">out_path</span><span class="p">)</span>
+        <span class="n">output_file_paths</span> <span class="o">=</span> <span class="n">build_output_dir</span><span class="p">(</span><span class="n">sim_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="p">)</span>
 
         <span class="n">vehicle_summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_file_paths</span><span class="p">[</span><span class="s1">&#39;summary_path&#39;</span><span class="p">],</span> <span class="s1">&#39;vehicle_summary.csv&#39;</span><span class="p">)</span>
         <span class="n">fleet_summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_file_paths</span><span class="p">[</span><span class="s1">&#39;summary_path&#39;</span><span class="p">],</span> <span class="s1">&#39;fleet_summary.txt&#39;</span><span class="p">)</span>
@@ -215,6 +225,8 @@
 
             <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SIM_ENV</span><span class="p">[</span><span class="s1">&#39;bases&#39;</span><span class="p">]:</span>
                 <span class="n">base</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_SIM_ENV</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
 
             <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SIM_ENV</span><span class="p">[</span><span class="s1">&#39;sim_clock&#39;</span><span class="p">])</span>
 

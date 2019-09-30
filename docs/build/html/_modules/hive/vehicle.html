@@ -43,7 +43,6 @@
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">utm</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
@@ -122,6 +121,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">MAX_PASSENGERS</span> <span class="o">=</span> <span class="n">max_passengers</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">WH_PER_MILE_LOOKUP</span> <span class="o">=</span> <span class="n">whmi_lookup</span>
+
+        <span class="c1">#TODO: Replace this with KWH__MI in fleet state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AVG_WH_PER_MILE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">whmi_lookup</span><span class="p">[</span><span class="s1">&#39;whmi&#39;</span><span class="p">])</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">CHARGE_TEMPLATE</span> <span class="o">=</span> <span class="n">charge_template</span>
 
         <span class="c1"># Public variables</span>
@@ -189,8 +192,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">soc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;soc&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state</span><span class="p">(</span><span class="s1">&#39;soc&#39;</span><span class="p">)</span>
 
     <span class="nd">@soc</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">soc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
@@ -208,8 +210,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">idle_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;idle_min&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state</span><span class="p">(</span><span class="s1">&#39;idle_min&#39;</span><span class="p">)</span>
 
     <span class="nd">@available</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">idle_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
@@ -217,12 +218,43 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">avail_seats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;avail_seats&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state</span><span class="p">(</span><span class="s1">&#39;avail_seats&#39;</span><span class="p">)</span>
 
     <span class="nd">@avail_seats</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">avail_seats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_fleet_state</span><span class="p">(</span><span class="s1">&#39;avail_seats&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">range_remaining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">range_miles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_kwh</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state</span><span class="p">(</span><span class="s1">&#39;KWH__MI&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">range_miles</span>
+
+    <span class="nd">@range_remaining</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">range_remaining</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Please do not set range_remaining directly. Use energy_kwh.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">charging</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This variable represents if a vehicle is charging. If the value is 0,</span>
+<span class="sd">        the vehicle is not charging. If the value is greater than 0, the vehicle</span>
+<span class="sd">        is charging with a power equal to the value of the charging variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state</span><span class="p">(</span><span class="s1">&#39;charging&#39;</span><span class="p">)</span>
+
+    <span class="nd">@charging</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">charging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_fleet_state</span><span class="p">(</span><span class="s1">&#39;charging&#39;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;reserve&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fleet_state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">col</span><span class="p">])</span>
+
+    <span class="nd">@reserve</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">,</span> <span class="s2">&quot;This variable must be boolean&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_fleet_state</span><span class="p">(</span><span class="s1">&#39;reserve&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Vehicle(id: </span><span class="si">{self.ID}</span><span class="s2">, name: </span><span class="si">{self.NAME}</span><span class="s2">)&quot;</span><span class="p">)</span>
@@ -238,22 +270,29 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base</span><span class="o">.</span><span class="n">ID</span>
 
-
         <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                     <span class="s1">&#39;ID&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span>
                     <span class="s1">&#39;sim_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
                     <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">get_time</span><span class="p">(),</span>
-                    <span class="s1">&#39;position_x&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-                    <span class="s1">&#39;position_y&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                    <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                    <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
                     <span class="s1">&#39;step_distance_mi&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_distance</span><span class="p">,</span>
                     <span class="s1">&#39;active&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
                     <span class="s1">&#39;available&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">available</span><span class="p">,</span>
+                    <span class="s1">&#39;reserve&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserve</span><span class="p">,</span>
                     <span class="s1">&#39;soc&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span>
+                    <span class="s1">&#39;range_remaining&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_remaining</span><span class="p">,</span>
                     <span class="s1">&#39;activity&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity</span><span class="p">,</span>
                     <span class="s1">&#39;station&#39;</span><span class="p">:</span> <span class="n">station</span><span class="p">,</span>
+                    <span class="s1">&#39;station_power&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">charging</span><span class="p">,</span>
                     <span class="s1">&#39;base&#39;</span><span class="p">:</span> <span class="n">base</span><span class="p">,</span>
                     <span class="s1">&#39;passengers&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_PASSENGERS</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">avail_seats</span><span class="p">,</span>
+                    <span class="s1">&#39;reserve&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserve</span><span class="p">,</span>
                     <span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">_get_fleet_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_state</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_set_fleet_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
@@ -265,6 +304,11 @@
         <span class="n">kwh__mi</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">spd</span><span class="p">,</span> <span class="n">lookup</span><span class="p">[</span><span class="s1">&#39;avg_spd_mph&#39;</span><span class="p">],</span> <span class="n">lookup</span><span class="p">[</span><span class="s1">&#39;whmi&#39;</span><span class="p">]))</span><span class="o">/</span><span class="mf">1000.0</span>
         <span class="n">energy_used_kwh</span> <span class="o">=</span> <span class="n">dist_mi</span> <span class="o">*</span> <span class="n">kwh__mi</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">energy_kwh</span> <span class="o">-=</span> <span class="n">energy_used_kwh</span>
+
+    <span class="k">def</span> <span class="nf">_leave_station</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charging</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">_update_idle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">==</span> <span class="s1">&#39;Idle&#39;</span><span class="p">:</span>
@@ -309,9 +353,9 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Idle&quot;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Reserve&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reserve</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_leave_station</span><span class="p">()</span>
 
 
 
@@ -355,11 +399,11 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reserve</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">avail_seats</span> <span class="o">-=</span> <span class="n">passengers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_leave_station</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_route</span> <span class="o">=</span> <span class="n">route</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">)</span>
@@ -398,13 +442,27 @@
 <span class="sd">        station: hive.stations.FuelStation</span>
 <span class="sd">            station object for the vehicle to charge at.</span>
 <span class="sd">        route: list</span>
-<span class="sd">            list containing location, distnace and activity information representing</span>
+<span class="sd">            list containing location, distance and activity information representing</span>
 <span class="sd">            a route.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="n">station</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charging</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">PLUG_POWER_KW</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmd_move</span><span class="p">(</span><span class="n">route</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.cmd_unplug"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_unplug">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_unplug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Commands to vehicle to unplug if currently charging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_leave_station</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Reserve&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Idle&quot;</span></div>
+
 
 <div class="viewcode-block" id="Vehicle.cmd_return_to_base"><a class="viewcode-back" href="../../reference/vehicle.html#hive.vehicle.Vehicle.cmd_return_to_base">[docs]</a>    <span class="k">def</span> <span class="nf">cmd_return_to_base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">route</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -415,14 +473,15 @@
 <span class="sd">        base: hive.stations.FuelStation</span>
 <span class="sd">            base object for the vehicle to return to and charge at.</span>
 <span class="sd">        route: list</span>
-<span class="sd">            list containing location, distnace and activity information representing</span>
+<span class="sd">            list containing location, distance and activity information representing</span>
 <span class="sd">            a route.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base</span> <span class="o">=</span> <span class="n">base</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span> <span class="o">=</span> <span class="n">base</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_station</span><span class="o">.</span><span class="n">avail_plugs</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charging</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">PLUG_POWER_KW</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmd_move</span><span class="p">(</span><span class="n">route</span><span class="p">)</span></div>
 
 

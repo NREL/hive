@@ -44,7 +44,6 @@
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">utm</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">tripenergy</span> <span class="k">as</span> <span class="n">nrg</span>
@@ -75,10 +74,37 @@
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span>
+                <span class="n">fleet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">fleet_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">stations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">bases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">demand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">env_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">route_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">clock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">fleet</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spin_up</span><span class="p">(</span>
                 <span class="n">fleet</span><span class="p">,</span>
                 <span class="n">fleet_state</span><span class="p">,</span>
                 <span class="n">stations</span><span class="p">,</span>
                 <span class="n">bases</span><span class="p">,</span>
+                <span class="n">demand</span><span class="p">,</span>
+                <span class="n">env_params</span><span class="p">,</span>
+                <span class="n">route_engine</span><span class="p">,</span>
+                <span class="n">clock</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">spin_up</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">fleet</span><span class="p">,</span>
+                <span class="n">fleet_state</span><span class="p">,</span>
+                <span class="n">stations</span><span class="p">,</span>
+                <span class="n">bases</span><span class="p">,</span>
+                <span class="n">demand</span><span class="p">,</span>
                 <span class="n">env_params</span><span class="p">,</span>
                 <span class="n">route_engine</span><span class="p">,</span>
                 <span class="n">clock</span><span class="p">,</span>
@@ -91,6 +117,8 @@
         <span class="k">for</span> <span class="n">veh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">:</span>
             <span class="n">veh</span><span class="o">.</span><span class="n">fleet_state</span> <span class="o">=</span> <span class="n">fleet_state</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_demand</span> <span class="o">=</span> <span class="n">demand</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span> <span class="o">=</span> <span class="n">clock</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_stations</span> <span class="o">=</span> <span class="n">stations</span>
@@ -101,11 +129,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dropped_requests</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_requests</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wait_time_min</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span> <span class="o">=</span> <span class="n">env_params</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_charge_matrix</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_fleet_state_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet_state</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Dispatcher.log"><a class="viewcode-back" href="../../reference/dispatcher.html#hive.dispatcher.Dispatcher.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function stores the partial state of the object at each time step.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -113,13 +148,56 @@
         <span class="n">active_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;active&#39;</span><span class="p">]</span>
         <span class="n">active_vehicles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet_state</span><span class="p">[:,</span> <span class="n">active_col</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_charge_matrix</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                         <span class="s1">&#39;sim_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
                         <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clock</span><span class="o">.</span><span class="n">get_time</span><span class="p">(),</span>
                         <span class="s1">&#39;active_vehicles&#39;</span><span class="p">:</span> <span class="n">active_vehicles</span><span class="p">,</span>
                         <span class="s1">&#39;dropped_requests&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dropped_requests</span><span class="p">,</span>
                         <span class="s1">&#39;total_requests&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_requests</span><span class="p">,</span>
-                        <span class="p">})</span>
+                        <span class="s1">&#39;_wait_time_min&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wait_time_min</span><span class="p">,</span>
+                        <span class="s1">&#39;cm_in_service_high_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_in_service_med_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_in_service_low_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_fast_charge_high_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_fast_charge_med_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_fast_charge_low_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_slow_charge_high_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_slow_charge_med_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_slow_charge_low_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_out_service_high_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_out_service_med_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="s1">&#39;cm_out_service_low_range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="p">})</span></div>
+
+    <span class="k">def</span> <span class="nf">_calc_charge_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state_col</span><span class="p">(</span><span class="s1">&#39;soc&#39;</span><span class="p">)</span>
+        <span class="n">battery_capacity_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state_col</span><span class="p">(</span><span class="s1">&#39;BATTERY_CAPACITY_KWH&#39;</span><span class="p">)</span>
+        <span class="n">energy_kwh</span> <span class="o">=</span> <span class="n">soc</span> <span class="o">*</span> <span class="n">battery_capacity_kwh</span>
+        <span class="n">kwh__mi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state_col</span><span class="p">(</span><span class="s1">&#39;KWH__MI&#39;</span><span class="p">)</span>
+
+        <span class="n">range_mi</span> <span class="o">=</span> <span class="n">energy_kwh</span> <span class="o">/</span> <span class="n">kwh__mi</span>
+
+        <span class="n">active</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state_col</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">)</span>
+        <span class="n">charging</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state_col</span><span class="p">(</span><span class="s1">&#39;charging&#39;</span><span class="p">)</span>
+        <span class="n">reserve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fleet_state_col</span><span class="p">(</span><span class="s1">&#39;reserve&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&gt;=</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">active</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">range_mi</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">active</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">active</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&gt;=</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&gt;=</span> <span class="mi">50</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">range_mi</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&gt;=</span> <span class="mi">50</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&gt;=</span> <span class="mi">50</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&gt;=</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">range_mi</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">charging</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&gt;=</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">reserve</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;</span> <span class="mi">150</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">range_mi</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">reserve</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">range_mi</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">reserve</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_find_closest_plug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;station&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -207,6 +285,8 @@
         <span class="n">available_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;available&#39;</span><span class="p">]</span>
         <span class="n">available_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">fleet_state</span><span class="p">[:,</span><span class="n">available_col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
 
+        <span class="c1">#TODO: Update this to include energy required to dispatch and get to</span>
+        <span class="c1">#      nearest charger.</span>
         <span class="n">soc_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;soc&#39;</span><span class="p">]</span>
         <span class="n">KWH__MI_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;KWH__MI&#39;</span><span class="p">]</span>
         <span class="n">BATTERY_CAPACITY_KWH_col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ENV</span><span class="p">[</span><span class="s1">&#39;FLEET_STATE_IDX&#39;</span><span class="p">][</span><span class="s1">&#39;BATTERY_CAPACITY_KWH&#39;</span><span class="p">]</span>
@@ -233,6 +313,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dropped_requests</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_requests</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wait_time_min</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">requests</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
             <span class="n">best_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_n_best_vehicles</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_vehicle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -240,16 +321,19 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">vehid</span> <span class="o">=</span> <span class="n">best_vehicle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">veh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">[</span><span class="n">vehid</span><span class="p">]</span>
-                <span class="n">disp_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span>
+                <span class="n">disp_route_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span>
                                         <span class="n">veh</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
                                         <span class="n">veh</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
                                         <span class="n">request</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span>
                                         <span class="n">request</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">,</span>
                                         <span class="n">activity</span> <span class="o">=</span> <span class="s2">&quot;Dispatch to Request&quot;</span><span class="p">)</span>
+                <span class="n">disp_route</span> <span class="o">=</span> <span class="n">disp_route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_wait_time_min</span> <span class="o">+=</span> <span class="n">disp_route_summary</span><span class="p">[</span><span class="s1">&#39;trip_time_s&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">SECONDS_TO_MINUTES</span>
+
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;route&#39;</span><span class="p">):</span>
                     <span class="n">trip_route</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">route</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">trip_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span>
+                    <span class="n">trip_route_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span>
                                             <span class="n">request</span><span class="o">.</span><span class="n">pickup_lat</span><span class="p">,</span>
                                             <span class="n">request</span><span class="o">.</span><span class="n">pickup_lon</span><span class="p">,</span>
                                             <span class="n">request</span><span class="o">.</span><span class="n">dropoff_lat</span><span class="p">,</span>
@@ -258,6 +342,7 @@
                                             <span class="n">trip_dist_mi</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">distance_miles</span><span class="p">,</span>
                                             <span class="n">trip_time_s</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
                                             <span class="p">)</span>
+                    <span class="n">trip_route</span> <span class="o">=</span> <span class="n">trip_route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span>
 
                 <span class="k">del</span> <span class="n">disp_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">route</span> <span class="o">=</span> <span class="n">disp_route</span> <span class="o">+</span> <span class="n">trip_route</span>
@@ -282,7 +367,8 @@
         <span class="k">for</span> <span class="n">veh_id</span> <span class="ow">in</span> <span class="n">veh_ids</span><span class="p">:</span>
             <span class="n">vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">[</span><span class="n">veh_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">station</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_closest_plug</span><span class="p">(</span><span class="n">vehicle</span><span class="p">)</span>
-            <span class="n">route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Moving to Station&#39;</span><span class="p">)</span>
+            <span class="n">route_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Moving to Station&#39;</span><span class="p">)</span>
+            <span class="n">route</span> <span class="o">=</span> <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span>
             <span class="n">vehicle</span><span class="o">.</span><span class="n">cmd_charge</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">route</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_idle_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -298,7 +384,8 @@
         <span class="k">for</span> <span class="n">veh_id</span> <span class="ow">in</span> <span class="n">veh_ids</span><span class="p">:</span>
             <span class="n">vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fleet</span><span class="p">[</span><span class="n">veh_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_closest_plug</span><span class="p">(</span><span class="n">vehicle</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
-            <span class="n">route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Moving to Base&#39;</span><span class="p">)</span>
+            <span class="n">route_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_engine</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">vehicle</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;Moving to Base&#39;</span><span class="p">)</span>
+            <span class="n">route</span> <span class="o">=</span> <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span>
             <span class="n">vehicle</span><span class="o">.</span><span class="n">cmd_return_to_base</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">route</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Dispatcher.process_requests"><a class="viewcode-back" href="../../reference/dispatcher.html#hive.dispatcher.Dispatcher.process_requests">[docs]</a>    <span class="k">def</span> <span class="nf">process_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="p">):</span>
@@ -313,8 +400,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_charge_vehicles</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dispatch_vehicles</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_idle_vehicles</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">()</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_idle_vehicles</span><span class="p">()</span></div></div>
 </pre></div>
 
           </div>
