@@ -8,6 +8,12 @@ from hive.core import SimulationEngine
 from hive.dispatcher import Dispatcher
 
 class SmartDispatcher(Dispatcher):
+    def _smart_idle(self):
+
+        # Implement logic to calculate appropriate idle time for each vehicle.
+
+        pass
+
     def _charge_vehicles(self):
         soc_col = self._ENV['FLEET_STATE_IDX']['soc']
         available_col = self._ENV['FLEET_STATE_IDX']['available']
@@ -40,6 +46,12 @@ class SmartDispatcher(Dispatcher):
     def _check_idle_vehicles(self):
         idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
         idle_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
+
+        # Implement custom idle logic. For example:
+        #
+        # idle_min_per_vehicle = self._smart_idle()
+        # idle_mask = self._fleet_state[:, idle_min_col] >= idle_min_per_vehicle
+
         veh_ids = np.argwhere(idle_mask)
 
         for veh_id in veh_ids:
@@ -48,6 +60,7 @@ class SmartDispatcher(Dispatcher):
             route_summary = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
             route = route_summary['route']
             vehicle.cmd_return_to_base(base, route)
+
 
 
 # Replace with your own scenario

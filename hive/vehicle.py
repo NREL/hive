@@ -417,9 +417,6 @@ class Vehicle:
     def cmd_unplug(self):
         """
         Commands to vehicle to unplug if currently charging.
-
-        Parameters
-        ----------
         """
         if self._station and not self._route:
             self._leave_station()
