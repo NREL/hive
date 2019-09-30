@@ -24,10 +24,17 @@ class SimulationEngine:
         Use hive.helpers.load_scenario to generate this from scenario.yaml file
     """
 
-    def __init__(self, input_data):
+    def __init__(self, input_data, out_path = '', dispatcher=None):
         self._SIM_ENV = None
 
         self.input_data = input_data
+        self.out_path = out_path
+
+        if dispatcher is not None:
+            self.dispatcher = dispatcher
+        else:
+            self.dispatcher = Dispatcher()
+
 
 
     def _build_simulation_env(self):
@@ -123,21 +130,19 @@ class SimulationEngine:
                                             )
 
         info("Initializing dispatcher..")
-        dispatcher = Dispatcher(fleet = fleet,
-                                fleet_state = fleet_state,
-                                stations = stations,
-                                bases = bases,
-                                env_params = env_params,
-                                route_engine = route_engine,
-                                clock = sim_clock)
-        SIM_ENV['dispatcher'] = dispatcher
-
-
-
+        self.dispatcher.spin_up(
+                            fleet = fleet,
+                            fleet_state = fleet_state,
+                            stations = stations,
+                            bases = bases,
+                            env_params = env_params,
+                            route_engine = route_engine,
+                            clock = sim_clock)
+        SIM_ENV['dispatcher'] = self.dispatcher
 
         self._SIM_ENV = SIM_ENV
 
-    def run_simulation(self, sim_name, out_path = ''):
+    def run_simulation(self, sim_name):
         """
         Runs a single hive simulation.
 
@@ -149,7 +154,7 @@ class SimulationEngine:
             Where this function will write output logs.
         """
         info("Building scenario output directory..")
-        output_file_paths = build_output_dir(sim_name, out_path)
+        output_file_paths = build_output_dir(sim_name, self.out_path)
 
         vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
         fleet_summary_file = os.path.join(output_file_paths['summary_path'], 'fleet_summary.txt')

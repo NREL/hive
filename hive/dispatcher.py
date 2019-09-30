@@ -37,6 +37,30 @@ class Dispatcher:
 
     def __init__(
                 self,
+                fleet=None,
+                fleet_state=None,
+                stations=None,
+                bases=None,
+                env_params=None,
+                route_engine=None,
+                clock=None,
+                ):
+
+        if fleet is None:
+            return
+
+        self.spin_up(
+                fleet,
+                fleet_state,
+                stations,
+                bases,
+                env_params,
+                route_engine,
+                clock,
+                )
+
+    def spin_up(
+                self,
                 fleet,
                 fleet_state,
                 stations,
