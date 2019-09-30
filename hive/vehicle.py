@@ -268,6 +268,11 @@ class Vehicle:
         energy_used_kwh = dist_mi * kwh__mi
         self.energy_kwh -= energy_used_kwh
 
+    def _leave_station(self):
+        self._station.avail_plugs += 1
+        self._station = None
+        self.charging = 0
+
     def _update_idle(self):
         if self.activity == 'Idle':
             self._idle_counter += 1
@@ -313,9 +318,7 @@ class Vehicle:
                     self.activity = "Reserve"
                     self.reserve = True
                 self.available = True
-                self._station.avail_plugs += 1
-                self._station = None
-                self.charging = 0
+                self._leave_station()
 
 
 
@@ -363,9 +366,7 @@ class Vehicle:
         self.avail_seats -= passengers
         self._base = None
         if self._station is not None:
-            self._station.avail_plugs += 1
-            self._station = None
-            self.charging = 0
+            self._leave_station()
 
         self._route = route
         self._route_iter = iter(self._route)
@@ -404,7 +405,7 @@ class Vehicle:
         station: hive.stations.FuelStation
             station object for the vehicle to charge at.
         route: list
-            list containing location, distnace and activity information representing
+            list containing location, distance and activity information representing
             a route.
         """
         self.available = False
@@ -412,6 +413,19 @@ class Vehicle:
         self._station.avail_plugs -= 1
         self.charging = station.PLUG_POWER_KW
         self.cmd_move(route)
+
+    def cmd_unplug(self):
+        """
+        Commands to vehicle to unplug if currently charging.
+        """
+        if self._station and not self._route:
+            self._leave_station()
+            self.available = True
+            if self._base:
+                self.activity = "Reserve"
+            else:
+                self.activity = "Idle"
+
 
     def cmd_return_to_base(self, base, route):
         """
@@ -422,7 +436,7 @@ class Vehicle:
         base: hive.stations.FuelStation
             base object for the vehicle to return to and charge at.
         route: list
-            list containing location, distnace and activity information representing
+            list containing location, distance and activity information representing
             a route.
         """
         self.available = True

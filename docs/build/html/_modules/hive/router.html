@@ -36,12 +36,12 @@
             
   <h1>Source code for hive.router</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">utm</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 
 <span class="kn">from</span> <span class="nn">hive</span> <span class="k">import</span> <span class="n">units</span>
 <span class="kn">from</span> <span class="nn">hive.helpers</span> <span class="k">import</span> <span class="n">estimate_vmt_latlon</span>
 
+<span class="c1">#TODO: Consolidate route engine into parent and children classes.</span>
 
 <div class="viewcode-block" id="OSRMRouteEngine"><a class="viewcode-back" href="../../reference/router.html#hive.router.OSRMRouteEngine">[docs]</a><span class="k">class</span> <span class="nc">OSRMRouteEngine</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -61,6 +61,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">server</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">TIMESTEP_S</span> <span class="o">=</span> <span class="n">timestep_s</span>
     <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">,</span> <span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">,</span> <span class="n">activity</span><span class="p">,</span> <span class="n">trip_dist_mi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trip_time_s</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">route_summary</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="n">addr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.server}</span><span class="s1">/route/v1/driving/</span><span class="si">{olon}</span><span class="s1">,</span><span class="si">{olat}</span><span class="s1">;</span><span class="si">{dlon}</span><span class="s1">,</span><span class="si">{dlat}</span><span class="s1">?overview=full&amp;geometries=geojson&amp;annotations=true&#39;</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span>
         <span class="n">raw_json</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
@@ -83,7 +85,11 @@
             <span class="n">route</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">loc</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">activity</span><span class="p">))</span>
             <span class="n">prev_index</span> <span class="o">=</span> <span class="n">index</span>
 
-        <span class="k">return</span> <span class="n">route</span></div>
+        <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;trip_time_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route_time</span>
+        <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;trip_dist_mi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route_dist</span>
+        <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route</span>
+
+        <span class="k">return</span> <span class="n">route_summary</span></div>
 
 <div class="viewcode-block" id="DefaultRouteEngine"><a class="viewcode-back" href="../../reference/router.html#hive.router.DefaultRouteEngine">[docs]</a><span class="k">class</span> <span class="nc">DefaultRouteEngine</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -106,6 +112,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">RN_SCALING_FACTOR</span> <span class="o">=</span> <span class="n">rn_scaling_factor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">DISPATCH_MPH</span> <span class="o">=</span> <span class="n">dispatch_mph</span>
     <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">,</span> <span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">,</span> <span class="n">activity</span><span class="p">,</span> <span class="n">trip_dist_mi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trip_time_s</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">route_summary</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">trip_dist_mi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">trip_dist_mi</span> <span class="o">=</span> <span class="n">estimate_vmt_latlon</span><span class="p">(</span><span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">,</span> <span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">RN_SCALING_FACTOR</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">trip_time_s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -113,8 +120,12 @@
 
         <span class="n">steps</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">trip_time_s</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">TIMESTEP_S</span><span class="p">)</span>
 
+        <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;trip_time_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trip_time_s</span>
+        <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;trip_dist_mi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trip_dist_mi</span> 
+
         <span class="k">if</span> <span class="n">steps</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[((</span><span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">),</span> <span class="n">trip_dist_mi</span><span class="p">,</span> <span class="n">activity</span><span class="p">),</span> <span class="p">((</span><span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">),</span> <span class="n">trip_dist_mi</span><span class="p">,</span> <span class="n">activity</span><span class="p">)]</span>
+            <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[((</span><span class="n">olat</span><span class="p">,</span> <span class="n">olon</span><span class="p">),</span> <span class="n">trip_dist_mi</span><span class="p">,</span> <span class="n">activity</span><span class="p">),</span> <span class="p">((</span><span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">),</span> <span class="n">trip_dist_mi</span><span class="p">,</span> <span class="n">activity</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">route_summary</span>
         <span class="n">step_distance_mi</span> <span class="o">=</span> <span class="n">trip_dist_mi</span><span class="o">/</span><span class="n">steps</span>
         <span class="n">route_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">route</span> <span class="o">=</span> <span class="p">[]</span>
@@ -124,7 +135,10 @@
             <span class="n">yt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">olon</span> <span class="o">+</span> <span class="n">t</span><span class="o">*</span><span class="n">dlon</span>
             <span class="n">point</span> <span class="o">=</span> <span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">)</span>
             <span class="n">route</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">point</span><span class="p">,</span> <span class="n">step_distance_mi</span><span class="p">,</span> <span class="n">activity</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">route</span></div>
+
+        <span class="n">route_summary</span><span class="p">[</span><span class="s1">&#39;route&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route</span>
+
+        <span class="k">return</span> <span class="n">route_summary</span></div>
 </pre></div>
 
           </div>

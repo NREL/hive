@@ -56,6 +56,14 @@
 </dd>
 </dl>
 <dl class="method">
+<dt id="hive.vehicle.Vehicle.charging">
+<em class="property">property </em><code class="sig-name descname">charging</code><a class="headerlink" href="#hive.vehicle.Vehicle.charging" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable represents if a vehicle is charging. If the value is 0,
+the vehicle is not charging. If the value is greater than 0, the vehicle
+is charging with a power equal to the value of the charging variable.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="hive.vehicle.Vehicle.cmd_charge">
 <code class="sig-name descname">cmd_charge</code><span class="sig-paren">(</span><em class="sig-param">station</em>, <em class="sig-param">route</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_charge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_charge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commands the vehicle to charge at a station.</p>
@@ -63,7 +71,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>station</strong> (<a class="reference internal" href="stations.html#hive.stations.FuelStation" title="hive.stations.FuelStation"><em>hive.stations.FuelStation</em></a>) – station object for the vehicle to charge at.</p></li>
-<li><p><strong>route</strong> (<em>list</em>) – list containing location, distnace and activity information representing
+<li><p><strong>route</strong> (<em>list</em>) – list containing location, distance and activity information representing
 a route.</p></li>
 </ul>
 </dd>
@@ -105,11 +113,17 @@ a route.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base</strong> (<a class="reference internal" href="stations.html#hive.stations.FuelStation" title="hive.stations.FuelStation"><em>hive.stations.FuelStation</em></a>) – base object for the vehicle to return to and charge at.</p></li>
-<li><p><strong>route</strong> (<em>list</em>) – list containing location, distnace and activity information representing
+<li><p><strong>route</strong> (<em>list</em>) – list containing location, distance and activity information representing
 a route.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.vehicle.Vehicle.cmd_unplug">
+<code class="sig-name descname">cmd_unplug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/vehicle.html#Vehicle.cmd_unplug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.vehicle.Vehicle.cmd_unplug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commands to vehicle to unplug if currently charging.</p>
 </dd></dl>
 
 <dl class="method">
