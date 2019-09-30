@@ -33,7 +33,9 @@ FLEET_STATE_IDX ={
     'available': 3,
     'soc': 4,
     'idle_min': 5,
-    'KWH__MI': 6,
-    'BATTERY_CAPACITY_KWH': 7,
-    'avail_seats': 8,
+    'avail_seats': 6,
+    'charging': 7,
+    'reserve': 8,
+    'KWH__MI': 9,
+    'BATTERY_CAPACITY_KWH': 10,
 }

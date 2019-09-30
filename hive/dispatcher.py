@@ -63,11 +63,18 @@ class Dispatcher:
         self.history = []
         self._dropped_requests = 0
         self._total_requests = 0
+        self._wait_time_min = 0
 
         self._ENV = env_params
 
+        self._charge_matrix = np.zeros((4,3))
+        self._calc_charge_matrix()
 
-    def _log(self):
+    def _get_fleet_state_col(self, param):
+        col = self._ENV['FLEET_STATE_IDX'][param]
+        return self._fleet_state[:, col]
+
+    def log(self):
         """
         Function stores the partial state of the object at each time step.
         """
@@ -75,13 +82,56 @@ class Dispatcher:
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         active_vehicles = self._fleet_state[:, active_col].sum()
 
+        self._calc_charge_matrix()
+
         self.history.append({
                         'sim_time': self._clock.now,
                         'time': self._clock.get_time(),
                         'active_vehicles': active_vehicles,
                         'dropped_requests': self._dropped_requests,
                         'total_requests': self._total_requests,
+                        '_wait_time_min': self._wait_time_min,
+                        'cm_in_service_high_range': self._charge_matrix[0,0],
+                        'cm_in_service_med_range': self._charge_matrix[0,1],
+                        'cm_in_service_low_range': self._charge_matrix[0,2],
+                        'cm_fast_charge_high_range': self._charge_matrix[1,0],
+                        'cm_fast_charge_med_range': self._charge_matrix[1,1],
+                        'cm_fast_charge_low_range': self._charge_matrix[1,2],
+                        'cm_slow_charge_high_range': self._charge_matrix[2,0],
+                        'cm_slow_charge_med_range': self._charge_matrix[2,1],
+                        'cm_slow_charge_low_range': self._charge_matrix[2,2],
+                        'cm_out_service_high_range': self._charge_matrix[3,0],
+                        'cm_out_service_med_range': self._charge_matrix[3,1],
+                        'cm_out_service_low_range': self._charge_matrix[3,2],
                         })
+
+    def _calc_charge_matrix(self):
+        soc = self._get_fleet_state_col('soc')
+        battery_capacity_kwh = self._get_fleet_state_col('BATTERY_CAPACITY_KWH')
+        energy_kwh = soc * battery_capacity_kwh
+        kwh__mi = self._get_fleet_state_col('KWH__MI')
+
+        range_mi = energy_kwh / kwh__mi
+
+        active = self._get_fleet_state_col('active')
+        charging = self._get_fleet_state_col('charging')
+        reserve = self._get_fleet_state_col('reserve')
+
+        self._charge_matrix[0,0] = np.sum((range_mi >= 150) & (active == 1) & (charging == 0))
+        self._charge_matrix[0,1] = np.sum((range_mi < 150) & (range_mi > 50) & (active == 1) & (charging == 0))
+        self._charge_matrix[0,2] = np.sum((range_mi <= 50) & (active == 1) & (charging == 0))
+
+        self._charge_matrix[1,0] = np.sum((range_mi >= 150) & (charging >= 50))
+        self._charge_matrix[1,1] = np.sum((range_mi < 150) & (range_mi > 50) & (charging >= 50))
+        self._charge_matrix[1,2] = np.sum((range_mi <= 50) & (charging >= 50))
+
+        self._charge_matrix[2,0] = np.sum((range_mi >= 150) & (charging > 0) & (charging < 50))
+        self._charge_matrix[2,1] = np.sum((range_mi < 150) & (range_mi > 50) & (charging > 0) & (charging < 50))
+        self._charge_matrix[2,2] = np.sum((range_mi <= 50) & (charging > 0) & (charging < 50))
+
+        self._charge_matrix[3,0] = np.sum((range_mi >= 150) & (reserve == 1))
+        self._charge_matrix[3,1] = np.sum((range_mi < 150) & (range_mi > 50) & (reserve == 1))
+        self._charge_matrix[3,2] = np.sum((range_mi <= 50) & (reserve == 1))
 
     def _find_closest_plug(self, vehicle, type='station'):
         """
@@ -197,6 +247,7 @@ class Dispatcher:
         """
         self._dropped_requests = 0
         self._total_requests = len(requests)
+        self._wait_time_min = 0
         for request in requests.itertuples():
             best_vehicle = self._get_n_best_vehicles(request, n=1)
             if len(best_vehicle) < 1:
@@ -204,16 +255,19 @@ class Dispatcher:
             else:
                 vehid = best_vehicle[0]
                 veh = self._fleet[vehid]
-                disp_route = self._route_engine.route(
+                disp_route_summary = self._route_engine.route(
                                         veh.x,
                                         veh.y,
                                         request.pickup_lat,
                                         request.pickup_lon,
                                         activity = "Dispatch to Request")
+                disp_route = disp_route_summary['route']
+                self._wait_time_min += disp_route_summary['trip_time_s'] * units.SECONDS_TO_MINUTES
+
                 if hasattr(request, 'route'):
                     trip_route = request.route
                 else:
-                    trip_route = self._route_engine.route(
+                    trip_route_summary = self._route_engine.route(
                                             request.pickup_lat,
                                             request.pickup_lon,
                                             request.dropoff_lat,
@@ -222,6 +276,7 @@ class Dispatcher:
                                             trip_dist_mi = request.distance_miles,
                                             trip_time_s = request.seconds,
                                             )
+                    trip_route = trip_route_summary['route']
 
                 del disp_route[-1]
                 route = disp_route + trip_route
@@ -246,7 +301,8 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
-            route = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            route_summary = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            route = route_summary['route']
             vehicle.cmd_charge(station, route)
 
     def _check_idle_vehicles(self):
@@ -262,7 +318,8 @@ class Dispatcher:
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            route = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            route_summary = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            route = route_summary['route']
             vehicle.cmd_return_to_base(base, route)
 
     def process_requests(self, requests):
@@ -278,4 +335,3 @@ class Dispatcher:
         self._charge_vehicles()
         self._dispatch_vehicles(requests)
         self._check_idle_vehicles()
-        self._log()

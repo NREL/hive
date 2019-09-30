@@ -96,12 +96,14 @@ class VehicleTest(unittest.TestCase):
         pre_avail_plugs = test_station.avail_plugs
 
         router = self.SIM_ENV['dispatcher']._route_engine
-        route = router.route(
+        route_summary = router.route(
                         test_vehicle.x,
                         test_vehicle.y,
                         test_station.X,
                         test_station.Y,
                         activity='Moving to Station')
+
+        route = route_summary['route']
 
         test_vehicle.cmd_charge(test_station, route)
 
@@ -138,12 +140,14 @@ class VehicleTest(unittest.TestCase):
         pre_avail_plugs = test_base.avail_plugs
 
         router = self.SIM_ENV['dispatcher']._route_engine
-        route = router.route(
-            test_vehicle.x,
-            test_vehicle.y,
-            test_base.X,
-            test_base.Y,
-            activity = "Returning to Base")
+        route_summary = router.route(
+                            test_vehicle.x,
+                            test_vehicle.y,
+                            test_base.X,
+                            test_base.Y,
+                            activity = "Returning to Base")
+
+        route = route_summary['route']
 
         test_vehicle.cmd_return_to_base(test_base, route)
 

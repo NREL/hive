@@ -4,6 +4,7 @@ import requests
 from hive import units
 from hive.helpers import estimate_vmt_latlon
 
+#TODO: Consolidate route engine into parent and children classes.
 
 class OSRMRouteEngine:
     """
@@ -23,6 +24,8 @@ class OSRMRouteEngine:
         self.server = server
         self.TIMESTEP_S = timestep_s
     def route(self, olat, olon, dlat, dlon, activity, trip_dist_mi=None, trip_time_s=None):
+        route_summary = {}
+
         addr = f'{self.server}/route/v1/driving/{olon},{olat};{dlon},{dlat}?overview=full&geometries=geojson&annotations=true'
         r = requests.get(addr)
         raw_json = r.json()
@@ -45,7 +48,11 @@ class OSRMRouteEngine:
             route.append((loc, dist, activity))
             prev_index = index
 
-        return route
+        route_summary['trip_time_s'] = route_time
+        route_summary['trip_dist_mi'] = route_dist
+        route_summary['route'] = route
+
+        return route_summary
 
 class DefaultRouteEngine:
     """
@@ -68,6 +75,7 @@ class DefaultRouteEngine:
         self.RN_SCALING_FACTOR = rn_scaling_factor
         self.DISPATCH_MPH = dispatch_mph
     def route(self, olat, olon, dlat, dlon, activity, trip_dist_mi=None, trip_time_s=None):
+        route_summary = {}
         if trip_dist_mi is None:
             trip_dist_mi = estimate_vmt_latlon(olat, olon, dlat, dlon, self.RN_SCALING_FACTOR)
         if trip_time_s is None:
@@ -75,8 +83,12 @@ class DefaultRouteEngine:
 
         steps = round(trip_time_s/self.TIMESTEP_S)
 
+        route_summary['trip_time_s'] = trip_time_s
+        route_summary['trip_dist_mi'] = trip_dist_mi 
+
         if steps <= 1:
-            return [((olat, olon), trip_dist_mi, activity), ((dlat, dlon), trip_dist_mi, activity)]
+            route_summary['route'] = [((olat, olon), trip_dist_mi, activity), ((dlat, dlon), trip_dist_mi, activity)]
+            return route_summary
         step_distance_mi = trip_dist_mi/steps
         route_range = np.arange(0, steps + 1)
         route = []
@@ -86,4 +98,7 @@ class DefaultRouteEngine:
             yt = (1-t)*olon + t*dlon
             point = (xt, yt)
             route.append((point, step_distance_mi, activity))
-        return route
+
+        route_summary['route'] = route
+
+        return route_summary
