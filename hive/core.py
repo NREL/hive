@@ -7,6 +7,7 @@ from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import router
 from hive import reporting
+from hive import units
 from hive.utils import Clock, assert_constraint, build_output_dir, info, progress_bar
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.vehicle import Vehicle
@@ -48,13 +49,16 @@ class SimulationEngine:
         #Filter requests where distance < min_miles
         reqs_df = pp.filter_short_distance_trips(reqs_df, min_miles=0.05)
         info("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
-        #
+
         #Filter requests where total time < min_time_s
         reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
         info("filtered requests violating min time req, {} remain".format(len(reqs_df)))
-        #
 
         SIM_ENV['requests'] = reqs_df
+
+        info("Calculating demand..")
+        demand = pp.calculate_demand(reqs_df, self.input_data['SIMULATION_PERIOD_SECONDS'])
+        SIM_ENV['demand'] = demand
 
         sim_start_time = reqs_df.pickup_time.min()
         sim_end_time = reqs_df.dropoff_time.max()
@@ -135,6 +139,7 @@ class SimulationEngine:
                             fleet_state = fleet_state,
                             stations = stations,
                             bases = bases,
+                            demand = demand,
                             env_params = env_params,
                             route_engine = route_engine,
                             clock = sim_clock)

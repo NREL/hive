@@ -41,6 +41,7 @@ class Dispatcher:
                 fleet_state=None,
                 stations=None,
                 bases=None,
+                demand=None,
                 env_params=None,
                 route_engine=None,
                 clock=None,
@@ -54,6 +55,7 @@ class Dispatcher:
                 fleet_state,
                 stations,
                 bases,
+                demand,
                 env_params,
                 route_engine,
                 clock,
@@ -65,6 +67,7 @@ class Dispatcher:
                 fleet_state,
                 stations,
                 bases,
+                demand,
                 env_params,
                 route_engine,
                 clock,
@@ -76,6 +79,8 @@ class Dispatcher:
         self._fleet_state = fleet_state
         for veh in self._fleet:
             veh.fleet_state = fleet_state
+
+        self._demand = demand
 
         self._clock = clock
 

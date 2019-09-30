@@ -19,6 +19,7 @@ from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 
 from hive.constraints import ENV_PARAMS
+from hive import units
 from hive import utils
 
 def gen_synth_pax_cnt():
@@ -125,6 +126,12 @@ def load_requests(reqs_file, verbose=True, save_path=None):
             reqs_df.to_csv(outfile)
 
         return reqs_df[fields]
+
+def calculate_demand(reqs_df, timestep_s):
+    gb = reqs_df.set_index('pickup_time').groupby(pd.Grouper(level='pickup_time', freq=f"{timestep_s}S"))
+    demand = gb['dropoff_time'].count().reset_index(name='demand').demand.values
+
+    return demand
 
 def filter_nulls(reqs_df):
     """Filters requests that contain null values.
