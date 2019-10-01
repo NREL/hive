@@ -7,13 +7,16 @@ import numpy as np
 import pandas as pd
 import sys
 import yaml
+import logging
 
 sys.path.append('..')
 import config as cfg
 
 from hive.units import METERS_TO_MILES, KILOMETERS_TO_MILES
-from hive.utils import info, name
+from hive.utils import name
 from hive import preprocess as pp
+
+log = logging.getLogger(__name__)
 
 def haversine_np(lat1, lon1, lat2, lon2):
     """
@@ -118,7 +121,7 @@ def estimate_vmt_2D(x1, y1, x2, y2, scaling_factor):
 def load_scenario(scenario_file):
     scenario_name = name(scenario_file)
     with open(scenario_file, 'r') as f:
-        info('Loading scenario file..')
+        log.info('Loading scenario file..')
         yaml_data = yaml.safe_load(f)
 
         data = {}
@@ -161,6 +164,6 @@ def load_scenario(scenario_file):
         data['USE_OSRM'] = cfg.USE_OSRM
         data['OSRM_SERVER'] = cfg.OSRM_SERVER
 
-    info('Done.')
+    log.info('Done.')
 
     return data

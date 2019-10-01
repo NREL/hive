@@ -26,10 +26,6 @@ class Clock:
     def get_time(self):
         return self._DATETIME_STEPS[self.now]
 
-def info(msg):
-    if cfg.VERBOSE:
-        print(f"[info] {msg}")
-
 def name(path):
     return os.path.splitext(os.path.basename(path))[0]
 
