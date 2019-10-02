@@ -32,7 +32,7 @@ def name(path):
 def progress_bar(
             iteration,
             total,
-            prefix = '[info] Progress:',
+            prefix = '[INFO] Progress:',
             suffix = 'Complete',
             decimals = 1,
             length = 50,

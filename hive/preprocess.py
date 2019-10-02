@@ -87,18 +87,18 @@ def load_requests(reqs_file, verbose=True, save_path=None):
         # .apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
         # reqs_df.sort_values('pickup_time', inplace=True)
 
-        log.info("    - parsing datetime")
+        log.info("  parsing datetime")
         reqs_df['pickup_time'] = reqs_df['pickup_time'].apply(lambda x: parser.parse(x))
         reqs_df['dropoff_time'] = reqs_df['dropoff_time'].apply(lambda x: parser.parse(x))
 
         #synthesize 'passengers' if not exists
         if 'passengers' not in reqs_df.columns: #apply real-world pax distr
-            log.info("    - synthesizing passenger counts")
+            log.info("  synthesizing passenger counts")
             pax = [gen_synth_pax_cnt() for i in range(len(reqs_df))]
             reqs_df['passengers'] = pax
 
         if 'seconds' not in reqs_df.columns:
-            log.info("    - calculating trip times")
+            log.info("  calculating trip times")
             reqs_df['seconds'] = reqs_df.apply(lambda row: (row.dropoff_time - row.pickup_time).total_seconds(), axis=1)
 
         #convert latitude and longitude to utm
