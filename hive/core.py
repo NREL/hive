@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from datetime import timedelta
+import logging
 
 from hive import preprocess as pp
 from hive import tripenergy as nrg
@@ -8,11 +9,13 @@ from hive import charging as chrg
 from hive import router
 from hive import reporting
 from hive import units
-from hive.utils import Clock, assert_constraint, build_output_dir, info, progress_bar
+from hive.utils import Clock, assert_constraint, build_output_dir, progress_bar
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.vehicle import Vehicle
 from hive.dispatcher import Dispatcher
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
+
+log = logging.getLogger(__name__)
 
 class SimulationEngine:
     """
@@ -42,21 +45,21 @@ class SimulationEngine:
         SIM_ENV = {}
 
         #Load requests
-        info("Processing requests..")
+        log.info("Processing requests..")
         reqs_df = self.input_data['requests']
-        info("{} requests loaded".format(len(reqs_df)))
+        log.info("{} requests loaded".format(len(reqs_df)))
 
         #Filter requests where distance < min_miles
         reqs_df = pp.filter_short_distance_trips(reqs_df, min_miles=0.05)
-        info("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
+        log.info("filtered requests violating min distance req, {} remain".format(len(reqs_df)))
 
         #Filter requests where total time < min_time_s
         reqs_df = pp.filter_short_time_trips(reqs_df, min_time_s=1)
-        info("filtered requests violating min time req, {} remain".format(len(reqs_df)))
+        log.info("filtered requests violating min time req, {} remain".format(len(reqs_df)))
 
         SIM_ENV['requests'] = reqs_df
 
-        info("Calculating demand..")
+        log.info("Calculating demand..")
         demand = pp.calculate_demand(reqs_df, self.input_data['SIMULATION_PERIOD_SECONDS'])
         SIM_ENV['demand'] = demand
 
@@ -83,17 +86,17 @@ class SimulationEngine:
         #TODO: reqs_df.to_csv(self.input_data['OUT_PATH'] + sim_name + 'requests/' + requests_filename, index=False)
 
         #Load charging network
-        info("Loading charge network..")
+        log.info("Loading charge network..")
         stations = initialize_stations(self.input_data['stations'], sim_clock)
         SIM_ENV['stations'] = stations
 
         bases = initialize_stations(self.input_data['bases'], sim_clock)
         SIM_ENV['bases'] = bases
-        info("loaded {0} stations & {1} bases".format(len(stations), len(bases)))
+        log.info("loaded {0} stations & {1} bases".format(len(stations), len(bases)))
 
 
         #Initialize vehicle fleet
-        info("Initializing vehicle fleet..")
+        log.info("Initializing vehicle fleet..")
         env_params = {
             'MAX_DISPATCH_MILES': float(self.input_data['main']['MAX_DISPATCH_MILES']),
             'MIN_ALLOWED_SOC': float(self.input_data['main']['MIN_ALLOWED_SOC']),
@@ -118,10 +121,10 @@ class SimulationEngine:
                                  start_time = reqs_df.pickup_time.iloc[0],
                                  env_params = env_params,
                                  clock = sim_clock)
-        info("{} vehicles initialized".format(len(fleet)))
+        log.info("{} vehicles initialized".format(len(fleet)))
         SIM_ENV['fleet'] = fleet
 
-        info("Initializing route engine..")
+        log.info("Initializing route engine..")
         if self.input_data['USE_OSRM']:
             route_engine = router.OSRMRouteEngine(
                                         self.input_data['OSRM_SERVER'],
@@ -133,7 +136,7 @@ class SimulationEngine:
                                             env_params['DISPATCH_MPH'],
                                             )
 
-        info("Initializing dispatcher..")
+        log.info("Initializing dispatcher..")
         self.dispatcher.spin_up(
                             fleet = fleet,
                             fleet_state = fleet_state,
@@ -158,7 +161,7 @@ class SimulationEngine:
         out_path: string
             Where this function will write output logs.
         """
-        info("Building scenario output directory..")
+        log.info("Building scenario output directory..")
         output_file_paths = build_output_dir(sim_name, self.out_path)
 
         vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
@@ -170,7 +173,7 @@ class SimulationEngine:
         total_iterations = len(self._SIM_ENV['sim_time_steps'])-1
         i = 0
 
-        info("Simulating {}..".format(sim_name))
+        log.info("Simulating {}..".format(sim_name))
         reqs_df = self._SIM_ENV['requests']
 
         for timestep in self._SIM_ENV['sim_time_steps']:
@@ -193,8 +196,8 @@ class SimulationEngine:
 
             next(self._SIM_ENV['sim_clock'])
 
-        info("Done Simulating")
-        info("Generating logs and summary statistics..")
+        log.info("Done Simulating")
+        log.info("Generating logs and summary statistics..")
 
         reporting.generate_logs(self._SIM_ENV['fleet'], output_file_paths['vehicle_path'], 'vehicle')
         reporting.generate_logs(self._SIM_ENV['stations'], output_file_paths['station_path'], 'station')

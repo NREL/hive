@@ -6,6 +6,7 @@ config.py
 .DS_Store
 *.pstats
 outputs/
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
