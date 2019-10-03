@@ -105,8 +105,14 @@ def build_scenarios():
                                 'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
                                 }
 
-            config['DISPATCHER'] = scenario['DISPATCHER']
-            config['REPOSITIONING'] = scenario['REPOSITIONING']
+            if 'DISPATCHER' in scenario:
+                config['DISPATCHER'] = scenario['DISPATCHER']
+            else:
+                config['DISPATCHER'] = "greedy"
+            if 'REPOSITIONING' in scenario:
+                config['REPOSITIONING'] = scenario['REPOSITIONING']
+            else:
+                config['REPOSITIONING'] = "do_nothing"
 
             name = scenario['SCENARIO_NAME']
             outfile = os.path.join(SCENARIO_PATH, f'{name}.yaml')
