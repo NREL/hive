@@ -40,14 +40,9 @@ class AbstractRepositioning(ABC):
         pass
 
     @abstractmethod
-    def reposition_agents(self, clock):
+    def reposition_agents(self):
         """
         makes decisions related to agent repositioning at each time step
-
-        Parameters
-        ----------
-        clock: hive.utils.Clock
-            simulation clock shared across the simulation to track simulation time steps.
         """
         pass
 

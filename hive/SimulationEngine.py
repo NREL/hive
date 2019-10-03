@@ -9,11 +9,9 @@ from hive import reporting
 from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
 from hive.dispatcher import Dispatcher
-from hive.dispatcher import Repositioning
+from hive.repositioning import Repositioning
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.utils import Clock, assert_constraint, build_output_dir, progress_bar
-
-
 
 
 class SimulationEngine:
@@ -35,16 +33,6 @@ class SimulationEngine:
 
         self.input_data = input_data
         self.out_path = out_path
-
-        # if dispatcher is not None:
-        #     self.dispatcher = dispatcher
-        # else:
-        #     self.dispatcher = GreedyDispatcher()
-        #
-        # if repositioning is not None:
-        #     self.repositioning = repositioning
-        # else:
-        #     self.repositioning = DoNothingRepositioning()
 
     def _build_simulation_env(self):
         SIM_ENV = {}
@@ -212,19 +200,8 @@ class SimulationEngine:
                                & (reqs_df.pickup_time < (
                         timestep + timedelta(seconds=self.input_data['SIMULATION_PERIOD_SECONDS'])))]
 
-            try:
-                self._SIM_ENV['dispatcher'].process_requests(requests)
-            except AttributeError:
-                dispatcher_type = type(self._SIM_ENV['dispatcher'])
-                raise ModuleNotFoundError(
-                    "invalid dispatcher {} does not implement process_requests method".format(dispatcher_type))
-
-            try:
-                self._SIM_ENV['repositioning'].reposition_agents()
-            except AttributeError:
-                repositioning_type = type(self._SIM_ENV['repositioning'])
-                raise ModuleNotFoundError(
-                    "invalid repositioning {} does not implement reposition_agents method".format(repositioning_type))
+            self._SIM_ENV['dispatcher'].process_requests(requests)
+            self._SIM_ENV['repositioning'].reposition_agents()
 
             for veh in self._SIM_ENV['fleet']:
                 veh.step()

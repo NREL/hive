@@ -1,4 +1,4 @@
-from hive.dispatcher.Repositioning import AbstractRepositioning
+from hive.repositioning.Repositioning import AbstractRepositioning
 
 
 class DoNothingRepositioning(AbstractRepositioning):
@@ -20,7 +20,7 @@ class DoNothingRepositioning(AbstractRepositioning):
         """
         pass
 
-    def reposition_agents(self, clock):
+    def reposition_agents(self):
         """
         does nothing!
         """
