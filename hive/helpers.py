@@ -164,6 +164,9 @@ def load_scenario(scenario_file):
         data['USE_OSRM'] = cfg.USE_OSRM
         data['OSRM_SERVER'] = cfg.OSRM_SERVER
 
+        data['DISPATCHER'] = yaml_data['DISPATCHER']
+        data['REPOSITIONING'] = yaml_data['REPOSITIONING']
+
     log.info('Done.')
 
     return data

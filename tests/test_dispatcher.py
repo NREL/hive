@@ -1,11 +1,10 @@
-import os
 import sys
 import unittest
 
 from build_test_env import setup_env
 
 sys.path.append('../')
-from hive.dispatcher import Dispatcher
+
 
 class DispatcherTest(unittest.TestCase):
     @classmethod

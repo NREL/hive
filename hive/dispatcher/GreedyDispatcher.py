@@ -13,10 +13,12 @@ from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import helpers as hlp
 from hive import units
+from hive.dispatcher.Dispatcher import AbstractDispatcher
 
-class Dispatcher:
+
+class GreedyDispatcher(AbstractDispatcher):
     """
-    The Dispatcher object is responsible for coordinating the actions of the fleet.
+    Uses a greedy strategy to create agent plans
 
     Parameters
     ----------
@@ -33,7 +35,6 @@ class Dispatcher:
     clock: hive.utils.Clock
         simulation clock shared across the simulation to track simulation time steps.
     """
-
 
     def __init__(
                 self,

@@ -20,7 +20,7 @@ import logging.config
 
 
 from hive.utils import name
-from hive.core import SimulationEngine
+from hive.SimulationEngine import SimulationEngine
 from hive.helpers import load_scenario
 
 
