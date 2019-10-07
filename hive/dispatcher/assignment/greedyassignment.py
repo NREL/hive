@@ -7,10 +7,10 @@ import numpy as np
 
 from hive import helpers as hlp
 from hive import units
-from hive.dispatcher import AbstractDispatcher
+from hive.dispatcher.assignment import AbstractAssignment
 
 
-class GreedyDispatcher(AbstractDispatcher):
+class GreedyAssignment(AbstractAssignment):
     """
     Uses a greedy strategy to create agent plans
 

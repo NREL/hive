@@ -9,7 +9,6 @@ from hive import reporting
 from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
 from hive.dispatcher import dispatcher
-from hive.repositioning import repositioning
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.utils import Clock, assert_constraint, build_output_dir, progress_bar
 
@@ -128,47 +127,33 @@ class SimulationEngine:
                 env_params['DISPATCH_MPH'],
             )
 
-        if 'DISPATCHER' in self.input_data:
-            dispatcher_name = self.input_data['DISPATCHER']
+        # load dispatcher algorithms, or if not provided, use the defaults
+        if 'ASSIGNMENT' in self.input_data:
+            assignment_module_name = self.input_data['ASSIGNMENT']
         else:
-            dispatcher_name = "greedy"
-        self.log.info("Initializing dispatcher {}".format(dispatcher_name))
-        dispatcher_module = dispatcher.from_scenario_input(dispatcher_name)
-        try:
-            dispatcher_module.spin_up(
-                fleet=fleet,
-                fleet_state=fleet_state,
-                stations=stations,
-                bases=bases,
-                demand=demand,
-                env_params=env_params,
-                route_engine=route_engine,
-                clock=sim_clock)
-        except AttributeError as e:
-            dispatcher_type = type(dispatcher_module)
-            raise ModuleNotFoundError(
-                "invalid dispatcher {} does not implement spin_up method".format(dispatcher_type))
-        SIM_ENV['dispatcher'] = dispatcher_module
-
+            assignment_module_name = "greedy"
         if 'REPOSITIONING' in self.input_data:
-            repositioning_name = self.input_data['REPOSITIONING']
+            repositioning_module_name = self.input_data['REPOSITIONING']
         else:
-            repositioning_name = "do_nothing"
-        self.log.info("Initializing repositioning module {}".format(repositioning_name))
-        repositioning_module = repositioning.from_scenario_input(repositioning_name)
-        try:
-            repositioning_module.spin_up(
-                fleet=fleet,
-                fleet_state=fleet_state,
-                demand=demand,
-                env_params=env_params,
-                route_engine=route_engine,
-                clock=sim_clock
-            )
-        except AttributeError as e:
-            repositioning_type = type(repositioning_module)
-            raise ModuleNotFoundError(
-                "invalid repositioning {} does not implement spin_up method".format(repositioning_type))
+            repositioning_module_name = "do_nothing"
+
+        self.log.info("dispatcher loading {} assignment module".format(assignment_module_name))
+        self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
+
+        assignment_module, repositioning_module = dispatcher.load_dispatcher(
+            assignment_module_name,
+            repositioning_module_name,
+            fleet,
+            fleet_state,
+            stations,
+            bases,
+            demand,
+            env_params,
+            route_engine,
+            sim_clock
+        )
+
+        SIM_ENV['assignment'] = assignment_module
         SIM_ENV['repositioning'] = repositioning_module
 
         self._SIM_ENV = SIM_ENV
@@ -206,7 +191,7 @@ class SimulationEngine:
                                & (reqs_df.pickup_time < (
                         timestep + timedelta(seconds=self.input_data['SIMULATION_PERIOD_SECONDS'])))]
 
-            self._SIM_ENV['dispatcher'].process_requests(requests)
+            self._SIM_ENV['assignment'].process_requests(requests)
             self._SIM_ENV['repositioning'].reposition_agents()
 
             for veh in self._SIM_ENV['fleet']:
@@ -218,7 +203,8 @@ class SimulationEngine:
             for base in self._SIM_ENV['bases']:
                 base.step()
 
-            self._SIM_ENV['dispatcher'].log()
+            self._SIM_ENV['assignment'].log()
+            self._SIM_ENV['repositioning'].log()
 
             next(self._SIM_ENV['sim_clock'])
 
@@ -228,7 +214,8 @@ class SimulationEngine:
         reporting.generate_logs(self._SIM_ENV['fleet'], output_file_paths['vehicle_path'], 'vehicle')
         reporting.generate_logs(self._SIM_ENV['stations'], output_file_paths['station_path'], 'station')
         reporting.generate_logs(self._SIM_ENV['bases'], output_file_paths['base_path'], 'base')
-        reporting.generate_logs([self._SIM_ENV['dispatcher']], output_file_paths['dispatcher_path'], 'dispatcher')
+        reporting.generate_logs([self._SIM_ENV['assignment']], output_file_paths['dispatcher_path'], 'assignment')
+        reporting.generate_logs([self._SIM_ENV['repositioning']], output_file_paths['dispatcher_path'], 'repositioning')
 
         reporting.summarize_fleet_stats(output_file_paths['vehicle_path'], output_file_paths['summary_path'])
         reporting.summarize_dispatcher(output_file_paths['dispatcher_path'], output_file_paths['summary_path'])

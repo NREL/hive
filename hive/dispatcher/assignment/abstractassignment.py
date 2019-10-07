@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class AbstractDispatcher(ABC):
+class AbstractAssignment(ABC):
     """
     functions expected to be found on a Dispatcher
     """
@@ -57,3 +57,10 @@ class AbstractDispatcher(ABC):
             one or many requests to distribute to the fleet.
         """
         pass
+
+    @abstractmethod
+    def log(self):
+        """
+        Function stores the partial state of the object at each time step.
+        :return:
+        """

@@ -5,9 +5,9 @@ sys.path.append('..')
 
 from hive.helpers import load_scenario
 from hive.simulationengine import SimulationEngine
-from hive.dispatcher.greedydispatcher import GreedyDispatcher
+from hive.dispatcher.assignment.greedyassignment import GreedyAssignment
 
-class SmartGreedyDispatcher(GreedyDispatcher):
+class SmartGreedyDispatcher(GreedyAssignment):
     def _smart_idle(self):
 
         # Implement logic to calculate appropriate idle time for each vehicle.

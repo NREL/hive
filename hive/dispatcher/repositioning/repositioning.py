@@ -1,7 +1,7 @@
 import logging
 
-from hive.repositioning.abstractrepositioning import AbstractRepositioning
-from hive.repositioning.donothingrepositioning import DoNothingRepositioning
+from hive.dispatcher.repositioning import AbstractRepositioning
+from hive.dispatcher.repositioning import DoNothingRepositioning
 
 log = logging.getLogger(__name__)
 

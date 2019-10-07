@@ -105,7 +105,7 @@ def build_scenarios():
                                 'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
                                 }
 
-            config['DISPATCHER'] = scenario['DISPATCHER']
+            config['ASSIGNMENT'] = scenario['ASSIGNMENT']
             config['REPOSITIONING'] = scenario['REPOSITIONING']
 
             name = scenario['SCENARIO_NAME']

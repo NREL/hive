@@ -14,6 +14,8 @@ class AbstractRepositioning(ABC):
             self,
             fleet,
             fleet_state,
+            stations,
+            bases,
             demand,
             env_params,
             route_engine,
@@ -46,3 +48,9 @@ class AbstractRepositioning(ABC):
         """
         pass
 
+    @abstractmethod
+    def log(self):
+        """
+        Function stores the partial state of the object at each time step.
+        :return:
+        """
