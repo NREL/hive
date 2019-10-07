@@ -3,6 +3,7 @@ import os
 from datetime import timedelta
 
 import pandas as pd
+import geopandas as gpd
 
 from hive import preprocess as pp
 from hive import reporting
@@ -96,6 +97,10 @@ class SimulationEngine:
             'LOWER_SOC_THRESH_STATION': float(self.input_data['main']['LOWER_SOC_THRESH_STATION']),
             'UPPER_SOC_THRESH_STATION': float(self.input_data['main']['UPPER_SOC_THRESH_STATION']),
             'MAX_ALLOWABLE_IDLE_MINUTES': float(self.input_data['main']['MAX_ALLOWABLE_IDLE_MINUTES']),
+            'BOUNDARY_MINX': self.input_data['BOUNDARY_MINX'],
+            'BOUNDARY_MINY': self.input_data['BOUNDARY_MINY'],
+            'BOUNDARY_MAXX': self.input_data['BOUNDARY_MAXX'],
+            'BOUNDARY_MAXY': self.input_data['BOUNDARY_MAXY'],
         }
 
         for param, val in env_params.items():
