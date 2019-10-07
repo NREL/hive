@@ -4,8 +4,8 @@ import sys
 sys.path.append('..')
 
 from hive.helpers import load_scenario
-from hive.SimulationEngine import SimulationEngine
-from hive.dispatcher.GreedyDispatcher import GreedyDispatcher
+from hive.simulationengine import SimulationEngine
+from hive.dispatcher.greedydispatcher import GreedyDispatcher
 
 class SmartGreedyDispatcher(GreedyDispatcher):
     def _smart_idle(self):

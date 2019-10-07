@@ -1,28 +1,18 @@
 """
 Run hive w/ inputs defined in config.py
 """
-import subprocess
-import os
-import sys
-import random
-import shutil
-from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
-import pickle
 import glob
-import time
+import logging.config
+import os
+import random
+
+import numpy as np
 import yaml
 
 import config as cfg
-import logging
-import logging.config
-
-
-from hive.utils import name
-from hive.SimulationEngine import SimulationEngine
 from hive.helpers import load_scenario
-
+from hive.simulationengine import SimulationEngine
+from hive.utils import name
 
 random.seed(cfg.RANDOM_SEED)
 np.random.seed(cfg.RANDOM_SEED)
@@ -58,5 +48,6 @@ if __name__ == "__main__":
     for scenario_file in run_scenarios:
         log.info(f'Preparing {name(scenario_file)}..')
         data = load_scenario(scenario_file)
+
         simulation_engine = SimulationEngine(data, OUT_PATH)
         simulation_engine.run_simulation(name(scenario_file))

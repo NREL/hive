@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 sys.path.append('..')
-from hive.SimulationEngine import SimulationEngine
+from hive.simulationengine import SimulationEngine
 from hive.helpers import load_scenario
 import config
 

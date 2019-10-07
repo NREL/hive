@@ -6,7 +6,7 @@ sys.path.append('..')
 
 from hive.helpers import load_scenario
 from hive.utils import info
-from hive.SimulationEngine import SimulationEngine
+from hive.simulationengine import SimulationEngine
 
 # Replace with your own base scenario
 scenario_path = 'api-demo.yaml'

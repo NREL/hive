@@ -8,8 +8,8 @@ from hive import preprocess as pp
 from hive import reporting
 from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
-from hive.dispatcher import Dispatcher
-from hive.repositioning import Repositioning
+from hive.dispatcher import dispatcher
+from hive.repositioning import repositioning
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.utils import Clock, assert_constraint, build_output_dir, progress_bar
 
@@ -128,11 +128,14 @@ class SimulationEngine:
                 env_params['DISPATCH_MPH'],
             )
 
-        dispatcher_name = self.input_data['DISPATCHER']
+        if 'DISPATCHER' in self.input_data:
+            dispatcher_name = self.input_data['DISPATCHER']
+        else:
+            dispatcher_name = "greedy"
         self.log.info("Initializing dispatcher {}".format(dispatcher_name))
-        dispatcher = Dispatcher.from_scenario_input(dispatcher_name)
+        dispatcher_module = dispatcher.from_scenario_input(dispatcher_name)
         try:
-            dispatcher.spin_up(
+            dispatcher_module.spin_up(
                 fleet=fleet,
                 fleet_state=fleet_state,
                 stations=stations,
@@ -142,16 +145,19 @@ class SimulationEngine:
                 route_engine=route_engine,
                 clock=sim_clock)
         except AttributeError as e:
-            dispatcher_type = type(dispatcher)
+            dispatcher_type = type(dispatcher_module)
             raise ModuleNotFoundError(
                 "invalid dispatcher {} does not implement spin_up method".format(dispatcher_type))
-        SIM_ENV['dispatcher'] = dispatcher
+        SIM_ENV['dispatcher'] = dispatcher_module
 
-        repositioning_name = self.input_data['REPOSITIONING']
+        if 'REPOSITIONING' in self.input_data:
+            repositioning_name = self.input_data['REPOSITIONING']
+        else:
+            repositioning_name = "do_nothing"
         self.log.info("Initializing repositioning module {}".format(repositioning_name))
-        repositioning = Repositioning.from_scenario_input(repositioning_name)
+        repositioning_module = repositioning.from_scenario_input(repositioning_name)
         try:
-            repositioning.spin_up(
+            repositioning_module.spin_up(
                 fleet=fleet,
                 fleet_state=fleet_state,
                 demand=demand,
@@ -160,10 +166,10 @@ class SimulationEngine:
                 clock=sim_clock
             )
         except AttributeError as e:
-            repositioning_type = type(repositioning)
+            repositioning_type = type(repositioning_module)
             raise ModuleNotFoundError(
                 "invalid repositioning {} does not implement spin_up method".format(repositioning_type))
-        SIM_ENV['repositioning'] = repositioning
+        SIM_ENV['repositioning'] = repositioning_module
 
         self._SIM_ENV = SIM_ENV
 

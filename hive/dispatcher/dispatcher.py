@@ -1,7 +1,7 @@
 import logging
 
-from hive.dispatcher.AbstractDispatcher import AbstractDispatcher
-from hive.dispatcher.GreedyDispatcher import GreedyDispatcher
+from hive.dispatcher.abstractdispatcher import AbstractDispatcher
+from hive.dispatcher.greedydispatcher import GreedyDispatcher
 
 log = logging.getLogger(__name__)
 
@@ -43,4 +43,3 @@ def from_scenario_input(name):
     # this enforces class inheritance
     assert issubclass(type(dispatcher), AbstractDispatcher)
     return dispatcher
-

@@ -1,4 +1,4 @@
-from hive.repositioning.Repositioning import AbstractRepositioning
+from hive.repositioning.repositioning import AbstractRepositioning
 
 
 class DoNothingRepositioning(AbstractRepositioning):
