@@ -3,20 +3,16 @@ Dispatcher Object for high-level decision making in HIVE. Includes functions for
 vehicle dispatching, and station/base selection.
 """
 
-import datetime
-import requests
-import sys
-import os
 import numpy as np
 
-from hive import tripenergy as nrg
-from hive import charging as chrg
 from hive import helpers as hlp
 from hive import units
+from hive.dispatcher.assignment import AbstractAssignment
 
-class Dispatcher:
+
+class GreedyAssignment(AbstractAssignment):
     """
-    The Dispatcher object is responsible for coordinating the actions of the fleet.
+    Uses a greedy strategy to create agent plans
 
     Parameters
     ----------
@@ -33,7 +29,6 @@ class Dispatcher:
     clock: hive.utils.Clock
         simulation clock shared across the simulation to track simulation time steps.
     """
-
 
     def __init__(
                 self,

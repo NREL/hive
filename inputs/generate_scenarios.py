@@ -105,6 +105,8 @@ def build_scenarios():
                                 'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
                                 }
 
+            config['ASSIGNMENT'] = scenario['ASSIGNMENT']
+            config['REPOSITIONING'] = scenario['REPOSITIONING']
 
             name = scenario['SCENARIO_NAME']
             outfile = os.path.join(SCENARIO_PATH, f'{name}.yaml')

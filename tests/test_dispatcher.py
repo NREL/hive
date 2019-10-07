@@ -1,11 +1,10 @@
-import os
 import sys
 import unittest
 
 from build_test_env import setup_env
 
 sys.path.append('../')
-from hive.dispatcher import Dispatcher
+
 
 class DispatcherTest(unittest.TestCase):
     @classmethod
@@ -23,7 +22,7 @@ class DispatcherTest(unittest.TestCase):
         pass
 
     def test_find_closest_plug(self):
-        dispatcher = self.SIM_ENV['dispatcher']
+        dispatcher = self.SIM_ENV['assignment']
         test_vehicle = self.SIM_ENV['fleet'][0]
         test_station = self.SIM_ENV['stations'][0]
 
@@ -34,7 +33,7 @@ class DispatcherTest(unittest.TestCase):
         self.assertEqual(test_station.ID, nearest_station.ID)
 
     def test_get_n_best_vehicles(self):
-        dispatcher = self.SIM_ENV['dispatcher']
+        dispatcher = self.SIM_ENV['assignment']
         test_vehicle = self.SIM_ENV['fleet'][0]
         test_request = self.SIM_ENV['requests'].iloc[0]
 

@@ -1,3 +1,3 @@
-﻿SCENARIO_NAME,REQUESTS_FILE,OPERATING_AREA_FILE,CHARGE_STATIONS_FILE,VEH_BASES_FILE,FLEET_FILE,MAX_DISPATCH_MILES,MAX_ALLOWABLE_IDLE_MINUTES,LOWER_SOC_THRESH_STATION,UPPER_SOC_THRESH_STATION,MIN_ALLOWED_SOC
-aus-test,austin_w_route.csv,austin_ua.json,aus_fuel_stations.csv,aus_veh_bases.csv,aus_fleet.csv,5,10,0.2,0.8,0.05
-nyc-test,nyc_2013-03-01_8-12.csv,manhattan.json,nyc_fuel_stations.csv,nyc_veh_bases.csv,nyc_fleet.csv,5,10,0.2,0.8,0.05
+﻿SCENARIO_NAME,REQUESTS_FILE,OPERATING_AREA_FILE,CHARGE_STATIONS_FILE,VEH_BASES_FILE,FLEET_FILE,ASSIGNMENT,REPOSITIONING,MAX_DISPATCH_MILES,MAX_ALLOWABLE_IDLE_MINUTES,LOWER_SOC_THRESH_STATION,UPPER_SOC_THRESH_STATION,MIN_ALLOWED_SOC
+aus-test,austin_w_route.csv,austin_ua.json,aus_fuel_stations.csv,aus_veh_bases.csv,aus_fleet.csv,greedy,do_nothing,5,10,0.2,0.8,0.05
+nyc-test,nyc_2013-03-01_8-12.csv,manhattan.json,nyc_fuel_stations.csv,nyc_veh_bases.csv,nyc_fleet.csv,greedy,do_nothing,5,10,0.2,0.8,0.05
