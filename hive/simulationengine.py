@@ -215,7 +215,7 @@ class SimulationEngine:
         reporting.generate_logs(self._SIM_ENV['stations'], output_file_paths['station_path'], 'station')
         reporting.generate_logs(self._SIM_ENV['bases'], output_file_paths['base_path'], 'base')
         reporting.generate_logs([self._SIM_ENV['assignment']], output_file_paths['dispatcher_path'], 'assignment')
-        reporting.generate_logs([self._SIM_ENV['repositioning']], output_file_paths['dispatcher_path'], 'repositioning')
+        # reporting.generate_logs([self._SIM_ENV['repositioning']], output_file_paths['dispatcher_path'], 'repositioning')
 
         reporting.summarize_fleet_stats(output_file_paths['vehicle_path'], output_file_paths['summary_path'])
         reporting.summarize_dispatcher(output_file_paths['dispatcher_path'], output_file_paths['summary_path'])
