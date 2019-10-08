@@ -80,7 +80,7 @@ class SimulationEngine:
 
         # Load charging network
         station_log = logging.getLogger('station_log')
-        station_log_file = os.path.join(output_file_paths['station_path'], 'station.log')
+        station_log_file = os.path.join(output_file_paths['station_path'], 'station.csv')
         fh = RotatingFileHandler(
                         station_log_file,
                         maxBytes = 100000000,
@@ -92,7 +92,7 @@ class SimulationEngine:
         SIM_ENV['stations'] = stations
 
         base_log = logging.getLogger('base_log')
-        base_log_file = os.path.join(output_file_paths['base_path'], 'base.log')
+        base_log_file = os.path.join(output_file_paths['base_path'], 'base.csv')
         fh = RotatingFileHandler(
                         base_log_file,
                         maxBytes = 100000000,
@@ -122,7 +122,7 @@ class SimulationEngine:
         SIM_ENV['env_params'] = env_params
 
         vehicle_log = logging.getLogger('vehicle_log')
-        vehicle_log_file = os.path.join(output_file_paths['vehicle_path'], 'vehicle.log')
+        vehicle_log_file = os.path.join(output_file_paths['vehicle_path'], 'vehicle.csv')
         fh = RotatingFileHandler(
                         vehicle_log_file,
                         maxBytes = 100000000,
@@ -167,7 +167,7 @@ class SimulationEngine:
         self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
 
         dispatcher_log = logging.getLogger('dispatcher_log')
-        dispatcher_log_file = os.path.join(output_file_paths['dispatcher_path'], 'dispatcher.log')
+        dispatcher_log_file = os.path.join(output_file_paths['dispatcher_path'], 'dispatcher.csv')
         fh = RotatingFileHandler(
                         dispatcher_log_file,
                         maxBytes = 100000000,
