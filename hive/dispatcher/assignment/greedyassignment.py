@@ -282,8 +282,8 @@ class GreedyAssignment(AbstractAssignment):
                 disp_route_summary = self._route_engine.route(
                                         veh.x,
                                         veh.y,
-                                        request.pickup_lat,
                                         request.pickup_lon,
+                                        request.pickup_lat,
                                         activity = "Dispatch to Request")
                 disp_route = disp_route_summary['route']
                 self._wait_time_min += disp_route_summary['trip_time_s'] * units.SECONDS_TO_MINUTES
