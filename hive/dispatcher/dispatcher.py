@@ -13,7 +13,8 @@ def load_dispatcher(
         demand,
         env_params,
         route_engine,
-        clock
+        clock,
+        log,
 ):
     """
 
@@ -39,7 +40,8 @@ def load_dispatcher(
         demand=demand,
         env_params=env_params,
         route_engine=route_engine,
-        clock=clock)
+        clock=clock,
+        log=log)
 
     if module_type != "combined":
         # only spin_up the repositioning module if it is not the same
@@ -53,7 +55,8 @@ def load_dispatcher(
             demand=demand,
             env_params=env_params,
             route_engine=route_engine,
-            clock=clock
+            clock=clock,
+            log=log,
         )
 
     return assignment_module, repositioning_module

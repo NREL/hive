@@ -8,13 +8,14 @@ import datetime
 import numpy as np
 import math
 import os
+import logging
 
 from hive import helpers as hlp
 from hive import tripenergy as nrg
 from hive import charging as chrg
 from hive import units
 from hive.constraints import VEH_PARAMS
-from hive.utils import assert_constraint
+from hive.utils import assert_constraint, generate_csv_row
 
 
 class Vehicle:
@@ -43,6 +44,26 @@ class Vehicle:
         dictionary of all of the constant environment parameters shared across the simulation.
     """
 
+    LOG_COLUMNS = [
+                'ID',
+                'sim_time',
+                'time',
+                'latitude',
+                'longitude',
+                'step_distance_mi',
+                'active',
+                'available',
+                'reserve',
+                'soc',
+                'range_remaining',
+                'activity',
+                'station',
+                'station_power',
+                'base',
+                'passengers',
+                'reserve',
+                ]
+
     def __init__(
                 self,
                 veh_id,
@@ -54,6 +75,7 @@ class Vehicle:
                 charge_template,
                 clock,
                 env_params,
+                vehicle_log,
                 ):
 
         # Public Constants
@@ -113,6 +135,9 @@ class Vehicle:
         self.activity = "Idle"
 
         self.ENV = env_params
+
+        self.log = vehicle_log
+
 
 
     @property
@@ -233,25 +258,31 @@ class Vehicle:
         else:
             base = self._base.ID
 
-        self.history.append({
-                    'ID': self.ID,
-                    'sim_time': self._clock.now,
-                    'time': self._clock.get_time(),
-                    'latitude': self.x,
-                    'longitude': self.y,
-                    'step_distance_mi': self._step_distance,
-                    'active': self.active,
-                    'available': self.available,
-                    'reserve': self.reserve,
-                    'soc': self.soc,
-                    'range_remaining': self.range_remaining,
-                    'activity': self.activity,
-                    'station': station,
-                    'station_power': self.charging,
-                    'base': base,
-                    'passengers': self.MAX_PASSENGERS - self.avail_seats,
-                    'reserve': self.reserve,
-                    })
+
+        info = [
+            ('ID', self.ID),
+            ('sim_time', self._clock.now),
+            ('time', self._clock.get_time()),
+            ('latitude', self.x),
+            ('longitude', self.y),
+            ('step_distance_mi', self._step_distance),
+            ('active', self.active),
+            ('available', self.available),
+            ('reserve', self.reserve),
+            ('soc', self.soc),
+            ('range_remaining', self.range_remaining),
+            ('activity', self.activity),
+            ('station', station),
+            ('station_power', self.charging),
+            ('base', base),
+            ('passengers', self.MAX_PASSENGERS - self.avail_seats),
+            ('reserve', self.reserve),
+        ]
+
+        self.log.info(generate_csv_row(info, self.LOG_COLUMNS))
+
+
+
 
     def _get_fleet_state(self, param):
         col = self.ENV['FLEET_STATE_IDX'][param]

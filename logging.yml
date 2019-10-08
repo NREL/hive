@@ -3,7 +3,9 @@ version: 1
 disable_existing_loggers: False
 formatters:
   simple:
-    format: "[%(levelname)s] %(asctime)s - %(name)s - %(message)s"
+    format: "[%(levelname)s] %(asctime)s - %(message)s"
+  csv:
+    format: "%(message)s"
 
 handlers:
   console:
@@ -30,13 +32,23 @@ handlers:
     backupCount: 20
     encoding: utf8
 
-#    ---- an example of setting submodule-specific logging for a file called my_module.py ----
-#loggers:
-#  my_module:
-#    level: ERROR
-#    handlers: [console]
-#    propagate: no
+loggers:
+ vehicle_log:
+   level: INFO
 
-root:
-  level: INFO
-  handlers: [console, info_file_handler, error_file_handler]
+ base_log:
+   level: INFO
+
+ station_log:
+   level: INFO
+
+ dispatcher_log:
+   level: INFO
+
+ run_log:
+   level: INFO
+   handlers: [console, info_file_handler, error_file_handler]
+
+# root:
+#   level: INFO
+#   handlers: [console, info_file_handler, error_file_handler]

@@ -140,3 +140,20 @@ def assert_constraint(param, val, CONSTRAINTS, context=""):
         assert val in CONSTRAINTS[param][1], \
             "Context: {} | Param {}:{} must be from set {}"\
             .format(context, param, val, CONSTRAINTS[param][1])
+
+def generate_csv_row(info, log_columns):
+    columns = iter(log_columns)
+    column = next(columns)
+    key = info[0][0]
+    assert key == column
+
+    row = str(info[0][1])
+
+    for entry in info[1:]:
+        key = entry[0]
+        column = next(columns)
+        assert key == column
+
+        row = row + "," + str(entry[1])
+
+    return row
