@@ -9,7 +9,7 @@ class RandomRepositioning(AbstractRepositioning):
     def __init__(self, seed=0):
         self.random = random
         self.random.seed(seed)
-        self.log = logging.getLogger(__name__)
+        self._log = logging.getLogger(__name__)
         self.fleet = None
         self.fleet_state = None
         self.route_engine = None
@@ -44,7 +44,7 @@ class RandomRepositioning(AbstractRepositioning):
             vehicle.cmd_reposition(route['route'])
             agents_repositioned += 1
 
-        self.log.info("repositioned {} agents".format(agents_repositioned))
+        self._log.debug("repositioned {} agents".format(agents_repositioned))
 
     def log(self):
         pass
