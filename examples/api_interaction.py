@@ -5,7 +5,6 @@ import sys
 sys.path.append('..')
 
 from hive.helpers import load_scenario
-from hive.utils import info
 from hive.simulationengine import SimulationEngine
 
 # Replace with your own base scenario
@@ -31,13 +30,15 @@ for size in fleet_sizes:
     # Each call to run_simulation will spawn a new simulation.
     sim_eng.run_simulation(sim_name = sim_name)
 
-    summary_file = os.path.join(out_path, sim_name, 'summaries', 'dispatcher_summary.csv')
-    dispatcher_summary = pd.read_csv(summary_file)
+    dispatcher_log = os.path.join(out_path, sim_name, 'logs', 'dispatcher', 'dispatcher.csv')
+    dispatcher_df = pd.read_csv(dispatcher_log)
 
-    demand_served = round(dispatcher_summary.demand_served_percent.values[0], 2)
+    demand = dispatcher_df.total_requests.sum()
+    served = demand - dispatcher_df.dropped_requests.sum()
+    demand_served = (served/demand) * 100
 
     if demand_served > target_demand_served:
-        info(f"Fleet size of {size} was able to serve {demand_served}% of demand")
+        print(f"Fleet size of {size} was able to serve {demand_served}% of demand")
         break
     else:
-        info(f"Fleet size of {size} was not able to meet target. Only served {demand_served}% of demand")
+        print(f"Fleet size of {size} was not able to meet target. Only served {demand_served}% of demand")
