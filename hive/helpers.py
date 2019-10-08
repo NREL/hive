@@ -16,7 +16,7 @@ from hive.units import METERS_TO_MILES, KILOMETERS_TO_MILES
 from hive.utils import name
 from hive import preprocess as pp
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('run_log')
 
 def haversine_np(lat1, lon1, lat2, lon2):
     """

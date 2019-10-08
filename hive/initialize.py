@@ -10,7 +10,7 @@ from hive.stations import FuelStation
 from hive.vehicle import Vehicle
 
 
-def initialize_stations(station_df, clock):
+def initialize_stations(station_df, clock, log):
     """
     Initializes stations list from DataFrame.
 
@@ -35,8 +35,15 @@ def initialize_stations(station_df, clock):
                               station.plug_type,
                               station.plug_power_kw,
                               clock,
+                              log = log,
                               )
         stations.append(station)
+
+    # write station log header
+    header = stations[0].LOG_COLUMNS[0]
+    for column in stations[0].LOG_COLUMNS[1:]:
+        header = header + "," + column
+    log.info(header)
 
     return stations
 
@@ -47,6 +54,7 @@ def initialize_fleet(vehicle_types,
                         start_time,
                         env_params,
                         clock,
+                        vehicle_log,
                         ):
     """
     Initializes the fleet and the fleet_state matrix.
@@ -76,6 +84,9 @@ def initialize_fleet(vehicle_types,
     id = 0
     veh_fleet = []
     fleet_state_constructor = []
+
+
+
     for veh_type in vehicle_types:
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curve,
@@ -98,6 +109,7 @@ def initialize_fleet(vehicle_types,
                         charge_template = charge_template,
                         clock = clock,
                         env_params = env_params,
+                        vehicle_log = vehicle_log,
                         )
 
             id += 1
@@ -121,6 +133,12 @@ def initialize_fleet(vehicle_types,
                                             ))
 
     fleet_state = np.array(fleet_state_constructor)
+
+    # write vehicle log header
+    header = veh_fleet[0].LOG_COLUMNS[0]
+    for column in veh_fleet[0].LOG_COLUMNS[1:]:
+        header = header + "," + column
+    vehicle_log.info(header)
 
     for veh in veh_fleet:
         #Initialize vehicle location to a random base

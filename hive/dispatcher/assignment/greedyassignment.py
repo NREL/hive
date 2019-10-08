@@ -7,6 +7,7 @@ import numpy as np
 
 from hive import helpers as hlp
 from hive import units
+from hive.utils import generate_csv_row
 from hive.dispatcher.assignment import AbstractAssignment
 
 
@@ -40,6 +41,7 @@ class GreedyAssignment(AbstractAssignment):
                 env_params=None,
                 route_engine=None,
                 clock=None,
+                log=None,
                 ):
 
         if fleet is None:
@@ -54,6 +56,7 @@ class GreedyAssignment(AbstractAssignment):
                 env_params,
                 route_engine,
                 clock,
+                log,
                 )
 
     def spin_up(
@@ -66,6 +69,7 @@ class GreedyAssignment(AbstractAssignment):
                 env_params,
                 route_engine,
                 clock,
+                log,
                 ):
 
         self.ID = 0
@@ -94,6 +98,15 @@ class GreedyAssignment(AbstractAssignment):
         self._charge_matrix = np.zeros((4,3))
         self._calc_charge_matrix()
 
+        self.logger = log
+
+        # write dispatcher log header
+        header = self.LOG_COLUMNS[0]
+        for column in self.LOG_COLUMNS[1:]:
+            header = header + "," + column
+        self.logger.info(header)
+
+
     def _get_fleet_state_col(self, param):
         col = self._ENV['FLEET_STATE_IDX'][param]
         return self._fleet_state[:, col]
@@ -106,28 +119,19 @@ class GreedyAssignment(AbstractAssignment):
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         active_vehicles = self._fleet_state[:, active_col].sum()
 
-        self._calc_charge_matrix()
+        # self._calc_charge_matrix()
 
-        self.history.append({
-                        'sim_time': self._clock.now,
-                        'time': self._clock.get_time(),
-                        'active_vehicles': active_vehicles,
-                        'dropped_requests': self._dropped_requests,
-                        'total_requests': self._total_requests,
-                        '_wait_time_min': self._wait_time_min,
-                        'cm_in_service_high_range': self._charge_matrix[0,0],
-                        'cm_in_service_med_range': self._charge_matrix[0,1],
-                        'cm_in_service_low_range': self._charge_matrix[0,2],
-                        'cm_fast_charge_high_range': self._charge_matrix[1,0],
-                        'cm_fast_charge_med_range': self._charge_matrix[1,1],
-                        'cm_fast_charge_low_range': self._charge_matrix[1,2],
-                        'cm_slow_charge_high_range': self._charge_matrix[2,0],
-                        'cm_slow_charge_med_range': self._charge_matrix[2,1],
-                        'cm_slow_charge_low_range': self._charge_matrix[2,2],
-                        'cm_out_service_high_range': self._charge_matrix[3,0],
-                        'cm_out_service_med_range': self._charge_matrix[3,1],
-                        'cm_out_service_low_range': self._charge_matrix[3,2],
-                        })
+        info = [
+            ('sim_time', self._clock.now),
+            ('time', self._clock.get_time()),
+            ('active_vehicles', active_vehicles),
+            ('dropped_requests', self._dropped_requests),
+            ('total_requests', self._total_requests),
+            ('wait_time_min', self._wait_time_min),
+            ]
+
+        self.logger.info(generate_csv_row(info, self.LOG_COLUMNS))
+
 
     def _calc_charge_matrix(self):
         soc = self._get_fleet_state_col('soc')

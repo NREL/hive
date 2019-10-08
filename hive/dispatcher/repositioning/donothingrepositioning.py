@@ -21,6 +21,7 @@ class DoNothingRepositioning(AbstractRepositioning):
             env_params,
             route_engine,
             clock,
+            log,
     ):
         """
         mandatory constructor, but, nothing is stored since nothing happens

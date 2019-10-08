@@ -23,7 +23,7 @@ from hive.constraints import ENV_PARAMS
 from hive import units
 from hive import utils
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('run_log')
 
 def gen_synth_pax_cnt():
     """Randomly assigns passenger count from real-world distribution measured
