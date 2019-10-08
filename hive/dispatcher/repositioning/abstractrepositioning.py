@@ -20,6 +20,7 @@ class AbstractRepositioning(ABC):
             env_params,
             route_engine,
             clock,
+            log,
     ):
         """
         sets repositioning up with relevant data for this simulation

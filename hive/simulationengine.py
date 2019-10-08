@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 from datetime import timedelta
 
@@ -26,14 +27,14 @@ class SimulationEngine:
 
     def __init__(self, input_data, out_path=''):
 
-        self.log = logging.getLogger(__name__)
-        
+        self.log = logging.getLogger('run_log')
+
         self._SIM_ENV = None
 
         self.input_data = input_data
         self.out_path = out_path
 
-    def _build_simulation_env(self):
+    def _build_simulation_env(self, output_file_paths):
         SIM_ENV = {}
 
         # Load requests
@@ -78,11 +79,27 @@ class SimulationEngine:
         # TODO: reqs_df.to_csv(self.input_data['OUT_PATH'] + sim_name + 'requests/' + requests_filename, index=False)
 
         # Load charging network
+        station_log = logging.getLogger('station_log')
+        station_log_file = os.path.join(output_file_paths['station_path'], 'station.csv')
+        fh = RotatingFileHandler(
+                        station_log_file,
+                        maxBytes = 100000000,
+                        backupCount = 100,)
+        station_log.handlers = [fh]
+
         self.log.info("Loading charge network..")
-        stations = initialize_stations(self.input_data['stations'], sim_clock)
+        stations = initialize_stations(self.input_data['stations'], sim_clock, station_log)
         SIM_ENV['stations'] = stations
 
-        bases = initialize_stations(self.input_data['bases'], sim_clock)
+        base_log = logging.getLogger('base_log')
+        base_log_file = os.path.join(output_file_paths['base_path'], 'base.csv')
+        fh = RotatingFileHandler(
+                        base_log_file,
+                        maxBytes = 100000000,
+                        backupCount = 100,)
+        base_log.handlers = [fh]
+
+        bases = initialize_stations(self.input_data['bases'], sim_clock, base_log)
         SIM_ENV['bases'] = bases
         self.log.info("loaded {0} stations & {1} bases".format(len(stations), len(bases)))
 
@@ -104,6 +121,14 @@ class SimulationEngine:
         env_params['FLEET_STATE_IDX'] = FLEET_STATE_IDX
         SIM_ENV['env_params'] = env_params
 
+        vehicle_log = logging.getLogger('vehicle_log')
+        vehicle_log_file = os.path.join(output_file_paths['vehicle_path'], 'vehicle.csv')
+        fh = RotatingFileHandler(
+                        vehicle_log_file,
+                        maxBytes = 100000000,
+                        backupCount = 100,)
+        vehicle_log.handlers = [fh]
+
         vehicle_types = [veh for veh in self.input_data['vehicles'].itertuples()]
         fleet, fleet_state = initialize_fleet(vehicle_types=vehicle_types,
                                               bases=bases,
@@ -111,7 +136,8 @@ class SimulationEngine:
                                               whmi_lookup=self.input_data['whmi_lookup'],
                                               start_time=reqs_df.pickup_time.iloc[0],
                                               env_params=env_params,
-                                              clock=sim_clock)
+                                              clock=sim_clock,
+                                              vehicle_log=vehicle_log)
         self.log.info("{} vehicles initialized".format(len(fleet)))
         SIM_ENV['fleet'] = fleet
 
@@ -140,6 +166,14 @@ class SimulationEngine:
         self.log.info("dispatcher loading {} assignment module".format(assignment_module_name))
         self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
 
+        dispatcher_log = logging.getLogger('dispatcher_log')
+        dispatcher_log_file = os.path.join(output_file_paths['dispatcher_path'], 'dispatcher.csv')
+        fh = RotatingFileHandler(
+                        dispatcher_log_file,
+                        maxBytes = 100000000,
+                        backupCount = 100,)
+        dispatcher_log.handlers = [fh]
+
         assignment_module, repositioning_module = dispatcher.load_dispatcher(
             assignment_module_name,
             repositioning_module_name,
@@ -150,7 +184,8 @@ class SimulationEngine:
             demand,
             env_params,
             route_engine,
-            sim_clock
+            sim_clock,
+            dispatcher_log
         )
 
         SIM_ENV['assignment'] = assignment_module
@@ -172,11 +207,11 @@ class SimulationEngine:
         self.log.info("Building scenario output directory..")
         output_file_paths = build_output_dir(sim_name, self.out_path)
 
-        vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
-        fleet_summary_file = os.path.join(output_file_paths['summary_path'], 'fleet_summary.txt')
-        station_summary_file = os.path.join(output_file_paths['summary_path'], 'station_summary.csv')
+        # vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
+        # fleet_summary_file = os.path.join(output_file_paths['summary_path'], 'fleet_summary.txt')
+        # station_summary_file = os.path.join(output_file_paths['summary_path'], 'station_summary.csv')
 
-        self._build_simulation_env()
+        self._build_simulation_env(output_file_paths)
 
         total_iterations = len(self._SIM_ENV['sim_time_steps']) - 1
         i = 0
@@ -209,13 +244,6 @@ class SimulationEngine:
             next(self._SIM_ENV['sim_clock'])
 
         self.log.info("Done Simulating")
-        self.log.info("Generating logs and summary statistics..")
 
-        reporting.generate_logs(self._SIM_ENV['fleet'], output_file_paths['vehicle_path'], 'vehicle')
-        reporting.generate_logs(self._SIM_ENV['stations'], output_file_paths['station_path'], 'station')
-        reporting.generate_logs(self._SIM_ENV['bases'], output_file_paths['base_path'], 'base')
-        reporting.generate_logs([self._SIM_ENV['assignment']], output_file_paths['dispatcher_path'], 'assignment')
-        # reporting.generate_logs([self._SIM_ENV['repositioning']], output_file_paths['dispatcher_path'], 'repositioning')
-
-        reporting.summarize_fleet_stats(output_file_paths['vehicle_path'], output_file_paths['summary_path'])
-        reporting.summarize_dispatcher(output_file_paths['dispatcher_path'], output_file_paths['summary_path'])
+        # reporting.summarize_fleet_stats(output_file_paths['vehicle_path'], output_file_paths['summary_path'])
+        # reporting.summarize_dispatcher(output_file_paths['dispatcher_path'], output_file_paths['summary_path'])

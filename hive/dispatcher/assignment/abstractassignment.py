@@ -5,6 +5,14 @@ class AbstractAssignment(ABC):
     """
     functions expected to be found on a Dispatcher
     """
+    LOG_COLUMNS = [
+        'sim_time',
+        'time',
+        'active_vehicles',
+        'dropped_requests',
+        'total_requests',
+        'wait_time_min',
+        ]
 
     def __init__(self):
         super().__init__()
@@ -20,6 +28,7 @@ class AbstractAssignment(ABC):
         env_params,
         route_engine,
         clock,
+        log,
     ):
         """
         sets dispatcher up with relevant data for this simulation
