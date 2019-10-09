@@ -1,10 +1,14 @@
 import numpy as np
 import requests
 
+from collections import namedtuple
+
 from hive import units
 from hive.helpers import estimate_vmt_latlon
 
 #TODO: Consolidate route engine into parent and children classes.
+
+Point = namedtuple('Point', ['lat', 'lon'])
 
 class OSRMRouteEngine:
     """
@@ -29,7 +33,7 @@ class OSRMRouteEngine:
         addr = f'{self.server}/route/v1/driving/{olon},{olat};{dlon},{dlat}?overview=full&geometries=geojson&annotations=true'
         r = requests.get(addr)
         raw_json = r.json()
-        raw_route = [(p[1], p[0]) for p in raw_json['routes'][0]['geometry']['coordinates']]
+        raw_route = [Point(p[1], p[0]) for p in raw_json['routes'][0]['geometry']['coordinates']]
         durations = raw_json['routes'][0]['legs'][0]['annotation']['duration']
         dists = raw_json['routes'][0]['legs'][0]['annotation']['distance']
         route_time = np.cumsum(durations)
@@ -84,19 +88,19 @@ class DefaultRouteEngine:
         steps = round(trip_time_s/self.TIMESTEP_S)
 
         route_summary['trip_time_s'] = trip_time_s
-        route_summary['trip_dist_mi'] = trip_dist_mi 
+        route_summary['trip_dist_mi'] = trip_dist_mi
 
         if steps <= 1:
-            route_summary['route'] = [((olat, olon), trip_dist_mi, activity), ((dlat, dlon), trip_dist_mi, activity)]
+            route_summary['route'] = [(Point(olat, olon), trip_dist_mi, activity), (Point(dlat, dlon), trip_dist_mi, activity)]
             return route_summary
         step_distance_mi = trip_dist_mi/steps
         route_range = np.arange(0, steps + 1)
         route = []
         for i, time in enumerate(route_range):
             t = i/steps
-            xt = (1-t)*olat + t*dlat
-            yt = (1-t)*olon + t*dlon
-            point = (xt, yt)
+            latt = (1-t)*olat + t*dlat
+            lont = (1-t)*olon + t*dlon
+            point = Point(latt, lont)
             route.append((point, step_distance_mi, activity))
 
         route_summary['route'] = route

@@ -194,10 +194,10 @@ class GreedyAssignment(AbstractAssignment):
 
             dist_to_nearest = INF
             for station in search_space:
-                dist_mi = hlp.estimate_vmt_latlon(vehicle.x,
-                                               vehicle.y,
-                                               station.X,
-                                               station.Y,
+                dist_mi = hlp.estimate_vmt_latlon(vehicle.lat,
+                                               vehicle.lon,
+                                               station.LAT,
+                                               station.LON,
                                                scaling_factor = vehicle.ENV['RN_SCALING_FACTOR'])
                 if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
@@ -232,11 +232,11 @@ class GreedyAssignment(AbstractAssignment):
         """
         fleet_state = self._fleet_state
         point = np.array([request.pickup_lat, request.pickup_lon])
-        x_col = self._ENV['FLEET_STATE_IDX']['x']
-        y_col = self._ENV['FLEET_STATE_IDX']['y']
+        lat_col = self._ENV['FLEET_STATE_IDX']['lat']
+        lon_col = self._ENV['FLEET_STATE_IDX']['lon']
         dist = hlp.haversine_np(
-                        fleet_state[:, x_col].astype(np.float64),
-                        fleet_state[:, y_col].astype(np.float64),
+                        fleet_state[:, lat_col].astype(np.float64),
+                        fleet_state[:, lon_col].astype(np.float64),
                         point[0],
                         point[1],
                         )
@@ -284,10 +284,10 @@ class GreedyAssignment(AbstractAssignment):
                 vehid = best_vehicle[0]
                 veh = self._fleet[vehid]
                 disp_route_summary = self._route_engine.route(
-                                        veh.x,
-                                        veh.y,
-                                        request.pickup_lon,
+                                        veh.lat,
+                                        veh.lon,
                                         request.pickup_lat,
+                                        request.pickup_lon,
                                         activity = "Dispatch to Request")
                 disp_route = disp_route_summary['route']
                 self._wait_time_min += disp_route_summary['trip_time_s'] * units.SECONDS_TO_MINUTES
@@ -329,7 +329,7 @@ class GreedyAssignment(AbstractAssignment):
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
-            route_summary = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon, station.LAT, station.LON, 'Moving to Station')
             route = route_summary['route']
             vehicle.cmd_charge(station, route)
 
@@ -346,7 +346,7 @@ class GreedyAssignment(AbstractAssignment):
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            route_summary = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon, base.LAT, base.LON, 'Moving to Base')
             route = route_summary['route']
             vehicle.cmd_return_to_base(base, route)
 

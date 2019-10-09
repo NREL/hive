@@ -116,8 +116,8 @@ class Vehicle:
         self.history = []
 
         # Postition variables
-        self._x = None
-        self._y = None
+        self._lat = None
+        self._lon = None
 
         self._route = None
         self._route_iter = None
@@ -141,22 +141,22 @@ class Vehicle:
 
 
     @property
-    def x(self):
-        return self._x
+    def lat(self):
+        return self._lat
 
-    @x.setter
-    def x(self, val):
-        self._x = val
-        self._set_fleet_state('x', val)
+    @lat.setter
+    def lat(self, val):
+        self._lat = val
+        self._set_fleet_state('lat', val)
 
     @property
-    def y(self):
-        return self._y
+    def lon(self):
+        return self._lon
 
-    @y.setter
-    def y(self, val):
-        self._y = val
-        self._set_fleet_state('y', val)
+    @lon.setter
+    def lon(self, val):
+        self._lon = val
+        self._set_fleet_state('lon', val)
 
     @property
     def active(self):
@@ -263,8 +263,8 @@ class Vehicle:
             ('ID', self.ID),
             ('sim_time', self._clock.now),
             ('time', self._clock.get_time()),
-            ('latitude', self.x),
-            ('longitude', self.y),
+            ('latitude', self.lat),
+            ('longitude', self.lon),
             ('step_distance_mi', self._step_distance),
             ('active', self.active),
             ('available', self.available),
@@ -317,12 +317,12 @@ class Vehicle:
             try:
                 location, dist_mi, activity = next(self._route_iter)
                 self.activity = activity
-                new_x = location[0]
-                new_y = location[1]
+                new_lat = location.lat
+                new_lon = location.lon
                 self._update_charge(dist_mi)
                 self._step_distance = dist_mi
-                self.x = new_x
-                self.y = new_y
+                self.lat = new_lat
+                self.lon = new_lon
             except StopIteration:
                 self._route = None
                 if self._station is None:
@@ -352,23 +352,6 @@ class Vehicle:
                 self._leave_station()
 
 
-
-    def _generate_route(self, x0, y0, x1, y1, trip_dist_mi, trip_time_s, activity="NULL"):
-        steps = round(trip_time_s/self._clock.TIMESTEP_S)
-        if steps <= 1:
-            return [((x0, y0), trip_dist_mi, activity), ((x1, y1), trip_dist_mi, activity)]
-        step_distance_mi = trip_dist_mi/steps
-        route_range = np.arange(0, steps + 1)
-        route = []
-        for i, time in enumerate(route_range):
-            t = i/steps
-            xt = (1-t)*x0 + t*x1
-            yt = (1-t)*y0 + t*y1
-            point = (xt, yt)
-            route.append((point, step_distance_mi, activity))
-        return route
-
-
     def cmd_make_trip(self, route, passengers):
 
         """
@@ -385,10 +368,10 @@ class Vehicle:
         if route is None:
             return
 
-        start_x = route[0][0][0]
-        start_y = route[0][0][1]
+        start_lat = route[0][0].lat
+        start_lon = route[0][0].lon
 
-        assert (self.x, self.y) == (start_x, start_y), \
+        assert (self.lat, self.lon) == (start_lat, start_lon), \
             "Route must start at current vehicle location"
 
         self.active = True
@@ -417,10 +400,10 @@ class Vehicle:
         if route is None:
             return
 
-        start_x = route[0][0][0]
-        start_y = route[0][0][1]
+        start_lat = route[0][0].lat
+        start_lon = route[0][0].lon
 
-        assert (self.x, self.y) == (start_x, start_y), \
+        assert (self.lat, self.lon) == (start_lat, start_lon), \
             "Route must start at current vehicle location"
 
         self._route = route
