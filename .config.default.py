@@ -38,3 +38,11 @@ RANDOM_SEED = 123
 
 USE_OSRM = False
 OSRM_SERVER = 'http://0.0.0.0:5000'
+
+# Specify which logs you want hive to write
+LOGS = [
+    'vehicles',
+    'stations',
+    'bases',
+    'dispatcher'
+]

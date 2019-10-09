@@ -11,7 +11,12 @@ from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
 from hive.dispatcher import dispatcher
 from hive.initialize import initialize_stations, initialize_fleet
-from hive.utils import Clock, assert_constraint, build_output_dir, progress_bar
+from hive.utils import (
+    Clock,
+    assert_constraint,
+    build_output_dir,
+    progress_bar,
+    )
 
 
 class SimulationEngine:
@@ -26,8 +31,18 @@ class SimulationEngine:
     """
 
     def __init__(self, input_data, out_path=''):
-
         self.log = logging.getLogger('run_log')
+
+        formatter = logging.Formatter("[%(levelname)s] %(asctime)s - %(message)s")
+        run_handler = RotatingFileHandler(os.path.join(out_path, 'run.log'))
+        run_handler.setFormatter(formatter)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+
+        self.log.addHandler(run_handler)
+        self.log.addHandler(console_handler)
+        self.log.setLevel(logging.INFO)
 
         self._SIM_ENV = None
 
@@ -79,25 +94,36 @@ class SimulationEngine:
         # TODO: reqs_df.to_csv(self.input_data['OUT_PATH'] + sim_name + 'requests/' + requests_filename, index=False)
 
         # Load charging network
-        station_log = logging.getLogger('station_log')
-        station_log_file = os.path.join(output_file_paths['station_path'], 'station.csv')
-        fh = RotatingFileHandler(
-                        station_log_file,
-                        maxBytes = 100000000,
-                        backupCount = 100,)
-        station_log.handlers = [fh]
+        station_log = None
+        if 'stations' in self.input_data['LOGS']:
+            station_log = logging.getLogger('station_log')
+            station_log_file = os.path.join(output_file_paths['station_path'], 'station.csv')
+            fh = RotatingFileHandler(
+                            station_log_file,
+                            maxBytes = 100000000,
+                            backupCount = 100,)
+
+            formatter = logging.Formatter("%(message)s")
+            fh.setFormatter(formatter)
+            station_log.addHandler(fh)
+            station_log.setLevel(logging.INFO)
 
         self.log.info("Loading charge network..")
         stations = initialize_stations(self.input_data['stations'], sim_clock, station_log)
         SIM_ENV['stations'] = stations
 
-        base_log = logging.getLogger('base_log')
-        base_log_file = os.path.join(output_file_paths['base_path'], 'base.csv')
-        fh = RotatingFileHandler(
-                        base_log_file,
-                        maxBytes = 100000000,
-                        backupCount = 100,)
-        base_log.handlers = [fh]
+        base_log = None
+        if 'bases' in self.input_data['LOGS']:
+            base_log = logging.getLogger('base_log')
+            base_log_file = os.path.join(output_file_paths['base_path'], 'base.csv')
+            fh = RotatingFileHandler(
+                            base_log_file,
+                            maxBytes = 100000000,
+                            backupCount = 100,)
+
+            fh.setFormatter(formatter)
+            base_log.addHandler(fh)
+            base_log.setLevel(logging.INFO)
 
         bases = initialize_stations(self.input_data['bases'], sim_clock, base_log)
         SIM_ENV['bases'] = bases
@@ -121,13 +147,18 @@ class SimulationEngine:
         env_params['FLEET_STATE_IDX'] = FLEET_STATE_IDX
         SIM_ENV['env_params'] = env_params
 
-        vehicle_log = logging.getLogger('vehicle_log')
-        vehicle_log_file = os.path.join(output_file_paths['vehicle_path'], 'vehicle.csv')
-        fh = RotatingFileHandler(
-                        vehicle_log_file,
-                        maxBytes = 100000000,
-                        backupCount = 100,)
-        vehicle_log.handlers = [fh]
+        vehicle_log = None
+        if 'vehicles' in self.input_data['LOGS']:
+            vehicle_log = logging.getLogger('vehicle_log')
+            vehicle_log_file = os.path.join(output_file_paths['vehicle_path'], 'vehicle.csv')
+            fh = RotatingFileHandler(
+                            vehicle_log_file,
+                            maxBytes = 100000000,
+                            backupCount = 100,)
+
+            fh.setFormatter(formatter)
+            vehicle_log.addHandler(fh)
+            vehicle_log.setLevel(logging.INFO)
 
         vehicle_types = [veh for veh in self.input_data['vehicles'].itertuples()]
         fleet, fleet_state = initialize_fleet(vehicle_types=vehicle_types,
@@ -166,13 +197,18 @@ class SimulationEngine:
         self.log.info("dispatcher loading {} assignment module".format(assignment_module_name))
         self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
 
-        dispatcher_log = logging.getLogger('dispatcher_log')
-        dispatcher_log_file = os.path.join(output_file_paths['dispatcher_path'], 'dispatcher.csv')
-        fh = RotatingFileHandler(
-                        dispatcher_log_file,
-                        maxBytes = 100000000,
-                        backupCount = 100,)
-        dispatcher_log.handlers = [fh]
+        dispatcher_log = None
+        if 'dispatcher' in self.input_data['LOGS']:
+            dispatcher_log = logging.getLogger('dispatcher_log')
+            dispatcher_log_file = os.path.join(output_file_paths['dispatcher_path'], 'dispatcher.csv')
+            fh = RotatingFileHandler(
+                            dispatcher_log_file,
+                            maxBytes = 100000000,
+                            backupCount = 100,)
+
+            fh.setFormatter(formatter)
+            dispatcher_log.addHandler(fh)
+            dispatcher_log.setLevel(logging.INFO)
 
         assignment_module, repositioning_module = dispatcher.load_dispatcher(
             assignment_module_name,

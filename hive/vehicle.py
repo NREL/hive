@@ -248,6 +248,9 @@ class Vehicle:
         return str(f"Vehicle(id: {self.ID}, name: {self.NAME})")
 
     def _log(self):
+        if not self.log:
+            return
+            
         if self._station is None:
             station = None
         else:
