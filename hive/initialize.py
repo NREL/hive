@@ -40,10 +40,11 @@ def initialize_stations(station_df, clock, log):
         stations.append(station)
 
     # write station log header
-    header = stations[0].LOG_COLUMNS[0]
-    for column in stations[0].LOG_COLUMNS[1:]:
-        header = header + "," + column
-    log.info(header)
+    if log:
+        header = stations[0].LOG_COLUMNS[0]
+        for column in stations[0].LOG_COLUMNS[1:]:
+            header = header + "," + column
+        log.info(header)
 
     return stations
 
@@ -135,10 +136,11 @@ def initialize_fleet(vehicle_types,
     fleet_state = np.array(fleet_state_constructor)
 
     # write vehicle log header
-    header = veh_fleet[0].LOG_COLUMNS[0]
-    for column in veh_fleet[0].LOG_COLUMNS[1:]:
-        header = header + "," + column
-    vehicle_log.info(header)
+    if vehicle_log:
+        header = veh_fleet[0].LOG_COLUMNS[0]
+        for column in veh_fleet[0].LOG_COLUMNS[1:]:
+            header = header + "," + column
+        vehicle_log.info(header)
 
     for veh in veh_fleet:
         #Initialize vehicle location to a random base

@@ -101,10 +101,11 @@ class GreedyAssignment(AbstractAssignment):
         self.logger = log
 
         # write dispatcher log header
-        header = self.LOG_COLUMNS[0]
-        for column in self.LOG_COLUMNS[1:]:
-            header = header + "," + column
-        self.logger.info(header)
+        if log:
+            header = self.LOG_COLUMNS[0]
+            for column in self.LOG_COLUMNS[1:]:
+                header = header + "," + column
+            self.logger.info(header)
 
 
     def _get_fleet_state_col(self, param):
@@ -115,6 +116,8 @@ class GreedyAssignment(AbstractAssignment):
         """
         Function stores the partial state of the object at each time step.
         """
+        if not self.logger:
+            return
 
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         active_vehicles = self._fleet_state[:, active_col].sum()

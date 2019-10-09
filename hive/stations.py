@@ -76,6 +76,9 @@ class FuelStation:
         self.log = log
 
     def _log(self):
+        if not self.log:
+            return
+            
         power_usage_kw = self._energy_dispensed_kwh / (self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS)
         vehicles_charging = round(power_usage_kw/self.PLUG_POWER_KW)
 
