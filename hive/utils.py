@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 import glob
 import os
 import pickle
@@ -67,7 +68,10 @@ def build_output_dir(scenario_name, root_path):
     """
     Function to build scenario level output directory in root output directory.
     """
-    scenario_output = os.path.join(root_path, scenario_name)
+
+    experiment_time = datetime.now().strftime("%d-%m-%Y_%I-%M-%S_%p")
+    scenario_dir = "{}-{}".format(scenario_name, experiment_time)
+    scenario_output = os.path.join(root_path, scenario_dir)
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
     os.makedirs(scenario_output)
