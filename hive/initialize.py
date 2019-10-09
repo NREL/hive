@@ -10,7 +10,7 @@ from hive.stations import FuelStation
 from hive.vehicle import Vehicle
 
 
-def initialize_stations(station_df, clock):
+def initialize_stations(station_df, clock, log):
     """
     Initializes stations list from DataFrame.
 
@@ -35,8 +35,16 @@ def initialize_stations(station_df, clock):
                               station.plug_type,
                               station.plug_power_kw,
                               clock,
+                              log = log,
                               )
         stations.append(station)
+
+    # write station log header
+    if log:
+        header = stations[0].LOG_COLUMNS[0]
+        for column in stations[0].LOG_COLUMNS[1:]:
+            header = header + "," + column
+        log.info(header)
 
     return stations
 
@@ -47,6 +55,7 @@ def initialize_fleet(vehicle_types,
                         start_time,
                         env_params,
                         clock,
+                        vehicle_log,
                         ):
     """
     Initializes the fleet and the fleet_state matrix.
@@ -76,6 +85,9 @@ def initialize_fleet(vehicle_types,
     id = 0
     veh_fleet = []
     fleet_state_constructor = []
+
+
+
     for veh_type in vehicle_types:
         charge_template = chrg.construct_temporal_charge_template(
                                                     charge_curve,
@@ -98,6 +110,7 @@ def initialize_fleet(vehicle_types,
                         charge_template = charge_template,
                         clock = clock,
                         env_params = env_params,
+                        vehicle_log = vehicle_log,
                         )
 
             id += 1
@@ -107,8 +120,8 @@ def initialize_fleet(vehicle_types,
             veh_fleet.append(veh)
 
             #TODO: Make this more explicit
-            fleet_state_constructor.append((veh.x,
-                                            veh.y,
+            fleet_state_constructor.append((veh.lat,
+                                            veh.lon,
                                             1,
                                             1,
                                             0,
@@ -122,13 +135,20 @@ def initialize_fleet(vehicle_types,
 
     fleet_state = np.array(fleet_state_constructor)
 
+    # write vehicle log header
+    if vehicle_log:
+        header = veh_fleet[0].LOG_COLUMNS[0]
+        for column in veh_fleet[0].LOG_COLUMNS[1:]:
+            header = header + "," + column
+        vehicle_log.info(header)
+
     for veh in veh_fleet:
         #Initialize vehicle location to a random base
         base = random.choice(bases)
         veh.fleet_state = fleet_state
         veh.energy_kwh = np.random.uniform(0.2, 1.0) * veh.BATTERY_CAPACITY
-        veh.x = base.X
-        veh.y = base.Y
+        veh.lat = base.LAT
+        veh.lon = base.LON
         veh.base = base
 
     return veh_fleet, fleet_state

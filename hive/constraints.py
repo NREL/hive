@@ -30,9 +30,9 @@ STATION_PARAMS = {
     'PLUG_POWER': ('greater_than', 0),  # kw
 }
 
-FLEET_STATE_IDX = {
-    'x': 0,
-    'y': 1,
+FLEET_STATE_IDX ={
+    'lat': 0,
+    'lon': 1,
     'active': 2,
     'available': 3,
     'soc': 4,

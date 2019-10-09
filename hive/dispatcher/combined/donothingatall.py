@@ -11,7 +11,7 @@ class DoNothingAtAll(AbstractCombined):
     # the header. this is the minimal placeholder to spoof that function.
     history = [{}]
 
-    def spin_up(self, fleet, fleet_state, stations, bases, demand, env_params, route_engine, clock):
+    def spin_up(self, fleet, fleet_state, stations, bases, demand, env_params, route_engine, clock, log):
         pass
 
     def process_requests(self, requests):

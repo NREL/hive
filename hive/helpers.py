@@ -17,7 +17,7 @@ from hive.units import METERS_TO_MILES, KILOMETERS_TO_MILES
 from hive.utils import name
 from hive import preprocess as pp
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('run_log')
 
 
 def haversine_np(lat1, lon1, lat2, lon2):
@@ -167,6 +167,7 @@ def load_scenario(scenario_file):
         data['SIMULATION_PERIOD_SECONDS'] = cfg.SIMULATION_PERIOD_SECONDS
         data['USE_OSRM'] = cfg.USE_OSRM
         data['OSRM_SERVER'] = cfg.OSRM_SERVER
+        data['LOGS'] = cfg.LOGS
 
         if 'ASSIGNMENT' in yaml_data:
             data['ASSIGNMENT'] = yaml_data['ASSIGNMENT']

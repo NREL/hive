@@ -3,7 +3,7 @@ Charging station objects used in the HIVE simulation platform.
 """
 
 from hive.constraints import STATION_PARAMS
-from hive.utils import assert_constraint
+from hive.utils import assert_constraint, generate_csv_row
 from hive import units
 
 import sys
@@ -30,6 +30,14 @@ class FuelStation:
     clock: hive.utils.Clock
         simulation clock shared across the simulation to track simulation time steps.
     """
+    LOG_COLUMNS = [
+            'ID',
+            'sim_time',
+            'time',
+            'vehicles_charging',
+            'power_usage_kw',
+            'energy_dispensed_kwh',
+            ]
 
     def __init__(
                 self,
@@ -40,12 +48,13 @@ class FuelStation:
                 plug_type,
                 plug_power_kw,
                 clock,
+                log,
                 ):
 
         self.ID = station_id
 
-        self.X = latitude
-        self.Y = longitude
+        self.LAT = latitude
+        self.LON = longitude 
 
         assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
         self.TOTAL_PLUGS = plugs
@@ -64,17 +73,25 @@ class FuelStation:
 
         self._energy_dispensed_kwh = 0
 
+        self.log = log
+
     def _log(self):
+        if not self.log:
+            return
+            
         power_usage_kw = self._energy_dispensed_kwh / (self._clock.TIMESTEP_S * units.SECONDS_TO_HOURS)
         vehicles_charging = round(power_usage_kw/self.PLUG_POWER_KW)
-        self.history.append({
-                        'ID': self.ID,
-                        'sim_time': self._clock.now,
-                        'time': self._clock.get_time(),
-                        'vehicles_charging': vehicles_charging,
-                        'power_usage_kw': power_usage_kw,
-                        'energy_dispensed_kwh': self._energy_dispensed_kwh,
-                        })
+
+        info = [
+            ('ID', self.ID),
+            ('sim_time', self._clock.now),
+            ('time', self._clock.get_time()),
+            ('vehicles_charging', vehicles_charging),
+            ('power_usage_kw', power_usage_kw),
+            ('energy_dispensed_kwh', self._energy_dispensed_kwh),
+            ]
+
+        self.log.info(generate_csv_row(info, self.LOG_COLUMNS))
 
     def dispense_energy(self):
         """
@@ -95,7 +112,9 @@ class FuelStation:
 
     def step(self):
         """
-        Called each time step. Station updates its state and log history.
+        Called each time step. Station updates its state.
         """
-        self._log()
+        if self._energy_dispensed_kwh > 0:
+            self._log()
+
         self._energy_dispensed_kwh = 0

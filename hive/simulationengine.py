@@ -45,7 +45,6 @@ class SimulationEngine:
         self.log.addHandler(console_handler)
         self.log.setLevel(logging.INFO)
 
-
         self._SIM_ENV = None
 
         self.input_data = input_data
@@ -123,6 +122,7 @@ class SimulationEngine:
                             maxBytes = 100000000,
                             backupCount = 100,)
 
+            formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
             base_log.addHandler(fh)
             base_log.setLevel(logging.INFO)
@@ -162,6 +162,7 @@ class SimulationEngine:
                             maxBytes = 100000000,
                             backupCount = 100,)
 
+            formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
             vehicle_log.addHandler(fh)
             vehicle_log.setLevel(logging.INFO)
@@ -212,6 +213,7 @@ class SimulationEngine:
                             maxBytes = 100000000,
                             backupCount = 100,)
 
+            formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
             dispatcher_log.addHandler(fh)
             dispatcher_log.setLevel(logging.INFO)

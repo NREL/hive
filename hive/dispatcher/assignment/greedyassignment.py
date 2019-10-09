@@ -7,6 +7,7 @@ import numpy as np
 
 from hive import helpers as hlp
 from hive import units
+from hive.utils import generate_csv_row
 from hive.dispatcher.assignment import AbstractAssignment
 
 
@@ -40,6 +41,7 @@ class GreedyAssignment(AbstractAssignment):
                 env_params=None,
                 route_engine=None,
                 clock=None,
+                log=None,
                 ):
 
         if fleet is None:
@@ -54,6 +56,7 @@ class GreedyAssignment(AbstractAssignment):
                 env_params,
                 route_engine,
                 clock,
+                log,
                 )
 
     def spin_up(
@@ -66,6 +69,7 @@ class GreedyAssignment(AbstractAssignment):
                 env_params,
                 route_engine,
                 clock,
+                log,
                 ):
 
         self.ID = 0
@@ -94,6 +98,16 @@ class GreedyAssignment(AbstractAssignment):
         self._charge_matrix = np.zeros((4,3))
         self._calc_charge_matrix()
 
+        self.logger = log
+
+        # write dispatcher log header
+        if log:
+            header = self.LOG_COLUMNS[0]
+            for column in self.LOG_COLUMNS[1:]:
+                header = header + "," + column
+            self.logger.info(header)
+
+
     def _get_fleet_state_col(self, param):
         col = self._ENV['FLEET_STATE_IDX'][param]
         return self._fleet_state[:, col]
@@ -102,32 +116,25 @@ class GreedyAssignment(AbstractAssignment):
         """
         Function stores the partial state of the object at each time step.
         """
+        if not self.logger:
+            return
 
         active_col = self._ENV['FLEET_STATE_IDX']['active']
         active_vehicles = self._fleet_state[:, active_col].sum()
 
-        self._calc_charge_matrix()
+        # self._calc_charge_matrix()
 
-        self.history.append({
-                        'sim_time': self._clock.now,
-                        'time': self._clock.get_time(),
-                        'active_vehicles': active_vehicles,
-                        'dropped_requests': self._dropped_requests,
-                        'total_requests': self._total_requests,
-                        '_wait_time_min': self._wait_time_min,
-                        'cm_in_service_high_range': self._charge_matrix[0,0],
-                        'cm_in_service_med_range': self._charge_matrix[0,1],
-                        'cm_in_service_low_range': self._charge_matrix[0,2],
-                        'cm_fast_charge_high_range': self._charge_matrix[1,0],
-                        'cm_fast_charge_med_range': self._charge_matrix[1,1],
-                        'cm_fast_charge_low_range': self._charge_matrix[1,2],
-                        'cm_slow_charge_high_range': self._charge_matrix[2,0],
-                        'cm_slow_charge_med_range': self._charge_matrix[2,1],
-                        'cm_slow_charge_low_range': self._charge_matrix[2,2],
-                        'cm_out_service_high_range': self._charge_matrix[3,0],
-                        'cm_out_service_med_range': self._charge_matrix[3,1],
-                        'cm_out_service_low_range': self._charge_matrix[3,2],
-                        })
+        info = [
+            ('sim_time', self._clock.now),
+            ('time', self._clock.get_time()),
+            ('active_vehicles', active_vehicles),
+            ('dropped_requests', self._dropped_requests),
+            ('total_requests', self._total_requests),
+            ('wait_time_min', self._wait_time_min),
+            ]
+
+        self.logger.info(generate_csv_row(info, self.LOG_COLUMNS))
+
 
     def _calc_charge_matrix(self):
         soc = self._get_fleet_state_col('soc')
@@ -190,10 +197,10 @@ class GreedyAssignment(AbstractAssignment):
 
             dist_to_nearest = INF
             for station in search_space:
-                dist_mi = hlp.estimate_vmt_latlon(vehicle.x,
-                                               vehicle.y,
-                                               station.X,
-                                               station.Y,
+                dist_mi = hlp.estimate_vmt_latlon(vehicle.lat,
+                                               vehicle.lon,
+                                               station.LAT,
+                                               station.LON,
                                                scaling_factor = vehicle.ENV['RN_SCALING_FACTOR'])
                 if dist_mi < dist_to_nearest:
                     dist_to_nearest = dist_mi
@@ -228,11 +235,11 @@ class GreedyAssignment(AbstractAssignment):
         """
         fleet_state = self._fleet_state
         point = np.array([request.pickup_lat, request.pickup_lon])
-        x_col = self._ENV['FLEET_STATE_IDX']['x']
-        y_col = self._ENV['FLEET_STATE_IDX']['y']
+        lat_col = self._ENV['FLEET_STATE_IDX']['lat']
+        lon_col = self._ENV['FLEET_STATE_IDX']['lon']
         dist = hlp.haversine_np(
-                        fleet_state[:, x_col].astype(np.float64),
-                        fleet_state[:, y_col].astype(np.float64),
+                        fleet_state[:, lat_col].astype(np.float64),
+                        fleet_state[:, lon_col].astype(np.float64),
                         point[0],
                         point[1],
                         )
@@ -280,8 +287,8 @@ class GreedyAssignment(AbstractAssignment):
                 vehid = best_vehicle[0]
                 veh = self._fleet[vehid]
                 disp_route_summary = self._route_engine.route(
-                                        veh.x,
-                                        veh.y,
+                                        veh.lat,
+                                        veh.lon,
                                         request.pickup_lat,
                                         request.pickup_lon,
                                         activity = "Dispatch to Request")
@@ -325,7 +332,7 @@ class GreedyAssignment(AbstractAssignment):
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
-            route_summary = self._route_engine.route(vehicle.x, vehicle.y, station.X, station.Y, 'Moving to Station')
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon, station.LAT, station.LON, 'Moving to Station')
             route = route_summary['route']
             vehicle.cmd_charge(station, route)
 
@@ -342,7 +349,7 @@ class GreedyAssignment(AbstractAssignment):
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            route_summary = self._route_engine.route(vehicle.x, vehicle.y, base.X, base.Y, 'Moving to Base')
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon, base.LAT, base.LON, 'Moving to Base')
             route = route_summary['route']
             vehicle.cmd_return_to_base(base, route)
 

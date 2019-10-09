@@ -95,7 +95,7 @@ class VehicleTest(unittest.TestCase):
 
         pre_avail_plugs = test_station.avail_plugs
 
-        router = self.SIM_ENV['dispatcher']._route_engine
+        router = self.SIM_ENV['assignment']._route_engine
         route_summary = router.route(
                         test_vehicle.x,
                         test_vehicle.y,
@@ -139,7 +139,7 @@ class VehicleTest(unittest.TestCase):
 
         pre_avail_plugs = test_base.avail_plugs
 
-        router = self.SIM_ENV['dispatcher']._route_engine
+        router = self.SIM_ENV['assignment']._route_engine
         route_summary = router.route(
                             test_vehicle.x,
                             test_vehicle.y,
