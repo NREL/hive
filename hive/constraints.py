@@ -27,8 +27,8 @@ STATION_PARAMS = {
 }
 
 FLEET_STATE_IDX ={
-    'x': 0,
-    'y': 1,
+    'lat': 0,
+    'lon': 1,
     'active': 2,
     'available': 3,
     'soc': 4,

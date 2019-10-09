@@ -53,8 +53,8 @@ class FuelStation:
 
         self.ID = station_id
 
-        self.X = latitude
-        self.Y = longitude
+        self.LAT = latitude
+        self.LON = longitude 
 
         assert_constraint("TOTAL_PLUGS", plugs, STATION_PARAMS, context="Initialize FuelStation")
         self.TOTAL_PLUGS = plugs

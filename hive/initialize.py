@@ -120,8 +120,8 @@ def initialize_fleet(vehicle_types,
             veh_fleet.append(veh)
 
             #TODO: Make this more explicit
-            fleet_state_constructor.append((veh.x,
-                                            veh.y,
+            fleet_state_constructor.append((veh.lat,
+                                            veh.lon,
                                             1,
                                             1,
                                             0,
@@ -147,8 +147,8 @@ def initialize_fleet(vehicle_types,
         base = random.choice(bases)
         veh.fleet_state = fleet_state
         veh.energy_kwh = np.random.uniform(0.2, 1.0) * veh.BATTERY_CAPACITY
-        veh.x = base.X
-        veh.y = base.Y
+        veh.lat = base.LAT
+        veh.lon = base.LON
         veh.base = base
 
     return veh_fleet, fleet_state
