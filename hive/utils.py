@@ -69,20 +69,27 @@ def build_output_dir(scenario_name, root_path):
     Function to build scenario level output directory in root output directory.
     """
 
+    # create scenario output base directory
     experiment_time = datetime.now().strftime("%d-%m-%Y_%I-%M-%S_%p")
     scenario_dir = "{}-{}".format(scenario_name, experiment_time)
     scenario_output = os.path.join(root_path, scenario_dir)
+    log_path = os.path.join(scenario_output, 'logs')
+
     if os.path.isdir(scenario_output):
         shutil.rmtree(scenario_output)
-    os.makedirs(scenario_output)
-    file_paths = {}
-    log_path = os.path.join(scenario_output, 'logs')
-    file_paths['log_path'] = log_path
-    file_paths['summary_path'] = os.path.join(scenario_output, 'summaries')
-    file_paths['vehicle_path'] = os.path.join(log_path, 'vehicles')
-    file_paths['station_path'] = os.path.join(log_path, 'stations')
-    file_paths['base_path'] = os.path.join(log_path, 'bases')
-    file_paths['dispatcher_path'] = os.path.join(log_path, 'dispatcher')
+
+    # create collection of all relevant file paths for a scenario
+    file_paths = {
+        'scenario_path': scenario_output,
+        'log_path': log_path,
+        'summary_path': os.path.join(scenario_output, 'summaries'),
+        'vehicle_path': os.path.join(log_path, 'vehicles'),
+        'station_path': os.path.join(log_path, 'stations'),
+        'base_path': os.path.join(log_path, 'bases'),
+        'dispatcher_path': os.path.join(log_path, 'dispatcher')
+    }
+
+    os.makedirs(file_paths['scenario_path'])
     os.makedirs(file_paths['log_path'])
     os.makedirs(file_paths['vehicle_path'])
     os.makedirs(file_paths['station_path'])
