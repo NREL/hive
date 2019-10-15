@@ -174,13 +174,8 @@ def load_scenario(scenario_file):
         if 'REPOSITIONING' in yaml_data:
             data['REPOSITIONING'] = yaml_data['REPOSITIONING']
 
-        operating_area = gpd.read_file(filepaths['operating_area_file_path'],
-                                       verbose=cfg.VERBOSE,
-                                       )
-        data['BOUNDARY_MINX'] = float(operating_area.bounds['minx'])
-        data['BOUNDARY_MINY'] = float(operating_area.bounds['miny'])
-        data['BOUNDARY_MAXX'] = float(operating_area.bounds['maxx'])
-        data['BOUNDARY_MAXY'] = float(operating_area.bounds['maxy'])
+        # provide the bounding polygon for geo-fencing and location sampling
+        data['OPERATING_AREA_FILE'] = filepaths['operating_area_file_path']
 
     log.info('Done.')
 

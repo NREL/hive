@@ -11,10 +11,6 @@ ENV_PARAMS = {
     'DISPATCH_MPH': ('between', 0, 100),
     'MIN_ALLOWED_SOC': ('between', 0, 100),
     "TRIP_REVENUE": ('between', 0, 10000),
-    'BOUNDARY_MINX': ('between', -180, 180),
-    'BOUNDARY_MAXX': ('between', -180, 180),
-    'BOUNDARY_MINY': ('between', -90, 90),
-    'BOUNDARY_MAXY': ('between', -90, 90)
 }
 
 VEH_PARAMS = {

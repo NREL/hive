@@ -140,17 +140,17 @@ class SimulationEngine:
             'DISPATCH_MPH': DISPATCH_MPH,
             'LOWER_SOC_THRESH_STATION': float(self.input_data['main']['LOWER_SOC_THRESH_STATION']),
             'UPPER_SOC_THRESH_STATION': float(self.input_data['main']['UPPER_SOC_THRESH_STATION']),
-            'MAX_ALLOWABLE_IDLE_MINUTES': float(self.input_data['main']['MAX_ALLOWABLE_IDLE_MINUTES']),
-            'BOUNDARY_MINX': self.input_data['BOUNDARY_MINX'],
-            'BOUNDARY_MINY': self.input_data['BOUNDARY_MINY'],
-            'BOUNDARY_MAXX': self.input_data['BOUNDARY_MAXX'],
-            'BOUNDARY_MAXY': self.input_data['BOUNDARY_MAXY'],
+            'MAX_ALLOWABLE_IDLE_MINUTES': float(self.input_data['main']['MAX_ALLOWABLE_IDLE_MINUTES'])
         }
 
         for param, val in env_params.items():
             assert_constraint(param, val, ENV_PARAMS, context="Environment Parameters")
 
         env_params['FLEET_STATE_IDX'] = FLEET_STATE_IDX
+
+        # operating area used for location sampling
+        env_params['operating_area_file_path'] = self.input_data['OPERATING_AREA_FILE']
+
         SIM_ENV['env_params'] = env_params
 
         vehicle_log = None
