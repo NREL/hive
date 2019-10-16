@@ -36,9 +36,10 @@ if __name__ == "__main__":
         print('python generate_scenarios.py')
 
     run_scenarios = [s for s in all_scenarios if name(s) in cfg.SCENARIOS]
+    
+    simulation_engine = SimulationEngine(out_path = OUT_PATH)
 
     for scenario_file in run_scenarios:
         data = load_scenario(scenario_file)
-
-        simulation_engine = SimulationEngine(data, OUT_PATH)
+        simulation_engine.input_data = data
         simulation_engine.run_simulation(name(scenario_file))
