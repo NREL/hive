@@ -431,6 +431,21 @@ class Vehicle:
         self._route_iter = iter(self._route)
         next(self._route_iter)
 
+    def cmd_reposition(self, route):
+        """
+        Commands the vehicle to reposition.
+
+        Parameters
+        ----------
+        route: list
+            list containing location, distance and activity information representing
+            a route.
+        """
+        self.available = True
+        self._station = None
+        self.activity = "Reposition"
+        self.cmd_move(route)
+
     def cmd_charge(self, station, route):
         """
         Commands the vehicle to charge at a station.
