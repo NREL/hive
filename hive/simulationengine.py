@@ -31,7 +31,7 @@ class SimulationEngine:
         Use hive.helpers.load_scenario to generate this from scenario.yaml file
     """
 
-    def __init__(self, input_data, out_path=''):
+    def __init__(self, input_data=None, out_path=''):
         self.log = logging.getLogger('run_log')
 
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s - %(message)s")
@@ -106,7 +106,7 @@ class SimulationEngine:
 
             formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
-            station_log.addHandler(fh)
+            station_log.handlers = [fh]
             station_log.setLevel(logging.INFO)
 
         self.log.info("Loading charge network..")
@@ -124,7 +124,7 @@ class SimulationEngine:
 
             formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
-            base_log.addHandler(fh)
+            base_log.handlers = [fh]
             base_log.setLevel(logging.INFO)
 
         bases = initialize_stations(self.input_data['bases'], sim_clock, base_log)
@@ -164,7 +164,7 @@ class SimulationEngine:
 
             formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
-            vehicle_log.addHandler(fh)
+            vehicle_log.handlers = [fh]
             vehicle_log.setLevel(logging.INFO)
 
         vehicle_types = [veh for veh in self.input_data['vehicles'].itertuples()]
@@ -215,7 +215,7 @@ class SimulationEngine:
 
             formatter = logging.Formatter("%(message)s")
             fh.setFormatter(formatter)
-            dispatcher_log.addHandler(fh)
+            dispatcher_log.handlers = [fh]
             dispatcher_log.setLevel(logging.INFO)
 
         assignment_module, repositioning_module = dispatcher.load_dispatcher(
@@ -251,10 +251,6 @@ class SimulationEngine:
         self.log.info("Building scenario output directory..")
         output_file_paths = build_output_dir(sim_name, self.out_path)
 
-        # vehicle_summary_file = os.path.join(output_file_paths['summary_path'], 'vehicle_summary.csv')
-        # fleet_summary_file = os.path.join(output_file_paths['summary_path'], 'fleet_summary.txt')
-        # station_summary_file = os.path.join(output_file_paths['summary_path'], 'station_summary.csv')
-
         self._build_simulation_env(output_file_paths)
 
         total_iterations = len(self._SIM_ENV['sim_time_steps']) - 1
@@ -288,6 +284,3 @@ class SimulationEngine:
             next(self._SIM_ENV['sim_clock'])
 
         self.log.info("Done Simulating")
-
-        # reporting.summarize_fleet_stats(output_file_paths['vehicle_path'], output_file_paths['summary_path'])
-        # reporting.summarize_dispatcher(output_file_paths['dispatcher_path'], output_file_paths['summary_path'])
