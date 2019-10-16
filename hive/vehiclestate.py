@@ -2,12 +2,15 @@ from enum import Enum
 from collections import namedtuple
 from hive.exception import StateTransitionError
 
+# id used to enforce uniqueness in Python (otherwise, IDLE == REPOSITIONING, etc)
 VehicleStateAttributes = namedtuple('VehStateAttributes', ['id', 'active', 'available'])
 
 
 class VehicleState(Enum):
     """
     A finite set of vehicle states and rules for state transitions
+
+
     """
 
     # INACTIVE FLEET MANAGEMENT
@@ -38,45 +41,44 @@ class VehicleState(Enum):
         @throws StateTransitionError
         """
 
-        print("next state {}".format(next_state))
-
         if next_state not in valid_vehicle_transitions[self]:
             raise StateTransitionError("vehicle", self.name, next_state.name)
 
         return next_state
 
     @classmethod
-    def to_list(cls):
-        """
-        returns list of all vehicle states to the user
+    def is_valid(cls, state):
+        return state in valid_vehicle_states
 
-        :return: all possible vehicle states in a list
-        """
-        return [
-            cls.DISPATCH_BASE,
-            cls.CHARGING_BASE,
-            cls.RESERVE_BASE,
-            cls.IDLE,
-            cls.DISPATCH_TRIP,
-            cls.DISPATCH_STATION,
-            cls.CHARGING_STATION,
-            cls.REPOSITIONING,
-            cls.SERVING_TRIP
-        ]
 
+valid_vehicle_states = frozenset([
+    VehicleState.DISPATCH_BASE,
+    VehicleState.CHARGING_BASE,
+    VehicleState.RESERVE_BASE,
+    VehicleState.IDLE,
+    VehicleState.DISPATCH_TRIP,
+    VehicleState.DISPATCH_STATION,
+    VehicleState.CHARGING_STATION,
+    VehicleState.REPOSITIONING,
+    VehicleState.SERVING_TRIP
+])
 
 valid_vehicle_transitions = {
     # INACTIVE FLEET MANAGEMENT
-    VehicleState.DISPATCH_BASE: frozenset([VehicleState.CHARGING_BASE, VehicleState.RESERVE_BASE]),
+    VehicleState.DISPATCH_BASE: frozenset([VehicleState.CHARGING_BASE, VehicleState.RESERVE_BASE, VehicleState.IDLE]),
     VehicleState.CHARGING_BASE: frozenset([VehicleState.RESERVE_BASE, VehicleState.IDLE]),
     VehicleState.RESERVE_BASE: frozenset([VehicleState.CHARGING_BASE, VehicleState.IDLE]),
     # ACTIVE FLEET MANAGEMENT
-    VehicleState.IDLE: frozenset([VehicleState.DISPATCH_BASE, VehicleState.DISPATCH_STATION, VehicleState.DISPATCH_TRIP, VehicleState.REPOSITIONING]),
-    VehicleState.REPOSITIONING: frozenset([VehicleState.DISPATCH_BASE, VehicleState.DISPATCH_STATION, VehicleState.DISPATCH_TRIP, VehicleState.IDLE]),
+    VehicleState.IDLE: frozenset([VehicleState.DISPATCH_BASE, VehicleState.DISPATCH_STATION,
+                                  VehicleState.CHARGING_STATION, VehicleState.DISPATCH_TRIP,
+                                  VehicleState.SERVING_TRIP, VehicleState.REPOSITIONING]),
+    VehicleState.REPOSITIONING: frozenset([VehicleState.DISPATCH_BASE, VehicleState.DISPATCH_STATION,
+                                           VehicleState.DISPATCH_TRIP, VehicleState.SERVING_TRIP, VehicleState.IDLE]),
     # TRIPPING
-    VehicleState.DISPATCH_TRIP: frozenset([VehicleState.IDLE, VehicleState.SERVING_TRIP]),
+    VehicleState.DISPATCH_TRIP: frozenset([VehicleState.IDLE, VehicleState.SERVING_TRIP, VehicleState.DISPATCH_STATION]),
     VehicleState.SERVING_TRIP: frozenset([VehicleState.IDLE]),
     # CHARGING
-    VehicleState.DISPATCH_STATION: frozenset([VehicleState.IDLE, VehicleState.CHARGING_STATION]),
-    VehicleState.CHARGING_STATION: frozenset([VehicleState.IDLE]),
+    VehicleState.DISPATCH_STATION: frozenset([VehicleState.IDLE, VehicleState.CHARGING_STATION,
+                                              VehicleState.DISPATCH_TRIP]),
+    VehicleState.CHARGING_STATION: frozenset([VehicleState.IDLE, VehicleState.RESERVE_BASE]),
 }

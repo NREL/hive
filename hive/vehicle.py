@@ -16,6 +16,7 @@ from hive import charging as chrg
 from hive import units
 from hive.constraints import VEH_PARAMS
 from hive.utils import assert_constraint, generate_csv_row
+from hive.vehiclestate import VehicleState
 
 
 class Vehicle:
@@ -132,7 +133,7 @@ class Vehicle:
 
         self.fleet_state = None
 
-        self.activity = "Idle"
+        self._vehicle_state = VehicleState.IDLE
 
         self.ENV = env_params
 
@@ -157,6 +158,22 @@ class Vehicle:
     def lon(self, val):
         self._lon = val
         self._set_fleet_state('lon', val)
+
+    @property
+    def vehicle_state(self):
+        return self._vehicle_state
+
+    @vehicle_state.setter
+    def vehicle_state(self, next_state):
+        if self._vehicle_state != next_state:
+            assert VehicleState.is_valid(next_state)
+            self.available = next_state.available
+            self.active = next_state.active
+            self._vehicle_state = self.vehicle_state.to(next_state)
+
+    @property
+    def activity(self):
+        return self.vehicle_state.name
 
     @property
     def active(self):
@@ -308,7 +325,7 @@ class Vehicle:
         self.charging = 0
 
     def _update_idle(self):
-        if self.activity == 'Idle':
+        if self.vehicle_state == VehicleState.IDLE:
             self._idle_counter += 1
             self.idle_min = self._idle_counter * self._clock.TIMESTEP_S * units.SECONDS_TO_MINUTES
         else:
@@ -318,8 +335,9 @@ class Vehicle:
     def _move(self):
         if self._route is not None:
             try:
-                location, dist_mi, activity = next(self._route_iter)
-                self.activity = activity
+                location, dist_mi, next_vehicle_state = next(self._route_iter)
+                if next_vehicle_state is not self.vehicle_state:
+                    self.vehicle_state = next_vehicle_state
                 new_lat = location.lat
                 new_lon = location.lon
                 self._update_charge(dist_mi)
@@ -328,9 +346,9 @@ class Vehicle:
                 self.lon = new_lon
             except StopIteration:
                 self._route = None
-                if self._station is None:
-                    self.available = True
-                self.activity = "Idle"
+                # if self._station is None:
+                # self.available = True
+                self.vehicle_state = VehicleState.IDLE
                 self.avail_seats = self.MAX_PASSENGERS
                 self._step_distance = 0
         else:
@@ -339,7 +357,7 @@ class Vehicle:
     def _charge(self):
         # Make sure we're not still traveling to charge station
         if self._route is None:
-            self.activity = f"Charging at Station"
+            self.vehicle_state = VehicleState.CHARGING_STATION
             energy_gained_kwh = self._station.dispense_energy()
             hyp_soc = (self._energy_kwh + energy_gained_kwh) / self.BATTERY_CAPACITY
             if hyp_soc <= self.ENV['UPPER_SOC_THRESH_STATION']:
@@ -347,11 +365,11 @@ class Vehicle:
             else:
                 # Done charging,
                 if self._base is None:
-                    self.activity = "Idle"
+                    self.vehicle_state = VehicleState.IDLE
                 else:
-                    self.activity = "Reserve"
+                    self.vehicle_state = VehicleState.RESERVE_BASE
                     self.reserve = True
-                self.available = True
+                # self.available = True
                 self._leave_station()
 
 
@@ -377,8 +395,8 @@ class Vehicle:
         assert (self.lat, self.lon) == (start_lat, start_lon), \
             "Route must start at current vehicle location"
 
-        self.active = True
-        self.available = False
+        # self.active = True
+        # self.available = False
         self.reserve = False
         self.avail_seats -= passengers
         self._base = None
@@ -425,7 +443,7 @@ class Vehicle:
             list containing location, distance and activity information representing
             a route.
         """
-        self.available = False
+        # self.available = False
         self._station = station
         self._station.avail_plugs -= 1
         self.charging = station.PLUG_POWER_KW
@@ -437,11 +455,11 @@ class Vehicle:
         """
         if self._station and not self._route:
             self._leave_station()
-            self.available = True
+            # self.available = True
             if self._base:
-                self.activity = "Reserve"
+                self.vehicle_state = VehicleState.RESERVE_BASE
             else:
-                self.activity = "Idle"
+                self.vehicle_state = VehicleState.IDLE
 
 
     def cmd_return_to_base(self, base, route):
@@ -456,8 +474,8 @@ class Vehicle:
             list containing location, distance and activity information representing
             a route.
         """
-        self.available = True
-        self.active = False
+        # self.available = True
+        # self.active = False
         self._base = base
         self._station = base
         self._station.avail_plugs -= 1

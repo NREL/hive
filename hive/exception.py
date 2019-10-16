@@ -16,3 +16,6 @@ class StateTransitionError(Exception):
             this_state_name,
             next_state_name,
         )
+
+    def __str__(self):
+        return repr(self.message)

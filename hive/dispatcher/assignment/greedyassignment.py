@@ -9,7 +9,7 @@ from hive import helpers as hlp
 from hive import units
 from hive.utils import generate_csv_row
 from hive.dispatcher.assignment import AbstractAssignment
-
+from hive.vehiclestate import VehicleState
 
 class GreedyAssignment(AbstractAssignment):
     """
@@ -291,7 +291,7 @@ class GreedyAssignment(AbstractAssignment):
                                         veh.lon,
                                         request.pickup_lat,
                                         request.pickup_lon,
-                                        activity = "Dispatch to Request")
+                                        vehicle_state=VehicleState.DISPATCH_TRIP)
                 disp_route = disp_route_summary['route']
                 self._wait_time_min += disp_route_summary['trip_time_s'] * units.SECONDS_TO_MINUTES
 
@@ -303,9 +303,9 @@ class GreedyAssignment(AbstractAssignment):
                                             request.pickup_lon,
                                             request.dropoff_lat,
                                             request.dropoff_lon,
-                                            activity = "Serving Trip",
-                                            trip_dist_mi = request.distance_miles,
-                                            trip_time_s = request.seconds,
+                                            vehicle_state=VehicleState.SERVING_TRIP,
+                                            trip_dist_mi=request.distance_miles,
+                                            trip_time_s=request.seconds,
                                             )
                     trip_route = trip_route_summary['route']
 
@@ -332,7 +332,9 @@ class GreedyAssignment(AbstractAssignment):
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             station = self._find_closest_plug(vehicle)
-            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon, station.LAT, station.LON, 'Moving to Station')
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon,
+                                                     station.LAT, station.LON,
+                                                     VehicleState.DISPATCH_STATION)
             route = route_summary['route']
             vehicle.cmd_charge(station, route)
 
@@ -349,7 +351,9 @@ class GreedyAssignment(AbstractAssignment):
         for veh_id in veh_ids:
             vehicle = self._fleet[veh_id[0]]
             base = self._find_closest_plug(vehicle, type='base')
-            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon, base.LAT, base.LON, 'Moving to Base')
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon,
+                                                     base.LAT, base.LON,
+                                                     VehicleState.DISPATCH_BASE)
             route = route_summary['route']
             vehicle.cmd_return_to_base(base, route)
 
