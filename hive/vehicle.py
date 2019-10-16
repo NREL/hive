@@ -46,69 +46,69 @@ class Vehicle:
     """
 
     LOG_COLUMNS = [
-                'ID',
-                'sim_time',
-                'time',
-                'latitude',
-                'longitude',
-                'step_distance_mi',
-                'active',
-                'available',
-                'reserve',
-                'soc',
-                'range_remaining',
-                'activity',
-                'station',
-                'station_power',
-                'base',
-                'passengers',
-                'reserve',
-                ]
+        'ID',
+        'sim_time',
+        'time',
+        'latitude',
+        'longitude',
+        'step_distance_mi',
+        'active',
+        'available',
+        'reserve',
+        'soc',
+        'range_remaining',
+        'activity',
+        'station',
+        'station_power',
+        'base',
+        'passengers',
+        'reserve',
+    ]
 
     def __init__(
-                self,
-                veh_id,
-                name,
-                battery_capacity,
-                max_charge_acceptance,
-                max_passengers,
-                whmi_lookup,
-                charge_template,
-                clock,
-                env_params,
-                vehicle_log,
-                ):
+            self,
+            veh_id,
+            name,
+            battery_capacity,
+            max_charge_acceptance,
+            max_passengers,
+            whmi_lookup,
+            charge_template,
+            clock,
+            env_params,
+            vehicle_log,
+    ):
 
         # Public Constants
         self.ID = veh_id
         self.NAME = name
         assert_constraint(
-                        'BATTERY_CAPACITY',
-                        battery_capacity,
-                        VEH_PARAMS,
-                        context="Initialize Vehicle"
-                        )
+            'BATTERY_CAPACITY',
+            battery_capacity,
+            VEH_PARAMS,
+            context="Initialize Vehicle"
+        )
         self.BATTERY_CAPACITY = battery_capacity
 
         assert_constraint(
-                        'MAX_CHARGE_ACCEPTANCE_KW',
-                        max_charge_acceptance,
-                        VEH_PARAMS,
-                        context="Initialize Vehicle"
-                        )
+            'MAX_CHARGE_ACCEPTANCE_KW',
+            max_charge_acceptance,
+            VEH_PARAMS,
+            context="Initialize Vehicle"
+        )
         self.MAX_CHARGE_ACCEPTANCE_KW = max_charge_acceptance
 
         assert_constraint(
-                        'MAX_PASSENGERS',
-                        max_passengers,
-                        VEH_PARAMS,
-                        context="Initialize Vehicle"
-                        )
+            'MAX_PASSENGERS',
+            max_passengers,
+            VEH_PARAMS,
+            context="Initialize Vehicle"
+        )
         self.MAX_PASSENGERS = max_passengers
 
         self.WH_PER_MILE_LOOKUP = whmi_lookup
 
-        #TODO: Replace this with KWH__MI in fleet state
+        # TODO: Replace this with KWH__MI in fleet state
         self.AVG_WH_PER_MILE = np.mean(whmi_lookup['whmi'])
 
         self.CHARGE_TEMPLATE = charge_template
@@ -139,8 +139,6 @@ class Vehicle:
 
         self.log = vehicle_log
 
-
-
     @property
     def lat(self):
         return self._lat
@@ -167,8 +165,8 @@ class Vehicle:
     def vehicle_state(self, next_state):
         if self._vehicle_state != next_state:
             assert VehicleState.is_valid(next_state)
-            self.available = next_state.available
-            self.active = next_state.active
+            self.available = next_state.available()
+            self.active = next_state.active()
             self._vehicle_state = self.vehicle_state.to(next_state)
 
     @property
@@ -267,7 +265,7 @@ class Vehicle:
     def _log(self):
         if not self.log:
             return
-            
+
         if self._station is None:
             station = None
         else:
@@ -277,7 +275,6 @@ class Vehicle:
             base = None
         else:
             base = self._base.ID
-
 
         info = [
             ('ID', self.ID),
@@ -301,9 +298,6 @@ class Vehicle:
 
         self.log.info(generate_csv_row(info, self.LOG_COLUMNS))
 
-
-
-
     def _get_fleet_state(self, param):
         col = self.ENV['FLEET_STATE_IDX'][param]
         return self.fleet_state[self.ID, col]
@@ -315,7 +309,7 @@ class Vehicle:
     def _update_charge(self, dist_mi):
         spd = self.ENV['DISPATCH_MPH']
         lookup = self.WH_PER_MILE_LOOKUP
-        kwh__mi = (np.interp(spd, lookup['avg_spd_mph'], lookup['whmi']))/1000.0
+        kwh__mi = (np.interp(spd, lookup['avg_spd_mph'], lookup['whmi'])) / 1000.0
         energy_used_kwh = dist_mi * kwh__mi
         self.energy_kwh -= energy_used_kwh
 
@@ -336,8 +330,7 @@ class Vehicle:
         if self._route is not None:
             try:
                 location, dist_mi, next_vehicle_state = next(self._route_iter)
-                if next_vehicle_state is not self.vehicle_state:
-                    self.vehicle_state = next_vehicle_state
+                self.vehicle_state = next_vehicle_state
                 new_lat = location.lat
                 new_lon = location.lon
                 self._update_charge(dist_mi)
@@ -357,7 +350,10 @@ class Vehicle:
     def _charge(self):
         # Make sure we're not still traveling to charge station
         if self._route is None:
-            self.vehicle_state = VehicleState.CHARGING_STATION
+            if self._base is None:
+                self.vehicle_state = VehicleState.CHARGING_STATION
+            else:
+                self.vehicle_state = VehicleState.CHARGING_BASE
             energy_gained_kwh = self._station.dispense_energy()
             hyp_soc = (self._energy_kwh + energy_gained_kwh) / self.BATTERY_CAPACITY
             if hyp_soc <= self.ENV['UPPER_SOC_THRESH_STATION']:
@@ -371,7 +367,6 @@ class Vehicle:
                     self.reserve = True
                 # self.available = True
                 self._leave_station()
-
 
     def cmd_make_trip(self, route, passengers):
 
@@ -476,7 +471,6 @@ class Vehicle:
             else:
                 self.vehicle_state = VehicleState.IDLE
 
-
     def cmd_return_to_base(self, base, route):
         """
         Commands the vehicle to return to a base.
@@ -496,7 +490,6 @@ class Vehicle:
         self._station.avail_plugs -= 1
         self.charging = base.PLUG_POWER_KW
         self.cmd_move(route)
-
 
     def step(self):
         """

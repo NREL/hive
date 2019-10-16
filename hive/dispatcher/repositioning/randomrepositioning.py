@@ -4,6 +4,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 from hive.dispatcher.repositioning.abstractrepositioning import AbstractRepositioning
+from hive.vehiclestate import VehicleState
 
 
 class RandomRepositioning(AbstractRepositioning):
@@ -57,7 +58,7 @@ class RandomRepositioning(AbstractRepositioning):
         random_locations_sampled = 0
 
         # expensive O(n) filter of all vehicles for "Idle" state
-        reposition_vehicles = list(filter(lambda veh: veh.activity == "Idle", self.fleet))
+        reposition_vehicles = list(filter(lambda veh: veh.vehicle_state == VehicleState.IDLE, self.fleet))
 
         # get all inactive agents
         for vehicle in reposition_vehicles:
