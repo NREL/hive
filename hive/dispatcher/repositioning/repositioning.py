@@ -2,6 +2,7 @@ import logging
 
 from hive.dispatcher.repositioning import AbstractRepositioning
 from hive.dispatcher.repositioning import DoNothingRepositioning
+from hive.dispatcher.repositioning import RandomRepositioning
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +11,8 @@ the list of valid string names for dispatchers which can be
 requested in the scenario file
 """
 _valid_repositioning = {
-    "do_nothing": DoNothingRepositioning
+    "do_nothing": DoNothingRepositioning,
+    "random": RandomRepositioning
 }
 
 

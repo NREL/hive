@@ -10,4 +10,5 @@ defining new repositioning modules requires
 
 from hive.dispatcher.repositioning.abstractrepositioning import AbstractRepositioning
 from hive.dispatcher.repositioning.donothingrepositioning import DoNothingRepositioning
-__all__ = ["AbstractRepositioning", "DoNothingRepositioning"]
+from hive.dispatcher.repositioning.randomrepositioning import RandomRepositioning
+__all__ = ["AbstractRepositioning", "DoNothingRepositioning", "RandomRepositioning"]

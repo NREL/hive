@@ -37,6 +37,7 @@ def load_vehicles(fleet):
 
     return vehicles
 
+
 def read_parameters(scenario):
     result = {}
     PARAMETERS = [
@@ -47,9 +48,10 @@ def read_parameters(scenario):
         'MIN_ALLOWED_SOC',
     ]
     for param in PARAMETERS:
-        result[param] =  scenario[param]
+        result[param] = scenario[param]
 
     return result
+
 
 def build_scenarios():
     with open(GENERATOR_FILE, encoding='utf-8-sig') as f:
@@ -62,22 +64,28 @@ def build_scenarios():
 
             filepaths = {}
             requests_file = os.path.join(LIB_PATH,
-                                        'requests',
-                                        scenario['REQUESTS_FILE'])
+                                         'requests',
+                                         scenario['REQUESTS_FILE'])
             filepaths['requests_file_path'] = requests_file
-            config['filepaths'] =  filepaths
+
+            operating_area_file = os.path.join(LIB_PATH,
+                                               'operating_area',
+                                               scenario['OPERATING_AREA_FILE'])
+            filepaths['operating_area_file_path'] = operating_area_file
+
+            config['filepaths'] = filepaths
 
             charge_stations_file = os.path.join(LIB_PATH,
-                                        'charge_network',
-                                        scenario['CHARGE_STATIONS_FILE'])
+                                                'charge_network',
+                                                scenario['CHARGE_STATIONS_FILE'])
 
             vehicle_bases_file = os.path.join(LIB_PATH,
-                                        'charge_network',
-                                        scenario['VEH_BASES_FILE'])
+                                              'charge_network',
+                                              scenario['VEH_BASES_FILE'])
 
             fleet_file = os.path.join(LIB_PATH,
-                                    'fleet',
-                                    scenario['FLEET_FILE'])
+                                      'fleet',
+                                      scenario['FLEET_FILE'])
 
             parameters = read_parameters(scenario)
             config['parameters'] = parameters
@@ -95,15 +103,15 @@ def build_scenarios():
 
             charge_profile_df = pd.read_csv(charge_profile_file)
             config['charge_profile'] = {
-                                'soc': charge_profile_df.soc.to_list(),
-                                'kw': charge_profile_df.kw.to_list(),
-                                }
+                'soc': charge_profile_df.soc.to_list(),
+                'kw': charge_profile_df.kw.to_list(),
+            }
 
             whmi_df = pd.read_csv(whmi_lookup_file)
             config['whmi_lookup'] = {
-                                'mph': whmi_df.mph.to_list(),
-                                'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
-                                }
+                'mph': whmi_df.mph.to_list(),
+                'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
+            }
 
             config['ASSIGNMENT'] = scenario['ASSIGNMENT']
             config['REPOSITIONING'] = scenario['REPOSITIONING']
@@ -112,9 +120,6 @@ def build_scenarios():
             outfile = os.path.join(SCENARIO_PATH, f'{name}.yaml')
             with open(outfile, 'w+') as f:
                 yaml.dump(config, f, sort_keys=False)
-
-
-
 
 
 if __name__ == "__main__":
