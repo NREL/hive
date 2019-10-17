@@ -9,6 +9,7 @@ from hive import helpers as hlp
 from hive import units
 from hive.utils import generate_csv_row
 from hive.dispatcher.active_servicing import AbstractServicing
+from hive.vehiclestate import VehicleState
 
 
 class GreedyAssignment(AbstractServicing):
@@ -121,7 +122,7 @@ class GreedyAssignment(AbstractServicing):
                                         veh.lon,
                                         request.pickup_lat,
                                         request.pickup_lon,
-                                        activity = "Dispatch to Request")
+                                        vehicle_state=VehicleState.DISPATCH_TRIP)
                 disp_route = disp_route_summary['route']
                 self._wait_time_min += disp_route_summary['trip_time_s'] * units.SECONDS_TO_MINUTES
 
@@ -133,7 +134,7 @@ class GreedyAssignment(AbstractServicing):
                                             request.pickup_lon,
                                             request.dropoff_lat,
                                             request.dropoff_lon,
-                                            activity = "Serving Trip",
+                                            vehicle_state=VehicleState.SERVING_TRIP,
                                             trip_dist_mi = request.distance_miles,
                                             trip_time_s = request.seconds,
                                             )

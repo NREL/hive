@@ -8,7 +8,7 @@ import numpy as np
 from hive import helpers as hlp
 from hive import units
 from hive.utils import generate_csv_row
-from hive.dispatcher.assignment import AbstractAssignment
+from hive.dispatcher.assignment import AbstractServicing
 from hive.vehiclestate import VehicleState
 
 class GreedyAssignment(AbstractServicing):
