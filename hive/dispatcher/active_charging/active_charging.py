@@ -1,12 +1,11 @@
-from hive.dispatcher.active_servicing.abstract_servicing import AbstractServicing
-from hive.dispatcher.active_servicing.greedy_assignment import GreedyAssignment
+from hive.dispatcher.active_charging import AbstractCharging, BasicCharging
 
 """
 the list of valid string names for assignment modules which can be
 requested in the scenario file
 """
-_valid_servicing_modules = {
-    "greedy": GreedyAssignment
+_valid_charging_modules = {
+    "basic": BasicCharging
 }
 
 
@@ -20,7 +19,6 @@ def from_scenario_input(
                     env_params,
                     route_engine,
                     clock,
-                    log,
                     ):
     """
     takes a string name and attempts to use it to load an servicing module
@@ -42,7 +40,7 @@ def from_scenario_input(
         when the module created does not inherit correctly from AbstractServicing
     """
     try:
-        servicing_module = _valid_servicing_modules[name.lower()](
+        charging_module = _valid_charging_modules[name.lower()](
                                                             fleet,
                                                             fleet_state,
                                                             stations,
@@ -51,11 +49,10 @@ def from_scenario_input(
                                                             env_params,
                                                             route_engine,
                                                             clock,
-                                                            log,
                                                             )
     except KeyError:
-        valid_keys = ", ".join([k for k in _valid_servicing_modules.keys()])
-        raise ModuleNotFoundError("servicing module '{}' not found".format(name))
+        valid_keys = ", ".join([k for k in _valid_charging_modules.keys()])
+        raise ModuleNotFoundError("charging module '{}' not found".format(name))
     # this enforces class inheritance
-    assert issubclass(type(servicing_module), AbstractServicing)
-    return servicing_module
+    assert issubclass(type(charging_module), AbstractCharging)
+    return charging_module

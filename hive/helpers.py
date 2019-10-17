@@ -169,11 +169,6 @@ def load_scenario(scenario_file):
         data['OSRM_SERVER'] = cfg.OSRM_SERVER
         data['LOGS'] = cfg.LOGS
 
-        if 'ASSIGNMENT' in yaml_data:
-            data['ASSIGNMENT'] = yaml_data['ASSIGNMENT']
-        if 'REPOSITIONING' in yaml_data:
-            data['REPOSITIONING'] = yaml_data['REPOSITIONING']
-
         # provide the bounding polygon for geo-fencing and location sampling
         data['OPERATING_AREA_FILE'] = filepaths['operating_area_file_path']
 

@@ -10,7 +10,7 @@ from hive import preprocess as pp
 from hive import reporting
 from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
-from hive.dispatcher import dispatcher
+from hive.dispatcher import Dispatcher
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.utils import (
     Clock,
@@ -192,17 +192,22 @@ class SimulationEngine:
             )
 
         # load dispatcher algorithms, or if not provided, use the defaults
-        if 'ASSIGNMENT' in self.input_data:
-            assignment_module_name = self.input_data['ASSIGNMENT']
+        if 'ASSIGNMENT' in self.input_data['main']:
+            assignment_module_name = self.input_data['main']['ASSIGNMENT']
         else:
             assignment_module_name = "greedy"
-        if 'REPOSITIONING' in self.input_data:
-            repositioning_module_name = self.input_data['REPOSITIONING']
+        if 'REPOSITIONING' in self.input_data['main']:
+            repositioning_module_name = self.input_data['main']['REPOSITIONING']
         else:
-            repositioning_module_name = "do_nothing"
+            repositioning_module_name = "basic"
+        if 'ACTIVE_CHARGING' in self.input_data['main']:
+            charging_module_name = self.input_data['main']['ACTIVE_CHARGING']
+        else:
+            charging_module_name = "basic"
 
         self.log.info("dispatcher loading {} assignment module".format(assignment_module_name))
         self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
+        self.log.info("dispatcher loading {} charging module".format(charging_module_name))
 
         dispatcher_log = None
         if 'dispatcher' in self.input_data['LOGS']:
@@ -218,9 +223,10 @@ class SimulationEngine:
             dispatcher_log.handlers = [fh]
             dispatcher_log.setLevel(logging.INFO)
 
-        assignment_module, repositioning_module = dispatcher.load_dispatcher(
-            assignment_module_name,
+        dispatcher = Dispatcher(
             repositioning_module_name,
+            assignment_module_name,
+            charging_module_name,
             fleet,
             fleet_state,
             stations,
@@ -232,8 +238,7 @@ class SimulationEngine:
             dispatcher_log
         )
 
-        SIM_ENV['assignment'] = assignment_module
-        SIM_ENV['repositioning'] = repositioning_module
+        SIM_ENV['dispatcher'] = dispatcher
 
         self._SIM_ENV = SIM_ENV
 
@@ -266,8 +271,7 @@ class SimulationEngine:
                                & (reqs_df.pickup_time < (
                         timestep + timedelta(seconds=self.input_data['SIMULATION_PERIOD_SECONDS'])))]
 
-            self._SIM_ENV['assignment'].process_requests(requests)
-            self._SIM_ENV['repositioning'].reposition_agents()
+            self._SIM_ENV['dispatcher'].step(requests)
 
             for veh in self._SIM_ENV['fleet']:
                 veh.step()
@@ -278,8 +282,8 @@ class SimulationEngine:
             for base in self._SIM_ENV['bases']:
                 base.step()
 
-            self._SIM_ENV['assignment'].log()
-            self._SIM_ENV['repositioning'].log()
+            #TODO: This logging method stinks.... We should find a new way. NR
+            self._SIM_ENV['dispatcher'].active_servicing_module.log()
 
             next(self._SIM_ENV['sim_clock'])
 

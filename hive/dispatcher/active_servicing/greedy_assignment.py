@@ -44,7 +44,38 @@ class GreedyAssignment(AbstractServicing):
                 clock,
                 log,
                 ):
-        super().__init__()
+        super().__init__(
+                fleet,
+                fleet_state,
+                stations,
+                bases,
+                demand,
+                env_params,
+                route_engine,
+                clock,
+                log,
+        )
+
+    def log(self):
+        if not self.logger:
+            return
+
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        active_vehicles = self._fleet_state[:, active_col].sum()
+        available_col = self._ENV['FLEET_STATE_IDX']['available']
+        available_vehicles = self._fleet_state[:, available_col].sum()
+
+        info = [
+            ('sim_time', self._clock.now),
+            ('time', self._clock.get_time()),
+            ('active_vehicles', active_vehicles),
+            ('available_vehicles', available_vehicles),
+            ('dropped_requests', self._dropped_requests),
+            ('total_requests', self._total_requests),
+            ('wait_time_min', self._wait_time_min),
+            ]
+
+        self.logger.info(generate_csv_row(info, self.LOG_COLUMNS))
 
     def _get_n_best_vehicles(self, request, n):
         """

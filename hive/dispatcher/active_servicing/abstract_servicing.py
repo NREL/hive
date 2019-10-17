@@ -9,6 +9,7 @@ class AbstractServicing(ABC):
         'sim_time',
         'time',
         'active_vehicles',
+        'available_vehicles',
         'dropped_requests',
         'total_requests',
         'wait_time_min',
@@ -55,6 +56,8 @@ class AbstractServicing(ABC):
 
         self._fleet = fleet
         self._fleet_state = fleet_state
+
+        #TODO: come up with better way to initialize vehicle fleet state. (Get rid of?)
         for veh in self._fleet:
             veh.fleet_state = fleet_state
 
@@ -95,28 +98,9 @@ class AbstractServicing(ABC):
         """
         pass
 
+    @abstractmethod
     def log(self):
         """
         Function stores the partial state of the object at each time step.
         :return:
         """
-        if not self.logger:
-            return
-
-        active_col = self._ENV['FLEET_STATE_IDX']['active']
-        active_vehicles = self._fleet_state[:, active_col].sum()
-
-        info = [
-            ('sim_time', self._clock.now),
-            ('time', self._clock.get_time()),
-            ('active_vehicles', active_vehicles),
-            ('dropped_requests', self._dropped_requests),
-            ('total_requests', self._total_requests),
-            ('wait_time_min', self._wait_time_min),
-            ]
-
-        self.logger.info(generate_csv_row(info, self.LOG_COLUMNS))
-
-    def _get_fleet_state_col(self, param):
-        col = self._ENV['FLEET_STATE_IDX'][param]
-        return self._fleet_state[:, col]

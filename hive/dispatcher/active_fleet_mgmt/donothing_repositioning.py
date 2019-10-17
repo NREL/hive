@@ -1,4 +1,4 @@
-from hive.dispatcher.repositioning import AbstractRepositioning
+from hive.dispatcher.active_fleet_mgmt import AbstractRepositioning
 
 
 class DoNothingRepositioning(AbstractRepositioning):
@@ -6,12 +6,7 @@ class DoNothingRepositioning(AbstractRepositioning):
     the laziest replanner, assumes that everything's gonna be great.
     """
 
-    # reporting.generate_logs expects an attribute "history" which is indexed.
-    # it inspects the first row and grabs the keys from that row to create
-    # the header. this is the minimal placeholder to spoof that function.
-    history = [{}]
-
-    def spin_up(
+    def __init__(
             self,
             fleet,
             fleet_state,
@@ -21,11 +16,7 @@ class DoNothingRepositioning(AbstractRepositioning):
             env_params,
             route_engine,
             clock,
-            log,
-    ):
-        """
-        mandatory constructor, but, nothing is stored since nothing happens
-        """
+            ):
         pass
 
     def reposition_agents(self):
