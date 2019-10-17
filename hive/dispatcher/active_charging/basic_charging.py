@@ -8,10 +8,10 @@ import numpy as np
 from hive import helpers as hlp
 from hive import units
 from hive.utils import generate_csv_row
-from hive.dispatcher.assignment import AbstractAssignment
+from hive.dispatcher.active_servicing import AbstractServicing
 
 
-class GreedyAssignment(AbstractAssignment):
+class GreedyAssignment(AbstractServicing):
     """
     Uses a greedy strategy to create agent plans
 
@@ -33,34 +33,6 @@ class GreedyAssignment(AbstractAssignment):
 
     def __init__(
                 self,
-                fleet=None,
-                fleet_state=None,
-                stations=None,
-                bases=None,
-                demand=None,
-                env_params=None,
-                route_engine=None,
-                clock=None,
-                log=None,
-                ):
-
-        if fleet is None:
-            return
-
-        self.spin_up(
-                fleet,
-                fleet_state,
-                stations,
-                bases,
-                demand,
-                env_params,
-                route_engine,
-                clock,
-                log,
-                )
-
-    def spin_up(
-                self,
                 fleet,
                 fleet_state,
                 stations,
@@ -71,98 +43,8 @@ class GreedyAssignment(AbstractAssignment):
                 clock,
                 log,
                 ):
+        super().__init__()
 
-        self.ID = 0
-
-        self._fleet = fleet
-        self._fleet_state = fleet_state
-        for veh in self._fleet:
-            veh.fleet_state = fleet_state
-
-        self._demand = demand
-
-        self._clock = clock
-
-        self._stations = stations
-        self._bases = bases
-
-        self._route_engine = route_engine
-
-        self.history = []
-        self._dropped_requests = 0
-        self._total_requests = 0
-        self._wait_time_min = 0
-
-        self._ENV = env_params
-
-        self._charge_matrix = np.zeros((4,3))
-        self._calc_charge_matrix()
-
-        self.logger = log
-
-        # write dispatcher log header
-        if log:
-            header = self.LOG_COLUMNS[0]
-            for column in self.LOG_COLUMNS[1:]:
-                header = header + "," + column
-            self.logger.info(header)
-
-
-    def _get_fleet_state_col(self, param):
-        col = self._ENV['FLEET_STATE_IDX'][param]
-        return self._fleet_state[:, col]
-
-    def log(self):
-        """
-        Function stores the partial state of the object at each time step.
-        """
-        if not self.logger:
-            return
-
-        active_col = self._ENV['FLEET_STATE_IDX']['active']
-        active_vehicles = self._fleet_state[:, active_col].sum()
-
-        # self._calc_charge_matrix()
-
-        info = [
-            ('sim_time', self._clock.now),
-            ('time', self._clock.get_time()),
-            ('active_vehicles', active_vehicles),
-            ('dropped_requests', self._dropped_requests),
-            ('total_requests', self._total_requests),
-            ('wait_time_min', self._wait_time_min),
-            ]
-
-        self.logger.info(generate_csv_row(info, self.LOG_COLUMNS))
-
-
-    def _calc_charge_matrix(self):
-        soc = self._get_fleet_state_col('soc')
-        battery_capacity_kwh = self._get_fleet_state_col('BATTERY_CAPACITY_KWH')
-        energy_kwh = soc * battery_capacity_kwh
-        kwh__mi = self._get_fleet_state_col('KWH__MI')
-
-        range_mi = energy_kwh / kwh__mi
-
-        active = self._get_fleet_state_col('active')
-        charging = self._get_fleet_state_col('charging')
-        reserve = self._get_fleet_state_col('reserve')
-
-        self._charge_matrix[0,0] = np.sum((range_mi >= 150) & (active == 1) & (charging == 0))
-        self._charge_matrix[0,1] = np.sum((range_mi < 150) & (range_mi > 50) & (active == 1) & (charging == 0))
-        self._charge_matrix[0,2] = np.sum((range_mi <= 50) & (active == 1) & (charging == 0))
-
-        self._charge_matrix[1,0] = np.sum((range_mi >= 150) & (charging >= 50))
-        self._charge_matrix[1,1] = np.sum((range_mi < 150) & (range_mi > 50) & (charging >= 50))
-        self._charge_matrix[1,2] = np.sum((range_mi <= 50) & (charging >= 50))
-
-        self._charge_matrix[2,0] = np.sum((range_mi >= 150) & (charging > 0) & (charging < 50))
-        self._charge_matrix[2,1] = np.sum((range_mi < 150) & (range_mi > 50) & (charging > 0) & (charging < 50))
-        self._charge_matrix[2,2] = np.sum((range_mi <= 50) & (charging > 0) & (charging < 50))
-
-        self._charge_matrix[3,0] = np.sum((range_mi >= 150) & (reserve == 1))
-        self._charge_matrix[3,1] = np.sum((range_mi < 150) & (range_mi > 50) & (reserve == 1))
-        self._charge_matrix[3,2] = np.sum((range_mi <= 50) & (reserve == 1))
 
     def _find_closest_plug(self, vehicle, type='station'):
         """
