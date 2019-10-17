@@ -164,13 +164,22 @@ class Vehicle:
     @vehicle_state.setter
     def vehicle_state(self, next_state):
         if self._vehicle_state != next_state:
-            assert VehicleState.is_valid(next_state)
+            if not VehicleState.is_valid(next_state):
+                raise AssertionError("{}: {} needs to be a VehicleState".format(next_state, type(next_state)))
             self.available = next_state.available()
             self.active = next_state.active()
             self._vehicle_state = self.vehicle_state.to(next_state)
 
     @property
     def activity(self):
+        """
+        reports the name of the vehicle_state. to change the "activity",
+        change the vehicle_state:
+
+        self.vehicle_state = VehicleState.IDLE  # yields self.activity == "IDLE"
+
+        :return:
+        """
         return self.vehicle_state.name
 
     @property
@@ -436,9 +445,9 @@ class Vehicle:
             list containing location, distance and activity information representing
             a route.
         """
-        self.available = True
+        # self.available = True
         self._station = None
-        self.activity = "Reposition"
+        self.vehicle_state = VehicleState.REPOSITIONING
         self.cmd_move(route)
 
     def cmd_charge(self, station, route):

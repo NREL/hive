@@ -74,7 +74,9 @@ class RandomRepositioning(AbstractRepositioning):
                 random_locations_sampled = random_locations_sampled + 1
 
             # route vehicle from current position to the randomly generated point
-            route = self.route_engine.route(vehicle.lat, vehicle.lon, rand_lat_pos, rand_lon_pos, "Reposition")
+            route = self.route_engine.route(vehicle.lat, vehicle.lon,
+                                            rand_lat_pos, rand_lon_pos,
+                                            VehicleState.REPOSITIONING)
             vehicle.cmd_reposition(route['route'])
             agents_repositioned += 1
 
