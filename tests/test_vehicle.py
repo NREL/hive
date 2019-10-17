@@ -101,7 +101,7 @@ class VehicleTest(unittest.TestCase):
                         test_vehicle.y,
                         test_station.X,
                         test_station.Y,
-                        activity='Moving to Station')
+                        vehicle_state='Moving to Station')
 
         route = route_summary['route']
 
@@ -145,7 +145,7 @@ class VehicleTest(unittest.TestCase):
                             test_vehicle.y,
                             test_base.X,
                             test_base.Y,
-                            activity = "Returning to Base")
+                            vehicle_state="Returning to Base")
 
         route = route_summary['route']
 
