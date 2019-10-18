@@ -11,6 +11,7 @@ from hive import reporting
 from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
 from hive.dispatcher import Dispatcher
+from hive.manager import Manager
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.utils import (
     Clock,
@@ -193,21 +194,26 @@ class SimulationEngine:
 
         # load dispatcher algorithms, or if not provided, use the defaults
         if 'ASSIGNMENT' in self.input_data['main']:
-            assignment_module_name = self.input_data['main']['ASSIGNMENT']
+            active_servicing_name = self.input_data['main']['ASSIGNMENT']
         else:
-            assignment_module_name = "greedy"
+            active_servicing_name = "greedy"
         if 'REPOSITIONING' in self.input_data['main']:
-            repositioning_module_name = self.input_data['main']['REPOSITIONING']
+            active_fleet_mgmt_name = self.input_data['main']['REPOSITIONING']
         else:
-            repositioning_module_name = "basic"
+            active_fleet_mgmt_name = "basic"
         if 'ACTIVE_CHARGING' in self.input_data['main']:
-            charging_module_name = self.input_data['main']['ACTIVE_CHARGING']
+            active_charging_name = self.input_data['main']['ACTIVE_CHARGING']
         else:
-            charging_module_name = "basic"
+            active_charging_name = "basic"
+        if 'INACTIVE_MGMT' in self.input_data['main']:
+            inactive_fleet_mgmt_name = self.input_data['main']['INACTIVE_MGMT']
+        else:
+            inactive_fleet_mgmt_name = "basic"
 
-        self.log.info("dispatcher loading {} assignment module".format(assignment_module_name))
-        self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
-        self.log.info("dispatcher loading {} charging module".format(charging_module_name))
+        self.log.info("dispatcher loading {} assignment module".format(active_servicing_name))
+        self.log.info("dispatcher loading {} repositioning module".format(active_fleet_mgmt_name))
+        self.log.info("dispatcher loading {} charging module".format(active_charging_name))
+        self.log.info("dispatcher loading {} inactive fleet management module".format(inactive_fleet_mgmt_name))
 
         dispatcher_log = None
         if 'dispatcher' in self.input_data['LOGS']:
@@ -224,9 +230,10 @@ class SimulationEngine:
             dispatcher_log.setLevel(logging.INFO)
 
         dispatcher = Dispatcher(
-            repositioning_module_name,
-            assignment_module_name,
-            charging_module_name,
+            inactive_fleet_mgmt_name,
+            active_fleet_mgmt_name,
+            active_servicing_name,
+            active_charging_name,
             fleet,
             fleet_state,
             stations,
@@ -239,6 +246,16 @@ class SimulationEngine:
         )
 
         SIM_ENV['dispatcher'] = dispatcher
+
+        manager = Manager(
+            fleet,
+            fleet_state,
+            demand,
+            env_params,
+            sim_clock,
+        )
+
+        SIM_ENV['manager'] = manager
 
         self._SIM_ENV = SIM_ENV
 
@@ -271,6 +288,9 @@ class SimulationEngine:
                                & (reqs_df.pickup_time < (
                         timestep + timedelta(seconds=self.input_data['SIMULATION_PERIOD_SECONDS'])))]
 
+            fleet_diff = self._SIM_ENV['manager'].calc_fleet_differential()
+
+            self._SIM_ENV['dispatcher'].balance_fleet(fleet_diff)
             self._SIM_ENV['dispatcher'].step(requests)
 
             for veh in self._SIM_ENV['fleet']:

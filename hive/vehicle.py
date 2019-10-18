@@ -52,6 +52,7 @@ class Vehicle:
         'station_power',
         'base',
         'passengers',
+        'idle_min',
     ]
 
     def __init__(
@@ -217,7 +218,7 @@ class Vehicle:
     def idle_min(self):
         return self._get_fleet_state('idle_min')
 
-    @available.setter
+    @idle_min.setter
     def idle_min(self, val):
         self._set_fleet_state('idle_min', int(val))
 
@@ -294,6 +295,7 @@ class Vehicle:
             ('station_power', self.charging),
             ('base', base),
             ('passengers', self.MAX_PASSENGERS - self.avail_seats),
+            ('idle_min', self.idle_min)
         ]
 
         self.log.info(generate_csv_row(info, self.LOG_COLUMNS))
