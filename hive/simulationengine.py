@@ -288,9 +288,9 @@ class SimulationEngine:
                                & (reqs_df.pickup_time < (
                         timestep + timedelta(seconds=self.input_data['SIMULATION_PERIOD_SECONDS'])))]
 
-            fleet_diff = self._SIM_ENV['manager'].calc_fleet_differential()
+            active_fleet_n = self._SIM_ENV['manager'].calc_active_fleet_n()
 
-            self._SIM_ENV['dispatcher'].balance_fleet(fleet_diff)
+            self._SIM_ENV['dispatcher'].balance_fleet(active_fleet_n)
             self._SIM_ENV['dispatcher'].step(requests)
 
             for veh in self._SIM_ENV['fleet']:

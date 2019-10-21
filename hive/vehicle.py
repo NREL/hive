@@ -52,7 +52,6 @@ class Vehicle:
         'station_power',
         'base',
         'passengers',
-        'idle_min',
     ]
 
     def __init__(
@@ -163,6 +162,7 @@ class Vehicle:
 
             # update vehicle state
             self._vehicle_state = self.vehicle_state.to(next_state)
+            self._set_fleet_state('vehicle_state', next_state.value)
 
     @property
     def activity(self):
@@ -295,7 +295,6 @@ class Vehicle:
             ('station_power', self.charging),
             ('base', base),
             ('passengers', self.MAX_PASSENGERS - self.avail_seats),
-            ('idle_min', self.idle_min)
         ]
 
         self.log.info(generate_csv_row(info, self.LOG_COLUMNS))

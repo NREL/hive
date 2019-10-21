@@ -2,6 +2,9 @@ from hive.dispatcher.inactive_fleet_mgmt import inactive_fleet_mgmt
 from hive.dispatcher.active_fleet_mgmt import active_fleet_mgmt
 from hive.dispatcher.active_servicing import active_servicing
 from hive.dispatcher.active_charging import active_charging
+from hive.vehiclestate import VehicleState
+
+import numpy as np
 
 class Dispatcher:
     def __init__(
@@ -77,9 +80,48 @@ class Dispatcher:
                                                                     route_engine,
                                                                     clock,
                                                                     )
+        self._fleet = fleet
+        self._fleet_state = fleet_state
+        self._ENV = env_params
 
-    def balance_fleet(self, fleet_differential):
+    def _deactivate_vehicles(self, n):
+        fleet_state = self._fleet_state
+
+        veh_ste_col = self._ENV['FLEET_STATE_IDX']['vehicle_state']
+        soc_col = self._ENV['FLEET_STATE_IDX']['soc']
+
+        soc_sorted = np.argsort(fleet_state[:, soc_col])
+
+        idle_veh_mask = (fleet_state[:, veh_ste_col] == VehicleState.IDLE.value)
+
+        veh_ids = soc_sorted[idle_veh_mask[soc_sorted]][:n+1]
+
+        for veh_id in veh_ids:
+            veh = self._fleet[veh_id]
+            base = random.choice(self._bases)
+
+            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon,
+                                                     base.LAT, base.LON,
+                                                     VehicleState.DISPATCH_BASE)
+            route = route_summary['route']
+            veh.cmd_return_to_base(base, route)
+
+    def _activate_vehicles(self, n):
         pass
+
+    def balance_fleet(self, active_fleet_target):
+
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        active_vehicles = self._fleet_state[:, active_col].sum()
+
+        n = active_fleet_target - active_vehicles
+
+        if n > 0:
+            self._activate_vehicles(n)
+        elif n < 0:
+            self._deactivate_vehicles(n)
+
+
 
     def step(self, requests):
         self.active_servicing_module.process_requests(requests)

@@ -19,8 +19,11 @@ class Manager:
 
         self._ENV = env_params
 
-    def calc_fleet_differential(self):
-        neg = int(random.random() * 2)
+    def calc_active_fleet_n(self):
+        active_n = 0
+        now = self._clock.now
 
-        diff = int(random.random() * 10) * (-1 * neg)
-        return diff
+        if now < len(self._demand) - 15:
+            active_n = sum(self._demand[now:now+15])
+
+        return active_n 
