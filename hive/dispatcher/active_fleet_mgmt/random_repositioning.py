@@ -2,6 +2,7 @@ import random
 import logging
 import geopandas as gpd
 from shapely.geometry import Point
+import numpy as np
 
 from hive.dispatcher.active_fleet_mgmt.abstract_repositioning import AbstractRepositioning
 from hive.vehiclestate import VehicleState
@@ -61,15 +62,20 @@ class RandomRepositioning(AbstractRepositioning):
         """
         randomly repositions Idle agents within the bounds of the simulation
         """
+        fleet_state = self._fleet_state
+
+        veh_ste_col = self._ENV['FLEET_STATE_IDX']['vehicle_state']
 
         agents_repositioned = 0
         random_locations_sampled = 0
 
-        # expensive O(n) filter of all vehicles for "Idle" state
-        reposition_vehicles = list(filter(lambda veh: veh.vehicle_state == VehicleState.IDLE, self._fleet))
+        idle_veh_mask = (fleet_state[:, veh_ste_col] == VehicleState.IDLE.value)
+        reposition_vehicles = np.argwhere(idle_veh_mask)
 
         # get all inactive agents
-        for vehicle in reposition_vehicles:
+        for veh_id in reposition_vehicles:
+
+            vehicle = self._fleet[veh_id[0]]
             # generate random points from min/max x/y values until a pair
             # falls within the bounding polygon (operating area) of the scenario
 

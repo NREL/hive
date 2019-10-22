@@ -193,14 +193,14 @@ class SimulationEngine:
             )
 
         # load dispatcher algorithms, or if not provided, use the defaults
-        if 'ASSIGNMENT' in self.input_data['main']:
-            active_servicing_name = self.input_data['main']['ASSIGNMENT']
+        if 'ACTIVE_SERVICING' in self.input_data['main']:
+            active_servicing_name = self.input_data['main']['ACTIVE_SERVICING']
         else:
             active_servicing_name = "greedy"
-        if 'REPOSITIONING' in self.input_data['main']:
-            active_fleet_mgmt_name = self.input_data['main']['REPOSITIONING']
+        if 'ACTIVE_FLEET_MGMT' in self.input_data['main']:
+            active_fleet_mgmt_name = self.input_data['main']['ACTIVE_FLEET_MGMT']
         else:
-            active_fleet_mgmt_name = "basic"
+            active_fleet_mgmt_name = "do_nothing"
         if 'ACTIVE_CHARGING' in self.input_data['main']:
             active_charging_name = self.input_data['main']['ACTIVE_CHARGING']
         else:

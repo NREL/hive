@@ -24,6 +24,6 @@ class Manager:
         now = self._clock.now
 
         if now < len(self._demand) - 15:
-            active_n = sum(self._demand[now:now+15])
+            active_n = sum(self._demand[now:now+15]) + 20
 
-        return active_n 
+        return active_n
