@@ -100,7 +100,7 @@ class Dispatcher:
         idle_veh_mask = (fleet_state[:, veh_ste_col] == VehicleState.IDLE.value) \
             | (fleet_state[:, veh_ste_col] == VehicleState.REPOSITIONING.value)
 
-        veh_ids = soc_sorted[idle_veh_mask[soc_sorted]][:n+1]
+        veh_ids = soc_sorted[idle_veh_mask[soc_sorted]][:abs(n)]
 
         for veh_id in veh_ids:
             veh = self._fleet[veh_id]
@@ -111,6 +111,7 @@ class Dispatcher:
                                                      VehicleState.DISPATCH_BASE)
             route = route_summary['route']
             veh.cmd_return_to_base(base, route)
+
 
     def _activate_vehicles(self, n):
         fleet_state = self._fleet_state
@@ -123,7 +124,7 @@ class Dispatcher:
         veh_mask = (fleet_state[:, veh_ste_col] == VehicleState.CHARGING_BASE.value) \
             | (fleet_state[:, veh_ste_col] == VehicleState.RESERVE_BASE.value)
 
-        veh_ids = soc_sorted[veh_mask[soc_sorted]][:n+1]
+        veh_ids = soc_sorted[veh_mask[soc_sorted]][:n]
 
         for veh_id in veh_ids:
             veh = self._fleet[veh_id]
@@ -138,6 +139,8 @@ class Dispatcher:
         active_vehicles = self._fleet_state[:, active_col].sum()
 
         n = active_fleet_target - active_vehicles
+
+        self.active_fleet_target = active_fleet_target
 
         if n > 0:
             self._activate_vehicles(n)

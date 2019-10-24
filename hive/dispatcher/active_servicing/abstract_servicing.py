@@ -9,6 +9,7 @@ class AbstractServicing(ABC):
         'sim_time',
         'time',
         'active_vehicles',
+        'active_target',
         'available_vehicles',
         'dropped_requests',
         'total_requests',

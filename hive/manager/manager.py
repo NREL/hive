@@ -26,4 +26,13 @@ class Manager:
         if now < len(self._demand) - 15:
             active_n = sum(self._demand[now:now+15]) + 20
 
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        active_vehicles = self._fleet_state[:, active_col].sum()
+        #
+        ## Alternate method using a random number and current active vehicle count
+        # active_n = active_vehicles + random.randint(-5,5)
+        #
+        # if now == 0:
+        #     active_n = int(len(self._fleet) / 2)
+
         return active_n
