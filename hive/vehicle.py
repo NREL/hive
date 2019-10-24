@@ -162,6 +162,7 @@ class Vehicle:
 
             # update vehicle state
             self._vehicle_state = self.vehicle_state.to(next_state)
+            self._set_fleet_state('vehicle_state', next_state.value)
 
     @property
     def activity(self):
@@ -217,7 +218,7 @@ class Vehicle:
     def idle_min(self):
         return self._get_fleet_state('idle_min')
 
-    @available.setter
+    @idle_min.setter
     def idle_min(self, val):
         self._set_fleet_state('idle_min', int(val))
 

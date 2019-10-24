@@ -1,72 +1,94 @@
-from hive.dispatcher.combined import combined
-from hive.dispatcher.assignment import assignment
-from hive.dispatcher.repositioning import repositioning
+from hive.dispatcher.inactive_fleet_mgmt import inactive_fleet_mgmt
+from hive.dispatcher.active_fleet_mgmt import active_fleet_mgmt
+from hive.dispatcher.active_servicing import active_servicing
+from hive.dispatcher.active_charging import active_charging
+from hive.vehiclestate import VehicleState
+from hive.charging import find_closest_plug
+
+import numpy as np
+import random
+
+class Dispatcher:
+    def __init__(
+            self,
+            inactive_fleet_mgmt_name,
+            active_fleet_mgmt_name,
+            active_servicing_name,
+            active_charging_name,
+            fleet,
+            fleet_state,
+            stations,
+            bases,
+            demand,
+            env_params,
+            route_engine,
+            clock,
+            log,
+        ):
+        """
+        :param inactive_fleet_mgmt_name,
+        :param active_fleet_mgmt_name,
+        :param active_servicing_name,
+        :param active_charging_name,
+        :param fleet:
+        :param fleet_state:
+        :param stations:
+        :param bases:
+        :param demand:
+        :param env_params:
+        :param route_engine:
+        :param clock:
+        :return:
+        """
+        #TODO: Considering combining module input params into a single data structure
+        self.inactive_fleet_mgmt_module = inactive_fleet_mgmt.from_scenario_input(
+                                                                    inactive_fleet_mgmt_name,
+                                                                    fleet,
+                                                                    fleet_state,
+                                                                    env_params,
+                                                                    clock,
+                                                                    )
+        self.active_fleet_mgmt_module = active_fleet_mgmt.from_scenario_input(
+                                                                    active_fleet_mgmt_name,
+                                                                    fleet,
+                                                                    fleet_state,
+                                                                    stations,
+                                                                    bases,
+                                                                    demand,
+                                                                    env_params,
+                                                                    route_engine,
+                                                                    clock,
+                                                                    )
+        self.active_servicing_module = active_servicing.from_scenario_input(
+                                                                    active_servicing_name,
+                                                                    fleet,
+                                                                    fleet_state,
+                                                                    stations,
+                                                                    bases,
+                                                                    demand,
+                                                                    env_params,
+                                                                    route_engine,
+                                                                    clock,
+                                                                    log,
+                                                                    )
+        self.active_charging_module = active_charging.from_scenario_input(
+                                                                    active_charging_name,
+                                                                    fleet,
+                                                                    fleet_state,
+                                                                    stations,
+                                                                    bases,
+                                                                    demand,
+                                                                    env_params,
+                                                                    route_engine,
+                                                                    clock,
+                                                                    )
 
 
-def load_dispatcher(
-        assignment_module_name,
-        repositioning_module_name,
-        fleet,
-        fleet_state,
-        stations,
-        bases,
-        demand,
-        env_params,
-        route_engine,
-        clock,
-        log,
-):
-    """
+    def step(self, requests, active_fleet_target):
+        self.active_fleet_mgmt_module.deactivate_vehicles(active_fleet_target)
+        self.inactive_fleet_mgmt_module.activate_vehicles(active_fleet_target)
 
-    :param assignment_module_name:
-    :param repositioning_module_name:
-    :param fleet:
-    :param fleet_state:
-    :param stations:
-    :param bases:
-    :param demand:
-    :param env_params:
-    :param route_engine:
-    :param clock:
-    :return:
-    """
-    assignment_module, repositioning_module, module_type = _get_modules(assignment_module_name, repositioning_module_name)
-
-    assignment_module.spin_up(
-        fleet=fleet,
-        fleet_state=fleet_state,
-        stations=stations,
-        bases=bases,
-        demand=demand,
-        env_params=env_params,
-        route_engine=route_engine,
-        clock=clock,
-        log=log)
-
-    if module_type != "combined":
-        # only spin_up the repositioning module if it is not the same
-        # object as the assignment module - only need to construct it
-        # once!
-        repositioning_module.spin_up(
-            fleet=fleet,
-            fleet_state=fleet_state,
-            stations=stations,
-            bases=bases,
-            demand=demand,
-            env_params=env_params,
-            route_engine=route_engine,
-            clock=clock,
-            log=log,
-        )
-
-    return assignment_module, repositioning_module
-
-
-def _get_modules(assignment_module_name, repositioning_module_name):
-    if assignment_module_name == repositioning_module_name and combined.module_exists(assignment_module_name):
-        combined_module = combined.from_scenario_input(assignment_module_name)
-        return combined_module, combined_module, "combined"
-    else:
-        assignment_module = assignment.from_scenario_input(assignment_module_name)
-        repositioning_module = repositioning.from_scenario_input(repositioning_module_name)
-        return assignment_module, repositioning_module, ""
+        self.active_servicing_module.process_requests(requests)
+        self.active_fleet_mgmt_module.reposition_agents()
+        self.active_charging_module.charge()
+        self.inactive_fleet_mgmt_module.manage_inactive_charging()

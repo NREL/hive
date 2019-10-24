@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class AbstractAssignment(ABC):
+class AbstractServicing(ABC):
     """
     functions expected to be found on a Dispatcher
     """
@@ -9,27 +9,27 @@ class AbstractAssignment(ABC):
         'sim_time',
         'time',
         'active_vehicles',
+        'available_vehicles',
         'dropped_requests',
         'total_requests',
         'wait_time_min',
         ]
 
-    def __init__(self):
-        super().__init__()
-
     @abstractmethod
-    def spin_up(
-        self,
-        fleet,
-        fleet_state,
-        stations,
-        bases,
-        demand,
-        env_params,
-        route_engine,
-        clock,
-        log,
-    ):
+    def __init__(
+            self,
+            fleet,
+            fleet_state,
+            stations,
+            bases,
+            demand,
+            env_params,
+            route_engine,
+            clock,
+            log,
+        ):
+
+        super().__init__()
         """
         sets dispatcher up with relevant data for this simulation
 
@@ -52,7 +52,38 @@ class AbstractAssignment(ABC):
         clock: hive.utils.Clock
             simulation clock shared across the simulation to track simulation time steps.
         """
-        pass
+        self.ID = 0
+
+        self._fleet = fleet
+        self._fleet_state = fleet_state
+
+        #TODO: come up with better way to initialize vehicle fleet state. (Get rid of?)
+        for veh in self._fleet:
+            veh.fleet_state = fleet_state
+
+        self._demand = demand
+
+        self._clock = clock
+
+        self._stations = stations
+        self._bases = bases
+
+        self._route_engine = route_engine
+
+        self._dropped_requests = 0
+        self._total_requests = 0
+        self._wait_time_min = 0
+
+        self._ENV = env_params
+
+        self.logger = log
+
+        # write dispatcher log header
+        if log:
+            header = self.LOG_COLUMNS[0]
+            for column in self.LOG_COLUMNS[1:]:
+                header = header + "," + column
+            self.logger.info(header)
 
     @abstractmethod
     def process_requests(self, requests):

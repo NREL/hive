@@ -10,7 +10,8 @@ from hive import preprocess as pp
 from hive import reporting
 from hive import router
 from hive.constraints import ENV_PARAMS, FLEET_STATE_IDX
-from hive.dispatcher import dispatcher
+from hive.dispatcher import Dispatcher
+from hive.manager import Manager
 from hive.initialize import initialize_stations, initialize_fleet
 from hive.utils import (
     Clock,
@@ -192,17 +193,27 @@ class SimulationEngine:
             )
 
         # load dispatcher algorithms, or if not provided, use the defaults
-        if 'ASSIGNMENT' in self.input_data:
-            assignment_module_name = self.input_data['ASSIGNMENT']
+        if 'ACTIVE_SERVICING' in self.input_data['main']:
+            active_servicing_name = self.input_data['main']['ACTIVE_SERVICING']
         else:
-            assignment_module_name = "greedy"
-        if 'REPOSITIONING' in self.input_data:
-            repositioning_module_name = self.input_data['REPOSITIONING']
+            active_servicing_name = "greedy"
+        if 'ACTIVE_FLEET_MGMT' in self.input_data['main']:
+            active_fleet_mgmt_name = self.input_data['main']['ACTIVE_FLEET_MGMT']
         else:
-            repositioning_module_name = "do_nothing"
+            active_fleet_mgmt_name = "basic"
+        if 'ACTIVE_CHARGING' in self.input_data['main']:
+            active_charging_name = self.input_data['main']['ACTIVE_CHARGING']
+        else:
+            active_charging_name = "basic"
+        if 'INACTIVE_MGMT' in self.input_data['main']:
+            inactive_fleet_mgmt_name = self.input_data['main']['INACTIVE_MGMT']
+        else:
+            inactive_fleet_mgmt_name = "basic"
 
-        self.log.info("dispatcher loading {} assignment module".format(assignment_module_name))
-        self.log.info("dispatcher loading {} repositioning module".format(repositioning_module_name))
+        self.log.info("dispatcher loading {} assignment module".format(active_servicing_name))
+        self.log.info("dispatcher loading {} repositioning module".format(active_fleet_mgmt_name))
+        self.log.info("dispatcher loading {} charging module".format(active_charging_name))
+        self.log.info("dispatcher loading {} inactive fleet management module".format(inactive_fleet_mgmt_name))
 
         dispatcher_log = None
         if 'dispatcher' in self.input_data['LOGS']:
@@ -218,9 +229,11 @@ class SimulationEngine:
             dispatcher_log.handlers = [fh]
             dispatcher_log.setLevel(logging.INFO)
 
-        assignment_module, repositioning_module = dispatcher.load_dispatcher(
-            assignment_module_name,
-            repositioning_module_name,
+        dispatcher = Dispatcher(
+            inactive_fleet_mgmt_name,
+            active_fleet_mgmt_name,
+            active_servicing_name,
+            active_charging_name,
             fleet,
             fleet_state,
             stations,
@@ -232,8 +245,17 @@ class SimulationEngine:
             dispatcher_log
         )
 
-        SIM_ENV['assignment'] = assignment_module
-        SIM_ENV['repositioning'] = repositioning_module
+        SIM_ENV['dispatcher'] = dispatcher
+
+        manager = Manager(
+            fleet,
+            fleet_state,
+            demand,
+            env_params,
+            sim_clock,
+        )
+
+        SIM_ENV['manager'] = manager
 
         self._SIM_ENV = SIM_ENV
 
@@ -266,8 +288,9 @@ class SimulationEngine:
                                & (reqs_df.pickup_time < (
                         timestep + timedelta(seconds=self.input_data['SIMULATION_PERIOD_SECONDS'])))]
 
-            self._SIM_ENV['assignment'].process_requests(requests)
-            self._SIM_ENV['repositioning'].reposition_agents()
+            active_fleet_n = self._SIM_ENV['manager'].calc_active_fleet_n()
+
+            self._SIM_ENV['dispatcher'].step(requests, active_fleet_n)
 
             for veh in self._SIM_ENV['fleet']:
                 veh.step()
@@ -278,8 +301,8 @@ class SimulationEngine:
             for base in self._SIM_ENV['bases']:
                 base.step()
 
-            self._SIM_ENV['assignment'].log()
-            self._SIM_ENV['repositioning'].log()
+            #TODO: This logging method stinks.... We should find a new way. NR
+            self._SIM_ENV['dispatcher'].active_servicing_module.log()
 
             next(self._SIM_ENV['sim_clock'])
 

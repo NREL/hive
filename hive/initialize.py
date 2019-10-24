@@ -8,6 +8,7 @@ from hive import charging as chrg
 from hive import tripenergy as nrg
 from hive.stations import FuelStation
 from hive.vehicle import Vehicle
+from hive.vehiclestate import VehicleState
 
 
 def initialize_stations(station_df, clock, log):
@@ -120,17 +121,18 @@ def initialize_fleet(vehicle_types,
             veh_fleet.append(veh)
 
             #TODO: Make this more explicit
-            fleet_state_constructor.append((veh.lat,
-                                            veh.lon,
-                                            1,
-                                            1,
-                                            0,
-                                            0,
-                                            veh.MAX_PASSENGERS,
-                                            0,
-                                            0,
-                                            avg_kwh__mi,
-                                            veh.BATTERY_CAPACITY,
+            fleet_state_constructor.append((veh.lat, #lat
+                                            veh.lon, #lon
+                                            1, #active
+                                            1, #available
+                                            0, #soc
+                                            0, #idle_min
+                                            veh.MAX_PASSENGERS, #avail_seats
+                                            0, #charging
+                                            0, #reserve
+                                            avg_kwh__mi, #KWH__MI
+                                            veh.BATTERY_CAPACITY, #BATTERY_CAPACITY_KWH
+                                            VehicleState.IDLE.value, #vehicle_state
                                             ))
 
     fleet_state = np.array(fleet_state_constructor)
@@ -149,6 +151,7 @@ def initialize_fleet(vehicle_types,
         veh.energy_kwh = np.random.uniform(0.2, 1.0) * veh.BATTERY_CAPACITY
         veh.lat = base.LAT
         veh.lon = base.LON
+        veh.vehicle_state = VehicleState.IDLE
         veh.base = base
 
     return veh_fleet, fleet_state

@@ -46,6 +46,10 @@ def read_parameters(scenario):
         'LOWER_SOC_THRESH_STATION',
         'UPPER_SOC_THRESH_STATION',
         'MIN_ALLOWED_SOC',
+        'ACTIVE_SERVICING',
+        'ACTIVE_FLEET_MGMT',
+        'ACTIVE_CHARGING',
+        'INACTIVE_MGMT',
     ]
     for param in PARAMETERS:
         result[param] = scenario[param]
@@ -112,9 +116,6 @@ def build_scenarios():
                 'mph': whmi_df.mph.to_list(),
                 'wh_mi_factor': whmi_df.wh_mi_factor.to_list(),
             }
-
-            config['ASSIGNMENT'] = scenario['ASSIGNMENT']
-            config['REPOSITIONING'] = scenario['REPOSITIONING']
 
             name = scenario['SCENARIO_NAME']
             outfile = os.path.join(SCENARIO_PATH, f'{name}.yaml')

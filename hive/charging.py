@@ -6,6 +6,8 @@ Functions for estimating charge curves
 import pandas as pd
 import numpy as np
 
+from hive.helpers import estimate_vmt_latlon
+
 def construct_temporal_charge_template(unscaled_df, battery_kwh, battery_kw):
     """
     Builds a scaled charging template based on battery specifications.
@@ -344,3 +346,49 @@ def calc_dcfc_secs(charge_template, battery_kwh, battery_kw, soc_i, soc_f):
     time_secs = charge_df.iloc[-1]['abs_time']
 
     return float(time_secs)
+
+def find_closest_plug(vehicle, network):
+    """
+    Function takes hive.vehicle.Vehicle object and returns the FuelStation
+    nearest Vehicle with at least one available plug. The "type" argument
+    accepts either 'station' or 'base', informing the search space.
+
+    Parameters
+    ----------
+    vehicle: hive.vehicle.Vehicle
+        vehicle to which the closest plug is relative to.
+    type: str
+        string to indicate which type of plug is being searched for.
+
+    Returns
+    -------
+    nearest: hive.stations.FuelStation
+        the station or bases that is the closest to the vehicle
+    """
+    #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
+    INF = 1000000000
+
+    def recursive_search(search_space):
+        if len(search_space) < 1:
+            raise NotImplementedError("""No plugs are available on the
+                entire network.""")
+
+        dist_to_nearest = INF
+        for station in search_space:
+            dist_mi = estimate_vmt_latlon(vehicle.lat,
+                                           vehicle.lon,
+                                           station.LAT,
+                                           station.LON,
+                                           scaling_factor = vehicle.ENV['RN_SCALING_FACTOR'])
+            if dist_mi < dist_to_nearest:
+                dist_to_nearest = dist_mi
+                nearest = station
+        if nearest.avail_plugs < 1:
+            search_space = [s for s in search_space if s.ID != nearest.ID]
+            nearest = recursive_search(search_space)
+
+        return nearest
+
+    nearest = recursive_search(network)
+
+    return nearest
