@@ -24,7 +24,14 @@ class AbstractInactiveMgmt(ABC):
         self._ENV = env_params
 
     @abstractmethod
-    def manage_inactive_fleet(self):
+    def manage_inactive_charging(self):
+        """
+        makes decisions related to inactive agents at each time step
+        """
+        pass
+
+    @abstractmethod
+    def activate_vehicles(self):
         """
         makes decisions related to inactive agents at each time step
         """

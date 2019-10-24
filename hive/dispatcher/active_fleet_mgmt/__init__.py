@@ -8,13 +8,11 @@ defining new repositioning modules requires
 2. "registering" the class by adding it to the '_valid_repositioning' dictionary in repositioning.py
 """
 
-from hive.dispatcher.active_fleet_mgmt.abstract_repositioning import AbstractRepositioning
-from hive.dispatcher.active_fleet_mgmt.donothing_repositioning import DoNothingRepositioning
+from hive.dispatcher.active_fleet_mgmt.abstract_active_fleet_mgmt import AbstractActiveFleetMgmt
+from hive.dispatcher.active_fleet_mgmt.basic_active_mgmt import BasicActiveMgmt
 from hive.dispatcher.active_fleet_mgmt.random_repositioning import RandomRepositioning
-from hive.dispatcher.active_fleet_mgmt.basic_active_mgmt import BasicActiveMgmt 
 __all__ = [
-    "AbstractRepositioning",
-    "DoNothingRepositioning",
+    "AbstractActiveFleetMgmt",
     "RandomRepositioning",
     "BasicActiveMgmt",
     ]

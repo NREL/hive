@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class AbstractRepositioning(ABC):
+class AbstractActiveFleetMgmt(ABC):
     """
     functions expected to be found on a Repositioning module
     """
@@ -34,6 +34,13 @@ class AbstractRepositioning(ABC):
     def reposition_agents(self):
         """
         makes decisions related to agent repositioning at each time step
+        """
+        pass
+
+    @abstractmethod
+    def deactivate_vehicles(self, active_fleet_target):
+        """
+        makes decisions related to deactivating vehicles at each time step
         """
         pass
 

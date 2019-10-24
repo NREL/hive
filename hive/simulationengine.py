@@ -200,7 +200,7 @@ class SimulationEngine:
         if 'ACTIVE_FLEET_MGMT' in self.input_data['main']:
             active_fleet_mgmt_name = self.input_data['main']['ACTIVE_FLEET_MGMT']
         else:
-            active_fleet_mgmt_name = "do_nothing"
+            active_fleet_mgmt_name = "basic"
         if 'ACTIVE_CHARGING' in self.input_data['main']:
             active_charging_name = self.input_data['main']['ACTIVE_CHARGING']
         else:
@@ -290,8 +290,7 @@ class SimulationEngine:
 
             active_fleet_n = self._SIM_ENV['manager'].calc_active_fleet_n()
 
-            self._SIM_ENV['dispatcher'].balance_fleet(active_fleet_n)
-            self._SIM_ENV['dispatcher'].step(requests)
+            self._SIM_ENV['dispatcher'].step(requests, active_fleet_n)
 
             for veh in self._SIM_ENV['fleet']:
                 veh.step()

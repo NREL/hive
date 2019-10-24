@@ -1,6 +1,5 @@
 from hive.dispatcher.active_fleet_mgmt import (
-    AbstractRepositioning,
-    DoNothingRepositioning,
+    AbstractActiveFleetMgmt,
     RandomRepositioning,
     BasicActiveMgmt,
     )
@@ -10,7 +9,6 @@ the list of valid string names for dispatchers which can be
 requested in the scenario file
 """
 _valid_repositioning = {
-    "do_nothing": DoNothingRepositioning,
     "random": RandomRepositioning,
     "basic": BasicActiveMgmt,
 }
@@ -61,5 +59,5 @@ def from_scenario_input(
         valid_keys = ", ".join([k for k in _valid_repositioning.keys()])
         raise ModuleNotFoundError("Repositioning module '{}' not found".format(name))
     # this enforces class inheritance
-    assert issubclass(type(repositioning), AbstractRepositioning)
+    assert issubclass(type(repositioning), AbstractActiveFleetMgmt)
     return repositioning

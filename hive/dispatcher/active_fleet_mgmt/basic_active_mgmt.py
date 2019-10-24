@@ -1,13 +1,13 @@
-from hive.dispatcher.active_fleet_mgmt import AbstractRepositioning
+from hive.dispatcher.active_fleet_mgmt import AbstractActiveFleetMgmt
+from hive.charging import find_closest_plug
 from hive.vehiclestate import VehicleState
-
-import hive.helpers as hlp
 
 import numpy as np
 
-class BasicActiveMgmt(AbstractRepositioning):
+
+class BasicActiveMgmt(AbstractActiveFleetMgmt):
     """
-    Simple active fleet management that lets vehicles time out.
+    the laziest replanner, assumes that everything's gonna be great.
     """
 
     def __init__(
@@ -30,83 +30,52 @@ class BasicActiveMgmt(AbstractRepositioning):
                     env_params,
                     route_engine,
                     clock,
-                )
-    def _find_closest_plug(self, vehicle, type='station'):
-        """
-        Function takes hive.vehicle.Vehicle object and returns the FuelStation
-        nearest Vehicle with at least one available plug. The "type" argument
-        accepts either 'station' or 'base', informing the search space.
-
-        Parameters
-        ----------
-        vehicle: hive.vehicle.Vehicle
-            vehicle to which the closest plug is relative to.
-        type: str
-            string to indicate which type of plug is being searched for.
-
-        Returns
-        -------
-        nearest: hive.stations.FuelStation
-            the station or bases that is the closest to the vehicle
-        """
-        #IDEA: Store stations in a geospatial index to eliminate exhaustive search. -NR
-        INF = 1000000000
-
-        if type == 'station':
-            network = self._stations
-        elif type == 'base':
-            network = self._bases
-
-        def recursive_search(search_space):
-            if len(search_space) < 1:
-                raise NotImplementedError("""No plugs are available on the
-                    entire network.""")
-
-            dist_to_nearest = INF
-            for station in search_space:
-                dist_mi = hlp.estimate_vmt_latlon(vehicle.lat,
-                                               vehicle.lon,
-                                               station.LAT,
-                                               station.LON,
-                                               scaling_factor = vehicle.ENV['RN_SCALING_FACTOR'])
-                if dist_mi < dist_to_nearest:
-                    dist_to_nearest = dist_mi
-                    nearest = station
-            if nearest.avail_plugs < 1:
-                search_space = [s for s in search_space if s.ID != nearest.ID]
-                nearest = recursive_search(search_space)
-
-            return nearest
-
-        nearest = recursive_search(network)
-
-        return nearest
-
-
-    def _check_idle_vehicles(self):
-        """
-        Function checks for any vehicles that have been idling for longer than
-        MAX_ALLOWABLE_IDLE_MINUTES and commands those vehicles to return to their
-        respective base.
-        """
-        idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
-        idle_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
-        veh_ids = np.argwhere(idle_mask)
-
-        for veh_id in veh_ids:
-            vehicle = self._fleet[veh_id[0]]
-            base = self._find_closest_plug(vehicle, type='base')
-            route_summary = self._route_engine.route(vehicle.lat, vehicle.lon,
-                                                     base.LAT, base.LON,
-                                                     VehicleState.DISPATCH_BASE)
-            route = route_summary['route']
-            vehicle.cmd_return_to_base(base, route)
+                    )
 
     def reposition_agents(self):
         """
+        does nothing!
         """
-        self._check_idle_vehicles()
+        pass
 
+    def deactivate_vehicles(self, active_fleet_target):
+        """
+        makes decisions related to deactivating vehicles at each time step
+        """
+        active_col = self._ENV['FLEET_STATE_IDX']['active']
+        active_vehicles = self._fleet_state[:, active_col].sum()
+
+        n = active_fleet_target - active_vehicles
+
+        if n >= 0:
+            return
+
+        fleet_state = self._fleet_state
+
+        veh_ste_col = self._ENV['FLEET_STATE_IDX']['vehicle_state']
+        soc_col = self._ENV['FLEET_STATE_IDX']['soc']
+
+        soc_sorted = np.argsort(fleet_state[:, soc_col])
+
+        idle_veh_mask = (fleet_state[:, veh_ste_col] == VehicleState.IDLE.value) \
+            | (fleet_state[:, veh_ste_col] == VehicleState.REPOSITIONING.value)
+
+        idle_min_col = self._ENV['FLEET_STATE_IDX']['idle_min']
+        idle_min_mask = self._fleet_state[:, idle_min_col] >= self._ENV['MAX_ALLOWABLE_IDLE_MINUTES']
+
+        mask = idle_veh_mask & idle_min_mask
+
+        veh_ids = soc_sorted[mask[soc_sorted]][:abs(n)]
+
+        for veh_id in veh_ids:
+            veh = self._fleet[veh_id]
+            base = find_closest_plug(veh, self._bases)
+
+            route_summary = self._route_engine.route(veh.lat, veh.lon,
+                                                     base.LAT, base.LON,
+                                                     VehicleState.DISPATCH_BASE)
+            route = route_summary['route']
+            veh.cmd_return_to_base(base, route)
 
     def log(self):
         """

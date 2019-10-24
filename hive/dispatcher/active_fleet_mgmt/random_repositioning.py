@@ -4,11 +4,11 @@ import geopandas as gpd
 from shapely.geometry import Point
 import numpy as np
 
-from hive.dispatcher.active_fleet_mgmt.abstract_repositioning import AbstractRepositioning
+from hive.dispatcher.active_fleet_mgmt import BasicActiveMgmt
 from hive.vehiclestate import VehicleState
 
 
-class RandomRepositioning(AbstractRepositioning):
+class RandomRepositioning(BasicActiveMgmt):
 
     def __init__(
             self,
@@ -101,6 +101,12 @@ class RandomRepositioning(AbstractRepositioning):
             self._log.debug(
                 "Random Repositioning finished at time step {} for {} agents".format(self._clock.get_time(),
                                                                                      agents_repositioned))
+
+    def deactivate_vehicles(self, active_fleet_target):
+        """
+        does nothing!
+        """
+        pass
 
     def log(self):
         if self._log.isEnabledFor(logging.DEBUG):
