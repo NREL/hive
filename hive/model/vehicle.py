@@ -116,7 +116,7 @@ class Vehicle(NamedTuple):
         if self.has_passengers():
             raise StateTransitionError(f"{self} attempting to be repositioning but has passengers")
         elif self.vehicle_state == VehicleState.REPOSITIONING:
-            return self.step()
+            return self
         else:
             return self._replace(
                 route=route,
@@ -144,7 +144,7 @@ class Vehicle(NamedTuple):
 
     def transition_servicing_trip(self, route: Route, request: Request) -> Vehicle:
         if self.vehicle_state == VehicleState.SERVICING_TRIP:
-            return self.step()
+            return self
         elif self.has_passengers:
             raise StateTransitionError(f"{self} bzz, HIVE does not yet support dynamic pooling")
         else:
@@ -162,7 +162,7 @@ class Vehicle(NamedTuple):
 
     def transition_dispatch_station(self, route: Route) -> Vehicle:
         if self.vehicle_state == VehicleState.DISPATCH_STATION:
-            return self.step()
+            return self
         if self.has_passengers():
             raise StateTransitionError(f"{self} attempting to dispatch to station but has passengers")
         else:
@@ -180,7 +180,7 @@ class Vehicle(NamedTuple):
 
     def transition_charging_station(self, charger: Charger) -> Vehicle:
         if self.vehicle_state == VehicleState.CHARGING_STATION:
-            return self.step()
+            return self
         elif self.has_passengers():
             raise StateTransitionError(f"{self} attempting to be charging at station but has passengers")
         else:
@@ -192,7 +192,7 @@ class Vehicle(NamedTuple):
 
     def transition_dispatch_base(self, route: Route) -> Vehicle:
         if self.vehicle_state == VehicleState.DISPATCH_BASE:
-            return self.step()
+            return self
         elif self.has_passengers():
             raise StateTransitionError(f"{self} attempting to dispatch to base but has passengers")
         else:
@@ -204,7 +204,7 @@ class Vehicle(NamedTuple):
 
     def transition_charging_base(self, charger: Charger) -> Vehicle:
         if self.vehicle_state == VehicleState.CHARGING_BASE:
-            return self.step()
+            return self
         elif self.has_passengers():
             raise StateTransitionError(f"{self} attempting to be charging at base but has passengers")
         else:
