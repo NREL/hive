@@ -1,11 +1,11 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from hive.model.battery import Battery
 from hive.model.coordinate import Coordinate
 from hive.model.engine import Engine
 from hive.model.vehicle import Vehicle
 from hive.model.request import Request
-from hive.physics.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.route import Route
 from hive.roadnetwork.routestep import RouteStep
 from hive.util.typealiases import KwH
@@ -34,22 +34,28 @@ class TestVehicle(TestCase):
         updated_vehicle = TestVehicle.mock_vehicle()._replace(route=TestVehicle.mock_route())
         self.assertEqual(updated_vehicle.has_route(), True, "should have a route")
 
+    @skip("test not yet implemented")
     def test_add_passengers(self):
         self.fail()
 
-    def test_default_state_behavior(self):
+    @skip("test not yet implemented")
+    def test_step(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_battery_swap(self):
         self.fail()
 
     def test_transition_idle(self):
         non_idling_vehicle = TestVehicle.mock_vehicle()._replace(route=TestVehicle.mock_route(),
                                                                  vehicle_state=VehicleState.REPOSITIONING)
-        result = non_idling_vehicle.transition_idle()
-        self.assertEqual(result.vehicle_state, VehicleState.IDLE, "should have transitioned into an idle state")
-        self.assertEqual(result.route.is_empty(), True, "should have removed its route")
-        self.assertEqual(result.plugged_in(), False, "should not have a charger")
+        transitioned = non_idling_vehicle.transition_idle()
+        self.assertEqual(transitioned.vehicle_state, VehicleState.IDLE, "should have transitioned into an idle state")
+        self.assertEqual(transitioned.route.is_empty(), True, "should have removed its route")
+        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
+        result = transitioned.step()
+        # no changes should be observed
+        self.assertEqual(transitioned, result, "transition->step should be same as transition for IDLE")
 
     def test_transition_repositioning(self):
         idle_vehicle = TestVehicle.mock_vehicle()
@@ -57,7 +63,14 @@ class TestVehicle(TestCase):
         first_route_step, *remaining_route = route.route
         self.assertNotEqual(idle_vehicle.vehicle_state, VehicleState.REPOSITIONING,
                             "test vehicle should not begin in repositioning state")
-        result = idle_vehicle.transition_repositioning(route)
+
+        transitioned = idle_vehicle.transition_repositioning(route)
+        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
+        self.assertEqual(len(transitioned.route), len(route), "should not have consumed any of the route")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
+
+        result = transitioned.step()
         # TODO: PyCharm + unittest lost Route type information somehow and can't find is_empty() function
         # self.assertEqual(result.route.is_empty(), False, "route should be updated")
         self.assertEqual(result.plugged_in(), False, "should not have a charger")
@@ -65,24 +78,31 @@ class TestVehicle(TestCase):
         self.assertEqual(result.position, first_route_step.position,
                          "vehicle should have updated its position one step into route")
 
+    @skip("test not yet implemented")
     def test_transition_dispatch_trip(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_transition_servicing_trip(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_transition_dispatch_station(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_transition_charging_station(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_transition_dispatch_base(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_transition_charging_base(self):
         self.fail()
 
+    @skip("test not yet implemented")
     def test_transition_reserve_base(self):
         self.fail()
 

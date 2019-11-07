@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from hive.roadnetwork.route import Route
-from hive.model.position import Position
+from hive.roadnetwork.position import Position
 
 
 class RoadNetwork(ABC):

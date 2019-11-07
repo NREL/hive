@@ -7,10 +7,10 @@ from hive.util.typealiases import *
 from hive.model.battery import Battery
 from hive.model.engine import Engine
 from hive.model.passenger import Passenger
-from hive.model.position import Position
+from hive.roadnetwork.position import Position
 from hive.model.request import Request
 from hive.model.charger import Charger
-from hive.physics.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.route import Route
 from hive.util.exception import *
 
@@ -110,7 +110,7 @@ class Vehicle(NamedTuple):
                 route=Route.empty(),
                 plugged_in_charger=None,
                 vehicle_state=VehicleState.IDLE,
-            ).step()
+            )
 
     def transition_repositioning(self, route: Route) -> Vehicle:
         if self.has_passengers():
@@ -122,7 +122,7 @@ class Vehicle(NamedTuple):
                 route=route,
                 plugged_in_charger=None,
                 vehicle_state=VehicleState.REPOSITIONING,
-            ).step()
+            )
 
     def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Vehicle:
         if self.has_passengers():
@@ -140,7 +140,7 @@ class Vehicle(NamedTuple):
                 route=dispatch_route,
                 plugged_in_charger=None,
                 vehicle_state=VehicleState.DISPATCH_TRIP
-            ).step()
+            )
 
     def transition_servicing_trip(self, route: Route, request: Request) -> Vehicle:
         if self.vehicle_state == VehicleState.SERVICING_TRIP:
@@ -158,7 +158,7 @@ class Vehicle(NamedTuple):
                     route=route,
                     plugged_in_charger=None,
                     vehicle_state=VehicleState.SERVING_TRIP
-                ).add_passengers(request.passengers).step()
+                ).add_passengers(request.passengers)
 
     def transition_dispatch_station(self, route: Route) -> Vehicle:
         if self.vehicle_state == VehicleState.DISPATCH_STATION:
@@ -176,7 +176,7 @@ class Vehicle(NamedTuple):
                     route=route,
                     plugged_in_charger=None,
                     vehicle_state=VehicleState.DISPATCH_STATION
-                ).step()
+                )
 
     def transition_charging_station(self, charger: Charger) -> Vehicle:
         if self.vehicle_state == VehicleState.CHARGING_STATION:
@@ -188,7 +188,7 @@ class Vehicle(NamedTuple):
                 route=Route.empty(),
                 vehicle_state=VehicleState.CHARGING_STATION,
                 plugged_in_charger=charger
-            ).step()
+            )
 
     def transition_dispatch_base(self, route: Route) -> Vehicle:
         if self.vehicle_state == VehicleState.DISPATCH_BASE:
@@ -200,7 +200,7 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.DISPATCH_BASE,
                 plugged_in_charger=None,
                 route=route
-            ).step()
+            )
 
     def transition_charging_base(self, charger: Charger) -> Vehicle:
         if self.vehicle_state == VehicleState.CHARGING_BASE:
@@ -212,7 +212,7 @@ class Vehicle(NamedTuple):
                 route=Route.empty(),
                 vehicle_state=VehicleState.CHARGING_BASE,
                 plugged_in_charger=charger
-            ).step()
+            )
 
     def transition_reserve_base(self) -> Vehicle:
         if self.has_passengers():
@@ -222,4 +222,4 @@ class Vehicle(NamedTuple):
                 route=Route.empty(),
                 plugged_in_charger=None,
                 vehicle_state=VehicleState.RESERVE_BASE,
-            ).step()
+            )

@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from hive.model.position import Position
+from hive.roadnetwork.position import Position
 from hive.model.coordinate import Coordinate
 
 
@@ -10,7 +10,7 @@ class RouteStep(NamedTuple):
     """
     position: Position
     distance: float
-    percent_complete: float
+    # percent_complete: float
     # grade: float # nice in the future?'
 
     def to_coordinate(self) -> Coordinate:
