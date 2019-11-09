@@ -2,6 +2,7 @@ from typing import NamedTuple
 
 from hive.roadnetwork.position import Position
 from hive.model.coordinate import Coordinate
+from hive.roadnetwork.roadnetwork import RoadNetwork
 
 
 class RouteStep(NamedTuple):
@@ -13,7 +14,7 @@ class RouteStep(NamedTuple):
     # percent_complete: float
     # grade: float # nice in the future?'
 
-    def to_coordinate(self) -> Coordinate:
+    def to_coordinate(self, road_network: RoadNetwork) -> Coordinate:
         """
         this function is straight-forward for our current implementation using a
         euclidian space for routing. but, moving to a graph-based representation,

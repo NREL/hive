@@ -64,3 +64,15 @@ class Request(NamedTuple):
         :return: the updated Request
         """
         return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
+
+    def update_origin(self, lat, lon) -> Request:
+        """
+        used to override a request's origin location as the centroid of the spatial grid,
+        to make guarantees about what conditions will make requests overlap with vehicles.
+        :param lat:
+        :param lon:
+        :return:
+        """
+        return self._replace(
+            origin=Coordinate(lat, lon)
+        )

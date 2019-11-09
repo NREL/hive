@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 from typing import NamedTuple, Tuple, Dict, Optional
 
+from hive.model.coordinate import Coordinate
+from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.typealiases import *
 from hive.model.battery import Battery
 from hive.model.engine import Engine
@@ -24,7 +26,7 @@ class Vehicle(NamedTuple):
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
     plugged_in_charger: Optional[Charger] = None
-    route: Route = ()
+    route: Route = Route.empty()
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
@@ -40,10 +42,13 @@ class Vehicle(NamedTuple):
     def plugged_in(self) -> bool:
         return self.plugged_in_charger is not None
 
+    def get_coordinate(self, road_network: RoadNetwork) -> Coordinate:
+        return road_network
+
     def add_passengers(self, new_passengers: Tuple[Passenger]) -> Vehicle:
         """
         loads some passengers onto this vehicle
-
+        :param self:
         :param new_passengers: the set of passengers we want to add
         :return: the updated vehicle
         """
@@ -88,7 +93,7 @@ class Vehicle(NamedTuple):
             this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
             updated_battery = self.battery.use_fuel(this_fuel_usage)
             return self._replace(
-                position=this_route_step.to_coordinate(),
+                position=this_route_step.position,
                 battery=updated_battery,
                 route=updated_route,
                 distance_traveled=self.distance_traveled + this_route_step.distance
