@@ -10,7 +10,7 @@ from hive.model.passenger import Passenger
 from hive.roadnetwork.position import Position
 from hive.model.request import Request
 from hive.model.charger import Charger
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.roadnetwork.route import Route
 from hive.util.exception import *
 
@@ -24,7 +24,7 @@ class Vehicle(NamedTuple):
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
     plugged_in_charger: Optional[Charger] = None
-    route: Route = ()
+    route: Route = Route.empty()
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
@@ -43,7 +43,7 @@ class Vehicle(NamedTuple):
     def add_passengers(self, new_passengers: Tuple[Passenger]) -> Vehicle:
         """
         loads some passengers onto this vehicle
-
+        :param self:
         :param new_passengers: the set of passengers we want to add
         :return: the updated vehicle
         """
@@ -64,9 +64,13 @@ class Vehicle(NamedTuple):
         also may make a default state transition to IDLE if it is legal.
         :return:
         """
-        if self.vehicle_state == VehicleState.IDLE or self.vehicle_state == VehicleState.RESERVE_BASE:
-            return self  # noop
-        elif self.vehicle_state == VehicleState.CHARGING_STATION or self.vehicle_state == VehicleState.CHARGING_BASE:
+        step_type = VehicleStateCategory.from_vehicle_state(self.vehicle_state)
+
+        if step_type == VehicleStateCategory.DO_NOTHING:
+            return self  # NOOP
+
+        elif step_type == VehicleStateCategory.CHARGE:
+            # perform a CHARGE step
             if self.plugged_in_charger is None:
                 raise StateOfChargeError(f"{self} cannot charge without a plugged-in charger")
             elif self.battery.soc() >= self.soc_upper_limit:
@@ -77,22 +81,28 @@ class Vehicle(NamedTuple):
                 return self._replace(
                     battery=self.battery.charge(self.plugged_in_charger)
                 )
-        elif self.route.is_empty():
-            if self.has_passengers():
-                raise RouteStepError(f"{self} no default behavior with empty route and on-board passengers")
+
+        elif step_type == VehicleStateCategory.MOVE:
+            # perform a MOVE step
+            if self.route.is_empty():
+                if self.has_passengers():
+                    raise RouteStepError(f"{self} no default behavior with empty route and on-board passengers")
+                else:
+                    return self.transition_idle()
             else:
-                return self.transition_idle()
+                # take one route step
+                this_route_step, *updated_route = self.route.route
+                this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
+                updated_battery = self.battery.use_fuel(this_fuel_usage)
+                return self._replace(
+                    position=this_route_step.position,
+                    battery=updated_battery,
+                    route=updated_route,
+                    distance_traveled=self.distance_traveled + this_route_step.distance
+                )
+
         else:
-            # take one route step
-            this_route_step, *updated_route = self.route.route
-            this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
-            updated_battery = self.battery.use_fuel(this_fuel_usage)
-            return self._replace(
-                position=this_route_step.to_coordinate(),
-                battery=updated_battery,
-                route=updated_route,
-                distance_traveled=self.distance_traveled + this_route_step.distance
-            )
+            raise NotImplementedError(f"Step function failed for undefined vehicle state category {step_type}")
 
     def battery_swap(self, battery: Battery):
         return self._replace(battery=battery)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from hive.util.exception import StateTransitionError
 
@@ -22,20 +24,6 @@ class VehicleState(Enum):
     # CHARGING
     DISPATCH_STATION = 7
     CHARGING_STATION = 8
-
-    def to(self, next_state):
-        """
-        enforces use of valid state transitions for vehicles
-
-        @returns id of next_state if transition is valid
-
-        @throws StateTransitionError
-        """
-
-        if next_state not in _valid_vehicle_transitions[self]:
-            raise StateTransitionError("vehicle", self.name, next_state.name)
-
-        return next_state
 
     def active(self):
         return _state_active_properties[self]
@@ -84,65 +72,28 @@ _valid_vehicle_states = frozenset([
     VehicleState.SERVING_TRIP
 ])
 
-# TODO: some state transitions listed below are not consistent with Vehicle FSM illustration but added
-#  in order to work with current version of HIVE (labeled below "NOT IN FSM")
-_valid_vehicle_transitions = {
-    # INACTIVE FLEET MANAGEMENT
-    VehicleState.DISPATCH_BASE: frozenset([
-        VehicleState.CHARGING_BASE,
-        VehicleState.RESERVE_BASE,
-        VehicleState.IDLE  # NOT IN FSM
-    ]),
 
-    VehicleState.CHARGING_BASE: frozenset([
-        VehicleState.RESERVE_BASE,
-        VehicleState.IDLE
-    ]),
+class VehicleStateCategory(Enum):
+    """
+    higher-order categories for vehicle state
+    """
+    DO_NOTHING = 0
+    CHARGE = 1
+    MOVE = 2
 
-    VehicleState.RESERVE_BASE: frozenset([
-        VehicleState.CHARGING_BASE,
-        VehicleState.IDLE
-    ]),
+    @classmethod
+    def from_vehicle_state(cls, vehicle_state: VehicleState) -> VehicleStateCategory:
+        return _vehicle_state_category[vehicle_state]
 
-    # ACTIVE FLEET MANAGEMENT
-    VehicleState.IDLE: frozenset([
-        VehicleState.DISPATCH_BASE,
-        VehicleState.DISPATCH_STATION,
-        VehicleState.CHARGING_STATION,  # NOT IN FSM
-        VehicleState.DISPATCH_TRIP,
-        VehicleState.SERVING_TRIP,
-        VehicleState.REPOSITIONING,
-        VehicleState.CHARGING_BASE  # NOT IN FSM
-    ]),
 
-    VehicleState.REPOSITIONING: frozenset([
-        VehicleState.DISPATCH_BASE,
-        VehicleState.DISPATCH_STATION,
-        VehicleState.DISPATCH_TRIP,
-        VehicleState.SERVING_TRIP,
-        VehicleState.IDLE
-    ]),
-
-    # TRIPPING
-    VehicleState.DISPATCH_TRIP: frozenset([
-        VehicleState.IDLE,
-        VehicleState.SERVING_TRIP,
-        VehicleState.DISPATCH_STATION  # NOT IN FSM
-    ]),
-
-    VehicleState.SERVING_TRIP: frozenset([
-        VehicleState.IDLE
-    ]),
-
-    # CHARGING
-    VehicleState.DISPATCH_STATION: frozenset([
-        VehicleState.IDLE,
-        VehicleState.CHARGING_STATION,
-        VehicleState.DISPATCH_TRIP  # NOT IN FSM
-    ]),
-
-    VehicleState.CHARGING_STATION: frozenset([
-        VehicleState.IDLE,
-        VehicleState.RESERVE_BASE  # NOT IN FSM
-    ]),
+_vehicle_state_category = {
+    VehicleState.DISPATCH_BASE: VehicleStateCategory.MOVE,
+    VehicleState.CHARGING_BASE: VehicleStateCategory.CHARGE,
+    VehicleState.RESERVE_BASE: VehicleStateCategory.DO_NOTHING,
+    VehicleState.IDLE: VehicleStateCategory.DO_NOTHING,
+    VehicleState.REPOSITIONING: VehicleStateCategory.MOVE,
+    VehicleState.DISPATCH_TRIP: VehicleStateCategory.MOVE,
+    VehicleState.SERVING_TRIP: VehicleStateCategory.MOVE,
+    VehicleState.DISPATCH_STATION: VehicleStateCategory.MOVE,
+    VehicleState.CHARGING_STATION: VehicleStateCategory.CHARGE
 }
