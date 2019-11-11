@@ -14,6 +14,9 @@ class Route(NamedTuple):
     def is_empty(self):
         return len(self.route) == 0
 
+    def has_route(self):
+        return not self.is_empty()
+
     @classmethod
     def empty(cls):
         return cls((), 0.0, 0.0)

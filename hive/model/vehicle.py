@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import NamedTuple, Tuple, Dict, Optional
+from typing import NamedTuple, Tuple, Dict, Optional, Union
 
 from hive.util.typealiases import *
 from hive.model.battery import Battery
@@ -35,7 +35,7 @@ class Vehicle(NamedTuple):
         return bool(self.passengers)
 
     def has_route(self) -> bool:
-        return bool(self.route)
+        return bool(self.route.has_route())
 
     def plugged_in(self) -> bool:
         return self.plugged_in_charger is not None
@@ -134,17 +134,20 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.REPOSITIONING,
             )
 
-    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Vehicle:
+    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Union[StateTransitionError, Vehicle]:
         if self.has_passengers():
             # dynamic pooling -> remove this constraint? or, do we add a pooling vehicle state?
-            raise StateTransitionError(f"{self} attempting to dispatch to trip but has passengers")
+            return StateTransitionError(f"{self} attempting to dispatch to trip but has passengers")
 
         # estimate the total fuel cost of dispatch + servicing, confirm SoC is good for trip
         dispatch_fuel_cost = self.engine.route_fuel_cost(dispatch_route)
         service_fuel_cost = self.engine.route_fuel_cost(service_route)
+        estimated_fuel_effect = self.battery.load - (dispatch_fuel_cost + service_fuel_cost)
+        fuel_lower_limit = self.battery.capacity * self.soc_lower_limit
 
-        if dispatch_fuel_cost + service_fuel_cost > self.battery.load:
-            raise StateTransitionError(f"{self} attempting to dispatch to trip but not enough fuel")
+        if estimated_fuel_effect < fuel_lower_limit:
+            return StateTransitionError(
+                f"{self} not enough fuel for trip: {estimated_fuel_effect:.2f}/{fuel_lower_limit:.2f}")
         else:
             return self._replace(
                 route=dispatch_route,
