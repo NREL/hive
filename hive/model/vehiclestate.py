@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from hive.util.exception import StateTransitionError
-
 
 class VehicleState(Enum):
     """
@@ -20,7 +18,7 @@ class VehicleState(Enum):
     REPOSITIONING = 4
     # TRIPPING
     DISPATCH_TRIP = 5
-    SERVING_TRIP = 6
+    SERVICING_TRIP = 6
     # CHARGING
     DISPATCH_STATION = 7
     CHARGING_STATION = 8
@@ -43,7 +41,7 @@ _state_active_properties = {
     VehicleState.IDLE: True,
     VehicleState.REPOSITIONING: True,
     VehicleState.DISPATCH_TRIP: True,
-    VehicleState.SERVING_TRIP: True,
+    VehicleState.SERVICING_TRIP: True,
     VehicleState.DISPATCH_STATION: True,
     VehicleState.CHARGING_STATION: True
 }
@@ -55,7 +53,7 @@ _state_available_properties = {
     VehicleState.IDLE: True,
     VehicleState.REPOSITIONING: True,
     VehicleState.DISPATCH_TRIP: False,
-    VehicleState.SERVING_TRIP: False,
+    VehicleState.SERVICING_TRIP: False,
     VehicleState.DISPATCH_STATION: False,
     VehicleState.CHARGING_STATION: False
 }
@@ -69,7 +67,7 @@ _valid_vehicle_states = frozenset([
     VehicleState.DISPATCH_STATION,
     VehicleState.CHARGING_STATION,
     VehicleState.REPOSITIONING,
-    VehicleState.SERVING_TRIP
+    VehicleState.SERVICING_TRIP
 ])
 
 
@@ -93,7 +91,7 @@ _vehicle_state_category = {
     VehicleState.IDLE: VehicleStateCategory.DO_NOTHING,
     VehicleState.REPOSITIONING: VehicleStateCategory.MOVE,
     VehicleState.DISPATCH_TRIP: VehicleStateCategory.MOVE,
-    VehicleState.SERVING_TRIP: VehicleStateCategory.MOVE,
+    VehicleState.SERVICING_TRIP: VehicleStateCategory.MOVE,
     VehicleState.DISPATCH_STATION: VehicleStateCategory.MOVE,
     VehicleState.CHARGING_STATION: VehicleStateCategory.CHARGE
 }
