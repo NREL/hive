@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import NamedTuple, Optional, Tuple
 from hive.model.coordinate import Coordinate
 from hive.model.passenger import Passenger, create_passenger_id
-# from hive.model.vehicle import Vehicle
 from hive.util.typealiases import *
 
 
