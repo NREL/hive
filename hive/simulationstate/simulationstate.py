@@ -117,6 +117,16 @@ class SimulationState(NamedTuple):
         """
         pass
 
+    def update_road_network(self, sim_time: int) -> SimulationState:
+        """
+        trigger the update of the road network model based on the current sim time
+        :param sim_time: the current sim time
+        :return: updated simulation state (and road network)
+        """
+        return self._replace(
+            road_network=self.road_network.update(sim_time)
+        )
+
     def board_vehicle(self,
                       request_id: RequestId,
                       vehicle_id: VehicleId) -> Union[SimulationStateError, SimulationState]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 from hive.model.coordinate import Coordinate
@@ -15,7 +17,7 @@ class RoadNetwork(ABC):
         pass
 
     @abstractmethod
-    def update(self, sim_time: int):
+    def update(self, sim_time: int) -> RoadNetwork:
         """
         gives the RoadNetwork a chance to update it's flow network based on the current simulation time
         :param sim_time: the sim time to update the model to
