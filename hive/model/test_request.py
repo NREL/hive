@@ -7,7 +7,8 @@ from hive.model.engine import Engine
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id
-from hive.roadnetwork.roadnetwork import Route, RouteStep
+from hive.roadnetwork.route import Route
+from hive.roadnetwork.routestep import RouteStep
 
 
 class MyTestCase(unittest.TestCase):

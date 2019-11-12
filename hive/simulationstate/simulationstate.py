@@ -8,7 +8,7 @@ from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.util.helpers import pop_tuple
+from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
 from hive.util.exception import *
 from h3 import h3
@@ -62,11 +62,11 @@ class SimulationState(NamedTuple):
             updated_request = request.update_origin(new_lat, new_lon)
 
             updated_requests = copy(self.requests)
-            updated_requests.update({updated_request.id, updated_request})
+            updated_requests.update([(updated_request.id, updated_request)])
 
             updated_r_locations = copy(self.r_locations)
             ids_at_location = updated_r_locations.get(request_geoid, ())
-            updated_r_locations.update({request_geoid, (updated_request.id, ) + ids_at_location})
+            updated_r_locations.update([(request_geoid, (updated_request.id, ) + ids_at_location)])
 
             return self._replace(
                 requests=updated_requests,
@@ -81,6 +81,8 @@ class SimulationState(NamedTuple):
         :param request_id: id of the request to delete
         :return: the updated simulation state (does not report failure)
         """
+        if not isinstance(request_id, str):
+            raise TypeError(f"remove_request() takes a request_id (str), not a {type(request_id)}")
         if request_id not in self.requests:
             return self
         else:
@@ -91,7 +93,8 @@ class SimulationState(NamedTuple):
             del updated_requests[request_id]
 
             updated_r_locations = copy(self.r_locations)
-            updated_ids_at_location = pop_tuple(updated_r_locations[request_geoid], request_id)
+            ids_at_location = updated_r_locations[request_geoid]
+            updated_ids_at_location = TupleOps.remove(ids_at_location, request_id)
             if updated_ids_at_location is None:
                 return SimulationStateError(f"cannot remove request {request_id} at hex {request_geoid}")
             else:
