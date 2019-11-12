@@ -12,3 +12,5 @@ GeoId = str
 KwH = float
 Percentage = float
 
+# APPLICATION IDENTIFIERS
+ClusterNodeId = str
