@@ -1,41 +1,45 @@
 from __future__ import annotations
 from copy import copy
-from typing import NamedTuple, Dict, Optional, Union, Tuple
+from typing import NamedTuple, Dict, Optional, Union, Tuple, List
+import functools as ft
 
 from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.roadnetwork.roadnetwork import RoadNetwork
+from hive.util.helpers import pop_tuple
 from hive.util.typealiases import *
 from hive.util.exception import *
 from h3 import h3
 
 
 class SimulationState(NamedTuple):
-    # model data required in constructor
+    # road network representation
     road_network: RoadNetwork
-    stations: Dict[StationId, Station]
-    bases: Dict[BaseId, Base]
-    s_locations: Dict[GeoId, StationId] = {}
-    b_locations: Dict[GeoId, Base] = {}
 
-    # model data with default as empty
+    # simulation parameters
+    sim_time: int
+    sim_h3_resolution: int
+
+    # objects of the simulation
+    stations: Dict[StationId, Station] = {}
+    bases: Dict[BaseId, Base] = {}
     vehicles: Dict[VehicleId, Vehicle] = {}
     requests: Dict[RequestId, Request] = {}
 
     # location lookup collections
-    v_locations: Dict[GeoId, VehicleId] = {}
-    r_locations: Dict[GeoId, RequestId] = {}
+    v_locations: Dict[GeoId, Tuple[VehicleId, ...]] = {}
+    r_locations: Dict[GeoId, Tuple[RequestId, ...]] = {}
+    s_locations: Dict[GeoId, Tuple[StationId, ...]] = {}
+    b_locations: Dict[GeoId, Tuple[BaseId, ...]] = {}
 
-    # todo: a constructor which doesn't expect s + b locations
-
-    # resolution of 11 is within 25 meters/82 feet. this decides how granular
-    # the simulation will operate for internal operations. the user can still
-    # specify their own level of granularity for
-    # https://uber.github.io/h3/#/documentation/core-library/resolution-table
-    sim_h3_resolution: int = 11
-    cluster_node_id: Optional[ClusterNodeId] = None
+    """
+    resolution of '11' is within 25 meters/82 feet. this decides how granular
+    the simulation will operate for internal operations. the user can still
+    specify their own level of granularity for
+    https://uber.github.io/h3/#/documentation/core-library/resolution-table
+    """
 
     def add_request(self, request: Request) -> Union[SimulationStateError, SimulationState]:
         """
@@ -44,7 +48,7 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state, or an error
         """
         if not self.road_network.coordinate_within_geofence(request.origin):
-            return SimulationStateError(f"origin {request.origin} not within road network geofence of this")
+            return SimulationStateError(f"origin {request.origin} not within road network geofence")
         elif not self.road_network.coordinate_within_simulation(request.destination):
             return SimulationStateError(f"destination {request.destination} not within entire road network")
         else:
@@ -58,17 +62,18 @@ class SimulationState(NamedTuple):
             updated_request = request.update_origin(new_lat, new_lon)
 
             updated_requests = copy(self.requests)
-            updated_requests.update((updated_request.id, updated_request))
+            updated_requests.update({updated_request.id, updated_request})
 
             updated_r_locations = copy(self.r_locations)
-            updated_r_locations.update((request_geoid, updated_request.id))
+            ids_at_location = updated_r_locations.get(request_geoid, ())
+            updated_r_locations.update({request_geoid, (updated_request.id, ) + ids_at_location})
 
             return self._replace(
                 requests=updated_requests,
                 r_locations=updated_r_locations
             )
 
-    def remove_request(self, request_id: RequestId) -> SimulationState:
+    def remove_request(self, request_id: RequestId) -> Union[SimulationStateError, SimulationState]:
         """
         removes a request from this simulation.
         called once a Request has been fully serviced and is no longer
@@ -86,20 +91,41 @@ class SimulationState(NamedTuple):
             del updated_requests[request_id]
 
             updated_r_locations = copy(self.r_locations)
-            del updated_r_locations[request_geoid]
+            updated_ids_at_location = pop_tuple(updated_r_locations[request_geoid], request_id)
+            if updated_ids_at_location is None:
+                return SimulationStateError(f"cannot remove request {request_id} at hex {request_geoid}")
+            else:
 
-            return self._replace(
-                requests=updated_requests,
-                r_locations=updated_r_locations
-            )
+                updated_r_locations[request_geoid] = updated_ids_at_location
 
-    def add_vehicle(self, vehicle: Vehicle) -> SimulationState:
+                return self._replace(
+                    requests=updated_requests,
+                    r_locations=updated_r_locations
+                )
+
+    def add_vehicle(self, vehicle: Vehicle) -> Union[SimulationStateError, SimulationState]:
         """
         adds a vehicle into the region supported by the RoadNetwork in this SimulationState
         :param vehicle: a vehicle
-        :return: updated SimulationState
+        :return: updated SimulationState, or SimulationStateError
         """
-        pass
+        vehicle_coordinate = self.road_network.position_to_coordinate(vehicle.position)
+        if not self.road_network.coordinate_within_geofence(vehicle_coordinate):
+            return SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
+        else:
+            vehicle_geoid = h3.geo_to_h3(vehicle_coordinate.lat, vehicle_coordinate.lon, self.sim_h3_resolution)
+
+            updated_vehicles = copy(self.vehicles)
+            updated_vehicles.update([(vehicle.id, vehicle)])
+
+            updated_v_locations = copy(self.v_locations)
+            ids_at_location = updated_v_locations.get(vehicle_geoid, ())
+            updated_v_locations.update([(vehicle_geoid, (vehicle.id,) + ids_at_location)])
+
+            return self._replace(
+                vehicles=updated_vehicles,
+                v_locations=updated_v_locations
+            )
 
     def remove_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
         """
@@ -111,11 +137,64 @@ class SimulationState(NamedTuple):
 
     def pop_vehicle(self, vehicle_id: VehicleId) -> Union[SimulationStateError, Tuple[SimulationState, Vehicle]]:
         """
-        removes a vehicle from this SimulationState, which updates the state and also returns the vehicle
+        removes a vehicle from this SimulationState, which updates the state and also returns the vehicle.
+        supports shipping this vehicle to another cluster node.
         :param vehicle_id: the id of the vehicle to pop
         :return: either a Tuple containing the updated state and the vehicle, or, an error
         """
         pass
+
+    def add_station(self, station: Station) -> Union[SimulationStateError, SimulationState]:
+        """
+        adds a station to the simulation
+        :param station: the station to add
+        :return: the updated SimulationState, or a SimulationStateError
+        """
+        if not self.road_network.coordinate_within_geofence(station.coordinate):
+            return SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
+        else:
+            station_geoid = h3.geo_to_h3(station.coordinate.lat, station.coordinate.lon, self.sim_h3_resolution)
+
+            updated_vehicles = copy(self.stations)
+            updated_vehicles.update([(station.id, station)])
+
+            updated_s_locations = copy(self.s_locations)
+            ids_at_location = updated_s_locations.get(station_geoid, ())
+            updated_s_locations.update([(station_geoid, (station.id,) + ids_at_location)])
+
+            return self._replace(
+                stations=updated_vehicles,
+                s_locations=updated_s_locations
+            )
+
+    def remove_station(self, station_id: StationId) -> SimulationState:
+        raise NotImplementedError("do we remove stations?")
+
+    def add_base(self, base: Base) -> Union[SimulationStateError, SimulationState]:
+        """
+        adds a base to the simulation
+        :param base: the base to add
+        :return: the updated SimulationState, or a SimulationStateError
+        """
+        if not self.road_network.coordinate_within_geofence(base.coordinate):
+            return SimulationStateError(f"cannot add base {base.id} to sim: not within road network geofence")
+        else:
+            base_geoid = h3.geo_to_h3(base.coordinate.lat, base.coordinate.lon, self.sim_h3_resolution)
+
+            updated_bases = copy(self.bases)
+            updated_bases.update([(base.id, base)])
+
+            updated_b_locations = copy(self.b_locations)
+            ids_at_location = updated_b_locations.get(base_geoid, ())
+            updated_b_locations.update([(base_geoid, (base.id,) + ids_at_location)])
+
+            return self._replace(
+                bases=updated_bases,
+                b_locations=updated_b_locations
+            )
+
+    def remove_base(self, base_id: BaseId) -> SimulationState:
+        raise NotImplementedError("do we remove bases?")
 
     def update_road_network(self, sim_time: int) -> SimulationState:
         """
@@ -203,6 +282,3 @@ class SimulationState(NamedTuple):
             vehicle_coordinate = self.road_network.position_to_coordinate(vehicle_position)
             new_geoid = h3.geo_to_h3(vehicle_coordinate.lat, vehicle_coordinate.lon, self.sim_h3_resolution)
             return new_geoid
-
-    def assign_cluster_node_id(self, cluster_node_id: ClusterNodeId) -> SimulationState:
-        return self._replace(cluster_node_id=cluster_node_id)
