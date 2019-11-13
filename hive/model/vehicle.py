@@ -4,6 +4,7 @@ import copy
 from typing import NamedTuple, Tuple, Dict, Optional, Union
 
 from hive.util.typealiases import *
+from hive.util.tuple import head_tail
 from hive.model.battery import Battery
 from hive.model.engine import Engine
 from hive.model.passenger import Passenger
@@ -28,11 +29,11 @@ class Vehicle(NamedTuple):
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
-    passengers: Dict[Position, Passenger] = {}
+    passengers: Dict[PassengerId, Position] = {}
     distance_traveled: float = 0.0
 
     def has_passengers(self) -> bool:
-        return bool(self.passengers)
+        return len(self.passengers) > 0
 
     def has_route(self) -> bool:
         return bool(self.route.has_route())
@@ -49,11 +50,23 @@ class Vehicle(NamedTuple):
         """
         updated_passengers = copy.copy(self.passengers)
         for passenger in new_passengers:
-            updated_passengers[passenger.destination] = passenger
+            updated_passengers[passenger.id] = passenger.destination
         return self._replace(passengers=updated_passengers)
 
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.battery})"
+
+    def _move(self) -> Vehicle:
+        # take one route step
+        this_route_step, updated_route = self.route.step_route()
+        this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
+        updated_battery = self.battery.use_fuel(this_fuel_usage)
+        return self._replace(
+            position=this_route_step.position,
+            battery=updated_battery,
+            route=updated_route,
+            distance_traveled=self.distance_traveled + this_route_step.distance
+        )
 
     def step(self) -> Vehicle:
         """
@@ -90,31 +103,23 @@ class Vehicle(NamedTuple):
                 else:
                     return self.transition_idle()
             else:
-                # take one route step
-                this_route_step, *updated_route = self.route.route
-                this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
-                updated_battery = self.battery.use_fuel(this_fuel_usage)
-                return self._replace(
-                    position=this_route_step.position,
-                    battery=updated_battery,
-                    route=updated_route,
-                    distance_traveled=self.distance_traveled + this_route_step.distance
-                )
+                return self._move()
 
         else:
             raise NotImplementedError(f"Step function failed for undefined vehicle state category {step_type}")
 
-    def battery_swap(self, battery: Battery):
+    def battery_swap(self, battery: Battery) -> Vehicle:
         return self._replace(battery=battery)
+
 
     """
     TRANSITION FUNCTIONS
     --------------------
     """
 
-    def transition_idle(self) -> Vehicle:
+    def transition_idle(self) -> Union[Vehicle, None]:
         if self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to be idle but has passengers")
+            return None
         else:
             return self._replace(
                 route=Route.empty(),
@@ -122,9 +127,9 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.IDLE,
             )
 
-    def transition_repositioning(self, route: Route) -> Vehicle:
+    def transition_repositioning(self, route: Route) -> Union[Vehicle, None]:
         if self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to be repositioning but has passengers")
+            return None
         elif self.vehicle_state == VehicleState.REPOSITIONING:
             return self
         else:
@@ -134,10 +139,10 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.REPOSITIONING,
             )
 
-    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Union[StateTransitionError, Vehicle]:
+    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Union[Vehicle, None]:
         if self.has_passengers():
             # dynamic pooling -> remove this constraint? or, do we add a pooling vehicle state?
-            return StateTransitionError(f"{self} attempting to dispatch to trip but has passengers")
+            return None
 
         # estimate the total fuel cost of dispatch + servicing, confirm SoC is good for trip
         dispatch_fuel_cost = self.engine.route_fuel_cost(dispatch_route)
@@ -146,8 +151,7 @@ class Vehicle(NamedTuple):
         fuel_lower_limit = self.battery.capacity * self.soc_lower_limit
 
         if estimated_fuel_effect < fuel_lower_limit:
-            return StateTransitionError(
-                f"{self} not enough fuel for trip: {estimated_fuel_effect:.2f}/{fuel_lower_limit:.2f}")
+            return None
         else:
             return self._replace(
                 route=dispatch_route,
@@ -155,35 +159,35 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.DISPATCH_TRIP
             )
 
-    def transition_servicing_trip(self, route: Route, request: Request) -> Vehicle:
+    def transition_servicing_trip(self, route: Route, request: Request) -> Union[Vehicle, None]:
         if self.vehicle_state == VehicleState.SERVICING_TRIP:
             return self
-        elif self.has_passengers:
-            raise StateTransitionError(f"{self} bzz, HIVE does not yet support dynamic pooling")
+        elif self.has_passengers():
+            return None
         else:
             fuel_estimate = self.engine.route_fuel_cost(route)
             battery_estimate = self.battery.use_fuel(fuel_estimate)
             resulting_soc = battery_estimate.soc()
             if resulting_soc < self.soc_lower_limit:
-                raise StateTransitionError(f"{self} servicing trip which would reduce fuel below soc_lower_limit")
+                return None
             else:
                 return self._replace(
                     route=route,
                     plugged_in_charger=None,
-                    vehicle_state=VehicleState.SERVING_TRIP
+                    vehicle_state=VehicleState.SERVICING_TRIP
                 ).add_passengers(request.passengers)
 
-    def transition_dispatch_station(self, route: Route) -> Vehicle:
+    def transition_dispatch_station(self, route: Route) -> Union[Vehicle, None]:
         if self.vehicle_state == VehicleState.DISPATCH_STATION:
             return self
         if self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to dispatch to station but has passengers")
+            return None
         else:
             fuel_estimate = self.engine.route_fuel_cost(route)
             battery_estimate = self.battery.use_fuel(fuel_estimate)
             resulting_soc = battery_estimate.soc()
             if resulting_soc < self.soc_lower_limit:
-                raise StateTransitionError(f"{self} servicing trip which would reduce fuel below soc_lower_limit")
+                return None
             else:
                 return self._replace(
                     route=route,
@@ -191,11 +195,11 @@ class Vehicle(NamedTuple):
                     vehicle_state=VehicleState.DISPATCH_STATION
                 )
 
-    def transition_charging_station(self, charger: Charger) -> Vehicle:
+    def transition_charging_station(self, charger: Charger) -> Union[Vehicle, None]:
         if self.vehicle_state == VehicleState.CHARGING_STATION:
             return self
         elif self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to be charging at station but has passengers")
+            return None
         else:
             return self._replace(
                 route=Route.empty(),
@@ -203,11 +207,11 @@ class Vehicle(NamedTuple):
                 plugged_in_charger=charger
             )
 
-    def transition_dispatch_base(self, route: Route) -> Vehicle:
+    def transition_dispatch_base(self, route: Route) -> Union[Vehicle, None]:
         if self.vehicle_state == VehicleState.DISPATCH_BASE:
             return self
         elif self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to dispatch to base but has passengers")
+            return None
         else:
             return self._replace(
                 vehicle_state=VehicleState.DISPATCH_BASE,
@@ -215,11 +219,11 @@ class Vehicle(NamedTuple):
                 route=route
             )
 
-    def transition_charging_base(self, charger: Charger) -> Vehicle:
+    def transition_charging_base(self, charger: Charger) -> Union[Vehicle, None]:
         if self.vehicle_state == VehicleState.CHARGING_BASE:
             return self
         elif self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to be charging at base but has passengers")
+            return None
         else:
             return self._replace(
                 route=Route.empty(),
@@ -227,9 +231,9 @@ class Vehicle(NamedTuple):
                 plugged_in_charger=charger
             )
 
-    def transition_reserve_base(self) -> Vehicle:
+    def transition_reserve_base(self) -> Union[Vehicle, None]:
         if self.has_passengers():
-            raise StateTransitionError(f"{self} attempting to reserve at base but has passengers")
+            return None
         else:
             return self._replace(
                 route=Route.empty(),
