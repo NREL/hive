@@ -66,7 +66,7 @@ class SimulationState(NamedTuple):
 
             updated_r_locations = copy(self.r_locations)
             ids_at_location = updated_r_locations.get(request_geoid, ())
-            updated_r_locations.update([(request_geoid, (updated_request.id, ) + ids_at_location)])
+            updated_r_locations.update([(request_geoid, (updated_request.id,) + ids_at_location)])
 
             return self._replace(
                 requests=updated_requests,
@@ -82,7 +82,7 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state (does not report failure)
         """
         if not isinstance(request_id, str):
-            raise TypeError(f"remove_request() takes a request_id (str), not a {type(request_id)}")
+            raise TypeError(f"remove_request() takes a RequestId (str), not a {type(request_id)}")
         if request_id not in self.requests:
             return self
         else:
@@ -130,13 +130,37 @@ class SimulationState(NamedTuple):
                 v_locations=updated_v_locations
             )
 
-    def remove_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
+    def remove_vehicle(self, vehicle_id: VehicleId) -> Union[SimulationStateError, SimulationState]:
         """
         removes the vehicle from play (perhaps to simulate a broken vehicle or end of a shift)
         :param vehicle_id: the id of the vehicle
         :return: the updated simulation state
         """
-        pass
+        if not isinstance(vehicle_id, str):
+            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
+        if vehicle_id not in self.vehicles:
+            return self
+        else:
+            vehicle = self.vehicles[vehicle_id]
+            veh_coord = self.road_network.position_to_coordinate(vehicle.position)
+            vehicle_geoid = h3.geo_to_h3(veh_coord.lat, veh_coord.lon, self.sim_h3_resolution)
+
+            updated_vehicles = copy(self.vehicles)
+            del updated_vehicles[vehicle_id]
+
+            updated_v_locations = copy(self.v_locations)
+            ids_at_location = updated_v_locations[vehicle_geoid]
+            updated_ids_at_location = TupleOps.remove(ids_at_location, vehicle_id)
+            if updated_ids_at_location is None:
+                return SimulationStateError(f"cannot remove vehicle {vehicle_id} at hex {vehicle_geoid}")
+            else:
+
+                updated_v_locations[vehicle_geoid] = updated_ids_at_location
+
+                return self._replace(
+                    vehicles=updated_vehicles,
+                    v_locations=updated_v_locations
+                )
 
     def pop_vehicle(self, vehicle_id: VehicleId) -> Union[SimulationStateError, Tuple[SimulationState, Vehicle]]:
         """
@@ -145,7 +169,12 @@ class SimulationState(NamedTuple):
         :param vehicle_id: the id of the vehicle to pop
         :return: either a Tuple containing the updated state and the vehicle, or, an error
         """
-        pass
+        remove_result = self.remove_vehicle(vehicle_id)
+        if isinstance(remove_result, SimulationStateError):
+            return remove_result
+        else:
+            vehicle = self.vehicles[vehicle_id]
+            return remove_result, vehicle
 
     def add_station(self, station: Station) -> Union[SimulationStateError, SimulationState]:
         """
@@ -209,6 +238,57 @@ class SimulationState(NamedTuple):
             road_network=self.road_network.update(sim_time)
         )
 
+    def vehicle_at_request(self,
+                           vehicle_id: VehicleId,
+                           request_id: RequestId,
+                           override_resolution: Optional[int]) -> bool:
+        """
+        tests whether vehicle is at the request within the scope of the given geoid resolution
+        :param vehicle_id: the vehicle we are testing for proximity to a request
+        :param request_id: the request we are testing for proximity to a vehicle
+        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+        :return: bool
+        """
+        if vehicle_id not in self.vehicles or request_id not in self.requests:
+            return False
+        else:
+            vehicle = self.vehicles[vehicle_id]
+            request = self.requests[request_id]
+
+            test_resolution = override_resolution if override_resolution is not None else self.sim_h3_resolution
+            vehicle_coordinate = self.road_network.position_to_coordinate(vehicle.position)
+
+            vehicle_geoid = h3.geo_to_h3(vehicle_coordinate.lat, vehicle_coordinate.lon, test_resolution)
+            request_geoid = h3.geo_to_h3(request.origin.lat, request.origin.lon, test_resolution)
+
+            return vehicle_geoid == request_geoid
+
+    def vehicle_at_station(self,
+                           vehicle_id: VehicleId,
+                           station_id: StationId,
+                           override_resolution: Optional[int]) -> bool:
+        pass
+
+    def vehicle_at_base(self,
+                        vehicle_id: VehicleId,
+                        base_id: BaseId,
+                        override_resolution: Optional[int]) -> bool:
+        pass
+
+    def get_vehicle_geoid(self, vehicle_id) -> Optional[GeoId]:
+        """
+        updates the geoid of a vehicle based on the vehicle's coordinate
+        :param vehicle_id: id of the vehicle from which we want a geoid
+        :return: a geoid, or nothing if the vehicle doesn't exist
+        """
+        if vehicle_id not in self.vehicles:
+            return None
+        else:
+            vehicle_position = self.vehicles[vehicle_id].position
+            vehicle_coordinate = self.road_network.position_to_coordinate(vehicle_position)
+            new_geoid = h3.geo_to_h3(vehicle_coordinate.lat, vehicle_coordinate.lon, self.sim_h3_resolution)
+            return new_geoid
+
     def board_vehicle(self,
                       request_id: RequestId,
                       vehicle_id: VehicleId) -> Union[SimulationStateError, SimulationState]:
@@ -247,41 +327,10 @@ class SimulationState(NamedTuple):
                 vehicles=updated_vehicles
             )
 
-    def vehicle_at_request(self,
-                           vehicle_id: VehicleId,
-                           request_id: RequestId,
-                           override_resolution: Optional[int]) -> bool:
+    def apply_updated_vehicle(self, vehicle: Vehicle) -> Union[SimulationStateError, SimulationState]:
         """
-        tests whether vehicle is at the request within the scope of the given geoid resolution
-        :param vehicle_id: the vehicle we are testing for proximity to a request
-        :param request_id: the request we are testing for proximity to a vehicle
-        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
-        :return: bool
+        given an updated vehicle state, update the SimulationState with that vehicle
+        :param vehicle: the vehicle after calling a transition function and .step()
+        :return: the updated simulation, or an error
         """
-        if vehicle_id not in self.vehicles or request_id not in self.requests:
-            return False
-        else:
-            vehicle = self.vehicles[vehicle_id]
-            request = self.requests[request_id]
-
-            test_resolution = override_resolution if override_resolution is not None else self.sim_h3_resolution
-            vehicle_coordinate = self.road_network.position_to_coordinate(vehicle.position)
-
-            vehicle_geoid = h3.geo_to_h3(vehicle_coordinate.lat, vehicle_coordinate.lon, test_resolution)
-            request_geoid = h3.geo_to_h3(request.origin.lat, request.origin.lon, test_resolution)
-
-            return vehicle_geoid == request_geoid
-
-    def get_vehicle_geoid(self, vehicle_id) -> Optional[GeoId]:
-        """
-        updates the geoid of a vehicle based on the vehicle's coordinate
-        :param vehicle_id: id of the vehicle from which we want a geoid
-        :return: a geoid, or nothing if the vehicle doesn't exist
-        """
-        if vehicle_id not in self.vehicles:
-            return None
-        else:
-            vehicle_position = self.vehicles[vehicle_id].position
-            vehicle_coordinate = self.road_network.position_to_coordinate(vehicle_position)
-            new_geoid = h3.geo_to_h3(vehicle_coordinate.lat, vehicle_coordinate.lon, self.sim_h3_resolution)
-            return new_geoid
+        pass

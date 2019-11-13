@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from h3 import h3
 
@@ -50,13 +50,41 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(at_location), 0, "the request should have been removed")
 
     def test_add_vehicle(self):
-        self.fail()
+        veh = self.mock_vehicle()
+        sim = self.mock_sim()
+        sim_with_veh = sim.add_vehicle(veh)
+
+        self.assertEqual(len(sim.vehicles), 0, "the original sim object should not have been mutated")
+
+        veh_coord = sim.road_network.position_to_coordinate(veh.position)
+        veh_geoid = h3.geo_to_h3(veh_coord.lat, veh_coord.lon, sim_with_veh.sim_h3_resolution)
+        at_loc = sim_with_veh.v_locations[veh_geoid]
+
+        self.assertEqual(len(at_loc), 1, "should only have 1 vehicle at this location")
+        self.assertEqual(at_loc[0], veh.id, "the vehicle's id should be found at it's geoid")
 
     def test_remove_vehicle(self):
-        self.fail()
+        veh = self.mock_vehicle()
+        sim = self.mock_sim()
+        sim_with_veh = sim.add_vehicle(veh)
+        sim_after_remove = sim_with_veh.remove_vehicle(veh.id)
+
+        self.assertEqual(len(sim_with_veh.vehicles), 1, "the sim with vehicle added should not have been mutated")
+        self.assertEqual(len(sim_after_remove.vehicles), 0, "the vehicle should have been removed")
+
+        veh_coord = sim.road_network.position_to_coordinate(veh.position)
+        veh_geoid = h3.geo_to_h3(veh_coord.lat, veh_coord.lon, sim_with_veh.sim_h3_resolution)
+        at_location = sim_after_remove.v_locations[veh_geoid]
+        self.assertEqual(len(at_location), 0, "the vehicle should have been removed")
 
     def test_pop_vehicle(self):
-        self.fail()
+        veh = self.mock_vehicle()
+        sim = self.mock_sim().add_vehicle(veh)
+        sim_after_pop, veh_after_pop = sim.pop_vehicle(veh.id)
+
+        self.assertEqual(len(sim.vehicles), 1, "the sim with vehicle added should not have been mutated")
+        self.assertEqual(len(sim_after_pop.vehicles), 0, "the vehicle should have been removed")
+        self.assertEqual(veh, veh_after_pop, "should be the same vehicle that gets popped")
 
     def test_add_station(self):
         self.fail()
@@ -74,6 +102,15 @@ class TestSimulationState(TestCase):
         self.fail()
 
     def test_get_vehicle_geoid(self):
+        self.fail()
+
+    def test_vehicle_at_station(self):
+        self.fail()
+
+    def test_vehicle_at_base(self):
+        self.fail()
+
+    def test_apply_updated_vehicle(self):
         self.fail()
 
     # mock stuff
