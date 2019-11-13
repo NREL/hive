@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
+
 class VehicleState(Enum):
     """
     A finite set of vehicle states and rules for state transitions

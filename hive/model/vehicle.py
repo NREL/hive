@@ -117,6 +117,18 @@ class Vehicle(NamedTuple):
     TRANSITION FUNCTIONS
     --------------------
     """
+    def can_transition(self, vehicle_state: VehicleState) -> bool:
+        return True
+
+    def transition(self, vehicle_state: VehicleState, route: Optional[Route]) -> Optional[Vehicle]:
+        if self.vehicle_state == vehicle_state:
+            return self
+        elif not self.can_transition(vehicle_state):
+            return None
+        else:
+
+            return self._replace(vehicle_state=vehicle_state)
+
 
     def transition_idle(self) -> Optional[Vehicle]:
         if self.has_passengers():
