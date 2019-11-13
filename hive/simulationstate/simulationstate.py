@@ -269,7 +269,7 @@ class SimulationState(NamedTuple):
     def _vehicle_at_coordinate(self,
                                vehicle: Vehicle,
                                coordinate: Coordinate,
-                               override_resolution: Optional[int] = None) -> bool:
+                               override_resolution: Optional[int] = None) -> Union[Yada, bool]:
         """
         checks to see if a vehicle and a Coordinate intersect at some resolution of the h3 geo index
         :param vehicle: vehicle to test
