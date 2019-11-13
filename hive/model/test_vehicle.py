@@ -10,6 +10,7 @@ from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.route import Route
 from hive.roadnetwork.routestep import RouteStep
 from hive.util.typealiases import KwH
+from hive.util.tuple import head_tail
 
 
 class TestVehicle(TestCase):
@@ -60,7 +61,7 @@ class TestVehicle(TestCase):
     def test_transition_repositioning(self):
         idle_vehicle = TestVehicle.mock_vehicle()
         route = TestVehicle.mock_route()
-        first_route_step, *remaining_route = route.route
+        first_route_step, remaining_route = head_tail(route.route)
         self.assertNotEqual(idle_vehicle.vehicle_state, VehicleState.REPOSITIONING,
                             "test vehicle should not begin in repositioning state")
 
@@ -71,8 +72,7 @@ class TestVehicle(TestCase):
                          "vehicle position should not be changed")
 
         result = transitioned.step()
-        # TODO: PyCharm + unittest lost Route type information somehow and can't find is_empty() function
-        # self.assertEqual(result.route.is_empty(), False, "route should be updated")
+        self.assertEqual(result.route.is_empty(), False, "route should be updated")
         self.assertEqual(result.plugged_in(), False, "should not have a charger")
         self.assertEqual(len(result.route), len(remaining_route), "should have consumed one leg of the route")
         self.assertEqual(result.position, first_route_step.position,
@@ -89,7 +89,7 @@ class TestVehicle(TestCase):
         idle_vehicle = TestVehicle.mock_vehicle()
         dispatch_route = TestVehicle.mock_route()
         service_route = TestVehicle.mock_service_route()
-        first_route_step, *remaining_route = dispatch_route.route
+        first_route_step, remaining_route = head_tail(dispatch_route.route)
 
         # check on transition function result
         transitioned = idle_vehicle.transition_dispatch_trip(dispatch_route, service_route)
@@ -115,18 +115,39 @@ class TestVehicle(TestCase):
         snooty_test_vehicle = TestVehicle.mock_vehicle()._replace(soc_lower_limit=1.0)
 
         # check on transition function result
-        transitioned = snooty_test_vehicle.transition_dispatch_trip(TestVehicle.mock_route(),
-                                                                    TestVehicle.mock_service_route())
 
-        # todo: i tried asserting that it is a StateTransitionError, but, unittest is failing
-        #  on that comparison. perhaps nose is better at this kind of type introspection for
-        #  assertions?
-        self.assertIsInstance(transitioned, Exception,
-                              "result should be a StateTransitionError, not a Vehicle")
+        transitioned = snooty_test_vehicle.transition_dispatch_trip(
+                            TestVehicle.mock_route(),
+                            TestVehicle.mock_service_route())
 
-    @skip("test not yet implemented")
+        self.assertTrue(transitioned is None)
+        # self.assertRaises(StateTransitionError,
+        #                   snooty_test_vehicle.transition_dispatch_trip,
+        #                   TestVehicle.mock_route(),
+        #                   TestVehicle.mock_service_route())
+
     def test_transition_servicing_trip(self):
-        self.fail()
+        idle_vehicle = TestVehicle.mock_vehicle()
+        service_route = TestVehicle.mock_service_route()
+        request = TestVehicle.mock_request()
+        first_route_step, remaining_route = head_tail(service_route.route)
+
+        transitioned = idle_vehicle.transition_servicing_trip(service_route, request)
+
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
+        self.assertEqual(len(transitioned.route), len(service_route), "should not have consumed any of the route")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
+        self.assertEqual(len(request.passengers), len(transitioned.passengers), "should hold passengers from request")
+
+        # check on step function result
+        result = transitioned.step()
+        self.assertEqual(result.plugged_in(), False, "should not have a charger")
+        self.assertEqual(len(result.route), len(remaining_route), "should have consumed one leg of the route")
+        self.assertEqual(result.position, first_route_step.position,
+                         "vehicle should have updated its position one step into route")
+
 
     @skip("test not yet implemented")
     def test_transition_dispatch_station(self):

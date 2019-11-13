@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from typing import NamedTuple, Tuple
 
 from hive.roadnetwork.routestep import RouteStep
+from hive.util.tuple import head_tail
 
 
 class Route(NamedTuple):
@@ -16,6 +19,12 @@ class Route(NamedTuple):
 
     def has_route(self):
         return not self.is_empty()
+
+    def step_route(self) -> Tuple[RouteStep, Route]:
+        route_step, remaining_route = head_tail(self.route)
+        return route_step, self._replace(route=remaining_route)
+
+
 
     @classmethod
     def empty(cls):
