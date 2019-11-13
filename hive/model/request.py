@@ -15,6 +15,8 @@ class Request(NamedTuple):
     id: RequestId
     origin: Coordinate
     destination: Coordinate
+    o_geoid: GeoId
+    d_geoid: GeoId
     departure_time: int
     cancel_time: int
     passengers: Tuple[Passenger]
@@ -22,27 +24,42 @@ class Request(NamedTuple):
     dispatched_vehicle_time: Optional[int] = None
 
     @classmethod
-    def build(cls, _id: RequestId, _origin: Coordinate, _destination: Coordinate, _departure_time: int,
-              _cancel_time: int, _passengers: int) -> Request:
+    def build(cls,
+              request_id: RequestId,
+              origin: Coordinate,
+              destination: Coordinate,
+              origin_geoid: GeoId,
+              destination_geoid: GeoId,
+              departure_time: int,
+              cancel_time: int,
+              passengers: int) -> Request:
         """
         constructor which tests assertions about the arguments for this Request
-        :param _id:
-        :param _origin:
-        :param _destination:
-        :param _departure_time:
-        :param _cancel_time:
-        :param _passengers:
+        :param request_id:
+        :param origin:
+        :param destination:
+        :param origin_geoid:
+        :param destination_geoid:
+        :param departure_time:
+        :param cancel_time:
+        :param passengers:
         :return:
         """
-        assert (_departure_time >= 0)
-        assert (_cancel_time >= 0)
-        assert (_passengers > 0)
+        assert (departure_time >= 0)
+        assert (cancel_time >= 0)
+        assert (passengers > 0)
         request_as_passengers = [
-            Passenger(create_passenger_id(_id, pass_idx), _origin, _destination, _departure_time,
-                      _id)
+            Passenger(create_passenger_id(request_id, pass_idx), origin_geoid, destination_geoid, departure_time)
             for
-            pass_idx in range(0, _passengers)]
-        return cls(_id, _origin, _destination, _departure_time, _cancel_time, request_as_passengers)
+            pass_idx in range(0, passengers)]
+        return Request(request_id,
+                       origin,
+                       destination,
+                       origin_geoid,
+                       destination_geoid,
+                       departure_time,
+                       cancel_time,
+                       tuple(request_as_passengers))
 
     @classmethod
     def from_string(cls, string) -> Optional[Request]:

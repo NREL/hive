@@ -7,3 +7,4 @@ from hive.util.typealiases import *
 class Station(NamedTuple):
     id: StationId
     coordinate: Coordinate
+    geoid: GeoId
