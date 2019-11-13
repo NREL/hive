@@ -29,7 +29,8 @@ class Vehicle(NamedTuple):
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
-    passengers: Dict[PassengerId, Position] = {}
+    passengers: Dict[PassengerId, Passenger] = {}
+    # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
 
     def has_passengers(self) -> bool:
@@ -50,7 +51,7 @@ class Vehicle(NamedTuple):
         """
         updated_passengers = copy.copy(self.passengers)
         for passenger in new_passengers:
-            updated_passengers[passenger.id] = passenger.destination
+            updated_passengers[passenger.id] = passenger
         return self._replace(passengers=updated_passengers)
 
     def __repr__(self) -> str:
@@ -117,7 +118,7 @@ class Vehicle(NamedTuple):
     --------------------
     """
 
-    def transition_idle(self) -> Union[Vehicle, None]:
+    def transition_idle(self) -> Optional[Vehicle]:
         if self.has_passengers():
             return None
         else:
@@ -127,7 +128,7 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.IDLE,
             )
 
-    def transition_repositioning(self, route: Route) -> Union[Vehicle, None]:
+    def transition_repositioning(self, route: Route) -> Optional[Vehicle]:
         if self.has_passengers():
             return None
         elif self.vehicle_state == VehicleState.REPOSITIONING:
@@ -139,7 +140,7 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.REPOSITIONING,
             )
 
-    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Union[Vehicle, None]:
+    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Optional[Vehicle]:
         if self.has_passengers():
             # dynamic pooling -> remove this constraint? or, do we add a pooling vehicle state?
             return None
@@ -159,7 +160,7 @@ class Vehicle(NamedTuple):
                 vehicle_state=VehicleState.DISPATCH_TRIP
             )
 
-    def transition_servicing_trip(self, route: Route, request: Request) -> Union[Vehicle, None]:
+    def transition_servicing_trip(self, route: Route, request: Request) -> Optional[Vehicle]:
         if self.vehicle_state == VehicleState.SERVICING_TRIP:
             return self
         elif self.has_passengers():
@@ -177,7 +178,7 @@ class Vehicle(NamedTuple):
                     vehicle_state=VehicleState.SERVICING_TRIP
                 ).add_passengers(request.passengers)
 
-    def transition_dispatch_station(self, route: Route) -> Union[Vehicle, None]:
+    def transition_dispatch_station(self, route: Route) -> Optional[Vehicle]:
         if self.vehicle_state == VehicleState.DISPATCH_STATION:
             return self
         if self.has_passengers():
@@ -195,7 +196,7 @@ class Vehicle(NamedTuple):
                     vehicle_state=VehicleState.DISPATCH_STATION
                 )
 
-    def transition_charging_station(self, charger: Charger) -> Union[Vehicle, None]:
+    def transition_charging_station(self, charger: Charger) -> Optional[Vehicle]:
         if self.vehicle_state == VehicleState.CHARGING_STATION:
             return self
         elif self.has_passengers():
@@ -207,7 +208,7 @@ class Vehicle(NamedTuple):
                 plugged_in_charger=charger
             )
 
-    def transition_dispatch_base(self, route: Route) -> Union[Vehicle, None]:
+    def transition_dispatch_base(self, route: Route) -> Optional[Vehicle]:
         if self.vehicle_state == VehicleState.DISPATCH_BASE:
             return self
         elif self.has_passengers():
@@ -219,7 +220,7 @@ class Vehicle(NamedTuple):
                 route=route
             )
 
-    def transition_charging_base(self, charger: Charger) -> Union[Vehicle, None]:
+    def transition_charging_base(self, charger: Charger) -> Optional[Vehicle]:
         if self.vehicle_state == VehicleState.CHARGING_BASE:
             return self
         elif self.has_passengers():
@@ -231,7 +232,7 @@ class Vehicle(NamedTuple):
                 plugged_in_charger=charger
             )
 
-    def transition_reserve_base(self) -> Union[Vehicle, None]:
+    def transition_reserve_base(self) -> Optional[Vehicle]:
         if self.has_passengers():
             return None
         else:

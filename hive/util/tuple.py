@@ -5,8 +5,8 @@ from typing import Tuple
 
 def head_tail(tup: Tuple):
     if not tup:
-        return (), None
+        raise IndexError("called head_tail on empty Tuple")
     elif len(tup) == 1:
-        return tup, None
+        return tup, ()
     else:
         return tup[0], tup[1:]
