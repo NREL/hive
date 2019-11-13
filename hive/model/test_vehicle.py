@@ -1,16 +1,17 @@
 from unittest import TestCase, skip
 
-from hive.exception import StateTransitionError
+from h3 import h3
+
 from hive.model.battery import Battery
 from hive.model.coordinate import Coordinate
 from hive.model.engine import Engine
-from hive.model.vehicle import Vehicle
 from hive.model.request import Request
+from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.route import Route
 from hive.roadnetwork.routestep import RouteStep
-from hive.util.typealiases import KwH
 from hive.util.tuple import head_tail
+from hive.util.typealiases import KwH
 
 
 class TestVehicle(TestCase):
@@ -148,7 +149,6 @@ class TestVehicle(TestCase):
         self.assertEqual(result.position, first_route_step.position,
                          "vehicle should have updated its position one step into route")
 
-
     @skip("test not yet implemented")
     def test_transition_dispatch_station(self):
         self.fail()
@@ -174,16 +174,20 @@ class TestVehicle(TestCase):
         return Vehicle("test_vehicle",
                        cls.MockEngine(),
                        Battery.build("test_battery", 100),
-                       Coordinate(0, 0))
+                       Coordinate(0, 0),
+                       h3.geo_to_h3(0, 0, 11)
+                       )
 
     @classmethod
     def mock_request(cls) -> Request:
         return Request.build("test_request",
-                             _origin=Coordinate(0, 0),
-                             _destination=Coordinate(10, 10),
-                             _departure_time=0,
-                             _cancel_time=10,
-                             _passengers=2)
+                             origin=Coordinate(0, 0),
+                             destination=Coordinate(10, 10),
+                             origin_geoid=h3.geo_to_h3(0, 0, 11),
+                             destination_geoid=h3.geo_to_h3(10, 10, 11),
+                             departure_time=0,
+                             cancel_time=10,
+                             passengers=2)
 
     @classmethod
     def mock_route(cls) -> Route:
