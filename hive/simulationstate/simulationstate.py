@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from copy import copy
 import functools as ft
-from typing import NamedTuple, Dict, Optional, Union, Tuple
+from copy import copy
+from typing import NamedTuple, Dict, Optional, Union, Tuple, cast
 
 from h3 import h3
 
@@ -12,6 +12,7 @@ from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.roadnetwork import RoadNetwork
+from hive.simulationstate.at_location_response import AtLocationResponse
 from hive.util.exception import *
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
@@ -276,6 +277,28 @@ class SimulationState(NamedTuple):
         return self._replace(
             road_network=self.road_network.update(sim_time)
         )
+
+    def at_geoid(self, geoid: GeoId) -> Union[Exception, AtLocationResponse]:
+        """
+        returns a dictionary with the list of ids found at this location for all entities
+        :param geoid: geoid to look up
+        :return: an Optional AtLocationResponse
+        """
+        if not isinstance(geoid, GeoId):
+            return TypeError(f"sim.update_vehicle requires a vehicle but received {type(geoid)}")
+        else:
+            vehicles = self.v_locations[geoid] if geoid in self.v_locations else ()
+            requests = self.r_locations[geoid] if geoid in self.r_locations else ()
+            stations = self.s_locations[geoid] if geoid in self.s_locations else ()
+            bases = self.b_locations[geoid] if geoid in self.b_locations else ()
+
+            result = cast(AtLocationResponse, {
+                'vehicles': vehicles,
+                'requests': requests,
+                'stations': stations,
+                'bases': bases
+            })
+            return result
 
     def vehicle_at_request(self,
                            vehicle_id: VehicleId,

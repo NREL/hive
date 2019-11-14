@@ -172,6 +172,21 @@ class TestSimulationState(TestCase):
         updated_road_network = cast(SimulationStateTestAssets.MockRoadNetwork, updated_sim.road_network)
         self.assertEqual(updated_road_network.updated_to_time_step, update_time_argument)
 
+    def test_at_vehicle_geoid(self):
+        somewhere = Coordinate(90, 90)
+        somewhere_else = Coordinate(0, 0)
+        veh = SimulationStateTestAssets.mock_vehicle(position=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere)
+        sta = SimulationStateTestAssets.mock_station(coordinate=somewhere)
+        b = SimulationStateTestAssets.mock_base(coordinate=somewhere_else)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req).add_station(sta).add_base(b)
+
+        result = sim.at_geoid(veh.geoid)
+        self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
+        self.assertIn(req.id, result['requests'], "should have found this request")
+        self.assertIn(sta.id, result['stations'], "should have found this station")
+        self.assertNotIn(b.id, result['bases'], "should not have found this base")
+
     def test_vehicle_at_request(self):
         veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(90, 90))
         req = SimulationStateTestAssets.mock_request(origin=Coordinate(90, 90))
