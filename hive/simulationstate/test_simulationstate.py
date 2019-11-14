@@ -1,6 +1,6 @@
 import copy
 from typing import cast
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from h3 import h3
 
@@ -10,6 +10,7 @@ from hive.model.coordinate import Coordinate
 from hive.model.engine import Engine
 from hive.model.request import Request
 from hive.model.station import Station
+from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.roadnetwork.position import Position
 from hive.roadnetwork.roadnetwork import RoadNetwork
@@ -71,9 +72,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(sim.vehicles), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_veh.vehicles[veh.id], veh, "the vehicle should not have been mutated")
 
-        veh_coord = sim.road_network.position_to_geoid(veh.position)
-        veh_geoid = h3.geo_to_h3(veh_coord.lat, veh_coord.lon, sim_with_veh.sim_h3_resolution)
-        at_loc = sim_with_veh.v_locations[veh_geoid]
+        at_loc = sim_with_veh.v_locations[veh.geoid]
 
         self.assertEqual(len(at_loc), 1, "should only have 1 vehicle at this location")
         self.assertEqual(at_loc[0], veh.id, "the vehicle's id should be found at it's geoid")
@@ -246,10 +245,11 @@ class TestSimulationState(TestCase):
         # request should have been removed
         self.assertNotIn(req.id, sim_boarded.requests, "request should be removed from sim")
 
+    @skip("step expects engines, EngineIds, Chargers and assoc. logic to exist; sadly, they do not")
     def test_step(self):
         veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
         veh_route_step = RouteStep(Coordinate(1, 0), 1)
-        veh_repositioning = veh.transition_repositioning(Route((veh_route_step,), 1, 1))
+        veh_repositioning = veh.transition(VehicleState.REPOSITIONING)._replace(route=Route((veh_route_step,), 1, 1))
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh_repositioning)
 
         updated_sim = sim.step()
