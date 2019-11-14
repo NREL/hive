@@ -10,7 +10,7 @@ from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.route import Route
 from hive.roadnetwork.routestep import RouteStep
-from hive.util.tuple import head_tail
+from hive.util.helpers import TupleOps
 from hive.util.typealiases import KwH
 
 
@@ -62,7 +62,7 @@ class TestVehicle(TestCase):
     def test_transition_repositioning(self):
         idle_vehicle = TestVehicle.mock_vehicle()
         route = TestVehicle.mock_route()
-        first_route_step, remaining_route = head_tail(route.route)
+        first_route_step, remaining_route = TupleOps.head_tail(route.route)
         self.assertNotEqual(idle_vehicle.vehicle_state, VehicleState.REPOSITIONING,
                             "test vehicle should not begin in repositioning state")
 
@@ -90,7 +90,7 @@ class TestVehicle(TestCase):
         idle_vehicle = TestVehicle.mock_vehicle()
         dispatch_route = TestVehicle.mock_route()
         service_route = TestVehicle.mock_service_route()
-        first_route_step, remaining_route = head_tail(dispatch_route.route)
+        first_route_step, remaining_route = TupleOps.head_tail(dispatch_route.route)
 
         # check on transition function result
         transitioned = idle_vehicle.transition_dispatch_trip(dispatch_route, service_route)
@@ -131,7 +131,7 @@ class TestVehicle(TestCase):
         idle_vehicle = TestVehicle.mock_vehicle()
         service_route = TestVehicle.mock_service_route()
         request = TestVehicle.mock_request()
-        first_route_step, remaining_route = head_tail(service_route.route)
+        first_route_step, remaining_route = TupleOps.head_tail(service_route.route)
 
         transitioned = idle_vehicle.transition_servicing_trip(service_route, request)
 

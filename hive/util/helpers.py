@@ -13,6 +13,15 @@ class TupleOps:
         else:
             return removed
 
+    @classmethod
+    def head_tail(cls, tup: Tuple[T, ...]):
+        if not tup:
+            raise IndexError("called head_tail on empty Tuple")
+        elif len(tup) == 1:
+            return tup[0], ()
+        else:
+            return tup[0], tup[1:]
+
 
 class DictOps:
     T = TypeVar('T')
@@ -46,7 +55,8 @@ class DictOps:
         """
         updated_dict = copy(xs)
         ids_at_location = updated_dict.get(obj_geoid, ())
-        updated_dict.update([(obj_geoid, (obj_id,) + ids_at_location)])
+        updated_ids = (obj_id,) + ids_at_location
+        updated_dict.update([(obj_geoid, updated_ids)])
         return updated_dict
 
     @classmethod

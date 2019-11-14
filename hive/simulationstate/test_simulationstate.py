@@ -1,6 +1,6 @@
 import copy
 from typing import cast
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from h3 import h3
 
@@ -44,9 +44,24 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(sim_with_req.requests), 1, "the sim with req added should not have been mutated")
         self.assertEqual(len(sim_after_remove.requests), 0, "the request should have been removed")
 
-        req_geoid = h3.geo_to_h3(req.origin.lat, req.origin.lon, sim_with_req.sim_h3_resolution)
-        at_location = sim_after_remove.r_locations[req_geoid]
-        self.assertEqual(len(at_location), 0, "the request should have been removed")
+        self.assertNotIn(req.o_geoid, sim_after_remove.r_locations, "there should be no key for this geoid")
+
+    def test_remove_request_multiple_at_loc(self):
+        """
+        confirms that we didn't remove other requests at the same location
+        """
+        req1 = SimulationStateTestAssets.mock_request(request_id="1")
+        req2 = SimulationStateTestAssets.mock_request(request_id="2")
+        sim = SimulationStateTestAssets.mock_empty_sim()
+        sim_with_reqs = sim.add_request(req1).add_request(req2)
+        sim_remove_req1 = sim_with_reqs.remove_request(req1.id)
+
+        self.assertIn(req2.o_geoid,
+                      sim_remove_req1.r_locations,
+                      "geoid related to both reqs should still exist")
+        self.assertIn(req2.id,
+                      sim_remove_req1.r_locations[req2.o_geoid],
+                      "req2.id should still be found in r_locations")
 
     def test_add_vehicle(self):
         veh = SimulationStateTestAssets.mock_vehicle()
@@ -77,15 +92,15 @@ class TestSimulationState(TestCase):
                                        position=new_pos,
                                        soc_lower_limit=new_soc_lower_limit)
 
-        sim_after_update = sim_before_update.update_vehicle(updated_vehicle)
+        sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
 
         # confirm sim reflects changes to vehicle
         self.assertEqual(sim_after_update.vehicles[veh.id].soc_lower_limit, new_soc_lower_limit)
         self.assertIn(veh.id,
                       sim_after_update.v_locations[new_geoid],
                       "new vehicle geoid was not updated correctly")
-        self.assertNotIn(veh.id,
-                         sim_after_update.v_locations[old_geoid],
+        self.assertNotIn(veh.geoid,
+                         sim_after_update.v_locations,
                          "old vehicle geoid was not updated correctly")
 
     def test_remove_vehicle(self):
@@ -97,10 +112,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(sim_with_veh.vehicles), 1, "the sim with vehicle added should not have been mutated")
         self.assertEqual(len(sim_after_remove.vehicles), 0, "the vehicle should have been removed")
 
-        veh_coord = sim.road_network.position_to_geoid(veh.position)
-        veh_geoid = h3.geo_to_h3(veh_coord.lat, veh_coord.lon, sim_with_veh.sim_h3_resolution)
-        at_location = sim_after_remove.v_locations[veh_geoid]
-        self.assertEqual(len(at_location), 0, "the vehicle should have been removed")
+        self.assertNotIn(veh.geoid, sim_after_remove.v_locations, "there should be no key for this geoid")
 
     def test_pop_vehicle(self):
         veh = SimulationStateTestAssets.mock_vehicle()
@@ -152,7 +164,7 @@ class TestSimulationState(TestCase):
 
         self.assertNotIn(base.id, sim_after_remove.bases, "base should be removed")
         self.assertNotIn(base.geoid, sim_after_remove.b_locations, "nothing should be left at geoid")
-        
+
     def test_update_road_network(self):
         sim = SimulationStateTestAssets.mock_empty_sim()
         update_time_argument = 1999
@@ -161,9 +173,6 @@ class TestSimulationState(TestCase):
         self.assertEqual(updated_road_network.updated_to_time_step, update_time_argument)
 
     def test_vehicle_at_request(self):
-        """
-        invariant: mock vehicle and request are at same location
-        """
         veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(90, 90))
         req = SimulationStateTestAssets.mock_request(origin=Coordinate(90, 90))
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
@@ -222,6 +231,19 @@ class TestSimulationState(TestCase):
         # request should have been removed
         self.assertNotIn(req.id, sim_boarded.requests, "request should be removed from sim")
 
+    def test_step(self):
+        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
+        veh_route_step = RouteStep(Coordinate(1, 0), 1)
+        veh_repositioning = veh.transition_repositioning(Route((veh_route_step,), 1, 1))
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh_repositioning)
+
+        updated_sim = sim.step()
+        expected_veh_geoid = h3.geo_to_h3(veh_route_step.position.lat,
+                                          veh_route_step.position.lon,
+                                          sim.sim_h3_resolution)
+
+        self.assertIn(expected_veh_geoid, updated_sim.v_locations, "vehicle should have moved locations")
+
 
 class SimulationStateTestAssets:
     h3_resolution = 11
@@ -268,6 +290,7 @@ class SimulationStateTestAssets:
 
     @classmethod
     def mock_request(cls,
+                     request_id="r1",
                      origin: Coordinate = Coordinate(lat=0.0, lon=0.0),
                      destination: Coordinate = Coordinate(lat=3.0, lon=4.0),
                      passengers: int = 2) -> Request:
@@ -275,7 +298,7 @@ class SimulationStateTestAssets:
         d_geoid = h3.geo_to_h3(destination.lat, destination.lon, cls.h3_resolution)
 
         return Request.build(
-            request_id="r1",
+            request_id=request_id,
             origin=origin,
             destination=destination,
             origin_geoid=o_geoid,
@@ -286,10 +309,12 @@ class SimulationStateTestAssets:
         )
 
     @classmethod
-    def mock_vehicle(cls, position: Position = Coordinate(0, 0)) -> Vehicle:
+    def mock_vehicle(cls,
+                     vehicle_id="m1",
+                     position: Position = Coordinate(0, 0)) -> Vehicle:
         geoid = h3.geo_to_h3(position.lat, position.lon, cls.h3_resolution)
         return Vehicle(
-            "m1",
+            vehicle_id,
             cls.MockEngine(),
             Battery.build("battery", 100),
             position,
@@ -297,14 +322,16 @@ class SimulationStateTestAssets:
         )
 
     @classmethod
-    def mock_station(cls, coordinate: Coordinate = Coordinate(10, 0)) -> Station:
+    def mock_station(cls,
+                     station_id="s1",
+                     coordinate: Coordinate = Coordinate(10, 0)) -> Station:
         geoid = h3.geo_to_h3(coordinate.lat, coordinate.lon, cls.h3_resolution)
-        return Station("s1", coordinate, geoid)
+        return Station(station_id, coordinate, geoid)
 
     @classmethod
-    def mock_base(cls, coordinate: Coordinate = Coordinate(3, 3)) -> Base:
+    def mock_base(cls, base_id="b1", coordinate: Coordinate = Coordinate(3, 3)) -> Base:
         geoid = h3.geo_to_h3(coordinate.lat, coordinate.lon, cls.h3_resolution)
-        return Base("b1", coordinate, geoid)
+        return Base(base_id, coordinate, geoid)
 
     @classmethod
     def mock_empty_sim(cls) -> SimulationState:

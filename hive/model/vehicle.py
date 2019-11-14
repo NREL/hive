@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 from typing import NamedTuple, Tuple, Dict, Optional
 
+from h3 import h3
+
 from hive.model.battery import Battery
 from hive.model.charger import Charger
 from hive.model.engine import Engine
@@ -62,11 +64,15 @@ class Vehicle(NamedTuple):
         # take one route step
         # todo: need to update the GeoId here; i think this means the RoadNetwork
         #  needs to be in scope (a parameter of step/_move)
+        #  a quick fix for now:
         this_route_step, updated_route = self.route.step_route()
+        sim_h3_resolution = 11  # should come from simulation
+        new_geoid = h3.geo_to_h3(this_route_step.position.lat, this_route_step.position.lon, sim_h3_resolution)
         this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
         updated_battery = self.battery.use_fuel(this_fuel_usage)
         return self._replace(
             position=this_route_step.position,
+            geoid=new_geoid,
             battery=updated_battery,
             route=updated_route,
             distance_traveled=self.distance_traveled + this_route_step.distance

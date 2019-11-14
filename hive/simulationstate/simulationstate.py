@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import copy
+import functools as ft
 from typing import NamedTuple, Dict, Optional, Union, Tuple
 
 from h3 import h3
@@ -9,9 +10,10 @@ from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
+from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import *
-from hive.util.helpers import TupleOps
+from hive.util.helpers import DictOps
 from hive.util.typealiases import *
 
 
@@ -55,17 +57,9 @@ class SimulationState(NamedTuple):
         elif not self.road_network.geoid_within_simulation(request.d_geoid):
             return SimulationStateError(f"destination {request.destination} not within entire road network")
         else:
-
-            updated_requests = copy(self.requests)
-            updated_requests.update([(request.id, request)])
-
-            updated_r_locations = copy(self.r_locations)
-            ids_at_location = updated_r_locations.get(request.o_geoid, ())
-            updated_r_locations.update([(request.o_geoid, (request.id,) + ids_at_location)])
-
             return self._replace(
-                requests=updated_requests,
-                r_locations=updated_r_locations
+                requests=DictOps.add_to_entity_dict(self.requests, request.id, request),
+                r_locations=DictOps.add_to_location_dict(self.r_locations, request.o_geoid, request.id)
             )
 
     def remove_request(self, request_id: RequestId) -> Union[Exception, SimulationState]:
@@ -82,24 +76,10 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"attempting to remove request {request_id} which is not in simulation")
         else:
             request = self.requests[request_id]
-            request_geoid = h3.geo_to_h3(request.origin.lat, request.origin.lon, self.sim_h3_resolution)
-
-            updated_requests = copy(self.requests)
-            del updated_requests[request_id]
-
-            updated_r_locations = copy(self.r_locations)
-            ids_at_location = updated_r_locations[request_geoid]
-            updated_ids_at_location = TupleOps.remove(ids_at_location, request_id)
-            if updated_ids_at_location is None:
-                return SimulationStateError(f"cannot remove request {request_id} at hex {request_geoid}")
-            else:
-
-                updated_r_locations[request_geoid] = updated_ids_at_location
-
-                return self._replace(
-                    requests=updated_requests,
-                    r_locations=updated_r_locations
-                )
+            return self._replace(
+                requests=DictOps.remove_from_entity_dict(self.requests, request.id),
+                r_locations=DictOps.remove_from_location_dict(self.r_locations, request.o_geoid, request.id)
+            )
 
     def add_vehicle(self, vehicle: Vehicle) -> Union[Exception, SimulationState]:
         """
@@ -112,21 +92,14 @@ class SimulationState(NamedTuple):
         elif not self.road_network.geoid_within_geofence(vehicle.geoid):
             return SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
         else:
-            updated_vehicles = copy(self.vehicles)
-            updated_vehicles.update([(vehicle.id, vehicle)])
-
-            updated_v_locations = copy(self.v_locations)
-            ids_at_location = updated_v_locations.get(vehicle.geoid, ())
-            updated_v_locations.update([(vehicle.geoid, (vehicle.id,) + ids_at_location)])
-
             return self._replace(
-                vehicles=updated_vehicles,
-                v_locations=updated_v_locations
+                vehicles=DictOps.add_to_entity_dict(self.vehicles, vehicle.id, vehicle),
+                v_locations=DictOps.add_to_location_dict(self.v_locations, vehicle.geoid, vehicle.id)
             )
 
-    def update_vehicle(self, updated_vehicle: Vehicle) -> Union[Exception, SimulationState]:
+    def modify_vehicle(self, updated_vehicle: Vehicle) -> Union[Exception, SimulationState]:
         """
-        given an updated vehicle state, update the SimulationState with that vehicle
+        given an updated vehicle, update the SimulationState with that vehicle
         :param updated_vehicle: the vehicle after calling a transition function and .step()
         :return: the updated simulation, or an error
         """
@@ -135,28 +108,59 @@ class SimulationState(NamedTuple):
         elif not self.road_network.geoid_within_geofence(updated_vehicle.geoid):
             return SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
         else:
+
             old_vehicle = self.vehicles[updated_vehicle.id]
 
-            updated_vehicles = copy(self.vehicles)
-            updated_vehicles.update([(updated_vehicle.id, updated_vehicle)])
+            if old_vehicle.geoid == updated_vehicle.geoid:
+                return self._replace(
+                    vehicles=DictOps.add_to_entity_dict(self.vehicles, updated_vehicle.id, updated_vehicle)
+                )
+            else:
 
-            updated_v_locations = copy(self.v_locations)
-            if not old_vehicle.geoid == updated_vehicle.geoid:
                 # unset from old geoid add add to new one
+                v_locations_removed = DictOps.remove_from_location_dict(self.v_locations,
+                                                                        old_vehicle.geoid,
+                                                                        old_vehicle.id)
+                v_locations_updated = DictOps.add_to_location_dict(v_locations_removed,
+                                                                   updated_vehicle.geoid,
+                                                                   updated_vehicle.id)
 
-                ids_at_old_location: Tuple[VehicleId, ...] = updated_v_locations.get(old_vehicle.geoid, ())
-                updated_old_location: Tuple[VehicleId, ...] = TupleOps.remove(ids_at_old_location, updated_vehicle.id)
-                ids_at_new_location: Tuple[VehicleId, ...] = updated_v_locations.get(updated_vehicle.geoid, ())
-                updated_new_location: Tuple[VehicleId, ...] = (updated_vehicle.id,) + ids_at_new_location
-                updated_v_locations.update([
-                    (updated_vehicle.geoid, updated_new_location),
-                    (old_vehicle.geoid, updated_old_location)
-                ])
+                return self._replace(
+                    vehicles=DictOps.add_to_entity_dict(self.vehicles, updated_vehicle.id, updated_vehicle),
+                    v_locations=v_locations_updated
+                )
 
-            return self._replace(
-                vehicles=updated_vehicles,
-                v_locations=updated_v_locations
-            )
+    def perform_vehicle_state_transformation(self,
+                                             vehicle_id: VehicleId,
+                                             next_vehicle_state: Optional[VehicleState]
+                                             ) -> Union[Exception, SimulationState]:
+        """
+        test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
+        :param vehicle_id:
+        :param next_vehicle_state:
+        :return: the updated simulation state or an exception on failure
+        """
+        # todo:
+        #  test vehicle.can_transition
+        #  call modify_vehicle with transitioned vehicle
+        #
+        raise NotImplementedError("requires vehicle.can_transition functions to implement")
+
+    def step(self, time_step_size: int = 1) -> SimulationState:
+        """
+        advances this simulation one time step
+        :return: the simulation after calling step() on all vehicles
+        """
+
+        next_state = ft.reduce(
+            lambda acc, v: acc.modify_vehicle(v.step()),
+            self.vehicles.values(),
+            self
+        )
+
+        return next_state._replace(
+            sim_time=self.sim_time + time_step_size
+        )
 
     def remove_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, SimulationState]:
         """
@@ -171,23 +175,10 @@ class SimulationState(NamedTuple):
         else:
             vehicle = self.vehicles[vehicle_id]
 
-            updated_vehicles = copy(self.vehicles)
-            del updated_vehicles[vehicle_id]
-
-            updated_v_locations = copy(self.v_locations)
-            ids_at_location = updated_v_locations[vehicle.geoid]
-            updated_ids_at_location = TupleOps.remove(ids_at_location, vehicle_id)
-
-            if updated_ids_at_location is None:
-                return SimulationStateError(f"cannot remove vehicle {vehicle_id} at hex {vehicle.geoid}")
-            else:
-
-                updated_v_locations[vehicle.geoid] = updated_ids_at_location
-
-                return self._replace(
-                    vehicles=updated_vehicles,
-                    v_locations=updated_v_locations
-                )
+            return self._replace(
+                vehicles=DictOps.remove_from_entity_dict(self.vehicles, vehicle_id),
+                v_locations=DictOps.remove_from_location_dict(self.v_locations, vehicle.geoid, vehicle_id)
+            )
 
     def pop_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, Tuple[SimulationState, Vehicle]]:
         """
@@ -219,18 +210,9 @@ class SimulationState(NamedTuple):
         elif not self.road_network.geoid_within_geofence(station.geoid):
             return SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
         else:
-            station_geoid = h3.geo_to_h3(station.coordinate.lat, station.coordinate.lon, self.sim_h3_resolution)
-
-            updated_vehicles = copy(self.stations)
-            updated_vehicles.update([(station.id, station)])
-
-            updated_s_locations = copy(self.s_locations)
-            ids_at_location = updated_s_locations.get(station_geoid, ())
-            updated_s_locations.update([(station_geoid, (station.id,) + ids_at_location)])
-
             return self._replace(
-                stations=updated_vehicles,
-                s_locations=updated_s_locations
+                stations=DictOps.add_to_entity_dict(self.stations, station.id, station),
+                s_locations=DictOps.add_to_location_dict(self.s_locations, station.geoid, station.id)
             )
 
     def remove_station(self, station_id: StationId) -> Union[Exception, SimulationState]:
@@ -245,15 +227,10 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"cannot remove station {station_id}, it does not exist")
         else:
             station = self.stations[station_id]
-            updated_stations = copy(self.stations)
-            del updated_stations[station_id]
-
-            updated_s_locations = copy(self.s_locations)
-            del updated_s_locations[station.geoid]
 
             return self._replace(
-                stations=updated_stations,
-                s_locations=updated_s_locations
+                stations=DictOps.remove_from_entity_dict(self.stations, station_id),
+                s_locations=DictOps.remove_from_location_dict(self.s_locations, station.geoid, station_id)
             )
 
     def add_base(self, base: Base) -> Union[Exception, SimulationState]:
@@ -267,16 +244,9 @@ class SimulationState(NamedTuple):
         if not self.road_network.geoid_within_geofence(base.geoid):
             return SimulationStateError(f"cannot add base {base.id} to sim: not within road network geofence")
         else:
-            updated_bases = copy(self.bases)
-            updated_bases.update([(base.id, base)])
-
-            updated_s_locations = copy(self.b_locations)
-            ids_at_location = updated_s_locations.get(base.geoid, ())
-            updated_s_locations.update([(base.geoid, (base.id,) + ids_at_location)])
-
             return self._replace(
-                bases=updated_bases,
-                b_locations=updated_s_locations
+                bases=DictOps.add_to_entity_dict(self.bases, base.id, base),
+                b_locations=DictOps.add_to_location_dict(self.b_locations, base.geoid, base.id)
             )
 
     def remove_base(self, base_id: BaseId) -> Union[Exception, SimulationState]:
@@ -291,15 +261,10 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"cannot remove base {base_id}, it does not exist")
         else:
             base = self.bases[base_id]
-            updated_bases = copy(self.bases)
-            del updated_bases[base_id]
 
-            updated_s_locations = copy(self.b_locations)
-            del updated_s_locations[base.geoid]
-            
             return self._replace(
-                bases=updated_bases,
-                b_locations=updated_s_locations
+                bases=DictOps.remove_from_entity_dict(self.bases, base_id),
+                b_locations=DictOps.remove_from_location_dict(self.b_locations, base.geoid, base_id)
             )
 
     def update_road_network(self, sim_time: int) -> SimulationState:
@@ -311,32 +276,6 @@ class SimulationState(NamedTuple):
         return self._replace(
             road_network=self.road_network.update(sim_time)
         )
-
-    @classmethod
-    def _same_geoid(cls,
-                    a: GeoId,
-                    b: GeoId,
-                    sim_h3_resolution: int,
-                    override_resolution: Optional[int]) -> Union[SimulationStateError, bool]:
-        """
-        tests if two geoids are the same. allows for overriding test resolution to a parent level
-        todo: maybe move this to a geoutility collection somewhere like hive.util._
-        :param a: first geoid
-        :param b: second geoid
-        :param override_resolution: an overriding h3 spatial resolution, or, none to use this sim's default res
-        :return: True/False, or, a SimulationStateError
-        """
-        if override_resolution is None:
-            return a == b
-        elif override_resolution > sim_h3_resolution:
-            return SimulationStateError(
-                f"cannot override geoid resolution {sim_h3_resolution} to smaller hex {override_resolution}")
-        elif override_resolution == sim_h3_resolution:
-            return a == b
-        else:
-            a_parent = h3.h3_to_parent(a, override_resolution)
-            b_parent = h3.h3_to_parent(b, override_resolution)
-            return a_parent == b_parent
 
     def vehicle_at_request(self,
                            vehicle_id: VehicleId,
@@ -427,3 +366,29 @@ class SimulationState(NamedTuple):
             return self._replace(
                 vehicles=updated_vehicles,
             ).remove_request(request_id)
+
+    @classmethod
+    def _same_geoid(cls,
+                    a: GeoId,
+                    b: GeoId,
+                    sim_h3_resolution: int,
+                    override_resolution: Optional[int]) -> Union[SimulationStateError, bool]:
+        """
+        tests if two geoids are the same. allows for overriding test resolution to a parent level
+        todo: maybe move this to a geoutility collection somewhere like hive.util._
+        :param a: first geoid
+        :param b: second geoid
+        :param override_resolution: an overriding h3 spatial resolution, or, none to use this sim's default res
+        :return: True/False, or, a SimulationStateError
+        """
+        if override_resolution is None:
+            return a == b
+        elif override_resolution > sim_h3_resolution:
+            return SimulationStateError(
+                f"cannot override geoid resolution {sim_h3_resolution} to smaller hex {override_resolution}")
+        elif override_resolution == sim_h3_resolution:
+            return a == b
+        else:
+            a_parent = h3.h3_to_parent(a, override_resolution)
+            b_parent = h3.h3_to_parent(b, override_resolution)
+            return a_parent == b_parent
