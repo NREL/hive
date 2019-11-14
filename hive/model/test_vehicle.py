@@ -4,28 +4,14 @@ from h3 import h3
 
 from hive.model.battery import Battery
 from hive.model.coordinate import Coordinate
-from hive.model.engine import Engine
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
 from hive.roadnetwork.route import Route
 from hive.roadnetwork.routestep import RouteStep
-from hive.util.tuple import head_tail
-from hive.util.typealiases import KwH
 
 
 class TestVehicle(TestCase):
-    class MockEngine(Engine):
-        """
-        i haven't made instances of Engine yet. 20191106-rjf
-        """
-
-        def route_fuel_cost(self, route: Route) -> KwH:
-            return len(route.route)
-
-        def route_step_fuel_cost(self, route_step: RouteStep) -> KwH:
-            return 1.0
-
     def test_has_passengers(self):
         self.assertEqual(TestVehicle.mock_vehicle().has_passengers(), False, "should have no passengers")
         updated_vehicle = TestVehicle.mock_vehicle().add_passengers(TestVehicle.mock_request().passengers)
@@ -44,12 +30,6 @@ class TestVehicle(TestCase):
         self.assertEqual(no_pass_veh.has_passengers(), False)
         with_pass_veh = no_pass_veh.add_passengers(mock_request.passengers)
         self.assertEqual(len(with_pass_veh.passengers), len(mock_request.passengers))
-
-
-    #TODO: Consider moving this test to the SimulationState space
-    @skip("test not yet implemented")
-    def test_step(self):
-        self.fail()
 
     @skip("test not yet implemented")
     def test_battery_swap(self):
@@ -84,23 +64,6 @@ class TestVehicle(TestCase):
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
 
-    #TODO: Consider moving this test to the SimulationState space
-    @skip("Test needs updating")
-    def test_transition_dispatch_trip_negative_low_soc(self):
-        """
-        given a Vehicle which has a soc_lower_limit of 100% (not allowed to have less than 100% fuel),
-        - assign it to a DISPATCH_TRIP state via Vehicle.transition_dispatch_trip
-          - confirm the result is a StateTransitionError
-        """
-        snooty_test_vehicle = TestVehicle.mock_vehicle()._replace(soc_lower_limit=1.0)
-
-        # check on transition function result
-        transitioned = snooty_test_vehicle.transition_dispatch_trip(
-                            TestVehicle.mock_route(),
-                            TestVehicle.mock_service_route())
-
-        self.assertTrue(transitioned is None)
-
     def test_transition_servicing_trip(self):
         idle_vehicle = TestVehicle.mock_vehicle()
 
@@ -134,7 +97,6 @@ class TestVehicle(TestCase):
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
 
-    @skip("test not yet implemented")
     def test_transition_charging_base(self):
         idle_vehicle = TestVehicle.mock_vehicle()
 
@@ -143,7 +105,6 @@ class TestVehicle(TestCase):
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
 
-    @skip("test not yet implemented")
     def test_transition_reserve_base(self):
         idle_vehicle = TestVehicle.mock_vehicle()
 
@@ -152,10 +113,25 @@ class TestVehicle(TestCase):
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
 
+    def test_can_transition_good(self):
+        idle_vehicle = TestVehicle.mock_vehicle()
+
+        veh_can_trans = idle_vehicle.can_transition(VehicleState.IDLE)
+
+        self.assertEqual(veh_can_trans, True)
+
+    def test_can_transition_bad(self):
+        idle_vehicle = TestVehicle.mock_vehicle()
+        dispatched_veh = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+
+        veh_can_trans = dispatched_veh.can_transition(VehicleState.RESERVE_BASE)
+
+        self.assertEqual(veh_can_trans, False)
+
     @classmethod
     def mock_vehicle(cls) -> Vehicle:
         return Vehicle("test_vehicle",
-                       cls.MockEngine(),
+                       "test_engine",
                        Battery.build("test_battery", 100),
                        Coordinate(0, 0),
                        h3.geo_to_h3(0, 0, 11)
@@ -181,12 +157,3 @@ class TestVehicle(TestCase):
                      total_distance=20,
                      total_travel_time=4)
 
-    @classmethod
-    def mock_service_route(cls) -> Route:
-        return Route(route=(RouteStep(Coordinate(5, 10), 5),
-                            RouteStep(Coordinate(5, 5), 5),
-                            RouteStep(Coordinate(0, 5), 5),
-                            RouteStep(Coordinate(0, 0), 5)
-                            ),
-                     total_distance=20,
-                     total_travel_time=4)

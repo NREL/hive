@@ -34,6 +34,10 @@ class VehicleState(Enum):
     def is_valid(cls, state):
         return state in _valid_vehicle_states
 
+    @classmethod
+    def is_valid_transition(cls, state_i, state_f):
+        return state_f in _valid_vehicle_transitions[state_i]
+
 
 _state_active_properties = {
     VehicleState.DISPATCH_BASE: False,
@@ -70,6 +74,66 @@ _valid_vehicle_states = frozenset([
     VehicleState.REPOSITIONING,
     VehicleState.SERVICING_TRIP
 ])
+
+_valid_vehicle_transitions = {
+    # INACTIVE FLEET MANAGEMENT
+    VehicleState.DISPATCH_BASE: frozenset([
+        VehicleState.CHARGING_BASE,
+        VehicleState.RESERVE_BASE,
+    ]),
+
+    VehicleState.CHARGING_BASE: frozenset([
+        VehicleState.RESERVE_BASE,
+        VehicleState.IDLE
+    ]),
+
+    VehicleState.RESERVE_BASE: frozenset([
+        VehicleState.CHARGING_BASE,
+        VehicleState.IDLE
+    ]),
+
+    # ACTIVE FLEET MANAGEMENT
+    #TODO: Do we want idle to be able to transition into any state?
+    VehicleState.IDLE: frozenset([
+        VehicleState.DISPATCH_BASE,
+        VehicleState.CHARGING_BASE,
+        VehicleState.RESERVE_BASE,
+        VehicleState.IDLE,
+        VehicleState.DISPATCH_TRIP,
+        VehicleState.DISPATCH_STATION,
+        VehicleState.CHARGING_STATION,
+        VehicleState.REPOSITIONING,
+        VehicleState.SERVICING_TRIP
+    ]),
+
+    VehicleState.REPOSITIONING: frozenset([
+        VehicleState.DISPATCH_BASE,
+        VehicleState.DISPATCH_STATION,
+        VehicleState.DISPATCH_TRIP,
+        VehicleState.SERVICING_TRIP,
+        VehicleState.IDLE
+    ]),
+
+    # TRIPPING
+    VehicleState.DISPATCH_TRIP: frozenset([
+        VehicleState.IDLE,
+        VehicleState.SERVICING_TRIP,
+    ]),
+
+    VehicleState.SERVICING_TRIP: frozenset([
+        VehicleState.IDLE
+    ]),
+
+    # CHARGING
+    VehicleState.DISPATCH_STATION: frozenset([
+        VehicleState.IDLE,
+        VehicleState.CHARGING_STATION,
+    ]),
+
+    VehicleState.CHARGING_STATION: frozenset([
+        VehicleState.IDLE,
+    ]),
+}
 
 
 class VehicleStateCategory(Enum):

@@ -2,6 +2,7 @@
 RequestId = str
 VehicleId = str
 StationId = str
+EngineId = str
 BaseId = str
 PassengerId = str
 

@@ -22,13 +22,12 @@ from hive.util.typealiases import *
 class Vehicle(NamedTuple):
     # fixed vehicle attributes
     id: VehicleId
-    engine: Engine
+    engine: EngineId
     battery: Battery
     position: Position
     geoid: GeoId
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
-    plugged_in_charger: Optional[Charger] = None
     route: Route = Route.empty()
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
@@ -127,19 +126,17 @@ class Vehicle(NamedTuple):
     def can_transition(self, vehicle_state: VehicleState) -> bool:
         if not VehicleState.is_valid(vehicle_state):
             raise TypeError("Invalid vehicle state type.")
-
-        if self.has_passengers():
-            return False
         elif self.vehicle_state == vehicle_state:
             return True
-        else:
+        elif VehicleState.is_valid_transition(self.vehicle_state, vehicle_state):
             return True
+        else:
+            return False
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
         if self.vehicle_state == vehicle_state:
             return self
-        elif not self.can_transition(vehicle_state):
-            return None
-        else:
+        elif self.can_transition(vehicle_state):
             return self._replace(vehicle_state=vehicle_state)
-
+        else:
+            return None
