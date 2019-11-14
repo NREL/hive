@@ -61,12 +61,12 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.battery})"
 
-    def _move(self) -> Vehicle:
+    def _move(self, engine: Engine) -> Vehicle:
         # take one route step
         # todo: need to update the GeoId here; i think this means the RoadNetwork
         #  needs to be in scope (a parameter of step/_move)
         this_route_step, updated_route = self.route.step_route()
-        this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
+        this_fuel_usage = engine.route_step_fuel_cost(this_route_step)
         updated_battery = self.battery.use_fuel(this_fuel_usage)
         return self._replace(
             position=this_route_step.position,
@@ -75,7 +75,7 @@ class Vehicle(NamedTuple):
             distance_traveled=self.distance_traveled + this_route_step.distance
         )
 
-    def step(self) -> Vehicle:
+    def step(self, engine: Optional[Engine], charger: Optional[Charger]) -> Vehicle:
         """
         when an agent stays in the same vehicle state for two subsequent time steps,
         we perform their action in the transition.
@@ -91,7 +91,7 @@ class Vehicle(NamedTuple):
 
         elif step_type == VehicleStateCategory.CHARGE:
             # perform a CHARGE step
-            if self.plugged_in_charger is None:
+            if charger is None:
                 raise StateOfChargeError(f"{self} cannot charge without a plugged-in charger")
             elif self.battery.soc() >= self.soc_upper_limit:
                 # fall into IDLE state
@@ -99,7 +99,7 @@ class Vehicle(NamedTuple):
             else:
                 # take one charging step
                 return self._replace(
-                    battery=self.battery.charge(self.plugged_in_charger)
+                    battery=self.battery.charge(charger)
                 )
 
         elif step_type == VehicleStateCategory.MOVE:
@@ -110,7 +110,7 @@ class Vehicle(NamedTuple):
                 else:
                     return self.transition(VehicleState.IDLE)
             else:
-                return self._move()
+                return self._move(engine)
 
         else:
             raise NotImplementedError(f"Step function failed for undefined vehicle state category {step_type}")
@@ -128,10 +128,10 @@ class Vehicle(NamedTuple):
             raise TypeError("Invalid vehicle state type.")
         elif self.vehicle_state == vehicle_state:
             return True
-        elif VehicleState.is_valid_transition(self.vehicle_state, vehicle_state):
-            return True
-        else:
+        elif self.has_passengers():
             return False
+        else:
+            return True
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
         if self.vehicle_state == vehicle_state:
