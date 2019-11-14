@@ -48,9 +48,18 @@ class RouteStepError(Exception):
     """
 
     def __init__(self, msg):
-
         self.message = msg
 
     def __str__(self):
         return repr(self.message)
 
+
+class SimulationStateError(Exception):
+    """
+    errors related to SimulationState operations
+    """
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)
