@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 import copy
-from typing import NamedTuple, Tuple, Dict, Optional, Union
+from typing import NamedTuple, Tuple, Dict, Optional
+
 
 from hive.util.typealiases import *
 from hive.model.battery import Battery
+from hive.model.charger import Charger
 from hive.model.engine import Engine
 from hive.model.passenger import Passenger
+
 from hive.roadnetwork.position import Position
 from hive.model.charger import Charger
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
+from hive.roadnetwork.position import Position
 from hive.roadnetwork.route import Route
 from hive.util.exception import *
+from hive.util.typealiases import *
 
 
 class Vehicle(NamedTuple):
@@ -20,6 +25,7 @@ class Vehicle(NamedTuple):
     engine: Engine
     battery: Battery
     position: Position
+    geoid: GeoId
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
     plugged_in_charger: Optional[Charger] = None
@@ -40,7 +46,7 @@ class Vehicle(NamedTuple):
     def plugged_in(self) -> bool:
         return self.plugged_in_charger is not None
 
-    def add_passengers(self, new_passengers: Tuple[Passenger]) -> Vehicle:
+    def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
         """
         loads some passengers onto this vehicle
         :param self:
@@ -49,7 +55,8 @@ class Vehicle(NamedTuple):
         """
         updated_passengers = copy.copy(self.passengers)
         for passenger in new_passengers:
-            updated_passengers[passenger.id] = passenger
+            passenger_with_vehicle_id = passenger.add_vehicle_id(self.id)
+            updated_passengers[passenger.id] = passenger_with_vehicle_id
         return self._replace(passengers=updated_passengers)
 
     def __repr__(self) -> str:
@@ -57,6 +64,8 @@ class Vehicle(NamedTuple):
 
     def _move(self) -> Vehicle:
         # take one route step
+        # todo: need to update the GeoId here; i think this means the RoadNetwork
+        #  needs to be in scope (a parameter of step/_move)
         this_route_step, updated_route = self.route.step_route()
         this_fuel_usage = self.engine.route_step_fuel_cost(this_route_step)
         updated_battery = self.battery.use_fuel(this_fuel_usage)
