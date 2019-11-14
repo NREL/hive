@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
+
 class VehicleState(Enum):
     """
     A finite set of vehicle states and rules for state transitions
@@ -32,6 +33,10 @@ class VehicleState(Enum):
     @classmethod
     def is_valid(cls, state):
         return state in _valid_vehicle_states
+
+    @classmethod
+    def is_valid_transition(cls, state_i, state_f):
+        return state_f in _valid_vehicle_transitions[state_i]
 
 
 _state_active_properties = {
