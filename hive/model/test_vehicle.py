@@ -37,8 +37,15 @@ class TestVehicle(TestCase):
 
     @skip("test not yet implemented")
     def test_add_passengers(self):
-        self.fail()
+        no_pass_veh = TestVehicle.mock_vehicle()
+        mock_request = TestVehicle.mock_request()
 
+        self.assertEqual(no_pass_veh.has_passengers(), False)
+        with_pass_veh = no_pass_veh.add_passengers(mock_request.passengers)
+        self.assertEqual(len(with_pass_veh.passengers), len(mock_request.passengers))
+
+
+    #TODO: Consider moving this test to the SimulationState space
     @skip("test not yet implemented")
     def test_step(self):
         self.fail()
@@ -50,62 +57,34 @@ class TestVehicle(TestCase):
     def test_transition_idle(self):
         non_idling_vehicle = TestVehicle.mock_vehicle()._replace(route=TestVehicle.mock_route(),
                                                                  vehicle_state=VehicleState.REPOSITIONING)
-        transitioned = non_idling_vehicle.transition_idle()
+        transitioned = non_idling_vehicle.transition(VehicleState.IDLE)
         self.assertEqual(transitioned.vehicle_state, VehicleState.IDLE, "should have transitioned into an idle state")
-        self.assertEqual(transitioned.route.is_empty(), True, "should have removed its route")
-        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
-        result = transitioned.step()
-        # no changes should be observed
-        self.assertEqual(transitioned, result, "transition->step should be same as transition for IDLE")
 
     def test_transition_repositioning(self):
         idle_vehicle = TestVehicle.mock_vehicle()
-        route = TestVehicle.mock_route()
-        first_route_step, remaining_route = head_tail(route.route)
         self.assertNotEqual(idle_vehicle.vehicle_state, VehicleState.REPOSITIONING,
                             "test vehicle should not begin in repositioning state")
 
-        transitioned = idle_vehicle.transition_repositioning(route)
-        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
-        self.assertEqual(len(transitioned.route), len(route), "should not have consumed any of the route")
+        transitioned = idle_vehicle.transition(VehicleState.REPOSITIONING)
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
-
-        result = transitioned.step()
-        self.assertEqual(result.route.is_empty(), False, "route should be updated")
-        self.assertEqual(result.plugged_in(), False, "should not have a charger")
-        self.assertEqual(len(result.route), len(remaining_route), "should have consumed one leg of the route")
-        self.assertEqual(result.position, first_route_step.position,
-                         "vehicle should have updated its position one step into route")
 
     def test_transition_dispatch_trip(self):
         """
         given a Vehicle in an IDLE state,
         - assign it to a DISPATCH_TRIP state via Vehicle.transition_dispatch_trip
           - confirm the vehicle state is correctly updated
-        - apply the Vehicle.step() function
-          - confirm the vehicle has taken 1 step toward completing a DISPATCH_TRIP
         """
         idle_vehicle = TestVehicle.mock_vehicle()
-        dispatch_route = TestVehicle.mock_route()
-        service_route = TestVehicle.mock_service_route()
-        first_route_step, remaining_route = head_tail(dispatch_route.route)
 
         # check on transition function result
-        transitioned = idle_vehicle.transition_dispatch_trip(dispatch_route, service_route)
+        transitioned = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
-        self.assertEqual(len(transitioned.route), len(dispatch_route), "should not have consumed any of the route")
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
 
-        # check on step function result
-        result = transitioned.step()
-        self.assertEqual(result.plugged_in(), False, "should not have a charger")
-        self.assertEqual(len(result.route), len(remaining_route), "should have consumed one leg of the route")
-        self.assertEqual(result.position, first_route_step.position,
-                         "vehicle should have updated its position one step into route")
-
+    #TODO: Consider moving this test to the SimulationState space
+    @skip("Test needs updating")
     def test_transition_dispatch_trip_negative_low_soc(self):
         """
         given a Vehicle which has a soc_lower_limit of 100% (not allowed to have less than 100% fuel),
@@ -115,59 +94,63 @@ class TestVehicle(TestCase):
         snooty_test_vehicle = TestVehicle.mock_vehicle()._replace(soc_lower_limit=1.0)
 
         # check on transition function result
-
         transitioned = snooty_test_vehicle.transition_dispatch_trip(
                             TestVehicle.mock_route(),
                             TestVehicle.mock_service_route())
 
         self.assertTrue(transitioned is None)
-        # self.assertRaises(StateTransitionError,
-        #                   snooty_test_vehicle.transition_dispatch_trip,
-        #                   TestVehicle.mock_route(),
-        #                   TestVehicle.mock_service_route())
 
     def test_transition_servicing_trip(self):
         idle_vehicle = TestVehicle.mock_vehicle()
-        service_route = TestVehicle.mock_service_route()
-        request = TestVehicle.mock_request()
-        first_route_step, remaining_route = head_tail(service_route.route)
 
-        transitioned = idle_vehicle.transition_servicing_trip(service_route, request)
+        transitioned = idle_vehicle.transition(VehicleState.SERVICING_TRIP)
 
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.plugged_in(), False, "should not have a charger")
-        self.assertEqual(len(transitioned.route), len(service_route), "should not have consumed any of the route")
         self.assertEqual(transitioned.position, idle_vehicle.position,
                          "vehicle position should not be changed")
-        self.assertEqual(len(request.passengers), len(transitioned.passengers), "should hold passengers from request")
-
-        # check on step function result
-        result = transitioned.step()
-        self.assertEqual(result.plugged_in(), False, "should not have a charger")
-        self.assertEqual(len(result.route), len(remaining_route), "should have consumed one leg of the route")
-        self.assertEqual(result.position, first_route_step.position,
-                         "vehicle should have updated its position one step into route")
 
 
-    @skip("test not yet implemented")
     def test_transition_dispatch_station(self):
-        self.fail()
+        idle_vehicle = TestVehicle.mock_vehicle()
 
-    @skip("test not yet implemented")
+        transitioned = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
+
     def test_transition_charging_station(self):
-        self.fail()
+        idle_vehicle = TestVehicle.mock_vehicle()
 
-    @skip("test not yet implemented")
+        transitioned = idle_vehicle.transition(VehicleState.CHARGING_STATION)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
+
     def test_transition_dispatch_base(self):
-        self.fail()
+        idle_vehicle = TestVehicle.mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.DISPATCH_BASE)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
 
     @skip("test not yet implemented")
     def test_transition_charging_base(self):
-        self.fail()
+        idle_vehicle = TestVehicle.mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.CHARGING_BASE)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
 
     @skip("test not yet implemented")
     def test_transition_reserve_base(self):
-        self.fail()
+        idle_vehicle = TestVehicle.mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.RESERVE_BASE)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.position, idle_vehicle.position,
+                         "vehicle position should not be changed")
 
     @classmethod
     def mock_vehicle(cls) -> Vehicle:

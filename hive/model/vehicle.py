@@ -4,12 +4,10 @@ import copy
 from typing import NamedTuple, Tuple, Dict, Optional, Union
 
 from hive.util.typealiases import *
-from hive.util.tuple import head_tail
 from hive.model.battery import Battery
 from hive.model.engine import Engine
 from hive.model.passenger import Passenger
 from hive.roadnetwork.position import Position
-from hive.model.request import Request
 from hive.model.charger import Charger
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.roadnetwork.route import Route
@@ -89,7 +87,7 @@ class Vehicle(NamedTuple):
                 raise StateOfChargeError(f"{self} cannot charge without a plugged-in charger")
             elif self.battery.soc() >= self.soc_upper_limit:
                 # fall into IDLE state
-                return self.transition_idle()
+                return self.transition(VehicleState.IDLE)
             else:
                 # take one charging step
                 return self._replace(
@@ -102,7 +100,7 @@ class Vehicle(NamedTuple):
                 if self.has_passengers():
                     raise RouteStepError(f"{self} no default behavior with empty route and on-board passengers")
                 else:
-                    return self.transition_idle()
+                    return self.transition(VehicleState.IDLE)
             else:
                 return self._move()
 
@@ -112,144 +110,27 @@ class Vehicle(NamedTuple):
     def battery_swap(self, battery: Battery) -> Vehicle:
         return self._replace(battery=battery)
 
-
     """
     TRANSITION FUNCTIONS
     --------------------
     """
-    def can_transition(self, vehicle_state: VehicleState) -> bool:
-        return True
 
-    def transition(self, vehicle_state: VehicleState, route: Optional[Route]) -> Optional[Vehicle]:
+    def can_transition(self, vehicle_state: VehicleState) -> bool:
+        if not VehicleState.is_valid(vehicle_state):
+            raise TypeError("Invalid vehicle state type.")
+
+        if self.has_passengers():
+            return False
+        elif self.vehicle_state == vehicle_state:
+            return True
+        else:
+            return True
+
+    def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
         if self.vehicle_state == vehicle_state:
             return self
         elif not self.can_transition(vehicle_state):
             return None
         else:
-
             return self._replace(vehicle_state=vehicle_state)
 
-
-    def transition_idle(self) -> Optional[Vehicle]:
-        if self.has_passengers():
-            return None
-        else:
-            return self._replace(
-                route=Route.empty(),
-                plugged_in_charger=None,
-                vehicle_state=VehicleState.IDLE,
-            )
-
-    def transition_repositioning(self, route: Route) -> Optional[Vehicle]:
-        if self.has_passengers():
-            return None
-        elif self.vehicle_state == VehicleState.REPOSITIONING:
-            return self
-        else:
-            return self._replace(
-                route=route,
-                plugged_in_charger=None,
-                vehicle_state=VehicleState.REPOSITIONING,
-            )
-
-    def transition_dispatch_trip(self, dispatch_route: Route, service_route: Route) -> Optional[Vehicle]:
-        if self.has_passengers():
-            # dynamic pooling -> remove this constraint? or, do we add a pooling vehicle state?
-            return None
-
-        # estimate the total fuel cost of dispatch + servicing, confirm SoC is good for trip
-        dispatch_fuel_cost = self.engine.route_fuel_cost(dispatch_route)
-        service_fuel_cost = self.engine.route_fuel_cost(service_route)
-        estimated_fuel_effect = self.battery.load - (dispatch_fuel_cost + service_fuel_cost)
-        fuel_lower_limit = self.battery.capacity * self.soc_lower_limit
-
-        if estimated_fuel_effect < fuel_lower_limit:
-            return None
-        else:
-            return self._replace(
-                route=dispatch_route,
-                plugged_in_charger=None,
-                vehicle_state=VehicleState.DISPATCH_TRIP
-            )
-
-    def transition_servicing_trip(self, route: Route, request: Request) -> Optional[Vehicle]:
-        if self.vehicle_state == VehicleState.SERVICING_TRIP:
-            return self
-        elif self.has_passengers():
-            return None
-        else:
-            fuel_estimate = self.engine.route_fuel_cost(route)
-            battery_estimate = self.battery.use_fuel(fuel_estimate)
-            resulting_soc = battery_estimate.soc()
-            if resulting_soc < self.soc_lower_limit:
-                return None
-            else:
-                return self._replace(
-                    route=route,
-                    plugged_in_charger=None,
-                    vehicle_state=VehicleState.SERVICING_TRIP
-                ).add_passengers(request.passengers)
-
-    def transition_dispatch_station(self, route: Route) -> Optional[Vehicle]:
-        if self.vehicle_state == VehicleState.DISPATCH_STATION:
-            return self
-        if self.has_passengers():
-            return None
-        else:
-            fuel_estimate = self.engine.route_fuel_cost(route)
-            battery_estimate = self.battery.use_fuel(fuel_estimate)
-            resulting_soc = battery_estimate.soc()
-            if resulting_soc < self.soc_lower_limit:
-                return None
-            else:
-                return self._replace(
-                    route=route,
-                    plugged_in_charger=None,
-                    vehicle_state=VehicleState.DISPATCH_STATION
-                )
-
-    def transition_charging_station(self, charger: Charger) -> Optional[Vehicle]:
-        if self.vehicle_state == VehicleState.CHARGING_STATION:
-            return self
-        elif self.has_passengers():
-            return None
-        else:
-            return self._replace(
-                route=Route.empty(),
-                vehicle_state=VehicleState.CHARGING_STATION,
-                plugged_in_charger=charger
-            )
-
-    def transition_dispatch_base(self, route: Route) -> Optional[Vehicle]:
-        if self.vehicle_state == VehicleState.DISPATCH_BASE:
-            return self
-        elif self.has_passengers():
-            return None
-        else:
-            return self._replace(
-                vehicle_state=VehicleState.DISPATCH_BASE,
-                plugged_in_charger=None,
-                route=route
-            )
-
-    def transition_charging_base(self, charger: Charger) -> Optional[Vehicle]:
-        if self.vehicle_state == VehicleState.CHARGING_BASE:
-            return self
-        elif self.has_passengers():
-            return None
-        else:
-            return self._replace(
-                route=Route.empty(),
-                vehicle_state=VehicleState.CHARGING_BASE,
-                plugged_in_charger=charger
-            )
-
-    def transition_reserve_base(self) -> Optional[Vehicle]:
-        if self.has_passengers():
-            return None
-        else:
-            return self._replace(
-                route=Route.empty(),
-                plugged_in_charger=None,
-                vehicle_state=VehicleState.RESERVE_BASE,
-            )
