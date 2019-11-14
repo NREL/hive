@@ -58,28 +58,45 @@ def initial_simulation_state(
 
 
 def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
-                            x: Union[Vehicle, Station, Base]) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
-
+                        x: Union[Vehicle, Station, Base]) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
+    """
+    adds a single Vehicle, Station, or Base to the simulator, unless it is invalid
+    :param acc: the partially-constructed SimulationState
+    :param x: a new Vehicle, Station, or Base
+    :return: add x, or, if it failed, update our log of failures
+    """
     # unpack accumulator
     this_simulation_state: SimulationState = acc[0]
     this_failures: Tuple[SimulationStateError, ...] = acc[1]
 
-    # side effect, since i can't directly evaluate from an if/elif/else
-    result = None
+    # add a Vehicle
     if isinstance(x, Vehicle):
         vehicle = cast(Vehicle, x)
         result = this_simulation_state.add_vehicle(vehicle)
+        if isinstance(result, SimulationStateError):
+            return this_simulation_state, (result,) + this_failures
+        else:
+            return result, this_failures
+
+    # add a Station
     elif isinstance(x, Station):
         station = cast(Station, x)
         result = this_simulation_state.add_station(station)
+        if isinstance(result, SimulationStateError):
+            return this_simulation_state, (result,) + this_failures
+        else:
+            return result, this_failures
+
+    # add a Base
     elif isinstance(x, Base):
         base = cast(Base, x)
         result = this_simulation_state.add_base(base)
-    else:
-        result
+        if isinstance(result, SimulationStateError):
+            return this_simulation_state, (result,) + this_failures
+        else:
+            return result, this_failures
 
-    if isinstance(result, SimulationStateError):
-        # pass along failure
-        return this_simulation_state, (result,) + this_failures
+    # x is not a Vehicle, Station, or Request; do not modify simulation
     else:
-        return result, this_failures
+        failure = SimulationStateError(f"not a Vehicle, Station, or Base: {x}")
+        return this_simulation_state, (failure,) + this_failures
