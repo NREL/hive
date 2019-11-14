@@ -45,8 +45,8 @@ class TestSimulationStateOps(TestCase):
         self.assertEqual(sim.bases[self.mock_base_2.id], self.mock_base_2)
 
         # vehicles were properly geo-coded (reverse lookup)
-        m1_coord = sim.road_network.position_to_coordinate(self.mock_veh_1.position)
-        m2_coord = sim.road_network.position_to_coordinate(self.mock_veh_2.position)
+        m1_coord = sim.road_network.position_to_geoid(self.mock_veh_1.position)
+        m2_coord = sim.road_network.position_to_geoid(self.mock_veh_2.position)
         m1_geoid = h3.geo_to_h3(m1_coord.lat, m1_coord.lon, sim.sim_h3_resolution)
         m2_geoid = h3.geo_to_h3(m2_coord.lat, m2_coord.lon, sim.sim_h3_resolution)
         self.assertIn(self.mock_veh_1.id, sim.v_locations[m1_geoid])
@@ -110,8 +110,8 @@ class TestSimulationStateOps(TestCase):
         self.assertIsInstance(sim, SimulationState)
         self.assertEqual(len(failures), 0)
 
-        m1_coord = sim.road_network.position_to_coordinate(self.mock_veh_1.position)
-        m2_coord = sim.road_network.position_to_coordinate(self.mock_veh_2.position)
+        m1_coord = sim.road_network.position_to_geoid(self.mock_veh_1.position)
+        m2_coord = sim.road_network.position_to_geoid(self.mock_veh_2.position)
         m1_geoid = h3.geo_to_h3(m1_coord.lat, m1_coord.lon, sim.sim_h3_resolution)
         m2_geoid = h3.geo_to_h3(m2_coord.lat, m2_coord.lon, sim.sim_h3_resolution)
 
@@ -130,19 +130,19 @@ class TestSimulationStateOps(TestCase):
         def update(self, sim_time: int) -> RoadNetwork:
             pass
 
-        def coordinate_to_position(self, coordinate: Coordinate) -> Position:
+        def geoid_to_position(self, coordinate: Coordinate) -> Position:
             return coordinate
 
-        def position_to_coordinate(self, position: Position) -> Coordinate:
+        def position_to_geoid(self, position: Position) -> Coordinate:
             return position
 
-        def coordinate_within_geofence(self, coordinate: Coordinate) -> bool:
+        def geoid_within_geofence(self, coordinate: Coordinate) -> bool:
             return True
 
         def position_within_geofence(self, position: Position) -> bool:
             return True
 
-        def coordinate_within_simulation(self, coordinate: Coordinate) -> bool:
+        def geoid_within_simulation(self, coordinate: Coordinate) -> bool:
             return True
 
         def position_within_simulation(self, position: Position) -> bool:
@@ -175,14 +175,17 @@ class TestSimulationStateOps(TestCase):
     mock_veh_1 = Vehicle("m1",
                          MockEngine(),
                          Battery.build("test_battery", 100),
-                         Coordinate(0, 0))
+                         Coordinate(0, 0),
+                         h3.geo_to_h3(0, 0, 11))
+
     mock_veh_2 = Vehicle("m2",
                          MockEngine(),
                          Battery.build("test_battery_2", 1000),
-                         Coordinate(0, 0))
+                         Coordinate(0, 0),
+                         h3.geo_to_h3(0, 0, 11))
 
-    mock_station_1 = Station("s1", Coordinate(10, 0))
-    mock_station_2 = Station("s2", Coordinate(0, 10))
+    mock_station_1 = Station("s1", Coordinate(10, 0), h3.geo_to_h3(10, 0, 11))
+    mock_station_2 = Station("s2", Coordinate(0, 10), h3.geo_to_h3(0, 10, 11))
 
-    mock_base_1 = Base("b1", Coordinate(3, 3))
-    mock_base_2 = Base("b2", Coordinate(7, 7))
+    mock_base_1 = Base("b1", Coordinate(3, 3), h3.geo_to_h3(3, 3, 11))
+    mock_base_2 = Base("b2", Coordinate(7, 7), h3.geo_to_h3(7, 7, 11))
