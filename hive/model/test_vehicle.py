@@ -114,17 +114,22 @@ class TestVehicle(TestCase):
                          "vehicle position should not be changed")
 
     def test_can_transition_good(self):
-        idle_vehicle = TestVehicle.mock_vehicle()
+        mock_request = TestVehicle.mock_request()
+        idle_veh = TestVehicle.mock_vehicle()
+        veh_serving_trip = idle_veh.transition(VehicleState.SERVICING_TRIP)
+        veh_w_pass = veh_serving_trip.add_passengers(mock_request.passengers)
 
-        veh_can_trans = idle_vehicle.can_transition(VehicleState.IDLE)
+        veh_can_trans =veh_w_pass.can_transition(VehicleState.SERVICING_TRIP)
 
         self.assertEqual(veh_can_trans, True)
 
     def test_can_transition_bad(self):
-        idle_vehicle = TestVehicle.mock_vehicle()
-        dispatched_veh = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+        mock_request = TestVehicle.mock_request()
+        idle_veh = TestVehicle.mock_vehicle()
+        veh_serving_trip = idle_veh.transition(VehicleState.SERVICING_TRIP)
+        veh_w_pass = veh_serving_trip.add_passengers(mock_request.passengers)
 
-        veh_can_trans = dispatched_veh.can_transition(VehicleState.RESERVE_BASE)
+        veh_can_trans = veh_w_pass.can_transition(VehicleState.IDLE)
 
         self.assertEqual(veh_can_trans, False)
 
