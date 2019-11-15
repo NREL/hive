@@ -14,14 +14,14 @@ class Station(NamedTuple):
 
     chargers: Dict[ChargerId, Charger]
 
-    def get_charger(self, charger_type: ChargerType) -> Tuple[Station, Optional[Charger]]:
+    def get_charger(self, charger_type: ChargerType, vehicle_id: VehicleId) -> Tuple[Station, Optional[Charger]]:
         chargers_of_type = [charger for _, charger in self.chargers.items() if charger.type == charger_type]
         avail_chargers = [charger for charger in chargers_of_type if not charger.in_use]
 
         if len(avail_chargers) == 0:
             return self, None
         else:
-            in_use_charger = avail_chargers[0]._replace(in_use=True)
+            in_use_charger = avail_chargers[0]._replace(in_use=True, vehicle_id=vehicle_id)
 
             updated_chargers = self.chargers.copy()
             updated_chargers[in_use_charger.id] = in_use_charger
@@ -36,7 +36,7 @@ class Station(NamedTuple):
         else:
             charger = self.chargers[charger_id]
             
-            released_charger = charger._replace(in_use=False)
+            released_charger = charger._replace(in_use=False, vehicle_id=None)
 
             updated_chargers = self.chargers.copy()
             updated_chargers[charger_id] = released_charger

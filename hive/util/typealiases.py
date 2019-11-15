@@ -7,6 +7,7 @@ StationId = str
 ChargerId = str
 EngineId = str
 BaseId = str
+StallId = str
 PassengerId = str
 
 # H3
