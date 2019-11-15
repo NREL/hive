@@ -14,7 +14,7 @@ class Station(NamedTuple):
 
     chargers: Dict[ChargerId, Charger]
 
-    def get_charger(self, charger_type: ChargerType, vehicle_id: VehicleId) -> Tuple[Station, Optional[Charger]]:
+    def checkout_charger(self, charger_type: ChargerType, vehicle_id: VehicleId) -> Tuple[Station, Optional[Charger]]:
         chargers_of_type = [charger for _, charger in self.chargers.items() if charger.type == charger_type]
         avail_chargers = [charger for charger in chargers_of_type if not charger.in_use]
 
@@ -28,7 +28,7 @@ class Station(NamedTuple):
 
             return self._replace(chargers=updated_chargers), in_use_charger
 
-    def release_charger(self, charger_id: ChargerId) -> Station:
+    def return_charger(self, charger_id: ChargerId) -> Station:
         if charger_id not in self.chargers:
             raise KeyError('Attempting to release charger that this station doesnt have')
         elif not self.chargers[charger_id].in_use:
