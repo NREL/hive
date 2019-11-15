@@ -1,7 +1,10 @@
 # MODEL ID TYPES
+from typing import Type
+
 RequestId = str
 VehicleId = str
 StationId = str
+ChargerId = str
 EngineId = str
 BaseId = str
 PassengerId = str
@@ -10,6 +13,9 @@ PassengerId = str
 GeoId = str
 
 # NUMERICAL TYPES
+Kw = float
 KwH = float
 Percentage = float
+
+
 
