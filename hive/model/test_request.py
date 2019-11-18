@@ -1,14 +1,14 @@
 import unittest
 
 from hive.util.typealiases import KwH
-from hive.model.battery import Battery
+from hive.model.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.engine import Engine
+from hive.model.powertrain.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id
 from hive.roadnetwork.route import Route
-from hive.roadnetwork.routestep import RouteStep
+from hive.roadnetwork.link import Link
 from h3 import h3
 
 
@@ -32,12 +32,12 @@ class MyTestCase(unittest.TestCase):
         passengers=passengers
     )
 
-    class FakeEngine(Engine):
+    class FakePowertrain(Powertrain):
 
         def route_fuel_cost(self, route: Route) -> KwH:
             return 1.0
 
-        def route_step_fuel_cost(self, route_step: RouteStep) -> KwH:
+        def route_step_fuel_cost(self, route_step: Link) -> KwH:
             return 1.0
 
     def test_request_constructor(self):
@@ -55,8 +55,8 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = Battery.build("test_battery", 100.0)
-        engine = self.FakeEngine()
+        battery = EnergySource.build("test_battery", 100.0)
+        engine = self.FakePowertrain()
         vehicle = Vehicle(id="test_vehicle",
                           position=Coordinate(0, 0),
                           battery=battery,

@@ -5,9 +5,9 @@ from unittest import TestCase, skip
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.battery import Battery
+from hive.model.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.engine import Engine
+from hive.model.powertrain.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
@@ -15,7 +15,7 @@ from hive.model.vehicle import Vehicle
 from hive.roadnetwork.position import Position
 from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.roadnetwork.route import Route
-from hive.roadnetwork.routestep import RouteStep
+from hive.roadnetwork.link import Link
 from hive.simulationstate.simulationstate import SimulationState
 from hive.simulationstate.simulationstateops import initial_simulation_state
 from hive.util.typealiases import *
@@ -248,7 +248,7 @@ class TestSimulationState(TestCase):
     @skip("step expects engines, EngineIds, Chargers and assoc. logic to exist; sadly, they do not")
     def test_step(self):
         veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
-        veh_route_step = RouteStep(Coordinate(1, 0), 1)
+        veh_route_step = Link(Coordinate(1, 0), 1)
         veh_repositioning = veh.transition(VehicleState.REPOSITIONING)._replace(route=Route((veh_route_step,), 1, 1))
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh_repositioning)
 
@@ -292,7 +292,7 @@ class SimulationStateTestAssets:
         def position_within_simulation(self, position: Position) -> bool:
             return True
 
-    class MockEngine(Engine):
+    class MockPowertrain(Powertrain):
         """
         i haven't made instances of Engine yet. 20191106-rjf
         """
@@ -300,7 +300,7 @@ class SimulationStateTestAssets:
         def route_fuel_cost(self, route: Route) -> KwH:
             return len(route.route)
 
-        def route_step_fuel_cost(self, route_step: RouteStep) -> KwH:
+        def route_step_fuel_cost(self, route_step: Link) -> KwH:
             return 1.0
 
     @classmethod
@@ -330,8 +330,8 @@ class SimulationStateTestAssets:
         geoid = h3.geo_to_h3(position.lat, position.lon, cls.h3_resolution)
         return Vehicle(
             vehicle_id,
-            cls.MockEngine(),
-            Battery.build("battery", 100),
+            cls.MockPowertrain(),
+            EnergySource.build("battery", 100),
             position,
             geoid
         )

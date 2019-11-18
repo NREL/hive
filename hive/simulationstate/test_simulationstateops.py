@@ -3,15 +3,15 @@ from unittest import TestCase
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.battery import Battery
+from hive.model.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.engine import Engine
+from hive.model.powertrain.powertrain import Powertrain
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.roadnetwork.position import Position
 from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.roadnetwork.route import Route
-from hive.roadnetwork.routestep import RouteStep
+from hive.roadnetwork.link import Link
 from hive.simulationstate.simulationstate import SimulationState
 from hive.simulationstate.simulationstateops import initial_simulation_state
 from hive.util.typealiases import *
@@ -143,7 +143,7 @@ class TestSimulationStateOps(TestCase):
         def position_within_simulation(self, position: Position) -> bool:
             return False
 
-    class MockEngine(Engine):
+    class MockPowertrain(Powertrain):
         """
         i haven't made instances of Engine yet. 20191106-rjf
         """
@@ -151,18 +151,18 @@ class TestSimulationStateOps(TestCase):
         def route_fuel_cost(self, route: Route) -> KwH:
             return len(route.route)
 
-        def route_step_fuel_cost(self, route_step: RouteStep) -> KwH:
+        def route_step_fuel_cost(self, route_step: Link) -> KwH:
             return 1.0
 
     mock_veh_1 = Vehicle("m1",
-                         MockEngine(),
-                         Battery.build("test_battery", 100),
+                         MockPowertrain(),
+                         EnergySource.build("test_battery", 100),
                          Coordinate(0, 0),
                          h3.geo_to_h3(0, 0, 11))
 
     mock_veh_2 = Vehicle("m2",
-                         MockEngine(),
-                         Battery.build("test_battery_2", 1000),
+                         MockPowertrain(),
+                         EnergySource.build("test_battery_2", 1000),
                          Coordinate(0, 0),
                          h3.geo_to_h3(0, 0, 11))
 

@@ -2,7 +2,7 @@
 RequestId = str
 VehicleId = str
 StationId = str
-EngineId = str
+PowertrainId = str
 BaseId = str
 PassengerId = str
 
@@ -12,4 +12,5 @@ GeoId = str
 # NUMERICAL TYPES
 KwH = float
 Percentage = float
+
 
