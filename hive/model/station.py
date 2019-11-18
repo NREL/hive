@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Tuple, Optional
+from typing import NamedTuple, Dict, Optional
 
-from hive.model.charger import Charger, ChargerType
+from hive.model.charger import Charger
 from hive.model.coordinate import Coordinate
+from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
 
@@ -12,34 +13,26 @@ class Station(NamedTuple):
     coordinate: Coordinate
     geoid: GeoId
 
-    chargers: Dict[ChargerId, Charger]
+    total_chargers: Dict[Charger, int]
+    available_chargers: Dict[Charger, int]
 
-    def checkout_charger(self, charger_type: ChargerType, vehicle_id: VehicleId) -> Tuple[Station, Optional[Charger]]:
-        chargers_of_type = [charger for _, charger in self.chargers.items() if charger.type == charger_type]
-        avail_chargers = [charger for charger in chargers_of_type if not charger.in_use]
+    def checkout_charger(self, charger: Charger) -> Optional[Station]:
+        chargers = self.available_chargers[charger]
 
-        if len(avail_chargers) == 0:
-            return self, None
+        if chargers < 1:
+            return None
         else:
-            in_use_charger = avail_chargers[0]._replace(in_use=True, vehicle_id=vehicle_id)
+            updated_avail_chargers = self.available_chargers.copy()
+            updated_avail_chargers[charger] -= 1
 
-            updated_chargers = self.chargers.copy()
-            updated_chargers[in_use_charger.id] = in_use_charger
+            return self._replace(available_chargers=updated_avail_chargers)
 
-            return self._replace(chargers=updated_chargers), in_use_charger
-
-    def return_charger(self, charger_id: ChargerId) -> Station:
-        if charger_id not in self.chargers:
-            raise KeyError('Attempting to release charger that this station doesnt have')
-        elif not self.chargers[charger_id].in_use:
-            return self
+    def return_charger(self, charger: Charger) -> Optional[Station]:
+        chargers = self.available_chargers[charger]
+        if (chargers + 1) > self.total_chargers[charger]:
+            raise SimulationStateError("Station already has max chargers of this type")
         else:
-            charger = self.chargers[charger_id]
-            
-            released_charger = charger._replace(in_use=False, vehicle_id=None)
+            updated_avail_chargers = self.available_chargers.copy()
+            updated_avail_chargers[charger] += 1
 
-            updated_chargers = self.chargers.copy()
-            updated_chargers[charger_id] = released_charger
-            
-            return self._replace(chargers=updated_chargers)
-
+            return self._replace(available_chargers=updated_avail_chargers)
