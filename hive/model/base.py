@@ -18,6 +18,16 @@ class Base(NamedTuple):
     total_stalls: int
     available_stalls: int
 
+    @classmethod
+    def build(cls,
+              id: BaseId,
+              coordinate: Coordinate,
+              geoid: GeoId,
+              station: Station,
+              total_stalls: int
+              ):
+        return cls(id, coordinate, geoid, station, total_stalls, total_stalls)
+
     def checkout_stall(self) -> Optional[Base]:
         stalls = self.available_stalls
         if stalls < 1:

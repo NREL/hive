@@ -16,6 +16,15 @@ class Station(NamedTuple):
     total_chargers: Dict[Charger, int]
     available_chargers: Dict[Charger, int]
 
+    @classmethod
+    def build(cls,
+              id: StationId,
+              coordinate: Coordinate,
+              geoid: GeoId,
+              total_chargers: Dict[Charger, int]
+              ):
+        return cls(id, coordinate, geoid, total_chargers, total_chargers)
+
     def checkout_charger(self, charger: Charger) -> Optional[Station]:
         chargers = self.available_chargers[charger]
 
