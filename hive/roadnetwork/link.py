@@ -1,14 +1,18 @@
 from typing import NamedTuple
 
-
-from hive.util.typealiases import Percentage
+from hive.util.typealiases import LinkId, Percentage
+from hive.model.coordinate import Coordinate
 
 
 class Link(NamedTuple):
     """
-    a single step of a route
+    a directed edge on the road network from node a -> node b
     """
-    position: LinkId
+    id: LinkId
     distance: float
-    percent_complete: Percentage = 0.0
+
+    # TODO: Should these be coordinates or geoids?
+    # a: Coordinate
+    # b: Coordinate
+
     # grade: float # nice in the future?'

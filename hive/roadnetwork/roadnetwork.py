@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from hive.roadnetwork.route import Route
+from hive.roadnetwork.route import Route, Position
+from hive.roadnetwork.routetraversal import RouteTraversal
 from hive.util.typealiases import GeoId, LinkId
 
 
@@ -12,7 +13,11 @@ class RoadNetwork(ABC):
     is used to compute routes for agents in the simulation
     """
     @abstractmethod
-    def route(self, origin: LinkId, destination: LinkId) -> Route:
+    def route_by_geoid(self, origin: GeoId, destination: GeoId) -> Route:
+        pass
+
+    @abstractmethod
+    def route_by_position(self, origin: Position, destination: Position) -> Route:
         pass
 
     @abstractmethod
@@ -34,7 +39,16 @@ class RoadNetwork(ABC):
         pass
 
     @abstractmethod
-    def link_id_to_geoid(self, link_id: LinkId, resolution: int) -> GeoId:
+    def compute_route_traversal(self, route: Route) -> RouteTraversal:
+        """
+
+        :param route:
+        :return:
+        """
+        pass
+
+    @abstractmethod
+    def position_to_geoid(self, postition: Position, resolution: int) -> GeoId:
         """
         does the work to determine the coordinate of this position on the road network
         :param link_id: a position on the road network
@@ -50,6 +64,7 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
+        pass
 
     @abstractmethod
     def link_id_within_geofence(self, link_id: LinkId) -> bool:
@@ -58,6 +73,7 @@ class RoadNetwork(ABC):
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
+        pass
 
     @abstractmethod
     def geoid_within_simulation(self, geoid: GeoId) -> bool:
@@ -67,6 +83,7 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
+        pass
 
     @abstractmethod
     def link_id_within_simulation(self, link_id: LinkId) -> bool:
@@ -76,4 +93,5 @@ class RoadNetwork(ABC):
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
+        pass
 
