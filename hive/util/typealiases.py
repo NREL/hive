@@ -6,11 +6,13 @@ PowertrainId = str
 BaseId = str
 PassengerId = str
 
-# H3
-GeoId = str
+# POSITIONAL
+GeoId = str  # h3 geohash
+LinkId = str # road network link
 
 # NUMERICAL TYPES
 KwH = float
 Percentage = float
+Speed = float
 
 

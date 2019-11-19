@@ -1,25 +1,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
 
 from hive.roadnetwork.link import Link
+from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.roadnetwork.route import Route
+from hive.roadnetwork.routesegment import RouteSegment
 from hive.util.typealiases import KwH, PowertrainId
-
-
-class PowertrainType(Enum):
-    BEV = 0
-    PHEV = 1
-    GAS = 2
-    DIESEL = 3
-    HYDROGEN = 4
 
 
 class Powertrain(ABC):
     """
-    a powertrain has a behavior where it consumes routes or route steps
-    and returns an energy consumption in KwH
+    a powertrain has a behavior where it calculate energy consumption in KwH
     """
 
     @abstractmethod
@@ -27,9 +19,52 @@ class Powertrain(ABC):
         pass
 
     @abstractmethod
-    def route_fuel_cost(self, route: Route) -> KwH:
+    def route_energy_cost(self, route: Route, road_network: RoadNetwork) -> KwH:
+        """
+        (estimated) energy cost to traverse this route
+        :param route: a route
+        :param road_network: the road network
+        :return: energy cost
+        """
         pass
 
     @abstractmethod
-    def route_step_fuel_cost(self, route_step: Link) -> KwH:
+    def segment_energy_cost(self, segment: RouteSegment, road_network: RoadNetwork) -> KwH:
+        """
+        gives the energy cost to traverse this segment. starts at "percent complete" of
+        the first link, and goes until "percent complete" of the last link
+        :param segment: a segment
+        :param road_network: the road network
+        :return: energy cost
+        """
+        pass
+
+    @abstractmethod
+    def start_link_energy_cost(self, link: Link, road_network: RoadNetwork) -> KwH:
+        """
+        gets the link cost for traversal, starting from "percent complete" of the link
+        :param link: a link
+        :param road_network: the road network
+        :return: energy cost
+        """
+        pass
+
+    @abstractmethod
+    def end_link_energy_cost(self, link: Link, road_network: RoadNetwork) -> KwH:
+        """
+        gets the link cost for traversal, ending at "percent complete" of the link
+        :param link: a link
+        :param road_network: the road network
+        :return: energy cost
+        """
+        pass
+
+    @abstractmethod
+    def link_energy_cost(self, link: Link, road_network: RoadNetwork) -> KwH:
+        """
+        gets the link cost for traversal, ignoring "percent complete" of the link
+        :param link: a link
+        :param road_network: the road network
+        :return: energy cost
+        """
         pass

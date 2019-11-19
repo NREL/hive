@@ -34,10 +34,10 @@ class MyTestCase(unittest.TestCase):
 
     class FakePowertrain(Powertrain):
 
-        def route_fuel_cost(self, route: Route) -> KwH:
+        def route_energy_cost(self, route: Route) -> KwH:
             return 1.0
 
-        def route_step_fuel_cost(self, route_step: Link) -> KwH:
+        def segment_energy_cost(self, segment: Link) -> KwH:
             return 1.0
 
     def test_request_constructor(self):

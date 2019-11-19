@@ -3,8 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from hive.roadnetwork.route import Route
-from hive.roadnetwork.position import Position
-from hive.util.typealiases import GeoId
+from hive.util.typealiases import GeoId, LinkId
 
 
 class RoadNetwork(ABC):
@@ -13,7 +12,7 @@ class RoadNetwork(ABC):
     is used to compute routes for agents in the simulation
     """
     @abstractmethod
-    def route(self, origin: Position, destination: Position) -> Route:
+    def route(self, origin: LinkId, destination: LinkId) -> Route:
         pass
 
     @abstractmethod
@@ -26,18 +25,20 @@ class RoadNetwork(ABC):
         pass
 
     @abstractmethod
-    def geoid_to_position(self, geoid: GeoId) -> Position:
+    def get_link_speed(self, link_id: LinkId) -> float:
         """
-        finds the closest RoadNetwork Position to the provided coordinate
-        :param geoid: an h3 geoid
-        :return: a Position, which may be RoadNetwork-dependent
+        gets the current link speed for the provided Position
+        :param link_id: the location on the road network
+        :return: speed
         """
+        pass
 
     @abstractmethod
-    def position_to_geoid(self, position: Position) -> GeoId:
+    def link_id_to_geoid(self, link_id: LinkId, resolution: int) -> GeoId:
         """
         does the work to determine the coordinate of this position on the road network
-        :param position: a position on the road network
+        :param link_id: a position on the road network
+        :param resolution: h3 resolution
         :return: an h3 geoid at this position
         """
         pass
@@ -51,10 +52,10 @@ class RoadNetwork(ABC):
         """
 
     @abstractmethod
-    def position_within_geofence(self, position: Position) -> bool:
+    def link_id_within_geofence(self, link_id: LinkId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon of this road network instance
-        :param position: a position on the road network across the entire simulation
+        :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
 
@@ -68,11 +69,11 @@ class RoadNetwork(ABC):
         """
 
     @abstractmethod
-    def position_within_simulation(self, position: Position) -> bool:
+    def link_id_within_simulation(self, link_id: LinkId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon the entire simulation,
         which may include many (distributed) RoadNetwork instances
-        :param position: a position on the road network across the entire simulation
+        :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
 

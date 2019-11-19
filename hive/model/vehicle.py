@@ -11,7 +11,7 @@ from hive.model.passenger import Passenger
 
 from hive.model.charger import Charger
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
-from hive.roadnetwork.position import Position
+
 from hive.roadnetwork.route import Route
 from hive.util.exception import *
 from hive.util.typealiases import *
@@ -22,7 +22,7 @@ class Vehicle(NamedTuple):
     id: VehicleId
     powertrain_id: PowertrainId
     battery: EnergySource
-    position: Position
+    position: LinkId
     geoid: GeoId
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
@@ -64,7 +64,7 @@ class Vehicle(NamedTuple):
         this_route_step, updated_route = self.route.step_route()
         sim_h3_resolution = 11  # should come from simulation
         new_geoid = h3.geo_to_h3(this_route_step.position.lat, this_route_step.position.lon, sim_h3_resolution)
-        this_fuel_usage = engine.route_step_fuel_cost(this_route_step)
+        this_fuel_usage = engine.segment_energy_cost(this_route_step)
         updated_battery = self.battery.use_energy(this_fuel_usage)
         return self._replace(
             position=this_route_step.position,
