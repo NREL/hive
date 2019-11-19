@@ -12,6 +12,7 @@ LinkId = str # road network link
 
 # NUMERICAL TYPES
 KwH = float
+Km = float
 Percentage = float
 Speed = float
 

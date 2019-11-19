@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from hive.roadnetwork.link import Link
 from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.roadnetwork.route import Route
-from hive.roadnetwork.routesegment import RouteSegment
+from hive.roadnetwork.routetraversal import RouteSegment
 from hive.util.typealiases import KwH, PowertrainId
 
 
