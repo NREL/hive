@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Tuple
 
-from hive.roadnetwork.route import Route, Position
-from hive.roadnetwork.routetraversal import RouteTraversal
+from hive.roadnetwork.route import Route, Position, ExperiencedRouteSteps
 from hive.util.typealiases import GeoId, LinkId
 
 
@@ -39,9 +39,10 @@ class RoadNetwork(ABC):
         pass
 
     @abstractmethod
-    def compute_route_traversal(self, route: Route) -> RouteTraversal:
+    def advance_position(self, start_position: Position, route: Route) -> Tuple[Position, ExperiencedRouteSteps]:
         """
 
+        :param start_position:
         :param route:
         :return:
         """

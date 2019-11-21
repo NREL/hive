@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Tuple, Optional
 
+from h3 import h3
+
+from hive.roadnetwork.link import dist_h3, interpolate_between_geoids
 from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route, Position
-from hive.roadnetwork.routetraversal import RouteTraversal
+from hive.roadnetwork.route import Route, Position, RouteStep, ExperiencedRouteSteps
 from hive.util.typealiases import GeoId, LinkId
-from hive.model.coordinate import (
-    dist_geoid_haversine,
-    geoid_to_coordinate,
-    coordinate_to_geoid,
-    interpolate_between_coordinates,
-)
+from hive.config.environment import TIME_STEP_S
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -33,19 +30,42 @@ class HaversineRoadNetwork(RoadNetwork):
 
     def route_by_geoid(self, origin: GeoId, destination: GeoId) -> Route:
         link_id = origin + "-" + destination
-        link_distance = dist_geoid_haversine(origin, destination)
+        link_distance = dist_h3(origin, destination)
 
         route_time_estimate = link_distance / self._AVG_SPEED  # hr
 
-        return Route((Position(link_id, 0), Position(link_id, 1)), link_distance, route_time_estimate)
+        h3_line = h3.h3_line(origin, destination)
+        route_steps = tuple(RouteStep(link_id, geo_id) for geo_id in h3_line)
+
+        route = Route(route_steps, route_time_estimate, link_distance)
+
+        return route
 
     def route_by_position(self, origin: Position, destination: Position) -> Route:
         origin_geoid = self.position_to_geoid(origin)
         destination_geoid = self.position_to_geoid(destination)
         return self.route_by_geoid(origin_geoid, destination_geoid)
 
-    def compute_route_traversal(self, route: Route) -> RouteTraversal:
-        raise NotImplementedError("This method has not yet been implemented")
+    def advance_route(self, route: Route) -> Tuple[Optional[Route], ExperiencedRouteSteps]:
+        travel_time_s = 0
+        travel_distance_km = 0
+        route_steps = list()
+        # TODO: Replace with recursion to adhere to FP??
+        while travel_time_s < TIME_STEP_S and route:
+            route, route_step = route.step()
+            step_speed = self.get_link_speed(route_step.link_id)
+
+            step_time_s = route_step.DISTANCE / step_speed
+            travel_time_s += step_time_s
+            travel_distance_km += route_step.DISTANCE
+
+            experienced_route_step = route_step.add_experienced_time(step_time_s)
+
+            route_steps.append(experienced_route_step)
+
+        experienced_route_steps = ExperiencedRouteSteps(tuple(route_steps), travel_time_s, travel_distance_km)
+
+        return route, experienced_route_steps
 
     def update(self, sim_time: int) -> RoadNetwork:
         """
@@ -65,7 +85,7 @@ class HaversineRoadNetwork(RoadNetwork):
         """
         return self._AVG_SPEED
 
-    def postition_to_geoid(self, position: Position, resolution: int) -> GeoId:
+    def postition_to_geoid(self, position: Position) -> GeoId:
         """
         does the work to determine the coordinate of this position on the road network
         :param link_id: a position on the road network
@@ -73,13 +93,10 @@ class HaversineRoadNetwork(RoadNetwork):
         :return: an h3 geoid at this position
         """
         node_a_geoid, node_b_geoid = self._node_ids_from_link_id(position.link_id)
-        node_a_coord = geoid_to_coordinate(node_a_geoid)
-        node_b_coord = geoid_to_coordinate(node_b_geoid)
 
-        node_c_coord = interpolate_between_coordinates(node_a_coord, node_b_coord)
+        node_c_geoid = interpolate_between_geoids(node_a_geoid, node_b_geoid, position.percent_from_origin)
 
-        # TODO: Consolidate all references to h3 resolution.
-        return coordinate_to_geoid(node_c_coord, 11)
+        return node_c_geoid
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """
