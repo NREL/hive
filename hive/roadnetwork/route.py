@@ -38,12 +38,12 @@ class Route(NamedTuple):
     total_travel_distance: float
     route_step_pointer: RouteStepPointer
 
-    def step(self) -> Tuple[Optional[Route], Optional[RouteStep]]:
+    def step(self) -> Optional[Tuple[Route, RouteStep]]:
         if not self.at_end():
             route_step = self.current_route_step()
-            return self._replace(route_step_pointer=self.route_step_ponter + 1), route_step
+            return self._replace(route_step_pointer=self.route_step_pointer + 1), route_step
         else:
-            return None, None
+            return None
 
     def current_route_step(self) -> Optional[RouteStep]:
         if not self.at_end():
