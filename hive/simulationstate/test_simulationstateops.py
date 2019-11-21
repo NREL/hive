@@ -3,9 +3,9 @@ from unittest import TestCase
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.energysource import EnergySource
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.powertrain.powertrain import Powertrain
+from hive.model.energy.powertrain import Powertrain
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.roadnetwork.roadnetwork import RoadNetwork

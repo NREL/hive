@@ -5,9 +5,9 @@ from unittest import TestCase, skip
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.energysource import EnergySource
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.powertrain.powertrain import Powertrain
+from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState

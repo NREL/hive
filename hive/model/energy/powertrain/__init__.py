@@ -3,8 +3,8 @@ from typing import Union
 import yaml
 from pkg_resources import resource_string
 
-from hive.model.powertrain.powertrain import Powertrain
-from hive.model.powertrain.bev_tabular_powertrain import BEVTabularPowertrain
+from hive.model.energy.powertrain.powertrain import Powertrain
+from hive.model.energy.powertrain.bev_tabular_powertrain import BEVTabularPowertrain
 
 __doc__ = """
 

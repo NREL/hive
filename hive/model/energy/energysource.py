@@ -1,18 +1,10 @@
 from __future__ import annotations
 
-from enum import Enum
 from typing import NamedTuple
 
 from hive.util.typealiases import KwH
 from hive.util.exception import StateOfChargeError
-
-
-class EnergyType(Enum):
-    """
-    a strict set of energy types recognized in HIVE
-    """
-    ELECTRIC = 0
-    GASOLINE = 1
+from hive.model.energy.energytype import EnergyType
 
 
 class EnergySource(NamedTuple):

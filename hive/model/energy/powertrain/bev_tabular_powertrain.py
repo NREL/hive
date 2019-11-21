@@ -1,6 +1,6 @@
-from typing import Dict, TypedDict, List, Tuple
+from typing import Dict, TypedDict, List
 
-from hive.model.powertrain.powertrain import Powertrain
+from hive.model.energy.powertrain import Powertrain
 from hive.roadnetwork.link import Link
 from hive.roadnetwork.roadnetwork import RoadNetwork
 from hive.roadnetwork.route import Route

@@ -1,9 +1,9 @@
 import unittest
 
 from hive.util.typealiases import KwH
-from hive.model.energysource import EnergySource
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.powertrain.powertrain import Powertrain
+from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id

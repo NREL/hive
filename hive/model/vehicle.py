@@ -5,8 +5,8 @@ from typing import NamedTuple, Tuple, Dict, Optional
 
 from h3 import h3
 
-from hive.model.energysource import EnergySource
-from hive.model.powertrain.powertrain import Powertrain
+from hive.model.energy.energysource import EnergySource
+from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 
 from hive.model.charger import Charger

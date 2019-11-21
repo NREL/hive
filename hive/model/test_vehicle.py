@@ -2,7 +2,7 @@ from unittest import TestCase, skip
 
 from h3 import h3
 
-from hive.model.energysource import EnergySource
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
