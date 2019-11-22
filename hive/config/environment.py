@@ -1,9 +1,0 @@
-# Geospatial
-from h3 import h3
-
-H3_RESOLUTION = 11
-H3_EDGE_DISTANCE_KM = h3.edge_length(H3_RESOLUTION)
-ROUTESTEP_DIST_KM = H3_EDGE_DISTANCE_KM * 2
-
-# Temporal
-TIME_STEP_S = 1

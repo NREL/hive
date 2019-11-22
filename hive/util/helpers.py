@@ -14,6 +14,34 @@ class TupleOps:
             return removed
 
     @classmethod
+    def head(cls, xs: Tuple[T, ...]) -> T:
+        if len(xs) == 0:
+            raise IndexError("called head on empty Tuple")
+        else:
+            return xs[0]
+
+    @classmethod
+    def head_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
+        if len(xs) == 0:
+            return None
+        else:
+            return xs[0]
+
+    @classmethod
+    def last(cls, xs: Tuple[T, ...]) -> T:
+        if len(xs) == 0:
+            raise IndexError("called last on empty Tuple")
+        else:
+            return xs[-1]
+
+    @classmethod
+    def last_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
+        if len(xs) == 0:
+            return None
+        else:
+            return xs[-1]
+
+    @classmethod
     def head_tail(cls, tup: Tuple[T, ...]):
         if not tup:
             raise IndexError("called head_tail on empty Tuple")

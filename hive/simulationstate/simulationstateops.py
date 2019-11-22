@@ -18,7 +18,7 @@ def initial_simulation_state(
         bases: Tuple[Base, ...] = (),
         start_time: int = 0,
         sim_h3_resolution: Optional[int] = 11
-) -> Tuple[SimulationState, Tuple[SimulationStateError]]:
+) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
     :param road_network: the (initial) road network
