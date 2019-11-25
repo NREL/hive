@@ -5,6 +5,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
+from hive.model.roadnetwork.linktraversal import traverse_up_to
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId
 
@@ -12,15 +13,6 @@ from h3 import h3
 
 
 class TestRouteTraversal(TestCase):
-    def test_should_end_traversal(self):
-        self.fail()
-
-    def test_add_traversal(self):
-        self.fail()
-
-    def test_add_link_not_traversed(self):
-        self.fail()
-
     def test_traverse_with_enough_time(self):
         """
         the mock problem is tuned to complete the route with a time step of 1
@@ -38,7 +30,7 @@ class TestRouteTraversal(TestCase):
 
     def test_traverse_without_enough_time(self):
         """
-        the mock problem needs more than 0.2 time to complete the route
+        the mock problem needs more than 0.5 time to complete the route
         the amount that is completed is dependent on h3's transform from geo positioning
         of the centroids to lat/lon distances
         """
@@ -52,7 +44,42 @@ class TestRouteTraversal(TestCase):
         self.assertEqual(result.remaining_time, 0, "should have no more time left")
         self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
         self.assertEqual(len(result.experienced_route), 2, "should have traversed 2 links")
-        # todo: test that the "slice" of the middle link was done correctly?
+
+    def test_traverse_up_to_split(self):
+        network = TestRouteTraversalAssets.mock_network()
+        links = TestRouteTraversalAssets.mock_links()
+        test_link = links[0]
+
+        result = traverse_up_to(
+            road_network=network,
+            property_link=test_link,
+            available_time=0.1,
+        )
+
+        traversed = result.traversed
+        remaining = result.remaining
+
+        self.assertEqual(test_link.start, traversed.start, "Original link and traversed link should share start")
+        self.assertEqual(test_link.end, remaining.end, "Original link and remaining link should share end")
+        self.assertEqual(traversed.end, remaining.start, "Traversed end should match remaining start")
+
+    def test_traverse_up_to_no_split(self):
+        network = TestRouteTraversalAssets.mock_network()
+        links = TestRouteTraversalAssets.mock_links()
+        test_link = links[0]
+
+        result = traverse_up_to(
+            road_network=network,
+            property_link=test_link,
+            available_time=10,
+        )
+
+        traversed = result.traversed
+        remaining = result.remaining
+
+        self.assertEqual(test_link.start, traversed.start, "Original link and traversed link should share start")
+        self.assertEqual(test_link.end, traversed.end, "Original link and traversed link should share end")
+        self.assertIsNone(remaining, "There should be no remaining route")
 
 
 class MockRoadNetwork(RoadNetwork):

@@ -2,13 +2,11 @@ from __future__ import annotations
 
 from typing import Tuple, Optional
 
-from h3 import h3
-
-from hive.model.roadnetwork.link import dist_h3, interpolate_between_geoids
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.routetraversal import Route, Position, RouteStep, ExperiencedRouteSteps
-from hive.util.typealiases import GeoId, LinkId
-from hive.config.environment import TIME_STEP_S
+from hive.model.roadnetwork.property_link import PropertyLink
+from hive.util.typealiases import GeoId, LinkId, Time
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -21,82 +19,64 @@ class HaversineRoadNetwork(RoadNetwork):
 
     # TODO: Replace speed with more accurate/dynamic estimate.
     _AVG_SPEED = 40  # km/hour
+    sim_h3_resolution = 15
 
-    def _node_ids_from_link_id(self, link_id: LinkId) -> Tuple[GeoId, GeoId]:
-        nodes = link_id.split("-")
-        a = nodes[0]
-        b = nodes[1]
-        return a, b
+    def _geoids_to_link_id(self, origin: GeoId, destination: GeoId) -> LinkId:
+        link_id = origin + "-" + destination
+        return link_id
+
+    def _link_id_to_geodis(self, link_id: LinkId) -> Tuple[GeoId, GeoId]:
+        ids = link_id.split("-")
+        if len(ids) != 2:
+            raise(TypeError("LinkId not in expected format of [GeoId]-[GeoId]"))
+        start = ids[0]
+        end = ids[1]
+
+        return start, end
 
     def route(self, origin: GeoId, destination: GeoId) -> Route:
-        link_id = origin + "-" + destination
-        link_distance = dist_h3(origin, destination)
+        link_id = self._geoids_to_link_id(origin, destination)
 
-        route_time_estimate = link_distance / self._AVG_SPEED  # hr
+        property_link = self.get_link(link_id)
 
-        h3_line = h3.h3_line(origin, destination)
-        route_steps = tuple(RouteStep(link_id, geo_id) for geo_id in h3_line)
-
-        route = Route(route_steps, route_time_estimate, link_distance)
+        route = (property_link, )
 
         return route
 
-    def route_by_position(self, origin: Position, destination: Position) -> Route:
-        origin_geoid = self.position_to_geoid(origin)
-        destination_geoid = self.position_to_geoid(destination)
-        return self.route(origin_geoid, destination_geoid)
+    def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+        """
+        builds a location on the road network for a stationary simulation element
+        :param geoid:
+        :return:
+        """
+        link_id = self._geoids_to_link_id(geoid, geoid)
+        link = Link(link_id, geoid, geoid)
+        return PropertyLink(link_id, link, 0, 0, 0)
 
-    def advance_route(self, route: Route) -> Tuple[Optional[Route], ExperiencedRouteSteps]:
-        travel_time_s = 0
-        travel_distance_km = 0
-        route_steps = list()
-        # TODO: Replace with recursion to adhere to FP??
-        while travel_time_s < TIME_STEP_S and route:
-            route, route_step = route.step()
-            step_speed = self.get_link_speed(route_step.link_id)
-
-            step_time_s = route_step.DISTANCE / step_speed
-            travel_time_s += step_time_s
-            travel_distance_km += route_step.DISTANCE
-
-            experienced_route_step = route_step.add_experienced_time(step_time_s)
-
-            route_steps.append(experienced_route_step)
-
-        experienced_route_steps = ExperiencedRouteSteps(tuple(route_steps), travel_time_s, travel_distance_km)
-
-        return route, experienced_route_steps
-
-    def update(self, sim_time: int) -> RoadNetwork:
+    def update(self, sim_time: Time) -> RoadNetwork:
         """
         gives the RoadNetwork a chance to update it's flow network based on the current simulation time
         :param sim_time: the sim time to update the model to
         :return: does not return
         """
 
-        # This particular road network doesn't keep track of network flow so this method does nothing.
-        pass
+        # This particular road network implementation doesn't keep track of network flow so this method does nothing.
+        return self
 
-    def get_link_speed(self, link_id: LinkId) -> float:
+    def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
         """
-        gets the current link speed for the provided Position
-        :param link_id: the location on the road network
-        :return: speed
+        gets the link associated with the LinkId, or, if invalid, returns None
+        :param link_id: a link id
+        :return: a Link, or None if LinkId does not exist
         """
-        return self._AVG_SPEED
+        if not self.link_id_within_simulation(link_id):
+            return None
 
-    def postition_to_geoid(self, position: Position) -> GeoId:
-        """
-        does the work to determine the coordinate of this position on the road network
-        :param link_id: a position on the road network
-        :param resolution: h3 resolution
-        :return: an h3 geoid at this position
-        """
-        node_a_geoid, node_b_geoid = self._node_ids_from_link_id(position.link_id)
+        start, end = self._link_id_to_geodis(link_id)
+        link = Link(link_id, start, end)
+        property_link = PropertyLink.build(link, self._AVG_SPEED, self.neighboring_hex_distance)
 
-        node_c_geoid = interpolate_between_geoids(node_a_geoid, node_b_geoid, position.percent_from_origin)
-
-        return node_c_geoid
+        return property_link
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """
@@ -104,7 +84,7 @@ class HaversineRoadNetwork(RoadNetwork):
         :param geoid: an h3 geoid
         :return: True/False
         """
-        raise NotImplementedError("This method has not yet been implemented.")
+        return True
 
     def link_id_within_geofence(self, link_id: LinkId) -> bool:
         """
@@ -112,7 +92,8 @@ class HaversineRoadNetwork(RoadNetwork):
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
-        raise NotImplementedError("This method has not yet been implemented.")
+        start, end = self._link_id_to_geodis(link_id)
+        return self.geoid_within_geofence(start) and self.geoid_within_geofence(end)
 
     def geoid_within_simulation(self, geoid: GeoId) -> bool:
         """
@@ -121,7 +102,7 @@ class HaversineRoadNetwork(RoadNetwork):
         :param geoid: an h3 geoid
         :return: True/False
         """
-        raise NotImplementedError("This method has not yet been implemented.")
+        return True
 
     def link_id_within_simulation(self, link_id: LinkId) -> bool:
         """
@@ -130,4 +111,5 @@ class HaversineRoadNetwork(RoadNetwork):
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
-        raise NotImplementedError("This method has not yet been implemented.")
+        start, end = self._link_id_to_geodis(link_id)
+        return self.geoid_within_simulation(start) and self.geoid_within_simulation(end)

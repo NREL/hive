@@ -19,7 +19,6 @@ class RoadNetwork(ABC):
 
     sim_h3_resolution: int
 
-
     @functools.cached_property
     def neighboring_hex_distance(self) -> Km:
         """
@@ -96,4 +95,3 @@ class RoadNetwork(ABC):
         :return: True/False
         """
         pass
-
