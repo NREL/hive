@@ -17,6 +17,7 @@ H3Line = Tuple[GeoId, ...]
 # NUMERICAL TYPES
 # todo: Pints library!
 KwH = float
+Kw = float
 Km = float
 Percentage = float
 Speed = float

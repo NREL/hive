@@ -1,12 +1,13 @@
+import functools as ft
 from typing import Dict, TypedDict, List
 
-from hive.model.powertrain.powertrain import Powertrain
-from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.routetraversal import Route
-from hive.model.roadnetwork.routetraversal import RouteSegment
-from hive.util.typealiases import KwH, PowertrainId
 import numpy as np
+
+from hive.model.energy.energytype import EnergyType
+from hive.model.energy.powertrain.powertrain import Powertrain
+from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.routetraversal import Route
+from hive.util.typealiases import Kw, PowertrainId
 
 
 class BEVTabularInput(TypedDict):
@@ -42,20 +43,19 @@ class BEVTabularPowertrain(Powertrain):
     def get_id(self) -> PowertrainId:
         return self.id
 
-    def route_energy_cost(self, route: Route, road_network: RoadNetwork) -> KwH:
-        pass
+    def get_energy_type(self) -> EnergyType:
+        return EnergyType.ELECTRIC
 
-    def segment_energy_cost(self, segment: RouteSegment, road_network: RoadNetwork) -> KwH:
-        pass
+    def property_link_cost(self, property_link: PropertyLink) -> Kw:
+        watt_per_mile = np.interp(property_link.speed, self._consumption_mph, self._consumption_whmi)
+        return watt_per_mile * property_link.distance
 
-    def start_link_energy_cost(self, link: Link, road_network: RoadNetwork) -> KwH:
-        pass
+    def energy_cost(self, route: Route) -> Kw:
+        return ft.reduce(
+            lambda acc, link: acc + self.property_link_cost(link),
+            route,
+            0.0
+        )
 
-    def end_link_energy_cost(self, link: Link, road_network: RoadNetwork) -> KwH:
-        pass
 
-    def link_energy_cost(self, link: Link, road_network: RoadNetwork) -> KwH:
-        speed = road_network.get_link_speed(link.position)
-        watt_per_mile = np.interp(speed, self._consumption_mph, self._consumption_whmi)
-        raise NotImplementedError("do something with watt_per_mile")
 

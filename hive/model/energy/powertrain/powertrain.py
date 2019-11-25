@@ -3,9 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.routetraversal import RouteTraversal
-from hive.util.typealiases import KwH, PowertrainId
+from hive.model.roadnetwork.route import Route
+from hive.util.typealiases import Kw, PowertrainId
 
 
 class Powertrain(ABC):
@@ -26,12 +25,11 @@ class Powertrain(ABC):
         pass
 
     @abstractmethod
-    def energy_cost(self, route: Route, route_traversal: RouteTraversal) -> KwH:
+    def energy_cost(self, route: Route) -> Kw:
         """
         (estimated) energy cost to traverse this route
-        :param route: a route
-        :param route_traversal: the experienced route traversal
-        :return: energy cost
+        :param route: a route, either experienced, or, estimated
+        :return: energy cost of this route
         """
         pass
 

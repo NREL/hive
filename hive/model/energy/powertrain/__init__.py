@@ -11,7 +11,7 @@ __doc__ = """
 """
 
 powertrain_models = {
-    'leaf': resource_string('hive.resources.powertrain', 'leaf.yml')
+    'leaf': resource_string('hive.resources.powertrain', 'leaf.yaml')
 }
 
 powertrain_constructors = {
@@ -19,7 +19,7 @@ powertrain_constructors = {
 }
 
 
-def build(name: str) -> Union[IOError, Powertrain]:
+def build_powertrain(name: str) -> Union[IOError, Powertrain]:
     """
     constructs powertrain objects from file descriptions
     :param name: name of a valid powertrain type
