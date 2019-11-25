@@ -6,7 +6,7 @@ from typing import Optional, Union, Tuple, cast
 from hive.model.base import Base
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.simulationstate.simulationstate import SimulationState
 from hive.util.exception import *
 
@@ -18,7 +18,7 @@ def initial_simulation_state(
         bases: Tuple[Base, ...] = (),
         start_time: int = 0,
         sim_h3_resolution: Optional[int] = 11
-) -> Tuple[SimulationState, Tuple[SimulationStateError]]:
+) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
     :param road_network: the (initial) road network

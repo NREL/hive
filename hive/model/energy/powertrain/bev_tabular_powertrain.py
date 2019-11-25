@@ -1,10 +1,10 @@
 from typing import Dict, TypedDict, List
 
-from hive.model.energy.powertrain import Powertrain
-from hive.roadnetwork.link import Link
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.routesegment import RouteSegment
+from hive.model.powertrain.powertrain import Powertrain
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.routetraversal import RouteSegment
 from hive.util.typealiases import KwH, PowertrainId
 import numpy as np
 

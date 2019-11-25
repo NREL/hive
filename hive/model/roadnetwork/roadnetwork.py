@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import functools
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from hive.roadnetwork.route import Route, Position
-from hive.roadnetwork.routetraversal import RouteTraversal
-from hive.util.typealiases import GeoId, LinkId
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.route import Route
+from hive.util.helpers import H3Ops
+from hive.util.typealiases import GeoId, LinkId, Km, Time
 
 
 class RoadNetwork(ABC):
@@ -12,48 +16,46 @@ class RoadNetwork(ABC):
     a class that contains an updated model of the road network state and
     is used to compute routes for agents in the simulation
     """
+
+    sim_h3_resolution: int
+
+
+    @functools.cached_property
+    def neighboring_hex_distance(self) -> Km:
+        """
+        gives the distance between neighboring hexes at this simulation resolution
+        :return: neighboring hex centroid distance at this resolution
+        """
+        return H3Ops.distance_between_neighboring_hex_centroids(self.sim_h3_resolution)
+
     @abstractmethod
-    def route_by_geoid(self, origin: GeoId, destination: GeoId) -> Route:
+    def route(self, origin: Link, destination: Link) -> Route:
         pass
 
     @abstractmethod
-    def route_by_position(self, origin: Position, destination: Position) -> Route:
-        pass
-
-    @abstractmethod
-    def update(self, sim_time: int) -> RoadNetwork:
+    def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
         """
-        gives the RoadNetwork a chance to update it's flow network based on the current simulation time
-        :param sim_time: the sim time to update the model to
-        :return: does not return
-        """
-        pass
-
-    @abstractmethod
-    def get_link_speed(self, link_id: LinkId) -> float:
-        """
-        gets the current link speed for the provided Position
-        :param link_id: the location on the road network
-        :return: speed
-        """
-        pass
-
-    @abstractmethod
-    def compute_route_traversal(self, route: Route) -> RouteTraversal:
-        """
-
-        :param route:
+        builds a location on the road network for a stationary simulation element
+        :param geoid:
         :return:
         """
         pass
 
     @abstractmethod
-    def position_to_geoid(self, postition: Position, resolution: int) -> GeoId:
+    def update(self, sim_time: Time) -> RoadNetwork:
         """
-        does the work to determine the coordinate of this position on the road network
-        :param link_id: a position on the road network
-        :param resolution: h3 resolution
-        :return: an h3 geoid at this position
+        gives the RoadNetwork a chance to update it's flow network based on the current simulation time
+        :param sim_time: the current simulation time
+        :return: does not return
+        """
+        pass
+
+    @abstractmethod
+    def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
+        """
+        gets the link associated with the LinkId, or, if invalid, returns None
+        :param link_id: a link id
+        :return: a Link, or None if LinkId does not exist
         """
         pass
 

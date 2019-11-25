@@ -7,8 +7,8 @@ from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.link import Link
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.link import Link
 from h3 import h3
 
 

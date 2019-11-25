@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import NamedTuple, Tuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional
 
 from h3 import h3
 
@@ -12,7 +12,7 @@ from hive.model.passenger import Passenger
 from hive.model.charger import Charger
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 
-from hive.roadnetwork.route import Route
+from hive.model.roadnetwork.routetraversal import Route
 from hive.util.exception import *
 from hive.util.typealiases import *
 
@@ -22,11 +22,11 @@ class Vehicle(NamedTuple):
     id: VehicleId
     powertrain_id: PowertrainId
     battery: EnergySource
-    position: LinkId
+    position: Position
     geoid: GeoId
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
-    route: Route = Route.empty()
+    route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
@@ -38,7 +38,7 @@ class Vehicle(NamedTuple):
         return len(self.passengers) > 0
 
     def has_route(self) -> bool:
-        return bool(self.route.has_route())
+        return not self.route.is_empty()
 
     def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
         """

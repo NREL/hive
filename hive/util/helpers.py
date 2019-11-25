@@ -1,5 +1,21 @@
-from typing import Tuple, Dict, Optional, TypeVar
+import math
 from copy import copy
+from typing import Tuple, Dict, Optional, TypeVar
+from hive.util.typealiases import Km
+
+from h3 import h3
+
+
+class H3Ops:
+    @classmethod
+    def distance_between_neighboring_hex_centroids(cls, sim_h3_resolution: int) -> Km:
+        """
+        the distance between two neighboring hex centroids is sqrt(3) * 2(hex_side_length)
+        :return: hex centroid distance at this resolution
+        """
+        # based on https://github.com/Turfjs/turf/issues/623#issuecomment-309683755
+        avg_edge_length = h3.edge_length(sim_h3_resolution)
+        return math.sqrt(3) * (avg_edge_length * 2)
 
 
 class TupleOps:
@@ -12,6 +28,34 @@ class TupleOps:
             return None
         else:
             return removed
+
+    @classmethod
+    def head(cls, xs: Tuple[T, ...]) -> T:
+        if len(xs) == 0:
+            raise IndexError("called head on empty Tuple")
+        else:
+            return xs[0]
+
+    @classmethod
+    def head_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
+        if len(xs) == 0:
+            return None
+        else:
+            return xs[0]
+
+    @classmethod
+    def last(cls, xs: Tuple[T, ...]) -> T:
+        if len(xs) == 0:
+            raise IndexError("called last on empty Tuple")
+        else:
+            return xs[-1]
+
+    @classmethod
+    def last_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
+        if len(xs) == 0:
+            return None
+        else:
+            return xs[-1]
 
     @classmethod
     def head_tail(cls, tup: Tuple[T, ...]):
