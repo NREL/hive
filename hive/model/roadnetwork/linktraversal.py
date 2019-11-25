@@ -71,11 +71,11 @@ def traverse_up_to(road_network: RoadNetwork,
             # find the hexes,
             # split as this and next hexes, and then
             # re-cast as Links
-            this_hexes = this_link_hexes[agent_hex_dist_lim:]
+            this_hexes = this_link_hexes[0:agent_hex_dist_lim+1]
             this_traversal_o, this_traversal_d = this_hexes[0], this_hexes[-1]
             this_traversal = Link(property_link.link_id, this_traversal_o, this_traversal_d)
 
-            next_hexes = this_link_hexes[0:agent_hex_dist_lim]
+            next_hexes = this_link_hexes[agent_hex_dist_lim:]
             next_traversal_o, next_traversal_d = next_hexes[0], next_hexes[-1]
             next_traversal = Link(property_link.link_id, next_traversal_o, next_traversal_d)
             return LinkTraversal(
