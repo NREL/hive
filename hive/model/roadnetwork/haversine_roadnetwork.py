@@ -4,9 +4,9 @@ from typing import Tuple, Optional
 
 from h3 import h3
 
-from hive.roadnetwork.link import dist_h3, interpolate_between_geoids
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route, Position, RouteStep, ExperiencedRouteSteps
+from hive.model.roadnetwork.link import dist_h3, interpolate_between_geoids
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.routetraversal import Route, Position, RouteStep, ExperiencedRouteSteps
 from hive.util.typealiases import GeoId, LinkId
 from hive.config.environment import TIME_STEP_S
 
@@ -28,7 +28,7 @@ class HaversineRoadNetwork(RoadNetwork):
         b = nodes[1]
         return a, b
 
-    def route_by_geoid(self, origin: GeoId, destination: GeoId) -> Route:
+    def route(self, origin: GeoId, destination: GeoId) -> Route:
         link_id = origin + "-" + destination
         link_distance = dist_h3(origin, destination)
 
@@ -44,7 +44,7 @@ class HaversineRoadNetwork(RoadNetwork):
     def route_by_position(self, origin: Position, destination: Position) -> Route:
         origin_geoid = self.position_to_geoid(origin)
         destination_geoid = self.position_to_geoid(destination)
-        return self.route_by_geoid(origin_geoid, destination_geoid)
+        return self.route(origin_geoid, destination_geoid)
 
     def advance_route(self, route: Route) -> Tuple[Optional[Route], ExperiencedRouteSteps]:
         travel_time_s = 0

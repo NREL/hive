@@ -1,9 +1,11 @@
 from typing import Tuple, Optional
 from unittest import TestCase
 
-from hive.roadnetwork.link import PropertyLink, Link
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.routetraversal import traverse
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.routetraversal import traverse
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId
 
 from h3 import h3
@@ -45,7 +47,7 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=0.2
+            time_step=0.5
         )
         self.assertEqual(result.remaining_time, 0, "should have no more time left")
         self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
@@ -60,9 +62,10 @@ class MockRoadNetwork(RoadNetwork):
 
     def __init__(self, property_links):
         self.sim_h3_resolution = 15
+
         self.property_links = property_links
 
-    def route_by_geoid(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
+    def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
         pass
 
     def update(self, sim_time: int) -> RoadNetwork:
@@ -73,6 +76,21 @@ class MockRoadNetwork(RoadNetwork):
             return self.property_links[link_id]
         else:
             return None
+
+    def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+        pass
+
+    def geoid_within_geofence(self, geoid: GeoId) -> bool:
+        pass
+
+    def link_id_within_geofence(self, link_id: LinkId) -> bool:
+        pass
+
+    def geoid_within_simulation(self, geoid: GeoId) -> bool:
+        pass
+
+    def link_id_within_simulation(self, link_id: LinkId) -> bool:
+        pass
 
 
 class TestRouteTraversalAssets:
@@ -94,11 +112,14 @@ class TestRouteTraversalAssets:
                   h3.geo_to_h3(37.02, 122, sim_h3_resolution),
                   h3.geo_to_h3(37.03, 122, sim_h3_resolution)),
     }
+
+    neighboring_hex_distance = H3Ops.distance_between_neighboring_hex_centroids(sim_h3_resolution)
+
     property_links = {
         # distance of 1.11 KM, speed of 10 KM/time unit, results in 0.1ish time units
-        "1": PropertyLink("1", links["1"], 5.56, 10, 0.5),
-        "2": PropertyLink("2", links["2"], 5.56, 10, 0.5),
-        "3": PropertyLink("3", links["3"], 5.56, 10, 0.5)
+        "1": PropertyLink.build(links["1"], 10, neighboring_hex_distance),
+        "2": PropertyLink.build(links["2"], 10, neighboring_hex_distance),
+        "3": PropertyLink.build(links["3"], 10, neighboring_hex_distance)
     }
 
     @classmethod
@@ -106,5 +127,5 @@ class TestRouteTraversalAssets:
         return MockRoadNetwork(cls.property_links)
 
     @classmethod
-    def mock_links(cls) -> Tuple[Link, ...]:
-        return cls.links["1"], cls.links["2"], cls.links["3"]
+    def mock_links(cls) -> Tuple[PropertyLink, ...]:
+        return cls.property_links["1"], cls.property_links["2"], cls.property_links["3"]

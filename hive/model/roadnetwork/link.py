@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import NamedTuple
 
 from h3 import h3
@@ -15,22 +17,9 @@ class Link(NamedTuple):
     a partial link traversal, using an o/d pair which is within the link but
     not necessarily the end-points.
     """
-    id: LinkId
-    o: GeoId
-    d: GeoId
-
-
-class PropertyLink(NamedTuple):
-    """
-    a link on the road network which also has road network attributes
-    """
     link_id: LinkId
-    link: Link
-    # todo: units here? python Pints library?
-    distance: float
-    speed: float
-    travel_time: float
-    # grade: float # nice in the future?'
+    start: GeoId
+    end: GeoId
 
 
 def interpolate_between_geoids(a: GeoId, b: GeoId, percent: Percentage) -> GeoId:
@@ -38,3 +27,14 @@ def interpolate_between_geoids(a: GeoId, b: GeoId, percent: Percentage) -> GeoId
     index = int(len(line) * percent)
 
     return line[index]
+
+
+def link_distance(link: Link, avg_hex_dist: float) -> float:
+    """
+    determines the distance of a link
+    :param link: some road network link, possibly with a different start/end point from
+    the matching link in the road network
+    :param avg_hex_dist: the average distance between hexes at the sim_h3_resolution
+    :return: the distance of this link
+    """
+    return h3.h3_distance(link.start, link.end) * avg_hex_dist

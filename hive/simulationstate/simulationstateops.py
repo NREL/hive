@@ -6,7 +6,7 @@ from typing import Optional, Union, Tuple, cast
 from hive.model.base import Base
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.simulationstate.simulationstate import SimulationState
 from hive.util.exception import *
 

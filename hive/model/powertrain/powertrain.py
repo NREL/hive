@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from hive.roadnetwork.link import Link
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.routetraversal import RouteSegment
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.typealiases import KwH, PowertrainId
 
 
@@ -19,7 +17,7 @@ class Powertrain(ABC):
         pass
 
     @abstractmethod
-    def route_energy_cost(self, route: Route, road_network: RoadNetwork) -> KwH:
+    def route_energy_cost(self, route: Tuple[PropertyLink, ...], road_network: RoadNetwork) -> KwH:
         """
         (estimated) energy cost to traverse this route
         :param route: a route

@@ -8,9 +8,9 @@ from hive.model.coordinate import Coordinate
 from hive.model.powertrain.powertrain import Powertrain
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.link import Link
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.link import Link
 from hive.simulationstate.simulationstate import SimulationState
 from hive.simulationstate.simulationstateops import initial_simulation_state
 from hive.util.typealiases import *

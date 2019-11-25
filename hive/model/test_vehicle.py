@@ -7,8 +7,8 @@ from hive.model.coordinate import Coordinate
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.link import Link
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.link import Link
 
 
 class TestVehicle(TestCase):

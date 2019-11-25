@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 from copy import copy
-from typing import NamedTuple, Dict, Optional, Union, Tuple, cast
+from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
 
@@ -11,7 +11,7 @@ from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
-from hive.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.simulationstate.at_location_response import AtLocationResponse
 from hive.util.exception import *
 from hive.util.helpers import DictOps

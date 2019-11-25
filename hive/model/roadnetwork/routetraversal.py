@@ -4,18 +4,19 @@ import functools as ft
 from typing import NamedTuple
 from typing import Optional, Union
 
-from hive.roadnetwork.linktraversal import LinkTraversal
-from hive.roadnetwork.linktraversal import traverse_up_to
-from hive.roadnetwork.link import Link
-from hive.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.linktraversal import LinkTraversal
+from hive.model.roadnetwork.linktraversal import traverse_up_to
+from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
 
 
 class RouteTraversal(NamedTuple):
     remaining_time: Time = 0
-    experienced_route: Tuple[Link, ...] = ()
-    remaining_route: Tuple[Link, ...] = ()
+    experienced_route: Route = ()
+    remaining_route: Route = ()
 
     def no_time_left(self):
         """
@@ -42,7 +43,7 @@ class RouteTraversal(NamedTuple):
             remaining_route=updated_remaining_route,
         )
 
-    def add_link_not_traversed(self, link: Link) -> RouteTraversal:
+    def add_link_not_traversed(self, link: PropertyLink) -> RouteTraversal:
         """
         if a link wasn't traversed, be sure to add it to the remaining route
         :param link: a link for the remaining route
@@ -53,7 +54,7 @@ class RouteTraversal(NamedTuple):
         )
 
 
-def traverse(route_estimate: Tuple[Link, ...],
+def traverse(route_estimate: Route,
              road_network: RoadNetwork,
              time_step: Time) -> Optional[Union[Exception, RouteTraversal]]:
     """
@@ -68,19 +69,19 @@ def traverse(route_estimate: Tuple[Link, ...],
     """
     if len(route_estimate) == 0:
         return None
-    elif TupleOps.head(route_estimate).o == TupleOps.last(route_estimate).d:
+    elif TupleOps.head(route_estimate).start == TupleOps.last(route_estimate).end:
         return None
     else:
 
         # function that steps through the route
         def _traverse(acc: Tuple[RouteTraversal, Optional[Exception]],
-                      x: Link) -> Tuple[RouteTraversal, Optional[Exception]]:
+                      property_link: PropertyLink) -> Tuple[RouteTraversal, Optional[Exception]]:
             acc_traversal, acc_failures = acc
             if acc_traversal.no_time_left():
-                return acc_traversal.add_link_not_traversed(x), acc_failures
+                return acc_traversal.add_link_not_traversed(property_link), acc_failures
             else:
                 # traverse this link as far as we can go
-                traverse_result = traverse_up_to(road_network, x, acc_traversal.remaining_time)
+                traverse_result = traverse_up_to(road_network, property_link, acc_traversal.remaining_time)
                 if isinstance(traverse_result, Exception):
                     return acc_traversal, traverse_result
                 else:
