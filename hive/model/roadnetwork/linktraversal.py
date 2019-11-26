@@ -5,6 +5,7 @@ from h3 import h3
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import Time
 
 
@@ -58,26 +59,16 @@ def traverse_up_to(road_network: RoadNetwork,
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
             # leaving no remaining time.
 
-            # find how many hexes we can traverse
-            experienced_distance = available_time * property_link.speed
-            percent_trip_experienced = experienced_distance / property_link.distance
-            agent_hex_dist_lim = int((available_time * property_link.speed) / road_network.neighboring_hex_distance)
-            this_link_hexes = h3.h3_line(property_link.link.start, property_link.link.end)
+            # find the point in this link to split into two sub-links
+            mid_geoid = H3Ops.point_along_link(property_link, available_time)
 
-            # update our agent's link to only include the remaining hexes to traverse
-            # find the hexes,
-            # split as this and next hexes, and then
-            # re-cast as Links
-            this_hexes = this_link_hexes[0:agent_hex_dist_lim+1]
-            this_traversal_o, this_traversal_d = this_hexes[0], this_hexes[-1]
-            this_traversal = Link(property_link.link_id, this_traversal_o, this_traversal_d)
+            # create two sub-links, one for the part that was traversed, and one for the remaining part
+            traversed = property_link.update_link(Link(property_link.link_id, property_link.start, mid_geoid))
+            remaining = property_link.update_link(Link(property_link.link_id, mid_geoid, property_link.end))
 
-            next_hexes = this_link_hexes[agent_hex_dist_lim:]
-            next_traversal_o, next_traversal_d = next_hexes[0], next_hexes[-1]
-            next_traversal = Link(property_link.link_id, next_traversal_o, next_traversal_d)
             return LinkTraversal(
-                traversed=property_link.update_link(this_traversal),
-                remaining=property_link.update_link(next_traversal),
+                traversed=traversed,
+                remaining=remaining,
                 remaining_time=0
             )
 

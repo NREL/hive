@@ -38,7 +38,7 @@ class Vehicle(NamedTuple):
         return len(self.passengers) > 0
 
     def has_route(self) -> bool:
-        return not self.route.is_empty()
+        return len(self.route) != 0
 
     def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
         """

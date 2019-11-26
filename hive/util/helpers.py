@@ -61,8 +61,8 @@ class H3Ops:
             start = h3.h3_to_geo(property_link.start)
             end = h3.h3_to_geo(property_link.end)
             res = h3.h3_get_resolution(property_link.start)
-            lat = start[0] + ((start[0] - end[0]) * percent_trip_experienced)
-            lon = start[1] + ((start[1] - end[1]) * percent_trip_experienced)
+            lat = start[0] + ((end[0] - start[0]) * percent_trip_experienced)
+            lon = start[1] + ((end[1] - start[1]) * percent_trip_experienced)
             return h3.geo_to_h3(lat, lon, res)
 
 

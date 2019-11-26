@@ -15,14 +15,14 @@ from h3 import h3
 class TestRouteTraversal(TestCase):
     def test_traverse_with_enough_time(self):
         """
-        the mock problem is tuned to complete the route with a time step of 1
+        the mock problem is tuned to complete the route with a time step of just beyond 3 time units
         """
         network = TestRouteTraversalAssets.mock_network()
         links = TestRouteTraversalAssets.mock_links()
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=1
+            time_step=4
         )
         self.assertGreater(result.remaining_time, 0, "should have more time left")
         self.assertEqual(len(result.remaining_route), 0, "should have no more route")
@@ -30,16 +30,15 @@ class TestRouteTraversal(TestCase):
 
     def test_traverse_without_enough_time(self):
         """
-        the mock problem needs more than 0.5 time to complete the route
-        the amount that is completed is dependent on h3's transform from geo positioning
-        of the centroids to lat/lon distances
+        the mock problem needs more than 1.5 time to complete the route. should end
+        up somewhere in the middle
         """
         network = TestRouteTraversalAssets.mock_network()
         links = TestRouteTraversalAssets.mock_links()
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=0.5
+            time_step=1.5
         )
         self.assertEqual(result.remaining_time, 0, "should have no more time left")
         self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
@@ -53,7 +52,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time=0.1,
+            available_time=0.5,
         )
 
         traversed = result.traversed
@@ -71,7 +70,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time=10,
+            available_time=4,
         )
 
         traversed = result.traversed
@@ -131,20 +130,20 @@ class TestRouteTraversalAssets:
     links = {
         "1": Link("1",
                   h3.geo_to_h3(37, 122, sim_h3_resolution),
-                  h3.geo_to_h3(37.01, 122, sim_h3_resolution)),
+                  h3.geo_to_h3(37.008994, 122, sim_h3_resolution)),
         "2": Link("2",
-                  h3.geo_to_h3(37.01, 122, sim_h3_resolution),
-                  h3.geo_to_h3(37.02, 122, sim_h3_resolution)),
+                  h3.geo_to_h3(37.008994, 122, sim_h3_resolution),
+                  h3.geo_to_h3(37.017998, 122, sim_h3_resolution)),
         "3": Link("3",
-                  h3.geo_to_h3(37.02, 122, sim_h3_resolution),
-                  h3.geo_to_h3(37.03, 122, sim_h3_resolution)),
+                  h3.geo_to_h3(37.017998, 122, sim_h3_resolution),
+                  h3.geo_to_h3(37.026992, 122, sim_h3_resolution)),
     }
 
     property_links = {
-        # distance of 1.11 KM, speed of 10 KM/time unit, results in 0.1ish time units
-        "1": PropertyLink.build(links["1"], 10),
-        "2": PropertyLink.build(links["2"], 10),
-        "3": PropertyLink.build(links["3"], 10)
+        # distance of 1.0 KM, speed of 1 KM/time unit
+        "1": PropertyLink.build(links["1"], 1),
+        "2": PropertyLink.build(links["2"], 1),
+        "3": PropertyLink.build(links["3"], 1)
     }
 
     @classmethod
