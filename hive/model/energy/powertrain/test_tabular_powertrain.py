@@ -3,15 +3,15 @@ from unittest import TestCase
 from h3 import h3
 
 from hive.model.energy.powertrain import build_powertrain
-from hive.model.energy.powertrain.bev_tabular_powertrain import BEVTabularPowertrain
+from hive.model.energy.powertrain.tabular_powertrain import TabularPowertrain
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 
 
-class TestBEVTabularPowertrain(TestCase):
+class TestTabularPowertrain(TestCase):
     def test_leaf_build_powertrain(self):
         leaf_model = build_powertrain("leaf")
-        self.assertIsInstance(leaf_model, BEVTabularPowertrain)
+        self.assertIsInstance(leaf_model, TabularPowertrain)
 
     def test_leaf_energy_cost_empty_route(self):
         powertrain = build_powertrain("leaf")
