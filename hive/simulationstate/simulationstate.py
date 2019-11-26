@@ -53,14 +53,14 @@ class SimulationState(NamedTuple):
         """
         if not isinstance(request, Request):
             return TypeError(f"sim.add_request requires a request but received a {type(request)}")
-        elif not self.road_network.geoid_within_geofence(request.o_geoid):
+        elif not self.road_network.geoid_within_geofence(request.origin):
             return SimulationStateError(f"origin {request.origin} not within road network geofence")
         elif not self.road_network.geoid_within_simulation(request.d_geoid):
             return SimulationStateError(f"destination {request.destination} not within entire road network")
         else:
             return self._replace(
                 requests=DictOps.add_to_entity_dict(self.requests, request.id, request),
-                r_locations=DictOps.add_to_location_dict(self.r_locations, request.o_geoid, request.id)
+                r_locations=DictOps.add_to_location_dict(self.r_locations, request.origin, request.id)
             )
 
     def remove_request(self, request_id: RequestId) -> Union[Exception, SimulationState]:
@@ -79,7 +79,7 @@ class SimulationState(NamedTuple):
             request = self.requests[request_id]
             return self._replace(
                 requests=DictOps.remove_from_entity_dict(self.requests, request.id),
-                r_locations=DictOps.remove_from_location_dict(self.r_locations, request.o_geoid, request.id)
+                r_locations=DictOps.remove_from_location_dict(self.r_locations, request.origin, request.id)
             )
 
     def add_vehicle(self, vehicle: Vehicle) -> Union[Exception, SimulationState]:
@@ -317,7 +317,7 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"request {request_id} not in this simulation")
         else:
             vehicle = self.vehicles[vehicle_id].geoid
-            request = self.requests[request_id].o_geoid
+            request = self.requests[request_id].origin
 
             return SimulationState._same_geoid(vehicle, request, self.sim_h3_resolution, override_resolution)
 

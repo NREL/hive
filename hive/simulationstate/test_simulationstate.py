@@ -1,14 +1,17 @@
 import copy
-from typing import cast
+from typing import cast, Optional
 from unittest import TestCase, skip
 
 from h3 import h3
 
 from hive.model.base import Base
+from hive.model.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
+from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
+from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
@@ -30,8 +33,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(sim.requests), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_req.requests[req.id], req, "request contents should be idempotent")
 
-        req_geoid = h3.geo_to_h3(req.origin.lat, req.origin.lon, sim_with_req.sim_h3_resolution)
-        at_loc = sim_with_req.r_locations[req_geoid]
+        at_loc = sim_with_req.r_locations[req.origin]
 
         self.assertEqual(len(at_loc), 1, "should only have 1 request at this location")
         self.assertEqual(at_loc[0], req.id, "the request's id should be found at it's geoid")
@@ -45,7 +47,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(sim_with_req.requests), 1, "the sim with req added should not have been mutated")
         self.assertEqual(len(sim_after_remove.requests), 0, "the request should have been removed")
 
-        self.assertNotIn(req.o_geoid, sim_after_remove.r_locations, "there should be no key for this geoid")
+        self.assertNotIn(req.origin, sim_after_remove.r_locations, "there should be no key for this geoid")
 
     def test_remove_request_multiple_at_loc(self):
         """
@@ -57,11 +59,11 @@ class TestSimulationState(TestCase):
         sim_with_reqs = sim.add_request(req1).add_request(req2)
         sim_remove_req1 = sim_with_reqs.remove_request(req1.id)
 
-        self.assertIn(req2.o_geoid,
+        self.assertIn(req2.origin,
                       sim_remove_req1.r_locations,
                       "geoid related to both reqs should still exist")
         self.assertIn(req2.id,
-                      sim_remove_req1.r_locations[req2.o_geoid],
+                      sim_remove_req1.r_locations[req2.origin],
                       "req2.id should still be found in r_locations")
 
     def test_add_vehicle(self):
@@ -80,15 +82,12 @@ class TestSimulationState(TestCase):
     def test_update_vehicle(self):
         veh = SimulationStateTestAssets.mock_vehicle()
         sim = SimulationStateTestAssets.mock_empty_sim()
-        old_geoid = veh.geoid
         sim_before_update = sim.add_vehicle(veh)
 
         # modify some values on the vehicle
         new_soc_lower_limit = 0.5
-        new_pos = Coordinate(20, 20)
-        new_geoid = h3.geo_to_h3(new_pos.lat, new_pos.lon, sim_before_update.sim_h3_resolution)
+        new_geoid = h3.geo_to_h3(39.77, -105, sim_before_update.sim_h3_resolution)
         updated_vehicle = veh._replace(geoid=new_geoid,
-                                       position=new_pos,
                                        soc_lower_limit=new_soc_lower_limit)
 
         sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
@@ -172,12 +171,12 @@ class TestSimulationState(TestCase):
         self.assertEqual(updated_road_network.updated_to_time_step, update_time_argument)
 
     def test_at_vehicle_geoid(self):
-        somewhere = Coordinate(90, 90)
-        somewhere_else = Coordinate(0, 0)
-        veh = SimulationStateTestAssets.mock_vehicle(position=somewhere)
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
         req = SimulationStateTestAssets.mock_request(origin=somewhere)
-        sta = SimulationStateTestAssets.mock_station(coordinate=somewhere)
-        b = SimulationStateTestAssets.mock_base(coordinate=somewhere_else)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
+        b = SimulationStateTestAssets.mock_base(geoid=somewhere_else)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req).add_station(sta).add_base(b)
 
         result = sim.at_geoid(veh.geoid)
@@ -187,50 +186,60 @@ class TestSimulationState(TestCase):
         self.assertNotIn(b.id, result['bases'], "should not have found this base")
 
     def test_vehicle_at_request(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(90, 90))
-        req = SimulationStateTestAssets.mock_request(origin=Coordinate(90, 90))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
         result = sim.vehicle_at_request(veh.id, req.id)
         self.assertTrue(result, "the vehicle should be at the request")
 
     def test_vehicle_not_at_request(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
-        req = SimulationStateTestAssets.mock_request(origin=Coordinate(45, 45))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere_else)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
         result = sim.vehicle_at_request(veh.id, req.id)
         self.assertFalse(result, "the vehicle should not be at the request")
 
     def test_vehicle_at_station(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(45, 45))
-        sta = SimulationStateTestAssets.mock_station(coordinate=Coordinate(45, 45))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
         result = sim.vehicle_at_station(veh.id, sta.id)
         self.assertTrue(result, "the vehicle should be at the station")
 
     def test_vehicle_not_at_station(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
-        sta = SimulationStateTestAssets.mock_station(coordinate=Coordinate(45, 45))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere_else)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
         result = sim.vehicle_at_station(veh.id, sta.id)
         self.assertFalse(result, "the vehicle should not be at the station")
 
     def test_vehicle_at_base(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(45, 45))
-        base = SimulationStateTestAssets.mock_base(coordinate=Coordinate(45, 45))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        base = SimulationStateTestAssets.mock_base(geoid=somewhere)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(base)
         result = sim.vehicle_at_base(veh.id, base.id)
         self.assertTrue(result, "the vehicle should be at the base")
 
     def test_vehicle_not_at_base(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
-        base = SimulationStateTestAssets.mock_base(coordinate=Coordinate(45, 45))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        base = SimulationStateTestAssets.mock_base(geoid=somewhere_else)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(base)
         result = sim.vehicle_at_base(veh.id, base.id)
         self.assertFalse(result, "the vehicle should not be at the base")
 
     def test_board_vehicle(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(51, 50))
-        req = SimulationStateTestAssets.mock_request(origin=Coordinate(51, 50), passengers=2)
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere, passengers=2)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
 
         sim_boarded = sim.board_vehicle(req.id, veh.id)
@@ -247,7 +256,8 @@ class TestSimulationState(TestCase):
 
     @skip("step expects engines, EngineIds, Chargers and assoc. logic to exist; sadly, they do not")
     def test_step(self):
-        veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
         veh_route_step = Link(Coordinate(1, 0), 1)
         veh_repositioning = veh.transition(VehicleState.REPOSITIONING)._replace(route=Route((veh_route_step,), 1, 1))
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh_repositioning)
@@ -261,63 +271,52 @@ class TestSimulationState(TestCase):
 
 
 class SimulationStateTestAssets:
-    h3_resolution = 11
-
     class MockRoadNetwork(RoadNetwork):
-        updated_to_time_step: int = 0
 
-        def route(self, origin: LinkId, destination: LinkId) -> Route:
+        def route(self, origin: Link, destination: Link) -> Route:
             pass
 
-        def update(self, sim_time: int) -> RoadNetwork:
-            updated = copy.deepcopy(self)
-            updated.updated_to_time_step = sim_time
-            return updated
+        def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+            pass
 
-        def geoid_to_position(self, coordinate: Coordinate) -> LinkId:
-            return coordinate
+        def update(self, sim_time: Time) -> RoadNetwork:
+            pass
 
-        def link_id_to_geoid(self, link_id: LinkId) -> Coordinate:
-            return link_id
+        def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
+            pass
 
-        def geoid_within_geofence(self, coordinate: Coordinate) -> bool:
+        def geoid_within_geofence(self, geoid: GeoId) -> bool:
             return True
 
         def link_id_within_geofence(self, link_id: LinkId) -> bool:
             return True
 
-        def geoid_within_simulation(self, coordinate: Coordinate) -> bool:
+        def geoid_within_simulation(self, geoid: GeoId) -> bool:
             return True
 
         def link_id_within_simulation(self, link_id: LinkId) -> bool:
             return True
 
     class MockPowertrain(Powertrain):
-        """
-        i haven't made instances of Engine yet. 20191106-rjf
-        """
+        def get_id(self) -> PowertrainId:
+            return "mock_powertrain"
 
-        def route_energy_cost(self, route: Route) -> KwH:
-            return len(route.route)
+        def get_energy_type(self) -> EnergyType:
+            return EnergyType.ELECTRIC
 
-        def segment_energy_cost(self, segment: Link) -> KwH:
-            return 1.0
+        def energy_cost(self, route: Route) -> Kw:
+            return len(route)
 
     @classmethod
     def mock_request(cls,
                      request_id="r1",
-                     origin: Coordinate = Coordinate(lat=0.0, lon=0.0),
-                     destination: Coordinate = Coordinate(lat=3.0, lon=4.0),
+                     origin: GeoId = h3.geo_to_h3(39.74, -105, 15),
+                     destination: GeoId = h3.geo_to_h3(39.76, -105, 15),
                      passengers: int = 2) -> Request:
-        o_geoid = h3.geo_to_h3(origin.lat, origin.lon, cls.h3_resolution)
-        d_geoid = h3.geo_to_h3(destination.lat, destination.lon, cls.h3_resolution)
-
         return Request.build(
             request_id=request_id,
             origin=origin,
             destination=destination,
-            origin_geoid=o_geoid,
-            destination_geoid=d_geoid,
             departure_time=28800,
             cancel_time=29400,
             passengers=passengers
@@ -326,27 +325,23 @@ class SimulationStateTestAssets:
     @classmethod
     def mock_vehicle(cls,
                      vehicle_id="m1",
-                     position: LinkId = Coordinate(0, 0)) -> Vehicle:
-        geoid = h3.geo_to_h3(position.lat, position.lon, cls.h3_resolution)
-        return Vehicle(
-            vehicle_id,
-            cls.MockPowertrain(),
-            EnergySource.build("battery", 100),
-            position,
-            geoid
-        )
+                     geoid: GeoId = h3.geo_to_h3(39.75, -105, 15)) -> Vehicle:
+        mock_powertrain = cls.MockPowertrain()
+        mock_veh = Vehicle(vehicle_id,
+                           mock_powertrain.get_id(),
+                           EnergySource.build(EnergyType.ELECTRIC, 40, 1),
+                           geoid)
+        return mock_veh
 
     @classmethod
     def mock_station(cls,
                      station_id="s1",
-                     coordinate: Coordinate = Coordinate(10, 0)) -> Station:
-        geoid = h3.geo_to_h3(coordinate.lat, coordinate.lon, cls.h3_resolution)
-        return Station(station_id, coordinate, geoid)
+                     geoid: GeoId = h3.geo_to_h3(39.75, -105.01, 15)) -> Station:
+        return Station.build(station_id, geoid, {Charger.LEVEL_2: 5})
 
     @classmethod
-    def mock_base(cls, base_id="b1", coordinate: Coordinate = Coordinate(3, 3)) -> Base:
-        geoid = h3.geo_to_h3(coordinate.lat, coordinate.lon, cls.h3_resolution)
-        return Base(base_id, coordinate, geoid)
+    def mock_base(cls, base_id="b1", geoid: GeoId = h3.geo_to_h3(39.73, -105, 15)) -> Base:
+        return Base.build(base_id, geoid, None, 5)
 
     @classmethod
     def mock_empty_sim(cls) -> SimulationState:
