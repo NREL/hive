@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import functools
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.position import Position
-from hive.util.typealiases import GeoId
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.route import Route
+from hive.util.helpers import H3Ops
+from hive.util.typealiases import GeoId, LinkId, Km, Time
 
 
 class RoadNetwork(ABC):
@@ -12,33 +16,37 @@ class RoadNetwork(ABC):
     a class that contains an updated model of the road network state and
     is used to compute routes for agents in the simulation
     """
+
+    sim_h3_resolution: int
+
     @abstractmethod
-    def route(self, origin: Position, destination: Position) -> Route:
+    def route(self, origin: Link, destination: Link) -> Route:
         pass
 
     @abstractmethod
-    def update(self, sim_time: int) -> RoadNetwork:
+    def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+        """
+        builds a location on the road network for a stationary simulation element
+        :param geoid:
+        :return:
+        """
+        pass
+
+    @abstractmethod
+    def update(self, sim_time: Time) -> RoadNetwork:
         """
         gives the RoadNetwork a chance to update it's flow network based on the current simulation time
-        :param sim_time: the sim time to update the model to
+        :param sim_time: the current simulation time
         :return: does not return
         """
         pass
 
     @abstractmethod
-    def geoid_to_position(self, geoid: GeoId) -> Position:
+    def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
         """
-        finds the closest RoadNetwork Position to the provided coordinate
-        :param geoid: an h3 geoid
-        :return: a Position, which may be RoadNetwork-dependent
-        """
-
-    @abstractmethod
-    def position_to_geoid(self, position: Position) -> GeoId:
-        """
-        does the work to determine the coordinate of this position on the road network
-        :param position: a position on the road network
-        :return: an h3 geoid at this position
+        gets the link associated with the LinkId, or, if invalid, returns None
+        :param link_id: a link id
+        :return: a Link, or None if LinkId does not exist
         """
         pass
 
@@ -49,14 +57,16 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
+        pass
 
     @abstractmethod
-    def position_within_geofence(self, position: Position) -> bool:
+    def link_id_within_geofence(self, link_id: LinkId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon of this road network instance
-        :param position: a position on the road network across the entire simulation
+        :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
+        pass
 
     @abstractmethod
     def geoid_within_simulation(self, geoid: GeoId) -> bool:
@@ -66,13 +76,14 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
+        pass
 
     @abstractmethod
-    def position_within_simulation(self, position: Position) -> bool:
+    def link_id_within_simulation(self, link_id: LinkId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon the entire simulation,
         which may include many (distributed) RoadNetwork instances
-        :param position: a position on the road network across the entire simulation
+        :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
-
+        pass

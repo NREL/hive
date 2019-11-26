@@ -2,13 +2,13 @@ from unittest import TestCase, skip
 
 from h3 import h3
 
-from hive.model.battery import Battery
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.routestep import RouteStep
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.link import Link
 
 
 class TestVehicle(TestCase):
@@ -137,7 +137,7 @@ class TestVehicle(TestCase):
     def mock_vehicle(cls) -> Vehicle:
         return Vehicle("test_vehicle",
                        "test_engine",
-                       Battery.build("test_battery", 100),
+                       EnergySource.build("test_battery", 100),
                        Coordinate(0, 0),
                        h3.geo_to_h3(0, 0, 11)
                        )
@@ -155,10 +155,10 @@ class TestVehicle(TestCase):
 
     @classmethod
     def mock_route(cls) -> Route:
-        return Route(route=(RouteStep(Coordinate(0, 5), 5),
-                            RouteStep(Coordinate(5, 5), 5),
-                            RouteStep(Coordinate(5, 10), 5),
-                            RouteStep(Coordinate(10, 10), 5)),
+        return Route(route=(Link(Coordinate(0, 5), 5),
+                            Link(Coordinate(5, 5), 5),
+                            Link(Coordinate(5, 10), 5),
+                            Link(Coordinate(10, 10), 5)),
                      total_distance=20,
                      total_travel_time=4)
 

@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 import copy
-from typing import NamedTuple, Tuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional
 
 from h3 import h3
 
-from hive.model.battery import Battery
-from hive.model.charger import Charger
-from hive.model.engine import Engine
+from hive.model.energy.energysource import EnergySource
+from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 
-from hive.roadnetwork.position import Position
 from hive.model.charger import Charger
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
-from hive.roadnetwork.position import Position
-from hive.roadnetwork.route import Route
+
+from hive.model.roadnetwork.routetraversal import Route
 from hive.util.exception import *
 from hive.util.typealiases import *
 
@@ -22,13 +20,13 @@ from hive.util.typealiases import *
 class Vehicle(NamedTuple):
     # fixed vehicle attributes
     id: VehicleId
-    engine: EngineId
-    battery: Battery
+    powertrain_id: PowertrainId
+    battery: EnergySource
     position: Position
     geoid: GeoId
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
-    route: Route = Route.empty()
+    route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
@@ -40,7 +38,7 @@ class Vehicle(NamedTuple):
         return len(self.passengers) > 0
 
     def has_route(self) -> bool:
-        return bool(self.route.has_route())
+        return not self.route.is_empty()
 
     def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
         """
@@ -58,7 +56,7 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.battery})"
 
-    def _move(self, engine: Engine) -> Vehicle:
+    def _move(self, powertrain: Powertrain) -> Vehicle:
         # take one route step
         # todo: need to update the GeoId here; i think this means the RoadNetwork
         #  needs to be in scope (a parameter of step/_move)
@@ -66,17 +64,17 @@ class Vehicle(NamedTuple):
         this_route_step, updated_route = self.route.step_route()
         sim_h3_resolution = 11  # should come from simulation
         new_geoid = h3.geo_to_h3(this_route_step.position.lat, this_route_step.position.lon, sim_h3_resolution)
-        this_fuel_usage = engine.route_step_fuel_cost(this_route_step)
-        updated_battery = self.battery.use_fuel(this_fuel_usage)
+        this_fuel_usage = powertrain.energy_cost(this_route_step)
+        updated_battery = self.battery.use_energy(this_fuel_usage)
         return self._replace(
             position=this_route_step.position,
             geoid=new_geoid,
             battery=updated_battery,
             route=updated_route,
-            distance_traveled=self.distance_traveled + this_route_step.distance
+            distance_traveled=self.distance_traveled + this_route_step.great_circle_distance
         )
 
-    def step(self, engine: Optional[Engine], charger: Optional[Charger]) -> Vehicle:
+    def step(self, engine: Optional[Powertrain], charger: Optional[Charger]) -> Vehicle:
         """
         when an agent stays in the same vehicle state for two subsequent time steps,
         we perform their action in the transition.
@@ -100,7 +98,7 @@ class Vehicle(NamedTuple):
             else:
                 # take one charging step
                 return self._replace(
-                    battery=self.battery.charge(charger)
+                    battery=self.battery.load_energy(charger)
                 )
 
         elif step_type == VehicleStateCategory.MOVE:
@@ -116,7 +114,7 @@ class Vehicle(NamedTuple):
         else:
             raise NotImplementedError(f"Step function failed for undefined vehicle state category {step_type}")
 
-    def battery_swap(self, battery: Battery) -> Vehicle:
+    def battery_swap(self, battery: EnergySource) -> Vehicle:
         return self._replace(battery=battery)
 
     """

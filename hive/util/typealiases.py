@@ -1,22 +1,25 @@
-# MODEL ID TYPES
-from typing import Type
+from typing import Tuple
 
+# MODEL ID TYPES
 RequestId = str
 VehicleId = str
 StationId = str
-ChargerId = str
-EngineId = str
+PowertrainId = str
 BaseId = str
-StallId = str
 PassengerId = str
 
-# H3
-GeoId = str
+# POSITIONAL
+GeoId = str  # h3 geohash
+LinkId = str # road network link
+RouteStepPointer = int
+H3Line = Tuple[GeoId, ...]
 
 # NUMERICAL TYPES
-Kw = float
+# todo: Pints library!
 KwH = float
+Kw = float
+Km = float
 Percentage = float
-
-
+Speed = float
+Time = float
 

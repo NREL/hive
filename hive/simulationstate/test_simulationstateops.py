@@ -3,15 +3,14 @@ from unittest import TestCase
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.battery import Battery
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.engine import Engine
+from hive.model.energy.powertrain import Powertrain
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.roadnetwork.position import Position
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.routestep import RouteStep
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.link import Link
 from hive.simulationstate.simulationstate import SimulationState
 from hive.simulationstate.simulationstateops import initial_simulation_state
 from hive.util.typealiases import *
@@ -94,8 +93,8 @@ class TestSimulationStateOps(TestCase):
         self.assertIsInstance(sim, SimulationState)
         self.assertEqual(len(failures), 0)
 
-        m1_geoid = sim.road_network.position_to_geoid(self.mock_veh_1.position)
-        m2_geoid = sim.road_network.position_to_geoid(self.mock_veh_2.position)
+        m1_geoid = sim.road_network.link_id_to_geoid(self.mock_veh_1.position)
+        m2_geoid = sim.road_network.link_id_to_geoid(self.mock_veh_2.position)
 
         self.assertEqual(m1_geoid, m2_geoid, "both vehicles should be at the same location")
         vehicles_at_location = sim.v_locations[m1_geoid]
@@ -106,63 +105,61 @@ class TestSimulationStateOps(TestCase):
     # mock stuff
     class MockRoadNetwork(RoadNetwork):
 
-        def route(self, origin: Position, destination: Position) -> Route:
+        def route(self, origin: LinkId, destination: LinkId) -> Route:
             pass
 
         def update(self, sim_time: int) -> RoadNetwork:
             pass
 
-        def geoid_to_position(self, geoid: GeoId) -> Position:
-            return h3.h3_to_geo(geoid)
+        def link_id_to_geoid(self, link_id: LinkId, resolution: int) -> GeoId:
+            return h3.geo_to_h3(0, 0, 11)
 
-        def position_to_geoid(self, position: Position) -> GeoId:
-            return h3.geo_to_h3(position.lat, position.lon, 11)
 
         def geoid_within_geofence(self, coordinate: Coordinate) -> bool:
             return True
 
-        def position_within_geofence(self, position: Position) -> bool:
+        def link_id_within_geofence(self, link_id: LinkId) -> bool:
             return True
 
         def geoid_within_simulation(self, coordinate: Coordinate) -> bool:
             return True
 
-        def position_within_simulation(self, position: Position) -> bool:
+        def link_id_within_simulation(self, link_id: LinkId) -> bool:
             return True
 
     class MockRoadNetworkBadCoordinates(MockRoadNetwork):
         def geoid_within_geofence(self, geoid: GeoId) -> bool:
             return False
 
-        def position_within_geofence(self, position: Position) -> bool:
+        def position_within_geofence(self, position: LinkId) -> bool:
             return False
 
         def geoid_within_simulation(self, geoid: GeoId) -> bool:
             return False
 
-        def position_within_simulation(self, position: Position) -> bool:
+        def position_within_simulation(self, position: LinkId) -> bool:
             return False
 
-    class MockEngine(Engine):
+    class MockPowertrain(Powertrain):
         """
         i haven't made instances of Engine yet. 20191106-rjf
         """
 
-        def route_fuel_cost(self, route: Route) -> KwH:
+        def route_energy_cost(self, route: Route) -> KwH:
             return len(route.route)
 
-        def route_step_fuel_cost(self, route_step: RouteStep) -> KwH:
+        def segment_energy_cost(self, segment: Link) -> KwH:
             return 1.0
 
     mock_veh_1 = Vehicle("m1",
-                         MockEngine(),
-                         Battery.build("test_battery", 100),
+                         MockPowertrain(),
+                         EnergySource.build("test_battery", 100),
                          Coordinate(0, 0),
                          h3.geo_to_h3(0, 0, 11))
 
     mock_veh_2 = Vehicle("m2",
-                         MockEngine(),
-                         Battery.build("test_battery_2", 1000),
+                         MockPowertrain(),
+                         EnergySource.build("test_battery_2", 1000),
                          Coordinate(0, 0),
                          h3.geo_to_h3(0, 0, 11))
 

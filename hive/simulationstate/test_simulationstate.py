@@ -5,17 +5,17 @@ from unittest import TestCase, skip
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.battery import Battery
+from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
-from hive.model.engine import Engine
+from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
-from hive.roadnetwork.position import Position
-from hive.roadnetwork.roadnetwork import RoadNetwork
-from hive.roadnetwork.route import Route
-from hive.roadnetwork.routestep import RouteStep
+
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.routetraversal import Route
+from hive.model.roadnetwork.link import Link
 from hive.simulationstate.simulationstate import SimulationState
 from hive.simulationstate.simulationstateops import initial_simulation_state
 from hive.util.typealiases import *
@@ -248,7 +248,7 @@ class TestSimulationState(TestCase):
     @skip("step expects engines, EngineIds, Chargers and assoc. logic to exist; sadly, they do not")
     def test_step(self):
         veh = SimulationStateTestAssets.mock_vehicle(position=Coordinate(0, 0))
-        veh_route_step = RouteStep(Coordinate(1, 0), 1)
+        veh_route_step = Link(Coordinate(1, 0), 1)
         veh_repositioning = veh.transition(VehicleState.REPOSITIONING)._replace(route=Route((veh_route_step,), 1, 1))
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh_repositioning)
 
@@ -266,7 +266,7 @@ class SimulationStateTestAssets:
     class MockRoadNetwork(RoadNetwork):
         updated_to_time_step: int = 0
 
-        def route(self, origin: Position, destination: Position) -> Route:
+        def route(self, origin: LinkId, destination: LinkId) -> Route:
             pass
 
         def update(self, sim_time: int) -> RoadNetwork:
@@ -274,33 +274,33 @@ class SimulationStateTestAssets:
             updated.updated_to_time_step = sim_time
             return updated
 
-        def geoid_to_position(self, coordinate: Coordinate) -> Position:
+        def geoid_to_position(self, coordinate: Coordinate) -> LinkId:
             return coordinate
 
-        def position_to_geoid(self, position: Position) -> Coordinate:
-            return position
+        def link_id_to_geoid(self, link_id: LinkId) -> Coordinate:
+            return link_id
 
         def geoid_within_geofence(self, coordinate: Coordinate) -> bool:
             return True
 
-        def position_within_geofence(self, position: Position) -> bool:
+        def link_id_within_geofence(self, link_id: LinkId) -> bool:
             return True
 
         def geoid_within_simulation(self, coordinate: Coordinate) -> bool:
             return True
 
-        def position_within_simulation(self, position: Position) -> bool:
+        def link_id_within_simulation(self, link_id: LinkId) -> bool:
             return True
 
-    class MockEngine(Engine):
+    class MockPowertrain(Powertrain):
         """
         i haven't made instances of Engine yet. 20191106-rjf
         """
 
-        def route_fuel_cost(self, route: Route) -> KwH:
+        def route_energy_cost(self, route: Route) -> KwH:
             return len(route.route)
 
-        def route_step_fuel_cost(self, route_step: RouteStep) -> KwH:
+        def segment_energy_cost(self, segment: Link) -> KwH:
             return 1.0
 
     @classmethod
@@ -326,12 +326,12 @@ class SimulationStateTestAssets:
     @classmethod
     def mock_vehicle(cls,
                      vehicle_id="m1",
-                     position: Position = Coordinate(0, 0)) -> Vehicle:
+                     position: LinkId = Coordinate(0, 0)) -> Vehicle:
         geoid = h3.geo_to_h3(position.lat, position.lon, cls.h3_resolution)
         return Vehicle(
             vehicle_id,
-            cls.MockEngine(),
-            Battery.build("battery", 100),
+            cls.MockPowertrain(),
+            EnergySource.build("battery", 100),
             position,
             geoid
         )
