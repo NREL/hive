@@ -2,15 +2,9 @@ name: hive
 channels:
   - defaults
 dependencies:
-  - geopandas=0.4
-  - h3=3.4.3
-  - numpy=1.16
-  - pandas=0.24
-  - pip=19.0
+  - numpy
+  - pip
+  - pytest=5.2
   - python=3.8
-  - pytz=2018.9
   - pip:
-    - utm==0.5
-    - requests==2.21
-    - haversine==2.0
-    - PyYAML==5.1
+    - h3==3.4.3
