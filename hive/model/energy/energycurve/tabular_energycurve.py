@@ -5,7 +5,7 @@ import numpy as np
 from hive.model.energy.energycurve.powercurve import PowerCurve
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import KwH, EnergyCurveId
+from hive.util.typealiases import Kw, EnergyCurveId
 
 
 class TabularPowerCurveInput(TypedDict):
@@ -42,7 +42,7 @@ class TabularPowerCurve(PowerCurve):
     def get_energy_type(self) -> EnergyType:
         return self.energy_type
 
-    def energy_rate(self, energy_source: EnergySource) -> KwH:
+    def energy_rate(self, energy_source: EnergySource) -> Kw:
         """
          (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
          :param energy_source: a vehicle's source of energy

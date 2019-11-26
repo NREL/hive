@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.energysource import EnergySource
-from hive.util.typealiases import KwH, EnergyCurveId
+from hive.util.typealiases import Kw, EnergyCurveId
 
 
 class PowerCurve(ABC):
@@ -25,7 +25,7 @@ class PowerCurve(ABC):
         pass
 
     @abstractmethod
-    def energy_rate(self, energy_source: EnergySource) -> KwH:
+    def energy_rate(self, energy_source: EnergySource) -> Kw:
         """
         (estimated) energy rate due to fueling, based on EnergySource
         :param energy_source: a vehicle's source of energy
