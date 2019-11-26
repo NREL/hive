@@ -1,7 +1,9 @@
-import math
+from __future__ import annotations
+
 from copy import copy
 from typing import Tuple, Dict, Optional, TypeVar
-from hive.util.typealiases import Km, GeoId
+
+from hive.util.typealiases import Km, GeoId, Time
 import haversine
 
 from h3 import h3
@@ -26,17 +28,6 @@ class UnitOps:
 
 
 class H3Ops:
-    # @classmethod
-    # def distance_between_neighboring_hex_centroids(cls, sim_h3_resolution: int) -> Km:
-    #     """
-    #     the distance between two neighboring hex centroids is sqrt(3) * 2(hex_side_length)
-    #     :return: hex centroid distance at this resolution
-    #     """
-    #     # based on https://en.wikipedia.org/wiki/Hexagon#Parameters
-    #     avg_edge_length = h3.edge_length(sim_h3_resolution)
-    #     in_radius = (math.sqrt(3) / 2.0) * avg_edge_length
-    #     return 2.0 * in_radius
-
     @classmethod
     def great_circle_distance(cls, a: GeoId, b: GeoId) -> Km:
         """
@@ -49,6 +40,31 @@ class H3Ops:
         b_coord = h3.h3_to_geo(b)
         distance_km = haversine.haversine(a_coord, b_coord)
         return distance_km
+
+    @classmethod
+    def point_along_link(cls, property_link: 'PropertyLink', available_time: Time) -> GeoId:
+        """
+        finds the GeoId which is some percentage between two GeoIds along a line
+        :param property_link: the link we are finding a mid point along
+        :param available_time: the amount of time to traverse
+        :return: a GeoId along the Link
+        """
+
+        experienced_distance = available_time * property_link.speed
+        percent_trip_experienced = experienced_distance / property_link.distance
+        if percent_trip_experienced <= 0:
+            return property_link.start
+        elif percent_trip_experienced >= 1.0:
+            return property_link.end
+        else:
+            # find the point along the line
+            start = h3.h3_to_geo(property_link.start)
+            end = h3.h3_to_geo(property_link.end)
+            res = h3.h3_get_resolution(property_link.start)
+            lat = start[0] + ((end[0] - start[0]) * percent_trip_experienced)
+            lon = start[1] + ((end[1] - start[1]) * percent_trip_experienced)
+            return h3.geo_to_h3(lat, lon, res)
+
 
 class TupleOps:
     T = TypeVar('T')

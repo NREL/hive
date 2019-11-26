@@ -5,6 +5,7 @@ from h3 import h3
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import Time
 
 
@@ -47,40 +48,27 @@ def traverse_up_to(road_network: RoadNetwork,
         )
     else:
         # traverse up to available_time across this link
-        current_link_speed = property_link.speed
-        agent_link_hex_dist = h3.h3_distance(property_link.start, property_link.end)
-        agent_link_dist = road_network.neighboring_hex_distance * agent_link_hex_dist
-        agent_link_travel_time = agent_link_dist / current_link_speed
-
-        if agent_link_travel_time <= available_time:
+        if property_link.travel_time <= available_time:
             # we can complete this link, so we return (remaining) Link = None
             return LinkTraversal(
                 traversed=property_link,
                 remaining=None,
-                remaining_time=available_time - agent_link_travel_time
+                remaining_time=available_time - property_link.travel_time
             )
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
             # leaving no remaining time.
 
-            # find how many hexes we can traverse
-            agent_hex_dist_lim = int((available_time * current_link_speed) / road_network.neighboring_hex_distance)
-            this_link_hexes = h3.h3_line(property_link.link.start, property_link.link.end)
+            # find the point in this link to split into two sub-links
+            mid_geoid = H3Ops.point_along_link(property_link, available_time)
 
-            # update our agent's link to only include the remaining hexes to traverse
-            # find the hexes,
-            # split as this and next hexes, and then
-            # re-cast as Links
-            this_hexes = this_link_hexes[0:agent_hex_dist_lim+1]
-            this_traversal_o, this_traversal_d = this_hexes[0], this_hexes[-1]
-            this_traversal = Link(property_link.link_id, this_traversal_o, this_traversal_d)
+            # create two sub-links, one for the part that was traversed, and one for the remaining part
+            traversed = property_link.update_link(Link(property_link.link_id, property_link.start, mid_geoid))
+            remaining = property_link.update_link(Link(property_link.link_id, mid_geoid, property_link.end))
 
-            next_hexes = this_link_hexes[agent_hex_dist_lim:]
-            next_traversal_o, next_traversal_d = next_hexes[0], next_hexes[-1]
-            next_traversal = Link(property_link.link_id, next_traversal_o, next_traversal_d)
             return LinkTraversal(
-                traversed=property_link.update_link(this_traversal, road_network.neighboring_hex_distance),
-                remaining=property_link.update_link(next_traversal, road_network.neighboring_hex_distance),
+                traversed=traversed,
+                remaining=remaining,
                 remaining_time=0
             )
 

@@ -5,6 +5,7 @@ from h3 import h3
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
 from hive.model.request import Request
+from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
 from hive.model.roadnetwork.routetraversal import Route
@@ -22,7 +23,6 @@ class TestVehicle(TestCase):
         updated_vehicle = TestVehicle.mock_vehicle()._replace(route=TestVehicle.mock_route())
         self.assertEqual(updated_vehicle.has_route(), True, "should have a route")
 
-    @skip("test not yet implemented")
     def test_add_passengers(self):
         no_pass_veh = TestVehicle.mock_vehicle()
         mock_request = TestVehicle.mock_request()
@@ -155,10 +155,28 @@ class TestVehicle(TestCase):
 
     @classmethod
     def mock_route(cls) -> Route:
-        return Route(route=(Link(Coordinate(0, 5), 5),
-                            Link(Coordinate(5, 5), 5),
-                            Link(Coordinate(5, 10), 5),
-                            Link(Coordinate(10, 10), 5)),
-                     total_distance=20,
-                     total_travel_time=4)
+        sim_h3_resolution = 15
 
+        links = {
+            "1": Link("1",
+                      h3.geo_to_h3(0, 0, sim_h3_resolution),
+                      h3.geo_to_h3(0, 5, sim_h3_resolution)),
+            "2": Link("2",
+                      h3.geo_to_h3(0, 5, sim_h3_resolution),
+                      h3.geo_to_h3(5, 5, sim_h3_resolution)),
+            "3": Link("3",
+                      h3.geo_to_h3(5, 5, sim_h3_resolution),
+                      h3.geo_to_h3(5, 10, sim_h3_resolution)),
+            "4": Link("4",
+                      h3.geo_to_h3(5, 10, sim_h3_resolution),
+                      h3.geo_to_h3(10, 10, sim_h3_resolution)),
+        }
+
+        property_links = {
+            "1": PropertyLink.build(links["1"], 1),
+            "2": PropertyLink.build(links["2"], 1),
+            "3": PropertyLink.build(links["3"], 1),
+            "4": PropertyLink.build(links["4"], 1)
+        }
+
+        return property_links["1"], property_links["2"], property_links["3"], property_links["4"]
