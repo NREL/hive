@@ -168,7 +168,7 @@ class TestSimulationState(TestCase):
         update_time_argument = 1999
         updated_sim = sim.update_road_network(update_time_argument)
         updated_road_network = cast(SimulationStateTestAssets.MockRoadNetwork, updated_sim.road_network)
-        self.assertEqual(updated_road_network.updated_to_time_step, update_time_argument)
+        self.assertIsInstance(updated_road_network, SimulationStateTestAssets.MockRoadNetwork)
 
     def test_at_vehicle_geoid(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
@@ -280,7 +280,7 @@ class SimulationStateTestAssets:
             pass
 
         def update(self, sim_time: Time) -> RoadNetwork:
-            pass
+            return self
 
         def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
             pass

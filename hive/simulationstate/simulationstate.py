@@ -55,7 +55,7 @@ class SimulationState(NamedTuple):
             return TypeError(f"sim.add_request requires a request but received a {type(request)}")
         elif not self.road_network.geoid_within_geofence(request.origin):
             return SimulationStateError(f"origin {request.origin} not within road network geofence")
-        elif not self.road_network.geoid_within_simulation(request.d_geoid):
+        elif not self.road_network.geoid_within_simulation(request.destination):
             return SimulationStateError(f"destination {request.destination} not within entire road network")
         else:
             return self._replace(
