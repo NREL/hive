@@ -7,6 +7,7 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.routetraversal import Route
+from hive.util.helpers import UnitOps
 from hive.util.typealiases import Kw, PowertrainId
 
 
@@ -32,9 +33,20 @@ class BEVTabularPowertrain(Powertrain):
         self.id = data['name']
 
         # linear interpolation function approximation via these lookup values
-        consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
-        self._consumption_mph = sorted(list(map(lambda x: x['mph'], consumption_model)))
-        self._consumption_whmi = list(map(lambda x: x['whmi'], consumption_model))
+        consumption_model_kmph = []
+        for entry in data['consumption_model']:
+            consumption_model_kmph.append(BEVTabularPowertrain.convert_to_internal_units(entry))
+
+        # consumption_model_kmph = map(
+        #     BEVTabularPowertrain.convert_to_internal_units,
+        #     data['consumption_model']
+        # )
+        # consumption_model = sorted(consumption_model_kmph, key=lambda x: x['mph'])
+        consumption_model = sorted(consumption_model_kmph, key=lambda x: x['kmph'])
+        # self._consumption_mph = list(map(lambda x: x['mph'], consumption_model))
+        # self._consumption_whmi = list(map(lambda x: x['whmi'], consumption_model))
+        self._consumption_kmph = list(map(lambda x: x['kmph'], consumption_model))
+        self._consumption_whkm = list(map(lambda x: x['whkm'], consumption_model))
 
         charging_model = sorted(data['charging_model'], key=lambda x: x['soc'])
         self._charging_soc = list(map(lambda x: x['soc'], charging_model))
@@ -47,8 +59,16 @@ class BEVTabularPowertrain(Powertrain):
         return EnergyType.ELECTRIC
 
     def property_link_cost(self, property_link: PropertyLink) -> Kw:
-        watt_per_mile = np.interp(property_link.speed, self._consumption_mph, self._consumption_whmi)
-        return watt_per_mile * property_link.distance
+        """
+        uses mph tabular value and
+        :param property_link:
+        :return:
+        """
+        # speed_mph = UnitOps.kmph_to_mph(property_link.speed)
+        # watt_per_mile = np.interp(speed_mph, self._consumption_mph, self._consumption_whmi)
+        # watt_per_km = UnitOps.mph_to_kmph(watt_per_mile)
+        watt_per_km = np.interp(property_link.speed, self._consumption_kmph, self._consumption_whkm)
+        return watt_per_km * property_link.distance
 
     def energy_cost(self, route: Route) -> Kw:
         return ft.reduce(
@@ -57,5 +77,14 @@ class BEVTabularPowertrain(Powertrain):
             0.0
         )
 
-
-
+    @classmethod
+    def convert_to_internal_units(cls, entry: Dict[str, float]):
+        if "mph" in entry.keys() and "whmi" in entry.keys():
+            return {
+                    "kmph": UnitOps.mph_to_km(entry["mph"]),
+                    "whkm": UnitOps.miles_to_km(entry["whmi"])
+            }
+        elif "kmph" in entry.keys() and "whkm" in entry.keys():
+            return entry
+        else:
+            raise AttributeError(f"energy consumption entry missing entry for either mph or kmph: {entry}")

@@ -37,4 +37,5 @@ def link_distance(link: Link, avg_hex_dist: float) -> float:
     :param avg_hex_dist: the average distance between hexes at the sim_h3_resolution
     :return: the distance of this link
     """
-    return h3.h3_distance(link.start, link.end) * avg_hex_dist
+    num_hexes_distance = h3.h3_distance(link.start, link.end)
+    return num_hexes_distance * avg_hex_dist

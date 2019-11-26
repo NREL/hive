@@ -6,6 +6,24 @@ from hive.util.typealiases import Km
 from h3 import h3
 
 
+class UnitOps:
+    @classmethod
+    def miles_to_km(cls, mph: float) -> float:
+        return mph / 1.609
+
+    @classmethod
+    def km_to_miles(cls, kmph: float) -> float:
+        return kmph * 1.609
+
+    @classmethod
+    def mph_to_km(cls, mph: float) -> float:
+        return mph * 1.609
+
+    @classmethod
+    def km_to_mph(cls, kmph: float) -> float:
+        return kmph / 1.609
+
+
 class H3Ops:
     @classmethod
     def distance_between_neighboring_hex_centroids(cls, sim_h3_resolution: int) -> Km:
@@ -13,9 +31,10 @@ class H3Ops:
         the distance between two neighboring hex centroids is sqrt(3) * 2(hex_side_length)
         :return: hex centroid distance at this resolution
         """
-        # based on https://github.com/Turfjs/turf/issues/623#issuecomment-309683755
+        # based on https://en.wikipedia.org/wiki/Hexagon#Parameters
         avg_edge_length = h3.edge_length(sim_h3_resolution)
-        return math.sqrt(3) * (avg_edge_length * 2)
+        in_radius = (math.sqrt(3) / 2.0) * avg_edge_length
+        return 2.0 * in_radius
 
 
 class TupleOps:
