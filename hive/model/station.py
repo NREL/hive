@@ -3,14 +3,12 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Optional
 
 from hive.model.charger import Charger
-from hive.model.coordinate import Coordinate
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
 
 class Station(NamedTuple):
     id: StationId
-    coordinate: Coordinate
     geoid: GeoId
 
     total_chargers: Dict[Charger, int]
@@ -19,11 +17,10 @@ class Station(NamedTuple):
     @classmethod
     def build(cls,
               id: StationId,
-              coordinate: Coordinate,
               geoid: GeoId,
               total_chargers: Dict[Charger, int]
               ):
-        return cls(id, coordinate, geoid, total_chargers, total_chargers)
+        return cls(id, geoid, total_chargers, total_chargers)
 
     def checkout_charger(self, charger: Charger) -> Optional[Station]:
         chargers = self.available_chargers[charger]

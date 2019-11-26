@@ -1,6 +1,5 @@
 from __future__ import annotations
-from typing import NamedTuple, Optional, Tuple
-from hive.model.coordinate import Coordinate
+from typing import NamedTuple, Optional
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.util.typealiases import *
 
@@ -13,10 +12,8 @@ class Request(NamedTuple):
     if a vehicle has been dispatched to service this Request, then it should
     """
     id: RequestId
-    origin: Coordinate
-    destination: Coordinate
-    o_geoid: GeoId
-    d_geoid: GeoId
+    origin: GeoId
+    destination: GeoId
     departure_time: int
     cancel_time: int
     passengers: Tuple[Passenger]
@@ -26,10 +23,8 @@ class Request(NamedTuple):
     @classmethod
     def build(cls,
               request_id: RequestId,
-              origin: Coordinate,
-              destination: Coordinate,
-              origin_geoid: GeoId,
-              destination_geoid: GeoId,
+              origin: GeoId,
+              destination: GeoId,
               departure_time: int,
               cancel_time: int,
               passengers: int) -> Request:
@@ -38,8 +33,6 @@ class Request(NamedTuple):
         :param request_id:
         :param origin:
         :param destination:
-        :param origin_geoid:
-        :param destination_geoid:
         :param departure_time:
         :param cancel_time:
         :param passengers:
@@ -49,14 +42,12 @@ class Request(NamedTuple):
         assert (cancel_time >= 0)
         assert (passengers > 0)
         request_as_passengers = [
-            Passenger(create_passenger_id(request_id, pass_idx), origin_geoid, destination_geoid, departure_time)
+            Passenger(create_passenger_id(request_id, pass_idx), origin, destination, departure_time)
             for
             pass_idx in range(0, passengers)]
         return Request(request_id,
                        origin,
                        destination,
-                       origin_geoid,
-                       destination_geoid,
                        departure_time,
                        cancel_time,
                        tuple(request_as_passengers))
@@ -81,14 +72,13 @@ class Request(NamedTuple):
         """
         return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
 
-    def update_origin(self, lat, lon) -> Request:
+    def update_origin(self, geoid: GeoId) -> Request:
         """
         used to override a request's origin location as the centroid of the spatial grid,
         to make guarantees about what conditions will make requests overlap with vehicles.
-        :param lat:
-        :param lon:
+        :param geoid:
         :return:
         """
         return self._replace(
-            origin=Coordinate(lat, lon)
+            origin=geoid
         )

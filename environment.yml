@@ -8,3 +8,5 @@ dependencies:
   - python=3.8
   - pip:
     - h3==3.4.3
+    - PyYAML==5.1
+    - haversine==2.1

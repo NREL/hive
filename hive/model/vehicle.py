@@ -22,7 +22,7 @@ class Vehicle(NamedTuple):
     id: VehicleId
     powertrain_id: PowertrainId
     battery: EnergySource
-    position: Position
+    # todo: Need to capture link info. Just link id?
     geoid: GeoId
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
