@@ -4,6 +4,7 @@ from typing import NamedTuple
 
 from h3 import h3
 
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId, Percentage
 
 
@@ -29,13 +30,11 @@ def interpolate_between_geoids(a: GeoId, b: GeoId, percent: Percentage) -> GeoId
     return line[index]
 
 
-def link_distance(link: Link, avg_hex_dist: float) -> float:
+def link_distance(link: Link) -> float:
     """
     determines the distance of a link
     :param link: some road network link, possibly with a different start/end point from
     the matching link in the road network
-    :param avg_hex_dist: the average distance between hexes at the sim_h3_resolution
-    :return: the distance of this link
+    :return: the distance of this link, in kilometers
     """
-    num_hexes_distance = h3.h3_distance(link.start, link.end)
-    return num_hexes_distance * avg_hex_dist
+    return H3Ops.great_circle_distance(link.start, link.end)

@@ -56,7 +56,7 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.battery})"
 
-    def _move(self, engine: Powertrain) -> Vehicle:
+    def _move(self, powertrain: Powertrain) -> Vehicle:
         # take one route step
         # todo: need to update the GeoId here; i think this means the RoadNetwork
         #  needs to be in scope (a parameter of step/_move)
@@ -64,14 +64,14 @@ class Vehicle(NamedTuple):
         this_route_step, updated_route = self.route.step_route()
         sim_h3_resolution = 11  # should come from simulation
         new_geoid = h3.geo_to_h3(this_route_step.position.lat, this_route_step.position.lon, sim_h3_resolution)
-        this_fuel_usage = engine.segment_energy_cost(this_route_step)
+        this_fuel_usage = powertrain.energy_cost(this_route_step)
         updated_battery = self.battery.use_energy(this_fuel_usage)
         return self._replace(
             position=this_route_step.position,
             geoid=new_geoid,
             battery=updated_battery,
             route=updated_route,
-            distance_traveled=self.distance_traveled + this_route_step.distance
+            distance_traveled=self.distance_traveled + this_route_step.great_circle_distance
         )
 
     def step(self, engine: Optional[Powertrain], charger: Optional[Charger]) -> Vehicle:

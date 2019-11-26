@@ -1,7 +1,8 @@
 import math
 from copy import copy
 from typing import Tuple, Dict, Optional, TypeVar
-from hive.util.typealiases import Km
+from hive.util.typealiases import Km, GeoId
+import haversine
 
 from h3 import h3
 
@@ -25,17 +26,29 @@ class UnitOps:
 
 
 class H3Ops:
-    @classmethod
-    def distance_between_neighboring_hex_centroids(cls, sim_h3_resolution: int) -> Km:
-        """
-        the distance between two neighboring hex centroids is sqrt(3) * 2(hex_side_length)
-        :return: hex centroid distance at this resolution
-        """
-        # based on https://en.wikipedia.org/wiki/Hexagon#Parameters
-        avg_edge_length = h3.edge_length(sim_h3_resolution)
-        in_radius = (math.sqrt(3) / 2.0) * avg_edge_length
-        return 2.0 * in_radius
+    # @classmethod
+    # def distance_between_neighboring_hex_centroids(cls, sim_h3_resolution: int) -> Km:
+    #     """
+    #     the distance between two neighboring hex centroids is sqrt(3) * 2(hex_side_length)
+    #     :return: hex centroid distance at this resolution
+    #     """
+    #     # based on https://en.wikipedia.org/wiki/Hexagon#Parameters
+    #     avg_edge_length = h3.edge_length(sim_h3_resolution)
+    #     in_radius = (math.sqrt(3) / 2.0) * avg_edge_length
+    #     return 2.0 * in_radius
 
+    @classmethod
+    def great_circle_distance(cls, a: GeoId, b: GeoId) -> Km:
+        """
+        computes the distance between two geoids
+        :param a: one geoid
+        :param b: another geoid
+        :return: the haversine distance between the two GeoIds
+        """
+        a_coord = h3.h3_to_geo(a)
+        b_coord = h3.h3_to_geo(b)
+        distance_km = haversine.haversine(a_coord, b_coord)
+        return distance_km
 
 class TupleOps:
     T = TypeVar('T')

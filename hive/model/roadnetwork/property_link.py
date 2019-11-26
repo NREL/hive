@@ -21,15 +21,14 @@ class PropertyLink(NamedTuple):
     # grade: float # nice in the future?'
 
     @classmethod
-    def build(cls, link: Link, speed: float, avg_hex_distance: float) -> PropertyLink:
+    def build(cls, link: Link, speed: float) -> PropertyLink:
         """
         alternative constructor which sets distance/travel time based on underlying h3 grid
         :param link: the underlying link representation
         :param speed: the speed for traversing the link
-        :param avg_hex_distance: the distance between neighboring hex centroids at this resolution
         :return: a PropertyLink build around this Link
         """
-        dist = link_distance(link, avg_hex_distance)
+        dist = link_distance(link)
         tt = dist / speed
         return PropertyLink(link.link_id, link, dist, speed, tt)
 
@@ -41,14 +40,11 @@ class PropertyLink(NamedTuple):
     def end(self) -> str:
         return self.link.end
 
-    def update_link(self,
-                    updated_link: Link,
-                    avg_hex_distance: float) -> Union[AttributeError, PropertyLink]:
+    def update_link(self, updated_link: Link) -> Union[AttributeError, PropertyLink]:
         """
         some operations call for updating the the underlying link representation but
         maintaining the properties of the link which are not tied to the link representation.
         :param updated_link: the new Link data
-        :param avg_hex_distance: average distance between hexes at sim_h3_resolution
         :return: the updated PropertyLink
         """
         # todo: is it ok to re-calculate distance/travel time here based on h3 distances?
@@ -56,7 +52,7 @@ class PropertyLink(NamedTuple):
             return AttributeError(
                 f"mismatch: attempting to update PropertyLink {self.link_id} with Link {updated_link.link_id}")
         else:
-            dist = link_distance(updated_link, avg_hex_distance)
+            dist = link_distance(updated_link)
             tt = dist / self.speed
             return self._replace(
                 link=updated_link,

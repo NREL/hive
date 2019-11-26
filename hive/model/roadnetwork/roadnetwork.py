@@ -19,14 +19,6 @@ class RoadNetwork(ABC):
 
     sim_h3_resolution: int
 
-    @functools.cached_property
-    def neighboring_hex_distance(self) -> Km:
-        """
-        gives the distance between neighboring hexes at this simulation resolution
-        :return: neighboring hex centroid distance at this resolution
-        """
-        return H3Ops.distance_between_neighboring_hex_centroids(self.sim_h3_resolution)
-
     @abstractmethod
     def route(self, origin: Link, destination: Link) -> Route:
         pass

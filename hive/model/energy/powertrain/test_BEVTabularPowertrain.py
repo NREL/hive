@@ -1,4 +1,4 @@
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from h3 import h3
 
@@ -6,7 +6,6 @@ from hive.model.energy.powertrain import build_powertrain
 from hive.model.energy.powertrain.bev_tabular_powertrain import BEVTabularPowertrain
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.util.helpers import H3Ops
 
 
 class TestBEVTabularPowertrain(TestCase):
@@ -19,18 +18,17 @@ class TestBEVTabularPowertrain(TestCase):
         cost = powertrain.energy_cost(())
         self.assertEqual(cost, 0.0, "empty route should yield zero energy cost")
 
-    @skip
     def test_leaf_energy_cost_real_route(self):
         """
         the distance should be 3km;
         the speed being 45kmph results in a lookup watts per km of ~0.57
-        so, the result should be around 1.71.
+        so, the result should be around 1.7.
         :return:
         """
         powertrain = build_powertrain("leaf")
         test_route = _TestAssets.mock_route()
         cost = powertrain.energy_cost(test_route)
-        self.assertAlmostEqual(cost, 1.71, places=2)
+        self.assertAlmostEqual(cost, 1.7, places=1)
 
 
 class _TestAssets:
@@ -50,13 +48,11 @@ class _TestAssets:
                   h3.geo_to_h3(37.026992, 122, sim_h3_resolution)),
     }
 
-    neighboring_hex_distance = H3Ops.distance_between_neighboring_hex_centroids(sim_h3_resolution)
-
     property_links = {
         # 45kmph with leaf model should be about .57 watts per km, or about 1.5watts for this trip
-        "1": PropertyLink.build(links["1"], 45, neighboring_hex_distance),
-        "2": PropertyLink.build(links["2"], 45, neighboring_hex_distance),
-        "3": PropertyLink.build(links["3"], 45, neighboring_hex_distance)
+        "1": PropertyLink.build(links["1"], 45),
+        "2": PropertyLink.build(links["2"], 45),
+        "3": PropertyLink.build(links["3"], 45)
     }
 
     @classmethod
