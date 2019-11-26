@@ -19,7 +19,7 @@ class EnergySource(NamedTuple):
     def build(cls, _type: EnergyType, _capacity: KwH, _soc: float = 1.0) -> EnergySource:
         assert 0.0 <= _soc <= 1.0, StateOfChargeError(
             f"constructing battery {_type} with illegal soc of {(_soc * 100.0):.2f}")
-        return cls(_type, _capacity, _capacity * _soc)
+        return EnergySource(_type, _capacity, _capacity * _soc)
 
     def soc(self) -> float:
         return self.load / self.capacity

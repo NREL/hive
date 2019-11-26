@@ -11,23 +11,21 @@ from hive.util.helpers import UnitOps
 from hive.util.typealiases import Kw, PowertrainId
 
 
-class BEVTabularInput(TypedDict):
+class TabularPowertrainInput(TypedDict):
     name: str
     type: str
-    charging_model: List[Dict[float, float]]
     consumption_model: List[Dict[float, float]]
 
 
-class BEVTabularPowertrain(Powertrain):
+class TabularPowertrain(Powertrain):
     """
     builds a tabular, interpolated lookup model from a file
-    for energy charge and consumption
+    for energy consumption
     """
 
-    def __init__(self, data: BEVTabularInput):
+    def __init__(self, data: TabularPowertrainInput):
         if 'name' not in data and \
-                'consumption_model' not in data and \
-                'charging_model' not in data:
+                'consumption_model' not in data:
             raise IOError("invalid input file for tabular powertrain model")
 
         self.id = data['name']
@@ -35,15 +33,11 @@ class BEVTabularPowertrain(Powertrain):
         # linear interpolation function approximation via these lookup values
         consumption_model_kmph = []
         for entry in data['consumption_model']:
-            consumption_model_kmph.append(BEVTabularPowertrain.convert_to_internal_units(entry))
+            consumption_model_kmph.append(TabularPowertrain.convert_to_internal_units(entry))
 
         consumption_model = sorted(consumption_model_kmph, key=lambda x: x['kmph'])
         self._consumption_kmph = np.array(list(map(lambda x: x['kmph'], consumption_model)))
         self._consumption_whkm = np.array(list(map(lambda x: x['whkm'], consumption_model)))
-
-        charging_model = sorted(data['charging_model'], key=lambda x: x['soc'])
-        self._charging_soc = list(map(lambda x: x['soc'], charging_model))
-        self._charging_c_kw = list(map(lambda x: x['kw'], charging_model))
 
     def get_id(self) -> PowertrainId:
         return self.id
