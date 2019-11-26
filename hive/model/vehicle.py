@@ -117,6 +117,9 @@ class Vehicle(NamedTuple):
     def battery_swap(self, battery: EnergySource) -> Vehicle:
         return self._replace(battery=battery)
 
+    def assign_route(self, route: Route) -> Vehicle:
+        return self._replace(route=route)
+
     """
     TRANSITION FUNCTIONS
     --------------------

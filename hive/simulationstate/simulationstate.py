@@ -10,7 +10,7 @@ from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.simulationstate.at_location_response import AtLocationResponse
 from hive.util.exception import *
@@ -133,19 +133,50 @@ class SimulationState(NamedTuple):
 
     def perform_vehicle_state_transformation(self,
                                              vehicle_id: VehicleId,
-                                             next_vehicle_state: Optional[VehicleState]
-                                             ) -> Union[Exception, SimulationState]:
+                                             next_vehicle_state: VehicleState,
+                                             destination: Optional[GeoId] = None,
+                                             ) -> Optional[SimulationState]:
         """
         test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
         :param vehicle_id:
         :param next_vehicle_state:
+        :param destination:
         :return: the updated simulation state or an exception on failure
         """
-        # todo:
-        #  test vehicle.can_transition
-        #  call modify_vehicle with transitioned vehicle
-        #
-        raise NotImplementedError("requires vehicle.can_transition functions to implement")
+        if not isinstance(vehicle_id, VehicleId):
+            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
+        if vehicle_id not in self.vehicles:
+            raise SimulationStateError(f"attempting to update vehicle {vehicle_id} which is not in simulation")
+
+        vehicle = self.vehicles[vehicle_id]
+        if not vehicle.can_transition(next_vehicle_state):
+            return None
+
+        at_location = self.at_geoid(vehicle.geoid)
+
+        if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.CHARGE:
+            if not at_location['stations']:
+                return None
+        elif next_vehicle_state == VehicleState.RESERVE_BASE or next_vehicle_state == VehicleState.CHARGING_BASE:
+            if not at_location['bases']:
+                return None
+        elif next_vehicle_state == VehicleState.SERVICING_TRIP:
+            if not at_location['requests']:
+                return None
+
+        transitioned_vehicle = vehicle.transition(next_vehicle_state)
+
+        route = ()
+
+        if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.MOVE:
+            if not destination:
+                return None
+            route = self.road_network.route(transitioned_vehicle.geoid, destination)
+
+        updated_vehicle = transitioned_vehicle.assign_route(route)
+
+        updated_sim_state = self.modify_vehicle(updated_vehicle)
+        return updated_sim_state
 
     def step(self, time_step_size: int = 1) -> SimulationState:
         """

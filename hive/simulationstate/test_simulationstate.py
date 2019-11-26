@@ -254,6 +254,80 @@ class TestSimulationState(TestCase):
         # request should have been removed
         self.assertNotIn(req.id, sim_boarded.requests, "request should be removed from sim")
 
+    def test_perform_vehicle_state_transformation_base(self):
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        bas = SimulationStateTestAssets.mock_base(geoid=somewhere)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(bas)
+
+        sim_updated = sim.perform_vehicle_state_transformation(veh.id, VehicleState.RESERVE_BASE)
+
+        self.assertIsNotNone(sim_updated)
+
+        updated_veh = sim_updated.vehicles[veh.id]
+        self.assertEqual(updated_veh.vehicle_state, VehicleState.RESERVE_BASE)
+
+    def test_perform_vehicle_state_transformation_base_no_base(self):
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        bas = SimulationStateTestAssets.mock_base(geoid=somewhere)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere_else)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(bas)
+
+        sim_updated = sim.perform_vehicle_state_transformation(veh.id, VehicleState.RESERVE_BASE)
+
+        self.assertIsNone(sim_updated)
+
+    def test_perform_vehicle_state_transformation_charge(self):
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+
+        sim_updated = sim.perform_vehicle_state_transformation(veh.id, VehicleState.CHARGING_STATION)
+
+        self.assertIsNotNone(sim_updated)
+
+        updated_veh = sim_updated.vehicles[veh.id]
+        self.assertEqual(updated_veh.vehicle_state, VehicleState.CHARGING_STATION)
+
+    def test_perform_vehicle_state_transformation_charge_no_station(self):
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere_else)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+
+        sim_updated = sim.perform_vehicle_state_transformation(veh.id, VehicleState.CHARGING_STATION)
+
+        self.assertIsNone(sim_updated)
+
+    def test_perform_vehicle_state_transformation_serve_trip(self):
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere, passengers=2)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+
+        sim_updated = sim.perform_vehicle_state_transformation(veh.id, VehicleState.SERVICING_TRIP, req.destination)
+
+        self.assertIsNotNone(sim_updated)
+
+        updated_veh = sim_updated.vehicles[veh.id]
+        self.assertEqual(updated_veh.vehicle_state, VehicleState.SERVICING_TRIP)
+
+        self.assertTrue(updated_veh.has_route())
+
+    def test_perform_vehicle_state_transformation_serve_trip_no_reqs(self):
+        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere_else, passengers=2)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+
+        sim_updated = sim.perform_vehicle_state_transformation(veh.id, VehicleState.SERVICING_TRIP, req.destination)
+
+        self.assertIsNone(sim_updated)
+
     @skip("step expects engines, EngineIds, Chargers and assoc. logic to exist; sadly, they do not")
     def test_step(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
@@ -273,8 +347,8 @@ class TestSimulationState(TestCase):
 class SimulationStateTestAssets:
     class MockRoadNetwork(RoadNetwork):
 
-        def route(self, origin: Link, destination: Link) -> Route:
-            pass
+        def route(self, origin: GeoId, destination: GeoId) -> Route:
+            return (PropertyLink("mpl", Link("ml", origin, destination), 1, 1, 1), )
 
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
             pass
