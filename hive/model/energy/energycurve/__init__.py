@@ -3,8 +3,8 @@ from typing import Union
 import yaml
 from pkg_resources import resource_string
 
-from hive.model.energy.energycurve.energycurve import EnergyCurve
-from hive.model.energy.energycurve.tabular_energycurve import TabularEnergyCurve
+from hive.model.energy.energycurve.powercurve import PowerCurve
+from hive.model.energy.energycurve.tabular_energycurve import TabularPowerCurve
 
 __doc__ = """
 
@@ -15,11 +15,11 @@ energycurve_models = {
 }
 
 energycurve_constructors = {
-    'tabular': TabularEnergyCurve
+    'tabular': TabularPowerCurve
 }
 
 
-def build_energycurve(name: str) -> Union[IOError, EnergyCurve]:
+def build_energycurve(name: str) -> Union[IOError, PowerCurve]:
     """
     constructs EnergyCurve objects from file descriptions
     :param name: name of a valid energy curve type

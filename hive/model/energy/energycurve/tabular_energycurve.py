@@ -2,26 +2,26 @@ from typing import TypedDict, Dict, List
 
 import numpy as np
 
-from hive.model.energy.energycurve.energycurve import EnergyCurve
+from hive.model.energy.energycurve.powercurve import PowerCurve
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import Kw, EnergyCurveId
+from hive.util.typealiases import KwH, EnergyCurveId
 
 
-class TabularEnergyCurveInput(TypedDict):
+class TabularPowerCurveInput(TypedDict):
     name: str
     type: str
     energy_type: str
     energy_curve: List[Dict[float, float]]
 
 
-class TabularEnergyCurve(EnergyCurve):
+class TabularPowerCurve(PowerCurve):
     """
     builds a tabular, interpolated lookup model from a file
     for energy curves
     """
 
-    def __init__(self, data: TabularEnergyCurveInput):
+    def __init__(self, data: TabularPowerCurveInput):
         if 'name' not in data and \
                 'charging_model' not in data:
             raise IOError("invalid input file for tabular energy curve model")
@@ -42,11 +42,11 @@ class TabularEnergyCurve(EnergyCurve):
     def get_energy_type(self) -> EnergyType:
         return self.energy_type
 
-    def energy_gain(self, energy_source: EnergySource) -> Kw:
+    def energy_rate(self, energy_source: EnergySource) -> KwH:
         """
-         (estimated) energy gain due to fueling, based on an interpolated tabular lookup model
+         (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
          :param energy_source: a vehicle's source of energy
-         :return: energy that can be gained over this time
+         :return: energy rate in KwH for charging with the current state of the EnergySource
          """
         soc = energy_source.soc()
         soc_lookup = soc * 100
