@@ -37,16 +37,9 @@ class BEVTabularPowertrain(Powertrain):
         for entry in data['consumption_model']:
             consumption_model_kmph.append(BEVTabularPowertrain.convert_to_internal_units(entry))
 
-        # consumption_model_kmph = map(
-        #     BEVTabularPowertrain.convert_to_internal_units,
-        #     data['consumption_model']
-        # )
-        # consumption_model = sorted(consumption_model_kmph, key=lambda x: x['mph'])
         consumption_model = sorted(consumption_model_kmph, key=lambda x: x['kmph'])
-        # self._consumption_mph = list(map(lambda x: x['mph'], consumption_model))
-        # self._consumption_whmi = list(map(lambda x: x['whmi'], consumption_model))
-        self._consumption_kmph = list(map(lambda x: x['kmph'], consumption_model))
-        self._consumption_whkm = list(map(lambda x: x['whkm'], consumption_model))
+        self._consumption_kmph = np.array(list(map(lambda x: x['kmph'], consumption_model)))
+        self._consumption_whkm = np.array(list(map(lambda x: x['whkm'], consumption_model)))
 
         charging_model = sorted(data['charging_model'], key=lambda x: x['soc'])
         self._charging_soc = list(map(lambda x: x['soc'], charging_model))
@@ -64,9 +57,6 @@ class BEVTabularPowertrain(Powertrain):
         :param property_link:
         :return:
         """
-        # speed_mph = UnitOps.kmph_to_mph(property_link.speed)
-        # watt_per_mile = np.interp(speed_mph, self._consumption_mph, self._consumption_whmi)
-        # watt_per_km = UnitOps.mph_to_kmph(watt_per_mile)
         watt_per_km = np.interp(property_link.speed, self._consumption_kmph, self._consumption_whkm)
         return watt_per_km * property_link.distance
 
