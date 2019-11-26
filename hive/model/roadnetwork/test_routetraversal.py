@@ -140,13 +140,11 @@ class TestRouteTraversalAssets:
                   h3.geo_to_h3(37.03, 122, sim_h3_resolution)),
     }
 
-    neighboring_hex_distance = H3Ops.distance_between_neighboring_hex_centroids(sim_h3_resolution)
-
     property_links = {
         # distance of 1.11 KM, speed of 10 KM/time unit, results in 0.1ish time units
-        "1": PropertyLink.build(links["1"], 10, neighboring_hex_distance),
-        "2": PropertyLink.build(links["2"], 10, neighboring_hex_distance),
-        "3": PropertyLink.build(links["3"], 10, neighboring_hex_distance)
+        "1": PropertyLink.build(links["1"], 10),
+        "2": PropertyLink.build(links["2"], 10),
+        "3": PropertyLink.build(links["3"], 10)
     }
 
     @classmethod

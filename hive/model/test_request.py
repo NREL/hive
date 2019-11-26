@@ -1,5 +1,6 @@
 import unittest
 
+from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import KwH
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
@@ -32,14 +33,6 @@ class MyTestCase(unittest.TestCase):
         passengers=passengers
     )
 
-    class FakePowertrain(Powertrain):
-
-        def route_energy_cost(self, route: Route) -> KwH:
-            return 1.0
-
-        def segment_energy_cost(self, segment: Link) -> KwH:
-            return 1.0
-
     def test_request_constructor(self):
         """
         the constructed request should not modify its arguments
@@ -55,12 +48,11 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = EnergySource.build("test_battery", 100.0)
-        engine = self.FakePowertrain()
+        battery = EnergySource.build(EnergyType.ELECTRIC, 100.0)
         vehicle = Vehicle(id="test_vehicle",
+                          powertrain_id="fake_powertrain_id",
                           position=Coordinate(0, 0),
                           battery=battery,
-                          engine=engine,
                           geoid=h3.geo_to_h3(0, 0, 11))
         request_as_passengers = self.request.passengers
         updated_vehicle = vehicle.add_passengers(request_as_passengers)

@@ -47,24 +47,21 @@ def traverse_up_to(road_network: RoadNetwork,
         )
     else:
         # traverse up to available_time across this link
-        current_link_speed = property_link.speed
-        agent_link_hex_dist = h3.h3_distance(property_link.start, property_link.end)
-        agent_link_dist = road_network.neighboring_hex_distance * agent_link_hex_dist
-        agent_link_travel_time = agent_link_dist / current_link_speed
-
-        if agent_link_travel_time <= available_time:
+        if property_link.travel_time <= available_time:
             # we can complete this link, so we return (remaining) Link = None
             return LinkTraversal(
                 traversed=property_link,
                 remaining=None,
-                remaining_time=available_time - agent_link_travel_time
+                remaining_time=available_time - property_link.travel_time
             )
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
             # leaving no remaining time.
 
             # find how many hexes we can traverse
-            agent_hex_dist_lim = int((available_time * current_link_speed) / road_network.neighboring_hex_distance)
+            experienced_distance = available_time * property_link.speed
+            percent_trip_experienced = experienced_distance / property_link.distance
+            agent_hex_dist_lim = int((available_time * property_link.speed) / road_network.neighboring_hex_distance)
             this_link_hexes = h3.h3_line(property_link.link.start, property_link.link.end)
 
             # update our agent's link to only include the remaining hexes to traverse
@@ -79,8 +76,8 @@ def traverse_up_to(road_network: RoadNetwork,
             next_traversal_o, next_traversal_d = next_hexes[0], next_hexes[-1]
             next_traversal = Link(property_link.link_id, next_traversal_o, next_traversal_d)
             return LinkTraversal(
-                traversed=property_link.update_link(this_traversal, road_network.neighboring_hex_distance),
-                remaining=property_link.update_link(next_traversal, road_network.neighboring_hex_distance),
+                traversed=property_link.update_link(this_traversal),
+                remaining=property_link.update_link(next_traversal),
                 remaining_time=0
             )
 

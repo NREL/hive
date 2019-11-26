@@ -22,7 +22,6 @@ class TestVehicle(TestCase):
         updated_vehicle = TestVehicle.mock_vehicle()._replace(route=TestVehicle.mock_route())
         self.assertEqual(updated_vehicle.has_route(), True, "should have a route")
 
-    @skip("test not yet implemented")
     def test_add_passengers(self):
         no_pass_veh = TestVehicle.mock_vehicle()
         mock_request = TestVehicle.mock_request()
