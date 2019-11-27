@@ -73,9 +73,18 @@ class Vehicle(NamedTuple):
         updated_energy_source = self.energy_source.use_energy(energy_used)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 
-        new_route_vehicle = less_energy_vehicle.assign_route(traverse_result.remaining_route)
+        remaining_route = traverse_result.remaining_route
 
-        return new_route_vehicle
+        new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
+
+        updated_location_vehicle = new_route_vehicle._replace(
+            geoid=remaining_route[0].link.start,
+            property_link=remaining_route[0]
+        )
+
+        print(updated_location_vehicle.route)
+
+        return updated_location_vehicle
 
     def battery_swap(self, battery: EnergySource) -> Vehicle:
         return self._replace(energy_source=battery)

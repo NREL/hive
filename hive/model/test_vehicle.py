@@ -142,12 +142,20 @@ class TestVehicle(TestCase):
         vehicle = TestVehicle.mock_vehicle().transition(VehicleState.REPOSITIONING)
         power_train = TestVehicle.mock_powertrain()
         road_network = TestVehicle.mock_network()
+        start_geoid = vehicle.geoid
 
         vehicle_w_route = vehicle.assign_route(TestVehicle.mock_route())
 
-        moved_vehicle = vehicle_w_route.move(road_network=road_network, power_train=power_train, time_step=1)
+        moved_vehicle = vehicle_w_route.move(road_network=road_network, power_train=power_train, time_step=10)
+        m2 = moved_vehicle.move(road_network=road_network, power_train=power_train, time_step=10)
+        m3 = m2.move(road_network=road_network, power_train=power_train, time_step=10)
 
         self.assertLess(moved_vehicle.energy_source.soc(), 1)
+        self.assertNotEqual(start_geoid, moved_vehicle.geoid)
+        self.assertNotEqual(start_geoid, moved_vehicle.property_link.link.start)
+
+        self.assertNotEqual(moved_vehicle.geoid, m2.geoid)
+        self.assertNotEqual(m2.property_link.link.start, m3.property_link.link.start)
 
     @classmethod
     def mock_powertrain(cls) -> Powertrain:
@@ -210,6 +218,15 @@ class VehicleTestAssests:
             else:
                 return None
 
+        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+            link_id = property_link.link.link_id
+            if link_id in self.property_links:
+                current_property_link = self.property_links[link_id]
+                updated_property_link = property_link.update_speed(current_property_link.speed)
+                return updated_property_link
+            else:
+                return None
+
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
             return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
 
@@ -253,8 +270,8 @@ class VehicleTestAssests:
     }
 
     property_links = {
-        "1": PropertyLink.build(links["1"], 1),
-        "2": PropertyLink.build(links["2"], 1),
-        "3": PropertyLink.build(links["3"], 1),
-        "4": PropertyLink.build(links["4"], 1)
+        "1": PropertyLink.build(links["1"], 10),
+        "2": PropertyLink.build(links["2"], 10),
+        "3": PropertyLink.build(links["3"], 10),
+        "4": PropertyLink.build(links["4"], 10)
     }
