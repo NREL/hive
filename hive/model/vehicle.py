@@ -10,6 +10,7 @@ from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 
 from hive.model.charger import Charger
+from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 
 from hive.model.roadnetwork.routetraversal import Route
@@ -22,8 +23,8 @@ class Vehicle(NamedTuple):
     id: VehicleId
     powertrain_id: PowertrainId
     battery: EnergySource
-    # todo: Need to capture link info. Just link id?
     geoid: GeoId
+    property_link: PropertyLink
     soc_upper_limit: Percentage = 1.0
     soc_lower_limit: Percentage = 0.0
     route: Route = ()
@@ -116,6 +117,9 @@ class Vehicle(NamedTuple):
 
     def battery_swap(self, battery: EnergySource) -> Vehicle:
         return self._replace(battery=battery)
+
+    def assign_route(self, route: Route) -> Vehicle:
+        return self._replace(route=route)
 
     """
     TRANSITION FUNCTIONS
