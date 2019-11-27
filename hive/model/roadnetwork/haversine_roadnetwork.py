@@ -34,8 +34,10 @@ class HaversineRoadNetwork(RoadNetwork):
 
         return start, end
 
-    def route(self, origin: GeoId, destination: GeoId) -> Route:
-        link_id = self._geoids_to_link_id(origin, destination)
+    def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
+        start = origin.link.start
+        end = destination.link.end
+        link_id = self._geoids_to_link_id(start, end)
 
         property_link = self.get_link(link_id)
 
