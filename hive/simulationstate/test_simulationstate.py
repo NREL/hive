@@ -347,11 +347,13 @@ class TestSimulationState(TestCase):
 class SimulationStateTestAssets:
     class MockRoadNetwork(RoadNetwork):
 
-        def route(self, origin: GeoId, destination: GeoId) -> Route:
-            return (PropertyLink("mpl", Link("ml", origin, destination), 1, 1, 1), )
+        def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
+            start = origin.link.start
+            end = destination.link.end
+            return (PropertyLink("mpl", Link("ml", start, end), 1, 1, 1), )
 
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
-            pass
+            return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
 
         def update(self, sim_time: Time) -> RoadNetwork:
             return self
@@ -401,10 +403,13 @@ class SimulationStateTestAssets:
                      vehicle_id="m1",
                      geoid: GeoId = h3.geo_to_h3(39.75, -105, 15)) -> Vehicle:
         mock_powertrain = cls.MockPowertrain()
+        mock_property_link = cls.MockRoadNetwork().property_link_from_geoid(geoid)
         mock_veh = Vehicle(vehicle_id,
                            mock_powertrain.get_id(),
                            EnergySource.build(EnergyType.ELECTRIC, 40, 1),
-                           geoid)
+                           geoid,
+                           mock_property_link,
+                           )
         return mock_veh
 
     @classmethod

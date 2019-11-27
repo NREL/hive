@@ -171,7 +171,9 @@ class SimulationState(NamedTuple):
         if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.MOVE:
             if not destination:
                 return None
-            route = self.road_network.route(transitioned_vehicle.geoid, destination)
+            start = transitioned_vehicle.property_link
+            end = self.road_network.property_link_from_geoid(destination)
+            route = self.road_network.route(start, end)
 
         updated_vehicle = transitioned_vehicle.assign_route(route)
 

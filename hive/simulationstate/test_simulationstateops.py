@@ -110,7 +110,7 @@ class TestSimulationStateOps(TestCase):
             pass
 
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
-            pass
+            return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
 
         def update(self, sim_time: Time) -> RoadNetwork:
             pass
@@ -154,16 +154,20 @@ class TestSimulationStateOps(TestCase):
             return len(route)
 
     mock_powertrain = MockPowertrain()
+    mock_geoid = h3.geo_to_h3(39.75, -105, 15)
+    mock_property_link = MockRoadNetwork().property_link_from_geoid(mock_geoid)
 
     mock_veh_1 = Vehicle("m1",
                          mock_powertrain.get_id(),
                          EnergySource.build(EnergyType.ELECTRIC, 40, 1),
-                         h3.geo_to_h3(39.75, -105, 15))
+                         mock_geoid,
+                         mock_property_link)
 
     mock_veh_2 = Vehicle("m2",
                          mock_powertrain.get_id(),
                          EnergySource.build(EnergyType.ELECTRIC, 40, 1),
-                         h3.geo_to_h3(39.75, -105, 15))
+                         mock_geoid,
+                         mock_property_link)
 
     mock_station_1 = Station.build("s1", h3.geo_to_h3(39.75, -105.01, 15), {Charger.LEVEL_2: 5})
     mock_station_2 = Station.build("s2", h3.geo_to_h3(39.74, -105.01, 15), {Charger.LEVEL_2: 5})

@@ -20,7 +20,7 @@ class RoadNetwork(ABC):
     sim_h3_resolution: int
 
     @abstractmethod
-    def route(self, origin: GeoId, destination: GeoId) -> Route:
+    def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
         pass
 
     @abstractmethod
