@@ -82,8 +82,6 @@ class Vehicle(NamedTuple):
             property_link=remaining_route[0]
         )
 
-        print(updated_location_vehicle.route)
-
         return updated_location_vehicle
 
     def battery_swap(self, battery: EnergySource) -> Vehicle:
