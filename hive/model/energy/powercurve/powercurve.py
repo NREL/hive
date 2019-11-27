@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.energysource import EnergySource
-from hive.util.typealiases import Kw, EnergyCurveId
+from hive.util.typealiases import Kw, PowerCurveId
 
 
 class PowerCurve(ABC):
@@ -13,7 +13,7 @@ class PowerCurve(ABC):
     """
 
     @abstractmethod
-    def get_id(self) -> EnergyCurveId:
+    def get_id(self) -> PowerCurveId:
         pass
 
     @abstractmethod

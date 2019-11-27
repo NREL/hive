@@ -1,25 +1,26 @@
 from __future__ import annotations
 
+import math
 from typing import NamedTuple
 
-from hive.util.typealiases import KwH
+from hive.model.energy.powercurve import PowerCurve
+from hive.util.typealiases import KwH, PowerCurveId, Time
 from hive.util.exception import StateOfChargeError
-from hive.model.energy.energytype import EnergyType
 
 
 class EnergySource(NamedTuple):
     """
     a battery has a battery type, capacity and a load
     """
-    type: EnergyType
+    powercurve_id: PowerCurveId
     capacity: KwH
     load: KwH
 
     @classmethod
-    def build(cls, _type: EnergyType, _capacity: KwH, _soc: float = 1.0) -> EnergySource:
-        assert 0.0 <= _soc <= 1.0, StateOfChargeError(
-            f"constructing battery {_type} with illegal soc of {(_soc * 100.0):.2f}")
-        return EnergySource(_type, _capacity, _capacity * _soc)
+    def build(cls, powercurve_id: PowerCurveId, capacity: KwH, soc: float = 1.0) -> EnergySource:
+        assert 0.0 <= soc <= 1.0, StateOfChargeError(
+            f"constructing battery with illegal soc of {(soc * 100.0):.2f}")
+        return EnergySource(powercurve_id, capacity, capacity * soc)
 
     def soc(self) -> float:
         return self.load / self.capacity
@@ -29,8 +30,10 @@ class EnergySource(NamedTuple):
         assert updated_load >= 0.0, StateOfChargeError("Battery fell below 0% SoC")
         return self._replace(load=updated_load)
 
-    def load_energy(self, rate):
-        updated_load = self.load + 1.0 # todo: whatever needs to happen here
+    def load_energy(self, powercurve: PowerCurve, time: Time):
+        rate = powercurve.energy_rate(self)
+        effect = rate * time
+        updated_load = math.min(self.capacity, self.load + effect)
         return self._replace(load=updated_load)
 
     def __repr__(self) -> str:

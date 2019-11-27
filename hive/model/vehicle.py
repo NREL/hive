@@ -21,6 +21,7 @@ class Vehicle(NamedTuple):
     # fixed vehicle attributes
     id: VehicleId
     powertrain_id: PowertrainId
+    powercurve_id: PowerCurveId
     battery: EnergySource
     # todo: Need to capture link info. Just link id?
     geoid: GeoId
@@ -73,6 +74,8 @@ class Vehicle(NamedTuple):
             route=updated_route,
             distance_traveled=self.distance_traveled + this_route_step.great_circle_distance
         )
+
+    def _charge(self, powertrain: Powertrain, energy):
 
     def step(self, engine: Optional[Powertrain], charger: Optional[Charger]) -> Vehicle:
         """
