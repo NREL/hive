@@ -6,6 +6,7 @@ from typing import NamedTuple, Dict, Optional
 from h3 import h3
 
 from hive.model.energy.energysource import EnergySource
+from hive.model.energy.powercurve import PowerCurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 
@@ -75,7 +76,20 @@ class Vehicle(NamedTuple):
             distance_traveled=self.distance_traveled + this_route_step.great_circle_distance
         )
 
-    def _charge(self, powertrain: Powertrain, energy):
+    def charge(self,
+                powertrain: Powertrain,
+                powercurve: PowerCurve,
+                charger: Charger,
+                time: Time) -> Vehicle:
+        """
+        applies a charge event to a vehicle
+        :param powertrain: the vehicle's powertrain model
+        :param powercurve: the vehicle's powercurve model
+        :param charger: the charger provided by the station
+        :param time: duration of this time step
+        :return: the updated Vehicle
+        """
+        pass
 
     def step(self, engine: Optional[Powertrain], charger: Optional[Charger]) -> Vehicle:
         """
