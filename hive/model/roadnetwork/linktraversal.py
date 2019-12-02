@@ -36,7 +36,7 @@ def traverse_up_to(road_network: RoadNetwork,
              regardless, return the agent's remaining time after traversing
              if there was any error, return the exception instead.
     """
-    property_link = road_network.get_link(property_link.link_id)
+    property_link = road_network.get_current_property_link(property_link)
     if property_link is None:
         return AttributeError(f"attempting to traverse link {property_link.link_id} which does not exist")
     elif property_link.start == property_link.end:
