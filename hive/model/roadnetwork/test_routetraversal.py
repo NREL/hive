@@ -103,6 +103,15 @@ class MockRoadNetwork(RoadNetwork):
         else:
             return None
 
+    def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+        link_id = property_link.link.link_id
+        if link_id in self.property_links:
+            current_property_link = self.property_links[link_id]
+            updated_property_link = property_link.update_speed(current_property_link.speed)
+            return updated_property_link
+        else:
+            return None
+
     def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
         pass
 
