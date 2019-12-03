@@ -370,8 +370,12 @@ class SimulationStateTestAssets:
         def geoid_within_simulation(self, geoid: GeoId) -> bool:
             return True
 
+        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+            raise NotImplementedError("implement if needed for testing")
+
         def link_id_within_simulation(self, link_id: LinkId) -> bool:
             return True
+
 
     class MockPowertrain(Powertrain):
         def get_id(self) -> PowertrainId:

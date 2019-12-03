@@ -5,7 +5,7 @@ RequestId = str
 VehicleId = str
 StationId = str
 PowertrainId = str
-EnergyCurveId = str
+PowerCurveId = str
 BaseId = str
 PassengerId = str
 

@@ -5,7 +5,7 @@ import numpy as np
 from hive.model.energy.energycurve.powercurve import PowerCurve
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import Kw, EnergyCurveId
+from hive.util.typealiases import Kw, PowerCurveId
 
 
 class TabularPowerCurveInput(TypedDict):
@@ -36,7 +36,7 @@ class TabularPowerCurve(PowerCurve):
         self._charging_soc = np.array(list(map(lambda x: x['soc'], charging_model)))
         self._charging_c_kw = np.array(list(map(lambda x: x['kw'], charging_model)))
 
-    def get_id(self) -> EnergyCurveId:
+    def get_id(self) -> PowerCurveId:
         return self.id
 
     def get_energy_type(self) -> EnergyType:
