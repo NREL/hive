@@ -5,6 +5,7 @@ from pkg_resources import resource_string
 
 from hive.model.energy.energycurve.powercurve import PowerCurve
 from hive.model.energy.energycurve.tabular_energycurve import TabularPowerCurve
+from hive.model.energy.energytype import EnergyType
 
 __doc__ = """
 
@@ -12,6 +13,10 @@ __doc__ = """
 
 energycurve_models = {
     'leaf': resource_string('hive.resources.energycurve', 'leaf.yaml')
+}
+
+energycurve_energy_types = {
+    'leaf': EnergyType.ELECTRIC
 }
 
 energycurve_constructors = {
