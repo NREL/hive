@@ -12,7 +12,7 @@ from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.link import Link
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import Route
 from hive.simulationstate.simulationstate import SimulationState

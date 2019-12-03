@@ -1,11 +1,10 @@
-import copy
 from typing import cast, Optional
 from unittest import TestCase, skip
 
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
 from hive.model.energy.energytype import EnergyType
@@ -84,16 +83,13 @@ class TestSimulationState(TestCase):
         sim = SimulationStateTestAssets.mock_empty_sim()
         sim_before_update = sim.add_vehicle(veh)
 
-        # modify some values on the vehicle
-        new_soc_lower_limit = 0.5
+        # modify some value on the vehicle
         new_geoid = h3.geo_to_h3(39.77, -105, sim_before_update.sim_h3_resolution)
-        updated_vehicle = veh._replace(geoid=new_geoid,
-                                       soc_lower_limit=new_soc_lower_limit)
+        updated_vehicle = veh._replace(geoid=new_geoid)
 
         sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
 
         # confirm sim reflects changes to vehicle
-        self.assertEqual(sim_after_update.vehicles[veh.id].soc_lower_limit, new_soc_lower_limit)
         self.assertIn(veh.id,
                       sim_after_update.v_locations[new_geoid],
                       "new vehicle geoid was not updated correctly")

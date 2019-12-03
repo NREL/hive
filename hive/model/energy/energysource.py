@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from typing import NamedTuple
 
 from hive.model.energy.energytype import EnergyType
@@ -16,6 +15,7 @@ class EnergySource(NamedTuple):
     """
     powercurve_id: PowerCurveId
     energy_type: EnergyType
+    max_charge_acceptance: KwH
     capacity: KwH
     load: KwH
 
@@ -24,18 +24,24 @@ class EnergySource(NamedTuple):
               powercurve_id: PowerCurveId,
               energy_type: EnergyType,
               capacity: KwH,
+              max_charge_acceptance: KwH,
               soc: Percentage = 1.0) -> EnergySource:
         """
         builds an EnergySource for a Vehicle
         :param powercurve_id: the id of the powercurve associated with charging this EnergySource
         :param energy_type: the type of energy used
         :param capacity: the fuel capacity of this EnergySource
+        :param max_charge_acceptance: the load that this EnergySource is limited to based on
+        manufacturer requirements and implementation
         :param soc: the initial state of charge of this vehicle, in percentage
         :return:
         """
         assert 0.0 <= soc <= 1.0, StateOfChargeError(
             f"constructing battery with illegal soc of {(soc * 100.0):.2f}%")
-        return EnergySource(powercurve_id, energy_type, capacity, capacity * soc)
+        assert 0.0 <= max_charge_acceptance <= capacity, StateOfChargeError(
+            f"max charge acceptance {max_charge_acceptance} needs to be between zero and capacity {capacity} provided")
+
+        return EnergySource(powercurve_id, energy_type, max_charge_acceptance, capacity, capacity * soc)
 
     def soc(self) -> Percentage:
         """
@@ -49,14 +55,14 @@ class EnergySource(NamedTuple):
         True if the EnergySource is full of energy
         :return: bool
         """
-        return self.load == self.capacity
+        return self.load == self.max_charge_acceptance
 
     def not_full(self) -> bool:
         """
         True if the EnergySource is not full of energy
         :return: bool
         """
-        return self.load != self.capacity
+        return self.load != self.max_charge_acceptance
 
     def is_empty(self) -> bool:
         """
@@ -81,11 +87,13 @@ class EnergySource(NamedTuple):
         :param fuel_gained: the fuel gained for this vehicle due to a charge event
         :return: the updated EnergySource with fuel added
         """
-        updated_load = min(self.capacity, self.load + fuel_gained)
+        updated_load = min(self.max_charge_acceptance, self.load + fuel_gained)
         return self._replace(load=updated_load)
 
     def __repr__(self) -> str:
-        return f"Battery({self.energy_type},cap={self.capacity}, load={self.load}/{(self.soc() * 100.0):.2f}%)"
+        soc = self.soc() * 100.0
+        max_chrg = self.max_charge_acceptance
+        return f"Battery({self.energy_type},cap={self.capacity}, max={max_chrg} load={self.load}/{soc:.2f}%) "
 
     def copy(self) -> EnergySource:
         return copy(self)

@@ -31,12 +31,9 @@ class StateOfChargeError(Exception):
     state of charge must exist in the range [0, 1]
     """
 
-    def __init__(self, soc, vehicle_id):
+    def __init__(self, soc):
 
-        self.message = "Illegal state of charge value {} for agent {}".format(
-            soc,
-            vehicle_id
-        )
+        self.message = "Illegal state of charge value {}".format(soc)
 
     def __str__(self):
         return repr(self.message)

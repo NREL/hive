@@ -3,9 +3,7 @@ from __future__ import annotations
 import copy
 from typing import NamedTuple, Dict, Optional
 
-from h3 import h3
-
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.powercurve import PowerCurve
 from hive.model.energy.powertrain import Powertrain
@@ -26,12 +24,8 @@ class Vehicle(NamedTuple):
     energy_source: EnergySource
     geoid: GeoId
     property_link: PropertyLink
-    soc_upper_limit: Percentage = 1.0
-    soc_lower_limit: Percentage = 0.0
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    # frozenmap implementation does not yet exist
-    # https://www.python.org/dev/peps/pep-0603/
     passengers: Dict[PassengerId, Passenger] = {}
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
@@ -72,8 +66,8 @@ class Vehicle(NamedTuple):
         if self.energy_source.is_full():
             return self.transition(VehicleState.IDLE)
         else:
-            updated_energy_source = self.energy_source.load_energy(powercurve, duration)
-            return self
+            updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
+            return self._replace(energy_source=updated_energy_source)
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
         """

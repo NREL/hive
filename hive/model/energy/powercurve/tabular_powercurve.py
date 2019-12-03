@@ -2,18 +2,18 @@ from typing import TypedDict, Dict, List
 
 import numpy as np
 
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.energy.powercurve.powercurve import PowerCurve
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import Kw, PowerCurveId, Time
+from hive.util.typealiases import PowerCurveId, Time
 
 
 class TabularPowerCurveInput(TypedDict):
     name: str
     type: str
     power_type: str
-    charge_acceptance: int
+    reported_max_charge_acceptance: int
     power_curve: List[Dict[float, float]]
 
 
@@ -25,7 +25,7 @@ class TabularPowerCurve(PowerCurve):
 
     def __init__(self, data: TabularPowerCurveInput):
         if 'name' not in data or 'power_type' not in data \
-                or 'power_curve' not in data or 'charge_acceptance' not in data:
+                or 'power_curve' not in data or 'reported_max_charge_acceptance' not in data:
             raise IOError("invalid input file for tabular energy curve model")
 
         self.id = data['name']
@@ -35,8 +35,9 @@ class TabularPowerCurve(PowerCurve):
             raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
 
         charging_model = sorted(data['power_curve'], key=lambda x: x['soc'])
+        normalizing_factor = data['reported_max_charge_acceptance']
         self._charging_soc = np.array(list(map(lambda x: x['soc'], charging_model)))
-        self._charging_c_kw = np.array(list(map(lambda x: x['kw'], charging_model)))
+        self._charging_c_kw = np.array(list(map(lambda x: x['kw'] / normalizing_factor, charging_model)))
 
     def get_id(self) -> PowerCurveId:
         return self.id
@@ -61,7 +62,10 @@ class TabularPowerCurve(PowerCurve):
 
         # todo: get feedback about interpretation of v0.2.0 charging logic
         # charging.py line 51:
-        # - what is this scaling for?
+        # - Q: what is this scaling for?
+        # - A: leaf model was annotated with a max charge acceptance of 50.0;
+        #      normalizing it to 1 allows us to apply this model to vehicles
+        #      with different max charge acceptance values
         # unscaled_df.kw = unscaled_df.kw * battery_kw / 50.0
         # charging.py lines 78-79 (ignored here):
         # - next battery kwh by computing kwh from the kw rate
@@ -77,7 +81,10 @@ class TabularPowerCurve(PowerCurve):
 
             # charging.py line 76:
             kw_rate = np.interp(soc, self._charging_soc, self._charging_c_kw)
-            limited_kw_rate = min(kw_rate, charger.value)
+            scaled_kw_rate = kw_rate * energy_source.max_charge_acceptance
+            # todo: guessing charger isn't at correct "scale" or "unit" here
+            limited_kw_rate = min(scaled_kw_rate, charger.value)
+
             kwh = limited_kw_rate * step_size_seconds / 3600.0
 
             updated_energy = updated_energy.load_energy(kwh)
