@@ -8,7 +8,7 @@ from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
 from hive.model.energy.energytype import EnergyType
-from hive.model.energy.powercurve import PowerCurve
+from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.roadnetwork.property_link import PropertyLink
@@ -384,12 +384,12 @@ class SimulationStateTestAssets:
         def energy_cost(self, route: Route) -> Kw:
             return len(route)
 
-    class MockPowercurve(PowerCurve):
+    class MockPowercurve(Powercurve):
         """
         just adds 1 when charging
         """
 
-        def get_id(self) -> PowerCurveId:
+        def get_id(self) -> PowercurveId:
             return "mock_powercurve"
 
         def get_energy_type(self) -> EnergyType:

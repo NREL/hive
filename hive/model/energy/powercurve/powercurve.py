@@ -3,16 +3,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import PowerCurveId, Time
+from hive.util.typealiases import PowercurveId, Time
 
 
-class PowerCurve(ABC):
+class Powercurve(ABC):
     """
     a powertrain has a behavior where it calculate energy consumption in KwH
     """
 
     @abstractmethod
-    def get_id(self) -> PowerCurveId:
+    def get_id(self) -> PowercurveId:
         pass
 
     @abstractmethod

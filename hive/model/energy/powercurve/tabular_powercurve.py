@@ -3,10 +3,10 @@ from typing import TypedDict, Dict, List
 import numpy as np
 
 from hive.model.energy.charger import Charger
-from hive.model.energy.powercurve.powercurve import PowerCurve
+from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import PowerCurveId, Time
+from hive.util.typealiases import PowercurveId, Time
 
 
 class TabularPowerCurveInput(TypedDict):
@@ -17,7 +17,7 @@ class TabularPowerCurveInput(TypedDict):
     power_curve: List[Dict[float, float]]
 
 
-class TabularPowerCurve(PowerCurve):
+class TabularPowercurve(Powercurve):
     """
     builds a tabular, interpolated lookup model from a file
     for energy curves
@@ -39,7 +39,7 @@ class TabularPowerCurve(PowerCurve):
         self._charging_soc = np.array(list(map(lambda x: x['soc'], charging_model)))
         self._charging_c_kw = np.array(list(map(lambda x: x['kw'] / normalizing_factor, charging_model)))
 
-    def get_id(self) -> PowerCurveId:
+    def get_id(self) -> PowercurveId:
         return self.id
 
     def get_energy_type(self) -> EnergyType:

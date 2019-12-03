@@ -7,7 +7,7 @@ from h3 import h3
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.powertrain import Powertrain
-from hive.model.energy.powercurve import PowerCurve
+from hive.model.energy.powercurve import Powercurve
 from hive.model.request import Request
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -182,7 +182,7 @@ class TestVehicle(TestCase):
         return VehicleTestAssests.MockPowertrain()
 
     @classmethod
-    def mock_powercurve(cls) -> PowerCurve:
+    def mock_powercurve(cls) -> Powercurve:
         return VehicleTestAssests.MockPowercurve()
 
     @classmethod
@@ -291,12 +291,12 @@ class VehicleTestAssests:
         def energy_cost(self, route: Route) -> Kw:
             return len(route)
 
-    class MockPowercurve(PowerCurve):
+    class MockPowercurve(Powercurve):
         """
         just adds 1 when charging
         """
 
-        def get_id(self) -> PowerCurveId:
+        def get_id(self) -> PowercurveId:
             return "mock_powercurve"
 
         def get_energy_type(self) -> EnergyType:

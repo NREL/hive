@@ -5,7 +5,7 @@ from typing import NamedTuple, Dict, Optional
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
-from hive.model.energy.powercurve import PowerCurve
+from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
@@ -20,7 +20,7 @@ class Vehicle(NamedTuple):
     # fixed vehicle attributes
     id: VehicleId
     powertrain_id: PowertrainId
-    powercurve_id: PowerCurveId
+    powercurve_id: PowercurveId
     energy_source: EnergySource
     geoid: GeoId
     property_link: PropertyLink
@@ -53,7 +53,7 @@ class Vehicle(NamedTuple):
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
     def charge(self,
-               powercurve: PowerCurve,
+               powercurve: Powercurve,
                charger: Charger,
                duration: Time) -> Vehicle:
         """

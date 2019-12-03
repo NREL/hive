@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from hive.model.energy.charger import Charger
-from hive.model.energy.powercurve import build_powercurve, TabularPowerCurve
+from hive.model.energy.powercurve import build_powercurve, TabularPowercurve
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 
@@ -11,7 +11,7 @@ class TestTabularPowercurve(TestCase):
 
     def test_leaf_build_energy_model(self):
         leaf_model = build_powercurve('leaf')
-        self.assertIsInstance(leaf_model, TabularPowerCurve)
+        self.assertIsInstance(leaf_model, TabularPowercurve)
 
     def test_leaf_energy_gain_0_soc(self):
         leaf_model = build_powercurve('leaf')

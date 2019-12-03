@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import KwH, Percentage, PowerCurveId
+from hive.util.typealiases import KwH, Percentage, PowercurveId
 from hive.util.exception import StateOfChargeError
 
 from copy import copy
@@ -13,7 +13,7 @@ class EnergySource(NamedTuple):
     """
     a battery has a battery type, capacity and a load
     """
-    powercurve_id: PowerCurveId
+    powercurve_id: PowercurveId
     energy_type: EnergyType
     max_charge_acceptance: KwH
     capacity: KwH
@@ -21,7 +21,7 @@ class EnergySource(NamedTuple):
 
     @classmethod
     def build(cls,
-              powercurve_id: PowerCurveId,
+              powercurve_id: PowercurveId,
               energy_type: EnergyType,
               capacity: KwH,
               max_charge_acceptance: KwH,
