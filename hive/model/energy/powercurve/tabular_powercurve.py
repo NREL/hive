@@ -14,6 +14,7 @@ class TabularPowerCurveInput(TypedDict):
     type: str
     power_type: str
     reported_max_charge_acceptance: int
+    step_size_seconds: int
     power_curve: List[Dict[float, float]]
 
 
@@ -24,12 +25,13 @@ class TabularPowercurve(Powercurve):
     """
 
     def __init__(self, data: TabularPowerCurveInput):
-        if 'name' not in data or 'power_type' not in data \
+        if 'name' not in data or 'power_type' not in data or 'step_size_seconds' not in data \
                 or 'power_curve' not in data or 'reported_max_charge_acceptance' not in data:
             raise IOError("invalid input file for tabular energy curve model")
 
         self.id = data['name']
         self.energy_type = EnergyType.from_string(data['power_type'])
+        self.step_size_seconds = data['step_size_seconds']
 
         if self.energy_type is None:
             raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
@@ -48,15 +50,12 @@ class TabularPowercurve(Powercurve):
     def refuel(self,
                energy_source: 'EnergySource',
                charger: 'Charger',
-               duration_seconds: Time = 1,
-               step_size_seconds: Time = 1) -> 'EnergySource':
+               duration_seconds: Time = 1) -> 'EnergySource':
         """
          (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
          :param energy_source: a vehicle's source of energy
          :param charger: has a capacity scaling effect on the energy_rate
          :param duration_seconds: the amount of time to charge for
-         :param step_size_seconds: the number of seconds per calculation; smaller values
-         lead to greater accuracy at the cost of performance
          :return: energy rate in KwH for charging with the current state of the EnergySource
          """
 
@@ -83,11 +82,11 @@ class TabularPowercurve(Powercurve):
             kw_rate = np.interp(soc, self._charging_soc, self._charging_c_kw)
             scaled_kw_rate = kw_rate * energy_source.max_charge_acceptance
             # todo: guessing charger isn't at correct "scale" or "unit" here..
-            kwh = scaled_kw_rate * step_size_seconds / 3600.0
-            charger_limit_kwh = charger.value * step_size_seconds / 3600.0
+            kwh = scaled_kw_rate * self.step_size_seconds / 3600.0
+            charger_limit_kwh = charger.value * self.step_size_seconds / 3600.0
             charger_limited_kwh_rate = min(kwh, charger_limit_kwh)
 
             updated_energy = updated_energy.load_energy(charger_limited_kwh_rate)
-            t += step_size_seconds
+            t += self.step_size_seconds
 
         return updated_energy

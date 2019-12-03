@@ -27,15 +27,12 @@ class Powercurve(ABC):
     def refuel(self,
                energy_source: 'EnergySource',
                charger: 'Charger',
-               duration_seconds: Time = 1,
-               step_size_seconds: Time = 1) -> 'EnergySource':
+               duration_seconds: Time = 1) -> 'EnergySource':
         """
         (estimated) energy rate due to fueling, based on EnergySource
         :param energy_source: a vehicle's source of energy
         :param charger: has a capacity scaling effect on the energy_rate
         :param duration_seconds: the amount of time to charge for
-        :param step_size_seconds: the number of seconds per calculation; smaller values
-         lead to greater accuracy at the cost of performance
         :return: energy rate in KwH for charging with the current state of the EnergySource
         """
         pass
