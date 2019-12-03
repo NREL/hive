@@ -1,15 +1,20 @@
 from unittest import TestCase, skip
 
+from typing import Optional
+
 from h3 import h3
 
 from hive.model.energy.energysource import EnergySource
-from hive.model.coordinate import Coordinate
+from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.roadnetwork.link import Link
+from hive.util.typealiases import *
+from hive.model.energy.energytype import EnergyType
 
 
 class TestVehicle(TestCase):
@@ -47,7 +52,7 @@ class TestVehicle(TestCase):
                             "test vehicle should not begin in repositioning state")
 
         transitioned = idle_vehicle.transition(VehicleState.REPOSITIONING)
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_dispatch_trip(self):
@@ -61,7 +66,7 @@ class TestVehicle(TestCase):
         # check on transition function result
         transitioned = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_servicing_trip(self):
@@ -70,7 +75,7 @@ class TestVehicle(TestCase):
         transitioned = idle_vehicle.transition(VehicleState.SERVICING_TRIP)
 
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_dispatch_station(self):
@@ -78,7 +83,7 @@ class TestVehicle(TestCase):
 
         transitioned = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_charging_station(self):
@@ -86,7 +91,7 @@ class TestVehicle(TestCase):
 
         transitioned = idle_vehicle.transition(VehicleState.CHARGING_STATION)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_dispatch_base(self):
@@ -94,7 +99,7 @@ class TestVehicle(TestCase):
 
         transitioned = idle_vehicle.transition(VehicleState.DISPATCH_BASE)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_charging_base(self):
@@ -102,7 +107,7 @@ class TestVehicle(TestCase):
 
         transitioned = idle_vehicle.transition(VehicleState.CHARGING_BASE)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_transition_reserve_base(self):
@@ -110,7 +115,7 @@ class TestVehicle(TestCase):
 
         transitioned = idle_vehicle.transition(VehicleState.RESERVE_BASE)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
-        self.assertEqual(transitioned.position, idle_vehicle.position,
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
     def test_can_transition_good(self):
@@ -119,7 +124,7 @@ class TestVehicle(TestCase):
         veh_serving_trip = idle_veh.transition(VehicleState.SERVICING_TRIP)
         veh_w_pass = veh_serving_trip.add_passengers(mock_request.passengers)
 
-        veh_can_trans =veh_w_pass.can_transition(VehicleState.SERVICING_TRIP)
+        veh_can_trans = veh_w_pass.can_transition(VehicleState.SERVICING_TRIP)
 
         self.assertEqual(veh_can_trans, True)
 
@@ -133,50 +138,140 @@ class TestVehicle(TestCase):
 
         self.assertEqual(veh_can_trans, False)
 
+    def test_move(self):
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.REPOSITIONING)
+        power_train = TestVehicle.mock_powertrain()
+        road_network = TestVehicle.mock_network()
+        start_geoid = vehicle.geoid
+
+        vehicle_w_route = vehicle.assign_route(TestVehicle.mock_route())
+
+        moved_vehicle = vehicle_w_route.move(road_network=road_network, power_train=power_train, time_step=10)
+        m2 = moved_vehicle.move(road_network=road_network, power_train=power_train, time_step=10)
+        m3 = m2.move(road_network=road_network, power_train=power_train, time_step=10)
+
+        self.assertLess(moved_vehicle.energy_source.soc(), 1)
+        self.assertNotEqual(start_geoid, moved_vehicle.geoid)
+        self.assertNotEqual(start_geoid, moved_vehicle.property_link.link.start)
+
+        self.assertNotEqual(moved_vehicle.geoid, m2.geoid)
+        self.assertNotEqual(m2.property_link.link.start, m3.property_link.link.start)
+
+    @classmethod
+    def mock_powertrain(cls) -> Powertrain:
+        return VehicleTestAssests.MockPowertrain()
+
+    @classmethod
+    def mock_network(cls) -> RoadNetwork:
+        return VehicleTestAssests.MockRoadNetwork(VehicleTestAssests.property_links)
+
     @classmethod
     def mock_vehicle(cls) -> Vehicle:
-        return Vehicle("test_vehicle",
-                       "test_engine",
-                       EnergySource.build("test_battery", 100),
-                       Coordinate(0, 0),
-                       h3.geo_to_h3(0, 0, 11)
-                       )
+        mock_powertrain = TestVehicle.mock_powertrain()
+        mock_network = TestVehicle.mock_network()
+        geoid = h3.geo_to_h3(0, 0, 11)
+        mock_property_link = mock_network.property_link_from_geoid(geoid)
+        mock_veh = Vehicle("v1",
+                           mock_powertrain.get_id(),
+                           EnergySource.build(EnergyType.ELECTRIC, 40, 1),
+                           geoid,
+                           mock_property_link,
+                           )
+        return mock_veh
 
     @classmethod
     def mock_request(cls) -> Request:
         return Request.build("test_request",
-                             origin=Coordinate(0, 0),
-                             destination=Coordinate(10, 10),
-                             origin_geoid=h3.geo_to_h3(0, 0, 11),
-                             destination_geoid=h3.geo_to_h3(10, 10, 11),
+                             origin=h3.geo_to_h3(0, 0, 11),
+                             destination=h3.geo_to_h3(10, 10, 11),
                              departure_time=0,
                              cancel_time=10,
                              passengers=2)
 
     @classmethod
     def mock_route(cls) -> Route:
-        sim_h3_resolution = 15
-
-        links = {
-            "1": Link("1",
-                      h3.geo_to_h3(0, 0, sim_h3_resolution),
-                      h3.geo_to_h3(0, 5, sim_h3_resolution)),
-            "2": Link("2",
-                      h3.geo_to_h3(0, 5, sim_h3_resolution),
-                      h3.geo_to_h3(5, 5, sim_h3_resolution)),
-            "3": Link("3",
-                      h3.geo_to_h3(5, 5, sim_h3_resolution),
-                      h3.geo_to_h3(5, 10, sim_h3_resolution)),
-            "4": Link("4",
-                      h3.geo_to_h3(5, 10, sim_h3_resolution),
-                      h3.geo_to_h3(10, 10, sim_h3_resolution)),
-        }
-
-        property_links = {
-            "1": PropertyLink.build(links["1"], 1),
-            "2": PropertyLink.build(links["2"], 1),
-            "3": PropertyLink.build(links["3"], 1),
-            "4": PropertyLink.build(links["4"], 1)
-        }
+        property_links = VehicleTestAssests.property_links
 
         return property_links["1"], property_links["2"], property_links["3"], property_links["4"]
+
+
+class VehicleTestAssests:
+    class MockRoadNetwork(RoadNetwork):
+        """
+        a road network that only implements "get_link"
+        """
+
+        def __init__(self, property_links):
+            self.sim_h3_resolution = 15
+
+            self.property_links = property_links
+
+        def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
+            pass
+
+        def update(self, sim_time: int) -> RoadNetwork:
+            pass
+
+        def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
+            if link_id in self.property_links:
+                return self.property_links[link_id]
+            else:
+                return None
+
+        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+            link_id = property_link.link.link_id
+            if link_id in self.property_links:
+                current_property_link = self.property_links[link_id]
+                updated_property_link = property_link.update_speed(current_property_link.speed)
+                return updated_property_link
+            else:
+                return None
+
+        def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+            return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
+
+        def geoid_within_geofence(self, geoid: GeoId) -> bool:
+            pass
+
+        def link_id_within_geofence(self, link_id: LinkId) -> bool:
+            pass
+
+        def geoid_within_simulation(self, geoid: GeoId) -> bool:
+            pass
+
+        def link_id_within_simulation(self, link_id: LinkId) -> bool:
+            pass
+
+    class MockPowertrain(Powertrain):
+        def get_id(self) -> PowertrainId:
+            return "mock_powertrain"
+
+        def get_energy_type(self) -> EnergyType:
+            return EnergyType.ELECTRIC
+
+        def energy_cost(self, route: Route) -> Kw:
+            return len(route)
+
+    sim_h3_resolution = 15
+
+    links = {
+        "1": Link("1",
+                  h3.geo_to_h3(0, 0, sim_h3_resolution),
+                  h3.geo_to_h3(0, 5, sim_h3_resolution)),
+        "2": Link("2",
+                  h3.geo_to_h3(0, 5, sim_h3_resolution),
+                  h3.geo_to_h3(5, 5, sim_h3_resolution)),
+        "3": Link("3",
+                  h3.geo_to_h3(5, 5, sim_h3_resolution),
+                  h3.geo_to_h3(5, 10, sim_h3_resolution)),
+        "4": Link("4",
+                  h3.geo_to_h3(5, 10, sim_h3_resolution),
+                  h3.geo_to_h3(10, 10, sim_h3_resolution)),
+    }
+
+    property_links = {
+        "1": PropertyLink.build(links["1"], 10),
+        "2": PropertyLink.build(links["2"], 10),
+        "3": PropertyLink.build(links["3"], 10),
+        "4": PropertyLink.build(links["4"], 10)
+    }

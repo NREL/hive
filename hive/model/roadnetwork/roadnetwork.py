@@ -48,6 +48,15 @@ class RoadNetwork(ABC):
         pass
 
     @abstractmethod
+    def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+        """
+        gets the current properties for a given property link, or, if invalid, returns None
+        :param property_link: a property link
+        :return: a Property Link, or None if LinkId does not exist
+        """
+        pass
+
+    @abstractmethod
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon of this road network instance

@@ -40,6 +40,9 @@ class PropertyLink(NamedTuple):
     def end(self) -> str:
         return self.link.end
 
+    def update_speed(self, speed: float) -> PropertyLink:
+        return self._replace(speed=speed)
+
     def update_link(self, updated_link: Link) -> Union[AttributeError, PropertyLink]:
         """
         some operations call for updating the the underlying link representation but
