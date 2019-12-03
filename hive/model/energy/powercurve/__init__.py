@@ -4,14 +4,14 @@ import yaml
 from pkg_resources import resource_string
 
 from hive.model.energy.powercurve.powercurve import PowerCurve
-from hive.model.energy.powercurve.tabular_energycurve import TabularPowerCurve
+from hive.model.energy.powercurve.tabular_powercurve import TabularPowerCurve
 
 __doc__ = """
 
 """
 
 energycurve_models = {
-    'leaf': resource_string('hive.resources.energycurve', 'leaf.yaml')
+    'leaf': resource_string('hive.resources.powercurve', 'leaf.yaml')
 }
 
 energycurve_constructors = {

@@ -5,6 +5,7 @@ from typing import NamedTuple, Dict, Optional
 
 from h3 import h3
 
+from hive.model.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.powercurve import PowerCurve
 from hive.model.energy.powertrain import Powertrain
@@ -58,19 +59,21 @@ class Vehicle(NamedTuple):
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
     def charge(self,
-                powertrain: Powertrain,
-                powercurve: PowerCurve,
-                charger: Charger,
-                time: Time) -> Vehicle:
+               powercurve: PowerCurve,
+               charger: Charger,
+               duration: Time) -> Vehicle:
         """
         applies a charge event to a vehicle
-        :param powertrain: the vehicle's powertrain model
         :param powercurve: the vehicle's powercurve model
         :param charger: the charger provided by the station
-        :param time: duration of this time step
+        :param duration: duration of this time step
         :return: the updated Vehicle
         """
-        pass
+        if self.energy_source.is_full():
+            return self.transition(VehicleState.IDLE)
+        else:
+            updated_energy_source = self.energy_source.load_energy(powercurve, duration)
+            return self
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
         """

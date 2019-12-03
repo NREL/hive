@@ -1,7 +1,8 @@
 name: "leaf"
 type: "tabular"
-energy_type: "electric"
-energy_curve:
+power_type: "electric"
+charge_acceptance: 50
+power_curve:
   - soc: 0
     kw: 10
   - soc: 2.5

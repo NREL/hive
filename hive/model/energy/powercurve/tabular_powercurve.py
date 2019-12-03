@@ -1,0 +1,86 @@
+from typing import TypedDict, Dict, List
+
+import numpy as np
+
+from hive.model.charger import Charger
+from hive.model.energy.powercurve.powercurve import PowerCurve
+from hive.model.energy.energysource import EnergySource
+from hive.model.energy.energytype import EnergyType
+from hive.util.typealiases import Kw, PowerCurveId, Time
+
+
+class TabularPowerCurveInput(TypedDict):
+    name: str
+    type: str
+    power_type: str
+    charge_acceptance: int
+    power_curve: List[Dict[float, float]]
+
+
+class TabularPowerCurve(PowerCurve):
+    """
+    builds a tabular, interpolated lookup model from a file
+    for energy curves
+    """
+
+    def __init__(self, data: TabularPowerCurveInput):
+        if 'name' not in data or 'power_type' not in data \
+                or 'power_curve' not in data or 'charge_acceptance' not in data:
+            raise IOError("invalid input file for tabular energy curve model")
+
+        self.id = data['name']
+        self.energy_type = EnergyType.from_string(data['power_type'])
+
+        if self.energy_type is None:
+            raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
+
+        charging_model = sorted(data['power_curve'], key=lambda x: x['soc'])
+        self._charging_soc = np.array(list(map(lambda x: x['soc'], charging_model)))
+        self._charging_c_kw = np.array(list(map(lambda x: x['kw'], charging_model)))
+
+    def get_id(self) -> PowerCurveId:
+        return self.id
+
+    def get_energy_type(self) -> EnergyType:
+        return self.energy_type
+
+    def refuel(self,
+               energy_source: 'EnergySource',
+               charger: 'Charger',
+               duration_seconds: Time = 1,
+               step_size_seconds: Time = 1) -> 'EnergySource':
+        """
+         (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
+         :param energy_source: a vehicle's source of energy
+         :param charger: has a capacity scaling effect on the energy_rate
+         :param duration_seconds: the amount of time to charge for
+         :param step_size_seconds: the number of seconds per calculation; smaller values
+         lead to greater accuracy at the cost of performance
+         :return: energy rate in KwH for charging with the current state of the EnergySource
+         """
+
+        # todo: get feedback about interpretation of v0.2.0 charging logic
+        # charging.py line 51:
+        # - what is this scaling for?
+        # unscaled_df.kw = unscaled_df.kw * battery_kw / 50.0
+        # charging.py lines 78-79 (ignored here):
+        # - next battery kwh by computing kwh from the kw rate
+        # kwh_f = kwh_i + kw / 3600.0
+        # - next state of charge percentage
+        # soc_f = kwh_f / battery_kwh * 100.0
+
+        # iterate
+        t = 0
+        updated_energy = energy_source.copy()
+        while t < duration_seconds and updated_energy.not_full():
+            soc = updated_energy.soc() * 100  # scaled to [0, 100]
+
+            # charging.py line 76:
+            kw_rate = np.interp(soc, self._charging_soc, self._charging_c_kw)
+            limited_kw_rate = min(kw_rate, charger.value)
+            kwh = limited_kw_rate * step_size_seconds / 3600.0
+
+            updated_energy = updated_energy.load_energy(kwh)
+            t += step_size_seconds
+
+        return updated_energy

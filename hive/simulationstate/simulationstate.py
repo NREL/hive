@@ -24,6 +24,7 @@ class SimulationState(NamedTuple):
 
     # simulation parameters
     sim_time: int
+    sim_timestep_duration_seconds: float
     sim_h3_resolution: int
 
     # objects of the simulation
