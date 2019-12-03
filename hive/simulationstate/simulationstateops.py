@@ -9,6 +9,7 @@ from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.simulationstate.simulationstate import SimulationState
 from hive.util.exception import *
+from hive.util.typealiases import Time
 
 
 def initial_simulation_state(
@@ -17,7 +18,8 @@ def initial_simulation_state(
         stations: Tuple[Station, ...] = (),
         bases: Tuple[Base, ...] = (),
         start_time: int = 0,
-        sim_h3_resolution: Optional[int] = 15
+        sim_timestep_duration_seconds: Time = 1,
+        sim_h3_resolution: int = 15
 ) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
@@ -26,6 +28,7 @@ def initial_simulation_state(
     :param stations: the stations available in this simulation
     :param bases: the bases available in this simulation
     :param start_time: the start time for this simulation (by default, time step 0)
+    :param sim_timestep_duration_seconds: the size of a time step in seconds
     :param sim_h3_resolution: the h3 resolution for internal positioning (comparison ops can override)
     :return: a SimulationState, or a SimulationStateError
     """
@@ -34,6 +37,7 @@ def initial_simulation_state(
     simulation_state_builder = SimulationState(
         road_network=road_network,
         sim_time=start_time,
+        sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_resolution=sim_h3_resolution)
     failures: Tuple[SimulationStateError, ...] = tuple()
 
