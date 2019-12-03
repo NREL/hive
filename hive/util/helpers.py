@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Tuple, Dict, Optional, TypeVar, Callable, Union
-from hive.model.station import Station
-from hive.model.base import Base
-from hive.model.vehicle import Vehicle
-from hive.util.typealiases import VehicleId, StationId, BaseId
+from typing import Tuple, Dict, Optional, TypeVar, Callable, Union, TYPE_CHECKING
 
-from hive.util.typealiases import Km, GeoId, Time
+from hive.util.typealiases import *
 import haversine
 
 from h3 import h3
+
+if TYPE_CHECKING:
+    from hive.model.station import Station
+    from hive.model.base import Base
+    from hive.model.vehicle import Vehicle
 
 
 class UnitOps:

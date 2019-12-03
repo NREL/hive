@@ -7,6 +7,6 @@ from hive.util.typealiases import VehicleId, RequestId, GeoId
 class Instruction(NamedTuple):
     vehicle_id: VehicleId
     action: VehicleState
-    location: Optional[GeoId]
-    request: Optional[RequestId]
+    location: Optional[GeoId] = None
+    request: Optional[RequestId] = None
 

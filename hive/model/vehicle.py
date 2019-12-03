@@ -27,6 +27,7 @@ class Vehicle(NamedTuple):
     soc_lower_limit: Percentage = 0.0
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
+    idle_time_steps: int = 0
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
     passengers: Dict[PassengerId, Passenger] = {}
@@ -55,6 +56,10 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
+    def _calculate_idle_time(self) -> Vehicle:
+        if self.vehicle_state == VehicleState.IDLE:
+            return self._replace(idle_time_steps=self.idle_time_steps+1)
+
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
@@ -68,6 +73,7 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
+        # TODO: update self.distance_traveled based on the traversal result distance.
         energy_used = power_train.energy_cost(traverse_result.experienced_route)
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
@@ -83,6 +89,9 @@ class Vehicle(NamedTuple):
         )
 
         return updated_location_vehicle
+
+    def step(self) -> Vehicle:
+        return self._calculate_idle_time()
 
     def battery_swap(self, battery: EnergySource) -> Vehicle:
         return self._replace(energy_source=battery)
