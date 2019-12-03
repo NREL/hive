@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Tuple, Dict, Optional, TypeVar
+from typing import Tuple, Dict, Optional, TypeVar, Callable, Union
+from hive.model.station import Station
+from hive.model.base import Base
+from hive.model.vehicle import Vehicle
+from hive.util.typealiases import VehicleId, StationId, BaseId
 
 from hive.util.typealiases import Km, GeoId, Time
 import haversine
@@ -28,6 +32,42 @@ class UnitOps:
 
 
 class H3Ops:
+    @classmethod
+    def nearest_entity(cls,
+                       geoid: GeoId,
+                       entities: Dict[str, Union[Station, Base, Vehicle]],
+                       entity_locations: Dict[GeoId, Tuple[Union[StationId, BaseId, VehicleId], ...]],
+                       is_valid: Callable = lambda x: True,
+                       k: int = 0,
+                       max_k: int = 10,
+                       ) -> Optional[Union[Station, Base, Vehicle]]:
+        """
+        returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
+        :param is_valid:
+        :param entities:
+        :param k:
+        :param max_k:
+        :param geoid:
+        :param entity_locations:
+        :return:
+        """
+        if k > max_k:
+            # There are no entities in any of the rings.
+            return None
+
+        ring = h3.k_ring_distances(geoid, k)[k]
+
+        for gid in ring:
+            if gid in entity_locations:
+                entities_at_location = entity_locations[gid]
+                if entities_at_location:
+                    for entity_id in entities_at_location:
+                        entity = entities[entity_id]
+                        if is_valid(entity):
+                            return entity
+
+        return cls.nearest_entity(geoid, entities, entity_locations, is_valid, k + 1, max_k)
+
     @classmethod
     def great_circle_distance(cls, a: GeoId, b: GeoId) -> Km:
         """
