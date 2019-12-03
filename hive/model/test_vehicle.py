@@ -4,8 +4,10 @@ from typing import Optional
 
 from h3 import h3
 
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.powertrain import Powertrain
+from hive.model.energy.powercurve import PowerCurve
 from hive.model.request import Request
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -150,32 +152,69 @@ class TestVehicle(TestCase):
         m2 = moved_vehicle.move(road_network=road_network, power_train=power_train, time_step=10)
         m3 = m2.move(road_network=road_network, power_train=power_train, time_step=10)
 
-        self.assertLess(moved_vehicle.energy_source.soc(), 1)
+        self.assertLess(moved_vehicle.energy_source.soc, 1)
         self.assertNotEqual(start_geoid, moved_vehicle.geoid)
         self.assertNotEqual(start_geoid, moved_vehicle.property_link.link.start)
 
         self.assertNotEqual(moved_vehicle.geoid, m2.geoid)
         self.assertNotEqual(m2.property_link.link.start, m3.property_link.link.start)
 
+    def test_charge(self):
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION)
+        power_curve = TestVehicle.mock_powercurve()
+        time_step_size_secs = 1.0
+
+        result = vehicle.charge(power_curve, Charger.DCFC, time_step_size_secs)
+        self.assertEqual(result.energy_source.load, vehicle.energy_source.load + 1, "should have charged 1 unit")
+
+    def test_charge_when_full(self):
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION)
+        vehicle_full = vehicle.battery_swap(TestVehicle.mock_energysource(cap=100, max_charge=100, soc=1.0))  # full
+        power_curve = TestVehicle.mock_powercurve()
+        time_step_size_secs = 1.0
+
+        result = vehicle_full.charge(power_curve, Charger.DCFC, time_step_size_secs)
+        self.assertEqual(result.energy_source.load, vehicle_full.energy_source.load, "should have not charged")
+        self.assertEqual(result.vehicle_state, VehicleState.IDLE, "should have been moved to an idle state")
+
     @classmethod
     def mock_powertrain(cls) -> Powertrain:
         return VehicleTestAssests.MockPowertrain()
+
+    @classmethod
+    def mock_powercurve(cls) -> PowerCurve:
+        return VehicleTestAssests.MockPowercurve()
 
     @classmethod
     def mock_network(cls) -> RoadNetwork:
         return VehicleTestAssests.MockRoadNetwork(VehicleTestAssests.property_links)
 
     @classmethod
+    def mock_energysource(cls, cap=100, soc=0.25, max_charge=50.0) -> EnergySource:
+        """
+        invariant: test_charge depends on having some amount of battery to fill
+        """
+        return EnergySource.build(
+            powercurve_id=TestVehicle.mock_powercurve().get_id(),
+            energy_type=EnergyType.ELECTRIC,
+            capacity=cap,
+            max_charge_acceptance=max_charge,
+            soc=soc)
+
+    @classmethod
     def mock_vehicle(cls) -> Vehicle:
         mock_powertrain = TestVehicle.mock_powertrain()
+        mock_powercurve = TestVehicle.mock_powercurve()
+        mock_energy_source = TestVehicle.mock_energysource()
         mock_network = TestVehicle.mock_network()
         geoid = h3.geo_to_h3(0, 0, 11)
         mock_property_link = mock_network.property_link_from_geoid(geoid)
-        mock_veh = Vehicle("v1",
-                           mock_powertrain.get_id(),
-                           EnergySource.build(EnergyType.ELECTRIC, 40, 1),
-                           geoid,
-                           mock_property_link,
+        mock_veh = Vehicle(id="v1",
+                           powertrain_id=mock_powertrain.get_id(),
+                           powercurve_id=mock_powercurve.get_id(),
+                           energy_source=mock_energy_source,
+                           geoid=geoid,
+                           property_link=mock_property_link
                            )
         return mock_veh
 
@@ -251,6 +290,21 @@ class VehicleTestAssests:
 
         def energy_cost(self, route: Route) -> Kw:
             return len(route)
+
+    class MockPowercurve(PowerCurve):
+        """
+        just adds 1 when charging
+        """
+
+        def get_id(self) -> PowerCurveId:
+            return "mock_powercurve"
+
+        def get_energy_type(self) -> EnergyType:
+            return EnergyType.ELECTRIC
+
+        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: Time = 1,
+                   step_size_seconds: Time = 1) -> 'EnergySource':
+            return energy_source.load_energy(1.0)
 
     sim_h3_resolution = 15
 

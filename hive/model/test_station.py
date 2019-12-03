@@ -9,7 +9,6 @@ from hive.model.energy.charger import Charger
 
 class TestStation(TestCase):
     _mock_station = Station.build("test_station",
-                            Coordinate(0, 0),
                             h3.geo_to_h3(0, 0, 11),
                             {Charger.LEVEL_2: 1, Charger.DCFC: 1},
                             )

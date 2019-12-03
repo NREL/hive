@@ -73,21 +73,21 @@ class TabularPowerCurve(PowerCurve):
         # - next state of charge percentage
         # soc_f = kwh_f / battery_kwh * 100.0
 
-        # iterate
+        # iterate for as many seconds in a time step, by step_size_seconds
         t = 0
         updated_energy = energy_source.copy()
-        while t < duration_seconds and updated_energy.not_full():
-            soc = updated_energy.soc() * 100  # scaled to [0, 100]
+        while t < duration_seconds and updated_energy.not_at_max_charge_acceptance():
+            soc = updated_energy.soc * 100  # scaled to [0, 100]
 
             # charging.py line 76:
             kw_rate = np.interp(soc, self._charging_soc, self._charging_c_kw)
             scaled_kw_rate = kw_rate * energy_source.max_charge_acceptance
-            # todo: guessing charger isn't at correct "scale" or "unit" here
-            limited_kw_rate = min(scaled_kw_rate, charger.value)
+            # todo: guessing charger isn't at correct "scale" or "unit" here..
+            kwh = scaled_kw_rate * step_size_seconds / 3600.0
+            charger_limit_kwh = charger.value * step_size_seconds / 3600.0
+            charger_limited_kwh_rate = min(kwh, charger_limit_kwh)
 
-            kwh = limited_kw_rate * step_size_seconds / 3600.0
-
-            updated_energy = updated_energy.load_energy(kwh)
+            updated_energy = updated_energy.load_energy(charger_limited_kwh_rate)
             t += step_size_seconds
 
         return updated_energy

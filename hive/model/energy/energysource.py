@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import KwH, Percentage, Time, PowerCurveId
+from hive.util.typealiases import KwH, Percentage, PowerCurveId
 from hive.util.exception import StateOfChargeError
 
 from copy import copy
@@ -41,8 +41,9 @@ class EnergySource(NamedTuple):
         assert 0.0 <= max_charge_acceptance <= capacity, StateOfChargeError(
             f"max charge acceptance {max_charge_acceptance} needs to be between zero and capacity {capacity} provided")
 
-        return EnergySource(powercurve_id, energy_type, max_charge_acceptance, capacity, capacity * soc)
+        return EnergySource(powercurve_id, energy_type, capacity, max_charge_acceptance, capacity * soc)
 
+    @property
     def soc(self) -> Percentage:
         """
         calculates the current state of charge as a Percentage
@@ -50,14 +51,14 @@ class EnergySource(NamedTuple):
         """
         return self.load / self.capacity
 
-    def is_full(self) -> bool:
+    def is_at_max_charge_aceptance(self) -> bool:
         """
         True if the EnergySource is full of energy
         :return: bool
         """
         return self.load == self.max_charge_acceptance
 
-    def not_full(self) -> bool:
+    def not_at_max_charge_acceptance(self) -> bool:
         """
         True if the EnergySource is not full of energy
         :return: bool
@@ -91,7 +92,7 @@ class EnergySource(NamedTuple):
         return self._replace(load=updated_load)
 
     def __repr__(self) -> str:
-        soc = self.soc() * 100.0
+        soc = self.soc * 100.0
         max_chrg = self.max_charge_acceptance
         return f"Battery({self.energy_type},cap={self.capacity}, max={max_chrg} load={self.load}/{soc:.2f}%) "
 

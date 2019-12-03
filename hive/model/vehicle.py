@@ -63,7 +63,7 @@ class Vehicle(NamedTuple):
         :param duration: duration of this time step
         :return: the updated Vehicle
         """
-        if self.energy_source.is_full():
+        if self.energy_source.is_at_max_charge_aceptance():
             return self.transition(VehicleState.IDLE)
         else:
             updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
@@ -98,8 +98,8 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def battery_swap(self, battery: EnergySource) -> Vehicle:
-        return self._replace(energy_source=battery)
+    def battery_swap(self, energy_source: EnergySource) -> Vehicle:
+        return self._replace(energy_source=energy_source)
 
     def assign_route(self, route: Route) -> Vehicle:
         return self._replace(route=route)

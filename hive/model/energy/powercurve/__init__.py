@@ -10,26 +10,26 @@ __doc__ = """
 
 """
 
-energycurve_models = {
+powercurve_models = {
     'leaf': resource_string('hive.resources.powercurve', 'leaf.yaml')
 }
 
-energycurve_constructors = {
+powercurve_constructors = {
     'tabular': TabularPowerCurve
 }
 
 
-def build_energycurve(name: str) -> Union[IOError, PowerCurve]:
+def build_powercurve(name: str) -> Union[IOError, PowerCurve]:
     """
     constructs EnergyCurve objects from file descriptions
     :param name: name of a valid energy curve type
     :return: an EnergyCurve, or, an error
     :raise IOError: if model file is invalid
     """
-    if name not in energycurve_models:
-        return IOError(f"EnergyCurve with name {name} is not recognized, must be one of {energycurve_models.keys()}")
+    if name not in powercurve_models:
+        return IOError(f"EnergyCurve with name {name} is not recognized, must be one of {powercurve_models.keys()}")
     else:
-        file_path = energycurve_models[name]
+        file_path = powercurve_models[name]
         energycurve_config = yaml.safe_load(file_path)
         model_type = energycurve_config["type"]
-        return energycurve_constructors[model_type](energycurve_config)
+        return powercurve_constructors[model_type](energycurve_config)

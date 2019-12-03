@@ -7,6 +7,7 @@ from typing import Optional
 from hive.model.base import Base
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
+from hive.model.energy.powercurve import PowerCurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.link import Link
@@ -130,6 +131,9 @@ class TestSimulationStateOps(TestCase):
         def link_id_within_simulation(self, link_id: LinkId) -> bool:
             return True
 
+        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+            pass
+
     class MockRoadNetworkBadCoordinates(MockRoadNetwork):
         def geoid_within_geofence(self, geoid: GeoId) -> bool:
             return False
@@ -153,19 +157,37 @@ class TestSimulationStateOps(TestCase):
         def energy_cost(self, route: Route) -> Kw:
             return len(route)
 
+    class MockPowercurve(PowerCurve):
+        """
+        just adds 1 when charging
+        """
+
+        def get_id(self) -> PowerCurveId:
+            return "mock_powercurve"
+
+        def get_energy_type(self) -> EnergyType:
+            return EnergyType.ELECTRIC
+
+        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: Time = 1,
+                   step_size_seconds: Time = 1) -> 'EnergySource':
+            return energy_source.load_energy(1.0)
+
     mock_powertrain = MockPowertrain()
+    mock_powercurve = MockPowercurve()
     mock_geoid = h3.geo_to_h3(39.75, -105, 15)
     mock_property_link = MockRoadNetwork().property_link_from_geoid(mock_geoid)
 
     mock_veh_1 = Vehicle("m1",
                          mock_powertrain.get_id(),
-                         EnergySource.build(EnergyType.ELECTRIC, 40, 1),
+                         mock_powercurve.get_id(),
+                         EnergySource.build("test_id", EnergyType.ELECTRIC, 100, 40, 1),
                          mock_geoid,
                          mock_property_link)
 
     mock_veh_2 = Vehicle("m2",
                          mock_powertrain.get_id(),
-                         EnergySource.build(EnergyType.ELECTRIC, 40, 1),
+                         mock_powercurve.get_id(),
+                         EnergySource.build("test_id", EnergyType.ELECTRIC, 100, 40, 1),
                          mock_geoid,
                          mock_property_link)
 
