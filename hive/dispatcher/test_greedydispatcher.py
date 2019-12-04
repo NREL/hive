@@ -39,7 +39,7 @@ class TestGreedyDispatcher(TestCase):
         far_veh = GreedyDispatcherTestAssets.mock_vehicle(vehicle_id='far_veh', geoid=far_from_somewhere)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_request(req).add_vehicle(close_veh).add_vehicle(far_veh)
 
-        instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertIsNotNone(instructions, "Should have generated at least one instruction")
         self.assertEqual(instructions[0].action,
@@ -61,7 +61,7 @@ class TestGreedyDispatcher(TestCase):
         station = GreedyDispatcherTestAssets.mock_station(station_id='test_station', geoid=somewhere_else)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_vehicle(veh_low_battery).add_station(station)
 
-        instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertIsNotNone(instructions, "Should have generated at least one instruction")
         self.assertEqual(instructions[0].action,
@@ -82,7 +82,7 @@ class TestGreedyDispatcher(TestCase):
         base = GreedyDispatcherTestAssets.mock_base(base_id='test_base', geoid=somewhere_else)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_vehicle(stationary_vehicle).add_base(base)
 
-        instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertIsNotNone(instructions, "Should have generated at least one instruction")
         self.assertEqual(instructions[0].action,
