@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import copy
+import re
 from typing import NamedTuple, Dict, Optional
 
-from h3 import h3
-
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
-from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.vehiclestate import VehicleState
@@ -14,25 +13,73 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
+from hive.util.pattern import vehicle_regex
+from hive.model.energy.powercurve import *
+from hive.model.energy.powertrain import *
 
 
 class Vehicle(NamedTuple):
     # fixed vehicle attributes
     id: VehicleId
     powertrain_id: PowertrainId
+    powercurve_id: PowercurveId
     energy_source: EnergySource
     geoid: GeoId
     property_link: PropertyLink
-    soc_upper_limit: Percentage = 1.0
-    soc_lower_limit: Percentage = 0.0
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     idle_time_steps: int = 0
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
+
     passengers: Dict[PassengerId, Passenger] = {}
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
+
+    @classmethod
+    def from_string(cls, string: str, road_network: RoadNetwork) -> Union[IOError, Vehicle]:
+        """
+        reads a csv row from file to generate a Vehicle
+
+        :param string: a row of a .csv which matches hive.util.pattern.vehicle_regex.
+        this string will be stripped of whitespace characters (no spaces allowed in names!)
+        :param road_network: the road network, used to find the vehicle's location in the sim
+        :return: a vehicle, or, an IOError if failure occurred.
+        """
+        cleaned_string = string.replace(' ', '').replace('\t', '')
+        result = re.search(vehicle_regex, cleaned_string)
+        if result is None:
+            return IOError(f"row did not match expected vehicle format: '{cleaned_string}'")
+        elif result.group(4) not in powertrain_models.keys():
+            return IOError(f"invalid powertrain model for vehicle: '{result.group(4)}'")
+        elif result.group(5) not in energycurve_models.keys():
+            return IOError(f"invalid energycurve model for vehicle: '{result.group(5)}'")
+        else:
+            try:
+                vehicle_id = result.group(1)
+                lat = float(result.group(2))
+                lon = float(result.group(3))
+                powertrain_id = result.group(4)
+                energycurve_id = result.group(5) # todo: add after issue #102 completed
+                capacity = float(result.group(6))
+                initial_soc = float(result.group(7))
+                if not 0.0 <= initial_soc <= 1.0:
+                    return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
+
+                energy_type = energycurve_energy_types.get(result.group(5))
+                energy_source = EnergySource.build(energy_type, capacity, initial_soc)
+                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+                start_link = road_network.property_link_from_geoid(geoid)
+
+                return Vehicle(
+                    id=vehicle_id,
+                    powertrain_id=powertrain_id,
+                    energy_source=energy_source,
+                    geoid=geoid,
+                    property_link=start_link,
+                )
+            except ValueError:
+                return IOError(f"a numeric value could not be parsed from {cleaned_string}")
 
     def has_passengers(self) -> bool:
         return len(self.passengers) > 0
@@ -56,9 +103,27 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
+
     def _calculate_idle_time(self) -> Vehicle:
         if self.vehicle_state == VehicleState.IDLE:
             return self._replace(idle_time_steps=self.idle_time_steps+1)
+
+    def charge(self,
+               powercurve: Powercurve,
+               charger: Charger,
+               duration: Time) -> Vehicle:
+        """
+        applies a charge event to a vehicle
+        :param powercurve: the vehicle's powercurve model
+        :param charger: the charger provided by the station
+        :param duration: duration of this time step
+        :return: the updated Vehicle
+        """
+        if self.energy_source.is_at_max_charge_aceptance():
+            return self.transition(VehicleState.IDLE)
+        else:
+            updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
+            return self._replace(energy_source=updated_energy_source)
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
         """
@@ -93,8 +158,9 @@ class Vehicle(NamedTuple):
     def step(self) -> Vehicle:
         return self._calculate_idle_time()
 
-    def battery_swap(self, battery: EnergySource) -> Vehicle:
-        return self._replace(energy_source=battery)
+    def battery_swap(self, energy_source: EnergySource) -> Vehicle:
+        return self._replace(energy_source=energy_source)
+
 
     def assign_route(self, route: Route) -> Vehicle:
         return self._replace(route=route)

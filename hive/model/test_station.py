@@ -3,7 +3,7 @@ from unittest import TestCase
 from h3 import h3
 
 from hive.model.station import Station
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 
 
 class TestStation(TestCase):

@@ -1,6 +1,7 @@
 import unittest
 
 from hive.model.energy.energytype import EnergyType
+from hive.model.roadnetwork.property_link import PropertyLink
 from hive.util.typealiases import KwH
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
@@ -34,8 +35,8 @@ class MyTestCase(unittest.TestCase):
         the constructed request should not modify its arguments
         """
         self.assertEqual(self.request.id, self.request_id)
-        self.assertEqual(self.request.origin, self.origin)
-        self.assertEqual(self.request.destination, self.destination)
+        self.assertEqual(self.request.origin, self.o_geoid)
+        self.assertEqual(self.request.destination, self.d_geoid)
         self.assertEqual(self.request.departure_time, self.departure_time)
         self.assertEqual(self.request.cancel_time, self.cancel_time)
         self.assertEqual(len(self.request.passengers), self.passengers)
@@ -44,12 +45,18 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = EnergySource.build(EnergyType.ELECTRIC, 100.0)
+        battery = EnergySource.build("unused", EnergyType.ELECTRIC, 100.0, 100.0, 1.0)
         vehicle = Vehicle(id="test_vehicle",
                           powertrain_id="fake_powertrain_id",
-                          energy_source=EnergySource.build(EnergyType.ELECTRIC, 40, 1),
-                          geoid=h3.geo_to_h3(0, 0, 11),
-                          property_link=None)
+                          powercurve_id="fake",
+                          energy_source=battery,
+                          property_link=PropertyLink(
+                              "test",
+                              Link("test", h3.geo_to_h3(0,0,15), h3.geo_to_h3(1,1,15)),
+                              10,
+                              10,
+                              1),
+                          geoid=h3.geo_to_h3(0, 0, 11))
         request_as_passengers = self.request.passengers
         updated_vehicle = vehicle.add_passengers(request_as_passengers)
 
