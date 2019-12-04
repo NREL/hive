@@ -6,8 +6,6 @@ from typing import NamedTuple, Dict, Optional
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
-from hive.model.energy.powercurve import Powercurve
-from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.vehiclestate import VehicleState
@@ -16,7 +14,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.pattern import vehicle_regex
-from hive.model.energy.energycurve import *
+from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
 
