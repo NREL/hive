@@ -132,7 +132,7 @@ class TestSimulationStateOps(TestCase):
             return True
 
         def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-            pass
+            raise NotImplementedError("implement if needed for testing")
 
     class MockRoadNetworkBadCoordinates(MockRoadNetwork):
         def geoid_within_geofence(self, geoid: GeoId) -> bool:
