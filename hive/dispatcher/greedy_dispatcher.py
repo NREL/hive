@@ -27,7 +27,7 @@ class GreedyDispatcher(Dispatcher):
 
         vehicles_to_consider = simulation_state.vehicles.copy()
 
-        low_soc_vehicles = [v for v in vehicles_to_consider.values() if v.energy_source.soc() <= self.LOW_SOC_TRESHOLD]
+        low_soc_vehicles = [v for v in vehicles_to_consider.values() if v.energy_source.soc <= self.LOW_SOC_TRESHOLD]
         for veh in low_soc_vehicles:
             # TODO: if we have a low number of stations/bases, it might be quicker to just find the closest
             #  by computing the distance between all of them?
@@ -46,7 +46,7 @@ class GreedyDispatcher(Dispatcher):
             vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            if vehicle.vehicle_state == VehicleState.IDLE and vehicle.energy_source.soc() > self.LOW_SOC_TRESHOLD:
+            if vehicle.vehicle_state == VehicleState.IDLE and vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD:
                 return True
             else:
                 return False

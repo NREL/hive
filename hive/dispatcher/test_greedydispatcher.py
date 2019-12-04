@@ -5,7 +5,7 @@ from unittest import TestCase, skip
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powertrain import Powertrain
@@ -56,7 +56,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = GreedyDispatcherTestAssets.mock_vehicle(vehicle_id='test_veh', geoid=somewhere)
-        low_battery = EnergySource.build(EnergyType.ELECTRIC, 50, 0.1)
+        low_battery = EnergySource.build("", EnergyType.ELECTRIC, 50, 50, 0.1)
         veh_low_battery = veh.battery_swap(low_battery)
         station = GreedyDispatcherTestAssets.mock_station(station_id='test_station', geoid=somewhere_else)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_vehicle(veh_low_battery).add_station(station)
@@ -158,7 +158,8 @@ class GreedyDispatcherTestAssets:
         mock_property_link = cls.MockRoadNetwork().property_link_from_geoid(geoid)
         mock_veh = Vehicle(vehicle_id,
                            mock_powertrain.get_id(),
-                           EnergySource.build(EnergyType.ELECTRIC, 40, 1),
+                           "",
+                           EnergySource.build("", EnergyType.ELECTRIC, 40, 40, 1),
                            geoid,
                            mock_property_link,
                            )
