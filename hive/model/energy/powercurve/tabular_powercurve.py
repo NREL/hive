@@ -83,7 +83,7 @@ class TabularPowercurve(Powercurve):
             scaled_kw_rate = kw_rate * energy_source.max_charge_acceptance
             # todo: guessing charger isn't at correct "scale" or "unit" here..
             kwh = scaled_kw_rate * self.step_size_seconds / 3600.0
-            charger_limit_kwh = charger.value * self.step_size_seconds / 3600.0
+            charger_limit_kwh = charger.power * self.step_size_seconds / 3600.0
             charger_limited_kwh_rate = min(kwh, charger_limit_kwh)
 
             updated_energy = updated_energy.load_energy(charger_limited_kwh_rate)

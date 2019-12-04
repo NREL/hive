@@ -63,7 +63,7 @@ class EnergySource(NamedTuple):
         True if the EnergySource is not full of energy
         :return: bool
         """
-        return self.load != self.max_charge_acceptance
+        return self.load < self.max_charge_acceptance
 
     def is_empty(self) -> bool:
         """
