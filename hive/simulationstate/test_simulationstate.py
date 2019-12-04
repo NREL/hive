@@ -1,14 +1,14 @@
-import copy
 from typing import cast, Optional
 from unittest import TestCase, skip
 
 from h3 import h3
 
 from hive.model.base import Base
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
 from hive.model.energy.energytype import EnergyType
+from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.roadnetwork.property_link import PropertyLink
@@ -84,16 +84,13 @@ class TestSimulationState(TestCase):
         sim = SimulationStateTestAssets.mock_empty_sim()
         sim_before_update = sim.add_vehicle(veh)
 
-        # modify some values on the vehicle
-        new_soc_lower_limit = 0.5
+        # modify some value on the vehicle
         new_geoid = h3.geo_to_h3(39.77, -105, sim_before_update.sim_h3_resolution)
-        updated_vehicle = veh._replace(geoid=new_geoid,
-                                       soc_lower_limit=new_soc_lower_limit)
+        updated_vehicle = veh._replace(geoid=new_geoid)
 
         sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
 
         # confirm sim reflects changes to vehicle
-        self.assertEqual(sim_after_update.vehicles[veh.id].soc_lower_limit, new_soc_lower_limit)
         self.assertIn(veh.id,
                       sim_after_update.v_locations[new_geoid],
                       "new vehicle geoid was not updated correctly")
@@ -387,6 +384,21 @@ class SimulationStateTestAssets:
         def energy_cost(self, route: Route) -> Kw:
             return len(route)
 
+    class MockPowercurve(Powercurve):
+        """
+        just adds 1 when charging
+        """
+
+        def get_id(self) -> PowercurveId:
+            return "mock_powercurve"
+
+        def get_energy_type(self) -> EnergyType:
+            return EnergyType.ELECTRIC
+
+        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: Time = 1,
+                   step_size_seconds: Time = 1) -> 'EnergySource':
+            return energy_source.load_energy(1.0)
+
     @classmethod
     def mock_request(cls,
                      request_id="r1",
@@ -407,10 +419,12 @@ class SimulationStateTestAssets:
                      vehicle_id="m1",
                      geoid: GeoId = h3.geo_to_h3(39.75, -105, 15)) -> Vehicle:
         mock_powertrain = cls.MockPowertrain()
+        mock_powercurve = cls.MockPowercurve()
         mock_property_link = cls.MockRoadNetwork().property_link_from_geoid(geoid)
         mock_veh = Vehicle(vehicle_id,
                            mock_powertrain.get_id(),
-                           EnergySource.build(EnergyType.ELECTRIC, 40, 1),
+                           mock_powercurve.get_id(),
+                           EnergySource.build(mock_powercurve.get_id(), EnergyType.ELECTRIC, 40, 1),
                            geoid,
                            mock_property_link,
                            )

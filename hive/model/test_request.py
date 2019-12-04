@@ -1,6 +1,7 @@
 import unittest
 
 from hive.model.energy.energytype import EnergyType
+from hive.model.roadnetwork.property_link import PropertyLink
 from hive.util.typealiases import KwH
 from hive.model.energy.energysource import EnergySource
 from hive.model.coordinate import Coordinate
@@ -24,10 +25,8 @@ class MyTestCase(unittest.TestCase):
     passengers = 2
     request = Request.build(
         request_id=request_id,
-        origin=origin,
-        destination=destination,
-        origin_geoid=o_geoid,
-        destination_geoid=d_geoid,
+        origin=o_geoid,
+        destination=d_geoid,
         departure_time=departure_time,
         cancel_time=cancel_time,
         passengers=passengers
@@ -38,8 +37,8 @@ class MyTestCase(unittest.TestCase):
         the constructed request should not modify its arguments
         """
         self.assertEqual(self.request.id, self.request_id)
-        self.assertEqual(self.request.origin, self.origin)
-        self.assertEqual(self.request.destination, self.destination)
+        self.assertEqual(self.request.origin, self.o_geoid)
+        self.assertEqual(self.request.destination, self.d_geoid)
         self.assertEqual(self.request.departure_time, self.departure_time)
         self.assertEqual(self.request.cancel_time, self.cancel_time)
         self.assertEqual(len(self.request.passengers), self.passengers)
@@ -48,11 +47,17 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = EnergySource.build(EnergyType.ELECTRIC, 100.0)
+        battery = EnergySource.build("unused", EnergyType.ELECTRIC, 100.0, 100.0, 1.0)
         vehicle = Vehicle(id="test_vehicle",
                           powertrain_id="fake_powertrain_id",
-                          position=Coordinate(0, 0),
-                          battery=battery,
+                          powercurve_id="fake",
+                          energy_source=battery,
+                          property_link=PropertyLink(
+                              "test",
+                              Link("test", h3.geo_to_h3(0,0,15), h3.geo_to_h3(1,1,15)),
+                              10,
+                              10,
+                              1),
                           geoid=h3.geo_to_h3(0, 0, 11))
         request_as_passengers = self.request.passengers
         updated_vehicle = vehicle.add_passengers(request_as_passengers)
@@ -69,8 +74,8 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(passenger.id, target_passenger_id)
 
             # passenger details should be consistent with request
-            self.assertEqual(passenger.origin, self.request.o_geoid)
-            self.assertEqual(passenger.destination, self.request.d_geoid)
+            self.assertEqual(passenger.origin, self.request.origin)
+            self.assertEqual(passenger.destination, self.request.destination)
             self.assertEqual(passenger.departure_time, self.request.departure_time)
 
             # the current vehicle should be known to each passenger

@@ -4,8 +4,7 @@ import copy
 import re
 from typing import NamedTuple, Dict, Optional
 
-from h3 import h3
-
+from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
@@ -15,7 +14,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.pattern import vehicle_regex
-from hive.model.energy.energycurve import *
+from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
 
@@ -23,15 +22,12 @@ class Vehicle(NamedTuple):
     # fixed vehicle attributes
     id: VehicleId
     powertrain_id: PowertrainId
+    powercurve_id: PowercurveId
     energy_source: EnergySource
     geoid: GeoId
     property_link: PropertyLink
-    soc_upper_limit: Percentage = 1.0
-    soc_lower_limit: Percentage = 0.0
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    # frozenmap implementation does not yet exist
-    # https://www.python.org/dev/peps/pep-0603/
     passengers: Dict[PassengerId, Passenger] = {}
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
@@ -103,6 +99,23 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
+    def charge(self,
+               powercurve: Powercurve,
+               charger: Charger,
+               duration: Time) -> Vehicle:
+        """
+        applies a charge event to a vehicle
+        :param powercurve: the vehicle's powercurve model
+        :param charger: the charger provided by the station
+        :param duration: duration of this time step
+        :return: the updated Vehicle
+        """
+        if self.energy_source.is_at_max_charge_aceptance():
+            return self.transition(VehicleState.IDLE)
+        else:
+            updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
+            return self._replace(energy_source=updated_energy_source)
+
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
@@ -132,8 +145,8 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def battery_swap(self, battery: EnergySource) -> Vehicle:
-        return self._replace(energy_source=battery)
+    def battery_swap(self, energy_source: EnergySource) -> Vehicle:
+        return self._replace(energy_source=energy_source)
 
     def assign_route(self, route: Route) -> Vehicle:
         return self._replace(route=route)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Optional
 
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 

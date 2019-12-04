@@ -4,19 +4,17 @@ from h3 import h3
 
 from hive.model.coordinate import Coordinate
 from hive.model.station import Station
-from hive.model.charger import Charger
+from hive.model.energy.charger import Charger
 from hive.model.base import Base
 
 
 class TestBase(TestCase):
     _mock_station = Station.build("test_station",
-                                  Coordinate(0, 0),
                                   h3.geo_to_h3(0, 0, 11),
                                   {Charger.LEVEL_2: 1, Charger.DCFC: 1},
                                   )
 
     _mock_base = Base.build("test_base",
-                            Coordinate(0, 0),
                             h3.geo_to_h3(0, 0, 11),
                             _mock_station,
                             1,
