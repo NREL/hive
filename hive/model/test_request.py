@@ -35,8 +35,8 @@ class MyTestCase(unittest.TestCase):
         the constructed request should not modify its arguments
         """
         self.assertEqual(self.request.id, self.request_id)
-        self.assertEqual(self.request.origin, self.o_geoid)
-        self.assertEqual(self.request.destination, self.d_geoid)
+        self.assertEqual(self.request.origin, self.origin)
+        self.assertEqual(self.request.destination, self.destination)
         self.assertEqual(self.request.departure_time, self.departure_time)
         self.assertEqual(self.request.cancel_time, self.cancel_time)
         self.assertEqual(len(self.request.passengers), self.passengers)

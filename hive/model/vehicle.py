@@ -17,6 +17,8 @@ from hive.util.pattern import vehicle_regex
 from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
+from h3 import h3
+
 
 class Vehicle(NamedTuple):
     # fixed vehicle attributes
@@ -52,7 +54,7 @@ class Vehicle(NamedTuple):
             return IOError(f"row did not match expected vehicle format: '{cleaned_string}'")
         elif result.group(4) not in powertrain_models.keys():
             return IOError(f"invalid powertrain model for vehicle: '{result.group(4)}'")
-        elif result.group(5) not in energycurve_models.keys():
+        elif result.group(5) not in powercurve_models.keys():
             return IOError(f"invalid energycurve model for vehicle: '{result.group(5)}'")
         else:
             try:
@@ -66,7 +68,7 @@ class Vehicle(NamedTuple):
                 if not 0.0 <= initial_soc <= 1.0:
                     return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
-                energy_type = energycurve_energy_types.get(result.group(5))
+                energy_type = powercurve_energy_types.get(result.group(5))
                 energy_source = EnergySource.build(energy_type, capacity, initial_soc)
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.property_link_from_geoid(geoid)
