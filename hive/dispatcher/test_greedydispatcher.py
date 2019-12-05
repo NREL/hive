@@ -41,13 +41,25 @@ class TestGreedyDispatcher(TestCase):
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
-        self.assertIsNotNone(instructions, "Should have generated at least one instruction")
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertEqual(instructions[0].action,
                          VehicleState.DISPATCH_TRIP,
                          "Should have instructed vehicle to dispatch")
         self.assertEqual(instructions[0].vehicle_id,
                          close_veh.id,
                          "Should have picked closest vehicle")
+
+    def test_no_vehicles(self):
+        dispatcher = GreedyDispatcher()
+
+        somewhere = '89283470d93ffff'
+
+        req = GreedyDispatcherTestAssets.mock_request(origin=somewhere)
+        sim = GreedyDispatcherTestAssets.mock_empty_sim().add_request(req)
+
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
+
+        self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
     def test_charge_vehicle(self):
         dispatcher = GreedyDispatcher()
@@ -63,7 +75,7 @@ class TestGreedyDispatcher(TestCase):
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
-        self.assertIsNotNone(instructions, "Should have generated at least one instruction")
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertEqual(instructions[0].action,
                          VehicleState.DISPATCH_STATION,
                          "Should have instructed vehicle to dispatch to station")
@@ -78,7 +90,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = GreedyDispatcherTestAssets.mock_vehicle(vehicle_id='test_veh', geoid=somewhere)
-        stationary_vehicle = veh._replace(idle_time_steps=1000)
+        stationary_vehicle = veh._replace(idle_time_s=1000)
         base = GreedyDispatcherTestAssets.mock_base(base_id='test_base', geoid=somewhere_else)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_vehicle(stationary_vehicle).add_base(base)
 

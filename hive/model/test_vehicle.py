@@ -177,6 +177,21 @@ class TestVehicle(TestCase):
         self.assertEqual(result.energy_source.load, vehicle_full.energy_source.load, "should have not charged")
         self.assertEqual(result.vehicle_state, VehicleState.IDLE, "should have been moved to an idle state")
 
+    def test_idle(self):
+        idle_vehicle = TestVehicle.mock_vehicle()
+        idle_vehicle_less_energy = idle_vehicle.idle(60) # idle for 60 seconds
+
+        self.assertLess(idle_vehicle_less_energy.energy_source.soc, idle_vehicle.energy_source.soc,
+                        "Idle vehicles should have consumed energy.")
+        self.assertEqual(idle_vehicle_less_energy.idle_time_s, 60, "Should have recorded idle time.")
+
+    def test_idle_reset(self):
+        idle_vehicle = TestVehicle.mock_vehicle().idle(60)
+
+        dispatch_vehicle = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+
+        self.assertEqual(dispatch_vehicle.idle_time_s, 0, "Should have reset idle time.")
+
     @skip("underlying functionality changing to Dictionary-based loader, remove and replace")
     def test_from_string_good_row(self):
         """

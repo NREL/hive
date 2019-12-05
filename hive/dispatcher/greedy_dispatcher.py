@@ -66,7 +66,7 @@ class GreedyDispatcher(Dispatcher):
                 instructions.append(instruction)
                 vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, nearest_vehicle.id)
 
-        stationary_vehicles = [v for v in vehicles_to_consider.values() if v.idle_time_steps > self.MAX_IDLE_S]
+        stationary_vehicles = [v for v in vehicles_to_consider.values() if v.idle_time_s > self.MAX_IDLE_S]
         for veh in stationary_vehicles:
             nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
                                                 entities=simulation_state.bases,

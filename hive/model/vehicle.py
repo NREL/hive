@@ -30,7 +30,7 @@ class Vehicle(NamedTuple):
     property_link: PropertyLink
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    idle_time_steps: int = 0
+    idle_time_s: Time = 0
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
 
@@ -62,13 +62,13 @@ class Vehicle(NamedTuple):
                 lat = float(result.group(2))
                 lon = float(result.group(3))
                 powertrain_id = result.group(4)
-                energycurve_id = result.group(5) # todo: add after issue #102 completed
+                energycurve_id = result.group(5)  # todo: add after issue #102 completed
                 capacity = float(result.group(6))
                 initial_soc = float(result.group(7))
                 if not 0.0 <= initial_soc <= 1.0:
                     return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
-                energy_type = powercurve_energy_types.get(result.group(5))
+                energy_type = powercurve_energy_types.get(result.group(5)) #todo: where is powercurve_energy_types?
                 energy_source = EnergySource.build(energy_type, capacity, initial_soc)
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.property_link_from_geoid(geoid)
@@ -105,10 +105,8 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
-
-    def _calculate_idle_time(self) -> Vehicle:
-        if self.vehicle_state == VehicleState.IDLE:
-            return self._replace(idle_time_steps=self.idle_time_steps+1)
+    def _reset_idle_stats(self) -> Vehicle:
+        return self._replace(idle_time_s=0)
 
     def charge(self,
                powercurve: Powercurve,
@@ -157,12 +155,21 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def step(self) -> Vehicle:
-        return self._calculate_idle_time()
+    def idle(self, time_step_s: Time) -> Vehicle:
+        if self.vehicle_state != VehicleState.IDLE:
+            # TODO: raise EntityError
+            pass
+
+        idle_energy_kwh = 0.8 * time_step_s / 3600
+        updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
+        less_energy_vehicle = self.battery_swap(updated_energy_source)
+
+        vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=less_energy_vehicle.idle_time_s + time_step_s)
+
+        return vehicle_w_stats
 
     def battery_swap(self, energy_source: EnergySource) -> Vehicle:
         return self._replace(energy_source=energy_source)
-
 
     def assign_route(self, route: Route) -> Vehicle:
         return self._replace(route=route)
@@ -186,6 +193,11 @@ class Vehicle(NamedTuple):
         if self.vehicle_state == vehicle_state:
             return self
         elif self.can_transition(vehicle_state):
-            return self._replace(vehicle_state=vehicle_state)
+            transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
+
+            if self.vehicle_state == VehicleState.IDLE:
+                return transitioned_vehicle._reset_idle_stats()
+
+            return transitioned_vehicle
         else:
             return None
