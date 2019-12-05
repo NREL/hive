@@ -16,17 +16,15 @@ from h3 import h3
 
 class MyTestCase(unittest.TestCase):
     request_id = "test"
-    origin = Coordinate(lat=0.0, lon=0.0)
-    destination = Coordinate(lat=3.0, lon=4.0)
-    o_geoid = h3.geo_to_h3(origin.lat, origin.lon, res=11)
-    d_geoid = h3.geo_to_h3(destination.lat, destination.lon, res=11)
+    origin = h3.geo_to_h3(0, 0, res=11)
+    destination = h3.geo_to_h3(3, 4, res=11)
     departure_time = 28800
     cancel_time = 29400
     passengers = 2
     request = Request.build(
         request_id=request_id,
-        origin=o_geoid,
-        destination=d_geoid,
+        origin=origin,
+        destination=destination,
         departure_time=departure_time,
         cancel_time=cancel_time,
         passengers=passengers
@@ -37,8 +35,8 @@ class MyTestCase(unittest.TestCase):
         the constructed request should not modify its arguments
         """
         self.assertEqual(self.request.id, self.request_id)
-        self.assertEqual(self.request.origin, self.o_geoid)
-        self.assertEqual(self.request.destination, self.d_geoid)
+        self.assertEqual(self.request.origin, self.origin)
+        self.assertEqual(self.request.destination, self.destination)
         self.assertEqual(self.request.departure_time, self.departure_time)
         self.assertEqual(self.request.cancel_time, self.cancel_time)
         self.assertEqual(len(self.request.passengers), self.passengers)

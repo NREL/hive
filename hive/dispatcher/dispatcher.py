@@ -1,94 +1,21 @@
-from hive.dispatcher.inactive_fleet_mgmt import inactive_fleet_mgmt
-from hive.dispatcher.active_fleet_mgmt import active_fleet_mgmt
-from hive.dispatcher.active_servicing import active_servicing
-from hive.dispatcher.active_charging import active_charging
-from hive.vehiclestate import VehicleState
-from hive.charging import find_closest_plug
+from abc import ABC, abstractmethod
+from typing import Tuple
 
-import numpy as np
-import random
+from hive.dispatcher.instruction import Instruction
+from hive.util.typealiases import RequestId
+from hive.simulationstate.simulationstate import SimulationState
 
-class Dispatcher:
-    def __init__(
-            self,
-            inactive_fleet_mgmt_name,
-            active_fleet_mgmt_name,
-            active_servicing_name,
-            active_charging_name,
-            fleet,
-            fleet_state,
-            stations,
-            bases,
-            demand,
-            env_params,
-            route_engine,
-            clock,
-            log,
-        ):
+
+class Dispatcher(ABC):
+    """
+    A class that computes instructions for the fleet based on a given simulation state.
+    """
+
+    @abstractmethod
+    def generate_instructions(self, simulation_state: SimulationState) -> Tuple[Instruction, ...]:
         """
-        :param inactive_fleet_mgmt_name,
-        :param active_fleet_mgmt_name,
-        :param active_servicing_name,
-        :param active_charging_name,
-        :param fleet:
-        :param fleet_state:
-        :param stations:
-        :param bases:
-        :param demand:
-        :param env_params:
-        :param route_engine:
-        :param clock:
+        Generates instructions for a given simulation state.
+        :param simulation_state:
         :return:
         """
-        #TODO: Considering combining module input params into a single data structure
-        self.inactive_fleet_mgmt_module = inactive_fleet_mgmt.from_scenario_input(
-                                                                    inactive_fleet_mgmt_name,
-                                                                    fleet,
-                                                                    fleet_state,
-                                                                    env_params,
-                                                                    clock,
-                                                                    )
-        self.active_fleet_mgmt_module = active_fleet_mgmt.from_scenario_input(
-                                                                    active_fleet_mgmt_name,
-                                                                    fleet,
-                                                                    fleet_state,
-                                                                    stations,
-                                                                    bases,
-                                                                    demand,
-                                                                    env_params,
-                                                                    route_engine,
-                                                                    clock,
-                                                                    )
-        self.active_servicing_module = active_servicing.from_scenario_input(
-                                                                    active_servicing_name,
-                                                                    fleet,
-                                                                    fleet_state,
-                                                                    stations,
-                                                                    bases,
-                                                                    demand,
-                                                                    env_params,
-                                                                    route_engine,
-                                                                    clock,
-                                                                    log,
-                                                                    )
-        self.active_charging_module = active_charging.from_scenario_input(
-                                                                    active_charging_name,
-                                                                    fleet,
-                                                                    fleet_state,
-                                                                    stations,
-                                                                    bases,
-                                                                    demand,
-                                                                    env_params,
-                                                                    route_engine,
-                                                                    clock,
-                                                                    )
-
-
-    def step(self, requests, active_fleet_target):
-        self.active_fleet_mgmt_module.deactivate_vehicles(active_fleet_target)
-        self.inactive_fleet_mgmt_module.activate_vehicles(active_fleet_target)
-
-        self.active_servicing_module.process_requests(requests)
-        self.active_fleet_mgmt_module.reposition_agents()
-        self.active_charging_module.charge()
-        self.inactive_fleet_mgmt_module.manage_inactive_charging()
+        pass

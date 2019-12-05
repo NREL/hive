@@ -18,6 +18,8 @@ from hive.util.exception import EntityError
 from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
+from h3 import h3
+
 
 class Vehicle(NamedTuple):
     # fixed vehicle attributes
@@ -29,6 +31,10 @@ class Vehicle(NamedTuple):
     property_link: PropertyLink
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
+    idle_time_s: Time = 0
+    # frozenmap implementation does not yet exist
+    # https://www.python.org/dev/peps/pep-0603/
+
     passengers: Dict[PassengerId, Passenger] = {}
     charger: Charger = None
     request: RequestId = None
@@ -51,7 +57,7 @@ class Vehicle(NamedTuple):
             return IOError(f"row did not match expected vehicle format: '{cleaned_string}'")
         elif result.group(4) not in powertrain_models.keys():
             return IOError(f"invalid powertrain model for vehicle: '{result.group(4)}'")
-        elif result.group(5) not in energycurve_models.keys():
+        elif result.group(5) not in powercurve_models.keys():
             return IOError(f"invalid energycurve model for vehicle: '{result.group(5)}'")
         else:
             try:
@@ -59,13 +65,13 @@ class Vehicle(NamedTuple):
                 lat = float(result.group(2))
                 lon = float(result.group(3))
                 powertrain_id = result.group(4)
-                energycurve_id = result.group(5) # todo: add after issue #102 completed
+                energycurve_id = result.group(5)  # todo: add after issue #102 completed
                 capacity = float(result.group(6))
                 initial_soc = float(result.group(7))
                 if not 0.0 <= initial_soc <= 1.0:
                     return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
-                energy_type = energycurve_energy_types.get(result.group(5))
+                energy_type = powercurve_energy_types.get(result.group(5)) #todo: where is powercurve_energy_types?
                 energy_source = EnergySource.build(energy_type, capacity, initial_soc)
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.property_link_from_geoid(geoid)
@@ -108,6 +114,9 @@ class Vehicle(NamedTuple):
     def unplug(self):
         return self._replace(charger=None)
 
+    def _reset_idle_stats(self) -> Vehicle:
+        return self._replace(idle_time_s=0)
+
     def charge(self,
                powercurve: Powercurve,
                duration: Time) -> Vehicle:
@@ -139,6 +148,7 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
+        # TODO: update self.distance_traveled based on the traversal result distance.
         energy_used = power_train.energy_cost(traverse_result.experienced_route)
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
@@ -154,6 +164,19 @@ class Vehicle(NamedTuple):
         )
 
         return updated_location_vehicle
+
+    def idle(self, time_step_s: Time) -> Vehicle:
+        if self.vehicle_state != VehicleState.IDLE:
+            # TODO: raise EntityError
+            pass
+
+        idle_energy_kwh = 0.8 * time_step_s / 3600
+        updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
+        less_energy_vehicle = self.battery_swap(updated_energy_source)
+
+        vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=less_energy_vehicle.idle_time_s + time_step_s)
+
+        return vehicle_w_stats
 
     def battery_swap(self, energy_source: EnergySource) -> Vehicle:
         return self._replace(energy_source=energy_source)
@@ -180,6 +203,11 @@ class Vehicle(NamedTuple):
         if self.vehicle_state == vehicle_state:
             return self
         elif self.can_transition(vehicle_state):
-            return self._replace(vehicle_state=vehicle_state)
+            transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
+
+            if self.vehicle_state == VehicleState.IDLE:
+                return transitioned_vehicle._reset_idle_stats()
+
+            return transitioned_vehicle
         else:
             return None

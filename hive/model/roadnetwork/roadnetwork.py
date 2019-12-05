@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import functools
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.route import Route
-from hive.util.helpers import H3Ops
-from hive.util.typealiases import GeoId, LinkId, Km, Time
+from hive.util.typealiases import GeoId, LinkId, Time
 
 
 class RoadNetwork(ABC):

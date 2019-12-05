@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Tuple, Dict, Optional, TypeVar
+from typing import Dict, Optional, TypeVar, Callable
 
-from hive.util.typealiases import Km, GeoId, Time
+from hive.util.typealiases import *
 import haversine
 
 from h3 import h3
+from math import ceil
 
 
 class UnitOps:
@@ -28,6 +29,49 @@ class UnitOps:
 
 
 class H3Ops:
+    Entity = TypeVar('Entity')
+    EntityId = TypeVar('EntityId')
+
+    @classmethod
+    def nearest_entity(cls,
+                       geoid: GeoId,
+                       entities: Dict[EntityId, Entity],
+                       entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+                       is_valid: Callable = lambda x: True,
+                       k: int = 0,
+                       max_distance_km: Km = 1,
+                       ) -> Optional[Entity]:
+        """
+        returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
+        :param max_distance_km:
+        :param is_valid:
+        :param entities:
+        :param k:
+        :param geoid:
+        :param entity_locations:
+        :return:
+        """
+        resolution = h3.h3_get_resolution(geoid)
+        k_dist_km = h3.edge_length(resolution, unit='km') * 2
+        max_k = ceil(max_distance_km / k_dist_km)
+
+        if k > max_k:
+            # There are no entities in any of the rings.
+            return None
+
+        ring = h3.k_ring_distances(geoid, k)[k]
+
+        for gid in ring:
+            if gid in entity_locations:
+                entities_at_location = entity_locations[gid]
+                if entities_at_location:
+                    for entity_id in entities_at_location:
+                        entity = entities[entity_id]
+                        if is_valid(entity):
+                            return entity
+
+        return cls.nearest_entity(geoid, entities, entity_locations, is_valid, k + 1, max_distance_km)
+
     @classmethod
     def great_circle_distance(cls, a: GeoId, b: GeoId) -> Km:
         """
