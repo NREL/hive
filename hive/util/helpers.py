@@ -10,6 +10,17 @@ from h3 import h3
 from math import ceil
 
 
+class SwitchCase:
+    def _default(**kwargs):
+        return
+
+    case_statement: Dict = {}
+
+    @classmethod
+    def switch(cls, case, **kwargs):
+        return cls.case_statement.get(case, cls._default)(**kwargs)
+
+
 class UnitOps:
     @classmethod
     def miles_to_km(cls, mph: float) -> float:

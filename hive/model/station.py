@@ -22,6 +22,13 @@ class Station(NamedTuple):
               ):
         return cls(id, geoid, total_chargers, total_chargers)
 
+    def has_available_charger(self, charger: Charger) -> bool:
+        if charger in self.total_chargers:
+            if self.available_chargers[charger] > 0:
+                return True
+
+        return False
+
     def checkout_charger(self, charger: Charger) -> Optional[Station]:
         chargers = self.available_chargers[charger]
 

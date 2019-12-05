@@ -1,7 +1,8 @@
 from typing import NamedTuple, Optional
 
 from hive.model.vehiclestate import VehicleState
-from hive.util.typealiases import VehicleId, RequestId, GeoId
+from hive.model.energy.charger import Charger
+from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId
 
 
 class Instruction(NamedTuple):
@@ -9,4 +10,6 @@ class Instruction(NamedTuple):
     action: VehicleState
     location: Optional[GeoId] = None
     request: Optional[RequestId] = None
+    station: Optional[StationId] = None
+    charger: Optional[Charger] = None
 

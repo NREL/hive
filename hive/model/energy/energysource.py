@@ -51,12 +51,12 @@ class EnergySource(NamedTuple):
         """
         return self.load / self.capacity
 
-    def is_at_max_charge_aceptance(self) -> bool:
+    def is_at_max_charge_acceptance(self) -> bool:
         """
         True if the EnergySource is full of energy
         :return: bool
         """
-        return self.load == self.max_charge_acceptance
+        return self.load >= self.max_charge_acceptance
 
     def not_at_max_charge_acceptance(self) -> bool:
         """

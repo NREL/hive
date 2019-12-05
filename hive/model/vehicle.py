@@ -8,11 +8,12 @@ from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
+from hive.util.helpers import DictOps
 from hive.util.pattern import vehicle_regex
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import *
@@ -36,8 +37,9 @@ class Vehicle(NamedTuple):
     # https://www.python.org/dev/peps/pep-0603/
 
     passengers: Dict[PassengerId, Passenger] = {}
-    charger: Charger = None
-    request: RequestId = None
+    charger: Optional[Charger] = None
+    station: Optional[StationId] = None
+    request: Optional[RequestId] = None
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
 
@@ -105,14 +107,20 @@ class Vehicle(NamedTuple):
             updated_passengers[passenger.id] = passenger_with_vehicle_id
         return self._replace(passengers=updated_passengers)
 
+    def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
+        if passenger_id not in self.passengers:
+            return self
+        updated_passengers = DictOps.remove_from_entity_dict(self.passengers, passenger_id)
+        return self._replace(passengers=updated_passengers)
+
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
-    def plug_in_to(self, charger: Charger):
-        return self._replace(charger=charger)
+    def plug_in_to(self, station: StationId, charger: Charger):
+        return self._replace(charger=charger, station=station)
 
     def unplug(self):
-        return self._replace(charger=None)
+        return self._replace(charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
         return self._replace(idle_time_s=0)
@@ -167,8 +175,7 @@ class Vehicle(NamedTuple):
 
     def idle(self, time_step_s: Time) -> Vehicle:
         if self.vehicle_state != VehicleState.IDLE:
-            # TODO: raise EntityError
-            pass
+            raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
         idle_energy_kwh = 0.8 * time_step_s / 3600
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
@@ -200,12 +207,13 @@ class Vehicle(NamedTuple):
             return True
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
-        if self.vehicle_state == vehicle_state:
+        previous_vehicle_state = self.vehicle_state
+        if previous_vehicle_state == vehicle_state:
             return self
         elif self.can_transition(vehicle_state):
             transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
 
-            if self.vehicle_state == VehicleState.IDLE:
+            if previous_vehicle_state == VehicleState.IDLE:
                 return transitioned_vehicle._reset_idle_stats()
 
             return transitioned_vehicle

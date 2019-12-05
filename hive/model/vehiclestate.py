@@ -31,7 +31,7 @@ class VehicleState(Enum):
 
 _valid_vehicle_states = frozenset([
     VehicleState.DISPATCH_BASE,
-    VehicleState.CHARGING_BASE,
+    VehicleState.CHARGING_BASE, # TODO: I think we should get rid of CHARGING_BASE and just use a single CHARGING.
     VehicleState.RESERVE_BASE,
     VehicleState.IDLE,
     VehicleState.DISPATCH_TRIP,

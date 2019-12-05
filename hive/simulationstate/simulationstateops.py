@@ -104,3 +104,64 @@ def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, 
     else:
         failure = SimulationStateError(f"not a Vehicle, Station, or Base: {x}")
         return this_simulation_state, (failure,) + this_failures
+
+# TODO: Experimenting with switch case alternative.. Is this readable or convoluted?
+class TerminalStateSwitchCase(SwitchCase):
+
+    def _case_serving_trip(**kwargs) -> SimulationState:
+        vehicle = kwargs['vehicle']
+        if not vehicle.has_route():
+            for passenger in vehicle.passengers.values():
+                if passenger.destination == vehicle.geoid:
+                    vehicle = vehicle.drop_off_passenger(passenger.id)
+            if vehicle.has_passengers():
+                raise SimulationStateError('Vehicle ended trip with passengers')
+
+            vehicle = vehicle.transition(VehicleState.IDLE)
+        return vehicle
+
+    def _case_dispatch_trip(**kwargs) -> SimulationState:
+        vehicle = kwargs['vehicle']
+        at_location = kwargs['at_location']
+
+        if at_location['requests'] and not vehicle.has_route():
+            for request in at_location['requests']:
+                if request.dispatched_vehicle == vehicle.id and vehicle.can_transition(VehicleState.SERVICING_TRIP):
+                    vehicle = vehicle.transition(VehicleState.SERVICING_TRIP).add_passengers(request.passengers)
+        return vehicle
+
+    def _case_dispatch_station(**kwargs) -> SimulationState:
+        vehicle = kwargs['vehicle']
+        at_location = kwargs['at_location']
+
+        if at_location['stations'] and not vehicle.has_route():
+            # TODO: Transition to CHARGING_STATION, checkout charger
+            pass
+        return vehicle
+
+    def _case_dispatch_base(**kwargs) -> SimulationState:
+        vehicle = kwargs['vehicle']
+        at_location = kwargs['at_location']
+
+        if at_location['bases'] and vehicle.can_transition(VehicleState.RESERVE_BASE) and not vehicle.has_route():
+            vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
+        return vehicle
+
+    def _case_repositioning(**kwargs) -> SimulationState:
+        vehicle = kwargs['vehicle']
+
+        if not vehicle.has_route():
+            vehicle = vehicle.transition(VehicleState.IDLE)
+        return vehicle
+
+    def _default(**kwargs) -> SimulationState:
+        vehicle = kwargs['vehicle']
+        return vehicle
+
+    case_statement: Dict = {
+        VehicleState.DISPATCH_TRIP: _case_dispatch_trip,
+        VehicleState.SERVICING_TRIP: _case_serving_trip,
+        VehicleState.DISPATCH_STATION: _case_dispatch_station,
+        VehicleState.DISPATCH_BASE: _case_dispatch_base,
+        VehicleState.REPOSITIONING: _case_repositioning,
+    }
