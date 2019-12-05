@@ -7,11 +7,14 @@ from typing import NamedTuple, Dict, Optional, Union, cast
 from h3 import h3
 
 from hive.model.base import Base
+from hive.model.energy.charger import Charger
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.energy.powertrain import Powertrain
+from hive.model.energy.powercurve import Powercurve
 from hive.simulationstate.at_location_response import AtLocationResponse
 from hive.util.exception import *
 from hive.util.helpers import DictOps
@@ -32,6 +35,8 @@ class SimulationState(NamedTuple):
     bases: Dict[BaseId, Base] = {}
     vehicles: Dict[VehicleId, Vehicle] = {}
     requests: Dict[RequestId, Request] = {}
+    powertrains: Dict[PowertrainId, Powertrain] = {}
+    powercurves: Dict[PowercurveId, Powercurve] = {}
 
     # location lookup collections
     v_locations: Dict[GeoId, Tuple[VehicleId, ...]] = {}
@@ -132,11 +137,13 @@ class SimulationState(NamedTuple):
                     v_locations=v_locations_updated
                 )
 
-    def perform_vehicle_state_transformation(self,
-                                             vehicle_id: VehicleId,
-                                             next_vehicle_state: VehicleState,
-                                             destination: Optional[GeoId] = None,
-                                             ) -> Optional[SimulationState]:
+    def set_vehicle_intention(self,
+                             vehicle_id: VehicleId,
+                             next_vehicle_state: VehicleState,
+                             destination: Optional[GeoId] = None,
+                             request: Optional[RequestId] = None,
+                             charger: Optional[Charger] = None,  # TODO: Add charger to Instruction
+                             ) -> Optional[SimulationState]:
         """
         test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
         :param vehicle_id:
@@ -152,34 +159,86 @@ class SimulationState(NamedTuple):
         vehicle = self.vehicles[vehicle_id]
         if not vehicle.can_transition(next_vehicle_state):
             return None
+        else:
+            vehicle = vehicle.transition(next_vehicle_state)
 
         at_location = self.at_geoid(vehicle.geoid)
 
         if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.CHARGE:
-            if not at_location['stations']:
+            if not at_location['stations'] or not charger:
                 return None
-        elif next_vehicle_state == VehicleState.RESERVE_BASE or next_vehicle_state == VehicleState.CHARGING_BASE:
+            vehicle = vehicle.plug_in_to(charger)
+
+        if next_vehicle_state == VehicleState.RESERVE_BASE or next_vehicle_state == VehicleState.CHARGING_BASE:
             if not at_location['bases']:
                 return None
-        elif next_vehicle_state == VehicleState.SERVICING_TRIP:
-            if not at_location['requests']:
+        elif next_vehicle_state == VehicleState.DISPATCH_TRIP:
+            if not request:
                 return None
-
-        transitioned_vehicle = vehicle.transition(next_vehicle_state)
+            # TODO: Modify request instead of vehicle.
+            vehicle = vehicle.assign_request(request)
+        elif next_vehicle_state == VehicleState.SERVICING_TRIP:
+            if not request or not self.vehicle_at_request(vehicle.id, request):
+                return None
+            else:
+                vehicle = vehicle.reset_request_assignment()
+                # TODO: Board passengers.
 
         route = ()
 
         if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.MOVE:
             if not destination:
                 return None
-            start = transitioned_vehicle.property_link
+            start = vehicle.property_link
             end = self.road_network.property_link_from_geoid(destination)
             route = self.road_network.route(start, end)
 
-        updated_vehicle = transitioned_vehicle.assign_route(route)
+        updated_vehicle = vehicle.assign_route(route)
 
         updated_sim_state = self.modify_vehicle(updated_vehicle)
         return updated_sim_state
+
+    def step_vehicle(self, vehicle_id: Vehicle) -> SimulationState:
+        if not isinstance(vehicle_id, VehicleId):
+            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
+        if vehicle_id not in self.vehicles:
+            raise SimulationStateError(f"attempting to update vehicle {vehicle_id} which is not in simulation")
+
+        vehicle = self.vehicles[vehicle_id]
+        at_location = self.at_geoid(vehicle.geoid)
+
+        # TODO: Catch all terminal states here and then apply move/charge
+        if vehicle.vehicle_state == VehicleState.DISPATCH_TRIP:
+            pass
+        elif vehicle.vehicle_state == VehicleState.SERVICING_TRIP:
+            pass
+        elif vehicle.vehicle_state == VehicleState.DISPATCH_STATION:
+            pass
+        elif vehicle.vehicle_state == VehicleState.CHARGING_STATION:
+            pass
+        elif vehicle.vehicle_state == VehicleState.DISPATCH_BASE:
+            pass
+        elif vehicle.vehicle_state == VehicleState.RESERVE_BASE:
+            pass
+        elif vehicle.vehicle_state == VehicleState.CHARGING_BASE:
+            pass
+        elif vehicle.vehicle_state == VehicleState.REPOSITIONING:
+            pass
+        elif vehicle.vehicle_state == VehicleState.IDLE:
+            pass
+
+        if VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.MOVE:
+            # TODO: We need add powertrains and powercurves to initial sim state constructor.
+            powertrain = self.powertrains[vehicle.powertrain_id]
+            moved_vehicle = vehicle.move(self.road_network, powertrain, self.sim_timestep_duration_seconds)
+            return self.modify_vehicle(moved_vehicle)
+        elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
+            # Charge vehicle
+            if not at_location['stations']:
+                raise SimulationStateError(f"vehicle {vehicle_id} attempting to charge but no station at location.")
+        elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.DO_NOTHING:
+            # TODO: lose energy based on idle rate.
+            pass
 
     def step(self, time_step_size: int = 1) -> SimulationState:
         """

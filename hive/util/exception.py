@@ -60,3 +60,13 @@ class SimulationStateError(Exception):
 
     def __str__(self):
         return repr(self.message)
+
+class EntityError(Exception):
+    """
+    errors related to methods on entities such as vehicles or stations.
+    """
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)

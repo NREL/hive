@@ -14,6 +14,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.pattern import vehicle_regex
+from hive.util.exception import EntityError
 from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
@@ -29,6 +30,8 @@ class Vehicle(NamedTuple):
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     passengers: Dict[PassengerId, Passenger] = {}
+    charger: Charger = None
+    request: RequestId = None
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
 
@@ -99,9 +102,14 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
+    def plug_in_to(self, charger: Charger):
+        return self._replace(charger=charger)
+
+    def unplug(self):
+        return self._replace(charger=None)
+
     def charge(self,
                powercurve: Powercurve,
-               charger: Charger,
                duration: Time) -> Vehicle:
         """
         applies a charge event to a vehicle
@@ -110,10 +118,12 @@ class Vehicle(NamedTuple):
         :param duration: duration of this time step
         :return: the updated Vehicle
         """
+        if not self.charger:
+            raise EntityError("Vehicle cannot charge without a charger.")
         if self.energy_source.is_at_max_charge_aceptance():
             return self.transition(VehicleState.IDLE)
         else:
-            updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
+            updated_energy_source = powercurve.refuel(self.energy_source, self.charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
