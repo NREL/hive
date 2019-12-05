@@ -177,6 +177,7 @@ class TestVehicle(TestCase):
         self.assertEqual(result.energy_source.load, vehicle_full.energy_source.load, "should have not charged")
         self.assertEqual(result.vehicle_state, VehicleState.IDLE, "should have been moved to an idle state")
 
+    @skip("underlying functionality changing to Dictionary-based loader, remove and replace")
     def test_from_string_good_row(self):
         """
         should take a row of data, ignoring spaces, and return a vehicle
@@ -187,7 +188,7 @@ class TestVehicle(TestCase):
         self.assertIsInstance(vehicle, Vehicle, "result of parse should be a vehicle")
         self.assertEquals(vehicle.id, "test_id")
         self.assertEquals(vehicle.geoid, h3.geo_to_h3(37, 122, self.mock_network().sim_h3_resolution))
-        self.assertEquals(vehicle.energy_source.soc(), 0.5)
+        self.assertEquals(vehicle.energy_source.soc, 0.5)
         self.assertEquals(vehicle.energy_source.capacity, 150)
         self.assertEquals(vehicle.powertrain_id, "leaf")
 
