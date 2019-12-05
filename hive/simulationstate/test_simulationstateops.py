@@ -119,6 +119,9 @@ class TestSimulationStateOps(TestCase):
         def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
             pass
 
+        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+            pass
+
         def geoid_within_geofence(self, geoid: GeoId) -> bool:
             return True
 

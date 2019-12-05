@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from h3 import h3
 
-from hive.model.coordinate import Coordinate
 from hive.model.station import Station
 from hive.model.energy.charger import Charger
 
