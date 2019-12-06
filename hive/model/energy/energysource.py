@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import KwH, Percentage, PowercurveId
@@ -24,7 +24,7 @@ class EnergySource(NamedTuple):
               powercurve_id: PowercurveId,
               energy_type: EnergyType,
               capacity: KwH,
-              max_charge_acceptance: KwH,
+              max_charge_acceptance: Optional[KwH] = None,
               soc: Percentage = 1.0) -> EnergySource:
         """
         builds an EnergySource for a Vehicle
@@ -36,6 +36,9 @@ class EnergySource(NamedTuple):
         :param soc: the initial state of charge of this vehicle, in percentage
         :return:
         """
+        if not max_charge_acceptance:
+            max_charge_acceptance = capacity
+
         assert 0.0 <= soc <= 1.0, StateOfChargeError(
             f"constructing battery with illegal soc of {(soc * 100.0):.2f}%")
         assert 0.0 <= max_charge_acceptance <= capacity, StateOfChargeError(

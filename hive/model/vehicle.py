@@ -116,8 +116,8 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
-    def plug_in_to(self, station: StationId, charger: Charger):
-        return self._replace(charger=charger, station=station)
+    def plug_in_to(self, station_id: StationId, charger: Charger):
+        return self._replace(charger=charger, station=station_id)
 
     def unplug(self):
         return self._replace(charger=None, station=None)
@@ -137,8 +137,10 @@ class Vehicle(NamedTuple):
         """
         if not self.charger:
             raise EntityError("Vehicle cannot charge without a charger.")
-        if self.energy_source.is_at_max_charge_aceptance():
-            return self.transition(VehicleState.IDLE)
+        if self.energy_source.is_at_max_charge_acceptance():
+            # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
+            #  So, I think the simulation state should handle the charge end termination state.
+            return self
         else:
             updated_energy_source = powercurve.refuel(self.energy_source, self.charger, duration)
             return self._replace(energy_source=updated_energy_source)
@@ -157,7 +159,8 @@ class Vehicle(NamedTuple):
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
         # TODO: update self.distance_traveled based on the traversal result distance.
-        energy_used = power_train.energy_cost(traverse_result.experienced_route)
+        experienced_route = traverse_result.experienced_route
+        energy_used = power_train.energy_cost(experienced_route)
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
@@ -167,8 +170,8 @@ class Vehicle(NamedTuple):
         new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
 
         updated_location_vehicle = new_route_vehicle._replace(
-            geoid=remaining_route[0].link.start,
-            property_link=remaining_route[0]
+            geoid=experienced_route[-1].link.end,
+            property_link=experienced_route[-1]
         )
 
         return updated_location_vehicle
