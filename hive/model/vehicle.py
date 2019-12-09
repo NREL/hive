@@ -37,8 +37,10 @@ class Vehicle(NamedTuple):
     # https://www.python.org/dev/peps/pep-0603/
 
     passengers: Dict[PassengerId, Passenger] = {}
-    charger: Optional[Charger] = None
+    plugged_in_charger: Optional[Charger] = None
     station: Optional[StationId] = None
+    charger_intent: Optional[Charger] = None
+    station_intent: Optional[StationId] = None
     request: Optional[RequestId] = None
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
@@ -117,13 +119,16 @@ class Vehicle(NamedTuple):
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
     def plug_in_to(self, station_id: StationId, charger: Charger):
-        return self._replace(charger=charger, station=station_id)
+        return self._replace(plugged_in_charger=charger, station=station_id)
 
     def unplug(self):
-        return self._replace(charger=None, station=None)
+        return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
         return self._replace(idle_time_s=0)
+
+    def _reset_charge_intent(self) -> Vehicle:
+        return self._replace(charger_intent=None, station_intent=None)
 
     def charge(self,
                powercurve: Powercurve,
@@ -135,14 +140,14 @@ class Vehicle(NamedTuple):
         :param duration: duration of this time step
         :return: the updated Vehicle
         """
-        if not self.charger:
+        if not self.plugged_in_charger:
             raise EntityError("Vehicle cannot charge without a charger.")
         if self.energy_source.is_at_max_charge_acceptance():
             # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
             #  So, I think the simulation state should handle the charge end termination state.
             return self
         else:
-            updated_energy_source = powercurve.refuel(self.energy_source, self.charger, duration)
+            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
@@ -169,10 +174,17 @@ class Vehicle(NamedTuple):
 
         new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
 
-        updated_location_vehicle = new_route_vehicle._replace(
-            geoid=experienced_route[-1].link.end,
-            property_link=experienced_route[-1]
-        )
+        if not remaining_route:
+            geoid = experienced_route[-1].link.end
+            updated_location_vehicle = new_route_vehicle._replace(
+                geoid=geoid,
+                property_link=road_network.property_link_from_geoid(geoid)
+            )
+        else:
+            updated_location_vehicle = new_route_vehicle._replace(
+                geoid=experienced_route[-1].link.end,
+                property_link=remaining_route[0]
+            )
 
         return updated_location_vehicle
 
@@ -193,6 +205,9 @@ class Vehicle(NamedTuple):
 
     def assign_route(self, route: Route) -> Vehicle:
         return self._replace(route=route)
+
+    def set_charge_intent(self, station_id: StationId, charger: Charger):
+        return self._replace(station_intent=station_id, charger_intent=charger)
 
     """
     TRANSITION FUNCTIONS
@@ -218,6 +233,8 @@ class Vehicle(NamedTuple):
 
             if previous_vehicle_state == VehicleState.IDLE:
                 return transitioned_vehicle._reset_idle_stats()
+            elif previous_vehicle_state == VehicleState.DISPATCH_STATION:
+                return transitioned_vehicle._reset_charge_intent()
 
             return transitioned_vehicle
         else:

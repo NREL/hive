@@ -97,7 +97,7 @@ class EnergySource(NamedTuple):
     def __repr__(self) -> str:
         soc = self.soc * 100.0
         max_chrg = self.max_charge_acceptance
-        return f"Battery({self.energy_type},cap={self.capacity}, max={max_chrg} load={self.load}/{soc:.2f}%) "
+        return f"Battery({self.energy_type},cap={self.capacity}, max={max_chrg} soc={soc:.2f}%) "
 
     def copy(self) -> EnergySource:
         return copy(self)

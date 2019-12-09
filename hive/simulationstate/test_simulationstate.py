@@ -383,6 +383,164 @@ class TestSimulationState(TestCase):
                         veh.energy_source.soc,
                         "Idle vehicle should have consumed energy")
 
+    def test_terminal_state_ending_trip(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere,
+                                                     destination=somewhere_else,
+                                                     passengers=2)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+
+        sim = sim.set_vehicle_intention(veh.id,
+                                        VehicleState.SERVICING_TRIP,
+                                        request_id=req.id)
+
+        self.assertIsNotNone(sim, "Vehicle should have transitioned to servicing trip")
+
+        for t in range(100):
+            sim = sim.step()
+
+        idle_veh = sim.vehicles[veh.id]
+
+        self.assertEqual(idle_veh.vehicle_state, VehicleState.IDLE, "Vehicle should have transitioned to idle.")
+        self.assertEqual(idle_veh.geoid, req.destination, "Vehicle should be at request destination.")
+        self.assertEqual(idle_veh.has_passengers(), False, "Vehicle should not have any passengers.")
+        self.assertEqual(req.id not in sim.requests, True, "Request should have been removed from simulation.")
+
+    def test_terminal_state_starting_trip(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        req = SimulationStateTestAssets.mock_request(origin=somewhere_else,
+                                                     destination=somewhere,
+                                                     passengers=2)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+
+        sim = sim.set_vehicle_intention(veh.id,
+                                        VehicleState.DISPATCH_TRIP,
+                                        request_id=req.id)
+
+        self.assertIsNotNone(sim, "Vehicle should have set intention.")
+
+        for t in range(10):
+            sim = sim.step()
+
+        idle_veh = sim.vehicles[veh.id]
+
+        self.assertEqual(idle_veh.vehicle_state, VehicleState.IDLE, "Vehicle should have transitioned to idle.")
+        self.assertEqual(idle_veh.geoid, req.destination, "Vehicle should be at request destination.")
+        self.assertEqual(idle_veh.has_passengers(), False, "Vehicle should not have any passengers.")
+        self.assertEqual(req.id not in sim.requests, True, "Request should have been removed from simulation.")
+
+    def test_terminal_state_dispatch_station(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        sta = SimulationStateTestAssets.mock_station(station_id='s1', geoid=somewhere_else)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+
+        sim = sim.set_vehicle_intention(veh.id,
+                                        VehicleState.DISPATCH_STATION,
+                                        station_id=sta.id,
+                                        charger=Charger.DCFC,
+                                        )
+
+        self.assertIsNotNone(sim, "Vehicle should have set intention.")
+
+        for t in range(10):
+            sim = sim.step()
+
+        charging_veh = sim.vehicles[veh.id]
+        station_w_veh = sim.stations[sta.id]
+
+        self.assertEqual(charging_veh.vehicle_state,
+                         VehicleState.CHARGING_STATION,
+                         "Vehicle should have transitioned to idle.")
+        self.assertEqual(charging_veh.geoid, sta.geoid, "Vehicle should be at station.")
+        self.assertLess(station_w_veh.available_chargers[Charger.DCFC],
+                        station_w_veh.total_chargers[Charger.DCFC],
+                        "Station should have charger in use.")
+
+    def test_terminal_state_dispatch_base(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        base = SimulationStateTestAssets.mock_base(base_id='b1', geoid=somewhere_else)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(base)
+
+        sim = sim.set_vehicle_intention(veh.id,
+                                        VehicleState.DISPATCH_BASE,
+                                        destination=base.geoid,
+                                        )
+
+        self.assertIsNotNone(sim, "Vehicle should have set intention.")
+
+        for t in range(10):
+            print(sim.vehicles[veh.id])
+            sim = sim.step()
+
+        veh_at_base = sim.vehicles[veh.id]
+
+        self.assertEqual(veh_at_base.vehicle_state,
+                         VehicleState.RESERVE_BASE,
+                         "Vehicle should have transitioned to RESERVE_BASE")
+        self.assertEqual(veh_at_base.geoid,
+                         base.geoid,
+                         "Vehicle should be located at base")
+
+    def test_terminal_state_repositioning(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh)
+
+        sim = sim.set_vehicle_intention(veh.id,
+                                        VehicleState.REPOSITIONING,
+                                        destination=somewhere_else,
+                                        )
+
+        self.assertIsNotNone(sim, "Vehicle should have set intention.")
+
+        for t in range(10):
+            sim = sim.step()
+
+        veh_at_new_loc = sim.vehicles[veh.id]
+
+        self.assertEqual(veh_at_new_loc.vehicle_state,
+                         VehicleState.IDLE,
+                         "Vehicle should have transitioned to IDLE")
+        self.assertEqual(veh_at_new_loc.geoid,
+                         somewhere_else,
+                         "Vehicle should be located at somewhere_else")
+
+    def test_terminal_state_charging(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
+        high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
+                                          EnergyType.ELECTRIC,
+                                          capacity=40,
+                                          soc=0.99)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+
+        sim = sim.set_vehicle_intention(veh.id,
+                                        VehicleState.CHARGING_STATION,
+                                        station_id=sta.id,
+                                        charger=Charger.DCFC)
+
+        self.assertIsNotNone(sim, "Vehicle should have set intention.")
+
+        for t in range(10):
+            print(sim.vehicles[veh.id].energy_source.load)
+            sim = sim.step()
+
+        fully_charged_veh = sim.vehicles[veh.id]
+
+        self.assertEqual(fully_charged_veh.vehicle_state,
+                         VehicleState.IDLE,
+                         "Vehicle should have transitioned to IDLE")
+
 
 class SimulationStateTestAssets:
     class MockPowertrain(Powertrain):
