@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import Optional, Union, Tuple, cast
 
+from hive.dispatcher.instruction import Instruction
 from hive.model.base import Base
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
@@ -10,6 +11,30 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.simulationstate.simulationstate import SimulationState
 from hive.util.exception import *
 from hive.util.typealiases import Time
+
+
+def apply_instructions(
+        simulation_state: SimulationState,
+        instructions: Tuple[Instruction, ...]
+) -> SimulationState:
+    """
+    applies all the instructions to the simulation state, ignoring the ones that fail
+    :param simulation_state: the sim state
+    :param instructions: dispatcher instructions
+    :return: the sim state with vehicle intentions updated
+    """
+    ft.reduce(
+        lambda state, instruction:
+    )
+
+def _add_instruction(simulation_state: SimulationState, instruction: Instruction) -> SimulationState:
+    """
+    inner loop for apply_instructions method
+    :param simulation_state: the intermediate sim state
+    :param instruction: the ith instruction
+    :return: sim state with the ith instruction added, unless it's bogus
+    """
+    simulation_state.apply_instruction()
 
 
 def initial_simulation_state(
@@ -43,17 +68,17 @@ def initial_simulation_state(
 
     # add vehicles, stations, and bases
     has_vehicles = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         vehicles,
         (simulation_state_builder, failures)
     )
     has_vehicles_and_stations = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         stations,
         has_vehicles
     )
     has_everything = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         bases,
         has_vehicles_and_stations
     )
@@ -61,8 +86,8 @@ def initial_simulation_state(
     return has_everything
 
 
-def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
-                        x: Union[Vehicle, Station, Base]) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
+def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
+                    x: Union[Vehicle, Station, Base]) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     adds a single Vehicle, Station, or Base to the simulator, unless it is invalid
     :param acc: the partially-constructed SimulationState
