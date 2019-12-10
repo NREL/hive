@@ -9,7 +9,7 @@ class Instruction(NamedTuple):
     vehicle_id: VehicleId
     action: VehicleState
     location: Optional[GeoId] = None
-    request: Optional[RequestId] = None
-    station: Optional[StationId] = None
+    request_id: Optional[RequestId] = None
+    station_id: Optional[StationId] = None
     charger: Optional[Charger] = None
 

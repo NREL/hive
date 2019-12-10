@@ -6,6 +6,7 @@ from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
 
+from hive.dispatcher.instruction import Instruction
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.request import Request
@@ -16,270 +17,12 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.energy.powertrain import Powertrain
 from hive.model.energy.powercurve import Powercurve
 from hive.simulationstate.at_location_response import AtLocationResponse
+from hive.simulationstate.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
+from hive.simulationstate.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
+    VehicleTransitionEffectArgs
 from hive.util.exception import *
 from hive.util.helpers import DictOps, SwitchCase
 from hive.util.typealiases import *
-
-
-# TODO: Experimenting with switch case alternative.. Is this readable or convoluted?
-class TerminalStateInstantEffectsSwitchCase(SwitchCase):
-
-    def _case_serving_trip(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        vehicle_id = kwargs['vehicle_id']
-        vehicle = sim_state.vehicles[vehicle_id]
-        if not vehicle.has_route():
-            for passenger in vehicle.passengers.values():
-                if passenger.destination == vehicle.geoid:
-                    vehicle = vehicle.drop_off_passenger(passenger.id)
-            if vehicle.has_passengers():
-                raise SimulationStateError('Vehicle ended trip with passengers')
-
-            vehicle = vehicle.transition(VehicleState.IDLE)
-            sim_state = sim_state.modify_vehicle(vehicle)
-
-        return sim_state
-
-    def _case_dispatch_trip(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        vehicle_id = kwargs['vehicle_id']
-        vehicle = sim_state.vehicles[vehicle_id]
-        at_location = sim_state.at_geoid(vehicle.geoid)
-
-        if at_location['requests'] and not vehicle.has_route():
-            for request_id in at_location['requests']:
-                request = sim_state.requests[request_id]
-                if request.dispatched_vehicle == vehicle.id and vehicle.can_transition(VehicleState.SERVICING_TRIP):
-                    transitioned_vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
-
-                    start = transitioned_vehicle.property_link
-                    end = sim_state.road_network.property_link_from_geoid(request.destination)
-                    route = sim_state.road_network.route(start, end)
-                    routed_vehicle = transitioned_vehicle.assign_route(route)
-
-                    sim_state = sim_state.modify_vehicle(routed_vehicle).board_vehicle(request.id, routed_vehicle.id)
-
-        return sim_state
-
-    def _case_dispatch_station(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        vehicle_id = kwargs['vehicle_id']
-        vehicle = sim_state.vehicles[vehicle_id]
-        at_location = sim_state.at_geoid(vehicle.geoid)
-        charger = vehicle.charger_intent
-        station_id = vehicle.station_intent
-
-        if station_id in at_location['stations'] and not vehicle.has_route():
-            station = sim_state.stations[station_id]
-
-            if station.has_available_charger(charger):
-                station = station.checkout_charger(charger)
-                vehicle = vehicle.transition(VehicleState.CHARGING_STATION).plug_in_to(station.id, charger)
-                sim_state = sim_state.modify_vehicle(vehicle).modify_station(station)
-            else:
-                # FUTURE: Add station queuing?
-                vehicle = vehicle.transition(VehicleState.IDLE)
-                sim_state = sim_state.modify_vehicle(vehicle)
-
-        return sim_state
-
-    def _case_dispatch_base(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        vehicle_id = kwargs['vehicle_id']
-        vehicle = sim_state.vehicles[vehicle_id]
-        at_location = sim_state.at_geoid(vehicle.geoid)
-
-        # TODO: Implement base stall checkout.
-        if at_location['bases'] and vehicle.can_transition(VehicleState.RESERVE_BASE) and not vehicle.has_route():
-            vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
-            sim_state = sim_state.modify_vehicle(vehicle)
-
-        return sim_state
-
-    def _case_repositioning(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        vehicle_id = kwargs['vehicle_id']
-        vehicle = sim_state.vehicles[vehicle_id]
-
-        if not vehicle.has_route():
-            vehicle = vehicle.transition(VehicleState.IDLE)
-            sim_state = sim_state.modify_vehicle(vehicle)
-
-        return sim_state
-
-    def _case_charging_station(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        vehicle_id = kwargs['vehicle_id']
-        vehicle = sim_state.vehicles[vehicle_id]
-
-        if vehicle.energy_source.is_at_max_charge_acceptance():
-            station = sim_state.stations[vehicle.station]
-            updated_station = station.return_charger(vehicle.plugged_in_charger)
-
-            updated_vehicle = vehicle.transition(VehicleState.IDLE).unplug()
-            sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-        return sim_state
-
-    def _default(**kwargs) -> SimulationState:
-        sim_state = kwargs['sim_state']
-        return sim_state
-
-    case_statement: Dict = {
-        VehicleState.DISPATCH_TRIP: _case_dispatch_trip,
-        VehicleState.SERVICING_TRIP: _case_serving_trip,
-        VehicleState.DISPATCH_STATION: _case_dispatch_station,
-        VehicleState.DISPATCH_BASE: _case_dispatch_base,
-        VehicleState.REPOSITIONING: _case_repositioning,
-        VehicleState.CHARGING_STATION: _case_charging_station,
-    }
-
-
-class VehicleTransitionInstantEffectsSwitchCase(SwitchCase):
-
-    def _case_serving_trip(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-        request_id = kwargs['request_id']
-
-        request = sim_state.requests[request_id]
-        if not request or not sim_state.vehicle_at_request(vehicle.id, request.id):
-            return None
-
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(request.destination)
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route)
-        sim_boarded = sim_state.board_vehicle(request.id, vehicle_w_route.id)
-
-        updated_sim_state = sim_boarded.modify_vehicle(vehicle_w_route)
-
-        return updated_sim_state
-
-    def _case_dispatch_trip(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-        request_id = kwargs['request_id']
-
-        request = sim_state.requests[request_id]
-        if not request:
-            return None
-        assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.sim_time)
-
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(request.origin)
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route)
-
-        updated_sim_state = sim_state.modify_request(assigned_request).modify_vehicle(vehicle_w_route)
-        return updated_sim_state
-
-    def _case_dispatch_station(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-        station_id = kwargs['station_id']
-        charger = kwargs['charger']
-        if not station_id or not charger:
-            return None
-        elif station_id not in sim_state.stations:
-            return None
-
-        station = sim_state.stations[station_id]
-
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(station.geoid)
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route).set_charge_intent(station_id, charger)
-
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
-
-        return updated_sim_state
-
-    def _case_dispatch_base(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-        destination = kwargs['destination']
-        if not destination:
-            return None
-
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(destination)
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route)
-
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
-
-        return updated_sim_state
-
-    def _case_repositioning(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-        destination = kwargs['destination']
-        if not destination:
-            return None
-
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(destination)
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route)
-
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
-
-        return updated_sim_state
-
-    def _case_reserve_base(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-
-        at_location = sim_state.at_geoid(vehicle.geoid)
-
-        if not at_location['bases']:
-            return None
-
-        return sim_state
-
-    def _case_charging_station(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        vehicle = kwargs['vehicle']
-        station_id = kwargs['station_id']
-        charger = kwargs['charger']
-        at_location = sim_state.at_geoid(vehicle.geoid)
-
-        if not station_id or not charger:
-            return None
-        elif not at_location['stations']:
-            return None
-        elif station_id not in sim_state.s_locations[vehicle.geoid]:
-            return None
-
-        station = sim_state.stations[station_id]
-        if not station.has_available_charger(charger):
-            return None
-
-        station_less_charger = station.checkout_charger(charger)
-        vehicle_w_charger = vehicle.plug_in_to(station_id, charger)
-        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(vehicle_w_charger)
-
-        return updated_sim_state
-
-    def _default(**kwargs) -> Optional[SimulationState]:
-        sim_state = kwargs['sim_state']
-        return sim_state
-
-    case_statement: Dict = {
-        VehicleState.DISPATCH_TRIP: _case_dispatch_trip,
-        VehicleState.SERVICING_TRIP: _case_serving_trip,
-        VehicleState.DISPATCH_STATION: _case_dispatch_station,
-        VehicleState.DISPATCH_BASE: _case_dispatch_base,
-        VehicleState.REPOSITIONING: _case_repositioning,
-        VehicleState.RESERVE_BASE: _case_reserve_base,
-        VehicleState.CHARGING_STATION: _case_charging_station,
-    }
 
 
 class SimulationState(NamedTuple):
@@ -429,46 +172,30 @@ class SimulationState(NamedTuple):
                     v_locations=v_locations_updated
                 )
 
-    def set_vehicle_intention(self,
-                              vehicle_id: VehicleId,
-                              next_vehicle_state: VehicleState,
-                              destination: Optional[GeoId] = None,
-                              request_id: Optional[RequestId] = None,
-                              station_id: Optional[StationId] = None,
-                              charger: Optional[Charger] = None,
-                              ) -> Optional[SimulationState]:
+    def apply_instruction(self, i: Instruction) -> Optional[SimulationState]:
         """
         test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
-        :param charger:
-        :param station_id:
-        :param request_id:
-        :param vehicle_id:
-        :param next_vehicle_state:
-        :param destination:
+        :param i: the instruction to apply
         :return: the updated simulation state or an exception on failure
         """
-        if not isinstance(vehicle_id, VehicleId):
-            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
-        if vehicle_id not in self.vehicles:
-            raise SimulationStateError(f"attempting to update vehicle {vehicle_id} which is not in simulation")
+        if not isinstance(i, Instruction):
+            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(i.vehicle_id)}")
+        if i.vehicle_id not in self.vehicles:
+            raise SimulationStateError(f"attempting to update vehicle {i.vehicle_id} which is not in simulation")
 
-        vehicle = self.vehicles[vehicle_id]
-
-        if not vehicle.can_transition(next_vehicle_state):
+        vehicle = self.vehicles[i.vehicle_id]
+        if not vehicle.can_transition(i.action):
             return None
         else:
-            vehicle = vehicle.transition(next_vehicle_state)
+            # apply instruction to vehicle
+            updated_vehicle = vehicle.transition(i.action)
+            updated_vehicle_sim_state = self.modify_vehicle(updated_vehicle)
 
-        # Handle instantaneous effects
-        updated_sim_state = VehicleTransitionInstantEffectsSwitchCase.switch(next_vehicle_state,
-                                                                             sim_state=self.modify_vehicle(vehicle),
-                                                                             vehicle=vehicle,
-                                                                             destination=destination,
-                                                                             request_id=request_id,
-                                                                             station_id=station_id,
-                                                                             charger=charger)
+            # Handle instantaneous effects
+            effect_args = VehicleTransitionEffectArgs(updated_vehicle_sim_state, i)
+            updated_sim_state = VehicleTransitionEffectOps.switch(i.action, effect_args)
 
-        return updated_sim_state
+            return updated_sim_state
 
     def step_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
         if not isinstance(vehicle_id, VehicleId):
@@ -478,10 +205,8 @@ class SimulationState(NamedTuple):
 
         # Handle terminal state instant effects.
         vehicle = self.vehicles[vehicle_id]
-        sim_state_w_effects = TerminalStateInstantEffectsSwitchCase.switch(vehicle.vehicle_state,
-                                                                           sim_state=self,
-                                                                           vehicle_id=vehicle_id,
-                                                                           )
+        effect_args = TerminalStateEffectArgs(self, vehicle_id)
+        sim_state_w_effects = TerminalStateEffectOps.switch(vehicle.vehicle_state, effect_args)
 
         # Apply time based effects.
         vehicle = sim_state_w_effects.vehicles[vehicle_id]

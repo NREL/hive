@@ -16,8 +16,8 @@ from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import Route
-from hive.simulationstate.simulationstate import SimulationState
-from hive.simulationstate.simulationstateops import initial_simulation_state
+from hive.simulationstate.simulation_state import SimulationState
+from hive.simulationstate.simulation_state_ops import initial_simulation_state
 from hive.util.typealiases import *
 
 

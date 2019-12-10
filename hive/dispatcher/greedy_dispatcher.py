@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from hive.dispatcher.instruction import Instruction
-from hive.simulationstate.simulationstate import SimulationState
+from hive.simulationstate.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
