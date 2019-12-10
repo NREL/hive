@@ -16,6 +16,7 @@ from hive.model.vehiclestate import VehicleState
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.roadnetwork.link import Link
 from hive.util.typealiases import *
+from hive.util.units import unit
 from hive.model.energy.energytype import EnergyType
 
 
@@ -359,8 +360,8 @@ class VehicleTestAssests:
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def energy_cost(self, route: Route) -> Kw:
-            return len(route)
+        def energy_cost(self, route: Route) -> kwh:
+            return len(route) * unit.kilowathour
 
     class MockPowercurve(Powercurve):
         """

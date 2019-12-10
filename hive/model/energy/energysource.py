@@ -5,7 +5,7 @@ from typing import NamedTuple
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
 from hive.util.exception import StateOfChargeError, UnitError
-from hive.util.units import unit, kwh, Ratio
+from hive.util.units import unit, kw, kwh, Ratio
 
 from copy import copy
 
@@ -19,7 +19,8 @@ class EnergySource(NamedTuple):
     ideal_energy_limit: kwh
     capacity: kwh
     energy: kwh
-    charge_threshold: float = 0.001
+    max_charge_acceptance_kw: kw
+    charge_threshold: kwh = 0.001 * unit.kilowatthour
 
     @classmethod
     def build(cls,
@@ -27,7 +28,9 @@ class EnergySource(NamedTuple):
               energy_type: EnergyType,
               capacity: kwh,
               ideal_energy_limit: kwh,
-              soc: Ratio = 1.0, ) -> EnergySource:
+              max_charge_acceptance_kw: kw = 50 * unit.kilowatt,
+              soc: Ratio = 1.0,
+              ) -> EnergySource:
         """
         builds an EnergySource for a Vehicle
         :param powercurve_id: the id of the powercurve associated with charging this EnergySource
@@ -35,6 +38,7 @@ class EnergySource(NamedTuple):
         :param capacity: the fuel capacity of this EnergySource
         :param ideal_energy_limit: the energy that this EnergySource is limited to based on
         manufacturer requirements and implementation
+        :param max_charge_acceptance_kw: the maximum charge power this vehicle can accept
         :param soc: the initial state of charge of this vehicle, in percentage
         :return:
         """
@@ -48,8 +52,16 @@ class EnergySource(NamedTuple):
         assert ideal_energy_limit.units == unit.kilowatthour, UnitError(
             f"expected units of type {unit.kilowatthour}, but got {ideal_energy_limit.units}"
         )
+        assert max_charge_acceptance_kw.units == unit.kilowatt, UnitError(
+            f"expected units of type {unit.kilowatt}, but got {max_charge_acceptance_kw.units}"
+        )
 
-        return EnergySource(powercurve_id, energy_type, capacity, ideal_energy_limit, capacity * soc)
+        return EnergySource(powercurve_id,
+                            energy_type,
+                            capacity,
+                            ideal_energy_limit,
+                            capacity * soc,
+                            max_charge_acceptance_kw)
 
     @property
     def soc(self) -> Ratio:
@@ -64,8 +76,7 @@ class EnergySource(NamedTuple):
         True if the EnergySource is at ideal energy limit 
         :return: bool
         """
-        return (self.ideal_energy_limit - self.charge_threshold) < self.energy \
-               < (self.ideal_energy_limit + self.charge_threshold)
+        return self.energy >= self.ideal_energy_limit
 
     def not_at_ideal_energy_limit(self) -> bool:
         """

@@ -50,7 +50,7 @@ class _TestAssets:
     }
 
     property_links = {
-        # 45kmph with leaf model should be about .57 watts per km, or about 1.5watts for this trip
+        # 45kmph with leaf model should be about .57 watts per km, or about 1.7 watthours for this trip
         "1": PropertyLink.build(links["1"], 45 * (unit.kilometer/unit.hour)),
         "2": PropertyLink.build(links["2"], 45 * (unit.kilometer/unit.hour)),
         "3": PropertyLink.build(links["3"], 45 * (unit.kilometer/unit.hour))
