@@ -9,7 +9,7 @@ from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.energy.powercurve.powercurve import Powercurve 
-from hive.simulationstate.simulationstate import SimulationState
+from hive.simulationstate.simulation_state import SimulationState
 from hive.util.exception import *
 from hive.util.typealiases import Time
 
