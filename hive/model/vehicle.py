@@ -8,12 +8,14 @@ from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
+from hive.util.helpers import DictOps
 from hive.util.pattern import vehicle_regex
+from hive.util.exception import EntityError
 from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
@@ -35,6 +37,11 @@ class Vehicle(NamedTuple):
     # https://www.python.org/dev/peps/pep-0603/
 
     passengers: Dict[PassengerId, Passenger] = {}
+    plugged_in_charger: Optional[Charger] = None
+    station: Optional[StationId] = None
+    charger_intent: Optional[Charger] = None
+    station_intent: Optional[StationId] = None
+    request: Optional[RequestId] = None
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: float = 0.0
 
@@ -102,15 +109,29 @@ class Vehicle(NamedTuple):
             updated_passengers[passenger.id] = passenger_with_vehicle_id
         return self._replace(passengers=updated_passengers)
 
+    def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
+        if passenger_id not in self.passengers:
+            return self
+        updated_passengers = DictOps.remove_from_entity_dict(self.passengers, passenger_id)
+        return self._replace(passengers=updated_passengers)
+
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
+
+    def plug_in_to(self, station_id: StationId, charger: Charger):
+        return self._replace(plugged_in_charger=charger, station=station_id)
+
+    def unplug(self):
+        return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
         return self._replace(idle_time_s=0)
 
+    def _reset_charge_intent(self) -> Vehicle:
+        return self._replace(charger_intent=None, station_intent=None)
+
     def charge(self,
                powercurve: Powercurve,
-               charger: Charger,
                duration: Time) -> Vehicle:
         """
         applies a charge event to a vehicle
@@ -119,10 +140,14 @@ class Vehicle(NamedTuple):
         :param duration: duration of this time step
         :return: the updated Vehicle
         """
-        if self.energy_source.is_at_max_charge_aceptance():
-            return self.transition(VehicleState.IDLE)
+        if not self.plugged_in_charger:
+            raise EntityError("Vehicle cannot charge without a charger.")
+        if self.energy_source.is_at_max_charge_acceptance():
+            # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
+            #  So, I think the simulation state should handle the charge end termination state.
+            return self
         else:
-            updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
+            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
@@ -139,7 +164,8 @@ class Vehicle(NamedTuple):
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
         # TODO: update self.distance_traveled based on the traversal result distance.
-        energy_used = power_train.energy_cost(traverse_result.experienced_route)
+        experienced_route = traverse_result.experienced_route
+        energy_used = power_train.energy_cost(experienced_route)
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
@@ -148,17 +174,23 @@ class Vehicle(NamedTuple):
 
         new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
 
-        updated_location_vehicle = new_route_vehicle._replace(
-            geoid=remaining_route[0].link.start,
-            property_link=remaining_route[0]
-        )
+        if not remaining_route:
+            geoid = experienced_route[-1].link.end
+            updated_location_vehicle = new_route_vehicle._replace(
+                geoid=geoid,
+                property_link=road_network.property_link_from_geoid(geoid)
+            )
+        else:
+            updated_location_vehicle = new_route_vehicle._replace(
+                geoid=experienced_route[-1].link.end,
+                property_link=remaining_route[0]
+            )
 
         return updated_location_vehicle
 
     def idle(self, time_step_s: Time) -> Vehicle:
         if self.vehicle_state != VehicleState.IDLE:
-            # TODO: raise EntityError
-            pass
+            raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
         idle_energy_kwh = 0.8 * time_step_s / 3600
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
@@ -173,6 +205,9 @@ class Vehicle(NamedTuple):
 
     def assign_route(self, route: Route) -> Vehicle:
         return self._replace(route=route)
+
+    def set_charge_intent(self, station_id: StationId, charger: Charger):
+        return self._replace(station_intent=station_id, charger_intent=charger)
 
     """
     TRANSITION FUNCTIONS
@@ -190,13 +225,16 @@ class Vehicle(NamedTuple):
             return True
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
-        if self.vehicle_state == vehicle_state:
+        previous_vehicle_state = self.vehicle_state
+        if previous_vehicle_state == vehicle_state:
             return self
         elif self.can_transition(vehicle_state):
             transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
 
-            if self.vehicle_state == VehicleState.IDLE:
+            if previous_vehicle_state == VehicleState.IDLE:
                 return transitioned_vehicle._reset_idle_stats()
+            elif previous_vehicle_state == VehicleState.DISPATCH_STATION:
+                return transitioned_vehicle._reset_charge_intent()
 
             return transitioned_vehicle
         else:

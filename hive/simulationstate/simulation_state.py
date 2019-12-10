@@ -6,19 +6,32 @@ from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
 
+from hive.dispatcher.instruction import Instruction
 from hive.model.base import Base
+from hive.model.energy.charger import Charger
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.energy.powertrain import Powertrain
+from hive.model.energy.powercurve import Powercurve
 from hive.simulationstate.at_location_response import AtLocationResponse
+from hive.simulationstate.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
+from hive.simulationstate.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
+    VehicleTransitionEffectArgs
 from hive.util.exception import *
-from hive.util.helpers import DictOps
+from hive.util.helpers import DictOps, SwitchCase
 from hive.util.typealiases import *
 
 
 class SimulationState(NamedTuple):
+    """
+    resolution of '11' is within 25 meters/82 feet. this decides how granular
+    the simulation will operate for internal operations. the user can still
+    specify their own level of granularity for
+    https://uber.github.io/h3/#/documentation/core-library/resolution-table
+    """
     # road network representation
     road_network: RoadNetwork
 
@@ -32,19 +45,14 @@ class SimulationState(NamedTuple):
     bases: Dict[BaseId, Base] = {}
     vehicles: Dict[VehicleId, Vehicle] = {}
     requests: Dict[RequestId, Request] = {}
+    powertrains: Dict[PowertrainId, Powertrain] = {}
+    powercurves: Dict[PowercurveId, Powercurve] = {}
 
     # location lookup collections
     v_locations: Dict[GeoId, Tuple[VehicleId, ...]] = {}
     r_locations: Dict[GeoId, Tuple[RequestId, ...]] = {}
     s_locations: Dict[GeoId, Tuple[StationId, ...]] = {}
     b_locations: Dict[GeoId, Tuple[BaseId, ...]] = {}
-
-    """
-    resolution of '11' is within 25 meters/82 feet. this decides how granular
-    the simulation will operate for internal operations. the user can still
-    specify their own level of granularity for
-    https://uber.github.io/h3/#/documentation/core-library/resolution-table
-    """
 
     def add_request(self, request: Request) -> Union[Exception, SimulationState]:
         """
@@ -82,6 +90,38 @@ class SimulationState(NamedTuple):
                 requests=DictOps.remove_from_entity_dict(self.requests, request.id),
                 r_locations=DictOps.remove_from_location_dict(self.r_locations, request.origin, request.id)
             )
+
+    # TODO: Think about making this generic wrt entities.
+    def modify_request(self, updated_request: Request) -> Union[Exception, SimulationState]:
+        """
+        given an updated request, update the SimulationState with that request 
+        :param updated_request: 
+        :return: the updated simulation, or an error
+        """
+        if not isinstance(updated_request, Request):
+            return TypeError(f"sim.update_request requires a request but received {type(updated_request)}")
+        else:
+
+            old_request = self.requests[updated_request.id]
+
+            if old_request.origin == updated_request.origin:
+                return self._replace(
+                    requests=DictOps.add_to_entity_dict(self.requests, updated_request.id, updated_request)
+                )
+            else:
+
+                # unset from old geoid add add to new one
+                r_locations_removed = DictOps.remove_from_location_dict(self.r_locations,
+                                                                        old_request.origin,
+                                                                        old_request.id)
+                r_locations_updated = DictOps.add_to_location_dict(r_locations_removed,
+                                                                   updated_request.origin,
+                                                                   updated_request.id)
+
+                return self._replace(
+                    requests=DictOps.add_to_entity_dict(self.requests, updated_request.id, updated_request),
+                    r_locations=r_locations_updated
+                )
 
     def add_vehicle(self, vehicle: Vehicle) -> Union[Exception, SimulationState]:
         """
@@ -132,53 +172,57 @@ class SimulationState(NamedTuple):
                     v_locations=v_locations_updated
                 )
 
-    def perform_vehicle_state_transformation(self,
-                                             vehicle_id: VehicleId,
-                                             next_vehicle_state: VehicleState,
-                                             destination: Optional[GeoId] = None,
-                                             ) -> Optional[SimulationState]:
+    def apply_instruction(self, i: Instruction) -> Optional[SimulationState]:
         """
         test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
-        :param vehicle_id:
-        :param next_vehicle_state:
-        :param destination:
+        :param i: the instruction to apply
         :return: the updated simulation state or an exception on failure
         """
+        if not isinstance(i, Instruction):
+            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(i.vehicle_id)}")
+        if i.vehicle_id not in self.vehicles:
+            raise SimulationStateError(f"attempting to update vehicle {i.vehicle_id} which is not in simulation")
+
+        vehicle = self.vehicles[i.vehicle_id]
+        if not vehicle.can_transition(i.action):
+            return None
+        else:
+            # apply instruction to vehicle
+            updated_vehicle = vehicle.transition(i.action)
+            updated_vehicle_sim_state = self.modify_vehicle(updated_vehicle)
+
+            # Handle instantaneous effects
+            effect_args = VehicleTransitionEffectArgs(updated_vehicle_sim_state, i)
+            updated_sim_state = VehicleTransitionEffectOps.switch(i.action, effect_args)
+
+            return updated_sim_state
+
+    def step_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
         if not isinstance(vehicle_id, VehicleId):
             raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
         if vehicle_id not in self.vehicles:
             raise SimulationStateError(f"attempting to update vehicle {vehicle_id} which is not in simulation")
 
+        # Handle terminal state instant effects.
         vehicle = self.vehicles[vehicle_id]
-        if not vehicle.can_transition(next_vehicle_state):
-            return None
+        effect_args = TerminalStateEffectArgs(self, vehicle_id)
+        sim_state_w_effects = TerminalStateEffectOps.switch(vehicle.vehicle_state, effect_args)
 
-        at_location = self.at_geoid(vehicle.geoid)
+        # Apply time based effects.
+        vehicle = sim_state_w_effects.vehicles[vehicle_id]
+        if VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.MOVE:
+            powertrain = sim_state_w_effects.powertrains[vehicle.powertrain_id]
+            vehicle = vehicle.move(sim_state_w_effects.road_network,
+                                   powertrain,
+                                   sim_state_w_effects.sim_timestep_duration_seconds)
+        elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
+            powercurve = sim_state_w_effects.powercurves[vehicle.powercurve_id]
+            vehicle = vehicle.charge(powercurve, sim_state_w_effects.sim_timestep_duration_seconds)
+        elif vehicle.vehicle_state == VehicleState.IDLE:
+            vehicle = vehicle.idle(sim_state_w_effects.sim_timestep_duration_seconds)
 
-        if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.CHARGE:
-            if not at_location['stations']:
-                return None
-        elif next_vehicle_state == VehicleState.RESERVE_BASE or next_vehicle_state == VehicleState.CHARGING_BASE:
-            if not at_location['bases']:
-                return None
-        elif next_vehicle_state == VehicleState.SERVICING_TRIP:
-            if not at_location['requests']:
-                return None
+        updated_sim_state = sim_state_w_effects.modify_vehicle(vehicle)
 
-        transitioned_vehicle = vehicle.transition(next_vehicle_state)
-
-        route = ()
-
-        if VehicleStateCategory.from_vehicle_state(next_vehicle_state) == VehicleStateCategory.MOVE:
-            if not destination:
-                return None
-            start = transitioned_vehicle.property_link
-            end = self.road_network.property_link_from_geoid(destination)
-            route = self.road_network.route(start, end)
-
-        updated_vehicle = transitioned_vehicle.assign_route(route)
-
-        updated_sim_state = self.modify_vehicle(updated_vehicle)
         return updated_sim_state
 
     def step(self, time_step_size: int = 1) -> SimulationState:
@@ -187,8 +231,9 @@ class SimulationState(NamedTuple):
         :return: the simulation after calling step() on all vehicles
         """
 
+        # TODO: step_vehicle() assumes a single time step so we need something to repeat this if time_step_size > 1
         next_state = ft.reduce(
-            lambda acc, v: acc.modify_vehicle(v.step()),
+            lambda acc, v: acc.step_vehicle(v.id),
             self.vehicles.values(),
             self
         )
@@ -268,6 +313,19 @@ class SimulationState(NamedTuple):
                 s_locations=DictOps.remove_from_location_dict(self.s_locations, station.geoid, station_id)
             )
 
+    def modify_station(self, updated_station: Station) -> Union[Exception, SimulationState]:
+        """
+        given an updated station, update the SimulationState with that station
+        :param updated_station:
+        :return: the updated simulation, or an error
+        """
+        if not isinstance(updated_station, Station):
+            return TypeError(f"sim.update_station requires a station but received {type(updated_station)}")
+        else:
+            return self._replace(
+                stations=DictOps.add_to_entity_dict(self.stations, updated_station.id, updated_station)
+            )
+
     def add_base(self, base: Base) -> Union[Exception, SimulationState]:
         """
         adds a base to the simulation
@@ -300,6 +358,45 @@ class SimulationState(NamedTuple):
             return self._replace(
                 bases=DictOps.remove_from_entity_dict(self.bases, base_id),
                 b_locations=DictOps.remove_from_location_dict(self.b_locations, base.geoid, base_id)
+            )
+
+    def modify_base(self, updated_base: Base) -> Union[Exception, SimulationState]:
+        """
+        given an updated base, update the SimulationState with that base
+        :param updated_base:
+        :return: the updated simulation, or an error
+        """
+        if not isinstance(updated_base, Base):
+            return TypeError(f"sim.update_base requires a base but received {type(updated_base)}")
+        else:
+            return self._replace(
+                bases=DictOps.add_to_entity_dict(self.bases, updated_base.id, updated_base)
+            )
+
+    def add_powertrain(self, powertrain: Powertrain) -> Union[Exception, SimulationState]:
+        """
+        Adds a powertrain to the simulation
+        :param powertrain: 
+        :return: 
+        """
+        if not isinstance(powertrain, Powertrain):
+            return TypeError(f"sim.add_base requires a base but received {type(powertrain)}")
+        else:
+            return self._replace(
+                powertrains=DictOps.add_to_entity_dict(self.powertrains, powertrain.get_id(), powertrain),
+            )
+
+    def add_powercurve(self, powercurve: Powercurve) -> Union[Exception, SimulationState]:
+        """
+        Adds a powercurve to the simulation
+        :param powercurve: 
+        :return: 
+        """
+        if not isinstance(powercurve, Powercurve):
+            return TypeError(f"sim.add_base requires a base but received {type(powercurve)}")
+        else:
+            return self._replace(
+                powercurves=DictOps.add_to_entity_dict(self.powercurves, powercurve.get_id(), powercurve),
             )
 
     def update_road_network(self, sim_time: int) -> SimulationState:
