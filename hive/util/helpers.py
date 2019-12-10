@@ -41,7 +41,7 @@ class SwitchCase(ABC):
 
     @classmethod
     def switch(cls, case, payload: Arguments) -> Result:
-        return cls.case_statement.get(case, cls._default)(payload)
+        return cls.case_statement.get(case, cls._default)(cls, payload)
 
 
 class UnitOps:
