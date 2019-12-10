@@ -6,7 +6,8 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.util.typealiases import GeoId, LinkId, Time
+from hive.util.typealiases import GeoId, LinkId, SimTime
+from hive.util.units import unit
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -18,7 +19,7 @@ class HaversineRoadNetwork(RoadNetwork):
     """
 
     # TODO: Replace speed with more accurate/dynamic estimate.
-    _AVG_SPEED = 40  # km/hour
+    _AVG_SPEED = 40 * (unit.kilometer / unit.hour)
     sim_h3_resolution = 15
 
     def _geoids_to_link_id(self, origin: GeoId, destination: GeoId) -> LinkId:
@@ -55,7 +56,7 @@ class HaversineRoadNetwork(RoadNetwork):
         link = Link(link_id, geoid, geoid)
         return PropertyLink(link_id, link, 0, 0, 0)
 
-    def update(self, sim_time: Time) -> RoadNetwork:
+    def update(self, sim_time: SimTime) -> RoadNetwork:
         """
         gives the RoadNetwork a chance to update it's flow network based on the current simulation time
         :param sim_time: the sim time to update the model to

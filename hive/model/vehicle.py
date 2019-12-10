@@ -14,6 +14,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.pattern import vehicle_regex
+from hive.util.units import unit, s, km
 from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
 
@@ -30,13 +31,13 @@ class Vehicle(NamedTuple):
     property_link: PropertyLink
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    idle_time_s: Time = 0
+    idle_time_s: s = 0 * unit.seconds
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
 
     passengers: Dict[PassengerId, Passenger] = {}
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
-    distance_traveled: float = 0.0
+    distance_traveled: km = 0.0 * unit.kilometers
 
     @classmethod
     def from_string(cls, string: str, road_network: RoadNetwork) -> Union[IOError, Vehicle]:
@@ -106,12 +107,12 @@ class Vehicle(NamedTuple):
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
     def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_s=0)
+        return self._replace(idle_time_s=0*unit.seconds)
 
     def charge(self,
                powercurve: Powercurve,
                charger: Charger,
-               duration: Time) -> Vehicle:
+               duration: s) -> Vehicle:
         """
         applies a charge event to a vehicle
         :param powercurve: the vehicle's powercurve model
@@ -119,13 +120,13 @@ class Vehicle(NamedTuple):
         :param duration: duration of this time step
         :return: the updated Vehicle
         """
-        if self.energy_source.is_at_max_charge_aceptance():
+        if self.energy_source.is_at_ideal_energy_limit():
             return self.transition(VehicleState.IDLE)
         else:
             updated_energy_source = powercurve.refuel(self.energy_source, charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: s) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
         :param road_network:
@@ -155,12 +156,14 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def idle(self, time_step_s: Time) -> Vehicle:
+    def idle(self, time_step_s: s) -> Vehicle:
         if self.vehicle_state != VehicleState.IDLE:
             # TODO: raise EntityError
             pass
 
-        idle_energy_kwh = 0.8 * time_step_s / 3600
+        idle_energy_rate = 0.8 * (unit.kilowatt / unit.hour)
+
+        idle_energy_kwh = idle_energy_rate * time_step_s.to(unit.hour)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 

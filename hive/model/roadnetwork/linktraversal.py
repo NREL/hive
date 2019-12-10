@@ -6,7 +6,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.helpers import H3Ops
-from hive.util.typealiases import Time
+from hive.util.units import unit, h
 
 
 class LinkTraversal(NamedTuple):
@@ -18,12 +18,12 @@ class LinkTraversal(NamedTuple):
     """
     traversed: Optional[PropertyLink]
     remaining: Optional[PropertyLink]
-    remaining_time: Time
+    remaining_time: h
 
 
 def traverse_up_to(road_network: RoadNetwork,
                    property_link: PropertyLink,
-                   available_time: Time) -> Union[Exception, LinkTraversal]:
+                   available_time: h) -> Union[Exception, LinkTraversal]:
     """
     using the ground truth road network, and some agent Link traversal, attempt to traverse
     the link, based on travel time calculations from the Link's PropertyLink attributes.
@@ -69,6 +69,6 @@ def traverse_up_to(road_network: RoadNetwork,
             return LinkTraversal(
                 traversed=traversed,
                 remaining=remaining,
-                remaining_time=0
+                remaining_time=0 * unit.hours
             )
 

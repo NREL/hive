@@ -23,7 +23,7 @@ class TestTabularPowercurve(TestCase):
     def test_leaf_energy_gain_full_soc(self):
         leaf_model = build_powercurve('leaf')
         energy_source = EnergySource("test_id", EnergyType.ELECTRIC, 50, 100, 50)
-        self.assertTrue(energy_source.is_at_max_charge_aceptance(), "test precondition should be at max")
+        self.assertTrue(energy_source.is_at_ideal_energy_limit(), "test precondition should be at max")
         one_hour = 3600.0
         result = leaf_model.refuel(energy_source, Charger.LEVEL_2, one_hour)
         self.assertAlmostEqual(result.soc, energy_source.soc)

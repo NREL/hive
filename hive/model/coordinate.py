@@ -5,6 +5,7 @@ from h3 import h3
 from haversine import haversine
 
 from hive.util.typealiases import *
+from hive.util.units import unit, km, Ratio
 
 
 class Coordinate(NamedTuple):
@@ -29,18 +30,18 @@ def dist_euclidian(a: Coordinate, b: Coordinate) -> float:
     return sqrt(pow((a.lat - b.lat), 2) + pow((a.lon - b.lon), 2))
 
 
-def dist_haversine(a: Coordinate, b: Coordinate) -> Km:
-    return haversine(a, b)
+def dist_haversine(a: Coordinate, b: Coordinate) -> km:
+    return haversine(a, b) * unit.kilometer
 
 
-def dist_geoid_haversine(a: GeoId, b: GeoId) -> Km:
+def dist_geoid_haversine(a: GeoId, b: GeoId) -> km:
     a_coord = geoid_to_coordinate(a)
     b_coord = geoid_to_coordinate(b)
-    return haversine(a_coord, b_coord)
+    return haversine(a_coord, b_coord) * unit.kilometer
 
 
-def interpolate_between_coordinates(a: Coordinate, b: Coordinate, percent: Percentage) -> Coordinate:
+def interpolate_between_coordinates(a: Coordinate, b: Coordinate, ratio: Ratio) -> Coordinate:
     # TODO: Right now this is just a linear interpolation. Do we want/need a more accurate interpolation?
-    lat = a.lat + (b.lat - a.lat) * percent
-    lon = a.lon + (b.lon - a.lon) * percent
+    lat = a.lat + (b.lat - a.lat) * ratio
+    lon = a.lon + (b.lon - a.lon) * ratio
     return Coordinate(lat, lon)

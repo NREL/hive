@@ -32,7 +32,6 @@ class StateOfChargeError(Exception):
     """
 
     def __init__(self, soc):
-
         self.message = "Illegal state of charge value {}".format(soc)
 
     def __str__(self):
@@ -55,6 +54,19 @@ class SimulationStateError(Exception):
     """
     errors related to SimulationState operations
     """
+
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)
+
+
+class UnitError(Exception):
+    """
+    errors related to units
+    """
+
     def __init__(self, msg):
         self.message = msg
 

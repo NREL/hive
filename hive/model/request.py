@@ -14,19 +14,19 @@ class Request(NamedTuple):
     id: RequestId
     origin: GeoId
     destination: GeoId
-    departure_time: int
-    cancel_time: int
+    departure_time: SimTime
+    cancel_time: SimTime
     passengers: Tuple[Passenger]
     dispatched_vehicle: Optional[VehicleId] = None
-    dispatched_vehicle_time: Optional[int] = None
+    dispatched_vehicle_time: Optional[SimTime] = None
 
     @classmethod
     def build(cls,
               request_id: RequestId,
               origin: GeoId,
               destination: GeoId,
-              departure_time: int,
-              cancel_time: int,
+              departure_time: SimTime,
+              cancel_time: SimTime,
               passengers: int) -> Request:
         """
         constructor which tests assertions about the arguments for this Request
@@ -62,7 +62,7 @@ class Request(NamedTuple):
         # todo: parses a string, calls cls.build() with the result
         raise NotImplementedError(f"yo, this doesn't exist brah, but, nice string anyway: {string}")
 
-    def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: int) -> Request:
+    def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """
         allows the dispatcher to update the request that a vehicle has been dispatched to them.
         this does not signal that the vehicle is guaranteed to pick them up.

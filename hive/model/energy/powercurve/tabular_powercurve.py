@@ -75,7 +75,7 @@ class TabularPowercurve(Powercurve):
         # iterate for as many seconds in a time step, by step_size_seconds
         t = 0
         updated_energy = energy_source.copy()
-        while t < duration_seconds and updated_energy.not_at_max_charge_acceptance():
+        while t < duration_seconds and updated_energy.not_at_ideal_energy_limit():
             soc = updated_energy.soc * 100  # scaled to [0, 100]
 
             # charging.py line 76:

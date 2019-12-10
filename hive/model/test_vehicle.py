@@ -269,7 +269,7 @@ class TestVehicle(TestCase):
             powercurve_id=TestVehicle.mock_powercurve().get_id(),
             energy_type=EnergyType.ELECTRIC,
             capacity=cap,
-            max_charge_acceptance=max_charge,
+            ideal_energy_limit=max_charge,
             soc=soc)
 
     @classmethod
