@@ -3,7 +3,7 @@ from typing import Tuple
 
 from hive.dispatcher.instruction import Instruction
 from hive.util.typealiases import RequestId
-from hive.simulationstate.simulation_state import SimulationState
+# from hive.simulationstate.simulation_state import SimulationState
 
 
 class Dispatcher(ABC):
@@ -12,7 +12,7 @@ class Dispatcher(ABC):
     """
 
     @abstractmethod
-    def generate_instructions(self, simulation_state: SimulationState) -> Tuple[Instruction, ...]:
+    def generate_instructions(self, simulation_state: 'SimulationState') -> Tuple[Instruction, ...]:
         """
         Generates instructions for a given simulation state.
         :param simulation_state:

@@ -43,7 +43,7 @@ class GreedyDispatcher(Dispatcher):
             instruction = Instruction(vehicle_id=veh.id,
                                       action=VehicleState.DISPATCH_STATION,
                                       location=nearest_station.geoid,
-                                      station=nearest_station.id,
+                                      station_id=nearest_station.id,
                                       charger=Charger.DCFC,
                                       )
             instructions.append(instruction)
@@ -66,7 +66,7 @@ class GreedyDispatcher(Dispatcher):
                 instruction = Instruction(vehicle_id=nearest_vehicle.id,
                                           action=VehicleState.DISPATCH_TRIP,
                                           location=request.origin,
-                                          request=request.id)
+                                          request_id=request.id)
                 instructions.append(instruction)
                 vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, nearest_vehicle.id)
 

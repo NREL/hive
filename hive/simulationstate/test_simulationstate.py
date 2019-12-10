@@ -486,7 +486,6 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            print(sim.vehicles[veh.id])
             sim = sim.step()
 
         veh_at_base = sim.vehicles[veh.id]
@@ -542,7 +541,6 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            print(sim.vehicles[veh.id].energy_source.load)
             sim = sim.step()
 
         fully_charged_veh = sim.vehicles[veh.id]
