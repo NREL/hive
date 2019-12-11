@@ -1,9 +1,10 @@
 from typing import Tuple
 
 from hive.dispatcher.instruction import Instruction
-from hive.simulationstate.simulationstate import SimulationState
+from hive.simulationstate.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
+from hive.model.energy.charger import Charger
 from hive.dispatcher.dispatcher import Dispatcher
 from hive.util.helpers import H3Ops, DictOps
 
@@ -41,7 +42,10 @@ class GreedyDispatcher(Dispatcher):
 
             instruction = Instruction(vehicle_id=veh.id,
                                       action=VehicleState.DISPATCH_STATION,
-                                      location=nearest_station.geoid)
+                                      location=nearest_station.geoid,
+                                      station_id=nearest_station.id,
+                                      charger=Charger.DCFC,
+                                      )
             instructions.append(instruction)
             vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
 
@@ -62,7 +66,7 @@ class GreedyDispatcher(Dispatcher):
                 instruction = Instruction(vehicle_id=nearest_vehicle.id,
                                           action=VehicleState.DISPATCH_TRIP,
                                           location=request.origin,
-                                          request=request.id)
+                                          request_id=request.id)
                 instructions.append(instruction)
                 vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, nearest_vehicle.id)
 

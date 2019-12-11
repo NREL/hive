@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import abstractmethod, ABC
 from copy import copy
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING
 
@@ -13,6 +14,38 @@ from math import ceil
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.property_link import PropertyLink
+
+
+class SwitchCase(ABC):
+    Key = TypeVar('Key')
+    """
+    the type used to switch off of
+    """
+
+    Arguments = TypeVar('Arguments')
+    """
+    the type of the arguments fed to the inner switch clause
+    """
+
+    Result = TypeVar('Result')
+    """
+    the type returned from the SwitchCase (can be "Any")
+    """
+
+    @abstractmethod
+    def _default(self, arguments: Arguments) -> Result:
+        """
+        called when "key" does not exist in the SwitchCase
+        :param arguments: the arguments to pass in the default case
+        :return:
+        """
+        pass
+
+    case_statement: Dict[Key, Callable[[Arguments], Result]] = {}
+
+    @classmethod
+    def switch(cls, case, payload: Arguments) -> Result:
+        return cls.case_statement.get(case, cls._default)(cls, payload)
 
 
 class H3Ops:

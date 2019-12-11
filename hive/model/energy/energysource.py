@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
@@ -27,10 +27,11 @@ class EnergySource(NamedTuple):
               powercurve_id: PowercurveId,
               energy_type: EnergyType,
               capacity: kwh,
-              ideal_energy_limit: kwh,
+              ideal_energy_limit: Optional[kwh] = None,
               max_charge_acceptance_kw: kw = 50 * unit.kilowatt,
               soc: Ratio = 1.0,
               ) -> EnergySource:
+
         """
         builds an EnergySource for a Vehicle
         :param powercurve_id: the id of the powercurve associated with charging this EnergySource
@@ -42,6 +43,9 @@ class EnergySource(NamedTuple):
         :param soc: the initial state of charge of this vehicle, in percentage
         :return:
         """
+        if not ideal_energy_limit:
+            ideal_energy_limit = capacity
+
         assert 0.0 <= soc <= 1.0, StateOfChargeError(
             f"constructing battery with illegal soc of {(soc * 100.0):.2f}%")
         assert 0.0 <= ideal_energy_limit <= capacity, StateOfChargeError(
@@ -72,11 +76,13 @@ class EnergySource(NamedTuple):
         return self.energy / self.capacity
 
     def is_at_ideal_energy_limit(self) -> bool:
+
         """
         True if the EnergySource is at ideal energy limit 
         :return: bool
         """
         return self.energy >= self.ideal_energy_limit
+
 
     def not_at_ideal_energy_limit(self) -> bool:
         """
@@ -121,6 +127,7 @@ class EnergySource(NamedTuple):
     def __repr__(self) -> str:
         soc = self.soc * 100.0
         max_chrg = self.ideal_energy_limit
+
         return f"Battery({self.energy_type},cap={self.capacity}, max={max_chrg} soc={soc:.2f}%) "
 
     def copy(self) -> EnergySource:

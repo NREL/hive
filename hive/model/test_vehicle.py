@@ -161,22 +161,21 @@ class TestVehicle(TestCase):
         self.assertNotEqual(m2.property_link.link.start, m3.property_link.link.start)
 
     def test_charge(self):
-        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION)
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to(Charger.DCFC, 's1')
         power_curve = TestVehicle.mock_powercurve()
         time_step_size_secs = 1.0
 
-        result = vehicle.charge(power_curve, Charger.DCFC, time_step_size_secs)
+        result = vehicle.charge(power_curve, time_step_size_secs)
         self.assertEqual(result.energy_source.load, vehicle.energy_source.load + 1, "should have charged 1 unit")
 
     def test_charge_when_full(self):
-        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION)
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to(Charger.DCFC, 's1')
         vehicle_full = vehicle.battery_swap(TestVehicle.mock_energysource(cap=100, max_charge=100, soc=1.0))  # full
         power_curve = TestVehicle.mock_powercurve()
         time_step_size_secs = 1.0
 
-        result = vehicle_full.charge(power_curve, Charger.DCFC, time_step_size_secs)
+        result = vehicle_full.charge(power_curve, time_step_size_secs)
         self.assertEqual(result.energy_source.load, vehicle_full.energy_source.load, "should have not charged")
-        self.assertEqual(result.vehicle_state, VehicleState.IDLE, "should have been moved to an idle state")
 
     def test_idle(self):
         idle_vehicle = TestVehicle.mock_vehicle()

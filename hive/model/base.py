@@ -25,6 +25,12 @@ class Base(NamedTuple):
               ):
         return cls(id, geoid, station, total_stalls, total_stalls)
 
+    def has_available_stall(self) -> bool:
+        if self.available_stalls > 0:
+            return True
+        else:
+            return False
+
     def checkout_stall(self) -> Optional[Base]:
         stalls = self.available_stalls
         if stalls < 1:
