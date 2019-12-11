@@ -18,8 +18,8 @@ from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.roadnetwork.link import Link
-from hive.simulationstate.simulation_state import SimulationState
-from hive.simulationstate.simulation_state_ops import initial_simulation_state
+from hive.state.simulation_state import SimulationState
+from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.typealiases import *
 
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher

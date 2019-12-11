@@ -16,9 +16,9 @@ from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.energy.powertrain import Powertrain
 from hive.model.energy.powercurve import Powercurve
-from hive.simulationstate.at_location_response import AtLocationResponse
-from hive.simulationstate.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
-from hive.simulationstate.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
+from hive.state.at_location_response import AtLocationResponse
+from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
+from hive.state.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
     VehicleTransitionEffectArgs
 from hive.util.exception import *
 from hive.util.helpers import DictOps, SwitchCase
@@ -37,7 +37,7 @@ class SimulationState(NamedTuple):
 
     # simulation parameters
     sim_time: int
-    sim_timestep_duration_seconds: float
+    sim_timestep_duration_seconds: int
     sim_h3_resolution: int
 
     # objects of the simulation
@@ -225,21 +225,19 @@ class SimulationState(NamedTuple):
 
         return updated_sim_state
 
-    def step(self, time_step_size: int = 1) -> SimulationState:
+    def step_simulation(self) -> SimulationState:
         """
-        advances this simulation one time step
+        advances this simulation
         :return: the simulation after calling step() on all vehicles
         """
-
-        # TODO: step_vehicle() assumes a single time step so we need something to repeat this if time_step_size > 1
         next_state = ft.reduce(
-            lambda acc, v: acc.step_vehicle(v.id),
-            self.vehicles.values(),
+            lambda acc, v_id: acc.step_vehicle(v_id),
+            self.vehicles.keys(),
             self
         )
 
         return next_state._replace(
-            sim_time=self.sim_time + time_step_size
+            sim_time=self.sim_time + self.sim_timestep_duration_seconds
         )
 
     def remove_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, SimulationState]:

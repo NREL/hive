@@ -10,24 +10,38 @@ from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.energy.powercurve.powercurve import Powercurve
-from hive.simulationstate.simulation_state import SimulationState
+from hive.state.simulation_state import SimulationState
 from hive.util.exception import *
 from hive.util.typealiases import Time
 
 
-def apply_instructions(
-        simulation_state: SimulationState,
-        instructions: Tuple[Instruction, ...]
-) -> SimulationState:
+# def advance_simulation(simulation_state: SimulationState) -> SimulationState:
+#     """
+#     applies the step function for each agent.
+#     :param simulation_state: the state with all vehicle intentions set
+#     :return: sim state at time t+1
+#     """
+#     sim_vehicles_stepped = ft.reduce(
+#         lambda sim, veh: sim.step_vehicle(veh),
+#         simulation_state.vehicles.keys(),
+#         simulation_state
+#     )
+#     return sim_vehicles_stepped.
+
+
+def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
     """
     applies all the instructions to the simulation state, ignoring the ones that fail
     :param simulation_state: the sim state
     :param instructions: dispatcher instructions
     :return: the sim state with vehicle intentions updated
     """
-    ft.reduce(
-        lambda state, instruction:
+    return ft.reduce(
+        _add_instruction,
+        instructions,
+        simulation_state
     )
+
 
 def _add_instruction(simulation_state: SimulationState, instruction: Instruction) -> SimulationState:
     """
@@ -36,7 +50,11 @@ def _add_instruction(simulation_state: SimulationState, instruction: Instruction
     :param instruction: the ith instruction
     :return: sim state with the ith instruction added, unless it's bogus
     """
-    simulation_state.apply_instruction()
+    updated_sim = simulation_state.apply_instruction(instruction)
+    if updated_sim is None:
+        return simulation_state
+    else:
+        return updated_sim
 
 
 def initial_simulation_state(
@@ -47,7 +65,7 @@ def initial_simulation_state(
         powertrains: Tuple[Type[Powertrain], ...] = (),
         powercurves: Tuple[Type[Powercurve], ...] = (),
         start_time: int = 0,
-        sim_timestep_duration_seconds: Time = 1,
+        sim_timestep_duration_seconds: int = 1,
         sim_h3_resolution: int = 15
 ) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
@@ -84,17 +102,17 @@ def initial_simulation_state(
         has_vehicles
     )
     has_bases = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         bases,
         has_vehicles_and_stations
     )
     has_powertrains = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         powertrains,
         has_bases
     )
     has_everything = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         powercurves,
         has_powertrains
     )

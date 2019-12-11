@@ -19,8 +19,8 @@ from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.roadnetwork.link import Link
-from hive.simulationstate.simulation_state import SimulationState
-from hive.simulationstate.simulation_state_ops import initial_simulation_state
+from hive.state.simulation_state import SimulationState
+from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.typealiases import *
 
 
@@ -353,7 +353,7 @@ class TestSimulationState(TestCase):
         instruction = Instruction(veh.id,
                                   VehicleState.SERVICING_TRIP,
                                   request_id=req.id)
-        sim_moving_veh = sim.apply_instruction(instruction).step()
+        sim_moving_veh = sim.apply_instruction(instruction).step_simulation()
 
         moved_veh = sim_moving_veh.vehicles[veh.id]
 
@@ -372,7 +372,7 @@ class TestSimulationState(TestCase):
                                   VehicleState.CHARGING_STATION,
                                   station_id=sta.id,
                                   charger=Charger.DCFC)
-        sim_charging_veh = sim.apply_instruction(instruction).step()
+        sim_charging_veh = sim.apply_instruction(instruction).step_simulation()
 
         charged_veh = sim_charging_veh.vehicles[veh.id]
 
@@ -384,7 +384,7 @@ class TestSimulationState(TestCase):
         veh = SimulationStateTestAssets.mock_vehicle()
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh)
 
-        sim_idle_veh = sim.step()
+        sim_idle_veh = sim.step_simulation()
 
         idle_veh = sim_idle_veh.vehicles[veh.id]
 
@@ -408,7 +408,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have transitioned to servicing trip")
 
         for t in range(100):
-            sim = sim.step()
+            sim = sim.step_simulation()
 
         idle_veh = sim.vehicles[veh.id]
 
@@ -433,7 +433,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            sim = sim.step()
+            sim = sim.step_simulation()
 
         idle_veh = sim.vehicles[veh.id]
 
@@ -458,7 +458,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            sim = sim.step()
+            sim = sim.step_simulation()
 
         charging_veh = sim.vehicles[veh.id]
         station_w_veh = sim.stations[sta.id]
@@ -486,7 +486,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            sim = sim.step()
+            sim = sim.step_simulation()
 
         veh_at_base = sim.vehicles[veh.id]
 
@@ -511,7 +511,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            sim = sim.step()
+            sim = sim.step_simulation()
 
         veh_at_new_loc = sim.vehicles[veh.id]
 
@@ -541,7 +541,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         for t in range(10):
-            sim = sim.step()
+            sim = sim.step_simulation()
 
         fully_charged_veh = sim.vehicles[veh.id]
 
