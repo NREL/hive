@@ -87,7 +87,7 @@ class HaversineRoadNetwork(RoadNetwork):
         :param property_link: a property link
         :return: a Property Link, or None if LinkId does not exist
         """
-        return self.get_link(property_link.link_id)
+        return property_link
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """

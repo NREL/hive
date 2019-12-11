@@ -60,12 +60,12 @@ class EnergySource(NamedTuple):
             f"expected units of type {unit.kilowatt}, but got {max_charge_acceptance_kw.units}"
         )
 
-        return EnergySource(powercurve_id,
-                            energy_type,
-                            capacity,
-                            ideal_energy_limit,
-                            capacity * soc,
-                            max_charge_acceptance_kw)
+        return EnergySource(powercurve_id=powercurve_id,
+                            energy_type=energy_type,
+                            ideal_energy_limit=ideal_energy_limit,
+                            capacity=capacity,
+                            energy=capacity * soc,
+                            max_charge_acceptance_kw=max_charge_acceptance_kw)
 
     @property
     def soc(self) -> Ratio:

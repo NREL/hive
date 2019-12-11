@@ -1,120 +1,122 @@
 from __future__ import annotations
 
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, TYPE_CHECKING
 
 from hive.model.vehiclestate import VehicleState
 from hive.util.exception import *
 from hive.util.helpers import SwitchCase
 from hive.util.typealiases import VehicleId
 
+if TYPE_CHECKING:
+    from hive.simulationstate.simulation_state import SimulationState
+
 
 class TerminalStateEffectArgs(NamedTuple):
-    simulation_state: 'SimulationState'
+    simulation_state: SimulationState
     vehicle_id: VehicleId
 
 
 class TerminalStateEffectOps(SwitchCase):
+    Key: VehicleState
+    Arguments: TerminalStateEffectArgs
+    Result: SimulationState
 
-    Key = VehicleState
-    Arguments = TerminalStateEffectArgs
-    Result = 'SimulationState'
+    def _case_serving_trip(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
+        if not vehicle.has_route():
+            for passenger in vehicle.passengers.values():
+                if passenger.destination == vehicle.geoid:
+                    vehicle = vehicle.drop_off_passenger(passenger.id)
+            if vehicle.has_passengers():
+                raise SimulationStateError('Vehicle ended trip with passengers')
 
-    def _case_serving_trip(self, arguments: TerminalStateEffectArgs) -> 'SimulationState':
-            sim_state = arguments.simulation_state
-            vehicle_id = arguments.vehicle_id
-            vehicle = sim_state.vehicles[vehicle_id]
-            if not vehicle.has_route():
-                for passenger in vehicle.passengers.values():
-                    if passenger.destination == vehicle.geoid:
-                        vehicle = vehicle.drop_off_passenger(passenger.id)
-                if vehicle.has_passengers():
-                    raise SimulationStateError('Vehicle ended trip with passengers')
+            vehicle = vehicle.transition(VehicleState.IDLE)
+            sim_state = sim_state.modify_vehicle(vehicle)
 
+        return sim_state
+
+    def _case_dispatch_trip(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
+        at_location = sim_state.at_geoid(vehicle.geoid)
+
+        if at_location['requests'] and not vehicle.has_route():
+            for request_id in at_location['requests']:
+                request = sim_state.requests[request_id]
+                if request.dispatched_vehicle == vehicle.id and vehicle.can_transition(VehicleState.SERVICING_TRIP):
+                    transitioned_vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
+
+                    start = transitioned_vehicle.property_link
+                    end = sim_state.road_network.property_link_from_geoid(request.destination)
+                    route = sim_state.road_network.route(start, end)
+                    routed_vehicle = transitioned_vehicle.assign_route(route)
+
+                    sim_state = sim_state.modify_vehicle(routed_vehicle).board_vehicle(request.id, routed_vehicle.id)
+
+        return sim_state
+
+    def _case_dispatch_station(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
+        at_location = sim_state.at_geoid(vehicle.geoid)
+        charger = vehicle.charger_intent
+        station_id = vehicle.station_intent
+
+        if station_id in at_location['stations'] and not vehicle.has_route():
+            station = sim_state.stations[station_id]
+
+            if station.has_available_charger(charger):
+                station = station.checkout_charger(charger)
+                vehicle = vehicle.transition(VehicleState.CHARGING_STATION).plug_in_to(station.id, charger)
+                sim_state = sim_state.modify_vehicle(vehicle).modify_station(station)
+            else:
+                # FUTURE: Add station queuing?
                 vehicle = vehicle.transition(VehicleState.IDLE)
                 sim_state = sim_state.modify_vehicle(vehicle)
 
-            return sim_state
+        return sim_state
 
-    def _case_dispatch_trip(self, arguments: TerminalStateEffectArgs) -> 'SimulationState':
-            sim_state = arguments.simulation_state
-            vehicle_id = arguments.vehicle_id
-            vehicle = sim_state.vehicles[vehicle_id]
-            at_location = sim_state.at_geoid(vehicle.geoid)
+    def _case_dispatch_base(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
+        at_location = sim_state.at_geoid(vehicle.geoid)
 
-            if at_location['requests'] and not vehicle.has_route():
-                for request_id in at_location['requests']:
-                    request = sim_state.requests[request_id]
-                    if request.dispatched_vehicle == vehicle.id and vehicle.can_transition(VehicleState.SERVICING_TRIP):
-                        transitioned_vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
+        # TODO: Implement base stall checkout.
+        if at_location['bases'] and vehicle.can_transition(VehicleState.RESERVE_BASE) and not vehicle.has_route():
+            vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
+            sim_state = sim_state.modify_vehicle(vehicle)
 
-                        start = transitioned_vehicle.property_link
-                        end = sim_state.road_network.property_link_from_geoid(request.destination)
-                        route = sim_state.road_network.route(start, end)
-                        routed_vehicle = transitioned_vehicle.assign_route(route)
+        return sim_state
 
-                        sim_state = sim_state.modify_vehicle(routed_vehicle).board_vehicle(request.id, routed_vehicle.id)
+    def _case_repositioning(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
 
-            return sim_state
+        if not vehicle.has_route():
+            vehicle = vehicle.transition(VehicleState.IDLE)
+            sim_state = sim_state.modify_vehicle(vehicle)
 
-    def _case_dispatch_station(self, arguments: TerminalStateEffectArgs) -> 'SimulationState':
-            sim_state = arguments.simulation_state
-            vehicle_id = arguments.vehicle_id
-            vehicle = sim_state.vehicles[vehicle_id]
-            at_location = sim_state.at_geoid(vehicle.geoid)
-            charger = vehicle.charger_intent
-            station_id = vehicle.station_intent
+        return sim_state
 
-            if station_id in at_location['stations'] and not vehicle.has_route():
-                station = sim_state.stations[station_id]
+    def _case_charging_station(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
 
-                if station.has_available_charger(charger):
-                    station = station.checkout_charger(charger)
-                    vehicle = vehicle.transition(VehicleState.CHARGING_STATION).plug_in_to(station.id, charger)
-                    sim_state = sim_state.modify_vehicle(vehicle).modify_station(station)
-                else:
-                    # FUTURE: Add station queuing?
-                    vehicle = vehicle.transition(VehicleState.IDLE)
-                    sim_state = sim_state.modify_vehicle(vehicle)
+        if vehicle.energy_source.is_at_ideal_energy_limit():
+            station = sim_state.stations[vehicle.station]
+            updated_station = station.return_charger(vehicle.plugged_in_charger)
 
-            return sim_state
+            updated_vehicle = vehicle.transition(VehicleState.IDLE).unplug()
+            sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
 
-    def _case_dispatch_base(self, arguments: TerminalStateEffectArgs) -> 'SimulationState':
-            sim_state = arguments.simulation_state
-            vehicle_id = arguments.vehicle_id
-            vehicle = sim_state.vehicles[vehicle_id]
-            at_location = sim_state.at_geoid(vehicle.geoid)
-
-            # TODO: Implement base stall checkout.
-            if at_location['bases'] and vehicle.can_transition(VehicleState.RESERVE_BASE) and not vehicle.has_route():
-                vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
-                sim_state = sim_state.modify_vehicle(vehicle)
-
-            return sim_state
-
-    def _case_repositioning(self, arguments: TerminalStateEffectArgs) -> 'SimulationState':
-            sim_state = arguments.simulation_state
-            vehicle_id = arguments.vehicle_id
-            vehicle = sim_state.vehicles[vehicle_id]
-
-            if not vehicle.has_route():
-                vehicle = vehicle.transition(VehicleState.IDLE)
-                sim_state = sim_state.modify_vehicle(vehicle)
-
-            return sim_state
-
-    def _case_charging_station(self, arguments: TerminalStateEffectArgs) -> 'SimulationState':
-            sim_state = arguments.simulation_state
-            vehicle_id = arguments.vehicle_id
-            vehicle = sim_state.vehicles[vehicle_id]
-
-            if vehicle.energy_source.is_at_max_charge_acceptance():
-                station = sim_state.stations[vehicle.station]
-                updated_station = station.return_charger(vehicle.plugged_in_charger)
-
-                updated_vehicle = vehicle.transition(VehicleState.IDLE).unplug()
-                sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-            return sim_state
+        return sim_state
 
     def _default(self, arguments: Arguments) -> Result:
         return arguments.simulation_state

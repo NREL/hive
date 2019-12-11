@@ -16,7 +16,7 @@ from hive.model.vehiclestate import VehicleState
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.roadnetwork.link import Link
 from hive.util.typealiases import *
-from hive.util.units import unit
+from hive.util.units import unit, kwh, s
 from hive.model.energy.energytype import EnergyType
 
 
@@ -149,9 +149,15 @@ class TestVehicle(TestCase):
 
         vehicle_w_route = vehicle.assign_route(TestVehicle.mock_route())
 
-        moved_vehicle = vehicle_w_route.move(road_network=road_network, power_train=power_train, time_step=10)
-        m2 = moved_vehicle.move(road_network=road_network, power_train=power_train, time_step=10)
-        m3 = m2.move(road_network=road_network, power_train=power_train, time_step=10)
+        moved_vehicle = vehicle_w_route.move(road_network=road_network,
+                                             power_train=power_train,
+                                             time_step=100*unit.seconds)
+        m2 = moved_vehicle.move(road_network=road_network,
+                                power_train=power_train,
+                                time_step=100*unit.seconds)
+        m3 = m2.move(road_network=road_network,
+                     power_train=power_train,
+                     time_step=100*unit.seconds)
 
         self.assertLess(moved_vehicle.energy_source.soc, 1)
         self.assertNotEqual(start_geoid, moved_vehicle.geoid)
@@ -161,36 +167,39 @@ class TestVehicle(TestCase):
         self.assertNotEqual(m2.property_link.link.start, m3.property_link.link.start)
 
     def test_charge(self):
-        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to(Charger.DCFC, 's1')
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to('s1', Charger.DCFC)
         power_curve = TestVehicle.mock_powercurve()
-        time_step_size_secs = 1.0
+        time_step_size_secs = 1.0*unit.seconds
 
         result = vehicle.charge(power_curve, time_step_size_secs)
-        self.assertEqual(result.energy_source.load, vehicle.energy_source.load + 1, "should have charged 1 unit")
+        self.assertEqual(result.energy_source.energy,
+                         vehicle.energy_source.energy + 0.1*unit.kilowatthour,
+                         "should have charged")
 
     def test_charge_when_full(self):
-        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to(Charger.DCFC, 's1')
-        vehicle_full = vehicle.battery_swap(TestVehicle.mock_energysource(cap=100, max_charge=100, soc=1.0))  # full
+        vehicle = TestVehicle.mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to('s1', Charger.DCFC)
+        vehicle_full = vehicle.battery_swap(TestVehicle.mock_energysource(cap=100*unit.kilowatthour,
+                                                                          soc=1.0))  # full
         power_curve = TestVehicle.mock_powercurve()
-        time_step_size_secs = 1.0
+        time_step_size_secs = 1.0*unit.seconds
 
         result = vehicle_full.charge(power_curve, time_step_size_secs)
-        self.assertEqual(result.energy_source.load, vehicle_full.energy_source.load, "should have not charged")
+        self.assertEqual(result.energy_source.energy, vehicle_full.energy_source.energy, "should have not charged")
 
     def test_idle(self):
         idle_vehicle = TestVehicle.mock_vehicle()
-        idle_vehicle_less_energy = idle_vehicle.idle(60) # idle for 60 seconds
+        idle_vehicle_less_energy = idle_vehicle.idle(60*unit.seconds) # idle for 60 seconds
 
         self.assertLess(idle_vehicle_less_energy.energy_source.soc, idle_vehicle.energy_source.soc,
                         "Idle vehicles should have consumed energy.")
-        self.assertEqual(idle_vehicle_less_energy.idle_time_s, 60, "Should have recorded idle time.")
+        self.assertEqual(idle_vehicle_less_energy.idle_time_s, 60*unit.seconds, "Should have recorded idle time.")
 
     def test_idle_reset(self):
-        idle_vehicle = TestVehicle.mock_vehicle().idle(60)
+        idle_vehicle = TestVehicle.mock_vehicle().idle(60*unit.seconds)
 
         dispatch_vehicle = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
 
-        self.assertEqual(dispatch_vehicle.idle_time_s, 0, "Should have reset idle time.")
+        self.assertEqual(dispatch_vehicle.idle_time_s, 0*unit.seconds, "Should have reset idle time.")
 
     @skip("underlying functionality changing to Dictionary-based loader, remove and replace")
     def test_from_string_good_row(self):
@@ -261,7 +270,10 @@ class TestVehicle(TestCase):
         return VehicleTestAssests.MockRoadNetwork(VehicleTestAssests.property_links)
 
     @classmethod
-    def mock_energysource(cls, cap=100, soc=0.25, max_charge=50.0) -> EnergySource:
+    def mock_energysource(cls,
+                          cap=100*unit.kilowatthour,
+                          soc=0.25,
+                          ideal_energy_limit=50.0*unit.kilowatthour) -> EnergySource:
         """
         invariant: test_charge depends on having some amount of battery to fill
         """
@@ -269,7 +281,7 @@ class TestVehicle(TestCase):
             powercurve_id=TestVehicle.mock_powercurve().get_id(),
             energy_type=EnergyType.ELECTRIC,
             capacity=cap,
-            ideal_energy_limit=max_charge,
+            ideal_energy_limit=ideal_energy_limit,
             soc=soc)
 
     @classmethod
@@ -338,7 +350,7 @@ class VehicleTestAssests:
                 return None
 
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
-            return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
+            return PropertyLink.build(Link("ml", geoid, geoid), 10*(unit.kilometer/unit.hour))
 
         def geoid_within_geofence(self, geoid: GeoId) -> bool:
             pass
@@ -360,12 +372,9 @@ class VehicleTestAssests:
             return EnergyType.ELECTRIC
 
         def energy_cost(self, route: Route) -> kwh:
-            return len(route) * unit.kilowathour
+            return 0.01 * unit.kilowatthour
 
     class MockPowercurve(Powercurve):
-        """
-        just adds 1 when charging
-        """
 
         def get_id(self) -> PowercurveId:
             return "mock_powercurve"
@@ -373,9 +382,9 @@ class VehicleTestAssests:
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: Time = 1,
-                   step_size_seconds: Time = 1) -> 'EnergySource':
-            return energy_source.load_energy(1.0)
+        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: s = 1*unit.seconds,
+                   step_size_seconds: s = 1*unit.seconds) -> 'EnergySource':
+            return energy_source.load_energy(0.1*unit.kilowatthours)
 
     sim_h3_resolution = 15
 
@@ -394,9 +403,10 @@ class VehicleTestAssests:
                   h3.geo_to_h3(10, 10, sim_h3_resolution)),
     }
 
+    kmph = (unit.kilometers/unit.hour)
     property_links = {
-        "1": PropertyLink.build(links["1"], 10),
-        "2": PropertyLink.build(links["2"], 10),
-        "3": PropertyLink.build(links["3"], 10),
-        "4": PropertyLink.build(links["4"], 10)
+        "1": PropertyLink.build(links["1"], 40 * kmph),
+        "2": PropertyLink.build(links["2"], 40 * kmph),
+        "3": PropertyLink.build(links["3"], 40 * kmph),
+        "4": PropertyLink.build(links["4"], 40 * kmph)
     }

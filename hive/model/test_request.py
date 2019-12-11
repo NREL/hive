@@ -7,6 +7,7 @@ from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id
 from hive.model.roadnetwork.link import Link
+from hive.util.units import unit
 from h3 import h3
 
 
@@ -41,7 +42,10 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = EnergySource.build("unused", EnergyType.ELECTRIC, 100.0, 100.0, 1.0)
+        battery = EnergySource.build("unused",
+                                     EnergyType.ELECTRIC,
+                                     100.0*unit.kilowatthour,
+                                     )
         vehicle = Vehicle(id="test_vehicle",
                           powertrain_id="fake_powertrain_id",
                           powercurve_id="fake",

@@ -19,6 +19,7 @@ from hive.model.roadnetwork.routetraversal import Route
 from hive.simulationstate.simulation_state import SimulationState
 from hive.simulationstate.simulation_state_ops import initial_simulation_state
 from hive.util.typealiases import *
+from hive.util.units import unit, kwh, s
 
 
 class TestSimulationStateOps(TestCase):
@@ -111,9 +112,9 @@ class TestSimulationStateOps(TestCase):
             pass
 
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
-            return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
+            return PropertyLink.build(Link("ml", geoid, geoid), 40*(unit.kilometer/unit.hour))
 
-        def update(self, sim_time: Time) -> RoadNetwork:
+        def update(self, sim_time: SimTime) -> RoadNetwork:
             pass
 
         def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
@@ -157,7 +158,7 @@ class TestSimulationStateOps(TestCase):
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def energy_cost(self, route: Route) -> Kw:
+        def energy_cost(self, route: Route) -> kwh:
             return len(route)
 
     class MockPowercurve(Powercurve):
@@ -171,9 +172,9 @@ class TestSimulationStateOps(TestCase):
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: Time = 1,
-                   step_size_seconds: Time = 1) -> 'EnergySource':
-            return energy_source.load_energy(1.0)
+        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: s = 1*unit.seconds,
+                   step_size_seconds: s = 1*unit.seconds) -> 'EnergySource':
+            return energy_source.load_energy(1.0*unit.kilowatthour)
 
     mock_powertrain = MockPowertrain()
     mock_powercurve = MockPowercurve()
@@ -183,14 +184,20 @@ class TestSimulationStateOps(TestCase):
     mock_veh_1 = Vehicle("m1",
                          mock_powertrain.get_id(),
                          mock_powercurve.get_id(),
-                         EnergySource.build("test_id", EnergyType.ELECTRIC, 100, 40, 1),
+                         EnergySource.build("test_id",
+                                            EnergyType.ELECTRIC,
+                                            capacity=50*unit.kilowatthour,
+                                            ),
                          mock_geoid,
                          mock_property_link)
 
     mock_veh_2 = Vehicle("m2",
                          mock_powertrain.get_id(),
                          mock_powercurve.get_id(),
-                         EnergySource.build("test_id", EnergyType.ELECTRIC, 100, 40, 1),
+                         EnergySource.build("test_id",
+                                            EnergyType.ELECTRIC,
+                                            capacity=50*unit.kilowatthour,
+                                            ),
                          mock_geoid,
                          mock_property_link)
 
