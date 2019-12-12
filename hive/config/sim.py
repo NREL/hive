@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union
 
-from hive.config.config import Config
+from hive.config import ConfigBuilder
 from hive.util.typealiases import SimTime
 
 
-class Sim(NamedTuple, Config):
+class Sim(NamedTuple):
     timestep_duration_seconds: SimTime
     start_time_seconds: SimTime
     end_time_seconds: SimTime
@@ -24,14 +24,18 @@ class Sim(NamedTuple, Config):
         return {}
 
     @classmethod
-    def from_dict(cls, d: Dict) -> Config:
+    def build(cls, config: Dict = None) -> Union[Exception, Sim]:
+        return ConfigBuilder.build(
+            default_config=cls.default_config(),
+            required_config=cls.required_config(),
+            config_constructor=lambda c: Sim.from_dict(c),
+            config=config
+        )
+
+    @classmethod
+    def from_dict(cls, d: Dict) -> Sim:
         return Sim(
             timestep_duration_seconds=d['timestep_duration_seconds'],
             start_time_seconds=d['start_time_seconds'],
             end_time_seconds=d['end_time_seconds']
         )
-
-    @classmethod
-    def build(cls, config: Dict = None) -> Union[Exception, Config]:
-        return super(Sim, cls).build(config=config)
-
