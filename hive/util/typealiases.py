@@ -23,4 +23,5 @@ Km = float
 Percentage = float
 Speed = float
 Time = float
+SimTime = int
 

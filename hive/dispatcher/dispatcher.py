@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Tuple
 
@@ -12,10 +14,10 @@ class Dispatcher(ABC):
     """
 
     @abstractmethod
-    def generate_instructions(self, simulation_state: 'SimulationState') -> Tuple[Instruction, ...]:
+    def generate_instructions(self, simulation_state: 'SimulationState') -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generates instructions for a given simulation state.
         :param simulation_state:
-        :return:
+        :return: the updated Dispatcher along with all instructions for this time step
         """
         pass
