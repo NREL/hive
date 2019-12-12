@@ -471,7 +471,6 @@ class TestSimulationState(TestCase):
 
         # should take about 800 seconds to arrive at station.
         for t in range(800):
-            print(sim.vehicles[veh.id])
             sim = sim.step()
 
         charging_veh = sim.vehicles[veh.id]
