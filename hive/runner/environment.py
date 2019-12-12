@@ -1,6 +1,8 @@
-from typing import NamedTuple, Dict
+from typing import NamedTuple
+
+from hive.config import HiveConfig
 
 
 class Environment(NamedTuple):
-    config: Dict
+    config: HiveConfig
     # powertrains, powercurves here?

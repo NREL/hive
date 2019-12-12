@@ -16,8 +16,8 @@ from hive.util.typealiases import *
 from hive.util.helpers import DictOps
 from hive.util.pattern import vehicle_regex
 from hive.util.exception import EntityError
-from hive.model.energy.powercurve import *
-from hive.model.energy.powertrain import *
+from hive.model.energy.powercurve import Powercurve
+from hive.model.energy.powertrain import Powertrain
 
 from h3 import h3
 

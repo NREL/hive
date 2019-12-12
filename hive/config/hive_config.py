@@ -11,7 +11,7 @@ class HiveConfig(NamedTuple):
     network: Optional[Network]
 
     @classmethod
-    def build(cls, config: Dict = None) -> Union[Exception, Network]:
+    def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
         return ConfigBuilder.build(
             default_config={},
             required_config={},
