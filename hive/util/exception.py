@@ -62,6 +62,17 @@ class SimulationStateError(Exception):
         return repr(self.message)
 
 
+class UnitError(Exception):
+    """
+    errors related to units
+    """
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)
+
+
 class EntityError(Exception):
     """
     errors related to methods on entities such as vehicles or stations.

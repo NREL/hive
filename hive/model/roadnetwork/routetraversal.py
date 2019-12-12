@@ -11,10 +11,11 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
+from hive.util.units import unit, h, s
 
 
 class RouteTraversal(NamedTuple):
-    remaining_time: Time = 0
+    remaining_time: h = 0 * unit.hours
     experienced_route: Route = ()
     remaining_route: Route = ()
 
@@ -23,7 +24,7 @@ class RouteTraversal(NamedTuple):
         if we have no more time, then end the traversal
         :return: True if the agent is out of time
         """
-        return self.remaining_time == 0
+        return self.remaining_time.magnitude == 0
 
     def add_traversal(self, t: LinkTraversal) -> RouteTraversal:
         """
@@ -56,7 +57,7 @@ class RouteTraversal(NamedTuple):
 
 def traverse(route_estimate: Route,
              road_network: RoadNetwork,
-             time_step: Time) -> Optional[Union[Exception, RouteTraversal]]:
+             time_step: s) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
     :param route_estimate: the current route estimate
@@ -89,7 +90,7 @@ def traverse(route_estimate: Route,
                     return updated_experienced_route, acc_failures
 
         # initial search state has a route traversal and an Optional[Exception]
-        initial = (RouteTraversal(remaining_time=time_step), None)
+        initial = (RouteTraversal(remaining_time=time_step.to(unit.hours)), None)
 
         traversal_result, error = ft.reduce(
             _traverse,

@@ -4,6 +4,8 @@ from typing import NamedTuple, Union
 
 from hive.util.typealiases import LinkId
 from hive.model.roadnetwork.link import Link, link_distance
+from hive.util.units import unit, km, kmph, h
+from hive.util.exception import UnitError
 
 
 class PropertyLink(NamedTuple):
@@ -13,21 +15,23 @@ class PropertyLink(NamedTuple):
     """
     link_id: LinkId
     link: Link
-    # todo: units here? python Pints library?
-    distance: float
-    speed: float
-    travel_time: float
+    distance: km
+    speed: kmph
+    travel_time: h
 
     # grade: float # nice in the future?'
 
     @classmethod
-    def build(cls, link: Link, speed: float) -> PropertyLink:
+    def build(cls, link: Link, speed: kmph) -> PropertyLink:
         """
         alternative constructor which sets distance/travel time based on underlying h3 grid
         :param link: the underlying link representation
         :param speed: the speed for traversing the link
         :return: a PropertyLink build around this Link
         """
+        assert speed.units == (unit.kilometers / unit.hour), UnitError(
+            f"Expected speed in units kmph but got units {speed.units}"
+        )
         dist = link_distance(link)
         tt = dist / speed
         return PropertyLink(link.link_id, link, dist, speed, tt)
@@ -40,7 +44,10 @@ class PropertyLink(NamedTuple):
     def end(self) -> str:
         return self.link.end
 
-    def update_speed(self, speed: float) -> PropertyLink:
+    def update_speed(self, speed: kmph) -> PropertyLink:
+        assert speed.units == (unit.kilometers / unit.hour), UnitError(
+            f"Expected speed in units kmph but got units {speed.units}"
+        )
         return self._replace(speed=speed)
 
     def update_link(self, updated_link: Link) -> Union[AttributeError, PropertyLink]:

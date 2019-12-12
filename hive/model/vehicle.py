@@ -15,6 +15,7 @@ from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
 from hive.util.pattern import vehicle_regex
+from hive.util.units import unit, s, km
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import *
 from hive.model.energy.powertrain import *
@@ -32,7 +33,7 @@ class Vehicle(NamedTuple):
     property_link: PropertyLink
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    idle_time_s: Time = 0
+    idle_time_s: s = 0 * unit.seconds
     # frozenmap implementation does not yet exist
     # https://www.python.org/dev/peps/pep-0603/
 
@@ -43,7 +44,7 @@ class Vehicle(NamedTuple):
     station_intent: Optional[StationId] = None
     request: Optional[RequestId] = None
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
-    distance_traveled: float = 0.0
+    distance_traveled: km = 0.0 * unit.kilometers
 
     @classmethod
     def from_string(cls, string: str, road_network: RoadNetwork) -> Union[IOError, Vehicle]:
@@ -125,14 +126,15 @@ class Vehicle(NamedTuple):
         return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_s=0)
+        return self._replace(idle_time_s=0*unit.seconds)
 
     def _reset_charge_intent(self) -> Vehicle:
         return self._replace(charger_intent=None, station_intent=None)
 
     def charge(self,
                powercurve: Powercurve,
-               duration: Time) -> Vehicle:
+               duration: s) -> Vehicle:
+
         """
         applies a charge event to a vehicle
         :param powercurve: the vehicle's powercurve model
@@ -140,9 +142,10 @@ class Vehicle(NamedTuple):
         :param duration: duration of this time step
         :return: the updated Vehicle
         """
+
         if not self.plugged_in_charger:
             raise EntityError("Vehicle cannot charge without a charger.")
-        if self.energy_source.is_at_max_charge_acceptance():
+        if self.energy_source.is_at_ideal_energy_limit():
             # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
             #  So, I think the simulation state should handle the charge end termination state.
             return self
@@ -150,7 +153,7 @@ class Vehicle(NamedTuple):
             updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: Time) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: s) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
         :param road_network:
@@ -188,11 +191,13 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def idle(self, time_step_s: Time) -> Vehicle:
+    def idle(self, time_step_s: s) -> Vehicle:
         if self.vehicle_state != VehicleState.IDLE:
             raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
-        idle_energy_kwh = 0.8 * time_step_s / 3600
+        idle_energy_rate = 0.8 * (unit.kilowatthour / unit.hour)
+
+        idle_energy_kwh = idle_energy_rate * time_step_s.to(unit.hour)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 

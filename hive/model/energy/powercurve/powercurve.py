@@ -3,7 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
-from hive.util.typealiases import PowercurveId, Time
+from hive.util.typealiases import PowercurveId
+from hive.util.units import unit, s
 
 
 class Powercurve(ABC):
@@ -27,7 +28,7 @@ class Powercurve(ABC):
     def refuel(self,
                energy_source: 'EnergySource',
                charger: 'Charger',
-               duration_seconds: Time = 1) -> 'EnergySource':
+               duration_seconds: s = 1 * unit.seconds) -> 'EnergySource':
         """
         (estimated) energy rate due to fueling, based on EnergySource
         :param energy_source: a vehicle's source of energy
