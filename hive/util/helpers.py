@@ -2,17 +2,21 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Dict, Optional, TypeVar, Callable
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING
 
 from hive.util.typealiases import *
+from hive.util.units import unit, km, h
+
 import haversine
 
 from h3 import h3
 from math import ceil
 
+if TYPE_CHECKING:
+    from hive.model.roadnetwork.property_link import PropertyLink
+
 
 class SwitchCase(ABC):
-
     Key = TypeVar('Key')
     """
     the type used to switch off of
@@ -44,24 +48,6 @@ class SwitchCase(ABC):
         return cls.case_statement.get(case, cls._default)(cls, payload)
 
 
-class UnitOps:
-    @classmethod
-    def miles_to_km(cls, mph: float) -> float:
-        return mph / 1.609
-
-    @classmethod
-    def km_to_miles(cls, kmph: float) -> float:
-        return kmph * 1.609
-
-    @classmethod
-    def mph_to_km(cls, mph: float) -> float:
-        return mph * 1.609
-
-    @classmethod
-    def km_to_mph(cls, kmph: float) -> float:
-        return kmph / 1.609
-
-
 class H3Ops:
     Entity = TypeVar('Entity')
     EntityId = TypeVar('EntityId')
@@ -73,7 +59,7 @@ class H3Ops:
                        entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
                        is_valid: Callable = lambda x: True,
                        k: int = 0,
-                       max_distance_km: Km = 1,
+                       max_distance_km: km = 1 * unit.kilometers,
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
@@ -86,8 +72,8 @@ class H3Ops:
         :return:
         """
         resolution = h3.h3_get_resolution(geoid)
-        k_dist_km = h3.edge_length(resolution, unit='km') * 2
-        max_k = ceil(max_distance_km / k_dist_km)
+        k_dist_km = h3.edge_length(resolution, unit='km') * 2 * unit.kilometers
+        max_k = ceil(max_distance_km.magnitude / k_dist_km.magnitude)
 
         if k > max_k:
             # There are no entities in any of the rings.
@@ -107,7 +93,7 @@ class H3Ops:
         return cls.nearest_entity(geoid, entities, entity_locations, is_valid, k + 1, max_distance_km)
 
     @classmethod
-    def great_circle_distance(cls, a: GeoId, b: GeoId) -> Km:
+    def great_circle_distance(cls, a: GeoId, b: GeoId) -> km:
         """
         computes the distance between two geoids
         :param a: one geoid
@@ -116,11 +102,11 @@ class H3Ops:
         """
         a_coord = h3.h3_to_geo(a)
         b_coord = h3.h3_to_geo(b)
-        distance_km = haversine.haversine(a_coord, b_coord)
+        distance_km = haversine.haversine(a_coord, b_coord) * unit.kilometer
         return distance_km
 
     @classmethod
-    def point_along_link(cls, property_link: 'PropertyLink', available_time: Time) -> GeoId:
+    def point_along_link(cls, property_link: PropertyLink, available_time: h) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
         :param property_link: the link we are finding a mid point along
@@ -128,19 +114,20 @@ class H3Ops:
         :return: a GeoId along the Link
         """
 
+        threshold = 0.001
         experienced_distance = available_time * property_link.speed
-        percent_trip_experienced = experienced_distance / property_link.distance
-        if percent_trip_experienced <= 0:
+        ratio_trip_experienced = experienced_distance / property_link.distance
+        if ratio_trip_experienced < (0 + threshold):
             return property_link.start
-        elif percent_trip_experienced >= 1.0:
+        elif (1 - threshold) < ratio_trip_experienced:
             return property_link.end
         else:
             # find the point along the line
             start = h3.h3_to_geo(property_link.start)
             end = h3.h3_to_geo(property_link.end)
             res = h3.h3_get_resolution(property_link.start)
-            lat = start[0] + ((end[0] - start[0]) * percent_trip_experienced)
-            lon = start[1] + ((end[1] - start[1]) * percent_trip_experienced)
+            lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
+            lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
             return h3.geo_to_h3(lat, lon, res)
 
 

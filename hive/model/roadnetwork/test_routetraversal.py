@@ -6,8 +6,8 @@ from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.linktraversal import traverse_up_to
-from hive.util.helpers import H3Ops
-from hive.util.typealiases import LinkId, GeoId
+from hive.util.typealiases import LinkId, GeoId, SimTime
+from hive.util.units import unit
 
 from h3 import h3
 
@@ -22,9 +22,9 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=4
+            time_step=4*unit.hour
         )
-        self.assertGreater(result.remaining_time, 0, "should have more time left")
+        self.assertGreater(result.remaining_time.magnitude, 0, "should have more time left")
         self.assertEqual(len(result.remaining_route), 0, "should have no more route")
         self.assertEqual(len(result.experienced_route), 3, "should have hit all 3 links")
 
@@ -38,9 +38,9 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=1.5
+            time_step=1.5*unit.hour
         )
-        self.assertEqual(result.remaining_time, 0, "should have no more time left")
+        self.assertEqual(result.remaining_time.magnitude, 0, "should have no more time left")
         self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
         self.assertEqual(len(result.experienced_route), 2, "should have traversed 2 links")
 
@@ -52,7 +52,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time=0.5,
+            available_time=0.5*unit.hour,
         )
 
         traversed = result.traversed
@@ -70,7 +70,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time=4,
+            available_time=4*unit.hour,
         )
 
         traversed = result.traversed
@@ -94,7 +94,7 @@ class MockRoadNetwork(RoadNetwork):
     def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
         pass
 
-    def update(self, sim_time: int) -> RoadNetwork:
+    def update(self, sim_time: SimTime) -> RoadNetwork:
         pass
 
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
@@ -150,9 +150,9 @@ class TestRouteTraversalAssets:
 
     property_links = {
         # distance of 1.0 KM, speed of 1 KM/time unit
-        "1": PropertyLink.build(links["1"], 1),
-        "2": PropertyLink.build(links["2"], 1),
-        "3": PropertyLink.build(links["3"], 1)
+        "1": PropertyLink.build(links["1"], 1 * (unit.kilometer/unit.hour)),
+        "2": PropertyLink.build(links["2"], 1 * (unit.kilometer/unit.hour)),
+        "3": PropertyLink.build(links["3"], 1 * (unit.kilometer/unit.hour))
     }
 
     @classmethod

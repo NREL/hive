@@ -2,15 +2,12 @@ import unittest
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.util.typealiases import KwH
 from hive.model.energy.energysource import EnergySource
-from hive.model.coordinate import Coordinate
-from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id
-from hive.model.roadnetwork.routetraversal import Route
 from hive.model.roadnetwork.link import Link
+from hive.util.units import unit
 from h3 import h3
 
 
@@ -45,14 +42,17 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = EnergySource.build("unused", EnergyType.ELECTRIC, 100.0, 100.0, 1.0)
+        battery = EnergySource.build("unused",
+                                     EnergyType.ELECTRIC,
+                                     100.0*unit.kilowatthour,
+                                     )
         vehicle = Vehicle(id="test_vehicle",
                           powertrain_id="fake_powertrain_id",
                           powercurve_id="fake",
                           energy_source=battery,
                           property_link=PropertyLink(
                               "test",
-                              Link("test", h3.geo_to_h3(0,0,15), h3.geo_to_h3(1,1,15)),
+                              Link("test", h3.geo_to_h3(0, 0, 15), h3.geo_to_h3(1, 1, 15)),
                               10,
                               10,
                               1),
@@ -65,7 +65,6 @@ class MyTestCase(unittest.TestCase):
 
         # the passengers should match our request and have unique names
         for i in range(0, 2):
-
             # the passengers should have the correct ids
             target_passenger_id = create_passenger_id(self.request_id, i)
             passenger = updated_vehicle.passengers[target_passenger_id]

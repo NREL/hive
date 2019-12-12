@@ -1,6 +1,4 @@
-import copy
-from typing import cast, Optional
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from h3 import h3
 
@@ -10,17 +8,16 @@ from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
-from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.routetraversal import Route
-from hive.model.roadnetwork.link import Link
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.typealiases import *
+from hive.util.units import unit, kwh
 
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
 
@@ -68,7 +65,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = GreedyDispatcherTestAssets.mock_vehicle(vehicle_id='test_veh', geoid=somewhere)
-        low_battery = EnergySource.build("", EnergyType.ELECTRIC, 50, 50, 0.1)
+        low_battery = EnergySource.build("", EnergyType.ELECTRIC, 50*unit.kilowatthour, soc=0.1)
         veh_low_battery = veh.battery_swap(low_battery)
         station = GreedyDispatcherTestAssets.mock_station(station_id='test_station', geoid=somewhere_else)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_vehicle(veh_low_battery).add_station(station)
@@ -90,7 +87,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = GreedyDispatcherTestAssets.mock_vehicle(vehicle_id='test_veh', geoid=somewhere)
-        stationary_vehicle = veh._replace(idle_time_s=1000)
+        stationary_vehicle = veh._replace(idle_time_s=1000*unit.seconds)
         base = GreedyDispatcherTestAssets.mock_base(base_id='test_base', geoid=somewhere_else)
         sim = GreedyDispatcherTestAssets.mock_empty_sim().add_vehicle(stationary_vehicle).add_base(base)
 
@@ -106,37 +103,6 @@ class TestGreedyDispatcher(TestCase):
 
 
 class GreedyDispatcherTestAssets:
-    class MockRoadNetwork(RoadNetwork):
-
-        def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
-            start = origin.link.start
-            end = destination.link.end
-            return (PropertyLink("mpl", Link("ml", start, end), 1, 1, 1),)
-
-        def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
-            return PropertyLink("mpl", Link("ml", geoid, geoid), 1, 1, 1)
-
-        def update(self, sim_time: Time) -> RoadNetwork:
-            return self
-
-        def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
-            pass
-
-        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-            pass
-
-        def geoid_within_geofence(self, geoid: GeoId) -> bool:
-            return True
-
-        def link_id_within_geofence(self, link_id: LinkId) -> bool:
-            return True
-
-        def geoid_within_simulation(self, geoid: GeoId) -> bool:
-            return True
-
-        def link_id_within_simulation(self, link_id: LinkId) -> bool:
-            return True
-
     class MockPowertrain(Powertrain):
         def get_id(self) -> PowertrainId:
             return "mock_powertrain"
@@ -144,8 +110,8 @@ class GreedyDispatcherTestAssets:
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def energy_cost(self, route: Route) -> Kw:
-            return len(route)
+        def energy_cost(self, route: Route) -> kwh:
+            return 0.01 * unit.kilowatthour
 
     @classmethod
     def mock_request(cls,
@@ -167,11 +133,11 @@ class GreedyDispatcherTestAssets:
                      vehicle_id="m1",
                      geoid: GeoId = h3.geo_to_h3(39.75, -105, 15)) -> Vehicle:
         mock_powertrain = cls.MockPowertrain()
-        mock_property_link = cls.MockRoadNetwork().property_link_from_geoid(geoid)
+        mock_property_link = HaversineRoadNetwork().property_link_from_geoid(geoid)
         mock_veh = Vehicle(vehicle_id,
                            mock_powertrain.get_id(),
                            "",
-                           EnergySource.build("", EnergyType.ELECTRIC, 40, 40, 1),
+                           EnergySource.build("", EnergyType.ELECTRIC, 40*unit.kilowatthour),
                            geoid,
                            mock_property_link,
                            )
@@ -189,6 +155,6 @@ class GreedyDispatcherTestAssets:
 
     @classmethod
     def mock_empty_sim(cls) -> SimulationState:
-        sim, failures = initial_simulation_state(cls.MockRoadNetwork())
+        sim, failures = initial_simulation_state(HaversineRoadNetwork())
         assert len(failures) == 0, f"default sim used for tests had failures:\n {failures}"
         return sim

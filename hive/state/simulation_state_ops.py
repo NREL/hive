@@ -12,7 +12,8 @@ from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.state.simulation_state import SimulationState
 from hive.util.exception import *
-from hive.util.typealiases import Time
+from hive.util.typealiases import SimTime
+from hive.util.units import unit, s
 
 
 # def advance_simulation(simulation_state: SimulationState) -> SimulationState:
@@ -64,14 +65,14 @@ def initial_simulation_state(
         bases: Tuple[Base, ...] = (),
         powertrains: Tuple[Type[Powertrain], ...] = (),
         powercurves: Tuple[Type[Powercurve], ...] = (),
-        start_time: int = 0,
-        sim_timestep_duration_seconds: int = 1,
+        start_time: SimTime = 0,
+        sim_timestep_duration_seconds: s = 1 * unit.seconds,
         sim_h3_resolution: int = 15
 ) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
-    :param powercurves:
-    :param powertrains:
+    :param powercurves: 
+    :param powertrains: 
     :param road_network: the (initial) road network
     :param vehicles: the vehicles available in this simulation
     :param stations: the stations available in this simulation

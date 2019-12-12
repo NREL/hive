@@ -11,7 +11,6 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
-from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
@@ -22,6 +21,7 @@ from hive.model.roadnetwork.link import Link
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.typealiases import *
+from hive.util.units import unit, kwh, s
 
 
 class TestSimulationState(TestCase):
@@ -393,6 +393,7 @@ class TestSimulationState(TestCase):
                         "Idle vehicle should have consumed energy")
 
     def test_terminal_state_ending_trip(self):
+        # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
@@ -418,6 +419,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(req.id not in sim.requests, True, "Request should have been removed from simulation.")
 
     def test_terminal_state_starting_trip(self):
+        # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
@@ -443,6 +445,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(req.id not in sim.requests, True, "Request should have been removed from simulation.")
 
     def test_terminal_state_dispatch_station(self):
+        # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
@@ -465,13 +468,14 @@ class TestSimulationState(TestCase):
 
         self.assertEqual(charging_veh.vehicle_state,
                          VehicleState.CHARGING_STATION,
-                         "Vehicle should have transitioned to idle.")
+                         "Vehicle should have transitioned to charging.")
         self.assertEqual(charging_veh.geoid, sta.geoid, "Vehicle should be at station.")
         self.assertLess(station_w_veh.available_chargers[Charger.DCFC],
                         station_w_veh.total_chargers[Charger.DCFC],
                         "Station should have charger in use.")
 
     def test_terminal_state_dispatch_base(self):
+        # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
@@ -498,6 +502,7 @@ class TestSimulationState(TestCase):
                          "Vehicle should be located at base")
 
     def test_terminal_state_repositioning(self):
+        # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
@@ -527,8 +532,9 @@ class TestSimulationState(TestCase):
         sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
         high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
                                           EnergyType.ELECTRIC,
-                                          capacity=40,
-                                          soc=0.99)
+                                          capacity=50*unit.kilowatthour,
+                                          ideal_energy_limit=40*unit.kilowatthour,
+                                          soc=0.75)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
 
@@ -558,8 +564,9 @@ class SimulationStateTestAssets:
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def energy_cost(self, route: Route) -> Kw:
-            return len(route)
+        def energy_cost(self, route: Route) -> kwh:
+            # Uses very minimal energy to check terminal states.
+            return 0.01 * unit.kilowatthour
 
     class MockPowercurve(Powercurve):
         """
@@ -572,9 +579,9 @@ class SimulationStateTestAssets:
         def get_energy_type(self) -> EnergyType:
             return EnergyType.ELECTRIC
 
-        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: Time = 1,
-                   step_size_seconds: Time = 1) -> 'EnergySource':
-            return energy_source.load_energy(1.0)
+        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: s = 1 * unit.seconds,
+                   step_size_seconds: s = 1 * unit.seconds) -> 'EnergySource':
+            return energy_source.load_energy(0.1*unit.kilowatthour)
 
     @classmethod
     def mock_request(cls,
@@ -601,7 +608,10 @@ class SimulationStateTestAssets:
         mock_veh = Vehicle(vehicle_id,
                            mock_powertrain.get_id(),
                            mock_powercurve.get_id(),
-                           EnergySource.build(mock_powercurve.get_id(), EnergyType.ELECTRIC, capacity=40, soc=0.5),
+                           EnergySource.build(powercurve_id=mock_powercurve.get_id(),
+                                              energy_type=EnergyType.ELECTRIC,
+                                              capacity=40*unit.kilowatthour,
+                                              soc=0.5),
                            geoid,
                            mock_property_link,
                            )

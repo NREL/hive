@@ -10,3 +10,4 @@ dependencies:
     - h3==3.4.3
     - PyYAML==5.1
     - haversine==2.1
+    - pint==0.9

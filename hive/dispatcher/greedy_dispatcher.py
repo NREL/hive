@@ -7,6 +7,7 @@ from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.dispatcher.dispatcher import Dispatcher
 from hive.util.helpers import H3Ops, DictOps
+from hive.util.units import unit
 
 
 class GreedyDispatcher(Dispatcher):
@@ -16,7 +17,7 @@ class GreedyDispatcher(Dispatcher):
 
     # TODO: put these in init function to parameterize based on config file.
     LOW_SOC_TRESHOLD = 0.2
-    MAX_IDLE_S = 600
+    MAX_IDLE_S = 600*unit.seconds
 
     def generate_instructions(self, simulation_state: SimulationState, ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
@@ -35,7 +36,7 @@ class GreedyDispatcher(Dispatcher):
             nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                    entities=simulation_state.stations,
                                                    entity_locations=simulation_state.s_locations,
-                                                   max_distance_km=1,
+                                                   max_distance_km=1*unit.kilometer,
                                                    )
             if not nearest_station:
                 raise NotImplementedError('No stations found. Consider raising max_distance_km to higher threshold.')
@@ -61,7 +62,7 @@ class GreedyDispatcher(Dispatcher):
                                                    entities=vehicles_to_consider,
                                                    entity_locations=simulation_state.v_locations,
                                                    is_valid=_is_valid_for_dispatch,
-                                                   max_distance_km=0.5)
+                                                   max_distance_km=0.5*unit.kilometer)
             if nearest_vehicle:
                 instruction = Instruction(vehicle_id=nearest_vehicle.id,
                                           action=VehicleState.DISPATCH_TRIP,
@@ -75,7 +76,7 @@ class GreedyDispatcher(Dispatcher):
             nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
                                                 entities=simulation_state.bases,
                                                 entity_locations=simulation_state.b_locations,
-                                                max_distance_km=1)
+                                                max_distance_km=1*unit.kilometer)
             if not nearest_base:
                 raise NotImplementedError('No bases found. Consider raising max_distance_km to higher threshold.')
 

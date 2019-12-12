@@ -5,7 +5,7 @@ from typing import Optional
 
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.route import Route
-from hive.util.typealiases import GeoId, LinkId, Time
+from hive.util.typealiases import GeoId, LinkId, SimTime
 
 
 class RoadNetwork(ABC):
@@ -30,7 +30,7 @@ class RoadNetwork(ABC):
         pass
 
     @abstractmethod
-    def update(self, sim_time: Time) -> RoadNetwork:
+    def update(self, sim_time: SimTime) -> RoadNetwork:
         """
         gives the RoadNetwork a chance to update it's flow network based on the current simulation time
         :param sim_time: the current simulation time

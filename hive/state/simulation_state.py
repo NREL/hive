@@ -21,8 +21,9 @@ from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, Termina
 from hive.state.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
     VehicleTransitionEffectArgs
 from hive.util.exception import *
-from hive.util.helpers import DictOps, SwitchCase
+from hive.util.helpers import DictOps
 from hive.util.typealiases import *
+from hive.util.units import s
 
 
 class SimulationState(NamedTuple):
@@ -36,8 +37,8 @@ class SimulationState(NamedTuple):
     road_network: RoadNetwork
 
     # simulation parameters
-    sim_time: int
-    sim_timestep_duration_seconds: int
+    sim_time: SimTime
+    sim_timestep_duration_seconds: s
     sim_h3_resolution: int
 
     # objects of the simulation
@@ -397,7 +398,7 @@ class SimulationState(NamedTuple):
                 powercurves=DictOps.add_to_entity_dict(self.powercurves, powercurve.get_id(), powercurve),
             )
 
-    def update_road_network(self, sim_time: int) -> SimulationState:
+    def update_road_network(self, sim_time: SimTime) -> SimulationState:
         """
         trigger the update of the road network model based on the current sim time
         :param sim_time: the current sim time

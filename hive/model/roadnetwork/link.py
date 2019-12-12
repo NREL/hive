@@ -5,7 +5,8 @@ from typing import NamedTuple
 from h3 import h3
 
 from hive.util.helpers import H3Ops
-from hive.util.typealiases import LinkId, GeoId, Percentage
+from hive.util.typealiases import LinkId, GeoId
+from hive.util.units import unit, km, Ratio
 
 
 class Link(NamedTuple):
@@ -23,14 +24,14 @@ class Link(NamedTuple):
     end: GeoId
 
 
-def interpolate_between_geoids(a: GeoId, b: GeoId, percent: Percentage) -> GeoId:
+def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
     line = h3.h3_line(a, b)
-    index = int(len(line) * percent)
+    index = int(len(line) * ratio)
 
     return line[index]
 
 
-def link_distance(link: Link) -> float:
+def link_distance(link: Link) -> km:
     """
     determines the distance of a link
     :param link: some road network link, possibly with a different start/end point from
