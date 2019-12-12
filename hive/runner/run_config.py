@@ -8,14 +8,10 @@ class Config(TypedDict):
     sim: Dict
     network: Dict
 
-# class IO(NamedTuple):
+# class IO(NamedTuple, Config):
 #     working_directory: str = "/tmp"
 #
 #
-# class Sim(NamedTuple):
-#     timestep_duration_seconds: SimTime = 1
-#     start_time_seconds: SimTime = 0
-#     end_time_seconds: SimTime = 86400
 #
 #
 # class Network(NamedTuple):

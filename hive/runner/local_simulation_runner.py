@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Tuple, Callable, Any
+from typing import NamedTuple, Tuple, Callable, Any, Dict, Union
 
 from hive.dispatcher import Dispatcher
 from hive.dispatcher.instruction import Instruction
@@ -32,8 +32,8 @@ class LocalSimulationRunner(NamedTuple):
         """
 
         time_steps = range(
-            start=self.env.config.sim.start_time_seconds,
-            stop=self.env.config.sim.end_time_seconds,
+            start=self.env.config['sim']['start_time_seconds'],
+            stop=self.env.config['sim']['end_time_seconds'],
             step=self.env.config.sim.timestep_duration_seconds
         )
 
