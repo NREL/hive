@@ -6,7 +6,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.helpers import H3Ops
-from hive.util.units import unit, h
+from hive.util.units import unit, h, km
 
 
 class LinkTraversal(NamedTuple):

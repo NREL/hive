@@ -76,7 +76,7 @@ class Vehicle(NamedTuple):
                 if not 0.0 <= initial_soc <= 1.0:
                     return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
-                energy_type = powercurve_energy_types.get(result.group(5)) #todo: where is powercurve_energy_types?
+                energy_type = powercurve_energy_types.get(result.group(5))  # todo: where is powercurve_energy_types?
                 energy_source = EnergySource.build(energy_type, capacity, initial_soc)
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.property_link_from_geoid(geoid)
@@ -126,7 +126,7 @@ class Vehicle(NamedTuple):
         return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_s=0*unit.seconds)
+        return self._replace(idle_time_s=0 * unit.seconds)
 
     def _reset_charge_intent(self) -> Vehicle:
         return self._replace(charger_intent=None, station_intent=None)
@@ -166,9 +166,9 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
-        # TODO: update self.distance_traveled based on the traversal result distance.
         experienced_route = traverse_result.experienced_route
         energy_used = power_train.energy_cost(experienced_route)
+        step_distance = traverse_result.traversal_distance
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
@@ -181,12 +181,14 @@ class Vehicle(NamedTuple):
             geoid = experienced_route[-1].link.end
             updated_location_vehicle = new_route_vehicle._replace(
                 geoid=geoid,
-                property_link=road_network.property_link_from_geoid(geoid)
+                property_link=road_network.property_link_from_geoid(geoid),
+                distance_traveled=self.distance_traveled + step_distance,
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
                 geoid=experienced_route[-1].link.end,
-                property_link=remaining_route[0]
+                property_link=remaining_route[0],
+                distance_traveled=self.distance_traveled + step_distance,
             )
 
         return updated_location_vehicle

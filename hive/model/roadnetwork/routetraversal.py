@@ -11,11 +11,12 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
-from hive.util.units import unit, h, s
+from hive.util.units import unit, h, s, km
 
 
 class RouteTraversal(NamedTuple):
     remaining_time: h = 0 * unit.hours
+    traversal_distance: km = 0 * unit.kilometers
     experienced_route: Route = ()
     remaining_route: Route = ()
 
@@ -38,8 +39,13 @@ class RouteTraversal(NamedTuple):
         updated_remaining_route = self.remaining_route \
             if t.remaining is None \
             else self.remaining_route + (t.remaining,)
+        if t.traversed:
+            traversal_distance = self.traversal_distance + t.traversed.distance
+        else:
+            traversal_distance = self.traversal_distance
         return self._replace(
             remaining_time=t.remaining_time,
+            traversal_distance= traversal_distance,
             experienced_route=updated_experienced_route,
             remaining_route=updated_remaining_route,
         )
