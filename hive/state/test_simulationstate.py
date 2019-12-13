@@ -408,7 +408,7 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have transitioned to servicing trip")
 
-        for t in range(100):
+        for t in range(1000):
             sim = sim.step_simulation()
 
         idle_veh = sim.vehicles[veh.id]
@@ -434,7 +434,17 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(10):
+        # should take about 800 seconds to arrive at trip origin.
+
+        for t in range(800):
+            sim = sim.step_simulation()
+
+        tripping_veh = sim.vehicles[veh.id]
+
+        self.assertEqual(tripping_veh.vehicle_state, VehicleState.SERVICING_TRIP)
+
+        # should take about 800 seconds to arrive at trip destination.
+        for t in range(800):
             sim = sim.step_simulation()
 
         idle_veh = sim.vehicles[veh.id]
@@ -460,7 +470,7 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(10):
+        for t in range(1000):
             sim = sim.step_simulation()
 
         charging_veh = sim.vehicles[veh.id]
@@ -489,7 +499,7 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(10):
+        for t in range(1000):
             sim = sim.step_simulation()
 
         veh_at_base = sim.vehicles[veh.id]
@@ -515,7 +525,7 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(10):
+        for t in range(1000):
             sim = sim.step_simulation()
 
         veh_at_new_loc = sim.vehicles[veh.id]
@@ -546,7 +556,7 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(10):
+        for t in range(1000):
             sim = sim.step_simulation()
 
         fully_charged_veh = sim.vehicles[veh.id]
