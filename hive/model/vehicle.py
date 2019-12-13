@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional, Union
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
+from hive.model.vehiclestate import VehicleState
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
@@ -17,8 +17,8 @@ from hive.util.helpers import DictOps
 from hive.util.pattern import vehicle_regex
 from hive.util.units import unit, s, km
 from hive.util.exception import EntityError
-from hive.model.energy.powercurve import *
-from hive.model.energy.powertrain import *
+from hive.model.energy.powercurve import Powercurve
+from hive.model.energy.powertrain import Powertrain
 
 from h3 import h3
 
@@ -167,6 +167,7 @@ class Vehicle(NamedTuple):
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
         experienced_route = traverse_result.experienced_route
+
         energy_used = power_train.energy_cost(experienced_route)
         step_distance = traverse_result.traversal_distance
 
@@ -183,12 +184,14 @@ class Vehicle(NamedTuple):
                 geoid=geoid,
                 property_link=road_network.property_link_from_geoid(geoid),
                 distance_traveled=self.distance_traveled + step_distance,
+
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
                 geoid=experienced_route[-1].link.end,
                 property_link=remaining_route[0],
                 distance_traveled=self.distance_traveled + step_distance,
+
             )
 
         return updated_location_vehicle

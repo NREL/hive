@@ -3,16 +3,45 @@ from __future__ import annotations
 import functools as ft
 from typing import Type, Union, Tuple, cast
 
+from hive.dispatcher.instruction import Instruction
 from hive.model.base import Base
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.energy.powertrain.powertrain import Powertrain
-from hive.model.energy.powercurve.powercurve import Powercurve 
-from hive.simulationstate.simulation_state import SimulationState
+from hive.model.energy.powercurve.powercurve import Powercurve
+from hive.state.simulation_state import SimulationState
 from hive.util.exception import *
 from hive.util.typealiases import SimTime
 from hive.util.units import unit, s
+
+
+def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
+    """
+    applies all the instructions to the simulation state, ignoring the ones that fail
+    :param simulation_state: the sim state
+    :param instructions: dispatcher instructions
+    :return: the sim state with vehicle intentions updated
+    """
+    return ft.reduce(
+        _add_instruction,
+        instructions,
+        simulation_state
+    )
+
+
+def _add_instruction(simulation_state: SimulationState, instruction: Instruction) -> SimulationState:
+    """
+    inner loop for apply_instructions method
+    :param simulation_state: the intermediate sim state
+    :param instruction: the ith instruction
+    :return: sim state with the ith instruction added, unless it's bogus
+    """
+    updated_sim = simulation_state.apply_instruction(instruction)
+    if updated_sim is None:
+        return simulation_state
+    else:
+        return updated_sim
 
 
 def initial_simulation_state(
@@ -50,27 +79,27 @@ def initial_simulation_state(
 
     # add vehicles, stations, bases, powertrains, and powercurves
     has_vehicles = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         vehicles,
         (simulation_state_builder, failures)
     )
     has_vehicles_and_stations = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         stations,
         has_vehicles
     )
     has_bases = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         bases,
         has_vehicles_and_stations
     )
     has_powertrains = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         powertrains,
         has_bases
     )
     has_everything = ft.reduce(
-        _add_to_accumulator,
+        _add_to_builder,
         powercurves,
         has_powertrains
     )
@@ -78,7 +107,7 @@ def initial_simulation_state(
     return has_everything
 
 
-def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
+def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
                         x: Union[Vehicle, Station, Base, Type[Powertrain], Type[Powercurve]]) \
                         -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
@@ -118,7 +147,7 @@ def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, 
         else:
             return result, this_failures
 
-    # add a Powertrain 
+    # add a Powertrain
     elif issubclass(type(x), Powertrain):
         powertrain = cast(Powertrain, x)
         result = this_simulation_state.add_powertrain(powertrain)
@@ -126,8 +155,8 @@ def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, 
             return this_simulation_state, (result,) + this_failures
         else:
             return result, this_failures
-        
-    # add a Powercurve 
+
+    # add a Powercurve
     elif issubclass(type(x), Powercurve):
         powercurve = cast(Powercurve, x)
         result = this_simulation_state.add_powercurve(powercurve)
@@ -135,7 +164,7 @@ def _add_to_accumulator(acc: Tuple[SimulationState, Tuple[SimulationStateError, 
             return this_simulation_state, (result,) + this_failures
         else:
             return result, this_failures
-        
+
     # x is something else; do not modify simulation
     else:
         failure = SimulationStateError(f"not a Vehicle, Station, Base, Powertrain, or Powercurve: {x}")
