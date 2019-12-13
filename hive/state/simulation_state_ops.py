@@ -16,20 +16,6 @@ from hive.util.typealiases import SimTime
 from hive.util.units import unit, s
 
 
-# def advance_simulation(simulation_state: SimulationState) -> SimulationState:
-#     """
-#     applies the step function for each agent.
-#     :param simulation_state: the state with all vehicle intentions set
-#     :return: sim state at time t+1
-#     """
-#     sim_vehicles_stepped = ft.reduce(
-#         lambda sim, veh: sim.step_vehicle(veh),
-#         simulation_state.vehicles.keys(),
-#         simulation_state
-#     )
-#     return sim_vehicles_stepped.
-
-
 def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
     """
     applies all the instructions to the simulation state, ignoring the ones that fail
