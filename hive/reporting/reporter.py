@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Tuple
 from abc import ABC, abstractmethod
 
-from hive.simulationstate.simulation_state import SimulationState
+from hive.state.simulation_state import SimulationState
 from hive.dispatcher.instruction import Instruction
 
 

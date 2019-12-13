@@ -19,6 +19,7 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.units import unit
+from hive.reporting.detailed_reporter import DetailedReporter
 
 from h3 import h3
 
@@ -35,7 +36,7 @@ class TestLocalSimulationRunner(TestCase):
         result_sim, result_dis = runner.run(
             initial_simulation_state=initial_sim_with_req,
             initial_dispatcher=GreedyDispatcher(),
-            report_state=TestLocalSimulationRunnerAssets.report_nothing
+            reporter=DetailedReporter(runner.env.config.io)
         )
 
         at_destination = result_sim.at_geoid(req.destination)
@@ -120,4 +121,5 @@ class TestLocalSimulationRunnerAssets:
 
     @classmethod
     def mock_config(cls) -> HiveConfig:
-        return HiveConfig.build({"sim": {'end_time_seconds': 1000}})
+        return HiveConfig.build({"sim": {'end_time_seconds': 1000},
+                                 "io": {'vehicles_file': ''}})

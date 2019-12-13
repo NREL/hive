@@ -42,7 +42,6 @@ class Vehicle(NamedTuple):
     station: Optional[StationId] = None
     charger_intent: Optional[Charger] = None
     station_intent: Optional[StationId] = None
-    request: Optional[RequestId] = None
     # todo: p_locations: Dict[GeoId, PassengerId] = {}
     distance_traveled: km = 0.0 * unit.kilometers
 
