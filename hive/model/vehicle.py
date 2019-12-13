@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import re
 from typing import NamedTuple, Dict, Optional
+import functools as ft
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -168,6 +169,13 @@ class Vehicle(NamedTuple):
 
         # TODO: update self.distance_traveled based on the traversal result distance.
         experienced_route = traverse_result.experienced_route
+
+        this_distance_traveled = ft.reduce(
+            lambda acc, property_link: acc + property_link.distance,
+            experienced_route,
+            0.0 * unit.kilometer
+        )
+
         energy_used = power_train.energy_cost(experienced_route)
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
@@ -181,12 +189,14 @@ class Vehicle(NamedTuple):
             geoid = experienced_route[-1].link.end
             updated_location_vehicle = new_route_vehicle._replace(
                 geoid=geoid,
-                property_link=road_network.property_link_from_geoid(geoid)
+                property_link=road_network.property_link_from_geoid(geoid),
+                distance_traveled=new_route_vehicle.distance_traveled + this_distance_traveled
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
                 geoid=experienced_route[-1].link.end,
-                property_link=remaining_route[0]
+                property_link=remaining_route[0],
+                distance_traveled=new_route_vehicle.distance_traveled + this_distance_traveled
             )
 
         return updated_location_vehicle
