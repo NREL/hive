@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Optional, NamedTuple
 
-from hive.model.station import Station
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -10,20 +9,18 @@ from hive.util.typealiases import *
 class Base(NamedTuple):
     id: BaseId
     geoid: GeoId
-
-    station: Optional[Station]
-
     total_stalls: int
     available_stalls: int
+    station_id: Optional[StationId]
 
     @classmethod
     def build(cls,
               id: BaseId,
               geoid: GeoId,
-              station: Optional[Station],
+              station_id: Optional[StationId],
               total_stalls: int
               ):
-        return cls(id, geoid, station, total_stalls, total_stalls)
+        return Base(id, geoid, total_stalls, total_stalls, station_id)
 
     def has_available_stall(self) -> bool:
         if self.available_stalls > 0:
