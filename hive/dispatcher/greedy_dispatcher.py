@@ -51,7 +51,10 @@ class GreedyDispatcher(Dispatcher):
             vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = [VehicleState.IDLE, VehicleState.CHARGING_BASE, VehicleState.RESERVE_BASE]
+            _valid_states = [VehicleState.IDLE,
+                             VehicleState.CHARGING_BASE,
+                             VehicleState.RESERVE_BASE,
+                             VehicleState.DISPATCH_BASE]
             if vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and vehicle.vehicle_state in _valid_states:
                 return True
             else:
