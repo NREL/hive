@@ -20,7 +20,7 @@ class Station(NamedTuple):
               geoid: GeoId,
               total_chargers: Dict[Charger, int]
               ):
-        return cls(id, geoid, total_chargers, total_chargers)
+        return Station(id, geoid, total_chargers, total_chargers)
 
     def has_available_charger(self, charger: Charger) -> bool:
         if charger in self.total_chargers:

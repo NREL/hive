@@ -173,6 +173,36 @@ class VehicleTransitionEffectOps(SwitchCase):
 
         return updated_sim_state
 
+    def _case_charging_base(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+        sim_state = payload.simulation_state
+        vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
+        station_id = payload.instruction.station_id
+        charger = payload.instruction.charger
+        at_location = sim_state.at_geoid(vehicle.geoid)
+
+        if not vehicle:
+            return None
+        elif not station_id or not charger:
+            return None
+        elif isinstance(at_location, Exception) or not at_location['bases']:
+            return None
+        elif station_id not in sim_state.s_locations[vehicle.geoid]:
+            return None
+
+        if payload.instruction.vehicle_id not in payload.simulation_state.vehicles:
+            return None
+        vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
+
+        station = sim_state.stations[station_id]
+        if not station.has_available_charger(charger):
+            return None
+
+        station_less_charger = station.checkout_charger(charger)
+        vehicle_w_charger = vehicle.plug_in_to(station_id, charger)
+        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(vehicle_w_charger)
+
+        return updated_sim_state
+
     def _default(self, arguments: Arguments) -> Result:
         return arguments.simulation_state
 
@@ -184,4 +214,5 @@ class VehicleTransitionEffectOps(SwitchCase):
         VehicleState.REPOSITIONING: _case_repositioning,
         VehicleState.RESERVE_BASE: _case_reserve_base,
         VehicleState.CHARGING_STATION: _case_charging_station,
+        VehicleState.CHARGING_BASE: _case_charging_base,
     }

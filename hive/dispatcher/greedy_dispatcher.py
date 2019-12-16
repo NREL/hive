@@ -86,4 +86,22 @@ class GreedyDispatcher(Dispatcher):
             instructions.append(instruction)
             vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
 
+        def _should_base_charge(vehicle: Vehicle) -> bool:
+            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_full():
+                return True
+            else:
+                return False
+
+        base_charge_vehicles = [v for v in vehicles_to_consider.values() if _should_base_charge(v)]
+        for v in base_charge_vehicles:
+            base_id = simulation_state.b_locations[v.geoid][0]
+            base = simulation_state.bases[base_id]
+            if base.station_id:
+                instruction = Instruction(vehicle_id=v.id,
+                                          action=VehicleState.CHARGING_BASE,
+                                          station_id=base.station_id,
+                                          charger=Charger.LEVEL_2,
+                                          )
+                instructions.append(instruction)
+
         return self, tuple(instructions)
