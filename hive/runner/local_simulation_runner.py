@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Tuple, Callable, Any, Dict, Union
+from typing import NamedTuple, Tuple, Callable, Any, Type
 
 from hive.dispatcher import Dispatcher
-from hive.dispatcher.instruction import Instruction
 from hive.runner import simulation_runner_ops
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
+from hive.reporting.reporter import Reporter
 
 
 class RunnerPayload(NamedTuple):
@@ -21,13 +21,13 @@ class LocalSimulationRunner(NamedTuple):
     def run(self,
             initial_simulation_state: SimulationState,
             initial_dispatcher: Dispatcher,
-            report_state: Callable[[SimulationState, Tuple[Instruction, ...]], Any]
+            reporter: Reporter,
             ) -> Tuple[SimulationState, Dispatcher]:
         """
         steps through time,
         :param initial_simulation_state:
         :param initial_dispatcher:
-        :param report_state: a callback which can be used to generate reports on the evolving simulation
+        :param reporter:
         :return:
         """
 
@@ -45,7 +45,7 @@ class LocalSimulationRunner(NamedTuple):
             :return: the resulting sim state
             """
             updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(payload.s, payload.d)
-            report_state(updated_sim, instructions)
+            reporter.report(updated_sim, instructions)
             return RunnerPayload(updated_sim, updated_dispatcher)
 
         final_payload = ft.reduce(
