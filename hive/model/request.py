@@ -6,6 +6,7 @@ from hive.util.typealiases import *
 
 from h3 import h3
 
+
 class Request(NamedTuple):
     """
     a ride hail request which is alive in the simulation but not yet serviced.
