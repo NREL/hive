@@ -93,6 +93,28 @@ class H3Ops:
         return cls.nearest_entity(geoid, entities, entity_locations, is_valid, k + 1, max_distance_km)
 
     @classmethod
+    def nearest_entity_point_to_point(cls,
+                                      geoid: GeoId,
+                                      entities: Dict[EntityId, Entity],
+                                      entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+                                      is_valid: Callable = lambda x: True,
+                                      ) -> Optional[Entity]:
+
+        best_dist = 1000000 * unit.kilometers
+        best_e = None
+        for e_geoid, e_ids in entity_locations.items():
+            dist = cls.great_circle_distance(geoid, e_geoid)
+            e = entities[e_ids[0]]
+            if dist < best_dist and is_valid(e):
+                best_dist = dist
+                best_e = e
+
+        return best_e
+
+
+
+
+    @classmethod
     def great_circle_distance(cls, a: GeoId, b: GeoId) -> km:
         """
         computes the distance between two geoids

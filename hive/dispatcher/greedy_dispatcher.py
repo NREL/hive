@@ -17,7 +17,7 @@ class GreedyDispatcher(Dispatcher):
 
     # TODO: put these in init function to parameterize based on config file.
     LOW_SOC_TRESHOLD = 0.2
-    MAX_IDLE_S = 600*unit.seconds
+    MAX_IDLE_S = 600 * unit.seconds
 
     def generate_instructions(self, simulation_state: SimulationState, ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
@@ -31,13 +31,10 @@ class GreedyDispatcher(Dispatcher):
 
         low_soc_vehicles = [v for v in vehicles_to_consider.values() if v.energy_source.soc <= self.LOW_SOC_TRESHOLD]
         for veh in low_soc_vehicles:
-            # TODO: if we have a low number of stations/bases, it might be quicker to just find the closest
-            #  by computing the distance between all of them?
-            nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
-                                                   entities=simulation_state.stations,
-                                                   entity_locations=simulation_state.s_locations,
-                                                   max_distance_km=1*unit.kilometer,
-                                                   )
+            nearest_station = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
+                                                                  entities=simulation_state.stations,
+                                                                  entity_locations=simulation_state.s_locations,
+                                                                  )
             if not nearest_station:
                 raise NotImplementedError('No stations found. Consider raising max_distance_km to higher threshold.')
 
@@ -62,11 +59,11 @@ class GreedyDispatcher(Dispatcher):
 
         unassigned_requests = [r for r in simulation_state.requests.values() if not r.dispatched_vehicle]
         for request in unassigned_requests:
-            nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
-                                                   entities=vehicles_to_consider,
-                                                   entity_locations=simulation_state.v_locations,
-                                                   is_valid=_is_valid_for_dispatch,
-                                                   max_distance_km=0.5*unit.kilometer)
+            nearest_vehicle = H3Ops.nearest_entity_point_to_point(geoid=request.origin,
+                                                                  entities=vehicles_to_consider,
+                                                                  entity_locations=simulation_state.v_locations,
+                                                                  is_valid=_is_valid_for_dispatch,
+                                                                  )
             if nearest_vehicle:
                 instruction = Instruction(vehicle_id=nearest_vehicle.id,
                                           action=VehicleState.DISPATCH_TRIP,
@@ -77,10 +74,10 @@ class GreedyDispatcher(Dispatcher):
 
         stationary_vehicles = [v for v in vehicles_to_consider.values() if v.idle_time_s > self.MAX_IDLE_S]
         for veh in stationary_vehicles:
-            nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
-                                                entities=simulation_state.bases,
-                                                entity_locations=simulation_state.b_locations,
-                                                max_distance_km=1*unit.kilometer)
+            nearest_base = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
+                                                               entities=simulation_state.bases,
+                                                               entity_locations=simulation_state.b_locations,
+                                                               )
             if not nearest_base:
                 raise NotImplementedError('No bases found. Consider raising max_distance_km to higher threshold.')
 

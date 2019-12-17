@@ -31,3 +31,14 @@ class TestH3Ops(TestCase):
         bwd_lat, bwd_lon = h3.h3_to_geo(bwd_result)
         self.assertAlmostEqual(bwd_lat, 37.004, places=2)
         self.assertAlmostEqual(bwd_lon, 122, places=2)
+
+    def test_nearest_entity_point_to_point(self):
+        somewhere = h3.geo_to_h3(39.748971, -104.992323, 15)
+        close_to_somewhere = h3.geo_to_h3(39.753600, -104.993369, 15)
+        far_from_somewhere = h3.geo_to_h3(39.728882, -105.002792, 15)
+        entities = {'1': 1, '2': 2, '3': 3, '4': 4}
+        entity_locations = {close_to_somewhere: ('1', '2'), far_from_somewhere: ('3', '4')}
+
+        nearest_entity = H3Ops.nearest_entity_point_to_point(somewhere, entities, entity_locations)
+
+        self.assertEqual(nearest_entity, 1, "should have returned 1")
