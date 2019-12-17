@@ -4,17 +4,18 @@ from typing import NamedTuple, Dict, Union
 
 from hive.config import ConfigBuilder
 from hive.util.typealiases import SimTime
+from hive.util.units import unit, s
 
 
 class Sim(NamedTuple):
-    timestep_duration_seconds: SimTime
+    timestep_duration_seconds: s
     start_time_seconds: SimTime
     end_time_seconds: SimTime
 
     @classmethod
     def default_config(cls) -> Dict:
         return {
-            'timestep_duration_seconds': 1,  # number of seconds per time step in Hive
+            'timestep_duration_seconds': 1*unit.s,  # number of seconds per time step in Hive
             'start_time_seconds': 0,  # 12:00:00am today (range-inclusive value)
             'end_time_seconds': 86400  # 12:00:00am next day (range-exclusive value)
         }

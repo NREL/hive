@@ -29,9 +29,13 @@ class DetailedReporter(Reporter):
             entry = json.dumps(log_dict, default=str)
             logger.info(entry)
 
-    def report(self, sim_state: SimulationState, instructions: Tuple[Instruction, ...]):
+    def report(self,
+               sim_state: SimulationState,
+               instructions: Tuple[Instruction, ...],
+               reports: Tuple[str, ...]):
         """
         Takes in a simulation state and a tuple of instructions and writes the appropriate information.
+        :param reports:
         :param sim_state:
         :param instructions:
         :return:
@@ -45,3 +49,5 @@ class DetailedReporter(Reporter):
         self._report_entities(logger=self.instruction_logger,
                               entities=instructions,
                               sim_time=sim_state.sim_time)
+        for report in reports:
+            self.run_logger.info(report)

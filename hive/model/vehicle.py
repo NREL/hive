@@ -165,6 +165,10 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
+        if not traverse_result:
+            # TODO: Need to think about edge case where vehicle gets route where origin=destination.
+            return self.assign_route(())
+
         experienced_route = traverse_result.experienced_route
 
         energy_used = power_train.energy_cost(experienced_route)

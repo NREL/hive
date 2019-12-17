@@ -58,7 +58,7 @@ def _success_as_json(r_id: RequestId, sim: SimulationState) -> str:
     :return: a stringified json report
     """
     dep_t = sim.requests[r_id].departure_time
-    return f"{{'report':'add_request','request_id':'{r_id}','departure_time':'{dep_t}}}"
+    return f"{{\"report\":\"add_request\",\"request_id\":\"{r_id}\",\"departure_time\":\"{dep_t}\"}}"
 
 
 def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
@@ -68,7 +68,7 @@ def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
     :param sim: the state of the sim before cancellation occurs
     :return: a stringified json report of an error
     """
-    return f"{{'report':'add_request','sim_time':'{sim.sim_time}','error':'{error_msg}'}}"
+    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.sim_time}\",\"error\":\"{error_msg}\"}}"
 
 
 def _eof_as_json(sim: SimulationState) -> str:
@@ -77,4 +77,4 @@ def _eof_as_json(sim: SimulationState) -> str:
     :param sim: the simulation state
     :return: a stringified end-of-file report
     """
-    return f"{{'report':'add_request','sim_time':'{sim.sim_time}','message':'EOF'}}"
+    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.sim_time}\",\"message\":\"EOF\"}}"
