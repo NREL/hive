@@ -1,7 +1,10 @@
 from __future__ import annotations
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Dict, Union
 from hive.model.passenger import Passenger, create_passenger_id
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.typealiases import *
+
+from h3 import h3
 
 
 class Request(NamedTuple):
@@ -53,14 +56,49 @@ class Request(NamedTuple):
                        tuple(request_as_passengers))
 
     @classmethod
-    def from_string(cls, string) -> Optional[Request]:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Union[IOError, Request]:
         """
-        parse a string from an input file to construct a Request
-        :param string: something like a CSV row or something like that. perhaps Regex?
-        :return: a Request,
+        takes a csv row and turns it into a Request
+        :param row: a row as interpreted by csv.DictReader
+        :param road_network: the road network loaded for this simulation
+        :return: a Request, or an error
         """
-        # todo: parses a string, calls cls.build() with the result
-        raise NotImplementedError(f"yo, this doesn't exist brah, but, nice string anyway: {string}")
+        if 'request_id' not in row:
+            return IOError("cannot load a request without a 'request_id'")
+        elif 'o_lat' not in row:
+            return IOError("cannot load a request without an 'o_lat' value")
+        elif 'o_lon' not in row:
+            return IOError("cannot load a request without an 'o_lon' value")
+        elif 'd_lat' not in row:
+            return IOError("cannot load a request without a 'd_lat' value")
+        elif 'd_lon' not in row:
+            return IOError("cannot load a request without a 'd_lon' value")
+        elif 'departure_time' not in row:
+            return IOError("cannot load a request without a 'departure_time'")
+        elif 'cancel_time' not in row:
+            return IOError("cannot load a request without a 'cancel_time'")
+        elif 'passengers' not in row:
+            return IOError("cannot load a request without a number of 'passengers'")
+        else:
+            request_id = row['request_id']
+            try:
+                o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
+                d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
+                o_geoid = h3.geo_to_h3(o_lat, o_lon, road_network.sim_h3_resolution)
+                d_geoid = h3.geo_to_h3(d_lat, d_lon, road_network.sim_h3_resolution)
+                departure_time = int(row['departure_time'])
+                cancel_time = int(row['cancel_time'])
+                passengers = int(row['passengers'])
+                return Request.build(
+                    request_id=request_id,
+                    origin=o_geoid,
+                    destination=d_geoid,
+                    departure_time=departure_time,
+                    cancel_time=cancel_time,
+                    passengers=passengers
+                )
+            except ValueError:
+                return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
 
     def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """

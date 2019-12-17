@@ -23,7 +23,7 @@ from hive.state.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
 from hive.util.exception import *
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
-from hive.util.units import s
+from hive.util.units import s, unit
 
 
 class SimulationState(NamedTuple):
@@ -54,6 +54,13 @@ class SimulationState(NamedTuple):
     r_locations: Dict[GeoId, Tuple[RequestId, ...]] = {}
     s_locations: Dict[GeoId, Tuple[StationId, ...]] = {}
     b_locations: Dict[GeoId, Tuple[BaseId, ...]] = {}
+
+    def current_time_seconds(self) -> s:
+        """
+        computes the current time in seconds
+        :return: the current time in seconds
+        """
+        return self.sim_time * unit.s * self.sim_timestep_duration_seconds
 
     def add_request(self, request: Request) -> Union[Exception, SimulationState]:
         """
@@ -238,7 +245,7 @@ class SimulationState(NamedTuple):
         )
 
         return next_state._replace(
-            sim_time=self.sim_time + self.sim_timestep_duration_seconds
+            sim_time=self.sim_time + 1
         )
 
     def remove_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, SimulationState]:

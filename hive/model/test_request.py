@@ -1,6 +1,8 @@
 import unittest
+from csv import DictReader
 
 from hive.model.energy.energytype import EnergyType
+from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.energy.energysource import EnergySource
 from hive.model.request import Request
@@ -77,6 +79,20 @@ class MyTestCase(unittest.TestCase):
 
             # the current vehicle should be known to each passenger
             self.assertEqual(passenger.vehicle_id, vehicle.id)
+
+    def test_from_row(self):
+        source = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
+        1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
+        """
+        row = next(DictReader(source.split()))
+        rn = HaversineRoadNetwork()
+        req = Request.from_row(row, rn)
+        self.assertEqual(req.id, "1_a")
+        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449,121.4294263,rn.sim_h3_resolution))
+        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091,121.4532226,rn.sim_h3_resolution))
+        self.assertEqual(req.departure_time, 61200)
+        self.assertEqual(req.cancel_time, 61800)
+        self.assertEqual(len(req.passengers), 4)
 
 
 if __name__ == '__main__':

@@ -18,6 +18,8 @@ from hive.runner.environment import Environment
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
+from hive.state.update import UpdateRequestsFromString
+from hive.state.update.cancel_requests import CancelRequests
 from hive.util.units import unit
 from hive.reporting.detailed_reporter import DetailedReporter
 
@@ -27,22 +29,25 @@ from h3 import h3
 class TestLocalSimulationRunner(TestCase):
 
     def test_run(self):
-
         runner = TestLocalSimulationRunnerAssets.mock_runner()
         initial_sim = TestLocalSimulationRunnerAssets.mock_initial_sim()
-        req = TestLocalSimulationRunnerAssets.mock_request()
-        initial_sim_with_req = initial_sim.add_request(req)
+        req = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
+        1,-37.001,122,-37.1,122,0,20,2
+        """
+        req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_resolution)
+        update_requests = UpdateRequestsFromString(req)
 
-        result_sim, result_dis = runner.run(
-            initial_simulation_state=initial_sim_with_req,
+        result = runner.run(
+            initial_simulation_state=initial_sim,
             initial_dispatcher=GreedyDispatcher(),
+            update_functions=(CancelRequests(), update_requests),
             reporter=DetailedReporter(runner.env.config.io)
         )
 
-        at_destination = result_sim.at_geoid(req.destination)
+        at_destination = result.s.at_geoid(req_destination)
         self.assertIn('1', at_destination['vehicles'], "vehicle should have driven request to destination")
 
-        self.assertAlmostEqual(11.1 * unit.kilometer, result_sim.vehicles['1'].distance_traveled, places=1)
+        self.assertAlmostEqual(11.1 * unit.kilometer, result.s.vehicles['1'].distance_traveled, places=1)
 
 
 class TestLocalSimulationRunnerAssets:
@@ -62,16 +67,6 @@ class TestLocalSimulationRunnerAssets:
         # print(instructions)
 
     # todo: replace this stuff with loading a pre-built toy scenario from hive.resources
-
-    @classmethod
-    def mock_request(cls) -> Request:
-        return Request.build(request_id="1",
-                             origin=h3.geo_to_h3(-37.001, 122, 15),
-                             destination=h3.geo_to_h3(-37.1, 122, 15),
-                             departure_time=0,
-                             cancel_time=8,
-                             passengers=2
-                             )
 
     @classmethod
     def mock_initial_sim(cls) -> SimulationState:
@@ -122,4 +117,4 @@ class TestLocalSimulationRunnerAssets:
     @classmethod
     def mock_config(cls) -> HiveConfig:
         return HiveConfig.build({"sim": {'end_time_seconds': 1000},
-                                 "io": {'vehicles_file': ''}})
+                                 "io": {'vehicles_file': '', 'requests_file': ''}})
