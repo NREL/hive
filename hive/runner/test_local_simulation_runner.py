@@ -31,7 +31,7 @@ class TestLocalSimulationRunner(TestCase):
     def test_run(self):
         runner = TestLocalSimulationRunnerAssets.mock_runner()
         initial_sim = TestLocalSimulationRunnerAssets.mock_initial_sim()
-        req = """request_id,origin_x,origin_y,destination_x,destination_y,departure_time,cancel_time,passengers
+        req = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
         1,-37.001,122,-37.1,122,0,20,2
         """
         req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_resolution)

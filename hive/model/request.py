@@ -65,14 +65,14 @@ class Request(NamedTuple):
         """
         if 'request_id' not in row:
             return IOError("cannot load a request without a 'request_id'")
-        elif 'origin_x' not in row:
-            return IOError("cannot load a request without an 'origin_x' value")
-        elif 'origin_y' not in row:
-            return IOError("cannot load a request without an 'origin_y' value")
-        elif 'destination_x' not in row:
-            return IOError("cannot load a request without a 'destination_x' value")
-        elif 'destination_y' not in row:
-            return IOError("cannot load a request without a 'destination_y' value")
+        elif 'o_lat' not in row:
+            return IOError("cannot load a request without an 'o_lat' value")
+        elif 'o_lon' not in row:
+            return IOError("cannot load a request without an 'o_lon' value")
+        elif 'd_lat' not in row:
+            return IOError("cannot load a request without a 'd_lat' value")
+        elif 'd_lon' not in row:
+            return IOError("cannot load a request without a 'd_lon' value")
         elif 'departure_time' not in row:
             return IOError("cannot load a request without a 'departure_time'")
         elif 'cancel_time' not in row:
@@ -82,10 +82,10 @@ class Request(NamedTuple):
         else:
             request_id = row['request_id']
             try:
-                o_x, o_y = float(row['origin_x']), float(row['origin_y'])
-                d_x, d_y = float(row['destination_x']), float(row['destination_y'])
-                o_geoid = h3.geo_to_h3(o_x, o_y, road_network.sim_h3_resolution)
-                d_geoid = h3.geo_to_h3(d_x, d_y, road_network.sim_h3_resolution)
+                o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
+                d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
+                o_geoid = h3.geo_to_h3(o_lat, o_lon, road_network.sim_h3_resolution)
+                d_geoid = h3.geo_to_h3(d_lat, d_lon, road_network.sim_h3_resolution)
                 departure_time = int(row['departure_time'])
                 cancel_time = int(row['cancel_time'])
                 passengers = int(row['passengers'])
