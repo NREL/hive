@@ -80,6 +80,33 @@ class TestGreedyDispatcher(TestCase):
                          station.geoid,
                          "Should have picked location equal to test_station")
 
+    def test_charge_vehicle_base(self):
+        dispatcher = GreedyDispatcher()
+
+        somewhere = '89283470d93ffff'
+        somewhere_else = '89283470d87ffff'
+
+        veh = GreedyDispatcherTestAssets.mock_vehicle(vehicle_id='test_veh', geoid=somewhere)\
+            .transition(VehicleState.RESERVE_BASE)
+        med_battery = EnergySource.build("", EnergyType.ELECTRIC, 50*unit.kilowatthour, soc=0.7)
+        veh_med_battery = veh.battery_swap(med_battery)
+        station = GreedyDispatcherTestAssets.mock_station(station_id='test_station', geoid=somewhere_else)
+        base = GreedyDispatcherTestAssets.mock_base(geoid=somewhere, station_id=station.id)
+        sim = GreedyDispatcherTestAssets.mock_empty_sim()\
+            .add_vehicle(veh_med_battery)\
+            .add_station(station)\
+            .add_base(base)
+
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
+
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
+        self.assertEqual(instructions[0].action,
+                         VehicleState.CHARGING_BASE,
+                         "Should have instructed vehicle to charge at base")
+        self.assertEqual(instructions[0].station_id,
+                         station.id,
+                         "Should have picked station_id equal to test_station.id")
+
     def test_idle_time_out(self):
         dispatcher = GreedyDispatcher()
 
@@ -150,8 +177,11 @@ class GreedyDispatcherTestAssets:
         return Station.build(station_id, geoid, {Charger.LEVEL_2: 5})
 
     @classmethod
-    def mock_base(cls, base_id="b1", geoid: GeoId = h3.geo_to_h3(39.73, -105, 15)) -> Base:
-        return Base.build(base_id, geoid, None, 5)
+    def mock_base(cls,
+                  base_id="b1",
+                  geoid: GeoId = h3.geo_to_h3(39.73, -105, 15),
+                  station_id: StationId = None) -> Base:
+        return Base.build(base_id, geoid, station_id, 5)
 
     @classmethod
     def mock_empty_sim(cls) -> SimulationState:

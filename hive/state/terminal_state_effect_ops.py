@@ -118,6 +118,20 @@ class TerminalStateEffectOps(SwitchCase):
 
         return sim_state
 
+    def _case_charging_base(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+        sim_state = arguments.simulation_state
+        vehicle_id = arguments.vehicle_id
+        vehicle = sim_state.vehicles[vehicle_id]
+
+        if vehicle.energy_source.is_at_ideal_energy_limit():
+            station = sim_state.stations[vehicle.station]
+            updated_station = station.return_charger(vehicle.plugged_in_charger)
+
+            updated_vehicle = vehicle.transition(VehicleState.RESERVE_BASE).unplug()
+            sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
+
+        return sim_state
+
     def _default(self, arguments: Arguments) -> Result:
         return arguments.simulation_state
 
@@ -131,4 +145,5 @@ class TerminalStateEffectOps(SwitchCase):
         VehicleState.DISPATCH_BASE: _case_dispatch_base,
         VehicleState.REPOSITIONING: _case_repositioning,
         VehicleState.CHARGING_STATION: _case_charging_station,
+        VehicleState.CHARGING_BASE: _case_charging_base,
     }

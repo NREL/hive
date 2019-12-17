@@ -565,6 +565,34 @@ class TestSimulationState(TestCase):
                          VehicleState.IDLE,
                          "Vehicle should have transitioned to IDLE")
 
+    def test_terminal_state_charging_base(self):
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
+        bas = SimulationStateTestAssets.mock_base(geoid=somewhere, station_id=sta.id)
+        high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
+                                          EnergyType.ELECTRIC,
+                                          capacity=50*unit.kilowatthour,
+                                          ideal_energy_limit=40*unit.kilowatthour,
+                                          soc=0.75)
+        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
+        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta).add_base(bas)
+
+        instruction = Instruction(veh.id,
+                                  VehicleState.CHARGING_BASE,
+                                  station_id=bas.station_id,
+                                  charger=Charger.DCFC)
+        sim = sim.apply_instruction(instruction)
+
+        self.assertIsNotNone(sim, "Vehicle should have set intention.")
+
+        for t in range(1000):
+            sim = sim.step_simulation()
+
+        fully_charged_veh = sim.vehicles[veh.id]
+
+        self.assertEqual(fully_charged_veh.vehicle_state,
+                         VehicleState.RESERVE_BASE,
+                         "Vehicle should have transitioned to RESERVE_BASE")
 
 class SimulationStateTestAssets:
     class MockPowertrain(Powertrain):
@@ -634,8 +662,11 @@ class SimulationStateTestAssets:
         return Station.build(station_id, geoid, {Charger.DCFC: 5})
 
     @classmethod
-    def mock_base(cls, base_id="b1", geoid: GeoId = h3.geo_to_h3(39.73, -105, 15)) -> Base:
-        return Base.build(base_id, geoid, None, 5)
+    def mock_base(cls,
+                  base_id="b1",
+                  geoid: GeoId = h3.geo_to_h3(39.73, -105, 15),
+                  station_id: StationId = None) -> Base:
+        return Base.build(base_id, geoid, station_id, 5)
 
     @classmethod
     def mock_empty_sim(cls) -> SimulationState:
