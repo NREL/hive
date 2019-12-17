@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import _csv
+import _io
 import csv
+import functools as ft
 from pathlib import Path
+from typing import Dict, TextIO
 
 from hive.model.request import Request
 from hive.state.simulation_state import SimulationState, RequestId
 from hive.state.update.simulation_update import SimulationUpdate
 from hive.state.update.simulation_update_result import SimulationUpdateResult
+from hive.state.update.update_requests import update_requests_from_iterator
+from hive.util.typealiases import SimTime
 
 
 class UpdateRequestsFromFile(SimulationUpdate):
@@ -24,59 +30,46 @@ class UpdateRequestsFromFile(SimulationUpdate):
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
         else:
-            self.requests = csv.DictReader(open(req_path, newline=''))
-            self.pointer = 0
+            self.file = open(req_path, newline='')
+            self.requests = csv.DictReader(self.file)
 
-    def update(self, simulation_state: SimulationState) -> SimulationUpdateResult:
+    def update(self, initial_sim_state: SimulationState) -> SimulationUpdateResult:
         """
         add requests from file when the simulation reaches the request's time
-        :param simulation_state: the current sim state
+        :param initial_sim_state: the current sim state
         :return: sim state plus new requests
         """
+        it = RequestFileIterator(self.requests, self.file, initial_sim_state.sim_time)
 
-        try:
-            row = next(self.requests)
-            req = Request.from_row(row, simulation_state.road_network)
-            if isinstance(req, IOError):
-                report = _failure_as_json(str(req), simulation_state)
-                return SimulationUpdateResult(simulation_state, (report, ))
-            else:
-                sim_updated = simulation_state.add_request(req)
-                if isinstance(sim_updated, Exception):
-                    report = _failure_as_json(str(sim_updated), simulation_state)
-                    return SimulationUpdateResult(simulation_state, (report,))
-                else:
-                    return SimulationUpdateResult(sim_updated)
-        except StopIteration:
-            report = _eof_as_json(simulation_state)
-            return SimulationUpdateResult(simulation_state, (report, ))
+        return update_requests_from_iterator(it, initial_sim_state)
 
 
-def _success_as_json(r_id: RequestId, sim: SimulationState) -> str:
-    """
-    stringified json report of a cancellation
-    :param r_id: request cancelled
-    :param sim: the state of the sim before cancellation occurs
-    :return: a stringified json report
-    """
-    dep_t = sim.requests[r_id].departure_time
-    return f"{{'report':'add_request','request_id':'{r_id}','departure_time':'{dep_t}}}"
+class RequestFileIterator:
+    def __init__(self, reader: _csv.reader, file: TextIO, sim_time: SimTime):
+        """
+        creates an iterator up to a departure time boundary, inclusive
+        :param reader: file reader
+        :param file: source file handler
+        :param sim_time: time we are scheduling up to and including
+        """
+        self.reader = reader
+        self.file = file
+        self.sim_time = sim_time
 
+    def __next__(self) -> Dict[str, str]:
+        """
+        attempts to grab the next row from the file
+        :return: a row, or, raises a StopIteration when end-of-file
+        :raises StopIteration: when file is empty, or, if all departures up to the present sim time have been found
+        """
+        pos_before_iter = self.file.tell()
+        row = next(self.reader)
+        row_time = int(row['departure_time'])
+        if row_time > self.sim_time:
+            self.file.seek(pos_before_iter)
+            raise StopIteration
+        else:
+            return row
 
-def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
-    """
-    stringified json report of a cancellation
-    :param error_msg: error message
-    :param sim: the state of the sim before cancellation occurs
-    :return: a stringified json report of an error
-    """
-    return f"{{'report':'add_request','sim_time':'{sim.sim_time}','error':'{error_msg}'}}"
-
-
-def _eof_as_json(sim: SimulationState) -> str:
-    """
-    notification of end-of-file
-    :param sim: the simulation state
-    :return: a stringified end-of-file report
-    """
-    return f"{{'report':'add_request','sim_time':'{sim.sim_time}','message':'EOF'}}"
+    def __iter__(self):
+        return self
