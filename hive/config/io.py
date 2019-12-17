@@ -21,6 +21,7 @@ def _setup_logger(name, log_file, level=logging.INFO):
 class IO(NamedTuple):
     working_directory: str
     vehicles_file: str
+    requests_file: str
     run_log: str
     vehicle_log: str
     request_log: str
@@ -32,7 +33,10 @@ class IO(NamedTuple):
 
     @classmethod
     def required_config(cls) -> Dict[str, type]:
-        return {'vehicles_file': str}
+        return {
+            'vehicles_file': str,
+            'requests_file': str
+        }
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, IO]:
@@ -58,6 +62,7 @@ class IO(NamedTuple):
         return IO(
             working_directory=d['working_directory'],
             vehicles_file=d['vehicles_file'],
+            requests_file=d['requests_file'],
             run_log=run_logger.name,
             vehicle_log=vehicle_logger.name,
             request_log=request_logger.name,

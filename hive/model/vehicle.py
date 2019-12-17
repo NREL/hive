@@ -152,7 +152,7 @@ class Vehicle(NamedTuple):
             updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: SimTime) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: s) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
         :param road_network:
