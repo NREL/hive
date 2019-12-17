@@ -14,6 +14,14 @@ from hive.state.update import SimulationUpdate
 class RunnerPayload(NamedTuple):
     s: SimulationState
     d: Dispatcher
+    r: Tuple[str, ...] = ()
+
+    def apply_fn(self, fn: SimulationUpdate) -> RunnerPayload:
+        result = fn.update(self.s)
+        return self._replace(
+            s=result.simulation_state,
+            r=self.r + result.reports
+        )
 
 
 class LocalSimulationRunner(NamedTuple):
@@ -24,7 +32,7 @@ class LocalSimulationRunner(NamedTuple):
             initial_dispatcher: Dispatcher,
             update_functions: Tuple[SimulationUpdate, ...],
             reporter: Reporter,
-            ) -> Tuple[SimulationState, Dispatcher]:
+            ) -> RunnerPayload:
         """
         steps through time, running a simulation, and producing a simulation result
         :param initial_simulation_state: the simulation state before the day has begun
@@ -47,14 +55,15 @@ class LocalSimulationRunner(NamedTuple):
             :param t: the (expected) time
             :return: the resulting sim state
             """
-            sim_after_updates = ft.reduce(
-                lambda s, fn: fn.update(s).simulation_state,
+            updated_payload = ft.reduce(
+                lambda acc, fn: acc.apply_fn(fn),
                 update_functions,
-                payload.s
+                payload
             )
-            updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(sim_after_updates, payload.d)
+            updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(updated_payload.s,
+                                                                                       updated_payload.d)
             reporter.report(updated_sim, instructions)
-            return RunnerPayload(updated_sim, updated_dispatcher)
+            return RunnerPayload(updated_sim, updated_dispatcher, updated_payload.r)
 
         final_payload = ft.reduce(
             _run_step,
@@ -62,5 +71,4 @@ class LocalSimulationRunner(NamedTuple):
             RunnerPayload(initial_simulation_state, initial_dispatcher)
         )
 
-        return final_payload.s, final_payload.d
-
+        return final_payload

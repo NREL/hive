@@ -37,17 +37,17 @@ class TestLocalSimulationRunner(TestCase):
         req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_resolution)
         update_requests = UpdateRequestsFromString(req)
 
-        result_sim, result_dis = runner.run(
+        result = runner.run(
             initial_simulation_state=initial_sim,
             initial_dispatcher=GreedyDispatcher(),
             update_functions=(CancelRequests(), update_requests),
             reporter=DetailedReporter(runner.env.config.io)
         )
 
-        at_destination = result_sim.at_geoid(req_destination)
+        at_destination = result.s.at_geoid(req_destination)
         self.assertIn('1', at_destination['vehicles'], "vehicle should have driven request to destination")
 
-        self.assertAlmostEqual(11.1 * unit.kilometer, result_sim.vehicles['1'].distance_traveled, places=1)
+        self.assertAlmostEqual(11.1 * unit.kilometer, result.s.vehicles['1'].distance_traveled, places=1)
 
 
 class TestLocalSimulationRunnerAssets:
