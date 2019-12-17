@@ -22,14 +22,14 @@ class TestTabularPowertrain(TestCase):
     def test_leaf_energy_cost_real_route(self):
         """
         the distance should be 3km;
-        the speed being 45kmph results in a lookup watts per km of ~0.57
-        so, the result should be around 0.0017 kilowatthour.
+        the speed being 45kmph results in a lookup watthours per km of ~102.5
+        so, the result should be around .308 kilowatthour.
         :return:
         """
         powertrain = build_powertrain("leaf")
         test_route = _TestAssets.mock_route()
         cost = powertrain.energy_cost(test_route)
-        self.assertAlmostEqual(cost.magnitude, 0.0017, places=1)
+        self.assertAlmostEqual(cost.magnitude, .308, places=1)
 
 
 class _TestAssets:
@@ -50,7 +50,7 @@ class _TestAssets:
     }
 
     property_links = {
-        # 45kmph with leaf model should be about .57 watts per km, or about 1.7 watthours for this trip
+        # 45kmph with leaf model should be about 102.5 watthours per km, or about 308 watthours for this trip
         "1": PropertyLink.build(links["1"], 45 * (unit.kilometer/unit.hour)),
         "2": PropertyLink.build(links["2"], 45 * (unit.kilometer/unit.hour)),
         "3": PropertyLink.build(links["3"], 45 * (unit.kilometer/unit.hour))
