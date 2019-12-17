@@ -13,7 +13,6 @@ from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.state.simulation_state import SimulationState
 from hive.util.exception import *
 from hive.util.typealiases import SimTime
-from hive.util.units import unit, s
 
 
 def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
@@ -52,7 +51,7 @@ def initial_simulation_state(
         powertrains: Tuple[Type[Powertrain], ...] = (),
         powercurves: Tuple[Type[Powercurve], ...] = (),
         start_time: SimTime = 0,
-        sim_timestep_duration_seconds: s = 1 * unit.seconds,
+        sim_timestep_duration_seconds: SimTime = 1,
         sim_h3_resolution: int = 15
 ) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
