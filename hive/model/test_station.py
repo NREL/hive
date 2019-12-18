@@ -3,7 +3,6 @@ from unittest import TestCase
 
 from h3 import h3
 
-from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.station import Station
 from hive.model.energy.charger import Charger
 
@@ -20,10 +19,10 @@ class TestStation(TestCase):
                  """
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        sim_h3_resolution = 15
+        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row, {}, road_network)
+        station = Station.from_row(row, {}, sim_h3_resolution)
 
         self.assertEqual(station.id, "s1")
         self.assertEqual(station.geoid, expected_geoid)
@@ -39,12 +38,12 @@ class TestStation(TestCase):
         reader = DictReader(source.split())
         row1 = next(reader)
         row2 = next(reader)
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        sim_h3_resolution = 15
+        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row1, {}, road_network)
+        station = Station.from_row(row1, {}, sim_h3_resolution)
         builder = {station.id: station}
-        station2 = Station.from_row(row2, builder, road_network)
+        station2 = Station.from_row(row2, builder, sim_h3_resolution)
 
         self.assertEqual(station2.id, "s1")
         self.assertEqual(station2.geoid, expected_geoid)
@@ -62,12 +61,12 @@ class TestStation(TestCase):
         reader = DictReader(source.split())
         row1 = next(reader)
         row2 = next(reader)
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        sim_h3_resolution = 15
+        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row1, {}, road_network)
+        station = Station.from_row(row1, {}, sim_h3_resolution)
         builder = {station.id: station}
-        station2 = Station.from_row(row2, builder, road_network)
+        station2 = Station.from_row(row2, builder, sim_h3_resolution)
 
         self.assertEqual(station2.id, "s1")
         self.assertEqual(station2.geoid, expected_geoid)

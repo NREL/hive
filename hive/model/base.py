@@ -27,11 +27,11 @@ class Base(NamedTuple):
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
-                 road_network: RoadNetwork) -> Union[IOError, Base]:
+                 sim_h3_resolution: int) -> Union[IOError, Base]:
         """
         takes a csv row and turns it into a Base
         :param row: a row as interpreted by csv.DictReader
-        :param road_network: the road network loaded for this simulation
+        :param sim_h3_resolution: the h3 resolution that events are experienced at
         :return: a Base, or an error
         """
         if 'base_id' not in row:
@@ -46,7 +46,7 @@ class Base(NamedTuple):
             base_id = row['base_id']
             try:
                 lat, lon = float(row['lat']), float(row['lon'])
-                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+                geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
                 stall_count = int(row['stall_count'])
 
                 # allow user to leave station_id blank or use the word "none" to signify no station at base

@@ -26,10 +26,10 @@ class TestBase(TestCase):
                     b1,37,122,10,s1"""
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        sim_h3_resolution = 15
+        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        base = Base.from_row(row, road_network)
+        base = Base.from_row(row, sim_h3_resolution)
 
         self.assertEqual(base.id, "b1")
         self.assertEqual(base.geoid, expected_geoid)
@@ -41,10 +41,10 @@ class TestBase(TestCase):
                     b1,37,122,10,"""
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        sim_h3_resolution = 15
+        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        base = Base.from_row(row, road_network)
+        base = Base.from_row(row, sim_h3_resolution)
 
         self.assertEqual(base.id, "b1")
         self.assertEqual(base.geoid, expected_geoid)
@@ -56,10 +56,10 @@ class TestBase(TestCase):
                     b1,37,122,10,none"""
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        sim_h3_resolution = 15
+        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        base = Base.from_row(row, road_network)
+        base = Base.from_row(row, sim_h3_resolution)
 
         self.assertEqual(base.id, "b1")
         self.assertEqual(base.geoid, expected_geoid)

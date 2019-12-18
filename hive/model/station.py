@@ -28,13 +28,13 @@ class Station(NamedTuple):
     @classmethod
     def from_row(cls, row: Dict[str, str],
                  builder: Dict[StationId, Station],
-                 road_network: RoadNetwork) -> Union[IOError, Station]:
+                 sim_h3_resolution: int) -> Union[IOError, Station]:
         """
         takes a csv row and turns it into a Station
         :param row: a row as interpreted by csv.DictReader
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
-        :param road_network: the road network loaded for this simulation
+        :param sim_h3_resolution: the h3 resolution that events are experienced at
         :return: a Station, or an error
         """
         if 'station_id' not in row:
@@ -51,7 +51,7 @@ class Station(NamedTuple):
             station_id = row['station_id']
             try:
                 lat, lon = float(row['lat']), float(row['lon'])
-                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+                geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
                 charger_type = Charger.from_string(row['charger_type'])
                 charger_count = int(row['charger_count'])
 
