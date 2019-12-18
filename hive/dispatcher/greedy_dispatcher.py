@@ -96,7 +96,7 @@ class GreedyDispatcher(Dispatcher):
             vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_full():
+            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
                 return True
             else:
                 return False
