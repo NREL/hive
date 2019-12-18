@@ -42,7 +42,7 @@ class GreedyDispatcher(Dispatcher):
                 if not nearest_station:
                     raise NotImplementedError('No stations found. Consider raising max_distance_km to higher threshold.')
                 elif not nearest_station.has_available_charger(Charger.DCFC):
-                    stations_to_consider = DictOps.remove_from_entity_dict(stations_to_consider, nearest_station.id)
+                    stations_to_consider = DictOps.remove_from_dict(stations_to_consider, nearest_station.id)
                 else:
                     break
 
@@ -53,7 +53,7 @@ class GreedyDispatcher(Dispatcher):
                                       charger=Charger.DCFC,
                                       )
             instructions.append(instruction)
-            vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
+            vehicles_to_consider = DictOps.remove_from_dict(vehicles_to_consider, veh.id)
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
             _valid_states = [VehicleState.IDLE,
@@ -78,7 +78,7 @@ class GreedyDispatcher(Dispatcher):
                                           location=request.origin,
                                           request_id=request.id)
                 instructions.append(instruction)
-                vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, nearest_vehicle.id)
+                vehicles_to_consider = DictOps.remove_from_dict(vehicles_to_consider, nearest_vehicle.id)
 
         stationary_vehicles = [v for v in vehicles_to_consider.values() if v.idle_time_s > self.MAX_IDLE_S]
         for veh in stationary_vehicles:
@@ -93,7 +93,7 @@ class GreedyDispatcher(Dispatcher):
                                       action=VehicleState.DISPATCH_BASE,
                                       location=nearest_base.geoid)
             instructions.append(instruction)
-            vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
+            vehicles_to_consider = DictOps.remove_from_dict(vehicles_to_consider, veh.id)
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
             if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
