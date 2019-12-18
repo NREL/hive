@@ -35,4 +35,4 @@ def _as_json(r_id: RequestId, sim: SimulationState) -> str:
     """
     dep_t = sim.requests[r_id].departure_time
     sim_t = sim.sim_time
-    return f"{{'report':'cancel_request','request_id':'{r_id}','departure_time':'{dep_t}','cancel_time':'{sim_t}'}}"
+    return f"{{\"report\":\"cancel_request\",\"request_id\":\"{r_id}\",\"departure_time\":\"{dep_t}\",\"cancel_time\":\"{sim_t}\"}}"

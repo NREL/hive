@@ -165,6 +165,11 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
 
+        if not traverse_result:
+            # TODO: Need to think about edge case where vehicle gets route where origin=destination.
+            no_route_veh = self.assign_route(tuple())
+            return no_route_veh
+
         experienced_route = traverse_result.experienced_route
 
         energy_used = power_train.energy_cost(experienced_route)
@@ -227,7 +232,7 @@ class Vehicle(NamedTuple):
         if not VehicleState.is_valid(vehicle_state):
             raise TypeError("Invalid vehicle state type.")
         elif self.vehicle_state == vehicle_state:
-            return True
+            return False
         elif self.has_passengers():
             return False
         else:

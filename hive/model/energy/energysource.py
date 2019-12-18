@@ -21,6 +21,7 @@ class EnergySource(NamedTuple):
     energy: kwh
     max_charge_acceptance_kw: kw
     charge_threshold: kwh = 0.001 * unit.kilowatthour
+    charge_epsilon: kwh = 0.001 * unit.kilowatthour
 
     @classmethod
     def build(cls,
@@ -76,20 +77,20 @@ class EnergySource(NamedTuple):
         return self.energy / self.capacity
 
     def is_at_ideal_energy_limit(self) -> bool:
-
         """
         True if the EnergySource is at ideal energy limit 
-        :return: bool
+        :return: True, if the energy level is equal to or greater than the ideal energy limit,
+        within some epsilon, considering that charging curves can prevent reaching this ideal
+        value.
         """
-        return self.energy >= self.ideal_energy_limit
-
+        return self.energy + self.charge_epsilon >= self.ideal_energy_limit
 
     def not_at_ideal_energy_limit(self) -> bool:
         """
         True if the EnergySource is not at ideal energy limit 
         :return: bool
         """
-        return self.energy < self.ideal_energy_limit
+        return not self.is_at_ideal_energy_limit()
 
     def is_full(self) -> bool:
         """

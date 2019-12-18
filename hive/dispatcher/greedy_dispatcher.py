@@ -28,15 +28,23 @@ class GreedyDispatcher(Dispatcher):
         instructions = []
 
         vehicles_to_consider = simulation_state.vehicles.copy()
+        stations_to_consider = simulation_state.stations.copy()
 
-        low_soc_vehicles = [v for v in vehicles_to_consider.values() if v.energy_source.soc <= self.LOW_SOC_TRESHOLD]
+        low_soc_vehicles = [v for v in vehicles_to_consider.values()\
+                            if v.energy_source.soc <= self.LOW_SOC_TRESHOLD\
+                            and v.vehicle_state != VehicleState.DISPATCH_STATION]
         for veh in low_soc_vehicles:
-            nearest_station = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
-                                                                  entities=simulation_state.stations,
-                                                                  entity_locations=simulation_state.s_locations,
-                                                                  )
-            if not nearest_station:
-                raise NotImplementedError('No stations found. Consider raising max_distance_km to higher threshold.')
+            for _ in range(len(simulation_state.stations)):
+                nearest_station = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
+                                                                      entities=stations_to_consider,
+                                                                      entity_locations=simulation_state.s_locations,
+                                                                      )
+                if not nearest_station:
+                    raise NotImplementedError('No stations found. Consider raising max_distance_km to higher threshold.')
+                elif not nearest_station.has_available_charger(Charger.DCFC):
+                    stations_to_consider = DictOps.remove_from_entity_dict(stations_to_consider, nearest_station.id)
+                else:
+                    break
 
             instruction = Instruction(vehicle_id=veh.id,
                                       action=VehicleState.DISPATCH_STATION,
@@ -88,7 +96,7 @@ class GreedyDispatcher(Dispatcher):
             vehicles_to_consider = DictOps.remove_from_entity_dict(vehicles_to_consider, veh.id)
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_full():
+            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
                 return True
             else:
                 return False
