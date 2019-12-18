@@ -26,6 +26,7 @@ def _build_vehicles():
         powercurve_id="leaf",
         energy_type=EnergyType.ELECTRIC,
         capacity=50 * unit.kilowatthours,
+        ideal_energy_limit=40 * unit.kilowatthour,
         soc=0.3,
     )
     for i in range(20):

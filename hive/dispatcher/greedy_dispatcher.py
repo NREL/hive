@@ -30,7 +30,9 @@ class GreedyDispatcher(Dispatcher):
         vehicles_to_consider = simulation_state.vehicles.copy()
         stations_to_consider = simulation_state.stations.copy()
 
-        low_soc_vehicles = [v for v in vehicles_to_consider.values() if v.energy_source.soc <= self.LOW_SOC_TRESHOLD]
+        low_soc_vehicles = [v for v in vehicles_to_consider.values()\
+                            if v.energy_source.soc <= self.LOW_SOC_TRESHOLD\
+                            and v.vehicle_state != VehicleState.DISPATCH_STATION]
         for veh in low_soc_vehicles:
             for _ in range(len(simulation_state.stations)):
                 nearest_station = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
