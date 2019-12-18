@@ -17,50 +17,60 @@ from hive.util.helpers import DictOps
 from hive.util.pattern import vehicle_regex
 from hive.util.units import unit, s, km
 from hive.util.exception import EntityError
-from hive.model.energy.powercurve import Powercurve
-from hive.model.energy.powertrain import Powertrain
+from hive.model.energy.powercurve import Powercurve, powercurve_models
+from hive.model.energy.powertrain import Powertrain, powertrain_models
 
 from h3 import h3
 
 
 class Vehicle(NamedTuple):
-    # fixed vehicle attributes
+    # user-defined attributes
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
     geoid: GeoId
     property_link: PropertyLink
+
+    # within-simulation attributes
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    idle_time_s: s = 0 * unit.seconds
-    # frozenmap implementation does not yet exist
-    # https://www.python.org/dev/peps/pep-0603/
-
     passengers: Dict[PassengerId, Passenger] = {}
-    plugged_in_charger: Optional[Charger] = None
-    station: Optional[StationId] = None
-    charger_intent: Optional[Charger] = None
+
     station_intent: Optional[StationId] = None
-    # todo: p_locations: Dict[GeoId, PassengerId] = {}
+    charger_intent: Optional[Charger] = None
+
+    station: Optional[StationId] = None
+    plugged_in_charger: Optional[Charger] = None
+
+    idle_time_s: s = 0 * unit.seconds
     distance_traveled: km = 0.0 * unit.kilometers
 
     @classmethod
-    def from_string(cls, string: str, road_network: RoadNetwork) -> Union[IOError, Vehicle]:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Union[IOError, Vehicle]:
         """
         reads a csv row from file to generate a Vehicle
 
-        :param string: a row of a .csv which matches hive.util.pattern.vehicle_regex.
+        :param row: a row of a .csv which matches hive.util.pattern.vehicle_regex.
         this string will be stripped of whitespace characters (no spaces allowed in names!)
         :param road_network: the road network, used to find the vehicle's location in the sim
         :return: a vehicle, or, an IOError if failure occurred.
         """
-        cleaned_string = string.replace(' ', '').replace('\t', '')
-        result = re.search(vehicle_regex, cleaned_string)
-        if result is None:
-            return IOError(f"row did not match expected vehicle format: '{cleaned_string}'")
-        elif result.group(4) not in powertrain_models.keys():
-            return IOError(f"invalid powertrain model for vehicle: '{result.group(4)}'")
+
+        if 'vehicle_id' not in row:
+            return IOError("cannot load a vehicle without a 'vehicle_id'")
+        elif 'powertrain_id' not in row:
+            return IOError("cannot load a vehicle without a 'powertrain_id'")
+        elif 'powercurve_id' not in row:
+            return IOError("cannot load a vehicle without a 'powercurve_id'")
+        elif 'powertrain_id' not in row:
+            return IOError("cannot load a vehicle without a 'powertrain_id'")
+        elif 'powertrain_id' not in row:
+            return IOError("cannot load a vehicle without a 'powertrain_id'")
+        elif 'powertrain_id' not in row:
+            return IOError("cannot load a vehicle without a 'powertrain_id'")
+        elif row['powertrain_id'] not in powertrain_models.keys():
+            return IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
         elif result.group(5) not in powercurve_models.keys():
             return IOError(f"invalid energycurve model for vehicle: '{result.group(5)}'")
         else:

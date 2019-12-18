@@ -221,7 +221,7 @@ class TestVehicle(TestCase):
         """
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "test_id,37 ,122,leaf      ,leaf       ,150            ,0.5"
-        vehicle = Vehicle.from_string(row, self.mock_network())
+        vehicle = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(vehicle, Vehicle, "result of parse should be a vehicle")
         self.assertEquals(vehicle.id, "test_id")
         self.assertEquals(vehicle.geoid, h3.geo_to_h3(37, 122, self.mock_network().sim_h3_resolution))
@@ -236,42 +236,42 @@ class TestVehicle(TestCase):
         """
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "bad-id$,37 ,122,leaf      ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
+        result = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(result, IOError, "the id should cause failure")
 
     @skip("")
     def test_from_string_bad_lat(self):
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "test_id,a1 ,122,leaf      ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
+        result = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(result, IOError, "the lat should cause failure")
 
     @skip("")
     def test_from_string_bad_lon(self):
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "test_id,37 ,1B$,leaf      ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
+        result = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(result, IOError, "the lon should cause failure")
 
     @skip("")
     def test_from_string_bad_powertrain(self):
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "test_id,37 ,122,no-good   ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
+        result = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(result, IOError, "the powertrain should cause failure")
 
     @skip("vehicles don't have energycurves yet")
     def test_from_string_bad_energycurve(self):
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "test_id,37 ,122,leaf      ,beef       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
+        result = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(result, IOError, "the energycurve should cause failure")
 
     @skip("")
     def test_from_string_bad_initial_soc(self):
         #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
         row = "test_id,37 ,122,leaf      ,leaf       ,150            ,1.5"
-        result = Vehicle.from_string(row, self.mock_network())
+        result = Vehicle.from_row(row, self.mock_network())
         self.assertIsInstance(result, IOError, "the initial_soc should cause failure")
 
     @classmethod
