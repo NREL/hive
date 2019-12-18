@@ -6,6 +6,7 @@ from typing import NamedTuple, Dict, Optional, Union
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
+from hive.model.energy.energytype import EnergyType
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.vehiclestate import VehicleState
@@ -14,81 +15,108 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.pattern import vehicle_regex
 from hive.util.units import unit, s, km
 from hive.util.exception import EntityError
-from hive.model.energy.powercurve import Powercurve
-from hive.model.energy.powertrain import Powertrain
+from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
+from hive.model.energy.powertrain import Powertrain, powertrain_models
 
 from h3 import h3
 
 
 class Vehicle(NamedTuple):
-    # fixed vehicle attributes
+    # user-defined attributes
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
     geoid: GeoId
     property_link: PropertyLink
+
+    # within-simulation attributes
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    idle_time_s: s = 0 * unit.seconds
-    # frozenmap implementation does not yet exist
-    # https://www.python.org/dev/peps/pep-0603/
-
     passengers: Dict[PassengerId, Passenger] = {}
-    plugged_in_charger: Optional[Charger] = None
-    station: Optional[StationId] = None
-    charger_intent: Optional[Charger] = None
+
     station_intent: Optional[StationId] = None
-    # todo: p_locations: Dict[GeoId, PassengerId] = {}
+    charger_intent: Optional[Charger] = None
+
+    station: Optional[StationId] = None
+    plugged_in_charger: Optional[Charger] = None
+
+    idle_time_s: s = 0 * unit.seconds
     distance_traveled: km = 0.0 * unit.kilometers
 
     @classmethod
-    def from_string(cls, string: str, road_network: RoadNetwork) -> Union[IOError, Vehicle]:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Union[IOError, Vehicle]:
         """
         reads a csv row from file to generate a Vehicle
 
-        :param string: a row of a .csv which matches hive.util.pattern.vehicle_regex.
+        :param row: a row of a .csv which matches hive.util.pattern.vehicle_regex.
         this string will be stripped of whitespace characters (no spaces allowed in names!)
         :param road_network: the road network, used to find the vehicle's location in the sim
         :return: a vehicle, or, an IOError if failure occurred.
         """
-        cleaned_string = string.replace(' ', '').replace('\t', '')
-        result = re.search(vehicle_regex, cleaned_string)
-        if result is None:
-            return IOError(f"row did not match expected vehicle format: '{cleaned_string}'")
-        elif result.group(4) not in powertrain_models.keys():
-            return IOError(f"invalid powertrain model for vehicle: '{result.group(4)}'")
-        elif result.group(5) not in powercurve_models.keys():
-            return IOError(f"invalid energycurve model for vehicle: '{result.group(5)}'")
+
+        if 'vehicle_id' not in row:
+            return IOError("cannot load a vehicle without a 'vehicle_id'")
+        elif 'lat' not in row:
+            return IOError("cannot load a vehicle without a 'lat'")
+        elif 'lon' not in row:
+            return IOError("cannot load a vehicle without a 'lon'")
+        elif 'powertrain_id' not in row:
+            return IOError("cannot load a vehicle without a 'powertrain_id'")
+        elif 'powercurve_id' not in row:
+            return IOError("cannot load a vehicle without a 'powercurve_id'")
+        elif 'capacity' not in row:
+            return IOError("cannot load a vehicle without a 'capacity'")
+        elif 'ideal_energy_limit' not in row:
+            return IOError("cannot load a vehicle without a 'ideal_energy_limit'")
+        elif 'max_charge_acceptance' not in row:
+            return IOError("cannot load a vehicle without a 'max_charge_acceptance'")
+        elif 'initial_soc' not in row:
+            return IOError("cannot load a vehicle without a 'initial_soc'")
+        elif row['powertrain_id'] not in powertrain_models.keys():
+            return IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
+        elif row['powercurve_id'] not in powercurve_models.keys():
+            return IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
         else:
             try:
-                vehicle_id = result.group(1)
-                lat = float(result.group(2))
-                lon = float(result.group(3))
-                powertrain_id = result.group(4)
-                energycurve_id = result.group(5)  # todo: add after issue #102 completed
-                capacity = float(result.group(6))
-                initial_soc = float(result.group(7))
+                vehicle_id = row['vehicle_id']
+                lat = float(row['lat'])
+                lon = float(row['lon'])
+                powertrain_id = row['powertrain_id']
+                powercurve_id = row['powercurve_id']
+                energy_type = powercurve_energy_types[powercurve_id]
+                capacity = float(row['capacity']) * unit.kilowatthours
+                iel_str = row['ideal_energy_limit']
+                ideal_energy_limit = float(iel_str) * unit.kilowatthours if len(iel_str) > 0 else None
+                max_charge_acceptance = float(row['max_charge_acceptance']) * unit.kilowatt
+                initial_soc = float(row['initial_soc'])
+
                 if not 0.0 <= initial_soc <= 1.0:
                     return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
-                energy_type = powercurve_energy_types.get(result.group(5))  # todo: where is powercurve_energy_types?
-                energy_source = EnergySource.build(energy_type, capacity, initial_soc)
+                energy_source = EnergySource.build(powercurve_id,
+                                                   energy_type,
+                                                   capacity,
+                                                   ideal_energy_limit,
+                                                   max_charge_acceptance,
+                                                   initial_soc)
+
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.property_link_from_geoid(geoid)
 
                 return Vehicle(
                     id=vehicle_id,
                     powertrain_id=powertrain_id,
+                    powercurve_id=powercurve_id,
                     energy_source=energy_source,
                     geoid=geoid,
                     property_link=start_link,
                 )
+
             except ValueError:
-                return IOError(f"a numeric value could not be parsed from {cleaned_string}")
+                return IOError(f"a numeric value could not be parsed from {row}")
 
     def has_passengers(self) -> bool:
         return len(self.passengers) > 0

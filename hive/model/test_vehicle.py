@@ -1,3 +1,4 @@
+from csv import DictReader
 from unittest import TestCase, skip
 
 from typing import Optional
@@ -123,12 +124,10 @@ class TestVehicle(TestCase):
                          "vehicle position should not be changed")
 
     def test_can_transition_good(self):
-        mock_request = TestVehicle.mock_request()
         idle_veh = TestVehicle.mock_vehicle()
-        veh_serving_trip = idle_veh.transition(VehicleState.SERVICING_TRIP)
-        veh_w_pass = veh_serving_trip.add_passengers(mock_request.passengers)
+        veh_serving_trip = idle_veh.transition(VehicleState.IDLE)
 
-        veh_can_trans = veh_w_pass.can_transition(VehicleState.SERVICING_TRIP)
+        veh_can_trans = veh_serving_trip.can_transition(VehicleState.DISPATCH_TRIP)
 
         self.assertEqual(veh_can_trans, True)
 
@@ -214,65 +213,58 @@ class TestVehicle(TestCase):
 
         self.assertEqual(dispatch_vehicle.idle_time_s, 0 * unit.seconds, "Should have reset idle time.")
 
-    @skip("underlying functionality changing to Dictionary-based loader, remove and replace")
-    def test_from_string_good_row(self):
-        """
-        should take a row of data, ignoring spaces, and return a vehicle
-        """
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "test_id,37 ,122,leaf      ,leaf       ,150            ,0.5"
-        vehicle = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(vehicle, Vehicle, "result of parse should be a vehicle")
-        self.assertEquals(vehicle.id, "test_id")
-        self.assertEquals(vehicle.geoid, h3.geo_to_h3(37, 122, self.mock_network().sim_h3_resolution))
-        self.assertEquals(vehicle.energy_source.soc, 0.5)
-        self.assertEquals(vehicle.energy_source.capacity, 150)
-        self.assertEquals(vehicle.powertrain_id, "leaf")
+    def test_from_row(self):
+        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
+                    v1,37,122,leaf,leaf,50.0,40,50,1.0"""
 
-    @skip("")
-    def test_from_string_bad_id(self):
-        """
-        vehicle ids must be alphanumeric + underscore only
-        """
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "bad-id$,37 ,122,leaf      ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(result, IOError, "the id should cause failure")
+        row = next(DictReader(source.split()))
+        road_network = HaversineRoadNetwork()
+        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
 
-    @skip("")
-    def test_from_string_bad_lat(self):
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "test_id,a1 ,122,leaf      ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(result, IOError, "the lat should cause failure")
+        vehicle = Vehicle.from_row(row, road_network)
 
-    @skip("")
-    def test_from_string_bad_lon(self):
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "test_id,37 ,1B$,leaf      ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(result, IOError, "the lon should cause failure")
+        self.assertEqual(vehicle.id, "v1")
+        self.assertEqual(vehicle.geoid, expected_geoid)
+        self.assertEqual(vehicle.powercurve_id, 'leaf')
+        self.assertEqual(vehicle.powertrain_id, 'leaf')
+        self.assertEqual(vehicle.energy_source.powercurve_id, 'leaf')
+        self.assertEqual(vehicle.energy_source.ideal_energy_limit, 40.0 * unit.kilowatthours)
+        self.assertEqual(vehicle.energy_source.energy, 50.0 * unit.kilowatthours)
+        self.assertEqual(vehicle.energy_source.capacity, 50.0 * unit.kilowatthours)
+        self.assertEqual(vehicle.energy_source.energy_type, EnergyType.ELECTRIC)
+        self.assertEqual(vehicle.energy_source.max_charge_acceptance_kw, 50.0 * unit.kilowatt)
+        self.assertEqual(len(vehicle.passengers), 0)
+        self.assertEqual(vehicle.property_link.start, expected_geoid)
+        self.assertEqual(vehicle.vehicle_state, VehicleState.IDLE)
+        self.assertEqual(vehicle.distance_traveled, 0)
+        self.assertEqual(vehicle.idle_time_s, 0)
+        self.assertEqual(vehicle.route, ())
+        self.assertEqual(vehicle.station, None)
+        self.assertEqual(vehicle.station_intent, None)
+        self.assertEqual(vehicle.plugged_in_charger, None)
+        self.assertEqual(vehicle.charger_intent, None)
 
-    @skip("")
-    def test_from_string_bad_powertrain(self):
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "test_id,37 ,122,no-good   ,leaf       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(result, IOError, "the powertrain should cause failure")
+    def test_from_row_bad_powertrain_id(self):
+        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
+                    v1,37,122,beef!@#$,leaf,50.0,40,50,1.0"""
 
-    @skip("vehicles don't have energycurves yet")
-    def test_from_string_bad_energycurve(self):
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "test_id,37 ,122,leaf      ,beef       ,150            ,0.5"
-        result = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(result, IOError, "the energycurve should cause failure")
+        row = next(DictReader(source.split()))
+        road_network = HaversineRoadNetwork()
 
-    @skip("")
-    def test_from_string_bad_initial_soc(self):
-        #      id     ,lat,lon,powertrain,energycurve,energy_capacity,initial_soc
-        row = "test_id,37 ,122,leaf      ,leaf       ,150            ,1.5"
-        result = Vehicle.from_string(row, self.mock_network())
-        self.assertIsInstance(result, IOError, "the initial_soc should cause failure")
+        vehicle = Vehicle.from_row(row, road_network)
+
+        self.assertIsInstance(vehicle, IOError)
+
+    def test_from_row_bad_powercurve_id(self):
+        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
+                    v1,37,122,leaf,asdjfkl;asdfjkl;,50.0,40,50,1.0"""
+
+        row = next(DictReader(source.split()))
+        road_network = HaversineRoadNetwork()
+
+        vehicle = Vehicle.from_row(row, road_network)
+
+        self.assertIsInstance(vehicle, IOError)
 
     @classmethod
     def mock_powertrain(cls) -> Powertrain:
