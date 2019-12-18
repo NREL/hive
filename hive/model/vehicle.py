@@ -112,7 +112,7 @@ class Vehicle(NamedTuple):
     def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
         if passenger_id not in self.passengers:
             return self
-        updated_passengers = DictOps.remove_from_entity_dict(self.passengers, passenger_id)
+        updated_passengers = DictOps.remove_from_dict(self.passengers, passenger_id)
         return self._replace(passengers=updated_passengers)
 
     def __repr__(self) -> str:

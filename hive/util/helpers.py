@@ -206,12 +206,13 @@ class TupleOps:
 
 
 class DictOps:
-    T = TypeVar('T')
+    K = TypeVar('K')
+    V = TypeVar('V')
 
     @classmethod
-    def add_to_entity_dict(cls, xs: Dict[str, T], obj_id: str, obj: T) -> Dict[str, T]:
+    def add_to_dict(cls, xs: Dict[K, V], obj_id: K, obj: V) -> Dict[K, V]:
         """
-        updates Dicts that contain entities by id
+        updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
         :param xs:
         :param obj_id:
@@ -223,10 +224,24 @@ class DictOps:
         return updated_dict
 
     @classmethod
+    def remove_from_dict(cls, xs: Dict[K, V], obj_id: K) -> Dict[K, V]:
+        """
+        updates Dicts for arbitrary keys and values
+        performs a shallow copy and update, treating Dict as an immutable hash table
+        :param xs:
+        :param obj_id:
+        :param obj:
+        :return:
+        """
+        updated_dict = copy(xs)
+        del updated_dict[obj_id]
+        return updated_dict
+
+    @classmethod
     def add_to_location_dict(cls,
-                             xs: Dict[str, Tuple[T, ...]],
+                             xs: Dict[str, Tuple[V, ...]],
                              obj_geoid: str,
-                             obj_id: str) -> Dict[str, Tuple[T, ...]]:
+                             obj_id: str) -> Dict[str, Tuple[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -242,24 +257,10 @@ class DictOps:
         return updated_dict
 
     @classmethod
-    def remove_from_entity_dict(cls, xs: Dict[str, T], obj_id: str) -> Dict[str, T]:
-        """
-        updates Dicts that contain entities by id
-        performs a shallow copy and update, treating Dict as an immutable hash table
-        :param xs:
-        :param obj_id:
-        :param obj:
-        :return:
-        """
-        updated_dict = copy(xs)
-        del updated_dict[obj_id]
-        return updated_dict
-
-    @classmethod
     def remove_from_location_dict(cls,
-                                  xs: Dict[str, Tuple[T, ...]],
+                                  xs: Dict[str, Tuple[V, ...]],
                                   obj_geoid: str,
-                                  obj_id: str) -> Dict[str, Tuple[T, ...]]:
+                                  obj_id: str) -> Dict[str, Tuple[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table

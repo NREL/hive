@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, Dict, Union
 
+from h3 import h3
+
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -18,9 +21,47 @@ class Base(NamedTuple):
               id: BaseId,
               geoid: GeoId,
               station_id: Optional[StationId],
-              total_stalls: int
+              stall_count: int
               ):
-        return Base(id, geoid, total_stalls, total_stalls, station_id)
+        return Base(id, geoid, stall_count, stall_count, station_id)
+
+    @classmethod
+    def from_row(cls, row: Dict[str, str],
+                 road_network: RoadNetwork) -> Union[IOError, Base]:
+        """
+        takes a csv row and turns it into a Base
+        :param row: a row as interpreted by csv.DictReader
+        :param road_network: the road network loaded for this simulation
+        :return: a Base, or an error
+        """
+        if 'base_id' not in row:
+            return IOError("cannot load a base without a 'base_id'")
+        elif 'lat' not in row:
+            return IOError("cannot load a base without an 'lat' value")
+        elif 'lon' not in row:
+            return IOError("cannot load a base without an 'lon' value")
+        elif 'stall_count' not in row:
+            return IOError("cannot load a base without a 'stall_count' value")
+        else:
+            base_id = row['base_id']
+            try:
+                lat, lon = float(row['lat']), float(row['lon'])
+                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+                stall_count = int(row['stall_count'])
+
+                # allow user to leave station_id blank or use the word "none" to signify no station at base
+                station_id_name = row['station_id'] if len(row['station_id']) > 0 else "none"
+                station_id = None if station_id_name.lower() == "none" else station_id_name
+
+                return Base.build(
+                    id=base_id,
+                    geoid=geoid,
+                    station_id=station_id,
+                    stall_count=stall_count
+                )
+
+            except ValueError:
+                return IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
     def has_available_stall(self) -> bool:
         if self.available_stalls > 0:

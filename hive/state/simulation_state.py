@@ -76,7 +76,7 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"destination {request.destination} not within entire road network")
         else:
             return self._replace(
-                requests=DictOps.add_to_entity_dict(self.requests, request.id, request),
+                requests=DictOps.add_to_dict(self.requests, request.id, request),
                 r_locations=DictOps.add_to_location_dict(self.r_locations, request.origin, request.id)
             )
 
@@ -95,7 +95,7 @@ class SimulationState(NamedTuple):
         else:
             request = self.requests[request_id]
             return self._replace(
-                requests=DictOps.remove_from_entity_dict(self.requests, request.id),
+                requests=DictOps.remove_from_dict(self.requests, request.id),
                 r_locations=DictOps.remove_from_location_dict(self.r_locations, request.origin, request.id)
             )
 
@@ -114,7 +114,7 @@ class SimulationState(NamedTuple):
 
             if old_request.origin == updated_request.origin:
                 return self._replace(
-                    requests=DictOps.add_to_entity_dict(self.requests, updated_request.id, updated_request)
+                    requests=DictOps.add_to_dict(self.requests, updated_request.id, updated_request)
                 )
             else:
 
@@ -127,7 +127,7 @@ class SimulationState(NamedTuple):
                                                                    updated_request.id)
 
                 return self._replace(
-                    requests=DictOps.add_to_entity_dict(self.requests, updated_request.id, updated_request),
+                    requests=DictOps.add_to_dict(self.requests, updated_request.id, updated_request),
                     r_locations=r_locations_updated
                 )
 
@@ -143,7 +143,7 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
         else:
             return self._replace(
-                vehicles=DictOps.add_to_entity_dict(self.vehicles, vehicle.id, vehicle),
+                vehicles=DictOps.add_to_dict(self.vehicles, vehicle.id, vehicle),
                 v_locations=DictOps.add_to_location_dict(self.v_locations, vehicle.geoid, vehicle.id)
             )
 
@@ -163,7 +163,7 @@ class SimulationState(NamedTuple):
 
             if old_vehicle.geoid == updated_vehicle.geoid:
                 return self._replace(
-                    vehicles=DictOps.add_to_entity_dict(self.vehicles, updated_vehicle.id, updated_vehicle)
+                    vehicles=DictOps.add_to_dict(self.vehicles, updated_vehicle.id, updated_vehicle)
                 )
             else:
 
@@ -176,7 +176,7 @@ class SimulationState(NamedTuple):
                                                                    updated_vehicle.id)
 
                 return self._replace(
-                    vehicles=DictOps.add_to_entity_dict(self.vehicles, updated_vehicle.id, updated_vehicle),
+                    vehicles=DictOps.add_to_dict(self.vehicles, updated_vehicle.id, updated_vehicle),
                     v_locations=v_locations_updated
                 )
 
@@ -262,7 +262,7 @@ class SimulationState(NamedTuple):
             vehicle = self.vehicles[vehicle_id]
 
             return self._replace(
-                vehicles=DictOps.remove_from_entity_dict(self.vehicles, vehicle_id),
+                vehicles=DictOps.remove_from_dict(self.vehicles, vehicle_id),
                 v_locations=DictOps.remove_from_location_dict(self.v_locations, vehicle.geoid, vehicle_id)
             )
 
@@ -297,7 +297,7 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
         else:
             return self._replace(
-                stations=DictOps.add_to_entity_dict(self.stations, station.id, station),
+                stations=DictOps.add_to_dict(self.stations, station.id, station),
                 s_locations=DictOps.add_to_location_dict(self.s_locations, station.geoid, station.id)
             )
 
@@ -315,7 +315,7 @@ class SimulationState(NamedTuple):
             station = self.stations[station_id]
 
             return self._replace(
-                stations=DictOps.remove_from_entity_dict(self.stations, station_id),
+                stations=DictOps.remove_from_dict(self.stations, station_id),
                 s_locations=DictOps.remove_from_location_dict(self.s_locations, station.geoid, station_id)
             )
 
@@ -329,7 +329,7 @@ class SimulationState(NamedTuple):
             return TypeError(f"sim.update_station requires a station but received {type(updated_station)}")
         else:
             return self._replace(
-                stations=DictOps.add_to_entity_dict(self.stations, updated_station.id, updated_station)
+                stations=DictOps.add_to_dict(self.stations, updated_station.id, updated_station)
             )
 
     def add_base(self, base: Base) -> Union[Exception, SimulationState]:
@@ -344,7 +344,7 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"cannot add base {base.id} to sim: not within road network geofence")
         else:
             return self._replace(
-                bases=DictOps.add_to_entity_dict(self.bases, base.id, base),
+                bases=DictOps.add_to_dict(self.bases, base.id, base),
                 b_locations=DictOps.add_to_location_dict(self.b_locations, base.geoid, base.id)
             )
 
@@ -362,7 +362,7 @@ class SimulationState(NamedTuple):
             base = self.bases[base_id]
 
             return self._replace(
-                bases=DictOps.remove_from_entity_dict(self.bases, base_id),
+                bases=DictOps.remove_from_dict(self.bases, base_id),
                 b_locations=DictOps.remove_from_location_dict(self.b_locations, base.geoid, base_id)
             )
 
@@ -376,7 +376,7 @@ class SimulationState(NamedTuple):
             return TypeError(f"sim.update_base requires a base but received {type(updated_base)}")
         else:
             return self._replace(
-                bases=DictOps.add_to_entity_dict(self.bases, updated_base.id, updated_base)
+                bases=DictOps.add_to_dict(self.bases, updated_base.id, updated_base)
             )
 
     def add_powertrain(self, powertrain: Powertrain) -> Union[Exception, SimulationState]:
@@ -389,7 +389,7 @@ class SimulationState(NamedTuple):
             return TypeError(f"sim.add_base requires a base but received {type(powertrain)}")
         else:
             return self._replace(
-                powertrains=DictOps.add_to_entity_dict(self.powertrains, powertrain.get_id(), powertrain),
+                powertrains=DictOps.add_to_dict(self.powertrains, powertrain.get_id(), powertrain),
             )
 
     def add_powercurve(self, powercurve: Powercurve) -> Union[Exception, SimulationState]:
@@ -402,7 +402,7 @@ class SimulationState(NamedTuple):
             return TypeError(f"sim.add_base requires a base but received {type(powercurve)}")
         else:
             return self._replace(
-                powercurves=DictOps.add_to_entity_dict(self.powercurves, powercurve.get_id(), powercurve),
+                powercurves=DictOps.add_to_dict(self.powercurves, powercurve.get_id(), powercurve),
             )
 
     def update_road_network(self, sim_time: SimTime) -> SimulationState:

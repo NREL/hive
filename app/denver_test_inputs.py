@@ -46,13 +46,13 @@ def _build_vehicles():
 def _build_stations():
     station_1 = Station.build(id="s1",
                               geoid=_station_1_geoid,
-                              total_chargers={Charger.DCFC: 10})
+                              chargers={Charger.DCFC: 10})
     station_2 = Station.build(id="s2",
                               geoid=_station_2_geoid,
-                              total_chargers={Charger.DCFC: 10})
+                              chargers={Charger.DCFC: 10})
     base_station = Station.build(id="bs1",
                                  geoid=_base_geoid,
-                                 total_chargers={Charger.LEVEL_2: 20})
+                                 chargers={Charger.LEVEL_2: 20})
     return (station_1, station_2, base_station)
 
 
@@ -60,7 +60,7 @@ def _build_bases():
     base = Base.build(id="b1",
                       geoid=_base_geoid,
                       station_id="bs1",
-                      total_stalls=20)
+                      stall_count=20)
     return (base,)
 
 
