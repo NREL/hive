@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.util.test_h3_ops &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.util.test_h3_ops</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.link</span> <span class="kn">import</span> <span class="n">Link</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.property_link</span> <span class="kn">import</span> <span class="n">PropertyLink</span>
+<span class="kn">from</span> <span class="nn">hive.util.helpers</span> <span class="kn">import</span> <span class="n">H3Ops</span>
+<span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span>
+
+
+<div class="viewcode-block" id="TestH3Ops"><a class="viewcode-back" href="../../../reference/hive.util.html#hive.util.test_h3_ops.TestH3Ops">[docs]</a><span class="k">class</span> <span class="nc">TestH3Ops</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestH3Ops.test_point_along_link"><a class="viewcode-back" href="../../../reference/hive.util.html#hive.util.test_h3_ops.TestH3Ops.test_point_along_link">[docs]</a>    <span class="k">def</span> <span class="nf">test_point_along_link</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># endpoints are about 1km apart</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mi">37</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">37.008994</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+
+        <span class="c1"># create links with 1km speed</span>
+        <span class="n">kmph</span> <span class="o">=</span> <span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span><span class="o">/</span><span class="n">unit</span><span class="o">.</span><span class="n">hours</span><span class="p">)</span>
+        <span class="n">fwd_link</span> <span class="o">=</span> <span class="n">PropertyLink</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">Link</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="mi">1</span><span class="o">*</span><span class="n">kmph</span><span class="p">)</span>
+        <span class="n">bwd_link</span> <span class="o">=</span> <span class="n">PropertyLink</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">Link</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">start</span><span class="p">),</span> <span class="mi">1</span><span class="o">*</span><span class="n">kmph</span><span class="p">)</span>
+
+        <span class="c1"># test moving forward and backward, each by a half-unit of time</span>
+        <span class="n">fwd_result</span> <span class="o">=</span> <span class="n">H3Ops</span><span class="o">.</span><span class="n">point_along_link</span><span class="p">(</span><span class="n">fwd_link</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+        <span class="n">bwd_result</span> <span class="o">=</span> <span class="n">H3Ops</span><span class="o">.</span><span class="n">point_along_link</span><span class="p">(</span><span class="n">bwd_link</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+
+        <span class="c1"># check that the point is half-way</span>
+        <span class="n">fwd_lat</span><span class="p">,</span> <span class="n">fwd_lon</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">h3_to_geo</span><span class="p">(</span><span class="n">fwd_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">fwd_lat</span><span class="p">,</span> <span class="mf">37.004</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">fwd_lon</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">bwd_lat</span><span class="p">,</span> <span class="n">bwd_lon</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">h3_to_geo</span><span class="p">(</span><span class="n">bwd_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">bwd_lat</span><span class="p">,</span> <span class="mf">37.004</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">bwd_lon</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestH3Ops.test_nearest_entity_point_to_point"><a class="viewcode-back" href="../../../reference/hive.util.html#hive.util.test_h3_ops.TestH3Ops.test_nearest_entity_point_to_point">[docs]</a>    <span class="k">def</span> <span class="nf">test_nearest_entity_point_to_point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">somewhere</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.748971</span><span class="p">,</span> <span class="o">-</span><span class="mf">104.992323</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="n">close_to_somewhere</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.753600</span><span class="p">,</span> <span class="o">-</span><span class="mf">104.993369</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="n">far_from_somewhere</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.728882</span><span class="p">,</span> <span class="o">-</span><span class="mf">105.002792</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+        <span class="n">entity_locations</span> <span class="o">=</span> <span class="p">{</span><span class="n">close_to_somewhere</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">),</span> <span class="n">far_from_somewhere</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">)}</span>
+
+        <span class="n">nearest_entity</span> <span class="o">=</span> <span class="n">H3Ops</span><span class="o">.</span><span class="n">nearest_entity_point_to_point</span><span class="p">(</span><span class="n">somewhere</span><span class="p">,</span> <span class="n">entities</span><span class="p">,</span> <span class="n">entity_locations</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">nearest_entity</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;should have returned 1&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

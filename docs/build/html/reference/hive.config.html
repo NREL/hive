@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.config package &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hive.dispatcher package" href="hive.dispatcher.html" />
+    <link rel="prev" title="hive package" href="hive.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.dispatcher.html" title="hive.dispatcher package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hive.html" title="hive package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" accesskey="U">hive package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hive-config-package">
+<h1>hive.config package<a class="headerlink" href="#hive-config-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.config.config_builder">
+<span id="hive-config-config-builder-module"></span><h2>hive.config.config_builder module<a class="headerlink" href="#module-hive.config.config_builder" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.config.config_builder.ConfigBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">hive.config.config_builder.</code><code class="sig-name descname">ConfigBuilder</code><a class="reference internal" href="../_modules/hive/config/config_builder.html#ConfigBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.config_builder.ConfigBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hive.config.config_builder.ConfigBuilder.T">
+<code class="sig-name descname">T</code><em class="property"> = ~T</em><a class="headerlink" href="#hive.config.config_builder.ConfigBuilder.T" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.config_builder.ConfigBuilder.build">
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">default_config: Dict, required_config: Dict[str, type], config_constructor: Callable[[Dict], Union[Exception, T]], config: Dict = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, T]<a class="reference internal" href="../_modules/hive/config/config_builder.html#ConfigBuilder.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.config_builder.ConfigBuilder.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>constructs a Config from a configuration Dict
+:param default_config: a dictionary containing default config values
+:param required_config: a dictionary containing required keys and their expected types
+:param config_constructor: a function that takes a dict and builds a Config object
+:param config: the Dict containing attributes to load for this Config
+:return: a Config, or, an error</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.config.hive_config">
+<span id="hive-config-hive-config-module"></span><h2>hive.config.hive_config module<a class="headerlink" href="#module-hive.config.hive_config" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.config.hive_config.HiveConfig">
+<em class="property">class </em><code class="sig-prename descclassname">hive.config.hive_config.</code><code class="sig-name descname">HiveConfig</code><span class="sig-paren">(</span><em class="sig-param">io</em>, <em class="sig-param">sim</em>, <em class="sig-param">network</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.config.hive_config.HiveConfig.io">
+<code class="sig-name descname">io</code><a class="headerlink" href="#hive.config.hive_config.HiveConfig.io" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.hive_config.HiveConfig.sim">
+<code class="sig-name descname">sim</code><a class="headerlink" href="#hive.config.hive_config.HiveConfig.sim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.hive_config.HiveConfig.network">
+<code class="sig-name descname">network</code><a class="headerlink" href="#hive.config.hive_config.HiveConfig.network" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.hive_config.HiveConfig.build">
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.hive_config.HiveConfig]<a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig.build" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.hive_config.HiveConfig.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.hive_config.HiveConfig]<a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.config.io">
+<span id="hive-config-io-module"></span><h2>hive.config.io module<a class="headerlink" href="#module-hive.config.io" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.config.io.IO">
+<em class="property">class </em><code class="sig-prename descclassname">hive.config.io.</code><code class="sig-name descname">IO</code><span class="sig-paren">(</span><em class="sig-param">working_directory</em>, <em class="sig-param">vehicles_file</em>, <em class="sig-param">requests_file</em>, <em class="sig-param">run_log</em>, <em class="sig-param">vehicle_log</em>, <em class="sig-param">request_log</em>, <em class="sig-param">instruction_log</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/io.html#IO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.config.io.IO.working_directory">
+<code class="sig-name descname">working_directory</code><a class="headerlink" href="#hive.config.io.IO.working_directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.io.IO.vehicles_file">
+<code class="sig-name descname">vehicles_file</code><a class="headerlink" href="#hive.config.io.IO.vehicles_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.io.IO.requests_file">
+<code class="sig-name descname">requests_file</code><a class="headerlink" href="#hive.config.io.IO.requests_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.io.IO.run_log">
+<code class="sig-name descname">run_log</code><a class="headerlink" href="#hive.config.io.IO.run_log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.io.IO.vehicle_log">
+<code class="sig-name descname">vehicle_log</code><a class="headerlink" href="#hive.config.io.IO.vehicle_log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.io.IO.request_log">
+<code class="sig-name descname">request_log</code><a class="headerlink" href="#hive.config.io.IO.request_log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.io.IO.instruction_log">
+<code class="sig-name descname">instruction_log</code><a class="headerlink" href="#hive.config.io.IO.instruction_log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.io.IO.default_config">
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../_modules/hive/config/io.html#IO.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.default_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.io.IO.required_config">
+<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, type]<a class="reference internal" href="../_modules/hive/config/io.html#IO.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.required_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.io.IO.build">
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.io.IO]<a class="reference internal" href="../_modules/hive/config/io.html#IO.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.build" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.io.IO.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; hive.config.io.IO<a class="reference internal" href="../_modules/hive/config/io.html#IO.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.config.network">
+<span id="hive-config-network-module"></span><h2>hive.config.network module<a class="headerlink" href="#module-hive.config.network" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.config.network.Network">
+<em class="property">class </em><code class="sig-prename descclassname">hive.config.network.</code><code class="sig-name descname">Network</code><span class="sig-paren">(</span><em class="sig-param">network_type</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/network.html#Network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.config.network.Network.network_type">
+<code class="sig-name descname">network_type</code><a class="headerlink" href="#hive.config.network.Network.network_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.network.Network.default_config">
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../_modules/hive/config/network.html#Network.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.default_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.network.Network.required_config">
+<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, type]<a class="reference internal" href="../_modules/hive/config/network.html#Network.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.required_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.network.Network.build">
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.network.Network]<a class="reference internal" href="../_modules/hive/config/network.html#Network.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.build" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.network.Network.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; hive.config.network.Network<a class="reference internal" href="../_modules/hive/config/network.html#Network.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.config.sim">
+<span id="hive-config-sim-module"></span><h2>hive.config.sim module<a class="headerlink" href="#module-hive.config.sim" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.config.sim.Sim">
+<em class="property">class </em><code class="sig-prename descclassname">hive.config.sim.</code><code class="sig-name descname">Sim</code><span class="sig-paren">(</span><em class="sig-param">timestep_duration_seconds</em>, <em class="sig-param">start_time_seconds</em>, <em class="sig-param">end_time_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/sim.html#Sim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.config.sim.Sim.timestep_duration_seconds">
+<code class="sig-name descname">timestep_duration_seconds</code><a class="headerlink" href="#hive.config.sim.Sim.timestep_duration_seconds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.sim.Sim.start_time_seconds">
+<code class="sig-name descname">start_time_seconds</code><a class="headerlink" href="#hive.config.sim.Sim.start_time_seconds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.config.sim.Sim.end_time_seconds">
+<code class="sig-name descname">end_time_seconds</code><a class="headerlink" href="#hive.config.sim.Sim.end_time_seconds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.sim.Sim.default_config">
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.default_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.sim.Sim.required_config">
+<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, type]<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.required_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.sim.Sim.build">
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.sim.Sim]<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.build" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.config.sim.Sim.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; hive.config.sim.Sim<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.config">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hive.config" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">hive.config package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-hive.config.config_builder">hive.config.config_builder module</a></li>
+<li><a class="reference internal" href="#module-hive.config.hive_config">hive.config.hive_config module</a></li>
+<li><a class="reference internal" href="#module-hive.config.io">hive.config.io module</a></li>
+<li><a class="reference internal" href="#module-hive.config.network">hive.config.network module</a></li>
+<li><a class="reference internal" href="#module-hive.config.sim">hive.config.sim module</a></li>
+<li><a class="reference internal" href="#module-hive.config">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hive.html"
+                        title="previous chapter">hive package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hive.dispatcher.html"
+                        title="next chapter">hive.dispatcher package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/hive.config.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.dispatcher.html" title="hive.dispatcher package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hive.html" title="hive package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

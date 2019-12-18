@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.state.test_simulationstateops &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.state.test_simulationstateops</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.base</span> <span class="kn">import</span> <span class="n">Base</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.energysource</span> <span class="kn">import</span> <span class="n">EnergySource</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.energytype</span> <span class="kn">import</span> <span class="n">EnergyType</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.powercurve</span> <span class="kn">import</span> <span class="n">Powercurve</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.powertrain</span> <span class="kn">import</span> <span class="n">Powertrain</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.property_link</span> <span class="kn">import</span> <span class="n">PropertyLink</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.link</span> <span class="kn">import</span> <span class="n">Link</span>
+<span class="kn">from</span> <span class="nn">hive.model.station</span> <span class="kn">import</span> <span class="n">Station</span>
+<span class="kn">from</span> <span class="nn">hive.model.vehicle</span> <span class="kn">import</span> <span class="n">Vehicle</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.charger</span> <span class="kn">import</span> <span class="n">Charger</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.roadnetwork</span> <span class="kn">import</span> <span class="n">RoadNetwork</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.routetraversal</span> <span class="kn">import</span> <span class="n">Route</span>
+<span class="kn">from</span> <span class="nn">hive.state.simulation_state</span> <span class="kn">import</span> <span class="n">SimulationState</span>
+<span class="kn">from</span> <span class="nn">hive.state.simulation_state_ops</span> <span class="kn">import</span> <span class="n">initial_simulation_state</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span><span class="p">,</span> <span class="n">kwh</span><span class="p">,</span> <span class="n">s</span>
+
+
+<div class="viewcode-block" id="TestSimulationStateOps"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps">[docs]</a><span class="k">class</span> <span class="nc">TestSimulationStateOps</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestSimulationStateOps.test_initial_simulation_state"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.test_initial_simulation_state">[docs]</a>    <span class="k">def</span> <span class="nf">test_initial_simulation_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;tests that the vehicles, stations, and bases provided appear in the</span>
+<span class="sd">        simulation and can be found using expected geohashes invariant: none</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># build sim state</span>
+        <span class="n">sim</span><span class="p">,</span> <span class="n">failures</span> <span class="o">=</span> <span class="n">initial_simulation_state</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">MockRoadNetwork</span><span class="p">(),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># head check</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># everything found at its id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">stations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">stations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">bases</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">bases</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="p">)</span>
+
+        <span class="c1"># vehicles were properly geo-coded (reverse lookup)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">v_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="o">.</span><span class="n">geoid</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">v_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="o">.</span><span class="n">geoid</span><span class="p">])</span>
+
+        <span class="c1"># stations were properly geo-coded (reverse lookup)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">s_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="o">.</span><span class="n">geoid</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">s_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="o">.</span><span class="n">geoid</span><span class="p">])</span>
+
+        <span class="c1"># bases were properly geo-coded (reverse lookup)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">b_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="o">.</span><span class="n">geoid</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">b_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="o">.</span><span class="n">geoid</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.test_initial_simulation_state_bad_coordinates"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.test_initial_simulation_state_bad_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">test_initial_simulation_state_bad_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;uses a road network that claims that all coordinates/positions are</span>
+<span class="sd">        outside of the simulation/geofence. all errors should be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># build sim state</span>
+        <span class="n">sim</span><span class="p">,</span> <span class="n">failures</span> <span class="o">=</span> <span class="n">initial_simulation_state</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">MockRoadNetworkBadCoordinates</span><span class="p">(),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">number_of_things_added</span> <span class="o">=</span> <span class="mi">6</span>
+
+        <span class="c1"># head check</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">),</span> <span class="n">number_of_things_added</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.test_initial_simulation_vehicles_at_same_location"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.test_initial_simulation_vehicles_at_same_location">[docs]</a>    <span class="k">def</span> <span class="nf">test_initial_simulation_vehicles_at_same_location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;confirms that things at the same location are correctly represented</span>
+<span class="sd">        in the state. invariant: the two mock vehicles should have the same</span>
+<span class="sd">        coordinates</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># build sim state</span>
+        <span class="n">sim</span><span class="p">,</span> <span class="n">failures</span> <span class="o">=</span> <span class="n">initial_simulation_state</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">MockRoadNetwork</span><span class="p">(),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_station_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_station_2</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_base_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_base_2</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># head check</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="o">.</span><span class="n">geoid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="o">.</span><span class="n">geoid</span><span class="p">,</span> <span class="s2">&quot;both vehicles should be at the same location&quot;</span><span class="p">)</span>
+        <span class="n">vehicles_at_location</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">v_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="o">.</span><span class="n">geoid</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vehicles_at_location</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">vehicles_at_location</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_veh_2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">vehicles_at_location</span><span class="p">)</span></div>
+
+    <span class="c1"># mock stuff</span>
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork">[docs]</a>    <span class="k">class</span> <span class="nc">MockRoadNetwork</span><span class="p">(</span><span class="n">RoadNetwork</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.route"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.route">[docs]</a>        <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="n">Link</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">Link</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Route</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                origin (Link):</span>
+<span class="sd">                destination (Link):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.property_link_from_geoid"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.property_link_from_geoid">[docs]</a>        <span class="k">def</span> <span class="nf">property_link_from_geoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                geoid (GeoId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">PropertyLink</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">Link</span><span class="p">(</span><span class="s2">&quot;ml&quot;</span><span class="p">,</span> <span class="n">geoid</span><span class="p">,</span> <span class="n">geoid</span><span class="p">),</span> <span class="mi">40</span><span class="o">*</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilometer</span><span class="o">/</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.update"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.update">[docs]</a>        <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadNetwork</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                sim_time (SimTime):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.get_link"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.get_link">[docs]</a>        <span class="k">def</span> <span class="nf">get_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                link_id (LinkId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">pass</span></div>
+
+        <span class="k">def</span> <span class="nf">get_current_property_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                property_link (PropertyLink):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">pass</span>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.geoid_within_geofence"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.geoid_within_geofence">[docs]</a>        <span class="k">def</span> <span class="nf">geoid_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                geoid (GeoId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.link_id_within_geofence"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.link_id_within_geofence">[docs]</a>        <span class="k">def</span> <span class="nf">link_id_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                link_id (LinkId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.geoid_within_simulation"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.geoid_within_simulation">[docs]</a>        <span class="k">def</span> <span class="nf">geoid_within_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                geoid (GeoId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.link_id_within_simulation"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.link_id_within_simulation">[docs]</a>        <span class="k">def</span> <span class="nf">link_id_within_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                link_id (LinkId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetwork.get_current_property_link"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetwork.get_current_property_link">[docs]</a>        <span class="k">def</span> <span class="nf">get_current_property_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                property_link (PropertyLink):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;implement if needed for testing&quot;</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetworkBadCoordinates"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetworkBadCoordinates">[docs]</a>    <span class="k">class</span> <span class="nc">MockRoadNetworkBadCoordinates</span><span class="p">(</span><span class="n">MockRoadNetwork</span><span class="p">):</span>
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetworkBadCoordinates.geoid_within_geofence"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetworkBadCoordinates.geoid_within_geofence">[docs]</a>        <span class="k">def</span> <span class="nf">geoid_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                geoid (GeoId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetworkBadCoordinates.link_id_within_geofence"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetworkBadCoordinates.link_id_within_geofence">[docs]</a>        <span class="k">def</span> <span class="nf">link_id_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                link_id (LinkId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetworkBadCoordinates.geoid_within_simulation"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetworkBadCoordinates.geoid_within_simulation">[docs]</a>        <span class="k">def</span> <span class="nf">geoid_within_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                geoid (GeoId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockRoadNetworkBadCoordinates.link_id_within_simulation"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockRoadNetworkBadCoordinates.link_id_within_simulation">[docs]</a>        <span class="k">def</span> <span class="nf">link_id_within_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                link_id (LinkId):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span></div></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowertrain"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowertrain">[docs]</a>    <span class="k">class</span> <span class="nc">MockPowertrain</span><span class="p">(</span><span class="n">Powertrain</span><span class="p">):</span>
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowertrain.get_id"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowertrain.get_id">[docs]</a>        <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PowertrainId</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;mock_powertrain&quot;</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowertrain.get_energy_type"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowertrain.get_energy_type">[docs]</a>        <span class="k">def</span> <span class="nf">get_energy_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnergyType</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EnergyType</span><span class="o">.</span><span class="n">ELECTRIC</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowertrain.energy_cost"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowertrain.energy_cost">[docs]</a>        <span class="k">def</span> <span class="nf">energy_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">:</span> <span class="n">Route</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">kwh</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                route (Route):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">route</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowercurve"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowercurve">[docs]</a>    <span class="k">class</span> <span class="nc">MockPowercurve</span><span class="p">(</span><span class="n">Powercurve</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;just adds 1 when charging&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowercurve.get_id"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowercurve.get_id">[docs]</a>        <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PowercurveId</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;mock_powercurve&quot;</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowercurve.get_energy_type"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowercurve.get_energy_type">[docs]</a>        <span class="k">def</span> <span class="nf">get_energy_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnergyType</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EnergyType</span><span class="o">.</span><span class="n">ELECTRIC</span></div>
+
+<div class="viewcode-block" id="TestSimulationStateOps.MockPowercurve.refuel"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.test_simulationstateops.TestSimulationStateOps.MockPowercurve.refuel">[docs]</a>        <span class="k">def</span> <span class="nf">refuel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_source</span><span class="p">:</span> <span class="s1">&#39;EnergySource&#39;</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="s1">&#39;Charger&#39;</span><span class="p">,</span> <span class="n">duration_seconds</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
+                   <span class="n">step_size_seconds</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;EnergySource&#39;</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Args:</span>
+<span class="sd">                energy_source:</span>
+<span class="sd">                charger:</span>
+<span class="sd">                duration_seconds (s):</span>
+<span class="sd">                step_size_seconds (s):</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">energy_source</span><span class="o">.</span><span class="n">load_energy</span><span class="p">(</span><span class="mf">1.0</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">kilowatthour</span><span class="p">)</span></div></div>
+
+    <span class="n">mock_powertrain</span> <span class="o">=</span> <span class="n">MockPowertrain</span><span class="p">()</span>
+    <span class="n">mock_powercurve</span> <span class="o">=</span> <span class="n">MockPowercurve</span><span class="p">()</span>
+    <span class="n">mock_geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.75</span><span class="p">,</span> <span class="o">-</span><span class="mi">105</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+    <span class="n">mock_property_link</span> <span class="o">=</span> <span class="n">MockRoadNetwork</span><span class="p">()</span><span class="o">.</span><span class="n">property_link_from_geoid</span><span class="p">(</span><span class="n">mock_geoid</span><span class="p">)</span>
+
+    <span class="n">mock_veh_1</span> <span class="o">=</span> <span class="n">Vehicle</span><span class="p">(</span><span class="s2">&quot;m1&quot;</span><span class="p">,</span>
+                         <span class="n">mock_powertrain</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+                         <span class="n">mock_powercurve</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+                         <span class="n">EnergySource</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;test_id&quot;</span><span class="p">,</span>
+                                            <span class="n">EnergyType</span><span class="o">.</span><span class="n">ELECTRIC</span><span class="p">,</span>
+                                            <span class="n">capacity</span><span class="o">=</span><span class="mi">50</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">kilowatthour</span><span class="p">,</span>
+                                            <span class="p">),</span>
+                         <span class="n">mock_geoid</span><span class="p">,</span>
+                         <span class="n">mock_property_link</span><span class="p">)</span>
+
+    <span class="n">mock_veh_2</span> <span class="o">=</span> <span class="n">Vehicle</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span>
+                         <span class="n">mock_powertrain</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+                         <span class="n">mock_powercurve</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+                         <span class="n">EnergySource</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;test_id&quot;</span><span class="p">,</span>
+                                            <span class="n">EnergyType</span><span class="o">.</span><span class="n">ELECTRIC</span><span class="p">,</span>
+                                            <span class="n">capacity</span><span class="o">=</span><span class="mi">50</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">kilowatthour</span><span class="p">,</span>
+                                            <span class="p">),</span>
+                         <span class="n">mock_geoid</span><span class="p">,</span>
+                         <span class="n">mock_property_link</span><span class="p">)</span>
+
+    <span class="n">mock_station_1</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.75</span><span class="p">,</span> <span class="o">-</span><span class="mf">105.01</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="p">{</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
+    <span class="n">mock_station_2</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;s2&quot;</span><span class="p">,</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.74</span><span class="p">,</span> <span class="o">-</span><span class="mf">105.01</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="p">{</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
+
+    <span class="n">mock_base_1</span> <span class="o">=</span> <span class="n">Base</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.73</span><span class="p">,</span> <span class="o">-</span><span class="mi">105</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">mock_base_2</span> <span class="o">=</span> <span class="n">Base</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">39.76</span><span class="p">,</span> <span class="o">-</span><span class="mi">105</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

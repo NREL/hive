@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.test_station &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.model.test_station</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">csv</span> <span class="kn">import</span> <span class="n">DictReader</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.station</span> <span class="kn">import</span> <span class="n">Station</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.charger</span> <span class="kn">import</span> <span class="n">Charger</span>
+
+
+<div class="viewcode-block" id="TestStation"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation">[docs]</a><span class="k">class</span> <span class="nc">TestStation</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="n">_mock_station</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;test_station&quot;</span><span class="p">,</span>
+                                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span>
+                                  <span class="p">{</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                                  <span class="p">)</span>
+
+<div class="viewcode-block" id="TestStation.test_from_row"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation.test_from_row">[docs]</a>    <span class="k">def</span> <span class="nf">test_from_row</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;station_id,lat,lon,charger_type,charger_count</span>
+<span class="s2">                 s1,37,122,DCFC,10</span>
+<span class="s2">                 &quot;&quot;&quot;</span>
+
+        <span class="n">row</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">DictReader</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+        <span class="n">sim_h3_resolution</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="n">expected_geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mi">37</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+
+        <span class="n">station</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="p">{},</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;s1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">geoid</span><span class="p">,</span> <span class="n">expected_geoid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">[</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStation.test_from_multiple_rows"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation.test_from_multiple_rows">[docs]</a>    <span class="k">def</span> <span class="nf">test_from_multiple_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;station_id,lat,lon,charger_type,charger_count</span>
+<span class="s2">                  s1,37,122,DCFC,10</span>
+<span class="s2">                  s1,37,122,LEVEL_2,5</span>
+<span class="s2">                  &quot;&quot;&quot;</span>
+
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">DictReader</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+        <span class="n">row1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+        <span class="n">row2</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+        <span class="n">sim_h3_resolution</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="n">expected_geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mi">37</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+
+        <span class="n">station</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row1</span><span class="p">,</span> <span class="p">{},</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="p">{</span><span class="n">station</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">station</span><span class="p">}</span>
+        <span class="n">station2</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row2</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;s1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">geoid</span><span class="p">,</span> <span class="n">expected_geoid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">[</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">,</span> <span class="n">station2</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">[</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStation.test_repeated_charger_type_entry"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation.test_repeated_charger_type_entry">[docs]</a>    <span class="k">def</span> <span class="nf">test_repeated_charger_type_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;station_id,lat,lon,charger_type,charger_count</span>
+<span class="s2">                  s1,37,122,DCFC,10</span>
+<span class="s2">                  s1,37,122,DCFC,5</span>
+<span class="s2">                  &quot;&quot;&quot;</span>
+
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">DictReader</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+        <span class="n">row1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+        <span class="n">row2</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+        <span class="n">sim_h3_resolution</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="n">expected_geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mi">37</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+
+        <span class="n">station</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row1</span><span class="p">,</span> <span class="p">{},</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="p">{</span><span class="n">station</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">station</span><span class="p">}</span>
+        <span class="n">station2</span> <span class="o">=</span> <span class="n">Station</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row2</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;s1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">geoid</span><span class="p">,</span> <span class="n">expected_geoid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station2</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">[</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">],</span> <span class="mi">15</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStation.test_checkout_charger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation.test_checkout_charger">[docs]</a>    <span class="k">def</span> <span class="nf">test_checkout_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">updated_station</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mock_station</span><span class="o">.</span><span class="n">checkout_charger</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">updated_station</span><span class="o">.</span><span class="n">available_chargers</span><span class="p">[</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStation.test_checkout_charger_none_avail"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation.test_checkout_charger_none_avail">[docs]</a>    <span class="k">def</span> <span class="nf">test_checkout_charger_none_avail</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">updated_station</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mock_station</span><span class="o">.</span><span class="n">checkout_charger</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">)</span>
+
+        <span class="n">no_dcfc_station</span> <span class="o">=</span> <span class="n">updated_station</span><span class="o">.</span><span class="n">checkout_charger</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">DCFC</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNone</span><span class="p">(</span><span class="n">no_dcfc_station</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStation.test_return_charger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.test_station.TestStation.test_return_charger">[docs]</a>    <span class="k">def</span> <span class="nf">test_return_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">updated_station</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mock_station</span><span class="o">.</span><span class="n">checkout_charger</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">)</span>
+
+        <span class="n">station_w_l2</span> <span class="o">=</span> <span class="n">updated_station</span><span class="o">.</span><span class="n">return_charger</span><span class="p">(</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">station_w_l2</span><span class="o">.</span><span class="n">available_chargers</span><span class="p">[</span><span class="n">Charger</span><span class="o">.</span><span class="n">LEVEL_2</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

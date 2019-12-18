@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.state.simulation_state_ops &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.state.simulation_state_ops</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">functools</span> <span class="k">as</span> <span class="nn">ft</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">from</span> <span class="nn">hive.dispatcher.instruction</span> <span class="kn">import</span> <span class="n">Instruction</span>
+<span class="kn">from</span> <span class="nn">hive.model.base</span> <span class="kn">import</span> <span class="n">Base</span>
+<span class="kn">from</span> <span class="nn">hive.model.station</span> <span class="kn">import</span> <span class="n">Station</span>
+<span class="kn">from</span> <span class="nn">hive.model.vehicle</span> <span class="kn">import</span> <span class="n">Vehicle</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.roadnetwork</span> <span class="kn">import</span> <span class="n">RoadNetwork</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.powertrain.powertrain</span> <span class="kn">import</span> <span class="n">Powertrain</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.powercurve.powercurve</span> <span class="kn">import</span> <span class="n">Powercurve</span>
+<span class="kn">from</span> <span class="nn">hive.state.simulation_state</span> <span class="kn">import</span> <span class="n">SimulationState</span>
+<span class="kn">from</span> <span class="nn">hive.util.exception</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">SimTime</span>
+<span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span><span class="p">,</span> <span class="n">s</span>
+
+<div class="viewcode-block" id="apply_instructions"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state_ops.apply_instructions">[docs]</a><span class="k">def</span> <span class="nf">apply_instructions</span><span class="p">(</span><span class="n">simulation_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">,</span> <span class="n">instructions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Instruction</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    applies all the instructions to the simulation state, ignoring the ones that fail</span>
+<span class="sd">    :param simulation_state: the sim state</span>
+<span class="sd">    :param instructions: dispatcher instructions</span>
+<span class="sd">    :return: the sim state with vehicle intentions updated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_add_instruction</span><span class="p">,</span>
+        <span class="n">instructions</span><span class="p">,</span>
+        <span class="n">simulation_state</span>
+    <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_add_instruction</span><span class="p">(</span><span class="n">simulation_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">Instruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    inner loop for apply_instructions method</span>
+<span class="sd">    :param simulation_state: the intermediate sim state</span>
+<span class="sd">    :param instruction: the ith instruction</span>
+<span class="sd">    :return: sim state with the ith instruction added, unless it&#39;s bogus</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">updated_sim</span> <span class="o">=</span> <span class="n">simulation_state</span><span class="o">.</span><span class="n">apply_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">updated_sim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">simulation_state</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">updated_sim</span>
+
+
+<div class="viewcode-block" id="initial_simulation_state"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state_ops.initial_simulation_state">[docs]</a><span class="k">def</span> <span class="nf">initial_simulation_state</span><span class="p">(</span>
+        <span class="n">road_network</span><span class="p">:</span> <span class="n">RoadNetwork</span><span class="p">,</span>
+        <span class="n">vehicles</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Vehicle</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">stations</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Station</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">bases</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">powertrains</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Powertrain</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">powercurves</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Powercurve</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">start_time</span><span class="p">:</span> <span class="n">SimTime</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">sim_timestep_duration_seconds</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+        <span class="n">sim_h3_resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationState</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network</span>
+<span class="sd">    :param powercurves: </span>
+<span class="sd">    :param powertrains: </span>
+<span class="sd">    :param road_network: the (initial) road network</span>
+<span class="sd">    :param vehicles: the vehicles available in this simulation</span>
+<span class="sd">    :param stations: the stations available in this simulation</span>
+<span class="sd">    :param bases: the bases available in this simulation</span>
+<span class="sd">    :param start_time: the start time for this simulation (by default, time step 0)</span>
+<span class="sd">    :param sim_timestep_duration_seconds: the size of a time step in seconds</span>
+<span class="sd">    :param sim_h3_resolution: the h3 resolution for internal positioning (comparison ops can override)</span>
+<span class="sd">    :return: a SimulationState, or a SimulationStateError</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># copy in fields which do not require additional work</span>
+    <span class="n">simulation_state_builder</span> <span class="o">=</span> <span class="n">SimulationState</span><span class="p">(</span>
+        <span class="n">road_network</span><span class="o">=</span><span class="n">road_network</span><span class="p">,</span>
+        <span class="n">sim_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span>
+        <span class="n">sim_timestep_duration_seconds</span><span class="o">=</span><span class="n">sim_timestep_duration_seconds</span><span class="p">,</span>
+        <span class="n">sim_h3_resolution</span><span class="o">=</span><span class="n">sim_h3_resolution</span><span class="p">)</span>
+    <span class="n">failures</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+
+    <span class="c1"># add vehicles, stations, bases, powertrains, and powercurves</span>
+    <span class="n">has_vehicles</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_add_to_builder</span><span class="p">,</span>
+        <span class="n">vehicles</span><span class="p">,</span>
+        <span class="p">(</span><span class="n">simulation_state_builder</span><span class="p">,</span> <span class="n">failures</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">has_vehicles_and_stations</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_add_to_builder</span><span class="p">,</span>
+        <span class="n">stations</span><span class="p">,</span>
+        <span class="n">has_vehicles</span>
+    <span class="p">)</span>
+    <span class="n">has_bases</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_add_to_builder</span><span class="p">,</span>
+        <span class="n">bases</span><span class="p">,</span>
+        <span class="n">has_vehicles_and_stations</span>
+    <span class="p">)</span>
+    <span class="n">has_powertrains</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_add_to_builder</span><span class="p">,</span>
+        <span class="n">powertrains</span><span class="p">,</span>
+        <span class="n">has_bases</span>
+    <span class="p">)</span>
+    <span class="n">has_everything</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_add_to_builder</span><span class="p">,</span>
+        <span class="n">powercurves</span><span class="p">,</span>
+        <span class="n">has_powertrains</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">has_everything</span></div>
+
+
+<span class="k">def</span> <span class="nf">_add_to_builder</span><span class="p">(</span><span class="n">acc</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationState</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+                        <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Vehicle</span><span class="p">,</span> <span class="n">Station</span><span class="p">,</span> <span class="n">Base</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">Powertrain</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="n">Powercurve</span><span class="p">]])</span> \
+                        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationState</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    adds a single Vehicle, Station, Base, Powertrain, or Powercurve to the simulator, unless it is invalid</span>
+<span class="sd">    :param acc: the partially-constructed SimulationState</span>
+<span class="sd">    :param x: a new Vehicle, Station, or Base</span>
+<span class="sd">    :return: add x, or, if it failed, update our log of failures</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># unpack accumulator</span>
+    <span class="n">this_simulation_state</span><span class="p">:</span> <span class="n">SimulationState</span> <span class="o">=</span> <span class="n">acc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">this_failures</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">acc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># add a Vehicle</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Vehicle</span><span class="p">):</span>
+        <span class="n">vehicle</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Vehicle</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">this_simulation_state</span><span class="o">.</span><span class="n">add_vehicle</span><span class="p">(</span><span class="n">vehicle</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationStateError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">this_simulation_state</span><span class="p">,</span> <span class="p">(</span><span class="n">result</span><span class="p">,)</span> <span class="o">+</span> <span class="n">this_failures</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">this_failures</span>
+
+    <span class="c1"># add a Station</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Station</span><span class="p">):</span>
+        <span class="n">station</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">this_simulation_state</span><span class="o">.</span><span class="n">add_station</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationStateError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">this_simulation_state</span><span class="p">,</span> <span class="p">(</span><span class="n">result</span><span class="p">,)</span> <span class="o">+</span> <span class="n">this_failures</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">this_failures</span>
+
+    <span class="c1"># add a Base</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">this_simulation_state</span><span class="o">.</span><span class="n">add_base</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationStateError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">this_simulation_state</span><span class="p">,</span> <span class="p">(</span><span class="n">result</span><span class="p">,)</span> <span class="o">+</span> <span class="n">this_failures</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">this_failures</span>
+
+    <span class="c1"># add a Powertrain</span>
+    <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">Powertrain</span><span class="p">):</span>
+        <span class="n">powertrain</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Powertrain</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">this_simulation_state</span><span class="o">.</span><span class="n">add_powertrain</span><span class="p">(</span><span class="n">powertrain</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationStateError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">this_simulation_state</span><span class="p">,</span> <span class="p">(</span><span class="n">result</span><span class="p">,)</span> <span class="o">+</span> <span class="n">this_failures</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">this_failures</span>
+
+    <span class="c1"># add a Powercurve</span>
+    <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">Powercurve</span><span class="p">):</span>
+        <span class="n">powercurve</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Powercurve</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">this_simulation_state</span><span class="o">.</span><span class="n">add_powercurve</span><span class="p">(</span><span class="n">powercurve</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationStateError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">this_simulation_state</span><span class="p">,</span> <span class="p">(</span><span class="n">result</span><span class="p">,)</span> <span class="o">+</span> <span class="n">this_failures</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">this_failures</span>
+
+    <span class="c1"># x is something else; do not modify simulation</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">failure</span> <span class="o">=</span> <span class="n">SimulationStateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;not a Vehicle, Station, Base, Powertrain, or Powercurve: </span><span class="si">{x}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">this_simulation_state</span><span class="p">,</span> <span class="p">(</span><span class="n">failure</span><span class="p">,)</span> <span class="o">+</span> <span class="n">this_failures</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

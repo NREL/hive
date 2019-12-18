@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.base &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.model.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
+
+<span class="kn">from</span> <span class="nn">hive.util.exception</span> <span class="kn">import</span> <span class="n">SimulationStateError</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="Base"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.base.Base">[docs]</a><span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a base within the simulation.</span>
+
+<span class="sd">    :param id: unique base id.</span>
+<span class="sd">    :type id: str</span>
+<span class="sd">    :param geoid: location of base.</span>
+<span class="sd">    :type geoid: GeoId</span>
+<span class="sd">    :param total_stalls: total number of parking stalls.</span>
+<span class="sd">    :type total_stalls: int</span>
+<span class="sd">    :param available_stalls: number of available parking stalls.</span>
+<span class="sd">    :type available_stalls: int</span>
+<span class="sd">    :param station_id: Optional station that is located at the base.</span>
+<span class="sd">    :type station_id: Optional[StationId]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="n">BaseId</span>
+    <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span>
+    <span class="n">total_stalls</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">available_stalls</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">station_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StationId</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+              <span class="nb">id</span><span class="p">:</span> <span class="n">BaseId</span><span class="p">,</span>
+              <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">,</span>
+              <span class="n">station_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StationId</span><span class="p">],</span>
+              <span class="n">stall_count</span><span class="p">:</span> <span class="nb">int</span>
+              <span class="p">):</span>
+        <span class="k">return</span> <span class="n">Base</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">geoid</span><span class="p">,</span> <span class="n">stall_count</span><span class="p">,</span> <span class="n">stall_count</span><span class="p">,</span> <span class="n">station_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Base.from_row"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.base.Base.from_row">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_row</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+                 <span class="n">sim_h3_resolution</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">Base</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        takes a csv row and turns it into a Base</span>
+
+<span class="sd">        :param row: a row as interpreted by csv.DictReader</span>
+<span class="sd">        :param sim_h3_resolution: the h3 resolution that events are experienced at</span>
+<span class="sd">        :return: a Base, or an error</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;base_id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;cannot load a base without a &#39;base_id&#39;&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;lat&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;cannot load a base without an &#39;lat&#39; value&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;lon&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;cannot load a base without an &#39;lon&#39; value&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;stall_count&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;cannot load a base without a &#39;stall_count&#39; value&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;base_id&#39;</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">])</span>
+                <span class="n">geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)</span>
+                <span class="n">stall_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;stall_count&#39;</span><span class="p">])</span>
+
+                <span class="c1"># allow user to leave station_id blank or use the word &quot;none&quot; to signify no station at base</span>
+                <span class="n">station_id_name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;station_id&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;station_id&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;none&quot;</span>
+                <span class="n">station_id</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">station_id_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="n">station_id_name</span>
+
+                <span class="k">return</span> <span class="n">Base</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">base_id</span><span class="p">,</span>
+                    <span class="n">geoid</span><span class="o">=</span><span class="n">geoid</span><span class="p">,</span>
+                    <span class="n">station_id</span><span class="o">=</span><span class="n">station_id</span><span class="p">,</span>
+                    <span class="n">stall_count</span><span class="o">=</span><span class="n">stall_count</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unable to parse request </span><span class="si">{base_id}</span><span class="s2"> from row due to invalid value(s): </span><span class="si">{row}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Base.has_available_stall"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.base.Base.has_available_stall">[docs]</a>    <span class="k">def</span> <span class="nf">has_available_stall</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Does base have a stall or not.</span>
+
+<span class="sd">        :return: Boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_stalls</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Base.checkout_stall"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.base.Base.checkout_stall">[docs]</a>    <span class="k">def</span> <span class="nf">checkout_stall</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Base</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks out a stall and returns the updated base if there are enough stalls.</span>
+
+<span class="sd">        :return: Updated Base or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stalls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_stalls</span>
+        <span class="k">if</span> <span class="n">stalls</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">available_stalls</span><span class="o">=</span><span class="n">stalls</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Base.return_stall"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.base.Base.return_stall">[docs]</a>    <span class="k">def</span> <span class="nf">return_stall</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Base</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks out a stall and returns the updated base.</span>
+
+<span class="sd">        :return: Updated Base</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stalls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_stalls</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">stalls</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_stalls</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SimulationStateError</span><span class="p">(</span><span class="s1">&#39;Base already has maximum sta&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">available_stalls</span><span class="o">=</span><span class="n">stalls</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

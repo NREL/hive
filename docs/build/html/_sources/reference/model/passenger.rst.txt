@@ -1,0 +1,4 @@
+Passenger
+=================
+.. automodule:: hive.model.passenger
+   :members:

@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.state.update.update_requests_from_string &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.state.update.update_requests_from_string</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">csv</span> <span class="kn">import</span> <span class="n">DictReader</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">from</span> <span class="nn">hive.state.simulation_state</span> <span class="kn">import</span> <span class="n">SimulationState</span>
+<span class="kn">from</span> <span class="nn">hive.state.update.simulation_update</span> <span class="kn">import</span> <span class="n">SimulationUpdate</span>
+<span class="kn">from</span> <span class="nn">hive.state.update.simulation_update_result</span> <span class="kn">import</span> <span class="n">SimulationUpdateResult</span>
+<span class="kn">from</span> <span class="nn">hive.state.update.update_requests</span> <span class="kn">import</span> <span class="n">update_requests_from_iterator</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">SimTime</span>
+
+
+<div class="viewcode-block" id="UpdateRequestsFromString"><a class="viewcode-back" href="../../../../reference/hive.state.update.html#hive.state.update.update_requests_from_string.UpdateRequestsFromString">[docs]</a><span class="k">class</span> <span class="nc">UpdateRequestsFromString</span><span class="p">(</span><span class="n">SimulationUpdate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    loads requests from a newline-delimited string in csv format</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string_requests</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        reads a requests file and builds a UpdateRequestsFromFile SimulationUpdate function</span>
+<span class="sd">        :param string_requests: requests as a string, with header</span>
+<span class="sd">        :return: a SimulationUpdate function based on the string data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="n">string_requests</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requests</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_position</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="UpdateRequestsFromString.update"><a class="viewcode-back" href="../../../../reference/hive.state.update.html#hive.state.update.update_requests_from_string.UpdateRequestsFromString.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_sim_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        add requests from file when the simulation reaches the request&#39;s time</span>
+<span class="sd">        :param initial_sim_state: the current sim state</span>
+<span class="sd">        :return: sim state plus new requests</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">,]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">row_position</span><span class="p">:]</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">DictReader</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">RequestStringIterator</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">initial_sim_state</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_position</span><span class="p">)</span>
+        <span class="n">sim_updated</span> <span class="o">=</span> <span class="n">update_requests_from_iterator</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">initial_sim_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_position</span> <span class="o">=</span> <span class="n">it</span><span class="o">.</span><span class="n">row_position</span>
+        <span class="k">return</span> <span class="n">sim_updated</span></div></div>
+
+
+<div class="viewcode-block" id="RequestStringIterator"><a class="viewcode-back" href="../../../../reference/hive.state.update.html#hive.state.update.update_requests_from_string.RequestStringIterator">[docs]</a><span class="k">class</span> <span class="nc">RequestStringIterator</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">DictReader</span><span class="p">,</span> <span class="n">sim_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">,</span> <span class="n">row_position</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requests</span> <span class="o">=</span> <span class="n">requests</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">=</span> <span class="n">sim_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_position</span> <span class="o">=</span> <span class="n">row_position</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        attempts to grab the next row from the string</span>
+<span class="sd">        :return: a row, or, raises a StopIteration when end-of-file</span>
+<span class="sd">        :raises StopIteration: when source is empty, or, if all departures up to the present sim time have been found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">)</span>
+        <span class="n">row_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;departure_time&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">row_time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">row_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_position</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">row</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

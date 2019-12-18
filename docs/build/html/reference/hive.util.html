@@ -1,0 +1,370 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.util package &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="hive.state.update package" href="hive.state.update.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.state.update.html" title="hive.state.update package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" accesskey="U">hive package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hive-util-package">
+<h1>hive.util package<a class="headerlink" href="#hive-util-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.util.exception">
+<span id="hive-util-exception-module"></span><h2>hive.util.exception module<a class="headerlink" href="#module-hive.util.exception" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="hive.util.exception.StateTransitionError">
+<em class="property">exception </em><code class="sig-prename descclassname">hive.util.exception.</code><code class="sig-name descname">StateTransitionError</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/exception.html#StateTransitionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.exception.StateTransitionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>calls out a breach in the simulation’s physics observed when
+a state transition’s invariants are not met.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hive.util.exception.StateOfChargeError">
+<em class="property">exception </em><code class="sig-prename descclassname">hive.util.exception.</code><code class="sig-name descname">StateOfChargeError</code><span class="sig-paren">(</span><em class="sig-param">soc</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/exception.html#StateOfChargeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.exception.StateOfChargeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>state of charge must exist in the range [0, 1]</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hive.util.exception.RouteStepError">
+<em class="property">exception </em><code class="sig-prename descclassname">hive.util.exception.</code><code class="sig-name descname">RouteStepError</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/exception.html#RouteStepError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.exception.RouteStepError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>errors related to stepping forward along a route</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hive.util.exception.SimulationStateError">
+<em class="property">exception </em><code class="sig-prename descclassname">hive.util.exception.</code><code class="sig-name descname">SimulationStateError</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/exception.html#SimulationStateError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.exception.SimulationStateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>errors related to SimulationState operations</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hive.util.exception.UnitError">
+<em class="property">exception </em><code class="sig-prename descclassname">hive.util.exception.</code><code class="sig-name descname">UnitError</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/exception.html#UnitError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.exception.UnitError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>errors related to units</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hive.util.exception.EntityError">
+<em class="property">exception </em><code class="sig-prename descclassname">hive.util.exception.</code><code class="sig-name descname">EntityError</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/exception.html#EntityError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.exception.EntityError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>errors related to methods on entities such as vehicles or stations.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.util.helpers">
+<span id="hive-util-helpers-module"></span><h2>hive.util.helpers module<a class="headerlink" href="#module-hive.util.helpers" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.util.helpers.SwitchCase">
+<em class="property">class </em><code class="sig-prename descclassname">hive.util.helpers.</code><code class="sig-name descname">SwitchCase</code><a class="reference internal" href="../_modules/hive/util/helpers.html#SwitchCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.SwitchCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dl class="attribute">
+<dt id="hive.util.helpers.SwitchCase.Key">
+<code class="sig-name descname">Key</code><em class="property"> = ~Key</em><a class="headerlink" href="#hive.util.helpers.SwitchCase.Key" title="Permalink to this definition">¶</a></dt>
+<dd><p>the type used to switch off of</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hive.util.helpers.SwitchCase.Arguments">
+<code class="sig-name descname">Arguments</code><em class="property"> = ~Arguments</em><a class="headerlink" href="#hive.util.helpers.SwitchCase.Arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>the type of the arguments fed to the inner switch clause</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hive.util.helpers.SwitchCase.Result">
+<code class="sig-name descname">Result</code><em class="property"> = ~Result</em><a class="headerlink" href="#hive.util.helpers.SwitchCase.Result" title="Permalink to this definition">¶</a></dt>
+<dd><p>the type returned from the SwitchCase (can be “Any”)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hive.util.helpers.SwitchCase.case_statement">
+<code class="sig-name descname">case_statement</code><em class="property"> = {}</em><a class="headerlink" href="#hive.util.helpers.SwitchCase.case_statement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.SwitchCase.switch">
+<em class="property">classmethod </em><code class="sig-name descname">switch</code><span class="sig-paren">(</span><em class="sig-param">case</em>, <em class="sig-param">payload: Arguments</em><span class="sig-paren">)</span> &#x2192; Result<a class="reference internal" href="../_modules/hive/util/helpers.html#SwitchCase.switch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.SwitchCase.switch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.util.helpers.H3Ops">
+<em class="property">class </em><code class="sig-prename descclassname">hive.util.helpers.</code><code class="sig-name descname">H3Ops</code><a class="reference internal" href="../_modules/hive/util/helpers.html#H3Ops"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.H3Ops" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hive.util.helpers.H3Ops.Entity">
+<code class="sig-name descname">Entity</code><em class="property"> = ~Entity</em><a class="headerlink" href="#hive.util.helpers.H3Ops.Entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.util.helpers.H3Ops.EntityId">
+<code class="sig-name descname">EntityId</code><em class="property"> = ~EntityId</em><a class="headerlink" href="#hive.util.helpers.H3Ops.EntityId" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.H3Ops.nearest_entity">
+<em class="property">classmethod </em><code class="sig-name descname">nearest_entity</code><span class="sig-paren">(</span><em class="sig-param">geoid: GeoId, entities: Dict[EntityId, Entity], entity_locations: Dict[GeoId, Tuple[EntityId, ...]], is_valid: Callable = &lt;function H3Ops.&lt;lambda&gt;&gt;, k: int = 0, max_distance_km: km = &lt;Quantity(1, 'kilometer')&gt;</em><span class="sig-paren">)</span> &#x2192; Optional[Entity]<a class="reference internal" href="../_modules/hive/util/helpers.html#H3Ops.nearest_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.H3Ops.nearest_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
+:param max_distance_km:
+:param is_valid:
+:param entities:
+:param k:
+:param geoid:
+:param entity_locations:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.H3Ops.nearest_entity_point_to_point">
+<em class="property">classmethod </em><code class="sig-name descname">nearest_entity_point_to_point</code><span class="sig-paren">(</span><em class="sig-param">geoid: GeoId, entities: Dict[EntityId, Entity], entity_locations: Dict[GeoId, Tuple[EntityId, ...]], is_valid: Callable = &lt;function H3Ops.&lt;lambda&gt;&gt;</em><span class="sig-paren">)</span> &#x2192; Optional[Entity]<a class="reference internal" href="../_modules/hive/util/helpers.html#H3Ops.nearest_entity_point_to_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.H3Ops.nearest_entity_point_to_point" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.H3Ops.great_circle_distance">
+<em class="property">classmethod </em><code class="sig-name descname">great_circle_distance</code><span class="sig-paren">(</span><em class="sig-param">a: str</em>, <em class="sig-param">b: str</em><span class="sig-paren">)</span> &#x2192; pint.unit.build_unit_class.&lt;locals&gt;.Unit<a class="reference internal" href="../_modules/hive/util/helpers.html#H3Ops.great_circle_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.H3Ops.great_circle_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the distance between two geoids
+:param a: one geoid
+:param b: another geoid
+:return: the haversine distance between the two GeoIds</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.H3Ops.point_along_link">
+<em class="property">classmethod </em><code class="sig-name descname">point_along_link</code><span class="sig-paren">(</span><em class="sig-param">property_link: PropertyLink</em>, <em class="sig-param">available_time: h</em><span class="sig-paren">)</span> &#x2192; GeoId<a class="reference internal" href="../_modules/hive/util/helpers.html#H3Ops.point_along_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.H3Ops.point_along_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the GeoId which is some percentage between two GeoIds along a line
+:param property_link: the link we are finding a mid point along
+:param available_time: the amount of time to traverse
+:return: a GeoId along the Link</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.util.helpers.TupleOps">
+<em class="property">class </em><code class="sig-prename descclassname">hive.util.helpers.</code><code class="sig-name descname">TupleOps</code><a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hive.util.helpers.TupleOps.T">
+<code class="sig-name descname">T</code><em class="property"> = ~T</em><a class="headerlink" href="#hive.util.helpers.TupleOps.T" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.TupleOps.remove">
+<em class="property">classmethod </em><code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">xs: Tuple[T, ...], value: T</em><span class="sig-paren">)</span> &#x2192; Optional[Tuple[T, ...]]<a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.TupleOps.head">
+<em class="property">classmethod </em><code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">xs: Tuple[T, ...]</em><span class="sig-paren">)</span> &#x2192; T<a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps.head"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps.head" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.TupleOps.head_optional">
+<em class="property">classmethod </em><code class="sig-name descname">head_optional</code><span class="sig-paren">(</span><em class="sig-param">xs: Tuple[T, ...]</em><span class="sig-paren">)</span> &#x2192; Optional[T]<a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps.head_optional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps.head_optional" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.TupleOps.last">
+<em class="property">classmethod </em><code class="sig-name descname">last</code><span class="sig-paren">(</span><em class="sig-param">xs: Tuple[T, ...]</em><span class="sig-paren">)</span> &#x2192; T<a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps.last"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps.last" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.TupleOps.last_optional">
+<em class="property">classmethod </em><code class="sig-name descname">last_optional</code><span class="sig-paren">(</span><em class="sig-param">xs: Tuple[T, ...]</em><span class="sig-paren">)</span> &#x2192; Optional[T]<a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps.last_optional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps.last_optional" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.TupleOps.head_tail">
+<em class="property">classmethod </em><code class="sig-name descname">head_tail</code><span class="sig-paren">(</span><em class="sig-param">tup: Tuple[T, ...]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/util/helpers.html#TupleOps.head_tail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.TupleOps.head_tail" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.util.helpers.DictOps">
+<em class="property">class </em><code class="sig-prename descclassname">hive.util.helpers.</code><code class="sig-name descname">DictOps</code><a class="reference internal" href="../_modules/hive/util/helpers.html#DictOps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.DictOps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hive.util.helpers.DictOps.K">
+<code class="sig-name descname">K</code><em class="property"> = ~K</em><a class="headerlink" href="#hive.util.helpers.DictOps.K" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.util.helpers.DictOps.V">
+<code class="sig-name descname">V</code><em class="property"> = ~V</em><a class="headerlink" href="#hive.util.helpers.DictOps.V" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.DictOps.add_to_dict">
+<em class="property">classmethod </em><code class="sig-name descname">add_to_dict</code><span class="sig-paren">(</span><em class="sig-param">xs: Dict[K, V], obj_id: K, obj: V</em><span class="sig-paren">)</span> &#x2192; Dict[K, V]<a class="reference internal" href="../_modules/hive/util/helpers.html#DictOps.add_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.DictOps.add_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates Dicts for arbitrary keys and values
+performs a shallow copy and update, treating Dict as an immutable hash table
+:param xs:
+:param obj_id:
+:param obj:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.DictOps.remove_from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">remove_from_dict</code><span class="sig-paren">(</span><em class="sig-param">xs: Dict[K, V], obj_id: K</em><span class="sig-paren">)</span> &#x2192; Dict[K, V]<a class="reference internal" href="../_modules/hive/util/helpers.html#DictOps.remove_from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.DictOps.remove_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates Dicts for arbitrary keys and values
+performs a shallow copy and update, treating Dict as an immutable hash table
+:param xs:
+:param obj_id:
+:param obj:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.DictOps.add_to_location_dict">
+<em class="property">classmethod </em><code class="sig-name descname">add_to_location_dict</code><span class="sig-paren">(</span><em class="sig-param">xs: Dict[str, Tuple[V, ...]], obj_geoid: str, obj_id: str</em><span class="sig-paren">)</span> &#x2192; Dict[str, Tuple[V, ...]]<a class="reference internal" href="../_modules/hive/util/helpers.html#DictOps.add_to_location_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.DictOps.add_to_location_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates Dicts that track the geoid of entities
+performs a shallow copy and update, treating Dict as an immutable hash table
+:param xs:
+:param obj_geoid:
+:param obj_id:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.util.helpers.DictOps.remove_from_location_dict">
+<em class="property">classmethod </em><code class="sig-name descname">remove_from_location_dict</code><span class="sig-paren">(</span><em class="sig-param">xs: Dict[str, Tuple[V, ...]], obj_geoid: str, obj_id: str</em><span class="sig-paren">)</span> &#x2192; Dict[str, Tuple[V, ...]]<a class="reference internal" href="../_modules/hive/util/helpers.html#DictOps.remove_from_location_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.util.helpers.DictOps.remove_from_location_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates Dicts that track the geoid of entities
+performs a shallow copy and update, treating Dict as an immutable hash table
+when a geoid has no ids after a remove, it deletes that geoid, to prevent geoid Dict memory leaks
+:param xs:
+:param obj_geoid:
+:param obj_id:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.util.pattern">
+<span id="hive-util-pattern-module"></span><h2>hive.util.pattern module<a class="headerlink" href="#module-hive.util.pattern" title="Permalink to this headline">¶</a></h2>
+<dl class="data">
+<dt id="hive.util.pattern.vehicle_regex">
+<code class="sig-prename descclassname">hive.util.pattern.</code><code class="sig-name descname">vehicle_regex</code><em class="property"> = '^([\\w]+),(\\d+\\.?\\d*),(\\d+\\.?\\d*),(\\w+),(\\w+),(\\d+\\.?\\d*),(\\d+\\.?\\d*)$'</em><a class="headerlink" href="#hive.util.pattern.vehicle_regex" title="Permalink to this definition">¶</a></dt>
+<dd><p>recognizes csv rows from a file with the following header:
+0  1   2   3          4           5               6
+id,lat,lon,powertrain,energycurve,energy_capacity,initial_soc</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.util.typealiases">
+<span id="hive-util-typealiases-module"></span><h2>hive.util.typealiases module<a class="headerlink" href="#module-hive.util.typealiases" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.util.units">
+<span id="hive-util-units-module"></span><h2>hive.util.units module<a class="headerlink" href="#module-hive.util.units" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.util">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hive.util" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">hive.util package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-hive.util.exception">hive.util.exception module</a></li>
+<li><a class="reference internal" href="#module-hive.util.helpers">hive.util.helpers module</a></li>
+<li><a class="reference internal" href="#module-hive.util.pattern">hive.util.pattern module</a></li>
+<li><a class="reference internal" href="#module-hive.util.typealiases">hive.util.typealiases module</a></li>
+<li><a class="reference internal" href="#module-hive.util.units">hive.util.units module</a></li>
+<li><a class="reference internal" href="#module-hive.util">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hive.state.update.html"
+                        title="previous chapter">hive.state.update package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/hive.util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.state.update.html" title="hive.state.update package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

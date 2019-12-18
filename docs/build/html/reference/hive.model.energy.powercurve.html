@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.energy.powercurve package &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hive.model.energy.powertrain package" href="hive.model.energy.powertrain.html" />
+    <link rel="prev" title="hive.model.energy package" href="hive.model.energy.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.model.energy.powertrain.html" title="hive.model.energy.powertrain package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hive.model.energy.html" title="hive.model.energy package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hive.model.html" >hive.model package</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hive.model.energy.html" accesskey="U">hive.model.energy package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hive-model-energy-powercurve-package">
+<h1>hive.model.energy.powercurve package<a class="headerlink" href="#hive-model-energy-powercurve-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.model.energy.powercurve.powercurve">
+<span id="hive-model-energy-powercurve-powercurve-module"></span><h2>hive.model.energy.powercurve.powercurve module<a class="headerlink" href="#module-hive.model.energy.powercurve.powercurve" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.model.energy.powercurve.powercurve.Powercurve">
+<em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.powercurve.powercurve.</code><code class="sig-name descname">Powercurve</code><a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>a powertrain has a behavior where it calculate energy consumption in KwH</p>
+<dl class="method">
+<dt id="hive.model.energy.powercurve.powercurve.Powercurve.get_id">
+<em class="property">abstract </em><code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.get_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.model.energy.powercurve.powercurve.Powercurve.get_energy_type">
+<em class="property">abstract </em><code class="sig-name descname">get_energy_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; hive.model.energy.energytype.EnergyType<a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.get_energy_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.get_energy_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the energy type of this Powertrain model
+:return: an energy type</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.model.energy.powercurve.powercurve.Powercurve.refuel">
+<em class="property">abstract </em><code class="sig-name descname">refuel</code><span class="sig-paren">(</span><em class="sig-param">energy_source: EnergySource</em>, <em class="sig-param">charger: Charger</em>, <em class="sig-param">duration_seconds: pint.unit.build_unit_class.&lt;locals&gt;.Unit = &lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em><span class="sig-paren">)</span> &#x2192; EnergySource<a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.refuel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.refuel" title="Permalink to this definition">¶</a></dt>
+<dd><p>(estimated) energy rate due to fueling, based on EnergySource
+:param energy_source: a vehicle’s source of energy
+:param charger: has a capacity scaling effect on the energy_rate
+:param duration_seconds: the amount of time to charge for
+:return: energy rate in KwH for charging with the current state of the EnergySource</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.model.energy.powercurve.tabular_powercurve">
+<span id="hive-model-energy-powercurve-tabular-powercurve-module"></span><h2>hive.model.energy.powercurve.tabular_powercurve module<a class="headerlink" href="#module-hive.model.energy.powercurve.tabular_powercurve" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowerCurveInput">
+<em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.powercurve.tabular_powercurve.</code><code class="sig-name descname">TabularPowerCurveInput</code><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowerCurveInput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowerCurveInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve">
+<em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.powercurve.tabular_powercurve.</code><code class="sig-name descname">TabularPowercurve</code><span class="sig-paren">(</span><em class="sig-param">data: hive.model.energy.powercurve.tabular_powercurve.TabularPowerCurveInput</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hive.model.energy.powercurve.powercurve.Powercurve" title="hive.model.energy.powercurve.powercurve.Powercurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">hive.model.energy.powercurve.powercurve.Powercurve</span></code></a></p>
+<p>builds a tabular, interpolated lookup model from a file
+for energy curves</p>
+<dl class="method">
+<dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_id">
+<code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_energy_type">
+<code class="sig-name descname">get_energy_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; hive.model.energy.energytype.EnergyType<a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.get_energy_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_energy_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the energy type of this Powertrain model
+:return: an energy type</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.refuel">
+<code class="sig-name descname">refuel</code><span class="sig-paren">(</span><em class="sig-param">energy_source: EnergySource</em>, <em class="sig-param">charger: Charger</em>, <em class="sig-param">duration_seconds: s = &lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em><span class="sig-paren">)</span> &#x2192; EnergySource<a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.refuel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.refuel" title="Permalink to this definition">¶</a></dt>
+<dd><p>(estimated) energy rate due to fueling, based on an interpolated tabular lookup model
+:param energy_source: a vehicle’s source of energy
+:param charger: has a capacity scaling effect on the energy_rate
+:param duration_seconds: the amount of time to charge for
+:return: energy rate in KwH for charging with the current state of the EnergySource</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.model.energy.powercurve">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hive.model.energy.powercurve" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hive.model.energy.powercurve.build_powercurve">
+<code class="sig-prename descclassname">hive.model.energy.powercurve.</code><code class="sig-name descname">build_powercurve</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; Union[OSError, hive.model.energy.powercurve.powercurve.Powercurve]<a class="reference internal" href="../_modules/hive/model/energy/powercurve.html#build_powercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.build_powercurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>constructs EnergyCurve objects from file descriptions
+:param name: name of a valid energy curve type
+:return: an EnergyCurve, or, an error
+:raise IOError: if model file is invalid</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">hive.model.energy.powercurve package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-hive.model.energy.powercurve.powercurve">hive.model.energy.powercurve.powercurve module</a></li>
+<li><a class="reference internal" href="#module-hive.model.energy.powercurve.tabular_powercurve">hive.model.energy.powercurve.tabular_powercurve module</a></li>
+<li><a class="reference internal" href="#module-hive.model.energy.powercurve">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hive.model.energy.html"
+                        title="previous chapter">hive.model.energy package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hive.model.energy.powertrain.html"
+                        title="next chapter">hive.model.energy.powertrain package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/hive.model.energy.powercurve.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.model.energy.powertrain.html" title="hive.model.energy.powertrain package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hive.model.energy.html" title="hive.model.energy package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hive.model.html" >hive.model package</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hive.model.energy.html" >hive.model.energy package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

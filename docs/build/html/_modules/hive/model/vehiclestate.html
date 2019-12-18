@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.vehiclestate &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.model.vehiclestate</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+
+
+<div class="viewcode-block" id="VehicleState"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleState">[docs]</a><span class="k">class</span> <span class="nc">VehicleState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A finite set of vehicle states and rules for state transitions</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># INACTIVE FLEET MANAGEMENT</span>
+    <span class="n">DISPATCH_BASE</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">CHARGING_BASE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">RESERVE_BASE</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="c1"># ACTIVE FLEET MANAGEMENT</span>
+    <span class="n">IDLE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">REPOSITIONING</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="c1"># TRIPPING</span>
+    <span class="n">DISPATCH_TRIP</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">SERVICING_TRIP</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="c1"># CHARGING</span>
+    <span class="n">DISPATCH_STATION</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">CHARGING_STATION</span> <span class="o">=</span> <span class="mi">8</span>
+
+<div class="viewcode-block" id="VehicleState.is_valid"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleState.is_valid">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">_valid_vehicle_states</span></div></div>
+
+
+<span class="n">_valid_vehicle_states</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_BASE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">CHARGING_BASE</span><span class="p">,</span> <span class="c1"># TODO: I think we should get rid of CHARGING_BASE and just use a single CHARGING.</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">RESERVE_BASE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">IDLE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_TRIP</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_STATION</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">CHARGING_STATION</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">REPOSITIONING</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">SERVICING_TRIP</span>
+<span class="p">])</span>
+
+
+<div class="viewcode-block" id="VehicleStateCategory"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory">[docs]</a><span class="k">class</span> <span class="nc">VehicleStateCategory</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    higher-order categories for vehicle state</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DO_NOTHING</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">CHARGE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">MOVE</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="VehicleStateCategory.from_vehicle_state"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory.from_vehicle_state">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_vehicle_state</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">vehicle_state</span><span class="p">:</span> <span class="n">VehicleState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VehicleStateCategory</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_vehicle_state_category</span><span class="p">[</span><span class="n">vehicle_state</span><span class="p">]</span></div></div>
+
+
+<span class="n">_vehicle_state_category</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_BASE</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">CHARGING_BASE</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">CHARGE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">RESERVE_BASE</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">DO_NOTHING</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">IDLE</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">DO_NOTHING</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">REPOSITIONING</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_TRIP</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">SERVICING_TRIP</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_STATION</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span>
+    <span class="n">VehicleState</span><span class="o">.</span><span class="n">CHARGING_STATION</span><span class="p">:</span> <span class="n">VehicleStateCategory</span><span class="o">.</span><span class="n">CHARGE</span>
+<span class="p">}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

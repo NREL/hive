@@ -4,12 +4,25 @@ from typing import Optional, NamedTuple, Dict, Union
 
 from h3 import h3
 
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
 
 class Base(NamedTuple):
+    """
+    Represents a base within the simulation.
+
+    :param id: unique base id.
+    :type id: str
+    :param geoid: location of base.
+    :type geoid: GeoId
+    :param total_stalls: total number of parking stalls.
+    :type total_stalls: int
+    :param available_stalls: number of available parking stalls.
+    :type available_stalls: int
+    :param station_id: Optional station that is located at the base.
+    :type station_id: Optional[StationId]
+    """
     id: BaseId
     geoid: GeoId
     total_stalls: int
@@ -30,6 +43,7 @@ class Base(NamedTuple):
                  sim_h3_resolution: int) -> Union[IOError, Base]:
         """
         takes a csv row and turns it into a Base
+
         :param row: a row as interpreted by csv.DictReader
         :param sim_h3_resolution: the h3 resolution that events are experienced at
         :return: a Base, or an error
@@ -64,12 +78,22 @@ class Base(NamedTuple):
                 return IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
     def has_available_stall(self) -> bool:
+        """
+        Does base have a stall or not.
+
+        :return: Boolean
+        """
         if self.available_stalls > 0:
             return True
         else:
             return False
 
     def checkout_stall(self) -> Optional[Base]:
+        """
+        Checks out a stall and returns the updated base if there are enough stalls.
+
+        :return: Updated Base or None
+        """
         stalls = self.available_stalls
         if stalls < 1:
             return None
@@ -77,6 +101,11 @@ class Base(NamedTuple):
             return self._replace(available_stalls=stalls - 1)
 
     def return_stall(self) -> Optional[Base]:
+        """
+        Checks out a stall and returns the updated base.
+
+        :return: Updated Base
+        """
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
             raise SimulationStateError('Base already has maximum sta')

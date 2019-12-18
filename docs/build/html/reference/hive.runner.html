@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.runner package &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hive.state package" href="hive.state.html" />
+    <link rel="prev" title="hive.resources package" href="hive.resources.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.state.html" title="hive.state package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hive.resources.html" title="hive.resources package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" accesskey="U">hive package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hive-runner-package">
+<h1>hive.runner package<a class="headerlink" href="#hive-runner-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.runner.environment">
+<span id="hive-runner-environment-module"></span><h2>hive.runner.environment module<a class="headerlink" href="#module-hive.runner.environment" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.runner.environment.Environment">
+<em class="property">class </em><code class="sig-prename descclassname">hive.runner.environment.</code><code class="sig-name descname">Environment</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/environment.html#Environment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.environment.Environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.runner.environment.Environment.config">
+<code class="sig-name descname">config</code><a class="headerlink" href="#hive.runner.environment.Environment.config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.runner.local_simulation_runner">
+<span id="hive-runner-local-simulation-runner-module"></span><h2>hive.runner.local_simulation_runner module<a class="headerlink" href="#module-hive.runner.local_simulation_runner" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.runner.local_simulation_runner.RunnerPayload">
+<em class="property">class </em><code class="sig-prename descclassname">hive.runner.local_simulation_runner.</code><code class="sig-name descname">RunnerPayload</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">d</em>, <em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#RunnerPayload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.runner.local_simulation_runner.RunnerPayload.s">
+<code class="sig-name descname">s</code><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload.s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.runner.local_simulation_runner.RunnerPayload.d">
+<code class="sig-name descname">d</code><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload.d" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.runner.local_simulation_runner.RunnerPayload.r">
+<code class="sig-name descname">r</code><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload.r" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.runner.local_simulation_runner.RunnerPayload.apply_fn">
+<code class="sig-name descname">apply_fn</code><span class="sig-paren">(</span><em class="sig-param">fn: hive.state.update.simulation_update.SimulationUpdate</em><span class="sig-paren">)</span> &#x2192; hive.runner.local_simulation_runner.RunnerPayload<a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#RunnerPayload.apply_fn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload.apply_fn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.runner.local_simulation_runner.LocalSimulationRunner">
+<em class="property">class </em><code class="sig-prename descclassname">hive.runner.local_simulation_runner.</code><code class="sig-name descname">LocalSimulationRunner</code><span class="sig-paren">(</span><em class="sig-param">env</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#LocalSimulationRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.runner.local_simulation_runner.LocalSimulationRunner.env">
+<code class="sig-name descname">env</code><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner.env" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.runner.local_simulation_runner.LocalSimulationRunner.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">initial_simulation_state: hive.state.simulation_state.SimulationState, initial_dispatcher: hive.dispatcher.dispatcher.Dispatcher, update_functions: Tuple[hive.state.update.simulation_update.SimulationUpdate, ...], reporter: hive.reporting.reporter.Reporter</em><span class="sig-paren">)</span> &#x2192; hive.runner.local_simulation_runner.RunnerPayload<a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#LocalSimulationRunner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>steps through time, running a simulation, and producing a simulation result
+:param initial_simulation_state: the simulation state before the day has begun
+:param initial_dispatcher: the initialized dispatcher
+:param update_functions: applied at the beginning of each time step to modify the sim
+:param reporter: a class to report messages from the simulation
+:return: the final simulation state and dispatcher state</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.runner.simulation_runner_ops">
+<span id="hive-runner-simulation-runner-ops-module"></span><h2>hive.runner.simulation_runner_ops module<a class="headerlink" href="#module-hive.runner.simulation_runner_ops" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hive.runner.simulation_runner_ops.step">
+<code class="sig-prename descclassname">hive.runner.simulation_runner_ops.</code><code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">simulation_state: hive.state.simulation_state.SimulationState</em>, <em class="sig-param">dispatcher: hive.dispatcher.dispatcher.Dispatcher</em><span class="sig-paren">)</span> &#x2192; Tuple[hive.state.simulation_state.SimulationState, hive.dispatcher.dispatcher.Dispatcher, Tuple[hive.dispatcher.instruction.Instruction, ...]]<a class="reference internal" href="../_modules/hive/runner/simulation_runner_ops.html#step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.simulation_runner_ops.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>take one step in the simulation
+:return: simulation at time t+1</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.runner">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hive.runner" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">hive.runner package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-hive.runner.environment">hive.runner.environment module</a></li>
+<li><a class="reference internal" href="#module-hive.runner.local_simulation_runner">hive.runner.local_simulation_runner module</a></li>
+<li><a class="reference internal" href="#module-hive.runner.simulation_runner_ops">hive.runner.simulation_runner_ops module</a></li>
+<li><a class="reference internal" href="#module-hive.runner">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hive.resources.html"
+                        title="previous chapter">hive.resources package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hive.state.html"
+                        title="next chapter">hive.state package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/hive.runner.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.state.html" title="hive.state package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hive.resources.html" title="hive.resources package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

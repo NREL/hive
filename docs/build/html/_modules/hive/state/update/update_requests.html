@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.state.update.update_requests &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.state.update.update_requests</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span>
+
+<span class="kn">import</span> <span class="nn">functools</span> <span class="k">as</span> <span class="nn">ft</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.request</span> <span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span> <span class="nn">hive.state.simulation_state</span> <span class="kn">import</span> <span class="n">SimulationState</span>
+<span class="kn">from</span> <span class="nn">hive.state.update.simulation_update_result</span> <span class="kn">import</span> <span class="n">SimulationUpdateResult</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">RequestId</span>
+
+
+<div class="viewcode-block" id="update_requests_from_iterator"><a class="viewcode-back" href="../../../../reference/hive.state.update.html#hive.state.update.update_requests.update_requests_from_iterator">[docs]</a><span class="k">def</span> <span class="nf">update_requests_from_iterator</span><span class="p">(</span><span class="n">it</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+                                  <span class="n">initial_sim_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    add requests from file when the simulation reaches the request&#39;s time</span>
+<span class="sd">    :param it: expected to be a Request iterator which streams in row data taken from a DictReader</span>
+<span class="sd">    :param initial_sim_state: the current sim state</span>
+<span class="sd">    :return: sim state plus new requests</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="n">acc</span><span class="p">:</span> <span class="n">SimulationUpdateResult</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        takes one row, attempts to parse it as a Request, and attempts to add it to the simulation</span>
+<span class="sd">        :param acc: latest SimulationState and any update reports</span>
+<span class="sd">        :param row: one row as loaded via DictReader</span>
+<span class="sd">        :return: the updated sim and updated reporting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">Request</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">acc</span><span class="o">.</span><span class="n">simulation_state</span><span class="o">.</span><span class="n">road_network</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+            <span class="c1"># request failed to parse from row</span>
+            <span class="n">row_failure</span> <span class="o">=</span> <span class="n">_failure_as_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">req</span><span class="p">),</span> <span class="n">initial_sim_state</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">acc</span><span class="o">.</span><span class="n">add_report</span><span class="p">(</span><span class="n">row_failure</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_updated</span> <span class="o">=</span> <span class="n">acc</span><span class="o">.</span><span class="n">simulation_state</span><span class="o">.</span><span class="n">add_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sim_updated</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                <span class="c1"># simulation failed to add this request</span>
+                <span class="n">sim_failure</span> <span class="o">=</span> <span class="n">_failure_as_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sim_updated</span><span class="p">),</span> <span class="n">initial_sim_state</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">acc</span><span class="o">.</span><span class="n">add_report</span><span class="p">(</span><span class="n">sim_failure</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># successfully added request</span>
+                <span class="n">sim_success</span> <span class="o">=</span> <span class="n">_success_as_json</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sim_updated</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">acc</span><span class="o">.</span><span class="n">update_sim</span><span class="p">(</span><span class="n">sim_updated</span><span class="p">,</span> <span class="n">sim_success</span><span class="p">)</span>
+
+    <span class="c1"># stream in all Requests that occur before the sim time of the provided SimulationState</span>
+    <span class="n">updated_sim</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+        <span class="n">_update</span><span class="p">,</span>
+        <span class="n">it</span><span class="p">,</span>
+        <span class="n">SimulationUpdateResult</span><span class="p">(</span><span class="n">initial_sim_state</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">updated_sim</span></div>
+
+
+<span class="k">def</span> <span class="nf">_success_as_json</span><span class="p">(</span><span class="n">r_id</span><span class="p">:</span> <span class="n">RequestId</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    stringified json report of a cancellation</span>
+<span class="sd">    :param r_id: request cancelled</span>
+<span class="sd">    :param sim: the state of the sim before cancellation occurs</span>
+<span class="sd">    :return: a stringified json report</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dep_t</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">r_id</span><span class="p">]</span><span class="o">.</span><span class="n">departure_time</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;{{</span><span class="se">\&quot;</span><span class="s2">report</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="s2">add_request</span><span class="se">\&quot;</span><span class="s2">,</span><span class="se">\&quot;</span><span class="s2">request_id</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="si">{r_id}</span><span class="se">\&quot;</span><span class="s2">,</span><span class="se">\&quot;</span><span class="s2">departure_time</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="si">{dep_t}</span><span class="se">\&quot;</span><span class="s2">}}&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_failure_as_json</span><span class="p">(</span><span class="n">error_msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    stringified json report of a cancellation</span>
+<span class="sd">    :param error_msg: error message</span>
+<span class="sd">    :param sim: the state of the sim before cancellation occurs</span>
+<span class="sd">    :return: a stringified json report of an error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;{{</span><span class="se">\&quot;</span><span class="s2">report</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="s2">add_request</span><span class="se">\&quot;</span><span class="s2">,</span><span class="se">\&quot;</span><span class="s2">sim_time</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="si">{sim.sim_time}</span><span class="se">\&quot;</span><span class="s2">,</span><span class="se">\&quot;</span><span class="s2">error</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="si">{error_msg}</span><span class="se">\&quot;</span><span class="s2">}}&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_eof_as_json</span><span class="p">(</span><span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    notification of end-of-file</span>
+<span class="sd">    :param sim: the simulation state</span>
+<span class="sd">    :return: a stringified end-of-file report</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;{{</span><span class="se">\&quot;</span><span class="s2">report</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="s2">add_request</span><span class="se">\&quot;</span><span class="s2">,</span><span class="se">\&quot;</span><span class="s2">sim_time</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="si">{sim.sim_time}</span><span class="se">\&quot;</span><span class="s2">,</span><span class="se">\&quot;</span><span class="s2">message</span><span class="se">\&quot;</span><span class="s2">:</span><span class="se">\&quot;</span><span class="s2">EOF</span><span class="se">\&quot;</span><span class="s2">}}&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.state.update package &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hive.util package" href="hive.util.html" />
+    <link rel="prev" title="hive.state package" href="hive.state.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.util.html" title="hive.util package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hive.state.html" title="hive.state package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hive.state.html" accesskey="U">hive.state package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hive-state-update-package">
+<h1>hive.state.update package<a class="headerlink" href="#hive-state-update-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hive.state.update.cancel_requests">
+<span id="hive-state-update-cancel-requests-module"></span><h2>hive.state.update.cancel_requests module<a class="headerlink" href="#module-hive.state.update.cancel_requests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.state.update.cancel_requests.CancelRequests">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.cancel_requests.</code><code class="sig-name descname">CancelRequests</code><a class="reference internal" href="../_modules/hive/state/update/cancel_requests.html#CancelRequests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.cancel_requests.CancelRequests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hive.state.update.simulation_update.SimulationUpdate" title="hive.state.update.simulation_update.SimulationUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">hive.state.update.simulation_update.SimulationUpdate</span></code></a></p>
+<dl class="method">
+<dt id="hive.state.update.cancel_requests.CancelRequests.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">simulation_state: hive.state.simulation_state.SimulationState</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/cancel_requests.html#CancelRequests.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.cancel_requests.CancelRequests.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>cancels requests whose cancel time has been exceeded
+:param simulation_state: state to modify
+:return: state without cancelled requests, along with this update function</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.state.update.simulation_update">
+<span id="hive-state-update-simulation-update-module"></span><h2>hive.state.update.simulation_update module<a class="headerlink" href="#module-hive.state.update.simulation_update" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.state.update.simulation_update.SimulationUpdate">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.simulation_update.</code><code class="sig-name descname">SimulationUpdate</code><a class="reference internal" href="../_modules/hive/state/update/simulation_update.html#SimulationUpdate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.simulation_update.SimulationUpdate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dl class="method">
+<dt id="hive.state.update.simulation_update.SimulationUpdate.update">
+<em class="property">abstract </em><code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">simulation_state: hive.state.simulation_state.SimulationState</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/simulation_update.html#SimulationUpdate.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.simulation_update.SimulationUpdate.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a simulation state and modifies it, returning the updated simulation state
+:param simulation_state: the state to modify
+:return: the updated sim state, along with any reporting</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.state.update.simulation_update_result">
+<span id="hive-state-update-simulation-update-result-module"></span><h2>hive.state.update.simulation_update_result module<a class="headerlink" href="#module-hive.state.update.simulation_update_result" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.state.update.simulation_update_result.SimulationUpdateResult">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.simulation_update_result.</code><code class="sig-name descname">SimulationUpdateResult</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em>, <em class="sig-param">reports</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/update/simulation_update_result.html#SimulationUpdateResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.simulation_update_result.SimulationUpdateResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="hive.state.update.simulation_update_result.SimulationUpdateResult.simulation_state">
+<code class="sig-name descname">simulation_state</code><a class="headerlink" href="#hive.state.update.simulation_update_result.SimulationUpdateResult.simulation_state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hive.state.update.simulation_update_result.SimulationUpdateResult.reports">
+<code class="sig-name descname">reports</code><a class="headerlink" href="#hive.state.update.simulation_update_result.SimulationUpdateResult.reports" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.state.update.simulation_update_result.SimulationUpdateResult.add_report">
+<code class="sig-name descname">add_report</code><span class="sig-paren">(</span><em class="sig-param">report: str</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/simulation_update_result.html#SimulationUpdateResult.add_report"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.simulation_update_result.SimulationUpdateResult.add_report" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hive.state.update.simulation_update_result.SimulationUpdateResult.update_sim">
+<code class="sig-name descname">update_sim</code><span class="sig-paren">(</span><em class="sig-param">sim: hive.state.simulation_state.SimulationState</em>, <em class="sig-param">report: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/simulation_update_result.html#SimulationUpdateResult.update_sim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.simulation_update_result.SimulationUpdateResult.update_sim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.state.update.update_requests">
+<span id="hive-state-update-update-requests-module"></span><h2>hive.state.update.update_requests module<a class="headerlink" href="#module-hive.state.update.update_requests" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hive.state.update.update_requests.update_requests_from_iterator">
+<code class="sig-prename descclassname">hive.state.update.update_requests.</code><code class="sig-name descname">update_requests_from_iterator</code><span class="sig-paren">(</span><em class="sig-param">it: Iterator[Dict[str, str]], initial_sim_state: hive.state.simulation_state.SimulationState</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/update_requests.html#update_requests_from_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests.update_requests_from_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>add requests from file when the simulation reaches the request’s time
+:param it: expected to be a Request iterator which streams in row data taken from a DictReader
+:param initial_sim_state: the current sim state
+:return: sim state plus new requests</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.state.update.update_requests_from_file">
+<span id="hive-state-update-update-requests-from-file-module"></span><h2>hive.state.update.update_requests_from_file module<a class="headerlink" href="#module-hive.state.update.update_requests_from_file" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.state.update.update_requests_from_file.UpdateRequestsFromFile">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.update_requests_from_file.</code><code class="sig-name descname">UpdateRequestsFromFile</code><span class="sig-paren">(</span><em class="sig-param">request_file: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/update/update_requests_from_file.html#UpdateRequestsFromFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests_from_file.UpdateRequestsFromFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hive.state.update.simulation_update.SimulationUpdate" title="hive.state.update.simulation_update.SimulationUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">hive.state.update.simulation_update.SimulationUpdate</span></code></a></p>
+<p>loads requests from a file, which is assumed to be sorted by Request</p>
+<dl class="method">
+<dt id="hive.state.update.update_requests_from_file.UpdateRequestsFromFile.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">initial_sim_state: hive.state.simulation_state.SimulationState</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/update_requests_from_file.html#UpdateRequestsFromFile.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests_from_file.UpdateRequestsFromFile.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>add requests from file when the simulation reaches the request’s time
+:param initial_sim_state: the current sim state
+:return: sim state plus new requests</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.state.update.update_requests_from_file.RequestFileIterator">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.update_requests_from_file.</code><code class="sig-name descname">RequestFileIterator</code><span class="sig-paren">(</span><em class="sig-param">reader: _csv.reader</em>, <em class="sig-param">file: TextIO</em>, <em class="sig-param">sim_time: int</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/update/update_requests_from_file.html#RequestFileIterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests_from_file.RequestFileIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.state.update.update_requests_from_string">
+<span id="hive-state-update-update-requests-from-string-module"></span><h2>hive.state.update.update_requests_from_string module<a class="headerlink" href="#module-hive.state.update.update_requests_from_string" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hive.state.update.update_requests_from_string.UpdateRequestsFromString">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.update_requests_from_string.</code><code class="sig-name descname">UpdateRequestsFromString</code><span class="sig-paren">(</span><em class="sig-param">string_requests: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/update/update_requests_from_string.html#UpdateRequestsFromString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests_from_string.UpdateRequestsFromString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hive.state.update.simulation_update.SimulationUpdate" title="hive.state.update.simulation_update.SimulationUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">hive.state.update.simulation_update.SimulationUpdate</span></code></a></p>
+<p>loads requests from a newline-delimited string in csv format</p>
+<dl class="method">
+<dt id="hive.state.update.update_requests_from_string.UpdateRequestsFromString.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">initial_sim_state: hive.state.simulation_state.SimulationState</em><span class="sig-paren">)</span> &#x2192; hive.state.update.simulation_update_result.SimulationUpdateResult<a class="reference internal" href="../_modules/hive/state/update/update_requests_from_string.html#UpdateRequestsFromString.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests_from_string.UpdateRequestsFromString.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>add requests from file when the simulation reaches the request’s time
+:param initial_sim_state: the current sim state
+:return: sim state plus new requests</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hive.state.update.update_requests_from_string.RequestStringIterator">
+<em class="property">class </em><code class="sig-prename descclassname">hive.state.update.update_requests_from_string.</code><code class="sig-name descname">RequestStringIterator</code><span class="sig-paren">(</span><em class="sig-param">requests: csv.DictReader</em>, <em class="sig-param">sim_time: int</em>, <em class="sig-param">row_position: int</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/update/update_requests_from_string.html#RequestStringIterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.update.update_requests_from_string.RequestStringIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-hive.state.update">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hive.state.update" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">hive.state.update package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-hive.state.update.cancel_requests">hive.state.update.cancel_requests module</a></li>
+<li><a class="reference internal" href="#module-hive.state.update.simulation_update">hive.state.update.simulation_update module</a></li>
+<li><a class="reference internal" href="#module-hive.state.update.simulation_update_result">hive.state.update.simulation_update_result module</a></li>
+<li><a class="reference internal" href="#module-hive.state.update.update_requests">hive.state.update.update_requests module</a></li>
+<li><a class="reference internal" href="#module-hive.state.update.update_requests_from_file">hive.state.update.update_requests_from_file module</a></li>
+<li><a class="reference internal" href="#module-hive.state.update.update_requests_from_string">hive.state.update.update_requests_from_string module</a></li>
+<li><a class="reference internal" href="#module-hive.state.update">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hive.state.html"
+                        title="previous chapter">hive.state package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hive.util.html"
+                        title="next chapter">hive.util package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/hive.state.update.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hive.util.html" title="hive.util package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hive.state.html" title="hive.state package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hive.state.html" >hive.state package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

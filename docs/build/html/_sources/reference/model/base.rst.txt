@@ -1,0 +1,4 @@
+Base
+=================
+.. automodule:: hive.model.base
+   :members:

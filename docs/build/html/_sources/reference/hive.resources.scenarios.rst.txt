@@ -1,0 +1,10 @@
+hive.resources.scenarios package
+================================
+
+Module contents
+---------------
+
+.. automodule:: hive.resources.scenarios
+   :members:
+   :undoc-members:
+   :show-inheritance:

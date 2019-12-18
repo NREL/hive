@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.config.test_config_builder &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.config.test_config_builder</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">hive.config</span> <span class="kn">import</span> <span class="n">ConfigBuilder</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.link</span> <span class="kn">import</span> <span class="n">Link</span>
+
+
+<div class="viewcode-block" id="TestConfigBuilder"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilder">[docs]</a><span class="k">class</span> <span class="nc">TestConfigBuilder</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestConfigBuilder.test_build_using_defaults"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilder.test_build_using_defaults">[docs]</a>    <span class="k">def</span> <span class="nf">test_build_using_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">test_class</span> <span class="o">=</span> <span class="n">ConfigBuilder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="n">default_config</span><span class="o">=</span><span class="n">defaults</span><span class="p">,</span>
+            <span class="n">required_config</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">config_constructor</span><span class="o">=</span><span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">constructor</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">test_class</span><span class="p">,</span> <span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">TestClass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">defaults</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">defaults</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">defaults</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestConfigBuilder.test_build_has_required_fields"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilder.test_build_has_required_fields">[docs]</a>    <span class="k">def</span> <span class="nf">test_build_has_required_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">Link</span>
+        <span class="p">}</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+            <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;foo&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;ya&quot;</span><span class="p">,</span> <span class="s2">&quot;asdf&quot;</span><span class="p">,</span> <span class="s2">&quot;jkl;&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">test_class</span> <span class="o">=</span> <span class="n">ConfigBuilder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="n">default_config</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">required_config</span><span class="o">=</span><span class="n">required</span><span class="p">,</span>
+            <span class="n">config_constructor</span><span class="o">=</span><span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">constructor</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">test_class</span><span class="p">,</span> <span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">TestClass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestConfigBuilder.test_build_missing_required_field"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilder.test_build_missing_required_field">[docs]</a>    <span class="k">def</span> <span class="nf">test_build_missing_required_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">Link</span>
+        <span class="p">}</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+            <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;ya&quot;</span><span class="p">,</span> <span class="s2">&quot;asdf&quot;</span><span class="p">,</span> <span class="s2">&quot;jkl;&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">test_class</span> <span class="o">=</span> <span class="n">ConfigBuilder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="n">default_config</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">required_config</span><span class="o">=</span><span class="n">required</span><span class="p">,</span>
+            <span class="n">config_constructor</span><span class="o">=</span><span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">constructor</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">test_class</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestConfigBuilder.test_build_ignores_extra_fields"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilder.test_build_ignores_extra_fields">[docs]</a>    <span class="k">def</span> <span class="nf">test_build_ignores_extra_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+            <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;foo&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;ya&quot;</span><span class="p">,</span> <span class="s2">&quot;asdf&quot;</span><span class="p">,</span> <span class="s2">&quot;jkl;&quot;</span><span class="p">),</span>
+            <span class="s1">&#39;extra&#39;</span><span class="p">:</span> <span class="s2">&quot;will be ignored&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="n">test_class</span> <span class="o">=</span> <span class="n">ConfigBuilder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="n">default_config</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">required_config</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">config_constructor</span><span class="o">=</span><span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">constructor</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">test_class</span><span class="p">,</span> <span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">TestClass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_class</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="TestConfigBuilderAssets"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilderAssets">[docs]</a><span class="k">class</span> <span class="nc">TestConfigBuilderAssets</span><span class="p">:</span>
+<div class="viewcode-block" id="TestConfigBuilderAssets.TestClass"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilderAssets.TestClass">[docs]</a>    <span class="k">class</span> <span class="nc">TestClass</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="n">b</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">c</span><span class="p">:</span> <span class="n">Link</span></div>
+
+<div class="viewcode-block" id="TestConfigBuilderAssets.constructor"><a class="viewcode-back" href="../../../reference/hive.config.html#hive.config.test_config_builder.TestConfigBuilderAssets.constructor">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">constructor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            d (Dict):</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TestConfigBuilderAssets</span><span class="o">.</span><span class="n">TestClass</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">])</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

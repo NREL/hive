@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.roadnetwork.routetraversal &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.model.roadnetwork.routetraversal</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">functools</span> <span class="k">as</span> <span class="nn">ft</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.linktraversal</span> <span class="kn">import</span> <span class="n">LinkTraversal</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.linktraversal</span> <span class="kn">import</span> <span class="n">traverse_up_to</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.property_link</span> <span class="kn">import</span> <span class="n">PropertyLink</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.roadnetwork</span> <span class="kn">import</span> <span class="n">RoadNetwork</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.route</span> <span class="kn">import</span> <span class="n">Route</span>
+<span class="kn">from</span> <span class="nn">hive.util.helpers</span> <span class="kn">import</span> <span class="n">TupleOps</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">km</span>
+
+
+<div class="viewcode-block" id="RouteTraversal"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.routetraversal.RouteTraversal">[docs]</a><span class="k">class</span> <span class="nc">RouteTraversal</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">remaining_time</span><span class="p">:</span> <span class="n">h</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">hours</span>
+    <span class="n">traversal_distance</span><span class="p">:</span> <span class="n">km</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span>
+    <span class="n">experienced_route</span><span class="p">:</span> <span class="n">Route</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">remaining_route</span><span class="p">:</span> <span class="n">Route</span> <span class="o">=</span> <span class="p">()</span>
+
+<div class="viewcode-block" id="RouteTraversal.no_time_left"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.routetraversal.RouteTraversal.no_time_left">[docs]</a>    <span class="k">def</span> <span class="nf">no_time_left</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if we have no more time, then end the traversal</span>
+<span class="sd">        :return: True if the agent is out of time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_time</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="RouteTraversal.add_traversal"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.routetraversal.RouteTraversal.add_traversal">[docs]</a>    <span class="k">def</span> <span class="nf">add_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">LinkTraversal</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RouteTraversal</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        take the result of a link traversal and update the route traversal</span>
+<span class="sd">        :param t: a link traversal</span>
+<span class="sd">        :return: the updated route traversal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_experienced_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experienced_route</span> \
+            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">traversed</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">experienced_route</span> <span class="o">+</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">traversed</span><span class="p">,)</span>
+        <span class="n">updated_remaining_route</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_route</span> \
+            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">remaining</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_route</span> <span class="o">+</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">remaining</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">traversed</span><span class="p">:</span>
+            <span class="n">traversal_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traversal_distance</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="n">traversed</span><span class="o">.</span><span class="n">distance</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">traversal_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traversal_distance</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+            <span class="n">remaining_time</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">remaining_time</span><span class="p">,</span>
+            <span class="n">traversal_distance</span><span class="o">=</span> <span class="n">traversal_distance</span><span class="p">,</span>
+            <span class="n">experienced_route</span><span class="o">=</span><span class="n">updated_experienced_route</span><span class="p">,</span>
+            <span class="n">remaining_route</span><span class="o">=</span><span class="n">updated_remaining_route</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="RouteTraversal.add_link_not_traversed"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.routetraversal.RouteTraversal.add_link_not_traversed">[docs]</a>    <span class="k">def</span> <span class="nf">add_link_not_traversed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RouteTraversal</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if a link wasn&#39;t traversed, be sure to add it to the remaining route</span>
+<span class="sd">        :param link: a link for the remaining route</span>
+<span class="sd">        :return: the updated RouteTraversal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+            <span class="n">remaining_route</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_route</span> <span class="o">+</span> <span class="p">(</span><span class="n">link</span><span class="p">,)</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="traverse"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.routetraversal.traverse">[docs]</a><span class="k">def</span> <span class="nf">traverse</span><span class="p">(</span><span class="n">route_estimate</span><span class="p">:</span> <span class="n">Route</span><span class="p">,</span>
+             <span class="n">road_network</span><span class="p">:</span> <span class="n">RoadNetwork</span><span class="p">,</span>
+             <span class="n">time_step</span><span class="p">:</span> <span class="n">s</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">RouteTraversal</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    step through the route from the current agent position (assumed to be start.link_id) toward the destination</span>
+<span class="sd">    :param route_estimate: the current route estimate</span>
+<span class="sd">    :param road_network: the current road network state</span>
+<span class="sd">    :param time_step: size of the time step for this traversal</span>
+<span class="sd">    :return: a route experience and updated route estimate;</span>
+<span class="sd">             or, nothing if the route is consumed.</span>
+<span class="sd">             an exception is possible if the current step is not found on the link or</span>
+<span class="sd">             the route is malformed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_estimate</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">TupleOps</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">route_estimate</span><span class="p">)</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">TupleOps</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">route_estimate</span><span class="p">)</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># function that steps through the route</span>
+        <span class="k">def</span> <span class="nf">_traverse</span><span class="p">(</span><span class="n">acc</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">RouteTraversal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]],</span>
+                      <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">RouteTraversal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]]:</span>
+            <span class="n">acc_traversal</span><span class="p">,</span> <span class="n">acc_failures</span> <span class="o">=</span> <span class="n">acc</span>
+            <span class="k">if</span> <span class="n">acc_traversal</span><span class="o">.</span><span class="n">no_time_left</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">acc_traversal</span><span class="o">.</span><span class="n">add_link_not_traversed</span><span class="p">(</span><span class="n">property_link</span><span class="p">),</span> <span class="n">acc_failures</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># traverse this link as far as we can go</span>
+                <span class="n">traverse_result</span> <span class="o">=</span> <span class="n">traverse_up_to</span><span class="p">(</span><span class="n">road_network</span><span class="p">,</span> <span class="n">property_link</span><span class="p">,</span> <span class="n">acc_traversal</span><span class="o">.</span><span class="n">remaining_time</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traverse_result</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">acc_traversal</span><span class="p">,</span> <span class="n">traverse_result</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">updated_experienced_route</span> <span class="o">=</span> <span class="n">acc_traversal</span><span class="o">.</span><span class="n">add_traversal</span><span class="p">(</span><span class="n">traverse_result</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">updated_experienced_route</span><span class="p">,</span> <span class="n">acc_failures</span>
+
+        <span class="c1"># initial search state has a route traversal and an Optional[Exception]</span>
+        <span class="n">initial</span> <span class="o">=</span> <span class="p">(</span><span class="n">RouteTraversal</span><span class="p">(</span><span class="n">remaining_time</span><span class="o">=</span><span class="n">time_step</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">hours</span><span class="p">)),</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">traversal_result</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+            <span class="n">_traverse</span><span class="p">,</span>
+            <span class="n">route_estimate</span><span class="p">,</span>
+            <span class="n">initial</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">error</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">traversal_result</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.vehicle &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.model.vehicle</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.energy.charger</span> <span class="kn">import</span> <span class="n">Charger</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.energysource</span> <span class="kn">import</span> <span class="n">EnergySource</span>
+<span class="kn">from</span> <span class="nn">hive.model.passenger</span> <span class="kn">import</span> <span class="n">Passenger</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.property_link</span> <span class="kn">import</span> <span class="n">PropertyLink</span>
+<span class="kn">from</span> <span class="nn">hive.model.vehiclestate</span> <span class="kn">import</span> <span class="n">VehicleState</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.roadnetwork</span> <span class="kn">import</span> <span class="n">RoadNetwork</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.routetraversal</span> <span class="kn">import</span> <span class="n">traverse</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.route</span> <span class="kn">import</span> <span class="n">Route</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">hive.util.helpers</span> <span class="kn">import</span> <span class="n">DictOps</span>
+<span class="kn">from</span> <span class="nn">hive.util.pattern</span> <span class="kn">import</span> <span class="n">vehicle_regex</span>
+<span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">km</span>
+<span class="kn">from</span> <span class="nn">hive.util.exception</span> <span class="kn">import</span> <span class="n">EntityError</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.powercurve</span> <span class="kn">import</span> <span class="n">Powercurve</span>
+<span class="kn">from</span> <span class="nn">hive.model.energy.powertrain</span> <span class="kn">import</span> <span class="n">Powertrain</span>
+
+<span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
+
+
+<div class="viewcode-block" id="Vehicle"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle">[docs]</a><span class="k">class</span> <span class="nc">Vehicle</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="c1"># fixed vehicle attributes</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="n">VehicleId</span>
+    <span class="n">powertrain_id</span><span class="p">:</span> <span class="n">PowertrainId</span>
+    <span class="n">powercurve_id</span><span class="p">:</span> <span class="n">PowercurveId</span>
+    <span class="n">energy_source</span><span class="p">:</span> <span class="n">EnergySource</span>
+    <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span>
+    <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span>
+    <span class="n">route</span><span class="p">:</span> <span class="n">Route</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">vehicle_state</span><span class="p">:</span> <span class="n">VehicleState</span> <span class="o">=</span> <span class="n">VehicleState</span><span class="o">.</span><span class="n">IDLE</span>
+    <span class="n">idle_time_s</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">seconds</span>
+    <span class="c1"># frozenmap implementation does not yet exist</span>
+    <span class="c1"># https://www.python.org/dev/peps/pep-0603/</span>
+
+    <span class="n">passengers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">PassengerId</span><span class="p">,</span> <span class="n">Passenger</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">plugged_in_charger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Charger</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">station</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StationId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">charger_intent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Charger</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">station_intent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StationId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># todo: p_locations: Dict[GeoId, PassengerId] = {}</span>
+    <span class="n">distance_traveled</span><span class="p">:</span> <span class="n">km</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span>
+
+<div class="viewcode-block" id="Vehicle.from_string"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.from_string">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">road_network</span><span class="p">:</span> <span class="n">RoadNetwork</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">Vehicle</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        reads a csv row from file to generate a Vehicle</span>
+
+<span class="sd">        :param string: a row of a .csv which matches hive.util.pattern.vehicle_regex.</span>
+<span class="sd">        this string will be stripped of whitespace characters (no spaces allowed in names!)</span>
+<span class="sd">        :param road_network: the road network, used to find the vehicle&#39;s location in the sim</span>
+<span class="sd">        :return: a vehicle, or, an IOError if failure occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cleaned_string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">vehicle_regex</span><span class="p">,</span> <span class="n">cleaned_string</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;row did not match expected vehicle format: &#39;</span><span class="si">{cleaned_string}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">powertrain_models</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid powertrain model for vehicle: &#39;{result.group(4)}&#39;&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">powercurve_models</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid energycurve model for vehicle: &#39;{result.group(5)}&#39;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">vehicle_id</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">lat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">lon</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+                <span class="n">powertrain_id</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+                <span class="n">energycurve_id</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># todo: add after issue #102 completed</span>
+                <span class="n">capacity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
+                <span class="n">initial_soc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">initial_soc</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;initial soc for vehicle: &#39;</span><span class="si">{initial_soc}</span><span class="s2">&#39; must be in range [0,1]&quot;</span><span class="p">)</span>
+
+                <span class="n">energy_type</span> <span class="o">=</span> <span class="n">powercurve_energy_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>  <span class="c1"># todo: where is powercurve_energy_types?</span>
+                <span class="n">energy_source</span> <span class="o">=</span> <span class="n">EnergySource</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">energy_type</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">initial_soc</span><span class="p">)</span>
+                <span class="n">geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">road_network</span><span class="o">.</span><span class="n">sim_h3_resolution</span><span class="p">)</span>
+                <span class="n">start_link</span> <span class="o">=</span> <span class="n">road_network</span><span class="o">.</span><span class="n">property_link_from_geoid</span><span class="p">(</span><span class="n">geoid</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">Vehicle</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">vehicle_id</span><span class="p">,</span>
+                    <span class="n">powertrain_id</span><span class="o">=</span><span class="n">powertrain_id</span><span class="p">,</span>
+                    <span class="n">energy_source</span><span class="o">=</span><span class="n">energy_source</span><span class="p">,</span>
+                    <span class="n">geoid</span><span class="o">=</span><span class="n">geoid</span><span class="p">,</span>
+                    <span class="n">property_link</span><span class="o">=</span><span class="n">start_link</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;a numeric value could not be parsed from </span><span class="si">{cleaned_string}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.has_passengers"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.has_passengers">[docs]</a>    <span class="k">def</span> <span class="nf">has_passengers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">passengers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Vehicle.has_route"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.has_route">[docs]</a>    <span class="k">def</span> <span class="nf">has_route</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Vehicle.add_passengers"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.add_passengers">[docs]</a>    <span class="k">def</span> <span class="nf">add_passengers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_passengers</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Passenger</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        loads some passengers onto this vehicle</span>
+<span class="sd">        :param self:</span>
+<span class="sd">        :param new_passengers: the set of passengers we want to add</span>
+<span class="sd">        :return: the updated vehicle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_passengers</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">passengers</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">passenger</span> <span class="ow">in</span> <span class="n">new_passengers</span><span class="p">:</span>
+            <span class="n">passenger_with_vehicle_id</span> <span class="o">=</span> <span class="n">passenger</span><span class="o">.</span><span class="n">add_vehicle_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">updated_passengers</span><span class="p">[</span><span class="n">passenger</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">passenger_with_vehicle_id</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">passengers</span><span class="o">=</span><span class="n">updated_passengers</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.drop_off_passenger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.drop_off_passenger">[docs]</a>    <span class="k">def</span> <span class="nf">drop_off_passenger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">passenger_id</span><span class="p">:</span> <span class="n">PassengerId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">passenger_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passengers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">updated_passengers</span> <span class="o">=</span> <span class="n">DictOps</span><span class="o">.</span><span class="n">remove_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">passengers</span><span class="p">,</span> <span class="n">passenger_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">passengers</span><span class="o">=</span><span class="n">updated_passengers</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Vehicle(</span><span class="si">{self.id}</span><span class="s2">,</span><span class="si">{self.vehicle_state}</span><span class="s2">,</span><span class="si">{self.energy_source}</span><span class="s2">)&quot;</span>
+
+<div class="viewcode-block" id="Vehicle.plug_in_to"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.plug_in_to">[docs]</a>    <span class="k">def</span> <span class="nf">plug_in_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="n">StationId</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">plugged_in_charger</span><span class="o">=</span><span class="n">charger</span><span class="p">,</span> <span class="n">station</span><span class="o">=</span><span class="n">station_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.unplug"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.unplug">[docs]</a>    <span class="k">def</span> <span class="nf">unplug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">plugged_in_charger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">station</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_reset_idle_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">idle_time_s</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_reset_charge_intent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">charger_intent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">station_intent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Vehicle.charge"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.charge">[docs]</a>    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">powercurve</span><span class="p">:</span> <span class="n">Powercurve</span><span class="p">,</span>
+               <span class="n">duration</span><span class="p">:</span> <span class="n">s</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        applies a charge event to a vehicle</span>
+<span class="sd">        :param powercurve: the vehicle&#39;s powercurve model</span>
+<span class="sd">        :param charger: the charger provided by the station</span>
+<span class="sd">        :param duration: duration of this time step</span>
+<span class="sd">        :return: the updated Vehicle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugged_in_charger</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EntityError</span><span class="p">(</span><span class="s2">&quot;Vehicle cannot charge without a charger.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_source</span><span class="o">.</span><span class="n">is_at_ideal_energy_limit</span><span class="p">():</span>
+            <span class="c1"># TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..</span>
+            <span class="c1">#  So, I think the simulation state should handle the charge end termination state.</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">updated_energy_source</span> <span class="o">=</span> <span class="n">powercurve</span><span class="o">.</span><span class="n">refuel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugged_in_charger</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">energy_source</span><span class="o">=</span><span class="n">updated_energy_source</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.move"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.move">[docs]</a>    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">road_network</span><span class="p">:</span> <span class="n">RoadNetwork</span><span class="p">,</span> <span class="n">power_train</span><span class="p">:</span> <span class="n">Powertrain</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="n">s</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Vehicle</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Moves the vehicle and consumes energy.</span>
+<span class="sd">        :param road_network:</span>
+<span class="sd">        :param power_train:</span>
+<span class="sd">        :param time_step:</span>
+<span class="sd">        :return: the updated vehicle or None if moving is not possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_route</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition</span><span class="p">(</span><span class="n">VehicleState</span><span class="o">.</span><span class="n">IDLE</span><span class="p">)</span>
+
+        <span class="n">traverse_result</span> <span class="o">=</span> <span class="n">traverse</span><span class="p">(</span><span class="n">route_estimate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">route</span><span class="p">,</span> <span class="n">road_network</span><span class="o">=</span><span class="n">road_network</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="n">time_step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">traverse_result</span><span class="p">:</span>
+            <span class="c1"># TODO: Need to think about edge case where vehicle gets route where origin=destination.</span>
+            <span class="n">no_route_veh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assign_route</span><span class="p">(</span><span class="nb">tuple</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">no_route_veh</span>
+
+        <span class="n">experienced_route</span> <span class="o">=</span> <span class="n">traverse_result</span><span class="o">.</span><span class="n">experienced_route</span>
+
+        <span class="n">energy_used</span> <span class="o">=</span> <span class="n">power_train</span><span class="o">.</span><span class="n">energy_cost</span><span class="p">(</span><span class="n">experienced_route</span><span class="p">)</span>
+        <span class="n">step_distance</span> <span class="o">=</span> <span class="n">traverse_result</span><span class="o">.</span><span class="n">traversal_distance</span>
+
+        <span class="n">updated_energy_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_source</span><span class="o">.</span><span class="n">use_energy</span><span class="p">(</span><span class="n">energy_used</span><span class="p">)</span>
+        <span class="n">less_energy_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_swap</span><span class="p">(</span><span class="n">updated_energy_source</span><span class="p">)</span>
+
+        <span class="n">remaining_route</span> <span class="o">=</span> <span class="n">traverse_result</span><span class="o">.</span><span class="n">remaining_route</span>
+
+        <span class="n">new_route_vehicle</span> <span class="o">=</span> <span class="n">less_energy_vehicle</span><span class="o">.</span><span class="n">assign_route</span><span class="p">(</span><span class="n">remaining_route</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">remaining_route</span><span class="p">:</span>
+            <span class="n">geoid</span> <span class="o">=</span> <span class="n">experienced_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">end</span>
+            <span class="n">updated_location_vehicle</span> <span class="o">=</span> <span class="n">new_route_vehicle</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+                <span class="n">geoid</span><span class="o">=</span><span class="n">geoid</span><span class="p">,</span>
+                <span class="n">property_link</span><span class="o">=</span><span class="n">road_network</span><span class="o">.</span><span class="n">property_link_from_geoid</span><span class="p">(</span><span class="n">geoid</span><span class="p">),</span>
+                <span class="n">distance_traveled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distance_traveled</span> <span class="o">+</span> <span class="n">step_distance</span><span class="p">,</span>
+
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">updated_location_vehicle</span> <span class="o">=</span> <span class="n">new_route_vehicle</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+                <span class="n">geoid</span><span class="o">=</span><span class="n">experienced_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+                <span class="n">property_link</span><span class="o">=</span><span class="n">remaining_route</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">distance_traveled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distance_traveled</span> <span class="o">+</span> <span class="n">step_distance</span><span class="p">,</span>
+
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">updated_location_vehicle</span></div>
+
+<div class="viewcode-block" id="Vehicle.idle"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.idle">[docs]</a>    <span class="k">def</span> <span class="nf">idle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step_s</span><span class="p">:</span> <span class="n">s</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle_state</span> <span class="o">!=</span> <span class="n">VehicleState</span><span class="o">.</span><span class="n">IDLE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EntityError</span><span class="p">(</span><span class="s2">&quot;vehicle.idle() method called but vehicle not in IDLE state.&quot;</span><span class="p">)</span>
+
+        <span class="n">idle_energy_rate</span> <span class="o">=</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilowatthour</span> <span class="o">/</span> <span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+
+        <span class="n">idle_energy_kwh</span> <span class="o">=</span> <span class="n">idle_energy_rate</span> <span class="o">*</span> <span class="n">time_step_s</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span>
+        <span class="n">updated_energy_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_source</span><span class="o">.</span><span class="n">use_energy</span><span class="p">(</span><span class="n">idle_energy_kwh</span><span class="p">)</span>
+        <span class="n">less_energy_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_swap</span><span class="p">(</span><span class="n">updated_energy_source</span><span class="p">)</span>
+
+        <span class="n">vehicle_w_stats</span> <span class="o">=</span> <span class="n">less_energy_vehicle</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">idle_time_s</span><span class="o">=</span><span class="n">less_energy_vehicle</span><span class="o">.</span><span class="n">idle_time_s</span> <span class="o">+</span> <span class="n">time_step_s</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vehicle_w_stats</span></div>
+
+<div class="viewcode-block" id="Vehicle.battery_swap"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.battery_swap">[docs]</a>    <span class="k">def</span> <span class="nf">battery_swap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_source</span><span class="p">:</span> <span class="n">EnergySource</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">energy_source</span><span class="o">=</span><span class="n">energy_source</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.assign_route"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.assign_route">[docs]</a>    <span class="k">def</span> <span class="nf">assign_route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">:</span> <span class="n">Route</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vehicle</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Vehicle.set_charge_intent"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.set_charge_intent">[docs]</a>    <span class="k">def</span> <span class="nf">set_charge_intent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="n">StationId</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">station_intent</span><span class="o">=</span><span class="n">station_id</span><span class="p">,</span> <span class="n">charger_intent</span><span class="o">=</span><span class="n">charger</span><span class="p">)</span></div>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TRANSITION FUNCTIONS</span>
+<span class="sd">    --------------------</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Vehicle.can_transition"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.can_transition">[docs]</a>    <span class="k">def</span> <span class="nf">can_transition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle_state</span><span class="p">:</span> <span class="n">VehicleState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">VehicleState</span><span class="o">.</span><span class="n">is_valid</span><span class="p">(</span><span class="n">vehicle_state</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid vehicle state type.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle_state</span> <span class="o">==</span> <span class="n">vehicle_state</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_passengers</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Vehicle.transition"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehicle.Vehicle.transition">[docs]</a>    <span class="k">def</span> <span class="nf">transition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle_state</span><span class="p">:</span> <span class="n">VehicleState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Vehicle</span><span class="p">]:</span>
+        <span class="n">previous_vehicle_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle_state</span>
+        <span class="k">if</span> <span class="n">previous_vehicle_state</span> <span class="o">==</span> <span class="n">vehicle_state</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_transition</span><span class="p">(</span><span class="n">vehicle_state</span><span class="p">):</span>
+            <span class="n">transitioned_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">vehicle_state</span><span class="o">=</span><span class="n">vehicle_state</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">previous_vehicle_state</span> <span class="o">==</span> <span class="n">VehicleState</span><span class="o">.</span><span class="n">IDLE</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">transitioned_vehicle</span><span class="o">.</span><span class="n">_reset_idle_stats</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">previous_vehicle_state</span> <span class="o">==</span> <span class="n">VehicleState</span><span class="o">.</span><span class="n">DISPATCH_STATION</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">transitioned_vehicle</span><span class="o">.</span><span class="n">_reset_charge_intent</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">transitioned_vehicle</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>

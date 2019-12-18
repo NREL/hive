@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>hive.model.roadnetwork.test_routetraversal &#8212; hive  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hive.model.roadnetwork.test_routetraversal</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.link</span> <span class="kn">import</span> <span class="n">Link</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.property_link</span> <span class="kn">import</span> <span class="n">PropertyLink</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.roadnetwork</span> <span class="kn">import</span> <span class="n">RoadNetwork</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.routetraversal</span> <span class="kn">import</span> <span class="n">traverse</span>
+<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.linktraversal</span> <span class="kn">import</span> <span class="n">traverse_up_to</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">LinkId</span><span class="p">,</span> <span class="n">GeoId</span><span class="p">,</span> <span class="n">SimTime</span>
+<span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span>
+
+<span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
+
+
+<div class="viewcode-block" id="TestRouteTraversal"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversal">[docs]</a><span class="k">class</span> <span class="nc">TestRouteTraversal</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestRouteTraversal.test_traverse_with_enough_time"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversal.test_traverse_with_enough_time">[docs]</a>    <span class="k">def</span> <span class="nf">test_traverse_with_enough_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        the mock problem is tuned to complete the route with a time step of just beyond 3 time units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_network</span><span class="p">()</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_links</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">traverse</span><span class="p">(</span>
+            <span class="n">route_estimate</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+            <span class="n">road_network</span><span class="o">=</span><span class="n">network</span><span class="p">,</span>
+            <span class="n">time_step</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertGreater</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">remaining_time</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;should have more time left&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">remaining_route</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;should have no more route&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">experienced_route</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;should have hit all 3 links&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRouteTraversal.test_traverse_without_enough_time"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversal.test_traverse_without_enough_time">[docs]</a>    <span class="k">def</span> <span class="nf">test_traverse_without_enough_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        the mock problem needs more than 1.5 time to complete the route. should end</span>
+<span class="sd">        up somewhere in the middle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_network</span><span class="p">()</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_links</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">traverse</span><span class="p">(</span>
+            <span class="n">route_estimate</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+            <span class="n">road_network</span><span class="o">=</span><span class="n">network</span><span class="p">,</span>
+            <span class="n">time_step</span><span class="o">=</span><span class="mf">1.5</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">remaining_time</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;should have no more time left&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">remaining_route</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;should have 2 links remaining&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">experienced_route</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;should have traversed 2 links&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRouteTraversal.test_traverse_up_to_split"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversal.test_traverse_up_to_split">[docs]</a>    <span class="k">def</span> <span class="nf">test_traverse_up_to_split</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_network</span><span class="p">()</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_links</span><span class="p">()</span>
+        <span class="n">test_link</span> <span class="o">=</span> <span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">traverse_up_to</span><span class="p">(</span>
+            <span class="n">road_network</span><span class="o">=</span><span class="n">network</span><span class="p">,</span>
+            <span class="n">property_link</span><span class="o">=</span><span class="n">test_link</span><span class="p">,</span>
+            <span class="n">available_time</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">traversed</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">traversed</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">remaining</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_link</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">traversed</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="s2">&quot;Original link and traversed link should share start&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_link</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">remaining</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="s2">&quot;Original link and remaining link should share end&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">traversed</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">remaining</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="s2">&quot;Traversed end should match remaining start&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRouteTraversal.test_traverse_up_to_no_split"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversal.test_traverse_up_to_no_split">[docs]</a>    <span class="k">def</span> <span class="nf">test_traverse_up_to_no_split</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_network</span><span class="p">()</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="n">TestRouteTraversalAssets</span><span class="o">.</span><span class="n">mock_links</span><span class="p">()</span>
+        <span class="n">test_link</span> <span class="o">=</span> <span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">traverse_up_to</span><span class="p">(</span>
+            <span class="n">road_network</span><span class="o">=</span><span class="n">network</span><span class="p">,</span>
+            <span class="n">property_link</span><span class="o">=</span><span class="n">test_link</span><span class="p">,</span>
+            <span class="n">available_time</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">traversed</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">traversed</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">remaining</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_link</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">traversed</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="s2">&quot;Original link and traversed link should share start&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">test_link</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">traversed</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="s2">&quot;Original link and traversed link should share end&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNone</span><span class="p">(</span><span class="n">remaining</span><span class="p">,</span> <span class="s2">&quot;There should be no remaining route&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MockRoadNetwork"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork">[docs]</a><span class="k">class</span> <span class="nc">MockRoadNetwork</span><span class="p">(</span><span class="n">RoadNetwork</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    a road network that only implements &quot;get_link&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_links</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_h3_resolution</span> <span class="o">=</span> <span class="mi">15</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">property_links</span> <span class="o">=</span> <span class="n">property_links</span>
+
+<div class="viewcode-block" id="MockRoadNetwork.route"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.route">[docs]</a>    <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Link</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.update"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadNetwork</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.get_link"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.get_link">[docs]</a>    <span class="k">def</span> <span class="nf">get_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_links</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_links</span><span class="p">[</span><span class="n">link_id</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.get_current_property_link"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.get_current_property_link">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_property_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+        <span class="n">link_id</span> <span class="o">=</span> <span class="n">property_link</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">link_id</span>
+        <span class="k">if</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_links</span><span class="p">:</span>
+            <span class="n">current_property_link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_links</span><span class="p">[</span><span class="n">link_id</span><span class="p">]</span>
+            <span class="n">updated_property_link</span> <span class="o">=</span> <span class="n">property_link</span><span class="o">.</span><span class="n">update_speed</span><span class="p">(</span><span class="n">current_property_link</span><span class="o">.</span><span class="n">speed</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">updated_property_link</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.property_link_from_geoid"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.property_link_from_geoid">[docs]</a>    <span class="k">def</span> <span class="nf">property_link_from_geoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.geoid_within_geofence"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.geoid_within_geofence">[docs]</a>    <span class="k">def</span> <span class="nf">geoid_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.link_id_within_geofence"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.link_id_within_geofence">[docs]</a>    <span class="k">def</span> <span class="nf">link_id_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.geoid_within_simulation"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.geoid_within_simulation">[docs]</a>    <span class="k">def</span> <span class="nf">geoid_within_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MockRoadNetwork.link_id_within_simulation"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.MockRoadNetwork.link_id_within_simulation">[docs]</a>    <span class="k">def</span> <span class="nf">link_id_within_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="TestRouteTraversalAssets"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversalAssets">[docs]</a><span class="k">class</span> <span class="nc">TestRouteTraversalAssets</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    a mock scenario with 3 road network links. their travel time each is in</span>
+<span class="sd">    generic units.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sim_h3_resolution</span> <span class="o">=</span> <span class="mi">15</span>
+
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mi">37</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">),</span>
+                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">37.008994</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)),</span>
+        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span>
+                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">37.008994</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">),</span>
+                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">37.017998</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)),</span>
+        <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="n">Link</span><span class="p">(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span>
+                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">37.017998</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">),</span>
+                  <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="mf">37.026992</span><span class="p">,</span> <span class="mi">122</span><span class="p">,</span> <span class="n">sim_h3_resolution</span><span class="p">)),</span>
+    <span class="p">}</span>
+
+    <span class="n">property_links</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># distance of 1.0 KM, speed of 1 KM/time unit</span>
+        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">links</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">],</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilometer</span><span class="o">/</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)),</span>
+        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">links</span><span class="p">[</span><span class="s2">&quot;2&quot;</span><span class="p">],</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilometer</span><span class="o">/</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)),</span>
+        <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">links</span><span class="p">[</span><span class="s2">&quot;3&quot;</span><span class="p">],</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilometer</span><span class="o">/</span><span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">))</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="TestRouteTraversalAssets.mock_network"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversalAssets.mock_network">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mock_network</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadNetwork</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MockRoadNetwork</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">property_links</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRouteTraversalAssets.mock_links"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.test_routetraversal.TestRouteTraversalAssets.mock_links">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mock_links</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">property_links</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">],</span> <span class="bp">cls</span><span class="o">.</span><span class="n">property_links</span><span class="p">[</span><span class="s2">&quot;2&quot;</span><span class="p">],</span> <span class="bp">cls</span><span class="o">.</span><span class="n">property_links</span><span class="p">[</span><span class="s2">&quot;3&quot;</span><span class="p">]</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">hive  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>
