@@ -3,6 +3,7 @@ from typing import Union
 import yaml
 from pkg_resources import resource_string
 
+from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.model.energy.powercurve.tabular_powercurve import TabularPowercurve
 
@@ -16,6 +17,10 @@ powercurve_models = {
 
 powercurve_constructors = {
     'tabular': TabularPowercurve
+}
+
+powercurve_energy_types = {
+    'leaf': EnergyType.ELECTRIC
 }
 
 
