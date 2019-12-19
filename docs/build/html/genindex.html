@@ -51,6 +51,7 @@
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -85,10 +86,10 @@
 </li>
       <li><a href="reference/hive.util.html#hive.util.helpers.DictOps.add_to_location_dict">add_to_location_dict() (hive.util.helpers.DictOps class method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.routetraversal.RouteTraversal.add_traversal">add_traversal() (hive.model.roadnetwork.routetraversal.RouteTraversal method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.add_vehicle">add_vehicle() (hive.state.simulation_state.SimulationState method)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.passenger.Passenger.add_vehicle_id">add_vehicle_id() (hive.model.passenger.Passenger method)</a>
@@ -107,11 +108,15 @@
       </ul></li>
       <li><a href="reference/hive.model.html#hive.model.request.Request.assign_dispatched_vehicle">assign_dispatched_vehicle() (hive.model.request.Request method)</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.assign_route">assign_route() (hive.model.vehicle.Vehicle method)</a>
+</li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.at_geoid">at_geoid() (hive.state.simulation_state.SimulationState method)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.at_location_response.AtLocationResponse">AtLocationResponse (class in hive.state.at_location_response)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.station.Station.available_chargers">available_chargers (hive.model.station.Station attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.base.Base.available_stalls">available_stalls (hive.model.base.Base attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -124,6 +129,8 @@
       <li><a href="reference/hive.model.html#hive.model.base.Base">Base (class in hive.model.base)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.bases">bases (hive.state.simulation_state.SimulationState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.battery_swap">battery_swap() (hive.model.vehicle.Vehicle method)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.board_vehicle">board_vehicle() (hive.state.simulation_state.SimulationState method)</a>
 </li>
@@ -157,6 +164,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.manager.html#hive.manager.manager.Manager.calc_active_fleet_n">calc_active_fleet_n() (hive.manager.manager.Manager method)</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.can_transition">can_transition() (hive.model.vehicle.Vehicle method)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.request.Request.cancel_time">cancel_time (hive.model.request.Request attribute)</a>
+</li>
       <li><a href="reference/hive.state.update.html#hive.state.update.cancel_requests.CancelRequests">CancelRequests (class in hive.state.update.cancel_requests)</a>
 </li>
       <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.capacity">capacity (hive.model.energy.energysource.EnergySource attribute)</a>
@@ -169,6 +180,8 @@
         <li><a href="reference/hive.util.html#hive.util.helpers.SwitchCase.case_statement">(hive.util.helpers.SwitchCase attribute)</a>
 </li>
       </ul></li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory.CHARGE">CHARGE (hive.model.vehiclestate.VehicleStateCategory attribute)</a>
+</li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.charge">charge() (hive.model.vehicle.Vehicle method)</a>
 </li>
       <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.charge_epsilon">charge_epsilon (hive.model.energy.energysource.EnergySource attribute)</a>
@@ -182,6 +195,10 @@
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction.charger">charger (hive.dispatcher.instruction.Instruction attribute)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.charger_intent">charger_intent (hive.model.vehicle.Vehicle attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.CHARGING_BASE">CHARGING_BASE (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.CHARGING_STATION">CHARGING_STATION (hive.model.vehiclestate.VehicleState attribute)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.station.Station.checkout_charger">checkout_charger() (hive.model.station.Station method)</a>
 </li>
@@ -219,11 +236,33 @@
         <li><a href="reference/hive.config.html#hive.config.sim.Sim.default_config">(hive.config.sim.Sim class method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/hive.model.html#hive.model.passenger.Passenger.departure_time">departure_time (hive.model.passenger.Passenger attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.request.Request.departure_time">(hive.model.request.Request attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/hive.model.html#hive.model.passenger.Passenger.destination">destination (hive.model.passenger.Passenger attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.request.Request.destination">(hive.model.request.Request attribute)</a>
+</li>
+      </ul></li>
       <li><a href="reference/hive.reporting.html#hive.reporting.detailed_reporter.DetailedReporter">DetailedReporter (class in hive.reporting.detailed_reporter)</a>
+</li>
+      <li><a href="reference/hive.util.html#hive.util.helpers.DictOps">DictOps (class in hive.util.helpers)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/hive.util.html#hive.util.helpers.DictOps">DictOps (class in hive.util.helpers)</a>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.DISPATCH_BASE">DISPATCH_BASE (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.DISPATCH_STATION">DISPATCH_STATION (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.DISPATCH_TRIP">DISPATCH_TRIP (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.request.Request.dispatched_vehicle">dispatched_vehicle (hive.model.request.Request attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.request.Request.dispatched_vehicle_time">dispatched_vehicle_time (hive.model.request.Request attribute)</a>
 </li>
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.dispatcher.Dispatcher">Dispatcher (class in hive.dispatcher.dispatcher)</a>
 </li>
@@ -234,6 +273,10 @@
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.property_link.PropertyLink.distance">distance (hive.model.roadnetwork.property_link.PropertyLink attribute)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.distance_traveled">distance_traveled (hive.model.vehicle.Vehicle attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory.DO_NOTHING">DO_NOTHING (hive.model.vehiclestate.VehicleStateCategory attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.drop_off_passenger">drop_off_passenger() (hive.model.vehicle.Vehicle method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -302,6 +345,8 @@
 </li>
         <li><a href="reference/hive.model.html#hive.model.station.Station.from_row">(hive.model.station.Station class method)</a>
 </li>
+        <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.from_row">(hive.model.vehicle.Vehicle class method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -311,7 +356,7 @@
         <li><a href="reference/hive.model.energy.html#hive.model.energy.energytype.EnergyType.from_string">(hive.model.energy.energytype.EnergyType attribute)</a>
 </li>
       </ul></li>
-      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.from_string">from_string() (hive.model.vehicle.Vehicle class method)</a>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory.from_vehicle_state">from_vehicle_state (hive.model.vehiclestate.VehicleStateCategory attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -327,8 +372,14 @@
         <li><a href="reference/hive.dispatcher.html#hive.dispatcher.greedy_dispatcher.GreedyDispatcher.generate_instructions">(hive.dispatcher.greedy_dispatcher.GreedyDispatcher method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.geoid">geoid (hive.model.vehicle.Vehicle attribute)</a>
+      <li><a href="reference/hive.model.html#hive.model.base.Base.geoid">geoid (hive.model.base.Base attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.station.Station.geoid">(hive.model.station.Station attribute)</a>
 </li>
+        <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.geoid">(hive.model.vehicle.Vehicle attribute)</a>
+</li>
+      </ul></li>
       <li><a href="reference/hive.model.html#hive.model.coordinate.geoid_to_coordinate">geoid_to_coordinate() (in module hive.model.coordinate)</a>
 </li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_geofence">geoid_within_geofence() (hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork method)</a>
@@ -393,6 +444,10 @@
 </li>
       <li><a href="reference/hive.model.html#hive.model.base.Base.has_available_stall">has_available_stall() (hive.model.base.Base method)</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.has_passengers">has_passengers() (hive.model.vehicle.Vehicle method)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.has_route">has_route() (hive.model.vehicle.Vehicle method)</a>
+</li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork">HaversineRoadNetwork (class in hive.model.roadnetwork.haversine_roadnetwork)</a>
 </li>
       <li><a href="reference/hive.util.html#hive.util.helpers.TupleOps.head">head() (hive.util.helpers.TupleOps class method)</a>
@@ -455,12 +510,12 @@
 </li>
       <li><a href="reference/hive.model.html#module-hive.model.request">hive.model.request (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.model.roadnetwork.html#module-hive.model.roadnetwork">hive.model.roadnetwork (module)</a>
 </li>
       <li><a href="reference/hive.model.roadnetwork.html#module-hive.model.roadnetwork.haversine_roadnetwork">hive.model.roadnetwork.haversine_roadnetwork (module)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.model.roadnetwork.html#module-hive.model.roadnetwork.link">hive.model.roadnetwork.link (module)</a>
 </li>
       <li><a href="reference/hive.model.roadnetwork.html#module-hive.model.roadnetwork.linktraversal">hive.model.roadnetwork.linktraversal (module)</a>
@@ -525,8 +580,6 @@
 </li>
       <li><a href="reference/hive.util.html#module-hive.util.helpers">hive.util.helpers (module)</a>
 </li>
-      <li><a href="reference/hive.util.html#module-hive.util.pattern">hive.util.pattern (module)</a>
-</li>
       <li><a href="reference/hive.util.html#module-hive.util.typealiases">hive.util.typealiases (module)</a>
 </li>
       <li><a href="reference/hive.util.html#module-hive.util.units">hive.util.units (module)</a>
@@ -539,22 +592,36 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.id">id (hive.model.vehicle.Vehicle attribute)</a>
+      <li><a href="reference/hive.model.html#hive.model.base.Base.id">id (hive.model.base.Base attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.passenger.Passenger.id">(hive.model.passenger.Passenger attribute)</a>
 </li>
+        <li><a href="reference/hive.model.html#hive.model.request.Request.id">(hive.model.request.Request attribute)</a>
+</li>
+        <li><a href="reference/hive.model.html#hive.model.station.Station.id">(hive.model.station.Station attribute)</a>
+</li>
+        <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.id">(hive.model.vehicle.Vehicle attribute)</a>
+</li>
+      </ul></li>
       <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.ideal_energy_limit">ideal_energy_limit (hive.model.energy.energysource.EnergySource attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.IDLE">IDLE (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.idle">idle() (hive.model.vehicle.Vehicle method)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.idle_time_s">idle_time_s (hive.model.vehicle.Vehicle attribute)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state_ops.initial_simulation_state">initial_simulation_state() (in module hive.state.simulation_state_ops)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction">Instruction (class in hive.dispatcher.instruction)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.vehicle_terminal_effect_ops.VehicleTransitionEffectArgs.instruction">instruction (hive.state.vehicle_terminal_effect_ops.VehicleTransitionEffectArgs attribute)</a>
 </li>
       <li><a href="reference/hive.config.html#hive.config.io.IO.instruction_log">instruction_log (hive.config.io.IO attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.model.html#hive.model.coordinate.interpolate_between_coordinates">interpolate_between_coordinates() (in module hive.model.coordinate)</a>
 </li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.link.interpolate_between_geoids">interpolate_between_geoids() (in module hive.model.roadnetwork.link)</a>
@@ -568,6 +635,8 @@
       <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.is_empty">is_empty() (hive.model.energy.energysource.EnergySource method)</a>
 </li>
       <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.is_full">is_full() (hive.model.energy.energysource.EnergySource method)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.is_valid">is_valid (hive.model.vehiclestate.VehicleState attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -594,6 +663,8 @@
       <li><a href="reference/hive.util.html#hive.util.helpers.TupleOps.last">last() (hive.util.helpers.TupleOps class method)</a>
 </li>
       <li><a href="reference/hive.util.html#hive.util.helpers.TupleOps.last_optional">last_optional() (hive.util.helpers.TupleOps class method)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.coordinate.Coordinate.lat">lat (hive.model.coordinate.Coordinate attribute)</a>
 </li>
       <li><a href="reference/hive.model.energy.html#hive.model.energy.charger.Charger.LEVEL_1">LEVEL_1 (hive.model.energy.charger.Charger attribute)</a>
 </li>
@@ -633,6 +704,8 @@
 </li>
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction.location">location (hive.dispatcher.instruction.Instruction attribute)</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.coordinate.Coordinate.lon">lon (hive.model.coordinate.Coordinate attribute)</a>
+</li>
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.greedy_dispatcher.GreedyDispatcher.LOW_SOC_TRESHOLD">LOW_SOC_TRESHOLD (hive.dispatcher.greedy_dispatcher.GreedyDispatcher attribute)</a>
 </li>
   </ul></td>
@@ -656,6 +729,8 @@
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.modify_station">modify_station() (hive.state.simulation_state.SimulationState method)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.modify_vehicle">modify_vehicle() (hive.state.simulation_state.SimulationState method)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory.MOVE">MOVE (hive.model.vehiclestate.VehicleStateCategory attribute)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.move">move() (hive.model.vehicle.Vehicle method)</a>
 </li>
@@ -684,12 +759,30 @@
   </ul></td>
 </tr></table>
 
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hive.model.html#hive.model.passenger.Passenger.origin">origin (hive.model.passenger.Passenger attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.request.Request.origin">(hive.model.request.Request attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.model.html#hive.model.passenger.Passenger">Passenger (class in hive.model.passenger)</a>
 </li>
-      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.passengers">passengers (hive.model.vehicle.Vehicle attribute)</a>
+      <li><a href="reference/hive.model.html#hive.model.request.Request.passengers">passengers (hive.model.request.Request attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.passengers">(hive.model.vehicle.Vehicle attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.plug_in_to">plug_in_to() (hive.model.vehicle.Vehicle method)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.plugged_in_charger">plugged_in_charger (hive.model.vehicle.Vehicle attribute)</a>
 </li>
@@ -779,6 +872,8 @@
 </li>
       <li><a href="reference/hive.state.update.html#hive.state.update.simulation_update_result.SimulationUpdateResult.reports">reports (hive.state.update.simulation_update_result.SimulationUpdateResult attribute)</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.REPOSITIONING">REPOSITIONING (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
       <li><a href="reference/hive.model.html#hive.model.request.Request">Request (class in hive.model.request)</a>
 </li>
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction.request_id">request_id (hive.dispatcher.instruction.Instruction attribute)</a>
@@ -803,6 +898,8 @@
         <li><a href="reference/hive.config.html#hive.config.sim.Sim.required_config">(hive.config.sim.Sim class method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.RESERVE_BASE">RESERVE_BASE (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
       <li><a href="reference/hive.state.html#hive.state.vehicle_terminal_effect_ops.VehicleTransitionEffectOps.Result">Result (hive.state.vehicle_terminal_effect_ops.VehicleTransitionEffectOps attribute)</a>
 
       <ul>
@@ -849,6 +946,10 @@
 </li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.s_locations">s_locations (hive.state.simulation_state.SimulationState attribute)</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.vehiclestate.VehicleState.SERVICING_TRIP">SERVICING_TRIP (hive.model.vehiclestate.VehicleState attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.set_charge_intent">set_charge_intent() (hive.model.vehicle.Vehicle method)</a>
+</li>
       <li><a href="reference/hive.config.html#hive.config.sim.Sim">Sim (class in hive.config.sim)</a>
 </li>
       <li><a href="reference/hive.config.html#hive.config.hive_config.HiveConfig.sim">sim (hive.config.hive_config.HiveConfig attribute)</a>
@@ -879,10 +980,10 @@
 </li>
       <li><a href="reference/hive.state.update.html#hive.state.update.simulation_update_result.SimulationUpdateResult">SimulationUpdateResult (class in hive.state.update.simulation_update_result)</a>
 </li>
-      <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.soc">soc() (hive.model.energy.energysource.EnergySource property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.soc">soc() (hive.model.energy.energysource.EnergySource property)</a>
+</li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.property_link.PropertyLink.speed">speed (hive.model.roadnetwork.property_link.PropertyLink attribute)</a>
 </li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.link.Link.start">start (hive.model.roadnetwork.link.Link attribute)</a>
@@ -900,7 +1001,11 @@
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.station">station (hive.model.vehicle.Vehicle attribute)</a>
 </li>
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction.station_id">station_id (hive.dispatcher.instruction.Instruction attribute)</a>
+
+      <ul>
+        <li><a href="reference/hive.model.html#hive.model.base.Base.station_id">(hive.model.base.Base attribute)</a>
 </li>
+      </ul></li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.station_intent">station_intent (hive.model.vehicle.Vehicle attribute)</a>
 </li>
       <li><a href="reference/hive.state.html#hive.state.simulation_state.SimulationState.stations">stations (hive.state.simulation_state.SimulationState attribute)</a>
@@ -939,11 +1044,15 @@
 </li>
       <li><a href="reference/hive.state.html#hive.state.terminal_state_effect_ops.TerminalStateEffectOps">TerminalStateEffectOps (class in hive.state.terminal_state_effect_ops)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.config.html#hive.config.sim.Sim.timestep_duration_seconds">timestep_duration_seconds (hive.config.sim.Sim attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.model.html#hive.model.station.Station.total_chargers">total_chargers (hive.model.station.Station attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.base.Base.total_stalls">total_stalls (hive.model.base.Base attribute)</a>
+</li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.transition">transition() (hive.model.vehicle.Vehicle method)</a>
 </li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.property_link.PropertyLink.travel_time">travel_time (hive.model.roadnetwork.property_link.PropertyLink attribute)</a>
 </li>
@@ -965,6 +1074,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.util.html#hive.util.exception.UnitError">UnitError</a>
 </li>
+      <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.unplug">unplug() (hive.model.vehicle.Vehicle method)</a>
+</li>
       <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.update">update() (hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork method)</a>
 
       <ul>
@@ -979,10 +1090,10 @@
         <li><a href="reference/hive.state.update.html#hive.state.update.update_requests_from_string.UpdateRequestsFromString.update">(hive.state.update.update_requests_from_string.UpdateRequestsFromString method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.property_link.PropertyLink.update_link">update_link() (hive.model.roadnetwork.property_link.PropertyLink method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hive.model.roadnetwork.html#hive.model.roadnetwork.property_link.PropertyLink.update_link">update_link() (hive.model.roadnetwork.property_link.PropertyLink method)</a>
+</li>
       <li><a href="reference/hive.model.html#hive.model.request.Request.update_origin">update_origin() (hive.model.request.Request method)</a>
 </li>
       <li><a href="reference/hive.state.update.html#hive.state.update.update_requests.update_requests_from_iterator">update_requests_from_iterator() (in module hive.state.update.update_requests)</a>
@@ -1020,14 +1131,14 @@
       <li><a href="reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction.vehicle_id">vehicle_id (hive.dispatcher.instruction.Instruction attribute)</a>
 
       <ul>
+        <li><a href="reference/hive.model.html#hive.model.passenger.Passenger.vehicle_id">(hive.model.passenger.Passenger attribute)</a>
+</li>
         <li><a href="reference/hive.state.html#hive.state.terminal_state_effect_ops.TerminalStateEffectArgs.vehicle_id">(hive.state.terminal_state_effect_ops.TerminalStateEffectArgs attribute)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hive.config.html#hive.config.io.IO.vehicle_log">vehicle_log (hive.config.io.IO attribute)</a>
-</li>
-      <li><a href="reference/hive.util.html#hive.util.pattern.vehicle_regex">vehicle_regex (in module hive.util.pattern)</a>
 </li>
       <li><a href="reference/hive.model.html#hive.model.vehicle.Vehicle.vehicle_state">vehicle_state (hive.model.vehicle.Vehicle attribute)</a>
 </li>

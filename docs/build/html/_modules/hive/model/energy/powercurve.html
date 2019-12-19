@@ -40,6 +40,7 @@
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_string</span>
 
+<span class="kn">from</span> <span class="nn">hive.model.energy.energytype</span> <span class="kn">import</span> <span class="n">EnergyType</span>
 <span class="kn">from</span> <span class="nn">hive.model.energy.powercurve.powercurve</span> <span class="kn">import</span> <span class="n">Powercurve</span>
 <span class="kn">from</span> <span class="nn">hive.model.energy.powercurve.tabular_powercurve</span> <span class="kn">import</span> <span class="n">TabularPowercurve</span>
 
@@ -53,6 +54,10 @@
 
 <span class="n">powercurve_constructors</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;tabular&#39;</span><span class="p">:</span> <span class="n">TabularPowercurve</span>
+<span class="p">}</span>
+
+<span class="n">powercurve_energy_types</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;leaf&#39;</span><span class="p">:</span> <span class="n">EnergyType</span><span class="o">.</span><span class="n">ELECTRIC</span>
 <span class="p">}</span>
 
 

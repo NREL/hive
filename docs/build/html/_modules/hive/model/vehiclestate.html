@@ -43,8 +43,6 @@
 <div class="viewcode-block" id="VehicleState"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleState">[docs]</a><span class="k">class</span> <span class="nc">VehicleState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A finite set of vehicle states and rules for state transitions</span>
-
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># INACTIVE FLEET MANAGEMENT</span>
@@ -62,7 +60,13 @@
     <span class="n">CHARGING_STATION</span> <span class="o">=</span> <span class="mi">8</span>
 
 <div class="viewcode-block" id="VehicleState.is_valid"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleState.is_valid">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines if a state is valid</span>
+
+<span class="sd">        :param state: vehicle state</span>
+<span class="sd">        :return: Boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">_valid_vehicle_states</span></div></div>
 
 
@@ -89,6 +93,12 @@
 
 <div class="viewcode-block" id="VehicleStateCategory.from_vehicle_state"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.vehiclestate.VehicleStateCategory.from_vehicle_state">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_vehicle_state</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">vehicle_state</span><span class="p">:</span> <span class="n">VehicleState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VehicleStateCategory</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        maps a VehicleStateCategory from a VehicleState.</span>
+
+<span class="sd">        :param vehicle_state: the vehicle state</span>
+<span class="sd">        :return: the vehicle state category</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_vehicle_state_category</span><span class="p">[</span><span class="n">vehicle_state</span><span class="p">]</span></div></div>
 
 
