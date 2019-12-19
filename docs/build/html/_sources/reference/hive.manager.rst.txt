@@ -1,9 +1,6 @@
 hive.manager package
 ====================
 
-Submodules
-----------
-
 hive.manager.manager module
 ---------------------------
 

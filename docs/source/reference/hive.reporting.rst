@@ -1,9 +1,6 @@
 hive.reporting package
 ======================
 
-Submodules
-----------
-
 hive.reporting.detailed\_reporter module
 ----------------------------------------
 

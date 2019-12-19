@@ -1,16 +1,10 @@
 hive.model package
 ==================
 
-Subpackages
------------
-
 .. toctree::
 
    hive.model.energy
    hive.model.roadnetwork
-
-Submodules
-----------
 
 hive.model.base module
 ----------------------

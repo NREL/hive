@@ -1,9 +1,6 @@
 hive.model.roadnetwork package
 ==============================
 
-Submodules
-----------
-
 hive.model.roadnetwork.haversine\_roadnetwork module
 ----------------------------------------------------
 

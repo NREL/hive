@@ -1,9 +1,6 @@
 hive.util package
 =================
 
-Submodules
-----------
-
 hive.util.exception module
 --------------------------
 

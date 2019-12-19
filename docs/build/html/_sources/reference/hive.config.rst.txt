@@ -1,9 +1,6 @@
 hive.config package
 ===================
 
-Submodules
-----------
-
 hive.config.config\_builder module
 ----------------------------------
 

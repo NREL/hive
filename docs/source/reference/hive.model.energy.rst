@@ -1,16 +1,10 @@
 hive.model.energy package
 =========================
 
-Subpackages
------------
-
 .. toctree::
 
    hive.model.energy.powercurve
    hive.model.energy.powertrain
-
-Submodules
-----------
 
 hive.model.energy.charger module
 --------------------------------

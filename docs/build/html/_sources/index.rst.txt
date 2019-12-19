@@ -7,7 +7,7 @@ Welcome to hive's documentation!
 ================================
 
 NREL's Highly Integrated Vehicle Ecosystem (HIVE) framework simulates the
-operations of mobility-service-provider fleets.
+operations of mobility-service-provider fleets. 🐝
 
 .. toctree::
    :maxdepth: 3
@@ -20,7 +20,7 @@ Modules
 =================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    reference/hive
 

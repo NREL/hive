@@ -1,15 +1,9 @@
 hive.state package
 ==================
 
-Subpackages
------------
-
 .. toctree::
 
    hive.state.update
-
-Submodules
-----------
 
 hive.state.at\_location\_response module
 ----------------------------------------

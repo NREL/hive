@@ -1,9 +1,6 @@
 hive.state.update package
 =========================
 
-Submodules
-----------
-
 hive.state.update.cancel\_requests module
 -----------------------------------------
 

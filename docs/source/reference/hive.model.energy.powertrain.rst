@@ -1,9 +1,6 @@
 hive.model.energy.powertrain package
 ====================================
 
-Submodules
-----------
-
 hive.model.energy.powertrain.powertrain module
 ----------------------------------------------
 

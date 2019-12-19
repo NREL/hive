@@ -1,9 +1,6 @@
 hive.dispatcher package
 =======================
 
-Submodules
-----------
-
 hive.dispatcher.dispatcher module
 ---------------------------------
 

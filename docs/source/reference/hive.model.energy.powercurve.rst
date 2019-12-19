@@ -1,9 +1,6 @@
 hive.model.energy.powercurve package
 ====================================
 
-Submodules
-----------
-
 hive.model.energy.powercurve.powercurve module
 ----------------------------------------------
 

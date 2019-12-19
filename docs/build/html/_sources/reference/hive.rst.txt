@@ -1,7 +1,8 @@
-hive package
+hive
 ============
 
 .. toctree::
+   :maxdepth: 4
 
    hive.config
    hive.dispatcher
