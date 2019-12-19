@@ -49,9 +49,13 @@
 <div class="viewcode-block" id="LinkTraversal"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.linktraversal.LinkTraversal">[docs]</a><span class="k">class</span> <span class="nc">LinkTraversal</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    represents the traversal of a link.</span>
-<span class="sd">    traversed_link represents any part of the link that was traversed.</span>
-<span class="sd">    remaining_link represents any part of the link that remains to be traversed</span>
-<span class="sd">    remaining_time represents any time the agent has left to traverse additional links</span>
+
+<span class="sd">    :param traversed: represents any part of the link that was traversed.</span>
+<span class="sd">    :type traversed: :py:obj:`Optional[PropertyLink]`</span>
+<span class="sd">    :param remaining: represents any part of the link that remains to be traversed</span>
+<span class="sd">    :type remaining: :py:obj:`Optional[PropertyLink]`</span>
+<span class="sd">    :param remaining_time: represents any time the agent has left to traverse additional links</span>
+<span class="sd">    :type remaining_time: :py:obj:`hours`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">traversed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]</span>
     <span class="n">remaining</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]</span>
@@ -64,6 +68,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    using the ground truth road network, and some agent Link traversal, attempt to traverse</span>
 <span class="sd">    the link, based on travel time calculations from the Link&#39;s PropertyLink attributes.</span>
+
 <span class="sd">    :param road_network: the road network</span>
 <span class="sd">    :param property_link: the plan the agent has to traverse a subset of a road network link</span>
 <span class="sd">    :param available_time: the remaining time the agent has in this time step</span>

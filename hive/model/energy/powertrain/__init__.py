@@ -22,6 +22,7 @@ powertrain_constructors = {
 def build_powertrain(name: str) -> Union[IOError, Powertrain]:
     """
     constructs powertrain objects from file descriptions
+
     :param name: name of a valid powertrain type
     :return: a Powertrain, or, an error
     :raise IOError: if model file is invalid

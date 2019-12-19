@@ -44,18 +44,28 @@
 
 
 <div class="viewcode-block" id="Charger"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.charger.Charger">[docs]</a><span class="k">class</span> <span class="nc">Charger</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a charger in the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">LEVEL_1</span> <span class="o">=</span> <span class="mf">3.3</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilowatt</span>
     <span class="n">LEVEL_2</span> <span class="o">=</span> <span class="mf">7.2</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilowatt</span>
     <span class="n">DCFC</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilowatt</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">power</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">kw</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the power of the charger in kilowatts</span>
+
+<span class="sd">        :rtype: :py:obj:`kilowats`</span>
+<span class="sd">        :return: charge power in kilowatts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
 
 <div class="viewcode-block" id="Charger.from_string"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.charger.Charger.from_string">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Charger</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        converts a string into a Charger</span>
+
 <span class="sd">        :return: the named charger, or None if name wasn&#39;t valid</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">s_lower</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>

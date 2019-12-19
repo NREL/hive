@@ -75,7 +75,7 @@
 <dt id="hive.model.energy.charger.Charger">
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.charger.</code><code class="sig-name descname">Charger</code><a class="reference internal" href="../_modules/hive/model/energy/charger.html#Charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.charger.Charger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
-<p>An enumeration.</p>
+<p>Represents a charger in the simulation.</p>
 <dl class="attribute">
 <dt id="hive.model.energy.charger.Charger.LEVEL_1">
 <code class="sig-name descname">LEVEL_1</code><em class="property"> = &lt;Quantity(3.3, 'kilowatt')&gt;</em><a class="headerlink" href="#hive.model.energy.charger.Charger.LEVEL_1" title="Permalink to this definition">¶</a></dt>
@@ -94,9 +94,13 @@
 <dl class="method">
 <dt id="hive.model.energy.charger.Charger.power">
 <em class="property">property </em><code class="sig-name descname">power</code><a class="headerlink" href="#hive.model.energy.charger.Charger.power" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Returns the power of the charger in kilowatts</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code></p>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kilowats</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>charge power in kilowatts</p>
 </dd>
 </dl>
 </dd></dl>
@@ -115,7 +119,20 @@
 <dt id="hive.model.energy.energysource.EnergySource">
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.energysource.</code><code class="sig-name descname">EnergySource</code><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<p>a battery has a battery type, capacity and a energy</p>
+<p>A tuple to represent an energy source. Can be of a unique energy type (i.e. electirc, gasoline, etc)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>powercurve_id</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">PowercurveId</span></code>) – The id of the powercurve this energy source will use.</p></li>
+<li><p><strong>energy_type</strong> (<a class="reference internal" href="#hive.model.energy.energysource.EnergySource" title="hive.model.energy.energysource.EnergySource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EnergySource</span></code></a>) – The energy type of this energy source.</p></li>
+<li><p><strong>ideal_energy_limit</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">kwh</span></code>) – Refueling is considered complete when this energy limit is reached.</p></li>
+<li><p><strong>capacity</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">kwh</span></code>) – The total energy capacity of the energy source.</p></li>
+<li><p><strong>energy</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">kwh</span></code>) – The current energy level of the energy source.</p></li>
+<li><p><strong>max_charge_acceptance_kw</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">kw</span></code>) – The maximum charge acceptance this energy source can handle (electric only)</p></li>
+<li><p><strong>charge_threshold</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">kwh</span></code>) – A threshold parameter to allow for some floating point error.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="attribute">
 <dt id="hive.model.energy.energysource.EnergySource.powercurve_id">
 <code class="sig-name descname">powercurve_id</code><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.powercurve_id" title="Permalink to this definition">¶</a></dt>
@@ -151,86 +168,101 @@
 <code class="sig-name descname">charge_threshold</code><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.charge_threshold" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
-<dt id="hive.model.energy.energysource.EnergySource.charge_epsilon">
-<code class="sig-name descname">charge_epsilon</code><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.charge_epsilon" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.build">
 <em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">powercurve_id</em>, <em class="sig-param">energy_type</em>, <em class="sig-param">capacity</em>, <em class="sig-param">ideal_energy_limit=None</em>, <em class="sig-param">max_charge_acceptance_kw=&lt;Quantity(50</em>, <em class="sig-param">'kilowatt')&gt;</em>, <em class="sig-param">soc=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.build" title="Permalink to this definition">¶</a></dt>
-<dd><p>builds an EnergySource for a Vehicle
-:type powercurve_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param powercurve_id: the id of the powercurve associated with charging this EnergySource
-:type energy_type: <a class="reference internal" href="#hive.model.energy.energytype.EnergyType" title="hive.model.energy.energytype.EnergyType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergyType</span></code></a>
-:param energy_type: the type of energy used
-:type capacity: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
-:param capacity: the fuel capacity of this EnergySource
-:type ideal_energy_limit: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>]
-:param ideal_energy_limit: the energy that this EnergySource is limited to based on
-manufacturer requirements and implementation
-:type max_charge_acceptance_kw: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
-:param max_charge_acceptance_kw: the maximum charge power this vehicle can accept
-:type soc: <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>
-:param soc: the initial state of charge of this vehicle, in percentage
-:rtype: <a class="reference internal" href="#hive.model.energy.energysource.EnergySource" title="hive.model.energy.energysource.EnergySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergySource</span></code></a>
-:return:</p>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.model.energy.energysource.EnergySource" title="hive.model.energy.energysource.EnergySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergySource</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.soc">
 <em class="property">property </em><code class="sig-name descname">soc</code><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.soc" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculates the current state of charge as a Percentage
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>
-:return: the percent SoC</p>
+<dd><p>calculates the current state of charge as a Ratio</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the SoC (0-1)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.is_at_ideal_energy_limit">
 <code class="sig-name descname">is_at_ideal_energy_limit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.is_at_ideal_energy_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.is_at_ideal_energy_limit" title="Permalink to this definition">¶</a></dt>
-<dd><p>True if the EnergySource is at ideal energy limit
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:return: True, if the energy level is equal to or greater than the ideal energy limit,
-within some epsilon, considering that charging curves can prevent reaching this ideal
+<dd><p>True if the EnergySource is at ideal energy limit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True, if the energy level is equal to or greater than the ideal energy limit,</p>
+</dd>
+</dl>
+<p>within some epsilon, considering that charging curves can prevent reaching this ideal
 value.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.not_at_ideal_energy_limit">
 <code class="sig-name descname">not_at_ideal_energy_limit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.not_at_ideal_energy_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.not_at_ideal_energy_limit" title="Permalink to this definition">¶</a></dt>
-<dd><p>True if the EnergySource is not at ideal energy limit
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:return: bool</p>
+<dd><p>True if the EnergySource is not at ideal energy limit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.is_full">
 <code class="sig-name descname">is_full</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.is_full"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.is_full" title="Permalink to this definition">¶</a></dt>
-<dd><p>True if EnergySource is full
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:return: bool</p>
+<dd><p>True if EnergySource is at full capacity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.is_empty">
 <code class="sig-name descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.is_empty" title="Permalink to this definition">¶</a></dt>
-<dd><p>True if the EnergySource is empty
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:return: bool</p>
+<dd><p>True if the EnergySource is empty</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.use_energy">
 <code class="sig-name descname">use_energy</code><span class="sig-paren">(</span><em class="sig-param">fuel_used</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.use_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.use_energy" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Uses energy and returns the updated energy source</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fuel_used</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>) – </p>
+<dd class="field-odd"><p><strong>fuel_used</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>) – fuel used in kilowatt-hours</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference internal" href="#hive.model.energy.energysource.EnergySource" title="hive.model.energy.energysource.EnergySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergySource</span></code></a></p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
+<dd class="field-odd"><p>the updated energy source</p>
 </dd>
 </dl>
 </dd></dl>
@@ -238,11 +270,18 @@ value.</p>
 <dl class="method">
 <dt id="hive.model.energy.energysource.EnergySource.load_energy">
 <code class="sig-name descname">load_energy</code><span class="sig-paren">(</span><em class="sig-param">fuel_gained</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/energysource.html#EnergySource.load_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.energysource.EnergySource.load_energy" title="Permalink to this definition">¶</a></dt>
-<dd><p>adds energy up to the EnergySource’s capacity
-:type fuel_gained: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
-:param fuel_gained: the fuel gained for this vehicle due to a charge event
-:rtype: <a class="reference internal" href="#hive.model.energy.energysource.EnergySource" title="hive.model.energy.energysource.EnergySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergySource</span></code></a>
-:return: the updated EnergySource with fuel added</p>
+<dd><p>adds energy up to the EnergySource’s capacity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fuel_gained</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>) – the fuel gained for this vehicle due to a refuel event</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.energy.energysource.EnergySource" title="hive.model.energy.energysource.EnergySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergySource</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the updated EnergySource with fuel added</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class TabularPowerCurveInput(TypedDict):
+    """
+    Inputs for the TabularPowerCurve
+    """
     name: str
     type: str
     power_type: str
@@ -26,7 +29,6 @@ class TabularPowerCurveInput(TypedDict):
 class TabularPowercurve(Powercurve):
     """
     builds a tabular, interpolated lookup model from a file
-    for energy curves
     """
 
     def __init__(self, data: TabularPowerCurveInput):
@@ -56,13 +58,6 @@ class TabularPowercurve(Powercurve):
                energy_source: EnergySource,
                charger: Charger,
                duration_seconds: s = 1 * unit.seconds) -> EnergySource:
-        """
-         (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
-         :param energy_source: a vehicle's source of energy
-         :param charger: has a capacity scaling effect on the energy_rate
-         :param duration_seconds: the amount of time to charge for
-         :return: energy rate in KwH for charging with the current state of the EnergySource
-         """
 
         # iterate for as many seconds in a time step, by step_size_seconds
         t = 0 * unit.seconds

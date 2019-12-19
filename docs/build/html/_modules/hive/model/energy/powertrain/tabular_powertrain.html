@@ -50,6 +50,9 @@
 
 
 <div class="viewcode-block" id="TabularPowertrainInput"><a class="viewcode-back" href="../../../../../reference/hive.model.energy.powertrain.html#hive.model.energy.powertrain.tabular_powertrain.TabularPowertrainInput">[docs]</a><span class="k">class</span> <span class="nc">TabularPowertrainInput</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Input parameters for a TabularPowertrain&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">consumption_model</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span></div>
@@ -57,8 +60,7 @@
 
 <div class="viewcode-block" id="TabularPowertrain"><a class="viewcode-back" href="../../../../../reference/hive.model.energy.powertrain.html#hive.model.energy.powertrain.tabular_powertrain.TabularPowertrain">[docs]</a><span class="k">class</span> <span class="nc">TabularPowertrain</span><span class="p">(</span><span class="n">Powertrain</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    builds a tabular, interpolated lookup model from a file</span>
-<span class="sd">    for energy consumption</span>
+<span class="sd">    builds a tabular, interpolated lookup model from a file for energy consumption</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TabularPowertrainInput</span><span class="p">):</span>
@@ -82,9 +84,10 @@
 
 <div class="viewcode-block" id="TabularPowertrain.property_link_cost"><a class="viewcode-back" href="../../../../../reference/hive.model.energy.powertrain.html#hive.model.energy.powertrain.tabular_powertrain.TabularPowertrain.property_link_cost">[docs]</a>    <span class="k">def</span> <span class="nf">property_link_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">kwh</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        uses mph tabular value and</span>
-<span class="sd">        :param property_link:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        uses mph tabular value to calculate energy over a link</span>
+
+<span class="sd">        :param property_link: the property link to calculate energy over.</span>
+<span class="sd">        :return: energy in kilowatt-hours</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">watthour_per_mile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">property_link</span><span class="o">.</span><span class="n">speed</span><span class="o">.</span><span class="n">to</span><span class="p">((</span><span class="n">unit</span><span class="o">.</span><span class="n">miles</span> <span class="o">/</span> <span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">)),</span>
                                       <span class="bp">self</span><span class="o">.</span><span class="n">_consumption_mph</span><span class="p">,</span>

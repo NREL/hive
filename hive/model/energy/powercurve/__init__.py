@@ -27,6 +27,7 @@ powercurve_energy_types = {
 def build_powercurve(name: str) -> Union[IOError, Powercurve]:
     """
     constructs EnergyCurve objects from file descriptions
+
     :param name: name of a valid energy curve type
     :return: an EnergyCurve, or, an error
     :raise IOError: if model file is invalid

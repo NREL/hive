@@ -39,7 +39,7 @@
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">LinkId</span>
+<span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">LinkId</span><span class="p">,</span> <span class="n">GeoId</span>
 <span class="kn">from</span> <span class="nn">hive.model.roadnetwork.link</span> <span class="kn">import</span> <span class="n">Link</span><span class="p">,</span> <span class="n">link_distance</span>
 <span class="kn">from</span> <span class="nn">hive.util.units</span> <span class="kn">import</span> <span class="n">unit</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">kmph</span><span class="p">,</span> <span class="n">h</span>
 <span class="kn">from</span> <span class="nn">hive.util.exception</span> <span class="kn">import</span> <span class="n">UnitError</span>
@@ -49,6 +49,17 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    a link on the road network which also has road network attributes such as</span>
 <span class="sd">    distance, speed, and travel time</span>
+
+<span class="sd">    :param link_id: The id of the underlying link in the network.</span>
+<span class="sd">    :type link_id: :py:obj:`LinkId`</span>
+<span class="sd">    :param link: The underlying link in the network.</span>
+<span class="sd">    :type link: :py:obj:`Link`</span>
+<span class="sd">    :param distance: distance of the property link</span>
+<span class="sd">    :type distance: :py:obj:`kilometers`</span>
+<span class="sd">    :param speed: speed of the property link</span>
+<span class="sd">    :type speed: :py:obj:`kilometers/hour`</span>
+<span class="sd">    :param travel_time: (estimated) travel time of the property link</span>
+<span class="sd">    :type travel_time: :py:obj:`hours`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span>
     <span class="n">link</span><span class="p">:</span> <span class="n">Link</span>
@@ -62,6 +73,7 @@
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">link</span><span class="p">:</span> <span class="n">Link</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="n">kmph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PropertyLink</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        alternative constructor which sets distance/travel time based on underlying h3 grid</span>
+
 <span class="sd">        :param link: the underlying link representation</span>
 <span class="sd">        :param speed: the speed for traversing the link</span>
 <span class="sd">        :return: a PropertyLink build around this Link</span>
@@ -74,14 +86,20 @@
         <span class="k">return</span> <span class="n">PropertyLink</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">link_id</span><span class="p">,</span> <span class="n">link</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">speed</span><span class="p">,</span> <span class="n">tt</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoId</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">start</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoId</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">end</span>
 
 <div class="viewcode-block" id="PropertyLink.update_speed"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.property_link.PropertyLink.update_speed">[docs]</a>    <span class="k">def</span> <span class="nf">update_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="n">kmph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PropertyLink</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the speed of the property link</span>
+
+<span class="sd">        :param speed: speed to update to</span>
+<span class="sd">        :return: an updated PropertyLink</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">speed</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span> <span class="o">/</span> <span class="n">unit</span><span class="o">.</span><span class="n">hour</span><span class="p">),</span> <span class="n">UnitError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Expected speed in units kmph but got units </span><span class="si">{speed.units}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
@@ -91,6 +109,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        some operations call for updating the the underlying link representation but</span>
 <span class="sd">        maintaining the properties of the link which are not tied to the link representation.</span>
+
 <span class="sd">        :param updated_link: the new Link data</span>
 <span class="sd">        :return: the updated PropertyLink</span>
 <span class="sd">        &quot;&quot;&quot;</span>

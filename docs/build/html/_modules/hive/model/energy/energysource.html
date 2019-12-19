@@ -49,7 +49,22 @@
 
 <div class="viewcode-block" id="EnergySource"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource">[docs]</a><span class="k">class</span> <span class="nc">EnergySource</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    a battery has a battery type, capacity and a energy</span>
+<span class="sd">    A tuple to represent an energy source. Can be of a unique energy type (i.e. electirc, gasoline, etc)</span>
+
+<span class="sd">    :param powercurve_id: The id of the powercurve this energy source will use.</span>
+<span class="sd">    :type powercurve_id: :py:obj:`PowercurveId`</span>
+<span class="sd">    :param energy_type: The energy type of this energy source.</span>
+<span class="sd">    :type energy_type: :py:obj:`EnergySource`</span>
+<span class="sd">    :param ideal_energy_limit: Refueling is considered complete when this energy limit is reached.</span>
+<span class="sd">    :type ideal_energy_limit: :py:obj:`kwh`</span>
+<span class="sd">    :param capacity: The total energy capacity of the energy source.</span>
+<span class="sd">    :type capacity: :py:obj:`kwh`</span>
+<span class="sd">    :param energy: The current energy level of the energy source.</span>
+<span class="sd">    :type energy: :py:obj:`kwh`</span>
+<span class="sd">    :param max_charge_acceptance_kw: The maximum charge acceptance this energy source can handle (electric only)</span>
+<span class="sd">    :type max_charge_acceptance_kw: :py:obj:`kw`</span>
+<span class="sd">    :param charge_threshold: A threshold parameter to allow for some floating point error.</span>
+<span class="sd">    :type charge_threshold: :py:obj:`kwh`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">powercurve_id</span><span class="p">:</span> <span class="n">PowercurveId</span>
     <span class="n">energy_type</span><span class="p">:</span> <span class="n">EnergyType</span>
@@ -58,7 +73,6 @@
     <span class="n">energy</span><span class="p">:</span> <span class="n">kwh</span>
     <span class="n">max_charge_acceptance_kw</span><span class="p">:</span> <span class="n">kw</span>
     <span class="n">charge_threshold</span><span class="p">:</span> <span class="n">kwh</span> <span class="o">=</span> <span class="mf">0.001</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilowatthour</span>
-    <span class="n">charge_epsilon</span><span class="p">:</span> <span class="n">kwh</span> <span class="o">=</span> <span class="mf">0.001</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilowatthour</span>
 
 <div class="viewcode-block" id="EnergySource.build"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
@@ -70,17 +84,6 @@
               <span class="n">soc</span><span class="p">:</span> <span class="n">Ratio</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
               <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnergySource</span><span class="p">:</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        builds an EnergySource for a Vehicle</span>
-<span class="sd">        :param powercurve_id: the id of the powercurve associated with charging this EnergySource</span>
-<span class="sd">        :param energy_type: the type of energy used</span>
-<span class="sd">        :param capacity: the fuel capacity of this EnergySource</span>
-<span class="sd">        :param ideal_energy_limit: the energy that this EnergySource is limited to based on</span>
-<span class="sd">        manufacturer requirements and implementation</span>
-<span class="sd">        :param max_charge_acceptance_kw: the maximum charge power this vehicle can accept</span>
-<span class="sd">        :param soc: the initial state of charge of this vehicle, in percentage</span>
-<span class="sd">        :return:</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ideal_energy_limit</span><span class="p">:</span>
             <span class="n">ideal_energy_limit</span> <span class="o">=</span> <span class="n">capacity</span>
 
@@ -108,30 +111,34 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">soc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Ratio</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        calculates the current state of charge as a Percentage</span>
-<span class="sd">        :return: the percent SoC</span>
+<span class="sd">        calculates the current state of charge as a Ratio</span>
+
+<span class="sd">        :return: the SoC (0-1)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
 
 <div class="viewcode-block" id="EnergySource.is_at_ideal_energy_limit"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.is_at_ideal_energy_limit">[docs]</a>    <span class="k">def</span> <span class="nf">is_at_ideal_energy_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        True if the EnergySource is at ideal energy limit </span>
+<span class="sd">        True if the EnergySource is at ideal energy limit</span>
+
 <span class="sd">        :return: True, if the energy level is equal to or greater than the ideal energy limit,</span>
 <span class="sd">        within some epsilon, considering that charging curves can prevent reaching this ideal</span>
 <span class="sd">        value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_epsilon</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideal_energy_limit</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_threshold</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideal_energy_limit</span></div>
 
 <div class="viewcode-block" id="EnergySource.not_at_ideal_energy_limit"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.not_at_ideal_energy_limit">[docs]</a>    <span class="k">def</span> <span class="nf">not_at_ideal_energy_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        True if the EnergySource is not at ideal energy limit </span>
+<span class="sd">        True if the EnergySource is not at ideal energy limit</span>
+
 <span class="sd">        :return: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_at_ideal_energy_limit</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="EnergySource.is_full"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.is_full">[docs]</a>    <span class="k">def</span> <span class="nf">is_full</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        True if EnergySource is full</span>
+<span class="sd">        True if EnergySource is at full capacity</span>
+
 <span class="sd">        :return: bool </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_threshold</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_threshold</span><span class="p">)</span></div>
@@ -139,15 +146,17 @@
 <div class="viewcode-block" id="EnergySource.is_empty"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        True if the EnergySource is empty</span>
+
 <span class="sd">        :return: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">&lt;=</span> <span class="mf">0.0</span></div>
 
 <div class="viewcode-block" id="EnergySource.use_energy"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.use_energy">[docs]</a>    <span class="k">def</span> <span class="nf">use_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fuel_used</span><span class="p">:</span> <span class="n">kwh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnergySource</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uses energy and returns the updated energy source</span>
 
-<span class="sd">        :param fuel_used:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :param fuel_used: fuel used in kilowatt-hours</span>
+<span class="sd">        :return: the updated energy source</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">updated_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">-</span> <span class="n">fuel_used</span>
         <span class="k">assert</span> <span class="n">updated_energy</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">StateOfChargeError</span><span class="p">(</span><span class="s2">&quot;Battery fell below 0% SoC&quot;</span><span class="p">)</span>
@@ -156,7 +165,8 @@
 <div class="viewcode-block" id="EnergySource.load_energy"><a class="viewcode-back" href="../../../../reference/hive.model.energy.html#hive.model.energy.energysource.EnergySource.load_energy">[docs]</a>    <span class="k">def</span> <span class="nf">load_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fuel_gained</span><span class="p">:</span> <span class="n">kwh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnergySource</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        adds energy up to the EnergySource&#39;s capacity</span>
-<span class="sd">        :param fuel_gained: the fuel gained for this vehicle due to a charge event</span>
+
+<span class="sd">        :param fuel_gained: the fuel gained for this vehicle due to a refuel event</span>
 <span class="sd">        :return: the updated EnergySource with fuel added</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">updated_energy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">+</span> <span class="n">fuel_gained</span><span class="p">)</span>

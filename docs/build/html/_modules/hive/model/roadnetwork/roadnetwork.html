@@ -55,14 +55,22 @@
 
 <div class="viewcode-block" id="RoadNetwork.route"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.roadnetwork.RoadNetwork.route">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Route</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a route between two road network property links</span>
+
+<span class="sd">        :param origin: PropertyLink of the origin</span>
+<span class="sd">        :param destination: PropertyLink of the destination</span>
+<span class="sd">        :return: A route.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="RoadNetwork.property_link_from_geoid"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.roadnetwork.RoadNetwork.property_link_from_geoid">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">property_link_from_geoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        builds a location on the road network for a stationary simulation element</span>
-<span class="sd">        :param geoid:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param geoid: geoid to map to network</span>
+<span class="sd">        :return: The nearest property link if it exists.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
@@ -70,8 +78,9 @@
     <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadNetwork</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gives the RoadNetwork a chance to update it&#39;s flow network based on the current simulation time</span>
+
 <span class="sd">        :param sim_time: the current simulation time</span>
-<span class="sd">        :return: does not return</span>
+<span class="sd">        :return: an updated RoadNetwork</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
@@ -79,6 +88,7 @@
     <span class="k">def</span> <span class="nf">get_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets the link associated with the LinkId, or, if invalid, returns None</span>
+
 <span class="sd">        :param link_id: a link id</span>
 <span class="sd">        :return: a Link, or None if LinkId does not exist</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -88,6 +98,7 @@
     <span class="k">def</span> <span class="nf">get_current_property_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyLink</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets the current properties for a given property link, or, if invalid, returns None</span>
+
 <span class="sd">        :param property_link: a property link</span>
 <span class="sd">        :return: a Property Link, or None if LinkId does not exist</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -97,6 +108,7 @@
     <span class="k">def</span> <span class="nf">geoid_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        confirms that the coordinate exists within the bounding polygon of this road network instance</span>
+
 <span class="sd">        :param geoid: an h3 geoid</span>
 <span class="sd">        :return: True/False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -106,6 +118,7 @@
     <span class="k">def</span> <span class="nf">link_id_within_geofence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_id</span><span class="p">:</span> <span class="n">LinkId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        confirms that the coordinate exists within the bounding polygon of this road network instance</span>
+
 <span class="sd">        :param link_id: a position on the road network across the entire simulation</span>
 <span class="sd">        :return: True/False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -116,6 +129,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        confirms that the coordinate exists within the bounding polygon the entire simulation,</span>
 <span class="sd">        which may include many (distributed) RoadNetwork instances</span>
+
 <span class="sd">        :param geoid: an h3 geoid</span>
 <span class="sd">        :return: True/False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -126,6 +140,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        confirms that the coordinate exists within the bounding polygon the entire simulation,</span>
 <span class="sd">        which may include many (distributed) RoadNetwork instances</span>
+
 <span class="sd">        :param link_id: a position on the road network across the entire simulation</span>
 <span class="sd">        :return: True/False</span>
 <span class="sd">        &quot;&quot;&quot;</span>

@@ -10,17 +10,23 @@ from hive.util.units import kwh
 
 class Powertrain(ABC):
     """
-    a powertrain has a behavior where it calculate energy consumption in KwH
+    a powertrain has the behavior where it calculate energy consumption in KwH
     """
 
     @abstractmethod
     def get_id(self) -> PowertrainId:
+        """
+        Gets the id of the Powertrain
+
+        :return: the powertrain id
+        """
         pass
 
     @abstractmethod
     def get_energy_type(self) -> EnergyType:
         """
         gets the energy type of this Powertrain model
+
         :return: an energy type
         """
         pass
@@ -29,6 +35,7 @@ class Powertrain(ABC):
     def energy_cost(self, route: Route) -> kwh:
         """
         (estimated) energy cost to traverse this route
+
         :param route: a route, either experienced, or, estimated
         :return: energy cost of this route
         """

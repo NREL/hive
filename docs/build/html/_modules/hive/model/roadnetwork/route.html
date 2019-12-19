@@ -47,6 +47,13 @@
 
 
 <div class="viewcode-block" id="route_distance"><a class="viewcode-back" href="../../../../reference/hive.model.roadnetwork.html#hive.model.roadnetwork.route.route_distance">[docs]</a><span class="k">def</span> <span class="nf">route_distance</span><span class="p">(</span><span class="n">route</span><span class="p">:</span> <span class="n">Route</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">km</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the distance of the route in kilometers</span>
+
+<span class="sd">    :param route: route to calculate distance on</span>
+<span class="sd">    :rtype: :py:obj:`kilometers`</span>
+<span class="sd">    :return: the distance in kilometers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">distance</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span>
     <span class="k">for</span> <span class="n">pl</span> <span class="ow">in</span> <span class="n">route</span><span class="p">:</span>
         <span class="n">distance</span> <span class="o">+=</span> <span class="n">pl</span><span class="o">.</span><span class="n">distance</span>

@@ -12,7 +12,22 @@ from copy import copy
 
 class EnergySource(NamedTuple):
     """
-    a battery has a battery type, capacity and a energy
+    A tuple to represent an energy source. Can be of a unique energy type (i.e. electirc, gasoline, etc)
+
+    :param powercurve_id: The id of the powercurve this energy source will use.
+    :type powercurve_id: :py:obj:`PowercurveId`
+    :param energy_type: The energy type of this energy source.
+    :type energy_type: :py:obj:`EnergySource`
+    :param ideal_energy_limit: Refueling is considered complete when this energy limit is reached.
+    :type ideal_energy_limit: :py:obj:`kwh`
+    :param capacity: The total energy capacity of the energy source.
+    :type capacity: :py:obj:`kwh`
+    :param energy: The current energy level of the energy source.
+    :type energy: :py:obj:`kwh`
+    :param max_charge_acceptance_kw: The maximum charge acceptance this energy source can handle (electric only)
+    :type max_charge_acceptance_kw: :py:obj:`kw`
+    :param charge_threshold: A threshold parameter to allow for some floating point error.
+    :type charge_threshold: :py:obj:`kwh`
     """
     powercurve_id: PowercurveId
     energy_type: EnergyType
@@ -21,7 +36,6 @@ class EnergySource(NamedTuple):
     energy: kwh
     max_charge_acceptance_kw: kw
     charge_threshold: kwh = 0.001 * unit.kilowatthour
-    charge_epsilon: kwh = 0.001 * unit.kilowatthour
 
     @classmethod
     def build(cls,
@@ -33,17 +47,6 @@ class EnergySource(NamedTuple):
               soc: Ratio = 1.0,
               ) -> EnergySource:
 
-        """
-        builds an EnergySource for a Vehicle
-        :param powercurve_id: the id of the powercurve associated with charging this EnergySource
-        :param energy_type: the type of energy used
-        :param capacity: the fuel capacity of this EnergySource
-        :param ideal_energy_limit: the energy that this EnergySource is limited to based on
-        manufacturer requirements and implementation
-        :param max_charge_acceptance_kw: the maximum charge power this vehicle can accept
-        :param soc: the initial state of charge of this vehicle, in percentage
-        :return:
-        """
         if not ideal_energy_limit:
             ideal_energy_limit = capacity
 
@@ -71,30 +74,34 @@ class EnergySource(NamedTuple):
     @property
     def soc(self) -> Ratio:
         """
-        calculates the current state of charge as a Percentage
-        :return: the percent SoC
+        calculates the current state of charge as a Ratio
+
+        :return: the SoC (0-1)
         """
         return self.energy / self.capacity
 
     def is_at_ideal_energy_limit(self) -> bool:
         """
-        True if the EnergySource is at ideal energy limit 
+        True if the EnergySource is at ideal energy limit
+
         :return: True, if the energy level is equal to or greater than the ideal energy limit,
         within some epsilon, considering that charging curves can prevent reaching this ideal
         value.
         """
-        return self.energy + self.charge_epsilon >= self.ideal_energy_limit
+        return (self.energy + self.charge_threshold) >= self.ideal_energy_limit
 
     def not_at_ideal_energy_limit(self) -> bool:
         """
-        True if the EnergySource is not at ideal energy limit 
+        True if the EnergySource is not at ideal energy limit
+
         :return: bool
         """
         return not self.is_at_ideal_energy_limit()
 
     def is_full(self) -> bool:
         """
-        True if EnergySource is full
+        True if EnergySource is at full capacity
+
         :return: bool 
         """
         return (self.capacity - self.charge_threshold) < self.energy < (self.capacity + self.charge_threshold)
@@ -102,15 +109,17 @@ class EnergySource(NamedTuple):
     def is_empty(self) -> bool:
         """
         True if the EnergySource is empty
+
         :return: bool
         """
         return self.energy <= 0.0
 
     def use_energy(self, fuel_used: kwh) -> EnergySource:
         """
+        Uses energy and returns the updated energy source
 
-        :param fuel_used:
-        :return:
+        :param fuel_used: fuel used in kilowatt-hours
+        :return: the updated energy source
         """
         updated_energy = self.energy - fuel_used
         assert updated_energy >= 0.0, StateOfChargeError("Battery fell below 0% SoC")
@@ -119,7 +128,8 @@ class EnergySource(NamedTuple):
     def load_energy(self, fuel_gained: kwh) -> EnergySource:
         """
         adds energy up to the EnergySource's capacity
-        :param fuel_gained: the fuel gained for this vehicle due to a charge event
+
+        :param fuel_gained: the fuel gained for this vehicle due to a refuel event
         :return: the updated EnergySource with fuel added
         """
         updated_energy = min(self.capacity, self.energy + fuel_gained)

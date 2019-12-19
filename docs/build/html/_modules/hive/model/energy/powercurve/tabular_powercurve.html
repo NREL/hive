@@ -53,6 +53,9 @@
 
 
 <div class="viewcode-block" id="TabularPowerCurveInput"><a class="viewcode-back" href="../../../../../reference/hive.model.energy.powercurve.html#hive.model.energy.powercurve.tabular_powercurve.TabularPowerCurveInput">[docs]</a><span class="k">class</span> <span class="nc">TabularPowerCurveInput</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inputs for the TabularPowerCurve</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">power_type</span><span class="p">:</span> <span class="nb">str</span>
@@ -64,7 +67,6 @@
 <div class="viewcode-block" id="TabularPowercurve"><a class="viewcode-back" href="../../../../../reference/hive.model.energy.powercurve.html#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve">[docs]</a><span class="k">class</span> <span class="nc">TabularPowercurve</span><span class="p">(</span><span class="n">Powercurve</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    builds a tabular, interpolated lookup model from a file</span>
-<span class="sd">    for energy curves</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TabularPowerCurveInput</span><span class="p">):</span>
@@ -94,13 +96,6 @@
                <span class="n">energy_source</span><span class="p">:</span> <span class="n">EnergySource</span><span class="p">,</span>
                <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">,</span>
                <span class="n">duration_seconds</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnergySource</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">         (estimated) energy rate due to fueling, based on an interpolated tabular lookup model</span>
-<span class="sd">         :param energy_source: a vehicle&#39;s source of energy</span>
-<span class="sd">         :param charger: has a capacity scaling effect on the energy_rate</span>
-<span class="sd">         :param duration_seconds: the amount of time to charge for</span>
-<span class="sd">         :return: energy rate in KwH for charging with the current state of the EnergySource</span>
-<span class="sd">         &quot;&quot;&quot;</span>
 
         <span class="c1"># iterate for as many seconds in a time step, by step_size_seconds</span>
         <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">seconds</span>

@@ -12,6 +12,9 @@ from hive.util.units import unit, kwh
 
 
 class TabularPowertrainInput(TypedDict):
+    """
+    Input parameters for a TabularPowertrain"
+    """
     name: str
     type: str
     consumption_model: List[Dict[float, float]]
@@ -19,8 +22,7 @@ class TabularPowertrainInput(TypedDict):
 
 class TabularPowertrain(Powertrain):
     """
-    builds a tabular, interpolated lookup model from a file
-    for energy consumption
+    builds a tabular, interpolated lookup model from a file for energy consumption
     """
 
     def __init__(self, data: TabularPowertrainInput):
@@ -44,9 +46,10 @@ class TabularPowertrain(Powertrain):
 
     def property_link_cost(self, property_link: PropertyLink) -> kwh:
         """
-        uses mph tabular value and
-        :param property_link:
-        :return:
+        uses mph tabular value to calculate energy over a link
+
+        :param property_link: the property link to calculate energy over.
+        :return: energy in kilowatt-hours
         """
         watthour_per_mile = np.interp(property_link.speed.to((unit.miles / unit.hour)),
                                       self._consumption_mph,

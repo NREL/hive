@@ -12,9 +12,13 @@ from hive.util.units import unit, h, km
 class LinkTraversal(NamedTuple):
     """
     represents the traversal of a link.
-    traversed_link represents any part of the link that was traversed.
-    remaining_link represents any part of the link that remains to be traversed
-    remaining_time represents any time the agent has left to traverse additional links
+
+    :param traversed: represents any part of the link that was traversed.
+    :type traversed: :py:obj:`Optional[PropertyLink]`
+    :param remaining: represents any part of the link that remains to be traversed
+    :type remaining: :py:obj:`Optional[PropertyLink]`
+    :param remaining_time: represents any time the agent has left to traverse additional links
+    :type remaining_time: :py:obj:`hours`
     """
     traversed: Optional[PropertyLink]
     remaining: Optional[PropertyLink]
@@ -27,6 +31,7 @@ def traverse_up_to(road_network: RoadNetwork,
     """
     using the ground truth road network, and some agent Link traversal, attempt to traverse
     the link, based on travel time calculations from the Link's PropertyLink attributes.
+
     :param road_network: the road network
     :param property_link: the plan the agent has to traverse a subset of a road network link
     :param available_time: the remaining time the agent has in this time step
