@@ -156,206 +156,264 @@ specify their own level of granularity for
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.current_time_seconds">
-<code class="sig-name descname">current_time_seconds</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pint.unit.build_unit_class.&lt;locals&gt;.Unit<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.current_time_seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.current_time_seconds" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">current_time_seconds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.current_time_seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.current_time_seconds" title="Permalink to this definition">¶</a></dt>
 <dd><p>computes the current time in seconds
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :return: the current time in seconds</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.add_request">
-<code class="sig-name descname">add_request</code><span class="sig-paren">(</span><em class="sig-param">request: hive.model.request.Request</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_request" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_request</code><span class="sig-paren">(</span><em class="sig-param">request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>adds a request to the SimulationState
+:type request: <a class="reference internal" href="hive.model.html#hive.model.request.Request" title="hive.model.request.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a>
 :param request: the request to add
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation state, or an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.remove_request">
-<code class="sig-name descname">remove_request</code><span class="sig-paren">(</span><em class="sig-param">request_id: str</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_request" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_request</code><span class="sig-paren">(</span><em class="sig-param">request_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>removes a request from this simulation.
 called once a Request has been fully serviced and is no longer
 alive in the simulation.
+:type request_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param request_id: id of the request to delete
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation state (does not report failure)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.modify_request">
-<code class="sig-name descname">modify_request</code><span class="sig-paren">(</span><em class="sig-param">updated_request: hive.model.request.Request</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_request" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">modify_request</code><span class="sig-paren">(</span><em class="sig-param">updated_request</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>given an updated request, update the SimulationState with that request
+:type updated_request: <a class="reference internal" href="hive.model.html#hive.model.request.Request" title="hive.model.request.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a>
 :param updated_request:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation, or an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.add_vehicle">
-<code class="sig-name descname">add_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle: hive.model.vehicle.Vehicle</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_vehicle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_vehicle" title="Permalink to this definition">¶</a></dt>
 <dd><p>adds a vehicle into the region supported by the RoadNetwork in this SimulationState
+:type vehicle: <a class="reference internal" href="hive.model.html#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>
 :param vehicle: a vehicle
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: updated SimulationState, or SimulationStateError</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.modify_vehicle">
-<code class="sig-name descname">modify_vehicle</code><span class="sig-paren">(</span><em class="sig-param">updated_vehicle: hive.model.vehicle.Vehicle</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_vehicle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">modify_vehicle</code><span class="sig-paren">(</span><em class="sig-param">updated_vehicle</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_vehicle" title="Permalink to this definition">¶</a></dt>
 <dd><p>given an updated vehicle, update the SimulationState with that vehicle
+:type updated_vehicle: <a class="reference internal" href="hive.model.html#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>
 :param updated_vehicle: the vehicle after calling a transition function and .step()
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation, or an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.apply_instruction">
-<code class="sig-name descname">apply_instruction</code><span class="sig-paren">(</span><em class="sig-param">i: hive.dispatcher.instruction.Instruction</em><span class="sig-paren">)</span> &#x2192; Optional[hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.apply_instruction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.apply_instruction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply_instruction</code><span class="sig-paren">(</span><em class="sig-param">i</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.apply_instruction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.apply_instruction" title="Permalink to this definition">¶</a></dt>
 <dd><p>test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
+:type i: <a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>
 :param i: the instruction to apply
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation state or an exception on failure</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.step_vehicle">
-<code class="sig-name descname">step_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em><span class="sig-paren">)</span> &#x2192; hive.state.simulation_state.SimulationState<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.step_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.step_vehicle" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">step_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.step_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.step_vehicle" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.step_simulation">
-<code class="sig-name descname">step_simulation</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; hive.state.simulation_state.SimulationState<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.step_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.step_simulation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">step_simulation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.step_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.step_simulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>advances this simulation
+:rtype: <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
 :return: the simulation after calling step() on all vehicles</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.remove_vehicle">
-<code class="sig-name descname">remove_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_vehicle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_vehicle" title="Permalink to this definition">¶</a></dt>
 <dd><p>removes the vehicle from play (perhaps to simulate a broken vehicle or end of a shift)
+:type vehicle_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param vehicle_id: the id of the vehicle
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation state</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.pop_vehicle">
-<code class="sig-name descname">pop_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em><span class="sig-paren">)</span> &#x2192; Union[Exception, Tuple[hive.state.simulation_state.SimulationState, hive.model.vehicle.Vehicle]]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.pop_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.pop_vehicle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">pop_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.pop_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.pop_vehicle" title="Permalink to this definition">¶</a></dt>
 <dd><p>removes a vehicle from this SimulationState, which updates the state and also returns the vehicle.
 supports shipping this vehicle to another cluster node.
+:type vehicle_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param vehicle_id: the id of the vehicle to pop
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>, <a class="reference internal" href="hive.model.html#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>]]
 :return: either a Tuple containing the updated state and the vehicle, or, an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.add_station">
-<code class="sig-name descname">add_station</code><span class="sig-paren">(</span><em class="sig-param">station: hive.model.station.Station</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_station" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_station</code><span class="sig-paren">(</span><em class="sig-param">station</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_station" title="Permalink to this definition">¶</a></dt>
 <dd><p>adds a station to the simulation
+:type station: <a class="reference internal" href="hive.model.html#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a>
 :param station: the station to add
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated SimulationState, or a SimulationStateError</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.remove_station">
-<code class="sig-name descname">remove_station</code><span class="sig-paren">(</span><em class="sig-param">station_id: str</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_station" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_station</code><span class="sig-paren">(</span><em class="sig-param">station_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_station" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove a station from the simulation. maybe they closed due to inclement weather.
+:type station_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param station_id: the id of the station to remove
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation state, or an exception</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.modify_station">
-<code class="sig-name descname">modify_station</code><span class="sig-paren">(</span><em class="sig-param">updated_station: hive.model.station.Station</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_station" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">modify_station</code><span class="sig-paren">(</span><em class="sig-param">updated_station</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_station" title="Permalink to this definition">¶</a></dt>
 <dd><p>given an updated station, update the SimulationState with that station
+:type updated_station: <a class="reference internal" href="hive.model.html#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a>
 :param updated_station:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation, or an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.add_base">
-<code class="sig-name descname">add_base</code><span class="sig-paren">(</span><em class="sig-param">base: hive.model.base.Base</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_base" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_base</code><span class="sig-paren">(</span><em class="sig-param">base</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>adds a base to the simulation
+:type base: <a class="reference internal" href="hive.model.html#hive.model.base.Base" title="hive.model.base.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a>
 :param base: the base to add
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated SimulationState, or a SimulationStateError</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.remove_base">
-<code class="sig-name descname">remove_base</code><span class="sig-paren">(</span><em class="sig-param">base_id: str</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_base" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">remove_base</code><span class="sig-paren">(</span><em class="sig-param">base_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.remove_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.remove_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove a base from the simulation. all your base belong to us.
+:type base_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param base_id: the id of the base to remove
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation state, or an exception</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.modify_base">
-<code class="sig-name descname">modify_base</code><span class="sig-paren">(</span><em class="sig-param">updated_base: hive.model.base.Base</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_base" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">modify_base</code><span class="sig-paren">(</span><em class="sig-param">updated_base</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.modify_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.modify_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>given an updated base, update the SimulationState with that base
+:type updated_base: <a class="reference internal" href="hive.model.html#hive.model.base.Base" title="hive.model.base.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a>
 :param updated_base:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: the updated simulation, or an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.add_powertrain">
-<code class="sig-name descname">add_powertrain</code><span class="sig-paren">(</span><em class="sig-param">powertrain: hive.model.energy.powertrain.powertrain.Powertrain</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_powertrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_powertrain" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_powertrain</code><span class="sig-paren">(</span><em class="sig-param">powertrain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_powertrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_powertrain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a powertrain to the simulation
+:type powertrain: <a class="reference internal" href="hive.model.energy.powertrain.html#hive.model.energy.powertrain.powertrain.Powertrain" title="hive.model.energy.powertrain.powertrain.Powertrain"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powertrain</span></code></a>
 :param powertrain:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return:</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.add_powercurve">
-<code class="sig-name descname">add_powercurve</code><span class="sig-paren">(</span><em class="sig-param">powercurve: hive.model.energy.powercurve.powercurve.Powercurve</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_powercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_powercurve" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_powercurve</code><span class="sig-paren">(</span><em class="sig-param">powercurve</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.add_powercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.add_powercurve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a powercurve to the simulation
+:type powercurve: <a class="reference internal" href="hive.model.energy.powercurve.html#hive.model.energy.powercurve.powercurve.Powercurve" title="hive.model.energy.powercurve.powercurve.Powercurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powercurve</span></code></a>
 :param powercurve:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return:</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.update_road_network">
-<code class="sig-name descname">update_road_network</code><span class="sig-paren">(</span><em class="sig-param">sim_time: int</em><span class="sig-paren">)</span> &#x2192; hive.state.simulation_state.SimulationState<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.update_road_network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.update_road_network" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_road_network</code><span class="sig-paren">(</span><em class="sig-param">sim_time</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.update_road_network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.update_road_network" title="Permalink to this definition">¶</a></dt>
 <dd><p>trigger the update of the road network model based on the current sim time
+:type sim_time: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
 :param sim_time: the current sim time
+:rtype: <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
 :return: updated simulation state (and road network)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.at_geoid">
-<code class="sig-name descname">at_geoid</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.state.at_location_response.AtLocationResponse]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.at_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.at_geoid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">at_geoid</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.at_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.at_geoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns a dictionary with the list of ids found at this location for all entities
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid: geoid to look up
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.state.at_location_response.AtLocationResponse" title="hive.state.at_location_response.AtLocationResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtLocationResponse</span></code></a>]
 :return: an Optional AtLocationResponse</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.vehicle_at_request">
-<code class="sig-name descname">vehicle_at_request</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em>, <em class="sig-param">request_id: str</em>, <em class="sig-param">override_resolution: Optional[int] = None</em><span class="sig-paren">)</span> &#x2192; Union[hive.util.exception.SimulationStateError, bool]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.vehicle_at_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.vehicle_at_request" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">vehicle_at_request</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em>, <em class="sig-param">request_id</em>, <em class="sig-param">override_resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.vehicle_at_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.vehicle_at_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>tests whether vehicle is at the request within the scope of the given geoid resolution
+:type vehicle_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param vehicle_id: the vehicle we are testing for proximity to a request
+:type request_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param request_id: the request we are testing for proximity to a vehicle
+:type override_resolution: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]
 :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="hive.util.html#hive.util.exception.SimulationStateError" title="hive.util.exception.SimulationStateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStateError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]
 :return: bool</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.vehicle_at_station">
-<code class="sig-name descname">vehicle_at_station</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em>, <em class="sig-param">station_id: str</em>, <em class="sig-param">override_resolution: Optional[int] = None</em><span class="sig-paren">)</span> &#x2192; Union[hive.util.exception.SimulationStateError, bool]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.vehicle_at_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.vehicle_at_station" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">vehicle_at_station</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em>, <em class="sig-param">station_id</em>, <em class="sig-param">override_resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.vehicle_at_station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.vehicle_at_station" title="Permalink to this definition">¶</a></dt>
 <dd><p>tests whether vehicle is at the station within the scope of the given geoid resolution
+:type vehicle_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param vehicle_id: the vehicle we are testing for proximity to a request
+:type station_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param station_id: the station we are testing for proximity to a vehicle
+:type override_resolution: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]
 :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="hive.util.html#hive.util.exception.SimulationStateError" title="hive.util.exception.SimulationStateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStateError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]
 :return: bool</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.vehicle_at_base">
-<code class="sig-name descname">vehicle_at_base</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em>, <em class="sig-param">base_id: str</em>, <em class="sig-param">override_resolution: Optional[int] = None</em><span class="sig-paren">)</span> &#x2192; Union[hive.util.exception.SimulationStateError, bool]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.vehicle_at_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.vehicle_at_base" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">vehicle_at_base</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em>, <em class="sig-param">base_id</em>, <em class="sig-param">override_resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.vehicle_at_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.vehicle_at_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>tests whether vehicle is at the request within the scope of the given geoid resolution
+:type vehicle_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param vehicle_id: the vehicle we are testing for proximity to a request
+:type base_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param base_id: the base we are testing for proximity to a vehicle
+:type override_resolution: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]
 :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="hive.util.html#hive.util.exception.SimulationStateError" title="hive.util.exception.SimulationStateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStateError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]
 :return: bool</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.state.simulation_state.SimulationState.board_vehicle">
-<code class="sig-name descname">board_vehicle</code><span class="sig-paren">(</span><em class="sig-param">request_id: str</em>, <em class="sig-param">vehicle_id: str</em><span class="sig-paren">)</span> &#x2192; Union[hive.util.exception.SimulationStateError, hive.state.simulation_state.SimulationState]<a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.board_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.board_vehicle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">board_vehicle</code><span class="sig-paren">(</span><em class="sig-param">request_id</em>, <em class="sig-param">vehicle_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state.html#SimulationState.board_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state.SimulationState.board_vehicle" title="Permalink to this definition">¶</a></dt>
 <dd><p>places passengers from a request into a Vehicle
+:type request_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param request_id: the request that will board the vehicle; removes the request from the simulation
+:type vehicle_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param vehicle_id:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="hive.util.html#hive.util.exception.SimulationStateError" title="hive.util.exception.SimulationStateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStateError</span></code></a>, <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>]
 :return: updated simulation state, or an error. vehicle position is idempotent.</p>
 </dd></dl>
 
@@ -366,26 +424,39 @@ supports shipping this vehicle to another cluster node.
 <span id="hive-state-simulation-state-ops-module"></span><h2>hive.state.simulation_state_ops module<a class="headerlink" href="#module-hive.state.simulation_state_ops" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="hive.state.simulation_state_ops.apply_instructions">
-<code class="sig-prename descclassname">hive.state.simulation_state_ops.</code><code class="sig-name descname">apply_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state: hive.state.simulation_state.SimulationState, instructions: Tuple[hive.dispatcher.instruction.Instruction, ...]</em><span class="sig-paren">)</span> &#x2192; hive.state.simulation_state.SimulationState<a class="reference internal" href="../_modules/hive/state/simulation_state_ops.html#apply_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state_ops.apply_instructions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hive.state.simulation_state_ops.</code><code class="sig-name descname">apply_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em>, <em class="sig-param">instructions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state_ops.html#apply_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state_ops.apply_instructions" title="Permalink to this definition">¶</a></dt>
 <dd><p>applies all the instructions to the simulation state, ignoring the ones that fail
+:type simulation_state: <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
 :param simulation_state: the sim state
+:type instructions: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]
 :param instructions: dispatcher instructions
+:rtype: <a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
 :return: the sim state with vehicle intentions updated</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="hive.state.simulation_state_ops.initial_simulation_state">
-<code class="sig-prename descclassname">hive.state.simulation_state_ops.</code><code class="sig-name descname">initial_simulation_state</code><span class="sig-paren">(</span><em class="sig-param">road_network: hive.model.roadnetwork.roadnetwork.RoadNetwork, vehicles: Tuple[hive.model.vehicle.Vehicle, ...] = (), stations: Tuple[hive.model.station.Station, ...] = (), bases: Tuple[hive.model.base.Base, ...] = (), powertrains: Tuple[Type[hive.model.energy.powertrain.powertrain.Powertrain], ...] = (), powercurves: Tuple[Type[hive.model.energy.powercurve.powercurve.Powercurve], ...] = (), start_time: int = 0, sim_timestep_duration_seconds: pint.unit.build_unit_class.&lt;locals&gt;.Unit = &lt;Quantity(1, 'second')&gt;, sim_h3_resolution: int = 15</em><span class="sig-paren">)</span> &#x2192; Tuple[hive.state.simulation_state.SimulationState, Tuple[hive.util.exception.SimulationStateError, ...]]<a class="reference internal" href="../_modules/hive/state/simulation_state_ops.html#initial_simulation_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state_ops.initial_simulation_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hive.state.simulation_state_ops.</code><code class="sig-name descname">initial_simulation_state</code><span class="sig-paren">(</span><em class="sig-param">road_network</em>, <em class="sig-param">vehicles=()</em>, <em class="sig-param">stations=()</em>, <em class="sig-param">bases=()</em>, <em class="sig-param">powertrains=()</em>, <em class="sig-param">powercurves=()</em>, <em class="sig-param">start_time=0</em>, <em class="sig-param">sim_timestep_duration_seconds=&lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em>, <em class="sig-param">sim_h3_resolution=15</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/state/simulation_state_ops.html#initial_simulation_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.state.simulation_state_ops.initial_simulation_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
+:type powercurves: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="hive.model.energy.powercurve.html#hive.model.energy.powercurve.powercurve.Powercurve" title="hive.model.energy.powercurve.powercurve.Powercurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powercurve</span></code></a>], …]
 :param powercurves:
+:type powertrains: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="hive.model.energy.powertrain.html#hive.model.energy.powertrain.powertrain.Powertrain" title="hive.model.energy.powertrain.powertrain.Powertrain"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powertrain</span></code></a>], …]
 :param powertrains:
+:type road_network: <a class="reference internal" href="hive.model.roadnetwork.html#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :param road_network: the (initial) road network
+:type vehicles: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.model.html#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>, …]
 :param vehicles: the vehicles available in this simulation
+:type stations: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.model.html#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a>, …]
 :param stations: the stations available in this simulation
+:type bases: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.model.html#hive.model.base.Base" title="hive.model.base.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a>, …]
 :param bases: the bases available in this simulation
+:type start_time: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
 :param start_time: the start time for this simulation (by default, time step 0)
+:type sim_timestep_duration_seconds: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param sim_timestep_duration_seconds: the size of a time step in seconds
+:type sim_h3_resolution: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
 :param sim_h3_resolution: the h3 resolution for internal positioning (comparison ops can override)
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.util.html#hive.util.exception.SimulationStateError" title="hive.util.exception.SimulationStateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStateError</span></code></a>, …]]
 :return: a SimulationState, or a SimulationStateError</p>
 </dd></dl>
 

@@ -39,27 +39,48 @@
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">from</span> <span class="nn">hive.model.coordinate</span> <span class="kn">import</span> <span class="n">Coordinate</span>
 <span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="o">*</span>
 
 
 <div class="viewcode-block" id="Passenger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.passenger.Passenger">[docs]</a><span class="k">class</span> <span class="nc">Passenger</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    An immutable class representing a HIVE agent request which is being serviced</span>
+<span class="sd">    A tuple representing a passenger in the simulation.</span>
+<span class="sd">    </span>
+<span class="sd">    :param id: the unique id of the passenger </span>
+<span class="sd">    :type id: PassengerId </span>
+<span class="sd">    :param origin: the pickup location of the passenger </span>
+<span class="sd">    :type origin: GeoId </span>
+<span class="sd">    :param destination: the destination location of the passenger</span>
+<span class="sd">    :type destination: GeoId </span>
+<span class="sd">    :param departure_time: the departure time of the passenger</span>
+<span class="sd">    :type departure_time: SimTime</span>
+<span class="sd">    :param vehicle_id: id of the vehicle that the passenger is occupying</span>
+<span class="sd">    :type vehicle_id: Optional[VehicleId]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">id</span><span class="p">:</span> <span class="n">PassengerId</span>
     <span class="n">origin</span><span class="p">:</span> <span class="n">GeoId</span>
     <span class="n">destination</span><span class="p">:</span> <span class="n">GeoId</span>
-    <span class="n">departure_time</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">departure_time</span><span class="p">:</span> <span class="n">SimTime</span>
     <span class="n">vehicle_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VehicleId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Passenger.add_vehicle_id"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.passenger.Passenger.add_vehicle_id">[docs]</a>    <span class="k">def</span> <span class="nf">add_vehicle_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle_id</span><span class="p">:</span> <span class="n">VehicleId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Passenger</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assign a VehicleId to a passenger</span>
+
+<span class="sd">        :param vehicle_id: vehicle id</span>
+<span class="sd">        :return: updated Passenger</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">vehicle_id</span><span class="o">=</span><span class="n">vehicle_id</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="create_passenger_id"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.passenger.create_passenger_id">[docs]</a><span class="k">def</span> <span class="nf">create_passenger_id</span><span class="p">(</span><span class="n">request_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">passenger_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PassengerId</span><span class="p">:</span>
+<div class="viewcode-block" id="create_passenger_id"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.passenger.create_passenger_id">[docs]</a><span class="k">def</span> <span class="nf">create_passenger_id</span><span class="p">(</span><span class="n">request_id</span><span class="p">:</span> <span class="n">RequestId</span><span class="p">,</span> <span class="n">passenger_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PassengerId</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    constructs a passenger_id from a request id and a unique id for this passenger</span>
+<span class="sd">    Constructs a passenger id using a RequestId and an integer</span>
+
+<span class="sd">    :param request_id: request id</span>
+<span class="sd">    :param passenger_id: integer for passenger in a request.</span>
+<span class="sd">    :rtype: :py:obj:`PassengerId`</span>
+<span class="sd">    :return: a new unique PassengerId</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{request_id}</span><span class="s2">-</span><span class="si">{passenger_id}</span><span class="s2">&quot;</span></div>
 </pre></div>

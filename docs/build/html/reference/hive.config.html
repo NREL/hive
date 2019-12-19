@@ -60,12 +60,17 @@
 
 <dl class="method">
 <dt id="hive.config.config_builder.ConfigBuilder.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">default_config: Dict, required_config: Dict[str, type], config_constructor: Callable[[Dict], Union[Exception, T]], config: Dict = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, T]<a class="reference internal" href="../_modules/hive/config/config_builder.html#ConfigBuilder.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.config_builder.ConfigBuilder.build" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">default_config</em>, <em class="sig-param">required_config</em>, <em class="sig-param">config_constructor</em>, <em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/config_builder.html#ConfigBuilder.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.config_builder.ConfigBuilder.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>constructs a Config from a configuration Dict
+:type default_config: Dict
 :param default_config: a dictionary containing default config values
+:type required_config: Dict[str, type]
 :param required_config: a dictionary containing required keys and their expected types
+:type config_constructor: Callable[[Dict], Union[Exception, T]]
 :param config_constructor: a function that takes a dict and builds a Config object
+:type config: Dict
 :param config: the Dict containing attributes to load for this Config
+:rtype: Union[Exception, T]
 :return: a Config, or, an error</p>
 </dd></dl>
 
@@ -95,13 +100,23 @@
 
 <dl class="method">
 <dt id="hive.config.hive_config.HiveConfig.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.hive_config.HiveConfig]<a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig.build" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig.build" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.config.hive_config.HiveConfig" title="hive.config.hive_config.HiveConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">HiveConfig</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.hive_config.HiveConfig.from_dict">
-<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.hive_config.HiveConfig]<a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig.from_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/hive_config.html#HiveConfig.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.hive_config.HiveConfig.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.config.hive_config.HiveConfig" title="hive.config.hive_config.HiveConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">HiveConfig</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -149,23 +164,43 @@
 
 <dl class="method">
 <dt id="hive.config.io.IO.default_config">
-<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../_modules/hive/config/io.html#IO.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.default_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/io.html#IO.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.default_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.io.IO.required_config">
-<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, type]<a class="reference internal" href="../_modules/hive/config/io.html#IO.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.required_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/io.html#IO.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.required_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.io.IO.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.io.IO]<a class="reference internal" href="../_modules/hive/config/io.html#IO.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.build" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/io.html#IO.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.build" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.config.io.IO" title="hive.config.io.IO"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.io.IO.from_dict">
-<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; hive.config.io.IO<a class="reference internal" href="../_modules/hive/config/io.html#IO.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.from_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/io.html#IO.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.io.IO.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.config.io.IO" title="hive.config.io.IO"><code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -183,23 +218,43 @@
 
 <dl class="method">
 <dt id="hive.config.network.Network.default_config">
-<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../_modules/hive/config/network.html#Network.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.default_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/network.html#Network.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.default_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.network.Network.required_config">
-<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, type]<a class="reference internal" href="../_modules/hive/config/network.html#Network.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.required_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/network.html#Network.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.required_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.network.Network.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.network.Network]<a class="reference internal" href="../_modules/hive/config/network.html#Network.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.build" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/network.html#Network.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.build" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.config.network.Network" title="hive.config.network.Network"><code class="xref py py-class docutils literal notranslate"><span class="pre">Network</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.network.Network.from_dict">
-<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; hive.config.network.Network<a class="reference internal" href="../_modules/hive/config/network.html#Network.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.from_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/network.html#Network.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.network.Network.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.config.network.Network" title="hive.config.network.Network"><code class="xref py py-class docutils literal notranslate"><span class="pre">Network</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -227,23 +282,43 @@
 
 <dl class="method">
 <dt id="hive.config.sim.Sim.default_config">
-<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.default_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/sim.html#Sim.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.default_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.sim.Sim.required_config">
-<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, type]<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.required_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">required_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/sim.html#Sim.required_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.required_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.sim.Sim.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config: Optional[Dict] = None</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.config.sim.Sim]<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.build" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/sim.html#Sim.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.build" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.config.sim.Sim" title="hive.config.sim.Sim"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sim</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.config.sim.Sim.from_dict">
-<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict</em><span class="sig-paren">)</span> &#x2192; hive.config.sim.Sim<a class="reference internal" href="../_modules/hive/config/sim.html#Sim.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.from_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/config/sim.html#Sim.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.config.sim.Sim.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.config.sim.Sim" title="hive.config.sim.Sim"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sim</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

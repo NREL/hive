@@ -47,37 +47,79 @@
 
 <div class="viewcode-block" id="Coordinate"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.Coordinate">[docs]</a><span class="k">class</span> <span class="nc">Coordinate</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    a latitude (y) and longitude (x) tuple</span>
+<span class="sd">    A tuple holding latitude and longitude information.</span>
+
+<span class="sd">    :param lat: Latitude of coordinate</span>
+<span class="sd">    :type lat: float</span>
+<span class="sd">    :param lon: Latitude of coordinate</span>
+<span class="sd">    :type lon: float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">lat</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">lon</span><span class="p">:</span> <span class="nb">float</span></div>
 
 
 <div class="viewcode-block" id="geoid_to_coordinate"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.geoid_to_coordinate">[docs]</a><span class="k">def</span> <span class="nf">geoid_to_coordinate</span><span class="p">(</span><span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Coordinate</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a GeoId to a Coordinate</span>
+
+<span class="sd">    :param geoid: geoid to convert</span>
+<span class="sd">    :return: Coordinate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">coord</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">h3_to_geo</span><span class="p">(</span><span class="n">geoid</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Coordinate</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="coordinate_to_geoid"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.coordinate_to_geoid">[docs]</a><span class="k">def</span> <span class="nf">coordinate_to_geoid</span><span class="p">(</span><span class="n">coordinate</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoId</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a Coordinate to a Geoid at a specific resolution</span>
+
+<span class="sd">    :param coordinate: Coordinate to convert</span>
+<span class="sd">    :param resolution: desired h3 resolution of the GeoId</span>
+<span class="sd">    :rtype: :py:obj:`GeoId`</span>
+<span class="sd">    :return: Geoid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">geoid</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">geo_to_h3</span><span class="p">(</span><span class="n">coordinate</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coordinate</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">geoid</span></div>
 
 
 <div class="viewcode-block" id="dist_euclidian"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.dist_euclidian">[docs]</a><span class="k">def</span> <span class="nf">dist_euclidian</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the euclidian distance between two coordinates.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">        Calculating euclidian distance on latitude and longitude will introduce some error.</span>
+
+<span class="sd">    :param a: Coordinate a</span>
+<span class="sd">    :param b: Coordinate b</span>
+<span class="sd">    :return: unitless distance between the two coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="nb">pow</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">lat</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">lat</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="nb">pow</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">lon</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">lon</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="dist_haversine"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.dist_haversine">[docs]</a><span class="k">def</span> <span class="nf">dist_haversine</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">km</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the haversine distance between two coordinates.</span>
+
+<span class="sd">    :param a: Coordinate a</span>
+<span class="sd">    :param b: Coordinate b</span>
+<span class="sd">    :rtype: :py:obj:`km`</span>
+<span class="sd">    :return: Distance between the two points in kilometers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">haversine</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometer</span></div>
 
 
-<div class="viewcode-block" id="dist_geoid_haversine"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.dist_geoid_haversine">[docs]</a><span class="k">def</span> <span class="nf">dist_geoid_haversine</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">km</span><span class="p">:</span>
-    <span class="n">a_coord</span> <span class="o">=</span> <span class="n">geoid_to_coordinate</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-    <span class="n">b_coord</span> <span class="o">=</span> <span class="n">geoid_to_coordinate</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">haversine</span><span class="p">(</span><span class="n">a_coord</span><span class="p">,</span> <span class="n">b_coord</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometer</span></div>
-
-
 <div class="viewcode-block" id="interpolate_between_coordinates"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.coordinate.interpolate_between_coordinates">[docs]</a><span class="k">def</span> <span class="nf">interpolate_between_coordinates</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Coordinate</span><span class="p">,</span> <span class="n">ratio</span><span class="p">:</span> <span class="n">Ratio</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Coordinate</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interpolate a new coordinate between two coordinates given a ratio using linear interpolation.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">        Using linear interpolation with latitude and longitude will introduce some error.</span>
+
+<span class="sd">    :param a: Coordinate a</span>
+<span class="sd">    :param b: Coordinate b</span>
+<span class="sd">    :param ratio: ratio from a -&gt; b</span>
+<span class="sd">    :return: new interpolated Coordinate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># TODO: Right now this is just a linear interpolation. Do we want/need a more accurate interpolation?</span>
     <span class="n">lat</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">lat</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">lat</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="n">ratio</span>
     <span class="n">lon</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">lon</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">lon</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span> <span class="o">*</span> <span class="n">ratio</span>

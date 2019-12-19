@@ -65,72 +65,93 @@ origin and destination respectively.</p>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.route">
-<code class="sig-name descname">route</code><span class="sig-paren">(</span><em class="sig-param">origin: hive.model.roadnetwork.property_link.PropertyLink</em>, <em class="sig-param">destination: hive.model.roadnetwork.property_link.PropertyLink</em><span class="sig-paren">)</span> &#x2192; Tuple[hive.model.roadnetwork.property_link.PropertyLink, ...]<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.route" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">route</code><span class="sig-paren">(</span><em class="sig-param">origin</em>, <em class="sig-param">destination</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.route" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.property_link_from_geoid">
-<code class="sig-name descname">property_link_from_geoid</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.property_link_from_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.property_link_from_geoid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">property_link_from_geoid</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.property_link_from_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.property_link_from_geoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>builds a location on the road network for a stationary simulation element
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return:</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">sim_time: int</em><span class="sig-paren">)</span> &#x2192; hive.model.roadnetwork.roadnetwork.RoadNetwork<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">sim_time</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>gives the RoadNetwork a chance to update it’s flow network based on the current simulation time
+:type sim_time: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
 :param sim_time: the sim time to update the model to
+:rtype: <a class="reference internal" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :return: does not return</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.get_link">
-<code class="sig-name descname">get_link</code><span class="sig-paren">(</span><em class="sig-param">link_id: str</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.get_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.get_link" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_link</code><span class="sig-paren">(</span><em class="sig-param">link_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.get_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.get_link" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the link associated with the LinkId, or, if invalid, returns None
+:type link_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param link_id: a link id
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return: a Link, or None if LinkId does not exist</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.get_current_property_link">
-<code class="sig-name descname">get_current_property_link</code><span class="sig-paren">(</span><em class="sig-param">property_link: hive.model.roadnetwork.property_link.PropertyLink</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.get_current_property_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.get_current_property_link" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_current_property_link</code><span class="sig-paren">(</span><em class="sig-param">property_link</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.get_current_property_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.get_current_property_link" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the current properties for a given property link, or, if invalid, returns None
+:type property_link: <a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>
 :param property_link: a property link
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return: a Property Link, or None if LinkId does not exist</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_geofence">
-<code class="sig-name descname">geoid_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.geoid_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_geofence" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">geoid_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.geoid_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_geofence" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon of this road network instance
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid: an h3 geoid
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.link_id_within_geofence">
-<code class="sig-name descname">link_id_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">link_id: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.link_id_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.link_id_within_geofence" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">link_id_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">link_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.link_id_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.link_id_within_geofence" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon of this road network instance
+:type link_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param link_id: a position on the road network across the entire simulation
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_simulation">
-<code class="sig-name descname">geoid_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.geoid_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_simulation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">geoid_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.geoid_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.geoid_within_simulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon the entire simulation,
 which may include many (distributed) RoadNetwork instances
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid: an h3 geoid
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.link_id_within_simulation">
-<code class="sig-name descname">link_id_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">link_id: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.link_id_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.link_id_within_simulation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">link_id_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">link_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/haversine_roadnetwork.html#HaversineRoadNetwork.link_id_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.haversine_roadnetwork.HaversineRoadNetwork.link_id_within_simulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon the entire simulation,
 which may include many (distributed) RoadNetwork instances
+:type link_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param link_id: a position on the road network across the entire simulation
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
@@ -169,15 +190,22 @@ not necessarily the end-points.</p>
 
 <dl class="function">
 <dt id="hive.model.roadnetwork.link.interpolate_between_geoids">
-<code class="sig-prename descclassname">hive.model.roadnetwork.link.</code><code class="sig-name descname">interpolate_between_geoids</code><span class="sig-paren">(</span><em class="sig-param">a: str</em>, <em class="sig-param">b: str</em>, <em class="sig-param">ratio: float</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/roadnetwork/link.html#interpolate_between_geoids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.link.interpolate_between_geoids" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.roadnetwork.link.</code><code class="sig-name descname">interpolate_between_geoids</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">ratio</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/link.html#interpolate_between_geoids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.link.interpolate_between_geoids" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hive.model.roadnetwork.link.link_distance">
-<code class="sig-prename descclassname">hive.model.roadnetwork.link.</code><code class="sig-name descname">link_distance</code><span class="sig-paren">(</span><em class="sig-param">link: hive.model.roadnetwork.link.Link</em><span class="sig-paren">)</span> &#x2192; pint.unit.build_unit_class.&lt;locals&gt;.Unit<a class="reference internal" href="../_modules/hive/model/roadnetwork/link.html#link_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.link.link_distance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hive.model.roadnetwork.link.</code><code class="sig-name descname">link_distance</code><span class="sig-paren">(</span><em class="sig-param">link</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/link.html#link_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.link.link_distance" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the distance of a link
+:type link: <a class="reference internal" href="#hive.model.roadnetwork.link.Link" title="hive.model.roadnetwork.link.Link"><code class="xref py py-class docutils literal notranslate"><span class="pre">Link</span></code></a>
 :param link: some road network link, possibly with a different start/end point from
 the matching link in the road network
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :return: the distance of this link, in kilometers</p>
 </dd></dl>
 
@@ -211,12 +239,16 @@ remaining_time represents any time the agent has left to traverse additional lin
 
 <dl class="function">
 <dt id="hive.model.roadnetwork.linktraversal.traverse_up_to">
-<code class="sig-prename descclassname">hive.model.roadnetwork.linktraversal.</code><code class="sig-name descname">traverse_up_to</code><span class="sig-paren">(</span><em class="sig-param">road_network: hive.model.roadnetwork.roadnetwork.RoadNetwork</em>, <em class="sig-param">property_link: hive.model.roadnetwork.property_link.PropertyLink</em>, <em class="sig-param">available_time: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.model.roadnetwork.linktraversal.LinkTraversal]<a class="reference internal" href="../_modules/hive/model/roadnetwork/linktraversal.html#traverse_up_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.linktraversal.traverse_up_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hive.model.roadnetwork.linktraversal.</code><code class="sig-name descname">traverse_up_to</code><span class="sig-paren">(</span><em class="sig-param">road_network</em>, <em class="sig-param">property_link</em>, <em class="sig-param">available_time</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/linktraversal.html#traverse_up_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.linktraversal.traverse_up_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>using the ground truth road network, and some agent Link traversal, attempt to traverse
 the link, based on travel time calculations from the Link’s PropertyLink attributes.
+:type road_network: <a class="reference internal" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :param road_network: the road network
+:type property_link: <a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>
 :param property_link: the plan the agent has to traverse a subset of a road network link
+:type available_time: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param available_time: the remaining time the agent has in this time step
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.model.roadnetwork.linktraversal.LinkTraversal" title="hive.model.roadnetwork.linktraversal.LinkTraversal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkTraversal</span></code></a>]
 :return: the updated traversal, or, an exception.</p>
 <blockquote>
 <div><p>on update, if there is any remaining traversal, return an updated Link.
@@ -262,34 +294,54 @@ distance, speed, and travel time</p>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.property_link.PropertyLink.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">link: hive.model.roadnetwork.link.Link</em>, <em class="sig-param">speed: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; hive.model.roadnetwork.property_link.PropertyLink<a class="reference internal" href="../_modules/hive/model/roadnetwork/property_link.html#PropertyLink.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.build" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">link</em>, <em class="sig-param">speed</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/property_link.html#PropertyLink.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>alternative constructor which sets distance/travel time based on underlying h3 grid
+:type link: <a class="reference internal" href="#hive.model.roadnetwork.link.Link" title="hive.model.roadnetwork.link.Link"><code class="xref py py-class docutils literal notranslate"><span class="pre">Link</span></code></a>
 :param link: the underlying link representation
+:type speed: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param speed: the speed for traversing the link
+:rtype: <a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>
 :return: a PropertyLink build around this Link</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.property_link.PropertyLink.start">
 <em class="property">property </em><code class="sig-name descname">start</code><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.start" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.property_link.PropertyLink.end">
 <em class="property">property </em><code class="sig-name descname">end</code><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.end" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.property_link.PropertyLink.update_speed">
-<code class="sig-name descname">update_speed</code><span class="sig-paren">(</span><em class="sig-param">speed: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; hive.model.roadnetwork.property_link.PropertyLink<a class="reference internal" href="../_modules/hive/model/roadnetwork/property_link.html#PropertyLink.update_speed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.update_speed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">update_speed</code><span class="sig-paren">(</span><em class="sig-param">speed</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/property_link.html#PropertyLink.update_speed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.update_speed" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.property_link.PropertyLink.update_link">
-<code class="sig-name descname">update_link</code><span class="sig-paren">(</span><em class="sig-param">updated_link: hive.model.roadnetwork.link.Link</em><span class="sig-paren">)</span> &#x2192; Union[AttributeError, hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/property_link.html#PropertyLink.update_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.update_link" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_link</code><span class="sig-paren">(</span><em class="sig-param">updated_link</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/property_link.html#PropertyLink.update_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.property_link.PropertyLink.update_link" title="Permalink to this definition">¶</a></dt>
 <dd><p>some operations call for updating the the underlying link representation but
 maintaining the properties of the link which are not tied to the link representation.
+:type updated_link: <a class="reference internal" href="#hive.model.roadnetwork.link.Link" title="hive.model.roadnetwork.link.Link"><code class="xref py py-class docutils literal notranslate"><span class="pre">Link</span></code></a>
 :param updated_link: the new Link data
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code>, <a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return: the updated PropertyLink</p>
 </dd></dl>
 
@@ -306,72 +358,93 @@ maintaining the properties of the link which are not tied to the link representa
 is used to compute routes for agents in the simulation</p>
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.route">
-<em class="property">abstract </em><code class="sig-name descname">route</code><span class="sig-paren">(</span><em class="sig-param">origin: hive.model.roadnetwork.property_link.PropertyLink</em>, <em class="sig-param">destination: hive.model.roadnetwork.property_link.PropertyLink</em><span class="sig-paren">)</span> &#x2192; Tuple[hive.model.roadnetwork.property_link.PropertyLink, ...]<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.route" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">abstract </em><code class="sig-name descname">route</code><span class="sig-paren">(</span><em class="sig-param">origin</em>, <em class="sig-param">destination</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.route" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>, …]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.property_link_from_geoid">
-<em class="property">abstract </em><code class="sig-name descname">property_link_from_geoid</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.property_link_from_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.property_link_from_geoid" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">property_link_from_geoid</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.property_link_from_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.property_link_from_geoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>builds a location on the road network for a stationary simulation element
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return:</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.update">
-<em class="property">abstract </em><code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">sim_time: int</em><span class="sig-paren">)</span> &#x2192; hive.model.roadnetwork.roadnetwork.RoadNetwork<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.update" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">sim_time</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>gives the RoadNetwork a chance to update it’s flow network based on the current simulation time
+:type sim_time: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
 :param sim_time: the current simulation time
+:rtype: <a class="reference internal" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :return: does not return</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.get_link">
-<em class="property">abstract </em><code class="sig-name descname">get_link</code><span class="sig-paren">(</span><em class="sig-param">link_id: str</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.get_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.get_link" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">get_link</code><span class="sig-paren">(</span><em class="sig-param">link_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.get_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.get_link" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the link associated with the LinkId, or, if invalid, returns None
+:type link_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param link_id: a link id
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return: a Link, or None if LinkId does not exist</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.get_current_property_link">
-<em class="property">abstract </em><code class="sig-name descname">get_current_property_link</code><span class="sig-paren">(</span><em class="sig-param">property_link: hive.model.roadnetwork.property_link.PropertyLink</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.roadnetwork.property_link.PropertyLink]<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.get_current_property_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.get_current_property_link" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">get_current_property_link</code><span class="sig-paren">(</span><em class="sig-param">property_link</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.get_current_property_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.get_current_property_link" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the current properties for a given property link, or, if invalid, returns None
+:type property_link: <a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>
 :param property_link: a property link
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>]
 :return: a Property Link, or None if LinkId does not exist</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.geoid_within_geofence">
-<em class="property">abstract </em><code class="sig-name descname">geoid_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.geoid_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.geoid_within_geofence" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">geoid_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.geoid_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.geoid_within_geofence" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon of this road network instance
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid: an h3 geoid
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.link_id_within_geofence">
-<em class="property">abstract </em><code class="sig-name descname">link_id_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">link_id: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.link_id_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.link_id_within_geofence" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">link_id_within_geofence</code><span class="sig-paren">(</span><em class="sig-param">link_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.link_id_within_geofence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.link_id_within_geofence" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon of this road network instance
+:type link_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param link_id: a position on the road network across the entire simulation
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.geoid_within_simulation">
-<em class="property">abstract </em><code class="sig-name descname">geoid_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.geoid_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.geoid_within_simulation" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">geoid_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.geoid_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.geoid_within_simulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon the entire simulation,
 which may include many (distributed) RoadNetwork instances
+:type geoid: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param geoid: an h3 geoid
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.roadnetwork.RoadNetwork.link_id_within_simulation">
-<em class="property">abstract </em><code class="sig-name descname">link_id_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">link_id: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.link_id_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.link_id_within_simulation" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">link_id_within_simulation</code><span class="sig-paren">(</span><em class="sig-param">link_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/roadnetwork.html#RoadNetwork.link_id_within_simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork.link_id_within_simulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>confirms that the coordinate exists within the bounding polygon the entire simulation,
 which may include many (distributed) RoadNetwork instances
+:type link_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param link_id: a position on the road network across the entire simulation
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
 :return: True/False</p>
 </dd></dl>
 
@@ -388,8 +461,13 @@ which may include many (distributed) RoadNetwork instances
 
 <dl class="function">
 <dt id="hive.model.roadnetwork.route.route_distance">
-<code class="sig-prename descclassname">hive.model.roadnetwork.route.</code><code class="sig-name descname">route_distance</code><span class="sig-paren">(</span><em class="sig-param">route: Tuple[hive.model.roadnetwork.property_link.PropertyLink, ...]</em><span class="sig-paren">)</span> &#x2192; pint.unit.build_unit_class.&lt;locals&gt;.Unit<a class="reference internal" href="../_modules/hive/model/roadnetwork/route.html#route_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.route.route_distance" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.roadnetwork.route.</code><code class="sig-name descname">route_distance</code><span class="sig-paren">(</span><em class="sig-param">route</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/route.html#route_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.route.route_distance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-hive.model.roadnetwork.routetraversal">
@@ -427,17 +505,21 @@ which may include many (distributed) RoadNetwork instances
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.routetraversal.RouteTraversal.add_traversal">
-<code class="sig-name descname">add_traversal</code><span class="sig-paren">(</span><em class="sig-param">t: hive.model.roadnetwork.linktraversal.LinkTraversal</em><span class="sig-paren">)</span> &#x2192; hive.model.roadnetwork.routetraversal.RouteTraversal<a class="reference internal" href="../_modules/hive/model/roadnetwork/routetraversal.html#RouteTraversal.add_traversal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.routetraversal.RouteTraversal.add_traversal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_traversal</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/routetraversal.html#RouteTraversal.add_traversal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.routetraversal.RouteTraversal.add_traversal" title="Permalink to this definition">¶</a></dt>
 <dd><p>take the result of a link traversal and update the route traversal
+:type t: <a class="reference internal" href="#hive.model.roadnetwork.linktraversal.LinkTraversal" title="hive.model.roadnetwork.linktraversal.LinkTraversal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkTraversal</span></code></a>
 :param t: a link traversal
+:rtype: <a class="reference internal" href="#hive.model.roadnetwork.routetraversal.RouteTraversal" title="hive.model.roadnetwork.routetraversal.RouteTraversal"><code class="xref py py-class docutils literal notranslate"><span class="pre">RouteTraversal</span></code></a>
 :return: the updated route traversal</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.roadnetwork.routetraversal.RouteTraversal.add_link_not_traversed">
-<code class="sig-name descname">add_link_not_traversed</code><span class="sig-paren">(</span><em class="sig-param">link: hive.model.roadnetwork.property_link.PropertyLink</em><span class="sig-paren">)</span> &#x2192; hive.model.roadnetwork.routetraversal.RouteTraversal<a class="reference internal" href="../_modules/hive/model/roadnetwork/routetraversal.html#RouteTraversal.add_link_not_traversed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.routetraversal.RouteTraversal.add_link_not_traversed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_link_not_traversed</code><span class="sig-paren">(</span><em class="sig-param">link</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/routetraversal.html#RouteTraversal.add_link_not_traversed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.routetraversal.RouteTraversal.add_link_not_traversed" title="Permalink to this definition">¶</a></dt>
 <dd><p>if a link wasn’t traversed, be sure to add it to the remaining route
+:type link: <a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>
 :param link: a link for the remaining route
+:rtype: <a class="reference internal" href="#hive.model.roadnetwork.routetraversal.RouteTraversal" title="hive.model.roadnetwork.routetraversal.RouteTraversal"><code class="xref py py-class docutils literal notranslate"><span class="pre">RouteTraversal</span></code></a>
 :return: the updated RouteTraversal</p>
 </dd></dl>
 
@@ -445,11 +527,15 @@ which may include many (distributed) RoadNetwork instances
 
 <dl class="function">
 <dt id="hive.model.roadnetwork.routetraversal.traverse">
-<code class="sig-prename descclassname">hive.model.roadnetwork.routetraversal.</code><code class="sig-name descname">traverse</code><span class="sig-paren">(</span><em class="sig-param">route_estimate: Tuple[hive.model.roadnetwork.property_link.PropertyLink, ...], road_network: hive.model.roadnetwork.roadnetwork.RoadNetwork, time_step: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; Union[Exception, hive.model.roadnetwork.routetraversal.RouteTraversal, None]<a class="reference internal" href="../_modules/hive/model/roadnetwork/routetraversal.html#traverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.routetraversal.traverse" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hive.model.roadnetwork.routetraversal.</code><code class="sig-name descname">traverse</code><span class="sig-paren">(</span><em class="sig-param">route_estimate</em>, <em class="sig-param">road_network</em>, <em class="sig-param">time_step</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/roadnetwork/routetraversal.html#traverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.roadnetwork.routetraversal.traverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>step through the route from the current agent position (assumed to be start.link_id) toward the destination
+:type route_estimate: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.model.roadnetwork.property_link.PropertyLink" title="hive.model.roadnetwork.property_link.PropertyLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyLink</span></code></a>, …]
 :param route_estimate: the current route estimate
+:type road_network: <a class="reference internal" href="#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :param road_network: the current road network state
+:type time_step: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param time_step: size of the time step for this traversal
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <a class="reference internal" href="#hive.model.roadnetwork.routetraversal.RouteTraversal" title="hive.model.roadnetwork.routetraversal.RouteTraversal"><code class="xref py py-class docutils literal notranslate"><span class="pre">RouteTraversal</span></code></a>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]
 :return: a route experience and updated route estimate;</p>
 <blockquote>
 <div><p>or, nothing if the route is consumed.

@@ -24,7 +24,9 @@ from h3 import h3
 
 
 class Vehicle(NamedTuple):
-    # fixed vehicle attributes
+    """
+    Tuple that represents a vehicle in the simulation
+    """
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId

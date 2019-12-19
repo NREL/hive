@@ -15,15 +15,17 @@ Submodules
 hive.model.base module
 ----------------------
 
-.. autoclass:: hive.model.base.Base
-    :members: from_row, has_available_stall, checkout_stall, return_stall
+.. automodule:: hive.model.base
+    :members:
+    :exclude-members: id, geoid, total_stalls, available_stalls, station_id
+    :show-inheritance:
 
 hive.model.coordinate module
 ----------------------------
 
 .. automodule:: hive.model.coordinate
    :members:
-   :undoc-members:
+   :exclude-members: lat, lon
    :show-inheritance:
 
 hive.model.passenger module
@@ -31,7 +33,7 @@ hive.model.passenger module
 
 .. automodule:: hive.model.passenger
    :members:
-   :undoc-members:
+   :exclude-members: id, origin, destination, departure_time, vehicle_id
    :show-inheritance:
 
 hive.model.request module
@@ -39,7 +41,7 @@ hive.model.request module
 
 .. automodule:: hive.model.request
    :members:
-   :undoc-members:
+   :exclude-members: id, origin, destination, departure_time, cancel_time, passengers, dispatched_vehicle, dispatched_vehicle_time
    :show-inheritance:
 
 hive.model.station module
@@ -47,7 +49,7 @@ hive.model.station module
 
 .. automodule:: hive.model.station
    :members:
-   :undoc-members:
+   :exclude-members: id, geoid, total_charger, available_charger
    :show-inheritance:
 
 hive.model.vehicle module
@@ -55,7 +57,6 @@ hive.model.vehicle module
 
 .. automodule:: hive.model.vehicle
    :members:
-   :undoc-members:
    :show-inheritance:
 
 hive.model.vehiclestate module
@@ -63,7 +64,6 @@ hive.model.vehiclestate module
 
 .. automodule:: hive.model.vehiclestate
    :members:
-   :undoc-members:
    :show-inheritance:
 
 
@@ -72,5 +72,4 @@ Module contents
 
 .. automodule:: hive.model
    :members:
-   :undoc-members:
    :show-inheritance:

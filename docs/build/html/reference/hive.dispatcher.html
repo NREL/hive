@@ -56,9 +56,11 @@
 <p>A class that computes instructions for the fleet based on a given simulation state.</p>
 <dl class="method">
 <dt id="hive.dispatcher.dispatcher.Dispatcher.generate_instructions">
-<em class="property">abstract </em><code class="sig-name descname">generate_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state: SimulationState</em><span class="sig-paren">)</span> &#x2192; Tuple[hive.dispatcher.dispatcher.Dispatcher, Tuple[hive.dispatcher.instruction.Instruction, ...]]<a class="reference internal" href="../_modules/hive/dispatcher/dispatcher.html#Dispatcher.generate_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.dispatcher.Dispatcher.generate_instructions" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">generate_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher/dispatcher.html#Dispatcher.generate_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.dispatcher.Dispatcher.generate_instructions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates instructions for a given simulation state.
+:type simulation_state: <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>
 :param simulation_state:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]
 :return: the updated Dispatcher along with all instructions for this time step</p>
 </dd></dl>
 
@@ -84,9 +86,11 @@
 
 <dl class="method">
 <dt id="hive.dispatcher.greedy_dispatcher.GreedyDispatcher.generate_instructions">
-<code class="sig-name descname">generate_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state: hive.state.simulation_state.SimulationState</em><span class="sig-paren">)</span> &#x2192; Tuple[hive.dispatcher.dispatcher.Dispatcher, Tuple[hive.dispatcher.instruction.Instruction, ...]]<a class="reference internal" href="../_modules/hive/dispatcher/greedy_dispatcher.html#GreedyDispatcher.generate_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.greedy_dispatcher.GreedyDispatcher.generate_instructions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">generate_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher/greedy_dispatcher.html#GreedyDispatcher.generate_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.greedy_dispatcher.GreedyDispatcher.generate_instructions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates instructions for a given simulation state.
+:type simulation_state: <a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
 :param simulation_state:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]
 :return:</p>
 </dd></dl>
 

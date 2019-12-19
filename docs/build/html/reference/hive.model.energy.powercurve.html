@@ -58,23 +58,33 @@
 <p>a powertrain has a behavior where it calculate energy consumption in KwH</p>
 <dl class="method">
 <dt id="hive.model.energy.powercurve.powercurve.Powercurve.get_id">
-<em class="property">abstract </em><code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.get_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">abstract </em><code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.get_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.powercurve.powercurve.Powercurve.get_energy_type">
-<em class="property">abstract </em><code class="sig-name descname">get_energy_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; hive.model.energy.energytype.EnergyType<a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.get_energy_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.get_energy_type" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">get_energy_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.get_energy_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.get_energy_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the energy type of this Powertrain model
+:rtype: <a class="reference internal" href="hive.model.energy.html#hive.model.energy.energytype.EnergyType" title="hive.model.energy.energytype.EnergyType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergyType</span></code></a>
 :return: an energy type</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.powercurve.powercurve.Powercurve.refuel">
-<em class="property">abstract </em><code class="sig-name descname">refuel</code><span class="sig-paren">(</span><em class="sig-param">energy_source: EnergySource</em>, <em class="sig-param">charger: Charger</em>, <em class="sig-param">duration_seconds: pint.unit.build_unit_class.&lt;locals&gt;.Unit = &lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em><span class="sig-paren">)</span> &#x2192; EnergySource<a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.refuel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.refuel" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">refuel</code><span class="sig-paren">(</span><em class="sig-param">energy_source</em>, <em class="sig-param">charger</em>, <em class="sig-param">duration_seconds=&lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/powercurve.html#Powercurve.refuel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.powercurve.Powercurve.refuel" title="Permalink to this definition">¶</a></dt>
 <dd><p>(estimated) energy rate due to fueling, based on EnergySource
+:type energy_source: <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>
 :param energy_source: a vehicle’s source of energy
+:type charger: <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>
 :param charger: has a capacity scaling effect on the energy_rate
+:type duration_seconds: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param duration_seconds: the amount of time to charge for
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>
 :return: energy rate in KwH for charging with the current state of the EnergySource</p>
 </dd></dl>
 
@@ -91,29 +101,39 @@
 
 <dl class="class">
 <dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve">
-<em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.powercurve.tabular_powercurve.</code><code class="sig-name descname">TabularPowercurve</code><span class="sig-paren">(</span><em class="sig-param">data: hive.model.energy.powercurve.tabular_powercurve.TabularPowerCurveInput</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.model.energy.powercurve.tabular_powercurve.</code><code class="sig-name descname">TabularPowercurve</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hive.model.energy.powercurve.powercurve.Powercurve" title="hive.model.energy.powercurve.powercurve.Powercurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">hive.model.energy.powercurve.powercurve.Powercurve</span></code></a></p>
 <p>builds a tabular, interpolated lookup model from a file
 for energy curves</p>
 <dl class="method">
 <dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_id">
-<code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_energy_type">
-<code class="sig-name descname">get_energy_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; hive.model.energy.energytype.EnergyType<a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.get_energy_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_energy_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_energy_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.get_energy_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.get_energy_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>gets the energy type of this Powertrain model
+:rtype: <a class="reference internal" href="hive.model.energy.html#hive.model.energy.energytype.EnergyType" title="hive.model.energy.energytype.EnergyType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergyType</span></code></a>
 :return: an energy type</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.refuel">
-<code class="sig-name descname">refuel</code><span class="sig-paren">(</span><em class="sig-param">energy_source: EnergySource</em>, <em class="sig-param">charger: Charger</em>, <em class="sig-param">duration_seconds: s = &lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em><span class="sig-paren">)</span> &#x2192; EnergySource<a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.refuel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.refuel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">refuel</code><span class="sig-paren">(</span><em class="sig-param">energy_source</em>, <em class="sig-param">charger</em>, <em class="sig-param">duration_seconds=&lt;Quantity(1</em>, <em class="sig-param">'second')&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve/tabular_powercurve.html#TabularPowercurve.refuel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.tabular_powercurve.TabularPowercurve.refuel" title="Permalink to this definition">¶</a></dt>
 <dd><p>(estimated) energy rate due to fueling, based on an interpolated tabular lookup model
+:type energy_source: EnergySource
 :param energy_source: a vehicle’s source of energy
+:type charger: Charger
 :param charger: has a capacity scaling effect on the energy_rate
+:type duration_seconds: s
 :param duration_seconds: the amount of time to charge for
+:rtype: EnergySource
 :return: energy rate in KwH for charging with the current state of the EnergySource</p>
 </dd></dl>
 
@@ -124,9 +144,11 @@ for energy curves</p>
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hive.model.energy.powercurve" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="hive.model.energy.powercurve.build_powercurve">
-<code class="sig-prename descclassname">hive.model.energy.powercurve.</code><code class="sig-name descname">build_powercurve</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; Union[OSError, hive.model.energy.powercurve.powercurve.Powercurve]<a class="reference internal" href="../_modules/hive/model/energy/powercurve.html#build_powercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.build_powercurve" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hive.model.energy.powercurve.</code><code class="sig-name descname">build_powercurve</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/energy/powercurve.html#build_powercurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.energy.powercurve.build_powercurve" title="Permalink to this definition">¶</a></dt>
 <dd><p>constructs EnergyCurve objects from file descriptions
+:type name: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :param name: name of a valid energy curve type
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code>, <a class="reference internal" href="#hive.model.energy.powercurve.powercurve.Powercurve" title="hive.model.energy.powercurve.powercurve.Powercurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powercurve</span></code></a>]
 :return: an EnergyCurve, or, an error
 :raise IOError: if model file is invalid</p>
 </dd></dl>

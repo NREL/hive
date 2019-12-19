@@ -46,10 +46,28 @@
 
 <div class="viewcode-block" id="Request"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.request.Request">[docs]</a><span class="k">class</span> <span class="nc">Request</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    a ride hail request which is alive in the simulation but not yet serviced.</span>
-<span class="sd">    it should only exist if the current sim time &gt;= self.departure_time.</span>
-<span class="sd">    it should be removed once the current sim time == self.cancel_time.</span>
-<span class="sd">    if a vehicle has been dispatched to service this Request, then it should</span>
+<span class="sd">    A ride hail request which is alive in the simulation but not yet serviced.</span>
+<span class="sd">    It should only exist if the current sim time &gt;= self.departure_time.</span>
+<span class="sd">    It should be removed once the current sim time == self.cancel_time.</span>
+<span class="sd">    If a vehicle has been dispatched to service this Request, then it should hold the vehicle id</span>
+<span class="sd">    and the time that vehicle was dispatched to it.</span>
+
+<span class="sd">    :param id: A unique id for the request.</span>
+<span class="sd">    :type id: :py:obj:`RequestId`</span>
+<span class="sd">    :param origin: The geoid of the request origin.</span>
+<span class="sd">    :type origin: :py:obj:`GeoId`</span>
+<span class="sd">    :param destination: The geoid of the request destination.</span>
+<span class="sd">    :type destination: :py:obj:`GeoId`</span>
+<span class="sd">    :param departure_time: The time of departure.</span>
+<span class="sd">    :type departure_time: :py:obj:`SimTime`</span>
+<span class="sd">    :param cancel_time: The time when this request will cancel.</span>
+<span class="sd">    :type cancel_time: :py:obj:`SimTime`</span>
+<span class="sd">    :param passengers: A tuple of passengers associated with this request.</span>
+<span class="sd">    :type passengers: :py:obj:`Tuple[Passenger]`</span>
+<span class="sd">    :param dispatched_vehicle: The id of the vehicle dispatched to service this request.</span>
+<span class="sd">    :type dispatched_vehicle: :py:obj:`Optional[VehicleId]`</span>
+<span class="sd">    :param dispatched_vehicle_time: Time time which a vehicle was dispatched for this request.</span>
+<span class="sd">    :type dispatched_vehicle_time: :py:obj:`Optional[SimTime]`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">id</span><span class="p">:</span> <span class="n">RequestId</span>
     <span class="n">origin</span><span class="p">:</span> <span class="n">GeoId</span>
@@ -60,7 +78,7 @@
     <span class="n">dispatched_vehicle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VehicleId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dispatched_vehicle_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SimTime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="Request.build"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.request.Request.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
               <span class="n">request_id</span><span class="p">:</span> <span class="n">RequestId</span><span class="p">,</span>
               <span class="n">origin</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">,</span>
@@ -68,16 +86,6 @@
               <span class="n">departure_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">,</span>
               <span class="n">cancel_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">,</span>
               <span class="n">passengers</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        constructor which tests assertions about the arguments for this Request</span>
-<span class="sd">        :param request_id:</span>
-<span class="sd">        :param origin:</span>
-<span class="sd">        :param destination:</span>
-<span class="sd">        :param departure_time:</span>
-<span class="sd">        :param cancel_time:</span>
-<span class="sd">        :param passengers:</span>
-<span class="sd">        :return:</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">departure_time</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">cancel_time</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">passengers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
@@ -90,12 +98,13 @@
                        <span class="n">destination</span><span class="p">,</span>
                        <span class="n">departure_time</span><span class="p">,</span>
                        <span class="n">cancel_time</span><span class="p">,</span>
-                       <span class="nb">tuple</span><span class="p">(</span><span class="n">request_as_passengers</span><span class="p">))</span></div>
+                       <span class="nb">tuple</span><span class="p">(</span><span class="n">request_as_passengers</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Request.from_row"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.request.Request.from_row">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_row</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">road_network</span><span class="p">:</span> <span class="n">RoadNetwork</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">Request</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        takes a csv row and turns it into a Request</span>
+
 <span class="sd">        :param row: a row as interpreted by csv.DictReader</span>
 <span class="sd">        :param road_network: the road network loaded for this simulation</span>
 <span class="sd">        :return: a Request, or an error</span>
@@ -141,6 +150,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        allows the dispatcher to update the request that a vehicle has been dispatched to them.</span>
 <span class="sd">        this does not signal that the vehicle is guaranteed to pick them up.</span>
+
 <span class="sd">        :param vehicle_id: the vehicle that is planning to service the request</span>
 <span class="sd">        :param current_time: the current simulation time</span>
 <span class="sd">        :return: the updated Request</span>
@@ -151,8 +161,9 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        used to override a request&#39;s origin location as the centroid of the spatial grid,</span>
 <span class="sd">        to make guarantees about what conditions will make requests overlap with vehicles.</span>
-<span class="sd">        :param geoid:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param geoid: The new request origin</span>
+<span class="sd">        :return: The updated request</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
             <span class="n">origin</span><span class="o">=</span><span class="n">geoid</span>

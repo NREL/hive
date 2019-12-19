@@ -100,7 +100,7 @@ class Base(NamedTuple):
         else:
             return self._replace(available_stalls=stalls - 1)
 
-    def return_stall(self) -> Optional[Base]:
+    def return_stall(self) -> Base:
         """
         Checks out a stall and returns the updated base.
 

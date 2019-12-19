@@ -15,6 +15,7 @@ LinkId = str # road network link
 RouteStepPointer = int
 H3Line = Tuple[GeoId, ...]
 
+# TODO: Should we make this datetime so we can freeze and pickup simulations with different requests?
 SimTime = int
 
 

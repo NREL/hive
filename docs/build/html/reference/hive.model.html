@@ -91,12 +91,13 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="hive-model-base-module">
-<h2>hive.model.base module<a class="headerlink" href="#hive-model-base-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hive.model.base">
+<span id="hive-model-base-module"></span><h2>hive.model.base module<a class="headerlink" href="#module-hive.model.base" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="hive.model.base.Base">
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.base.</code><code class="sig-name descname">Base</code><a class="reference internal" href="../_modules/hive/model/base.html#Base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Represents a base within the simulation.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Represents a base within the simulation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -110,50 +111,62 @@
 </dl>
 <dl class="method">
 <dt id="hive.model.base.Base.from_row">
-<em class="property">classmethod </em><code class="sig-name descname">from_row</code><span class="sig-paren">(</span><em class="sig-param">row: Dict[str, str], sim_h3_resolution: int</em><span class="sig-paren">)</span> &#x2192; Union[OSError, hive.model.base.Base]<a class="reference internal" href="../_modules/hive/model/base.html#Base.from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.from_row" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_row</code><span class="sig-paren">(</span><em class="sig-param">row</em>, <em class="sig-param">sim_h3_resolution</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/base.html#Base.from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.from_row" title="Permalink to this definition">¶</a></dt>
 <dd><p>takes a csv row and turns it into a Base</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>row</strong> – a row as interpreted by csv.DictReader</p></li>
-<li><p><strong>sim_h3_resolution</strong> – the h3 resolution that events are experienced at</p></li>
+<li><p><strong>row</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a row as interpreted by csv.DictReader</p></li>
+<li><p><strong>sim_h3_resolution</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the h3 resolution that events are experienced at</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a Base, or an error</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code>, <a class="reference internal" href="#hive.model.base.Base" title="hive.model.base.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Base, or an error</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.base.Base.has_available_stall">
-<code class="sig-name descname">has_available_stall</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/base.html#Base.has_available_stall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.has_available_stall" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">has_available_stall</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/base.html#Base.has_available_stall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.has_available_stall" title="Permalink to this definition">¶</a></dt>
 <dd><p>Does base have a stall or not.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Boolean</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.base.Base.checkout_stall">
-<code class="sig-name descname">checkout_stall</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional[hive.model.base.Base]<a class="reference internal" href="../_modules/hive/model/base.html#Base.checkout_stall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.checkout_stall" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">checkout_stall</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/base.html#Base.checkout_stall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.checkout_stall" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks out a stall and returns the updated base if there are enough stalls.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Updated Base or None</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.base.Base" title="hive.model.base.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Updated Base or None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.base.Base.return_stall">
-<code class="sig-name descname">return_stall</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Optional[hive.model.base.Base]<a class="reference internal" href="../_modules/hive/model/base.html#Base.return_stall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.return_stall" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">return_stall</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/base.html#Base.return_stall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.base.Base.return_stall" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks out a stall and returns the updated base.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Updated Base</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hive.model.base.Base" title="hive.model.base.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Updated Base</p>
 </dd>
 </dl>
 </dd></dl>
@@ -167,48 +180,122 @@
 <dt id="hive.model.coordinate.Coordinate">
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">Coordinate</code><a class="reference internal" href="../_modules/hive/model/coordinate.html#Coordinate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.Coordinate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<p>a latitude (y) and longitude (x) tuple</p>
-<dl class="attribute">
-<dt id="hive.model.coordinate.Coordinate.lat">
-<code class="sig-name descname">lat</code><a class="headerlink" href="#hive.model.coordinate.Coordinate.lat" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.coordinate.Coordinate.lon">
-<code class="sig-name descname">lon</code><a class="headerlink" href="#hive.model.coordinate.Coordinate.lon" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<p>A tuple holding latitude and longitude information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat</strong> (<em>float</em>) – Latitude of coordinate</p></li>
+<li><p><strong>lon</strong> (<em>float</em>) – Latitude of coordinate</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="hive.model.coordinate.geoid_to_coordinate">
-<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">geoid_to_coordinate</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; hive.model.coordinate.Coordinate<a class="reference internal" href="../_modules/hive/model/coordinate.html#geoid_to_coordinate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.geoid_to_coordinate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">geoid_to_coordinate</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/coordinate.html#geoid_to_coordinate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.geoid_to_coordinate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a GeoId to a Coordinate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>geoid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – geoid to convert</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Coordinate</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hive.model.coordinate.coordinate_to_geoid">
-<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">coordinate_to_geoid</code><span class="sig-paren">(</span><em class="sig-param">coordinate: hive.model.coordinate.Coordinate</em>, <em class="sig-param">resolution: int</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/coordinate.html#coordinate_to_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.coordinate_to_geoid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">coordinate_to_geoid</code><span class="sig-paren">(</span><em class="sig-param">coordinate</em>, <em class="sig-param">resolution</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/coordinate.html#coordinate_to_geoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.coordinate_to_geoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a Coordinate to a Geoid at a specific resolution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coordinate</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate to convert</p></li>
+<li><p><strong>resolution</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – desired h3 resolution of the GeoId</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GeoId</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Geoid</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hive.model.coordinate.dist_euclidian">
-<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">dist_euclidian</code><span class="sig-paren">(</span><em class="sig-param">a: hive.model.coordinate.Coordinate</em>, <em class="sig-param">b: hive.model.coordinate.Coordinate</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="../_modules/hive/model/coordinate.html#dist_euclidian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.dist_euclidian" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">dist_euclidian</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/coordinate.html#dist_euclidian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.dist_euclidian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the euclidian distance between two coordinates.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Calculating euclidian distance on latitude and longitude will introduce some error.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate a</p></li>
+<li><p><strong>b</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate b</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>unitless distance between the two coordinates</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hive.model.coordinate.dist_haversine">
-<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">dist_haversine</code><span class="sig-paren">(</span><em class="sig-param">a: hive.model.coordinate.Coordinate</em>, <em class="sig-param">b: hive.model.coordinate.Coordinate</em><span class="sig-paren">)</span> &#x2192; pint.unit.build_unit_class.&lt;locals&gt;.Unit<a class="reference internal" href="../_modules/hive/model/coordinate.html#dist_haversine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.dist_haversine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hive.model.coordinate.dist_geoid_haversine">
-<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">dist_geoid_haversine</code><span class="sig-paren">(</span><em class="sig-param">a: str</em>, <em class="sig-param">b: str</em><span class="sig-paren">)</span> &#x2192; pint.unit.build_unit_class.&lt;locals&gt;.Unit<a class="reference internal" href="../_modules/hive/model/coordinate.html#dist_geoid_haversine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.dist_geoid_haversine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">dist_haversine</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/coordinate.html#dist_haversine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.dist_haversine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the haversine distance between two coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate a</p></li>
+<li><p><strong>b</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate b</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">km</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Distance between the two points in kilometers.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hive.model.coordinate.interpolate_between_coordinates">
-<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">interpolate_between_coordinates</code><span class="sig-paren">(</span><em class="sig-param">a: hive.model.coordinate.Coordinate</em>, <em class="sig-param">b: hive.model.coordinate.Coordinate</em>, <em class="sig-param">ratio: float</em><span class="sig-paren">)</span> &#x2192; hive.model.coordinate.Coordinate<a class="reference internal" href="../_modules/hive/model/coordinate.html#interpolate_between_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.interpolate_between_coordinates" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">hive.model.coordinate.</code><code class="sig-name descname">interpolate_between_coordinates</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">ratio</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/coordinate.html#interpolate_between_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.coordinate.interpolate_between_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate a new coordinate between two coordinates given a ratio using linear interpolation.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Using linear interpolation with latitude and longitude will introduce some error.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate a</p></li>
+<li><p><strong>b</strong> (<a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a>) – Coordinate b</p></li>
+<li><p><strong>ratio</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – ratio from a -&gt; b</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.coordinate.Coordinate" title="hive.model.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>new interpolated Coordinate</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-hive.model.passenger">
@@ -217,43 +304,55 @@
 <dt id="hive.model.passenger.Passenger">
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.passenger.</code><code class="sig-name descname">Passenger</code><a class="reference internal" href="../_modules/hive/model/passenger.html#Passenger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.passenger.Passenger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<p>An immutable class representing a HIVE agent request which is being serviced</p>
-<dl class="attribute">
-<dt id="hive.model.passenger.Passenger.id">
-<code class="sig-name descname">id</code><a class="headerlink" href="#hive.model.passenger.Passenger.id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.passenger.Passenger.origin">
-<code class="sig-name descname">origin</code><a class="headerlink" href="#hive.model.passenger.Passenger.origin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.passenger.Passenger.destination">
-<code class="sig-name descname">destination</code><a class="headerlink" href="#hive.model.passenger.Passenger.destination" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.passenger.Passenger.departure_time">
-<code class="sig-name descname">departure_time</code><a class="headerlink" href="#hive.model.passenger.Passenger.departure_time" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.passenger.Passenger.vehicle_id">
-<code class="sig-name descname">vehicle_id</code><a class="headerlink" href="#hive.model.passenger.Passenger.vehicle_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<p>A tuple representing a passenger in the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>PassengerId</em>) – the unique id of the passenger</p></li>
+<li><p><strong>origin</strong> (<em>GeoId</em>) – the pickup location of the passenger</p></li>
+<li><p><strong>destination</strong> (<em>GeoId</em>) – the destination location of the passenger</p></li>
+<li><p><strong>departure_time</strong> (<em>SimTime</em>) – the departure time of the passenger</p></li>
+<li><p><strong>vehicle_id</strong> (<em>Optional</em><em>[</em><em>VehicleId</em><em>]</em>) – id of the vehicle that the passenger is occupying</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
 <dt id="hive.model.passenger.Passenger.add_vehicle_id">
-<code class="sig-name descname">add_vehicle_id</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em><span class="sig-paren">)</span> &#x2192; hive.model.passenger.Passenger<a class="reference internal" href="../_modules/hive/model/passenger.html#Passenger.add_vehicle_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.passenger.Passenger.add_vehicle_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">add_vehicle_id</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/passenger.html#Passenger.add_vehicle_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.passenger.Passenger.add_vehicle_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a VehicleId to a passenger</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vehicle_id</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – vehicle id</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.passenger.Passenger" title="hive.model.passenger.Passenger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Passenger</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>updated Passenger</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="hive.model.passenger.create_passenger_id">
-<code class="sig-prename descclassname">hive.model.passenger.</code><code class="sig-name descname">create_passenger_id</code><span class="sig-paren">(</span><em class="sig-param">request_id: str</em>, <em class="sig-param">passenger_id: int</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/hive/model/passenger.html#create_passenger_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.passenger.create_passenger_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>constructs a passenger_id from a request id and a unique id for this passenger</p>
+<code class="sig-prename descclassname">hive.model.passenger.</code><code class="sig-name descname">create_passenger_id</code><span class="sig-paren">(</span><em class="sig-param">request_id</em>, <em class="sig-param">passenger_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/passenger.html#create_passenger_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.passenger.create_passenger_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a passenger id using a RequestId and an integer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request_id</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – request id</p></li>
+<li><p><strong>passenger_id</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – integer for passenger in a request.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PassengerId</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a new unique PassengerId</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -263,89 +362,82 @@
 <dt id="hive.model.request.Request">
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.request.</code><code class="sig-name descname">Request</code><a class="reference internal" href="../_modules/hive/model/request.html#Request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<p>a ride hail request which is alive in the simulation but not yet serviced.
-it should only exist if the current sim time &gt;= self.departure_time.
-it should be removed once the current sim time == self.cancel_time.
-if a vehicle has been dispatched to service this Request, then it should</p>
-<dl class="attribute">
-<dt id="hive.model.request.Request.id">
-<code class="sig-name descname">id</code><a class="headerlink" href="#hive.model.request.Request.id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.origin">
-<code class="sig-name descname">origin</code><a class="headerlink" href="#hive.model.request.Request.origin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.destination">
-<code class="sig-name descname">destination</code><a class="headerlink" href="#hive.model.request.Request.destination" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.departure_time">
-<code class="sig-name descname">departure_time</code><a class="headerlink" href="#hive.model.request.Request.departure_time" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.cancel_time">
-<code class="sig-name descname">cancel_time</code><a class="headerlink" href="#hive.model.request.Request.cancel_time" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.passengers">
-<code class="sig-name descname">passengers</code><a class="headerlink" href="#hive.model.request.Request.passengers" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.dispatched_vehicle">
-<code class="sig-name descname">dispatched_vehicle</code><a class="headerlink" href="#hive.model.request.Request.dispatched_vehicle" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.request.Request.dispatched_vehicle_time">
-<code class="sig-name descname">dispatched_vehicle_time</code><a class="headerlink" href="#hive.model.request.Request.dispatched_vehicle_time" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.request.Request.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">request_id: str</em>, <em class="sig-param">origin: str</em>, <em class="sig-param">destination: str</em>, <em class="sig-param">departure_time: int</em>, <em class="sig-param">cancel_time: int</em>, <em class="sig-param">passengers: int</em><span class="sig-paren">)</span> &#x2192; hive.model.request.Request<a class="reference internal" href="../_modules/hive/model/request.html#Request.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.build" title="Permalink to this definition">¶</a></dt>
-<dd><p>constructor which tests assertions about the arguments for this Request
-:param request_id:
-:param origin:
-:param destination:
-:param departure_time:
-:param cancel_time:
-:param passengers:
-:return:</p>
-</dd></dl>
-
+<p>A ride hail request which is alive in the simulation but not yet serviced.
+It should only exist if the current sim time &gt;= self.departure_time.
+It should be removed once the current sim time == self.cancel_time.
+If a vehicle has been dispatched to service this Request, then it should hold the vehicle id
+and the time that vehicle was dispatched to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestId</span></code>) – A unique id for the request.</p></li>
+<li><p><strong>origin</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">GeoId</span></code>) – The geoid of the request origin.</p></li>
+<li><p><strong>destination</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">GeoId</span></code>) – The geoid of the request destination.</p></li>
+<li><p><strong>departure_time</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">SimTime</span></code>) – The time of departure.</p></li>
+<li><p><strong>cancel_time</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">SimTime</span></code>) – The time when this request will cancel.</p></li>
+<li><p><strong>passengers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Tuple[Passenger]</span></code>) – A tuple of passengers associated with this request.</p></li>
+<li><p><strong>dispatched_vehicle</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Optional[VehicleId]</span></code>) – The id of the vehicle dispatched to service this request.</p></li>
+<li><p><strong>dispatched_vehicle_time</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Optional[SimTime]</span></code>) – Time time which a vehicle was dispatched for this request.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
 <dt id="hive.model.request.Request.from_row">
-<em class="property">classmethod </em><code class="sig-name descname">from_row</code><span class="sig-paren">(</span><em class="sig-param">row: Dict[str, str], road_network: hive.model.roadnetwork.roadnetwork.RoadNetwork</em><span class="sig-paren">)</span> &#x2192; Union[OSError, hive.model.request.Request]<a class="reference internal" href="../_modules/hive/model/request.html#Request.from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.from_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>takes a csv row and turns it into a Request
-:param row: a row as interpreted by csv.DictReader
-:param road_network: the road network loaded for this simulation
-:return: a Request, or an error</p>
+<em class="property">classmethod </em><code class="sig-name descname">from_row</code><span class="sig-paren">(</span><em class="sig-param">row</em>, <em class="sig-param">road_network</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/request.html#Request.from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.from_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a csv row and turns it into a Request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a row as interpreted by csv.DictReader</p></li>
+<li><p><strong>road_network</strong> (<a class="reference internal" href="hive.model.roadnetwork.html#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>) – the road network loaded for this simulation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code>, <a class="reference internal" href="#hive.model.request.Request" title="hive.model.request.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Request, or an error</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.request.Request.assign_dispatched_vehicle">
-<code class="sig-name descname">assign_dispatched_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id: str</em>, <em class="sig-param">current_time: int</em><span class="sig-paren">)</span> &#x2192; hive.model.request.Request<a class="reference internal" href="../_modules/hive/model/request.html#Request.assign_dispatched_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.assign_dispatched_vehicle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">assign_dispatched_vehicle</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em>, <em class="sig-param">current_time</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/request.html#Request.assign_dispatched_vehicle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.assign_dispatched_vehicle" title="Permalink to this definition">¶</a></dt>
 <dd><p>allows the dispatcher to update the request that a vehicle has been dispatched to them.
-this does not signal that the vehicle is guaranteed to pick them up.
-:param vehicle_id: the vehicle that is planning to service the request
-:param current_time: the current simulation time
-:return: the updated Request</p>
+this does not signal that the vehicle is guaranteed to pick them up.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vehicle_id</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the vehicle that is planning to service the request</p></li>
+<li><p><strong>current_time</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the current simulation time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.request.Request" title="hive.model.request.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the updated Request</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.request.Request.update_origin">
-<code class="sig-name descname">update_origin</code><span class="sig-paren">(</span><em class="sig-param">geoid: str</em><span class="sig-paren">)</span> &#x2192; hive.model.request.Request<a class="reference internal" href="../_modules/hive/model/request.html#Request.update_origin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.update_origin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_origin</code><span class="sig-paren">(</span><em class="sig-param">geoid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/request.html#Request.update_origin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.request.Request.update_origin" title="Permalink to this definition">¶</a></dt>
 <dd><p>used to override a request’s origin location as the centroid of the spatial grid,
-to make guarantees about what conditions will make requests overlap with vehicles.
-:param geoid:
-:return:</p>
+to make guarantees about what conditions will make requests overlap with vehicles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>geoid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The new request origin</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.request.Request" title="hive.model.request.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The updated request</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -355,18 +447,19 @@ to make guarantees about what conditions will make requests overlap with vehicle
 <span id="hive-model-station-module"></span><h2>hive.model.station module<a class="headerlink" href="#module-hive.model.station" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="hive.model.station.Station">
-<em class="property">class </em><code class="sig-prename descclassname">hive.model.station.</code><code class="sig-name descname">Station</code><span class="sig-paren">(</span><em class="sig-param">id</em>, <em class="sig-param">geoid</em>, <em class="sig-param">total_chargers</em>, <em class="sig-param">available_chargers</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/station.html#Station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.model.station.</code><code class="sig-name descname">Station</code><a class="reference internal" href="../_modules/hive/model/station.html#Station"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<dl class="attribute">
-<dt id="hive.model.station.Station.id">
-<code class="sig-name descname">id</code><a class="headerlink" href="#hive.model.station.Station.id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.station.Station.geoid">
-<code class="sig-name descname">geoid</code><a class="headerlink" href="#hive.model.station.Station.geoid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<p>A station that vehicles can use to refuel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">StationId</span></code>) – The unique id of the station.</p></li>
+<li><p><strong>geoid</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Geoid</span></code>) – The location of the station.</p></li>
+<li><p><strong>total_chargers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Dict[Charger,</span> <span class="pre">int]</span></code>) – A map of the charger types and quanitites for this station.</p></li>
+<li><p><strong>available_chargers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Dict[Charger,</span> <span class="pre">int]</span></code>) – Identifies how many plugs for each charger type are unoccupied.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="attribute">
 <dt id="hive.model.station.Station.total_chargers">
 <code class="sig-name descname">total_chargers</code><a class="headerlink" href="#hive.model.station.Station.total_chargers" title="Permalink to this definition">¶</a></dt>
@@ -378,35 +471,75 @@ to make guarantees about what conditions will make requests overlap with vehicle
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="hive.model.station.Station.build">
-<em class="property">classmethod </em><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">id: str, geoid: str, chargers: Dict[hive.model.energy.charger.Charger, int]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/station.html#Station.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.build" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="hive.model.station.Station.from_row">
-<em class="property">classmethod </em><code class="sig-name descname">from_row</code><span class="sig-paren">(</span><em class="sig-param">row: Dict[str, str], builder: Dict[str, hive.model.station.Station], sim_h3_resolution: int</em><span class="sig-paren">)</span> &#x2192; Union[OSError, hive.model.station.Station]<a class="reference internal" href="../_modules/hive/model/station.html#Station.from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.from_row" title="Permalink to this definition">¶</a></dt>
-<dd><p>takes a csv row and turns it into a Station
-:param row: a row as interpreted by csv.DictReader
-:param builder: the (partially-completed) collection of stations. needed in the case
-that there already was a row parsed for this station
+<em class="property">classmethod </em><code class="sig-name descname">from_row</code><span class="sig-paren">(</span><em class="sig-param">row</em>, <em class="sig-param">builder</em>, <em class="sig-param">sim_h3_resolution</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/station.html#Station.from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.from_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a csv row and turns it into a Station</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a row as interpreted by csv.DictReader</p></li>
+<li><p><strong>builder</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a>]) – the (partially-completed) collection of stations. needed in the case</p></li>
+</ul>
+</dd>
+</dl>
+<p>that there already was a row parsed for this station
+:type sim_h3_resolution: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
 :param sim_h3_resolution: the h3 resolution that events are experienced at
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code>, <a class="reference internal" href="#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a>]
 :return: a Station, or an error</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.station.Station.has_available_charger">
-<code class="sig-name descname">has_available_charger</code><span class="sig-paren">(</span><em class="sig-param">charger: hive.model.energy.charger.Charger</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/station.html#Station.has_available_charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.has_available_charger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">has_available_charger</code><span class="sig-paren">(</span><em class="sig-param">charger</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/station.html#Station.has_available_charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.has_available_charger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates if a station has an available charge of type <cite>charger</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>charger</strong> (<a class="reference internal" href="hive.model.energy.html#hive.model.energy.charger.Charger" title="hive.model.energy.charger.Charger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Charger</span></code></a>) – charger type to be queried.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.station.Station.checkout_charger">
-<code class="sig-name descname">checkout_charger</code><span class="sig-paren">(</span><em class="sig-param">charger: hive.model.energy.charger.Charger</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.station.Station]<a class="reference internal" href="../_modules/hive/model/station.html#Station.checkout_charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.checkout_charger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">checkout_charger</code><span class="sig-paren">(</span><em class="sig-param">charger</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/station.html#Station.checkout_charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.checkout_charger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks out a charger of type <cite>charger</cite> and returns an updated station if there are any available</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>charger</strong> (<a class="reference internal" href="hive.model.energy.html#hive.model.energy.charger.Charger" title="hive.model.energy.charger.Charger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Charger</span></code></a>) – the charger type to be checked out</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Updated station or None</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hive.model.station.Station.return_charger">
-<code class="sig-name descname">return_charger</code><span class="sig-paren">(</span><em class="sig-param">charger: hive.model.energy.charger.Charger</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.station.Station]<a class="reference internal" href="../_modules/hive/model/station.html#Station.return_charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.return_charger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">return_charger</code><span class="sig-paren">(</span><em class="sig-param">charger</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/station.html#Station.return_charger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.station.Station.return_charger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a charger of type <cite>charger</cite> to the station.
+Raises exception if available chargers exceeds total chargers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>charger</strong> (<a class="reference internal" href="hive.model.energy.html#hive.model.energy.charger.Charger" title="hive.model.energy.charger.Charger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Charger</span></code></a>) – Charger to be returned</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.model.station.Station" title="hive.model.station.Station"><code class="xref py py-class docutils literal notranslate"><span class="pre">Station</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The updated station with returned charger</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -494,101 +627,57 @@ that there already was a row parsed for this station
 
 <dl class="method">
 <dt id="hive.model.vehicle.Vehicle.from_string">
-<em class="property">classmethod </em><code class="sig-name descname">from_string</code><span class="sig-paren">(</span><em class="sig-param">string: str</em>, <em class="sig-param">road_network: hive.model.roadnetwork.roadnetwork.RoadNetwork</em><span class="sig-paren">)</span> &#x2192; Union[OSError, hive.model.vehicle.Vehicle]<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.from_string" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_string</code><span class="sig-paren">(</span><em class="sig-param">string</em>, <em class="sig-param">road_network</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.from_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>reads a csv row from file to generate a Vehicle</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>string</strong> – a row of a .csv which matches hive.util.pattern.vehicle_regex.</p>
+<dd class="field-odd"><p><strong>string</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – a row of a .csv which matches hive.util.pattern.vehicle_regex.</p>
 </dd>
 </dl>
 <p>this string will be stripped of whitespace characters (no spaces allowed in names!)
+:type road_network: <a class="reference internal" href="hive.model.roadnetwork.html#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :param road_network: the road network, used to find the vehicle’s location in the sim
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code>, <a class="reference internal" href="#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>]
 :return: a vehicle, or, an IOError if failure occurred.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="hive.model.vehicle.Vehicle.has_passengers">
-<code class="sig-name descname">has_passengers</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.has_passengers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.has_passengers" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.has_route">
-<code class="sig-name descname">has_route</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.has_route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.has_route" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="hive.model.vehicle.Vehicle.add_passengers">
-<code class="sig-name descname">add_passengers</code><span class="sig-paren">(</span><em class="sig-param">new_passengers: Tuple[hive.model.passenger.Passenger, ...]</em><span class="sig-paren">)</span> &#x2192; hive.model.vehicle.Vehicle<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.add_passengers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.add_passengers" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_passengers</code><span class="sig-paren">(</span><em class="sig-param">new_passengers</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.add_passengers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.add_passengers" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads some passengers onto this vehicle
 :param self:
+:type new_passengers: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.model.passenger.Passenger" title="hive.model.passenger.Passenger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Passenger</span></code></a>, …]
 :param new_passengers: the set of passengers we want to add
+:rtype: <a class="reference internal" href="#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>
 :return: the updated vehicle</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="hive.model.vehicle.Vehicle.drop_off_passenger">
-<code class="sig-name descname">drop_off_passenger</code><span class="sig-paren">(</span><em class="sig-param">passenger_id: str</em><span class="sig-paren">)</span> &#x2192; hive.model.vehicle.Vehicle<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.drop_off_passenger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.drop_off_passenger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.plug_in_to">
-<code class="sig-name descname">plug_in_to</code><span class="sig-paren">(</span><em class="sig-param">station_id: str</em>, <em class="sig-param">charger: hive.model.energy.charger.Charger</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.plug_in_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.plug_in_to" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.unplug">
-<code class="sig-name descname">unplug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.unplug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.unplug" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="hive.model.vehicle.Vehicle.charge">
-<code class="sig-name descname">charge</code><span class="sig-paren">(</span><em class="sig-param">powercurve: hive.model.energy.powercurve.powercurve.Powercurve</em>, <em class="sig-param">duration: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; hive.model.vehicle.Vehicle<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.charge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.charge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">charge</code><span class="sig-paren">(</span><em class="sig-param">powercurve</em>, <em class="sig-param">duration</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.charge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.charge" title="Permalink to this definition">¶</a></dt>
 <dd><p>applies a charge event to a vehicle
+:type powercurve: <a class="reference internal" href="hive.model.energy.powercurve.html#hive.model.energy.powercurve.powercurve.Powercurve" title="hive.model.energy.powercurve.powercurve.Powercurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powercurve</span></code></a>
 :param powercurve: the vehicle’s powercurve model
 :param charger: the charger provided by the station
+:type duration: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param duration: duration of this time step
+:rtype: <a class="reference internal" href="#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>
 :return: the updated Vehicle</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="hive.model.vehicle.Vehicle.move">
-<code class="sig-name descname">move</code><span class="sig-paren">(</span><em class="sig-param">road_network: hive.model.roadnetwork.roadnetwork.RoadNetwork</em>, <em class="sig-param">power_train: hive.model.energy.powertrain.powertrain.Powertrain</em>, <em class="sig-param">time_step: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.vehicle.Vehicle]<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.move" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">move</code><span class="sig-paren">(</span><em class="sig-param">road_network</em>, <em class="sig-param">power_train</em>, <em class="sig-param">time_step</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.move" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves the vehicle and consumes energy.
+:type road_network: <a class="reference internal" href="hive.model.roadnetwork.html#hive.model.roadnetwork.roadnetwork.RoadNetwork" title="hive.model.roadnetwork.roadnetwork.RoadNetwork"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadNetwork</span></code></a>
 :param road_network:
+:type power_train: <a class="reference internal" href="hive.model.energy.powertrain.html#hive.model.energy.powertrain.powertrain.Powertrain" title="hive.model.energy.powertrain.powertrain.Powertrain"><code class="xref py py-class docutils literal notranslate"><span class="pre">Powertrain</span></code></a>
 :param power_train:
+:type time_step: <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>
 :param time_step:
+:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hive.model.vehicle.Vehicle" title="hive.model.vehicle.Vehicle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vehicle</span></code></a>]
 :return: the updated vehicle or None if moving is not possible.</p>
 </dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.idle">
-<code class="sig-name descname">idle</code><span class="sig-paren">(</span><em class="sig-param">time_step_s: pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><span class="sig-paren">)</span> &#x2192; hive.model.vehicle.Vehicle<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.idle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.idle" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.battery_swap">
-<code class="sig-name descname">battery_swap</code><span class="sig-paren">(</span><em class="sig-param">energy_source: hive.model.energy.energysource.EnergySource</em><span class="sig-paren">)</span> &#x2192; hive.model.vehicle.Vehicle<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.battery_swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.battery_swap" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.assign_route">
-<code class="sig-name descname">assign_route</code><span class="sig-paren">(</span><em class="sig-param">route: Tuple[hive.model.roadnetwork.property_link.PropertyLink, ...]</em><span class="sig-paren">)</span> &#x2192; hive.model.vehicle.Vehicle<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.assign_route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.assign_route" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.set_charge_intent">
-<code class="sig-name descname">set_charge_intent</code><span class="sig-paren">(</span><em class="sig-param">station_id: str</em>, <em class="sig-param">charger: hive.model.energy.charger.Charger</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.set_charge_intent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.set_charge_intent" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.can_transition">
-<code class="sig-name descname">can_transition</code><span class="sig-paren">(</span><em class="sig-param">vehicle_state: hive.model.vehiclestate.VehicleState</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.can_transition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.can_transition" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hive.model.vehicle.Vehicle.transition">
-<code class="sig-name descname">transition</code><span class="sig-paren">(</span><em class="sig-param">vehicle_state: hive.model.vehiclestate.VehicleState</em><span class="sig-paren">)</span> &#x2192; Optional[hive.model.vehicle.Vehicle]<a class="reference internal" href="../_modules/hive/model/vehicle.html#Vehicle.transition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehicle.Vehicle.transition" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -600,56 +689,6 @@ that there already was a row parsed for this station
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.vehiclestate.</code><code class="sig-name descname">VehicleState</code><a class="reference internal" href="../_modules/hive/model/vehiclestate.html#VehicleState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehiclestate.VehicleState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
 <p>A finite set of vehicle states and rules for state transitions</p>
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.DISPATCH_BASE">
-<code class="sig-name descname">DISPATCH_BASE</code><em class="property"> = 0</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.DISPATCH_BASE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.CHARGING_BASE">
-<code class="sig-name descname">CHARGING_BASE</code><em class="property"> = 1</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.CHARGING_BASE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.RESERVE_BASE">
-<code class="sig-name descname">RESERVE_BASE</code><em class="property"> = 2</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.RESERVE_BASE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.IDLE">
-<code class="sig-name descname">IDLE</code><em class="property"> = 3</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.IDLE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.REPOSITIONING">
-<code class="sig-name descname">REPOSITIONING</code><em class="property"> = 4</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.REPOSITIONING" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.DISPATCH_TRIP">
-<code class="sig-name descname">DISPATCH_TRIP</code><em class="property"> = 5</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.DISPATCH_TRIP" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.SERVICING_TRIP">
-<code class="sig-name descname">SERVICING_TRIP</code><em class="property"> = 6</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.SERVICING_TRIP" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.DISPATCH_STATION">
-<code class="sig-name descname">DISPATCH_STATION</code><em class="property"> = 7</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.DISPATCH_STATION" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.CHARGING_STATION">
-<code class="sig-name descname">CHARGING_STATION</code><em class="property"> = 8</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.CHARGING_STATION" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleState.is_valid">
-<code class="sig-name descname">is_valid</code><em class="property"> = &lt;bound method VehicleState.is_valid of &lt;enum 'VehicleState'&gt;&gt;</em><a class="reference internal" href="../_modules/hive/model/vehiclestate.html#VehicleState.is_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehiclestate.VehicleState.is_valid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -657,26 +696,6 @@ that there already was a row parsed for this station
 <em class="property">class </em><code class="sig-prename descclassname">hive.model.vehiclestate.</code><code class="sig-name descname">VehicleStateCategory</code><a class="reference internal" href="../_modules/hive/model/vehiclestate.html#VehicleStateCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehiclestate.VehicleStateCategory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
 <p>higher-order categories for vehicle state</p>
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleStateCategory.DO_NOTHING">
-<code class="sig-name descname">DO_NOTHING</code><em class="property"> = 0</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleStateCategory.DO_NOTHING" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleStateCategory.CHARGE">
-<code class="sig-name descname">CHARGE</code><em class="property"> = 1</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleStateCategory.CHARGE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleStateCategory.MOVE">
-<code class="sig-name descname">MOVE</code><em class="property"> = 2</em><a class="headerlink" href="#hive.model.vehiclestate.VehicleStateCategory.MOVE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="hive.model.vehiclestate.VehicleStateCategory.from_vehicle_state">
-<code class="sig-name descname">from_vehicle_state</code><em class="property"> = &lt;bound method VehicleStateCategory.from_vehicle_state of &lt;enum 'VehicleStateCategory'&gt;&gt;</em><a class="reference internal" href="../_modules/hive/model/vehiclestate.html#VehicleStateCategory.from_vehicle_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.model.vehiclestate.VehicleStateCategory.from_vehicle_state" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 </div>
@@ -696,7 +715,7 @@ that there already was a row parsed for this station
 <li><a class="reference internal" href="#">hive.model package</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#hive-model-base-module">hive.model.base module</a></li>
+<li><a class="reference internal" href="#module-hive.model.base">hive.model.base module</a></li>
 <li><a class="reference internal" href="#module-hive.model.coordinate">hive.model.coordinate module</a></li>
 <li><a class="reference internal" href="#module-hive.model.passenger">hive.model.passenger module</a></li>
 <li><a class="reference internal" href="#module-hive.model.request">hive.model.request module</a></li>

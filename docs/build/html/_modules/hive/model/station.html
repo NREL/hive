@@ -40,27 +40,38 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">hive.model.energy.charger</span> <span class="kn">import</span> <span class="n">Charger</span>
-<span class="kn">from</span> <span class="nn">hive.model.roadnetwork.roadnetwork</span> <span class="kn">import</span> <span class="n">RoadNetwork</span>
 <span class="kn">from</span> <span class="nn">hive.util.exception</span> <span class="kn">import</span> <span class="n">SimulationStateError</span>
 <span class="kn">from</span> <span class="nn">hive.util.helpers</span> <span class="kn">import</span> <span class="n">DictOps</span>
 <span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="kn">from</span> <span class="nn">h3</span> <span class="kn">import</span> <span class="n">h3</span>
 
+
 <div class="viewcode-block" id="Station"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station">[docs]</a><span class="k">class</span> <span class="nc">Station</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A station that vehicles can use to refuel</span>
+
+<span class="sd">    :param id: The unique id of the station.</span>
+<span class="sd">    :type id: :py:obj:`StationId`</span>
+<span class="sd">    :param geoid: The location of the station.</span>
+<span class="sd">    :type geoid: :py:obj:`Geoid`</span>
+<span class="sd">    :param total_chargers: A map of the charger types and quanitites for this station.</span>
+<span class="sd">    :type total_chargers: :py:obj:`Dict[Charger, int]`</span>
+<span class="sd">    :param available_chargers: Identifies how many plugs for each charger type are unoccupied.</span>
+<span class="sd">    :type available_chargers: :py:obj:`Dict[Charger, int]`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">id</span><span class="p">:</span> <span class="n">StationId</span>
     <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span>
-
     <span class="n">total_chargers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Charger</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
     <span class="n">available_chargers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Charger</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Station.build"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
               <span class="nb">id</span><span class="p">:</span> <span class="n">StationId</span><span class="p">,</span>
               <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">,</span>
               <span class="n">chargers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Charger</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
               <span class="p">):</span>
-        <span class="k">return</span> <span class="n">Station</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">geoid</span><span class="p">,</span> <span class="n">chargers</span><span class="p">,</span> <span class="n">chargers</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">Station</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">geoid</span><span class="p">,</span> <span class="n">chargers</span><span class="p">,</span> <span class="n">chargers</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Station.from_row"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station.from_row">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_row</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
@@ -68,6 +79,7 @@
                  <span class="n">sim_h3_resolution</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">Station</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        takes a csv row and turns it into a Station</span>
+
 <span class="sd">        :param row: a row as interpreted by csv.DictReader</span>
 <span class="sd">        :param builder: the (partially-completed) collection of stations. needed in the case</span>
 <span class="sd">        that there already was a row parsed for this station</span>
@@ -125,6 +137,12 @@
                 <span class="k">return</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unable to parse request </span><span class="si">{station_id}</span><span class="s2"> from row due to invalid value(s): </span><span class="si">{row}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Station.has_available_charger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station.has_available_charger">[docs]</a>    <span class="k">def</span> <span class="nf">has_available_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicates if a station has an available charge of type `charger`</span>
+
+<span class="sd">        :param charger: charger type to be queried.</span>
+<span class="sd">        :return: Boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">charger</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_chargers</span><span class="p">[</span><span class="n">charger</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
@@ -132,6 +150,12 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Station.checkout_charger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station.checkout_charger">[docs]</a>    <span class="k">def</span> <span class="nf">checkout_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Station</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks out a charger of type `charger` and returns an updated station if there are any available</span>
+
+<span class="sd">        :param charger: the charger type to be checked out</span>
+<span class="sd">        :return: Updated station or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">chargers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_chargers</span><span class="p">[</span><span class="n">charger</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">chargers</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -142,7 +166,14 @@
 
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">available_chargers</span><span class="o">=</span><span class="n">updated_avail_chargers</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Station.return_charger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station.return_charger">[docs]</a>    <span class="k">def</span> <span class="nf">return_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Station</span><span class="p">]:</span>
+<div class="viewcode-block" id="Station.return_charger"><a class="viewcode-back" href="../../../reference/hive.model.html#hive.model.station.Station.return_charger">[docs]</a>    <span class="k">def</span> <span class="nf">return_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">:</span> <span class="n">Charger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Station</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a charger of type `charger` to the station.</span>
+<span class="sd">        Raises exception if available chargers exceeds total chargers</span>
+
+<span class="sd">        :param charger: Charger to be returned</span>
+<span class="sd">        :return: The updated station with returned charger</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">chargers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_chargers</span><span class="p">[</span><span class="n">charger</span><span class="p">]</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">chargers</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_chargers</span><span class="p">[</span><span class="n">charger</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">SimulationStateError</span><span class="p">(</span><span class="s2">&quot;Station already has max chargers of this type&quot;</span><span class="p">)</span>

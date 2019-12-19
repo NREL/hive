@@ -3,17 +3,28 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Optional, Union
 
 from hive.model.energy.charger import Charger
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
 
 from h3 import h3
 
+
 class Station(NamedTuple):
+    """
+    A station that vehicles can use to refuel
+
+    :param id: The unique id of the station.
+    :type id: :py:obj:`StationId`
+    :param geoid: The location of the station.
+    :type geoid: :py:obj:`Geoid`
+    :param total_chargers: A map of the charger types and quanitites for this station.
+    :type total_chargers: :py:obj:`Dict[Charger, int]`
+    :param available_chargers: Identifies how many plugs for each charger type are unoccupied.
+    :type available_chargers: :py:obj:`Dict[Charger, int]`
+    """
     id: StationId
     geoid: GeoId
-
     total_chargers: Dict[Charger, int]
     available_chargers: Dict[Charger, int]
 
@@ -31,6 +42,7 @@ class Station(NamedTuple):
                  sim_h3_resolution: int) -> Union[IOError, Station]:
         """
         takes a csv row and turns it into a Station
+
         :param row: a row as interpreted by csv.DictReader
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
@@ -88,6 +100,12 @@ class Station(NamedTuple):
                 return IOError(f"unable to parse request {station_id} from row due to invalid value(s): {row}")
 
     def has_available_charger(self, charger: Charger) -> bool:
+        """
+        Indicates if a station has an available charge of type `charger`
+
+        :param charger: charger type to be queried.
+        :return: Boolean
+        """
         if charger in self.total_chargers:
             if self.available_chargers[charger] > 0:
                 return True
@@ -95,6 +113,12 @@ class Station(NamedTuple):
         return False
 
     def checkout_charger(self, charger: Charger) -> Optional[Station]:
+        """
+        Checks out a charger of type `charger` and returns an updated station if there are any available
+
+        :param charger: the charger type to be checked out
+        :return: Updated station or None
+        """
         chargers = self.available_chargers[charger]
 
         if chargers < 1:
@@ -105,7 +129,14 @@ class Station(NamedTuple):
 
             return self._replace(available_chargers=updated_avail_chargers)
 
-    def return_charger(self, charger: Charger) -> Optional[Station]:
+    def return_charger(self, charger: Charger) -> Station:
+        """
+        Returns a charger of type `charger` to the station.
+        Raises exception if available chargers exceeds total chargers
+
+        :param charger: Charger to be returned
+        :return: The updated station with returned charger
+        """
         chargers = self.available_chargers[charger]
         if (chargers + 1) > self.total_chargers[charger]:
             raise SimulationStateError("Station already has max chargers of this type")
