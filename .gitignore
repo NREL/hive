@@ -112,3 +112,4 @@ ENV/
 
 # doit
 *.db
+/profiling/
