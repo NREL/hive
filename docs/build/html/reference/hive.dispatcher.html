@@ -33,7 +33,7 @@
           <a href="hive.config.html" title="hive.config package"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="hive.html" accesskey="U">hive package</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="hive.html" accesskey="U">hive</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -54,11 +54,18 @@
 <dl class="method">
 <dt id="hive.dispatcher.dispatcher.Dispatcher.generate_instructions">
 <em class="property">abstract </em><code class="sig-name descname">generate_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher/dispatcher.html#Dispatcher.generate_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.dispatcher.Dispatcher.generate_instructions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates instructions for a given simulation state.
-:type simulation_state: <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>
-:param simulation_state:
-:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]
-:return: the updated Dispatcher along with all instructions for this time step</p>
+<dd><p>Generates instructions for a given simulation state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>simulation_state</strong> (<a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><em>SimulationState</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher">Dispatcher</a>, Tuple[<a class="reference internal" href="#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction">Instruction</a>, ..]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the updated Dispatcher along with all instructions for this time step</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -84,11 +91,18 @@
 <dl class="method">
 <dt id="hive.dispatcher.greedy_dispatcher.GreedyDispatcher.generate_instructions">
 <code class="sig-name descname">generate_instructions</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher/greedy_dispatcher.html#GreedyDispatcher.generate_instructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.greedy_dispatcher.GreedyDispatcher.generate_instructions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates instructions for a given simulation state.
-:type simulation_state: <a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
-:param simulation_state:
-:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]
-:return:</p>
+<dd><p>Generates instructions for a given simulation state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>simulation_state</strong> (<a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the updated Dispatcher along with all instructions for this time step</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -98,8 +112,21 @@
 <span id="hive-dispatcher-instruction-module"></span><h2>hive.dispatcher.instruction module<a class="headerlink" href="#module-hive.dispatcher.instruction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="hive.dispatcher.instruction.Instruction">
-<em class="property">class </em><code class="sig-prename descclassname">hive.dispatcher.instruction.</code><code class="sig-name descname">Instruction</code><span class="sig-paren">(</span><em class="sig-param">vehicle_id</em>, <em class="sig-param">action</em>, <em class="sig-param">location</em>, <em class="sig-param">request_id</em>, <em class="sig-param">station_id</em>, <em class="sig-param">charger</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/dispatcher/instruction.html#Instruction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.instruction.Instruction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.dispatcher.instruction.</code><code class="sig-name descname">Instruction</code><a class="reference internal" href="../_modules/hive/dispatcher/instruction.html#Instruction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.dispatcher.instruction.Instruction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Tuple that represents instructions for vehicles. These instructions have optional attributes based on their nature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vehicle_id</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">VehicleId</span></code>) – The id of the vehicles to apply this instruction to.</p></li>
+<li><p><strong>action</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">VehicleState</span></code>) – The action. Represented by a vehicle state that the vehicle should transition to.</p></li>
+<li><p><strong>location</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">GeoId</span></code>) – Geoid of the destination if the instruction involves relocating to an arbitrary location.</p></li>
+<li><p><strong>request_id</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestId</span></code>) – Id of the request if the instruction involves dispatching or servicing a trip.</p></li>
+<li><p><strong>station_id</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">StationId</span></code>) – Id of the station if the instruction involves dispatching or charging at a station.</p></li>
+<li><p><strong>charger</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Charger</span></code>) – Type of charger if the instruction involves dispatching or charging at a station.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="attribute">
 <dt id="hive.dispatcher.instruction.Instruction.vehicle_id">
 <code class="sig-name descname">vehicle_id</code><a class="headerlink" href="#hive.dispatcher.instruction.Instruction.vehicle_id" title="Permalink to this definition">¶</a></dt>
@@ -199,7 +226,7 @@
           <a href="hive.config.html" title="hive.config package"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">hive  documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="hive.html" >hive package</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="hive.html" >hive</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -43,6 +43,22 @@
 
 
 <div class="viewcode-block" id="Instruction"><a class="viewcode-back" href="../../../reference/hive.dispatcher.html#hive.dispatcher.instruction.Instruction">[docs]</a><span class="k">class</span> <span class="nc">Instruction</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tuple that represents instructions for vehicles. These instructions have optional attributes based on their nature.</span>
+
+<span class="sd">    :param vehicle_id: The id of the vehicles to apply this instruction to.</span>
+<span class="sd">    :type vehicle_id: :py:obj:`VehicleId`</span>
+<span class="sd">    :param action: The action. Represented by a vehicle state that the vehicle should transition to.</span>
+<span class="sd">    :type action: :py:obj:`VehicleState`</span>
+<span class="sd">    :param location: Geoid of the destination if the instruction involves relocating to an arbitrary location.</span>
+<span class="sd">    :type location: :py:obj:`GeoId`</span>
+<span class="sd">    :param request_id: Id of the request if the instruction involves dispatching or servicing a trip.</span>
+<span class="sd">    :type request_id: :py:obj:`RequestId`</span>
+<span class="sd">    :param station_id: Id of the station if the instruction involves dispatching or charging at a station.</span>
+<span class="sd">    :type station_id: :py:obj:`StationId`</span>
+<span class="sd">    :param charger: Type of charger if the instruction involves dispatching or charging at a station.</span>
+<span class="sd">    :type charger: :py:obj:`Charger`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vehicle_id</span><span class="p">:</span> <span class="n">VehicleId</span>
     <span class="n">action</span><span class="p">:</span> <span class="n">VehicleState</span>
     <span class="n">location</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
