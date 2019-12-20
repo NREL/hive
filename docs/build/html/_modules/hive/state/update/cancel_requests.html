@@ -48,6 +48,7 @@
 <div class="viewcode-block" id="CancelRequests.update"><a class="viewcode-back" href="../../../../reference/hive.state.update.html#hive.state.update.cancel_requests.CancelRequests.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        cancels requests whose cancel time has been exceeded</span>
+
 <span class="sd">        :param simulation_state: state to modify</span>
 <span class="sd">        :return: state without cancelled requests, along with this update function</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -66,6 +67,7 @@
 <span class="k">def</span> <span class="nf">_as_json</span><span class="p">(</span><span class="n">r_id</span><span class="p">:</span> <span class="n">RequestId</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    stringified json report of a cancellation</span>
+
 <span class="sd">    :param r_id: request cancelled</span>
 <span class="sd">    :param sim: the state of the sim before cancellation occurs</span>
 <span class="sd">    :return: a stringified json report</span>

@@ -45,7 +45,7 @@
 <span class="kn">from</span> <span class="nn">hive.util.typealiases</span> <span class="kn">import</span> <span class="n">VehicleId</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">hive.simulationstate.simulation_state</span> <span class="kn">import</span> <span class="n">SimulationState</span>
+    <span class="kn">from</span> <span class="nn">hive.state.simulation_state</span> <span class="kn">import</span> <span class="n">SimulationState</span>
 
 
 <div class="viewcode-block" id="TerminalStateEffectArgs"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.terminal_state_effect_ops.TerminalStateEffectArgs">[docs]</a><span class="k">class</span> <span class="nc">TerminalStateEffectArgs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
@@ -54,6 +54,13 @@
 
 
 <div class="viewcode-block" id="TerminalStateEffectOps"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.terminal_state_effect_ops.TerminalStateEffectOps">[docs]</a><span class="k">class</span> <span class="nc">TerminalStateEffectOps</span><span class="p">(</span><span class="n">SwitchCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pattern matching class for catching terminal state conditions.</span>
+
+<span class="sd">    :param Key: The vehicle state to match.</span>
+<span class="sd">    :param Arguments: Any arguments that are needed to check the terminal state condition</span>
+<span class="sd">    :param Result: An updated simulation state based on the checking.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">Key</span><span class="p">:</span> <span class="n">VehicleState</span>
     <span class="n">Arguments</span><span class="p">:</span> <span class="n">TerminalStateEffectArgs</span>
     <span class="n">Result</span><span class="p">:</span> <span class="n">SimulationState</span>

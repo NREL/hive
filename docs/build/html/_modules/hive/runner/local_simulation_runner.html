@@ -49,6 +49,16 @@
 
 
 <div class="viewcode-block" id="RunnerPayload"><a class="viewcode-back" href="../../../reference/hive.runner.html#hive.runner.local_simulation_runner.RunnerPayload">[docs]</a><span class="k">class</span> <span class="nc">RunnerPayload</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Holds the simulation state, dispatcher and reports for the simulation run.</span>
+
+<span class="sd">    :param s: the simulation state</span>
+<span class="sd">    :type s: :py:obj:`SimulationState`</span>
+<span class="sd">    :param d: the dispatcher</span>
+<span class="sd">    :type d: :py:obj:`Dispatcher`</span>
+<span class="sd">    :param r: any reports generated for a timestep</span>
+<span class="sd">    :type r: :py:obj:`Tuple[str, ...]`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">s</span><span class="p">:</span> <span class="n">SimulationState</span>
     <span class="n">d</span><span class="p">:</span> <span class="n">Dispatcher</span>
     <span class="n">r</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
@@ -62,6 +72,12 @@
 
 
 <div class="viewcode-block" id="LocalSimulationRunner"><a class="viewcode-back" href="../../../reference/hive.runner.html#hive.runner.local_simulation_runner.LocalSimulationRunner">[docs]</a><span class="k">class</span> <span class="nc">LocalSimulationRunner</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The local simulation runner.</span>
+
+<span class="sd">    :param env: The environment variables.</span>
+<span class="sd">    :type env: :py:obj:`Environment`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">Environment</span>
 
 <div class="viewcode-block" id="LocalSimulationRunner.run"><a class="viewcode-back" href="../../../reference/hive.runner.html#hive.runner.local_simulation_runner.LocalSimulationRunner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -72,6 +88,7 @@
             <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunnerPayload</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        steps through time, running a simulation, and producing a simulation result</span>
+
 <span class="sd">        :param initial_simulation_state: the simulation state before the day has begun</span>
 <span class="sd">        :param initial_dispatcher: the initialized dispatcher</span>
 <span class="sd">        :param update_functions: applied at the beginning of each time step to modify the sim</span>
@@ -86,12 +103,6 @@
         <span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_run_step</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">RunnerPayload</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunnerPayload</span><span class="p">:</span>
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            inner loop of a LocalSimulationRunner</span>
-<span class="sd">            :param payload: the sim state and dispatcher state</span>
-<span class="sd">            :param t: the (expected) time</span>
-<span class="sd">            :return: the resulting sim state</span>
-<span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">updated_payload</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">acc</span><span class="p">,</span> <span class="n">fn</span><span class="p">:</span> <span class="n">acc</span><span class="o">.</span><span class="n">apply_fn</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span>
                 <span class="n">update_functions</span><span class="p">,</span>

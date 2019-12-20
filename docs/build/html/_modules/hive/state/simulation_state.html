@@ -55,7 +55,7 @@
 <span class="kn">from</span> <span class="nn">hive.model.energy.powercurve</span> <span class="kn">import</span> <span class="n">Powercurve</span>
 <span class="kn">from</span> <span class="nn">hive.state.at_location_response</span> <span class="kn">import</span> <span class="n">AtLocationResponse</span>
 <span class="kn">from</span> <span class="nn">hive.state.terminal_state_effect_ops</span> <span class="kn">import</span> <span class="n">TerminalStateEffectOps</span><span class="p">,</span> <span class="n">TerminalStateEffectArgs</span>
-<span class="kn">from</span> <span class="nn">hive.state.vehicle_terminal_effect_ops</span> <span class="kn">import</span> <span class="n">VehicleTransitionEffectOps</span><span class="p">,</span> \
+<span class="kn">from</span> <span class="nn">hive.state.vehicle_transition_effect_ops</span> <span class="kn">import</span> <span class="n">VehicleTransitionEffectOps</span><span class="p">,</span> \
     <span class="n">VehicleTransitionEffectArgs</span>
 <span class="kn">from</span> <span class="nn">hive.util.exception</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">hive.util.helpers</span> <span class="kn">import</span> <span class="n">DictOps</span>
@@ -95,6 +95,7 @@
 <div class="viewcode-block" id="SimulationState.current_time_seconds"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.current_time_seconds">[docs]</a>    <span class="k">def</span> <span class="nf">current_time_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">s</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        computes the current time in seconds</span>
+
 <span class="sd">        :return: the current time in seconds</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">s</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_timestep_duration_seconds</span></div>
@@ -102,6 +103,7 @@
 <div class="viewcode-block" id="SimulationState.add_request"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.add_request">[docs]</a>    <span class="k">def</span> <span class="nf">add_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        adds a request to the SimulationState</span>
+
 <span class="sd">        :param request: the request to add</span>
 <span class="sd">        :return: the updated simulation state, or an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -122,6 +124,7 @@
 <span class="sd">        removes a request from this simulation.</span>
 <span class="sd">        called once a Request has been fully serviced and is no longer</span>
 <span class="sd">        alive in the simulation.</span>
+
 <span class="sd">        :param request_id: id of the request to delete</span>
 <span class="sd">        :return: the updated simulation state (does not report failure)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -139,7 +142,8 @@
     <span class="c1"># TODO: Think about making this generic wrt entities.</span>
 <div class="viewcode-block" id="SimulationState.modify_request"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.modify_request">[docs]</a>    <span class="k">def</span> <span class="nf">modify_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updated_request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        given an updated request, update the SimulationState with that request </span>
+<span class="sd">        given an updated request, update the SimulationState with that request</span>
+
 <span class="sd">        :param updated_request: </span>
 <span class="sd">        :return: the updated simulation, or an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -171,6 +175,7 @@
 <div class="viewcode-block" id="SimulationState.add_vehicle"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.add_vehicle">[docs]</a>    <span class="k">def</span> <span class="nf">add_vehicle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle</span><span class="p">:</span> <span class="n">Vehicle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        adds a vehicle into the region supported by the RoadNetwork in this SimulationState</span>
+
 <span class="sd">        :param vehicle: a vehicle</span>
 <span class="sd">        :return: updated SimulationState, or SimulationStateError</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -187,6 +192,7 @@
 <div class="viewcode-block" id="SimulationState.modify_vehicle"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.modify_vehicle">[docs]</a>    <span class="k">def</span> <span class="nf">modify_vehicle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updated_vehicle</span><span class="p">:</span> <span class="n">Vehicle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        given an updated vehicle, update the SimulationState with that vehicle</span>
+
 <span class="sd">        :param updated_vehicle: the vehicle after calling a transition function and .step()</span>
 <span class="sd">        :return: the updated simulation, or an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -220,6 +226,7 @@
 <div class="viewcode-block" id="SimulationState.apply_instruction"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.apply_instruction">[docs]</a>    <span class="k">def</span> <span class="nf">apply_instruction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Instruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process</span>
+
 <span class="sd">        :param i: the instruction to apply</span>
 <span class="sd">        :return: the updated simulation state or an exception on failure</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -243,6 +250,12 @@
             <span class="k">return</span> <span class="n">updated_sim_state</span></div>
 
 <div class="viewcode-block" id="SimulationState.step_vehicle"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.step_vehicle">[docs]</a>    <span class="k">def</span> <span class="nf">step_vehicle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle_id</span><span class="p">:</span> <span class="n">VehicleId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Steps a vehicle in time, checking for arrival at a terminal state condition.</span>
+
+<span class="sd">        :param vehicle_id: The id of the vehicle to step</span>
+<span class="sd">        :return: An update simulation state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vehicle_id</span><span class="p">,</span> <span class="n">VehicleId</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;remove_request() takes a VehicleId (str), not a {type(vehicle_id)}&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">vehicle_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicles</span><span class="p">:</span>
@@ -273,7 +286,8 @@
 <div class="viewcode-block" id="SimulationState.step_simulation"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.step_simulation">[docs]</a>    <span class="k">def</span> <span class="nf">step_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        advances this simulation</span>
-<span class="sd">        :return: the simulation after calling step() on all vehicles</span>
+
+<span class="sd">        :return: the simulation after calling step_vehicle() on all vehicles</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">next_state</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">acc</span><span class="p">,</span> <span class="n">v_id</span><span class="p">:</span> <span class="n">acc</span><span class="o">.</span><span class="n">step_vehicle</span><span class="p">(</span><span class="n">v_id</span><span class="p">),</span>
@@ -288,6 +302,7 @@
 <div class="viewcode-block" id="SimulationState.remove_vehicle"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.remove_vehicle">[docs]</a>    <span class="k">def</span> <span class="nf">remove_vehicle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vehicle_id</span><span class="p">:</span> <span class="n">VehicleId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        removes the vehicle from play (perhaps to simulate a broken vehicle or end of a shift)</span>
+
 <span class="sd">        :param vehicle_id: the id of the vehicle</span>
 <span class="sd">        :return: the updated simulation state</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -307,6 +322,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        removes a vehicle from this SimulationState, which updates the state and also returns the vehicle.</span>
 <span class="sd">        supports shipping this vehicle to another cluster node.</span>
+
 <span class="sd">        :param vehicle_id: the id of the vehicle to pop</span>
 <span class="sd">        :return: either a Tuple containing the updated state and the vehicle, or, an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -325,6 +341,7 @@
 <div class="viewcode-block" id="SimulationState.add_station"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.add_station">[docs]</a>    <span class="k">def</span> <span class="nf">add_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">:</span> <span class="n">Station</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        adds a station to the simulation</span>
+
 <span class="sd">        :param station: the station to add</span>
 <span class="sd">        :return: the updated SimulationState, or a SimulationStateError</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -341,6 +358,7 @@
 <div class="viewcode-block" id="SimulationState.remove_station"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.remove_station">[docs]</a>    <span class="k">def</span> <span class="nf">remove_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="n">StationId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        remove a station from the simulation. maybe they closed due to inclement weather.</span>
+
 <span class="sd">        :param station_id: the id of the station to remove</span>
 <span class="sd">        :return: the updated simulation state, or an exception</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -359,6 +377,7 @@
 <div class="viewcode-block" id="SimulationState.modify_station"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.modify_station">[docs]</a>    <span class="k">def</span> <span class="nf">modify_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updated_station</span><span class="p">:</span> <span class="n">Station</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        given an updated station, update the SimulationState with that station</span>
+
 <span class="sd">        :param updated_station:</span>
 <span class="sd">        :return: the updated simulation, or an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -372,6 +391,7 @@
 <div class="viewcode-block" id="SimulationState.add_base"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.add_base">[docs]</a>    <span class="k">def</span> <span class="nf">add_base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="n">Base</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        adds a base to the simulation</span>
+
 <span class="sd">        :param base: the base to add</span>
 <span class="sd">        :return: the updated SimulationState, or a SimulationStateError</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -388,6 +408,7 @@
 <div class="viewcode-block" id="SimulationState.remove_base"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.remove_base">[docs]</a>    <span class="k">def</span> <span class="nf">remove_base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_id</span><span class="p">:</span> <span class="n">BaseId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        remove a base from the simulation. all your base belong to us.</span>
+
 <span class="sd">        :param base_id: the id of the base to remove</span>
 <span class="sd">        :return: the updated simulation state, or an exception</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -406,6 +427,7 @@
 <div class="viewcode-block" id="SimulationState.modify_base"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.modify_base">[docs]</a>    <span class="k">def</span> <span class="nf">modify_base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updated_base</span><span class="p">:</span> <span class="n">Base</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        given an updated base, update the SimulationState with that base</span>
+
 <span class="sd">        :param updated_base:</span>
 <span class="sd">        :return: the updated simulation, or an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -419,6 +441,7 @@
 <div class="viewcode-block" id="SimulationState.add_powertrain"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.add_powertrain">[docs]</a>    <span class="k">def</span> <span class="nf">add_powertrain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">powertrain</span><span class="p">:</span> <span class="n">Powertrain</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a powertrain to the simulation</span>
+
 <span class="sd">        :param powertrain: </span>
 <span class="sd">        :return: </span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -432,6 +455,7 @@
 <div class="viewcode-block" id="SimulationState.add_powercurve"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.add_powercurve">[docs]</a>    <span class="k">def</span> <span class="nf">add_powercurve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">powercurve</span><span class="p">:</span> <span class="n">Powercurve</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a powercurve to the simulation</span>
+
 <span class="sd">        :param powercurve: </span>
 <span class="sd">        :return: </span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -445,6 +469,7 @@
 <div class="viewcode-block" id="SimulationState.update_road_network"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.update_road_network">[docs]</a>    <span class="k">def</span> <span class="nf">update_road_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_time</span><span class="p">:</span> <span class="n">SimTime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        trigger the update of the road network model based on the current sim time</span>
+
 <span class="sd">        :param sim_time: the current sim time</span>
 <span class="sd">        :return: updated simulation state (and road network)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -455,6 +480,7 @@
 <div class="viewcode-block" id="SimulationState.at_geoid"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state.SimulationState.at_geoid">[docs]</a>    <span class="k">def</span> <span class="nf">at_geoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geoid</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">AtLocationResponse</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns a dictionary with the list of ids found at this location for all entities</span>
+
 <span class="sd">        :param geoid: geoid to look up</span>
 <span class="sd">        :return: an Optional AtLocationResponse</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -480,6 +506,7 @@
                            <span class="n">override_resolution</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        tests whether vehicle is at the request within the scope of the given geoid resolution</span>
+
 <span class="sd">        :param vehicle_id: the vehicle we are testing for proximity to a request</span>
 <span class="sd">        :param request_id: the request we are testing for proximity to a vehicle</span>
 <span class="sd">        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution</span>
@@ -501,6 +528,7 @@
                            <span class="n">override_resolution</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        tests whether vehicle is at the station within the scope of the given geoid resolution</span>
+
 <span class="sd">        :param vehicle_id: the vehicle we are testing for proximity to a request</span>
 <span class="sd">        :param station_id: the station we are testing for proximity to a vehicle</span>
 <span class="sd">        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution</span>
@@ -522,6 +550,7 @@
                         <span class="n">override_resolution</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        tests whether vehicle is at the request within the scope of the given geoid resolution</span>
+
 <span class="sd">        :param vehicle_id: the vehicle we are testing for proximity to a request</span>
 <span class="sd">        :param base_id: the base we are testing for proximity to a vehicle</span>
 <span class="sd">        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution</span>
@@ -542,6 +571,7 @@
                       <span class="n">vehicle_id</span><span class="p">:</span> <span class="n">VehicleId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="n">SimulationState</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        places passengers from a request into a Vehicle</span>
+
 <span class="sd">        :param request_id: the request that will board the vehicle; removes the request from the simulation</span>
 <span class="sd">        :param vehicle_id:</span>
 <span class="sd">        :return: updated simulation state, or an error. vehicle position is idempotent.</span>
@@ -573,6 +603,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        tests if two geoids are the same. allows for overriding test resolution to a parent level</span>
 <span class="sd">        todo: maybe move this to a geoutility collection somewhere like hive.util._</span>
+
 <span class="sd">        :param a: first geoid</span>
 <span class="sd">        :param b: second geoid</span>
 <span class="sd">        :param override_resolution: an overriding h3 spatial resolution, or, none to use this sim&#39;s default res</span>

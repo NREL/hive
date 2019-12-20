@@ -55,6 +55,7 @@
 <div class="viewcode-block" id="apply_instructions"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.simulation_state_ops.apply_instructions">[docs]</a><span class="k">def</span> <span class="nf">apply_instructions</span><span class="p">(</span><span class="n">simulation_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">,</span> <span class="n">instructions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Instruction</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    applies all the instructions to the simulation state, ignoring the ones that fail</span>
+
 <span class="sd">    :param simulation_state: the sim state</span>
 <span class="sd">    :param instructions: dispatcher instructions</span>
 <span class="sd">    :return: the sim state with vehicle intentions updated</span>
@@ -69,6 +70,7 @@
 <span class="k">def</span> <span class="nf">_add_instruction</span><span class="p">(</span><span class="n">simulation_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">Instruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationState</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    inner loop for apply_instructions method</span>
+
 <span class="sd">    :param simulation_state: the intermediate sim state</span>
 <span class="sd">    :param instruction: the ith instruction</span>
 <span class="sd">    :return: sim state with the ith instruction added, unless it&#39;s bogus</span>
@@ -93,6 +95,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationState</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network</span>
+
 <span class="sd">    :param powercurves: </span>
 <span class="sd">    :param powertrains: </span>
 <span class="sd">    :param road_network: the (initial) road network</span>
@@ -148,6 +151,7 @@
                         <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationState</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SimulationStateError</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    adds a single Vehicle, Station, Base, Powertrain, or Powercurve to the simulator, unless it is invalid</span>
+
 <span class="sd">    :param acc: the partially-constructed SimulationState</span>
 <span class="sd">    :param x: a new Vehicle, Station, or Base</span>
 <span class="sd">    :return: add x, or, if it failed, update our log of failures</span>

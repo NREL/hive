@@ -48,8 +48,14 @@
 <span id="hive-runner-environment-module"></span><h2>hive.runner.environment module<a class="headerlink" href="#module-hive.runner.environment" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="hive.runner.environment.Environment">
-<em class="property">class </em><code class="sig-prename descclassname">hive.runner.environment.</code><code class="sig-name descname">Environment</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/environment.html#Environment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.environment.Environment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.runner.environment.</code><code class="sig-name descname">Environment</code><a class="reference internal" href="../_modules/hive/runner/environment.html#Environment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.environment.Environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Environment variables for hive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">HiveConfig</span></code>) – hive config object.</p>
+</dd>
+</dl>
 <dl class="attribute">
 <dt id="hive.runner.environment.Environment.config">
 <code class="sig-name descname">config</code><a class="headerlink" href="#hive.runner.environment.Environment.config" title="Permalink to this definition">¶</a></dt>
@@ -62,8 +68,18 @@
 <span id="hive-runner-local-simulation-runner-module"></span><h2>hive.runner.local_simulation_runner module<a class="headerlink" href="#module-hive.runner.local_simulation_runner" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="hive.runner.local_simulation_runner.RunnerPayload">
-<em class="property">class </em><code class="sig-prename descclassname">hive.runner.local_simulation_runner.</code><code class="sig-name descname">RunnerPayload</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">d</em>, <em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#RunnerPayload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.runner.local_simulation_runner.</code><code class="sig-name descname">RunnerPayload</code><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#RunnerPayload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Holds the simulation state, dispatcher and reports for the simulation run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">SimulationState</span></code>) – the simulation state</p></li>
+<li><p><strong>d</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Dispatcher</span></code>) – the dispatcher</p></li>
+<li><p><strong>r</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Tuple[str,</span> <span class="pre">...]</span></code>) – any reports generated for a timestep</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="attribute">
 <dt id="hive.runner.local_simulation_runner.RunnerPayload.s">
 <code class="sig-name descname">s</code><a class="headerlink" href="#hive.runner.local_simulation_runner.RunnerPayload.s" title="Permalink to this definition">¶</a></dt>
@@ -93,8 +109,14 @@
 
 <dl class="class">
 <dt id="hive.runner.local_simulation_runner.LocalSimulationRunner">
-<em class="property">class </em><code class="sig-prename descclassname">hive.runner.local_simulation_runner.</code><code class="sig-name descname">LocalSimulationRunner</code><span class="sig-paren">(</span><em class="sig-param">env</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#LocalSimulationRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hive.runner.local_simulation_runner.</code><code class="sig-name descname">LocalSimulationRunner</code><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#LocalSimulationRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>The local simulation runner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>env</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Environment</span></code>) – The environment variables.</p>
+</dd>
+</dl>
 <dl class="attribute">
 <dt id="hive.runner.local_simulation_runner.LocalSimulationRunner.env">
 <code class="sig-name descname">env</code><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner.env" title="Permalink to this definition">¶</a></dt>
@@ -103,17 +125,23 @@
 <dl class="method">
 <dt id="hive.runner.local_simulation_runner.LocalSimulationRunner.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">initial_simulation_state</em>, <em class="sig-param">initial_dispatcher</em>, <em class="sig-param">update_functions</em>, <em class="sig-param">reporter</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/local_simulation_runner.html#LocalSimulationRunner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.local_simulation_runner.LocalSimulationRunner.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>steps through time, running a simulation, and producing a simulation result
-:type initial_simulation_state: <a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>
-:param initial_simulation_state: the simulation state before the day has begun
-:type initial_dispatcher: <a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>
-:param initial_dispatcher: the initialized dispatcher
-:type update_functions: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.state.update.html#hive.state.update.simulation_update.SimulationUpdate" title="hive.state.update.simulation_update.SimulationUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationUpdate</span></code></a>, …]
-:param update_functions: applied at the beginning of each time step to modify the sim
-:type reporter: <a class="reference internal" href="hive.reporting.html#hive.reporting.reporter.Reporter" title="hive.reporting.reporter.Reporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reporter</span></code></a>
-:param reporter: a class to report messages from the simulation
-:rtype: <a class="reference internal" href="#hive.runner.local_simulation_runner.RunnerPayload" title="hive.runner.local_simulation_runner.RunnerPayload"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunnerPayload</span></code></a>
-:return: the final simulation state and dispatcher state</p>
+<dd><p>steps through time, running a simulation, and producing a simulation result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>initial_simulation_state</strong> (<a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>) – the simulation state before the day has begun</p></li>
+<li><p><strong>initial_dispatcher</strong> (<a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>) – the initialized dispatcher</p></li>
+<li><p><strong>update_functions</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.state.update.html#hive.state.update.simulation_update.SimulationUpdate" title="hive.state.update.simulation_update.SimulationUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationUpdate</span></code></a>, …]) – applied at the beginning of each time step to modify the sim</p></li>
+<li><p><strong>reporter</strong> (<a class="reference internal" href="hive.reporting.html#hive.reporting.reporter.Reporter" title="hive.reporting.reporter.Reporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reporter</span></code></a>) – a class to report messages from the simulation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hive.runner.local_simulation_runner.RunnerPayload" title="hive.runner.local_simulation_runner.RunnerPayload"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunnerPayload</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the final simulation state and dispatcher state</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -124,9 +152,21 @@
 <dl class="function">
 <dt id="hive.runner.simulation_runner_ops.step">
 <code class="sig-prename descclassname">hive.runner.simulation_runner_ops.</code><code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">simulation_state</em>, <em class="sig-param">dispatcher</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hive/runner/simulation_runner_ops.html#step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hive.runner.simulation_runner_ops.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>take one step in the simulation
-:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>, <a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]
-:return: simulation at time t+1</p>
+<dd><p>Steps the simulation by one time step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>simulation_state</strong> (<a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>) – Simulation state at time t</p></li>
+<li><p><strong>dispatcher</strong> (<a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>) – Dispatcher at time t</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.state.html#hive.state.simulation_state.SimulationState" title="hive.state.simulation_state.SimulationState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationState</span></code></a>, <a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.dispatcher.Dispatcher" title="hive.dispatcher.dispatcher.Dispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dispatcher</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="hive.dispatcher.html#hive.dispatcher.instruction.Instruction" title="hive.dispatcher.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a>, …]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>simulation state, dispatcher at time t+1, instructions generated.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

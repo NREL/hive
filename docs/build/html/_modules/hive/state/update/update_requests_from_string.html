@@ -53,6 +53,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string_requests</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        reads a requests file and builds a UpdateRequestsFromFile SimulationUpdate function</span>
+
 <span class="sd">        :param string_requests: requests as a string, with header</span>
 <span class="sd">        :return: a SimulationUpdate function based on the string data</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -65,6 +66,7 @@
 <div class="viewcode-block" id="UpdateRequestsFromString.update"><a class="viewcode-back" href="../../../../reference/hive.state.update.html#hive.state.update.update_requests_from_string.UpdateRequestsFromString.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_sim_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        add requests from file when the simulation reaches the request&#39;s time</span>
+
 <span class="sd">        :param initial_sim_state: the current sim state</span>
 <span class="sd">        :return: sim state plus new requests</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -88,6 +90,7 @@
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        attempts to grab the next row from the string</span>
+
 <span class="sd">        :return: a row, or, raises a StopIteration when end-of-file</span>
 <span class="sd">        :raises StopIteration: when source is empty, or, if all departures up to the present sim time have been found</span>
 <span class="sd">        &quot;&quot;&quot;</span>

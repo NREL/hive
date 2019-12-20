@@ -6,19 +6,30 @@ from hive.dispatcher.instruction import Instruction
 from hive.model.vehiclestate import VehicleState
 from hive.util.helpers import SwitchCase
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state import SimulationState
+
 
 class VehicleTransitionEffectArgs(NamedTuple):
-    simulation_state: 'SimulationState'
+    simulation_state: SimulationState
     instruction: Instruction
 
 
 class VehicleTransitionEffectOps(SwitchCase):
+    """
+    A pattern matching class for applying instant effects to a vehicle upon a transition.
 
+    :param Key: The vehicle state to match.
+    :param Arguments: Any arguments that are needed to apply the effects.
+    :param Result: An updated simulation state based on the checking.
+    """
     Key = VehicleState
     Arguments = VehicleTransitionEffectArgs
     Result = Optional['SimulationState']
 
-    def _case_serving_trip(self, arguments: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_serving_trip(self, arguments: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
 
         sim_state = arguments.simulation_state
         request_id = arguments.instruction.request_id
@@ -41,7 +52,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
             return updated_sim_state
 
-    def _case_dispatch_trip(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_dispatch_trip(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
 
         sim_state = payload.simulation_state
         vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
@@ -64,7 +75,7 @@ class VehicleTransitionEffectOps(SwitchCase):
             updated_sim_state = sim_state.modify_request(assigned_request).modify_vehicle(vehicle_w_route)
             return updated_sim_state
 
-    def _case_dispatch_station(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_dispatch_station(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
 
         sim_state = payload.simulation_state
         vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
@@ -90,7 +101,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
             return updated_sim_state
 
-    def _case_dispatch_base(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_dispatch_base(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
         vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
         destination = payload.instruction.location
@@ -111,7 +122,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
             return updated_sim_state
 
-    def _case_repositioning(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_repositioning(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
         vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
         destination = payload.instruction.location
@@ -131,7 +142,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
             return updated_sim_state
 
-    def _case_reserve_base(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_reserve_base(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
         if payload.instruction.vehicle_id not in payload.simulation_state.vehicles:
             return None
@@ -143,7 +154,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
         return sim_state
 
-    def _case_charging_station(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_charging_station(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
         vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
         station_id = payload.instruction.station_id
@@ -173,7 +184,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
         return updated_sim_state
 
-    def _case_charging_base(self, payload: VehicleTransitionEffectArgs) -> Optional['SimulationState']:
+    def _case_charging_base(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
         vehicle = payload.simulation_state.vehicles[payload.instruction.vehicle_id]
         station_id = payload.instruction.station_id

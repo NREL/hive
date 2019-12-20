@@ -18,6 +18,7 @@ from hive.util.units import unit, s
 def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
     """
     applies all the instructions to the simulation state, ignoring the ones that fail
+
     :param simulation_state: the sim state
     :param instructions: dispatcher instructions
     :return: the sim state with vehicle intentions updated
@@ -32,6 +33,7 @@ def apply_instructions(simulation_state: SimulationState, instructions: Tuple[In
 def _add_instruction(simulation_state: SimulationState, instruction: Instruction) -> SimulationState:
     """
     inner loop for apply_instructions method
+
     :param simulation_state: the intermediate sim state
     :param instruction: the ith instruction
     :return: sim state with the ith instruction added, unless it's bogus
@@ -56,6 +58,7 @@ def initial_simulation_state(
 ) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
+
     :param powercurves: 
     :param powertrains: 
     :param road_network: the (initial) road network
@@ -111,6 +114,7 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
                         -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     adds a single Vehicle, Station, Base, Powertrain, or Powercurve to the simulator, unless it is invalid
+
     :param acc: the partially-constructed SimulationState
     :param x: a new Vehicle, Station, or Base
     :return: add x, or, if it failed, update our log of failures

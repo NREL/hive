@@ -38,10 +38,10 @@ hive.state.terminal\_state\_effect\_ops module
    :show-inheritance:
 
 
-hive.state.vehicle\_terminal\_effect\_ops module
+hive.state.vehicle\_transition\_effect\_ops module
 ------------------------------------------------
 
-.. automodule:: hive.state.vehicle_terminal_effect_ops
+.. automodule:: hive.state.vehicle_transition_effect_ops
    :members:
    :undoc-members:
    :show-inheritance:

@@ -44,6 +44,18 @@
 
 
 <div class="viewcode-block" id="AtLocationResponse"><a class="viewcode-back" href="../../../reference/hive.state.html#hive.state.at_location_response.AtLocationResponse">[docs]</a><span class="k">class</span> <span class="nc">AtLocationResponse</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for entities at a specific location.</span>
+<span class="sd">    </span>
+<span class="sd">    :param requests: requests at the location</span>
+<span class="sd">    :type requests: :py:obj:`Tuple[Request, ...]` </span>
+<span class="sd">    :param vehicles: vehicles at the location</span>
+<span class="sd">    :type vehicles: :py:obj:`Tuple[Request, ...]` </span>
+<span class="sd">    :param stations: stations at the location</span>
+<span class="sd">    :type stations: :py:obj:`Tuple[Stations, ...]` </span>
+<span class="sd">    :param bases: bases at the location</span>
+<span class="sd">    :type bases: :py:obj:`Tuple[Base, ...]`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">requests</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Request</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="n">vehicles</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Vehicle</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="n">stations</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Station</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>

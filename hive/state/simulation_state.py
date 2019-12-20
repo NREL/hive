@@ -18,7 +18,7 @@ from hive.model.energy.powertrain import Powertrain
 from hive.model.energy.powercurve import Powercurve
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
-from hive.state.vehicle_terminal_effect_ops import VehicleTransitionEffectOps, \
+from hive.state.vehicle_transition_effect_ops import VehicleTransitionEffectOps, \
     VehicleTransitionEffectArgs
 from hive.util.exception import *
 from hive.util.helpers import DictOps
@@ -58,6 +58,7 @@ class SimulationState(NamedTuple):
     def current_time_seconds(self) -> s:
         """
         computes the current time in seconds
+
         :return: the current time in seconds
         """
         return self.sim_time * unit.s * self.sim_timestep_duration_seconds
@@ -65,6 +66,7 @@ class SimulationState(NamedTuple):
     def add_request(self, request: Request) -> Union[Exception, SimulationState]:
         """
         adds a request to the SimulationState
+
         :param request: the request to add
         :return: the updated simulation state, or an error
         """
@@ -85,6 +87,7 @@ class SimulationState(NamedTuple):
         removes a request from this simulation.
         called once a Request has been fully serviced and is no longer
         alive in the simulation.
+
         :param request_id: id of the request to delete
         :return: the updated simulation state (does not report failure)
         """
@@ -102,7 +105,8 @@ class SimulationState(NamedTuple):
     # TODO: Think about making this generic wrt entities.
     def modify_request(self, updated_request: Request) -> Union[Exception, SimulationState]:
         """
-        given an updated request, update the SimulationState with that request 
+        given an updated request, update the SimulationState with that request
+
         :param updated_request: 
         :return: the updated simulation, or an error
         """
@@ -134,6 +138,7 @@ class SimulationState(NamedTuple):
     def add_vehicle(self, vehicle: Vehicle) -> Union[Exception, SimulationState]:
         """
         adds a vehicle into the region supported by the RoadNetwork in this SimulationState
+
         :param vehicle: a vehicle
         :return: updated SimulationState, or SimulationStateError
         """
@@ -150,6 +155,7 @@ class SimulationState(NamedTuple):
     def modify_vehicle(self, updated_vehicle: Vehicle) -> Union[Exception, SimulationState]:
         """
         given an updated vehicle, update the SimulationState with that vehicle
+
         :param updated_vehicle: the vehicle after calling a transition function and .step()
         :return: the updated simulation, or an error
         """
@@ -183,6 +189,7 @@ class SimulationState(NamedTuple):
     def apply_instruction(self, i: Instruction) -> Optional[SimulationState]:
         """
         test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
+
         :param i: the instruction to apply
         :return: the updated simulation state or an exception on failure
         """
@@ -206,6 +213,12 @@ class SimulationState(NamedTuple):
             return updated_sim_state
 
     def step_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
+        """
+        Steps a vehicle in time, checking for arrival at a terminal state condition.
+
+        :param vehicle_id: The id of the vehicle to step
+        :return: An update simulation state
+        """
         if not isinstance(vehicle_id, VehicleId):
             raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
         if vehicle_id not in self.vehicles:
@@ -236,7 +249,8 @@ class SimulationState(NamedTuple):
     def step_simulation(self) -> SimulationState:
         """
         advances this simulation
-        :return: the simulation after calling step() on all vehicles
+
+        :return: the simulation after calling step_vehicle() on all vehicles
         """
         next_state = ft.reduce(
             lambda acc, v_id: acc.step_vehicle(v_id),
@@ -251,6 +265,7 @@ class SimulationState(NamedTuple):
     def remove_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, SimulationState]:
         """
         removes the vehicle from play (perhaps to simulate a broken vehicle or end of a shift)
+
         :param vehicle_id: the id of the vehicle
         :return: the updated simulation state
         """
@@ -270,6 +285,7 @@ class SimulationState(NamedTuple):
         """
         removes a vehicle from this SimulationState, which updates the state and also returns the vehicle.
         supports shipping this vehicle to another cluster node.
+
         :param vehicle_id: the id of the vehicle to pop
         :return: either a Tuple containing the updated state and the vehicle, or, an error
         """
@@ -288,6 +304,7 @@ class SimulationState(NamedTuple):
     def add_station(self, station: Station) -> Union[Exception, SimulationState]:
         """
         adds a station to the simulation
+
         :param station: the station to add
         :return: the updated SimulationState, or a SimulationStateError
         """
@@ -304,6 +321,7 @@ class SimulationState(NamedTuple):
     def remove_station(self, station_id: StationId) -> Union[Exception, SimulationState]:
         """
         remove a station from the simulation. maybe they closed due to inclement weather.
+
         :param station_id: the id of the station to remove
         :return: the updated simulation state, or an exception
         """
@@ -322,6 +340,7 @@ class SimulationState(NamedTuple):
     def modify_station(self, updated_station: Station) -> Union[Exception, SimulationState]:
         """
         given an updated station, update the SimulationState with that station
+
         :param updated_station:
         :return: the updated simulation, or an error
         """
@@ -335,6 +354,7 @@ class SimulationState(NamedTuple):
     def add_base(self, base: Base) -> Union[Exception, SimulationState]:
         """
         adds a base to the simulation
+
         :param base: the base to add
         :return: the updated SimulationState, or a SimulationStateError
         """
@@ -351,6 +371,7 @@ class SimulationState(NamedTuple):
     def remove_base(self, base_id: BaseId) -> Union[Exception, SimulationState]:
         """
         remove a base from the simulation. all your base belong to us.
+
         :param base_id: the id of the base to remove
         :return: the updated simulation state, or an exception
         """
@@ -369,6 +390,7 @@ class SimulationState(NamedTuple):
     def modify_base(self, updated_base: Base) -> Union[Exception, SimulationState]:
         """
         given an updated base, update the SimulationState with that base
+
         :param updated_base:
         :return: the updated simulation, or an error
         """
@@ -382,6 +404,7 @@ class SimulationState(NamedTuple):
     def add_powertrain(self, powertrain: Powertrain) -> Union[Exception, SimulationState]:
         """
         Adds a powertrain to the simulation
+
         :param powertrain: 
         :return: 
         """
@@ -395,6 +418,7 @@ class SimulationState(NamedTuple):
     def add_powercurve(self, powercurve: Powercurve) -> Union[Exception, SimulationState]:
         """
         Adds a powercurve to the simulation
+
         :param powercurve: 
         :return: 
         """
@@ -408,6 +432,7 @@ class SimulationState(NamedTuple):
     def update_road_network(self, sim_time: SimTime) -> SimulationState:
         """
         trigger the update of the road network model based on the current sim time
+
         :param sim_time: the current sim time
         :return: updated simulation state (and road network)
         """
@@ -418,6 +443,7 @@ class SimulationState(NamedTuple):
     def at_geoid(self, geoid: GeoId) -> Union[Exception, AtLocationResponse]:
         """
         returns a dictionary with the list of ids found at this location for all entities
+
         :param geoid: geoid to look up
         :return: an Optional AtLocationResponse
         """
@@ -443,6 +469,7 @@ class SimulationState(NamedTuple):
                            override_resolution: Optional[int] = None) -> Union[SimulationStateError, bool]:
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
+
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param request_id: the request we are testing for proximity to a vehicle
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
@@ -464,6 +491,7 @@ class SimulationState(NamedTuple):
                            override_resolution: Optional[int] = None) -> Union[SimulationStateError, bool]:
         """
         tests whether vehicle is at the station within the scope of the given geoid resolution
+
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param station_id: the station we are testing for proximity to a vehicle
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
@@ -485,6 +513,7 @@ class SimulationState(NamedTuple):
                         override_resolution: Optional[int] = None) -> Union[SimulationStateError, bool]:
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
+
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param base_id: the base we are testing for proximity to a vehicle
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
@@ -505,6 +534,7 @@ class SimulationState(NamedTuple):
                       vehicle_id: VehicleId) -> Union[SimulationStateError, SimulationState]:
         """
         places passengers from a request into a Vehicle
+
         :param request_id: the request that will board the vehicle; removes the request from the simulation
         :param vehicle_id:
         :return: updated simulation state, or an error. vehicle position is idempotent.
@@ -536,6 +566,7 @@ class SimulationState(NamedTuple):
         """
         tests if two geoids are the same. allows for overriding test resolution to a parent level
         todo: maybe move this to a geoutility collection somewhere like hive.util._
+
         :param a: first geoid
         :param b: second geoid
         :param override_resolution: an overriding h3 spatial resolution, or, none to use this sim's default res

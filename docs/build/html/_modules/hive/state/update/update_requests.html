@@ -49,6 +49,7 @@
                                   <span class="n">initial_sim_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    add requests from file when the simulation reaches the request&#39;s time</span>
+
 <span class="sd">    :param it: expected to be a Request iterator which streams in row data taken from a DictReader</span>
 <span class="sd">    :param initial_sim_state: the current sim state</span>
 <span class="sd">    :return: sim state plus new requests</span>
@@ -57,6 +58,7 @@
     <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="n">acc</span><span class="p">:</span> <span class="n">SimulationUpdateResult</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SimulationUpdateResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        takes one row, attempts to parse it as a Request, and attempts to add it to the simulation</span>
+
 <span class="sd">        :param acc: latest SimulationState and any update reports</span>
 <span class="sd">        :param row: one row as loaded via DictReader</span>
 <span class="sd">        :return: the updated sim and updated reporting</span>
@@ -90,6 +92,7 @@
 <span class="k">def</span> <span class="nf">_success_as_json</span><span class="p">(</span><span class="n">r_id</span><span class="p">:</span> <span class="n">RequestId</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    stringified json report of a cancellation</span>
+
 <span class="sd">    :param r_id: request cancelled</span>
 <span class="sd">    :param sim: the state of the sim before cancellation occurs</span>
 <span class="sd">    :return: a stringified json report</span>
@@ -101,6 +104,7 @@
 <span class="k">def</span> <span class="nf">_failure_as_json</span><span class="p">(</span><span class="n">error_msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    stringified json report of a cancellation</span>
+
 <span class="sd">    :param error_msg: error message</span>
 <span class="sd">    :param sim: the state of the sim before cancellation occurs</span>
 <span class="sd">    :return: a stringified json report of an error</span>
@@ -111,6 +115,7 @@
 <span class="k">def</span> <span class="nf">_eof_as_json</span><span class="p">(</span><span class="n">sim</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    notification of end-of-file</span>
+
 <span class="sd">    :param sim: the simulation state</span>
 <span class="sd">    :return: a stringified end-of-file report</span>
 <span class="sd">    &quot;&quot;&quot;</span>

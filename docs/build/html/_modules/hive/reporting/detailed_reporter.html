@@ -51,6 +51,8 @@
 <div class="viewcode-block" id="DetailedReporter"><a class="viewcode-back" href="../../../reference/hive.reporting.html#hive.reporting.detailed_reporter.DetailedReporter">[docs]</a><span class="k">class</span> <span class="nc">DetailedReporter</span><span class="p">(</span><span class="n">Reporter</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class that generates very detailed reports for the simulation.</span>
+
+<span class="sd">    :param io: io config</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io</span><span class="p">:</span> <span class="n">IO</span><span class="p">):</span>
@@ -70,13 +72,6 @@
                <span class="n">sim_state</span><span class="p">:</span> <span class="n">SimulationState</span><span class="p">,</span>
                <span class="n">instructions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Instruction</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
                <span class="n">reports</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Takes in a simulation state and a tuple of instructions and writes the appropriate information.</span>
-<span class="sd">        :param reports:</span>
-<span class="sd">        :param sim_state:</span>
-<span class="sd">        :param instructions:</span>
-<span class="sd">        :return:</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_report_entities</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vehicle_logger</span><span class="p">,</span>
                               <span class="n">entities</span><span class="o">=</span><span class="n">sim_state</span><span class="o">.</span><span class="n">vehicles</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
                               <span class="n">sim_time</span><span class="o">=</span><span class="n">sim_state</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span>

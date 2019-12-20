@@ -36,6 +36,7 @@ class SwitchCase(ABC):
     def _default(self, arguments: Arguments) -> Result:
         """
         called when "key" does not exist in the SwitchCase
+
         :param arguments: the arguments to pass in the default case
         :return:
         """
@@ -63,13 +64,14 @@ class H3Ops:
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
-        :param max_distance_km:
-        :param is_valid:
-        :param entities:
-        :param k:
-        :param geoid:
-        :param entity_locations:
-        :return:
+
+        :param geoid: Geoid to match to.
+        :param entities: Entities to search over.
+        :param entity_locations: Location of the entities
+        :param is_valid: Optional function to filter for valid entities.
+        :param k: the size of the k-ring
+        :param max_distance_km: the maximum distance in kilometers to search over
+        :return: an optional entity if found
         """
         resolution = h3.h3_get_resolution(geoid)
         k_dist_km = h3.edge_length(resolution, unit='km') * 2 * unit.kilometers
@@ -99,6 +101,15 @@ class H3Ops:
                                       entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
                                       is_valid: Callable = lambda x: True,
                                       ) -> Optional[Entity]:
+        """
+        A nearest neighbor search that scans all entities and returns the one with the lowest distance to the geoid.
+
+        :param geoid: GeoId to match to
+        :param entities: Entities to search over
+        :param entity_locations: Location of entities
+        :param is_valid: Optional function to filter for valid entities
+        :return: an optional entity if found
+        """
 
         best_dist = 1000000 * unit.kilometers
         best_e = None
@@ -121,6 +132,7 @@ class H3Ops:
     def great_circle_distance(cls, a: GeoId, b: GeoId) -> km:
         """
         computes the distance between two geoids
+
         :param a: one geoid
         :param b: another geoid
         :return: the haversine distance between the two GeoIds
@@ -134,6 +146,7 @@ class H3Ops:
     def point_along_link(cls, property_link: PropertyLink, available_time: h) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
+
         :param property_link: the link we are finding a mid point along
         :param available_time: the amount of time to traverse
         :return: a GeoId along the Link
@@ -214,6 +227,7 @@ class DictOps:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
+
         :param xs:
         :param obj_id:
         :param obj:
@@ -228,6 +242,7 @@ class DictOps:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
+
         :param xs:
         :param obj_id:
         :param obj:
@@ -245,6 +260,7 @@ class DictOps:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
+
         :param xs:
         :param obj_geoid:
         :param obj_id:
@@ -265,6 +281,7 @@ class DictOps:
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
         when a geoid has no ids after a remove, it deletes that geoid, to prevent geoid Dict memory leaks
+
         :param xs:
         :param obj_geoid:
         :param obj_id:

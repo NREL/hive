@@ -14,6 +14,8 @@ from hive.config import IO
 class DetailedReporter(Reporter):
     """
     A class that generates very detailed reports for the simulation.
+
+    :param io: io config
     """
 
     def __init__(self, io: IO):
@@ -33,13 +35,6 @@ class DetailedReporter(Reporter):
                sim_state: SimulationState,
                instructions: Tuple[Instruction, ...],
                reports: Tuple[str, ...]):
-        """
-        Takes in a simulation state and a tuple of instructions and writes the appropriate information.
-        :param reports:
-        :param sim_state:
-        :param instructions:
-        :return:
-        """
         self._report_entities(logger=self.vehicle_logger,
                               entities=sim_state.vehicles.values(),
                               sim_time=sim_state.sim_time)
