@@ -33,8 +33,8 @@ class TabularPowertrain(Powertrain):
         # linear interpolation function approximation via these lookup values
 
         consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
-        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model))) * (unit.miles/unit.hour)
-        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model))) * (unit.watthour/unit.mile)
+        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # * (unit.miles/unit.hour)
+        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model)))  # * (unit.watthour/unit.mile)
 
     def get_id(self) -> PowertrainId:
         return self.id
@@ -48,10 +48,11 @@ class TabularPowertrain(Powertrain):
         :param property_link:
         :return:
         """
-        watthour_per_mile = np.interp(property_link.speed.to((unit.miles / unit.hour)),
+        link_speed = property_link.speed.to((unit.miles / unit.hour)).magnitude
+        watthour_per_mile = np.interp(link_speed,
                                       self._consumption_mph,
-                                      self._consumption_whmi) * (unit.watthour / unit.mile)
-        energy_wh = watthour_per_mile * property_link.distance.to(unit.mile)
+                                      self._consumption_whmi)  # * (unit.watthour / unit.mile)
+        energy_wh = (watthour_per_mile * property_link.distance.to(unit.mile).magnitude) * unit.watthour
         return energy_wh.to(unit.kilowatthour)
 
     def energy_cost(self, route: Route) -> kwh:
