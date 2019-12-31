@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from copy import copy
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING
+import functools as ft
 
 from hive.util.typealiases import *
 from hive.util.units import unit, km, h
@@ -56,41 +57,84 @@ class H3Ops:
     def nearest_entity(cls,
                        geoid: GeoId,
                        entities: Dict[EntityId, Entity],
+                       entity_search: Dict[GeoId, Tuple[GeoId, ...]],
                        entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+                       sim_h3_search_resolution: int,
                        is_valid: Callable = lambda x: True,
-                       k: int = 0,
-                       max_distance_km: km = 1 * unit.kilometers,
+                       max_distance_km: km = 100 * unit.kilometers
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
-        :param max_distance_km:
-        :param is_valid:
-        :param entities:
-        :param k:
-        :param geoid:
+        invariant: the Entity has a geoid field (Entity.geoid)
+        :param geoid: the search origin
+        :param entities: a collection of a certain type of entity, by Id type
+        :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
+        :param entity_locations: the location of objects of this entity type at the finest grid resolution
+        :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
+        :param is_valid: a function used to filter valid search results, such as checking stations for charger availability
+        :param k: the number of concentric rings to check in the high-level search
+        :param max_distance_km: the maximum distance a result can be from the search origin
+
+        :return: the nearest entity, or, None if not found within the constraints
+        """
+
+        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2 * unit.kilometers
+        max_k = ceil(max_distance_km.magnitude / k_dist_km.magnitude)
+        search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
+
+        def _search(current_k: int = 0) -> Optional['Entity']:
+            if current_k > max_k:
+                # There are no entities in any of the rings.
+                return None
+            else:
+                # get the kth ring
+                ring = h3.k_ring(search_geoid, current_k)
+
+                # get all entities in this ring
+                found = (entity for cell in ring
+                         for entity in cls.get_entities_at_cell(cell, entity_search, entity_locations, entities))
+
+                best_dist = 1000000 * unit.kilometers
+                best_entity = None
+
+                for entity in found:
+                    dist = cls.great_circle_distance(geoid, entity.geoid)
+                    if is_valid(entity) and dist < best_dist:
+                        best_dist = dist
+                        best_entity = entity
+
+                if best_entity is not None:
+                    return best_entity
+                else:
+                    return _search(current_k + 1)
+
+        return _search()
+
+    @classmethod
+    def get_entities_at_cell(cls,
+                             search_cell: GeoId,
+                             entity_search: Dict[GeoId, Tuple[GeoId, ...]],
+                             entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+                             entities: Dict[EntityId, Entity]) -> Tuple[Entity, ...]:
+        """
+
+        :param search_cell:
+        :param entity_search:
         :param entity_locations:
+        :param entities:
         :return:
         """
-        resolution = h3.h3_get_resolution(geoid)
-        k_dist_km = h3.edge_length(resolution, unit='km') * 2 * unit.kilometers
-        max_k = ceil(max_distance_km.magnitude / k_dist_km.magnitude)
+        locations_at_cell = entity_search.get(search_cell)
+        if locations_at_cell is None:
+            return ()
+        else:
+            found_entities = ()
+            for loc in locations_at_cell:
+                for entity_id in entity_locations[loc]:
+                    entity = entities[entity_id]
+                    found_entities = found_entities + (entity,)
+            return found_entities
 
-        if k > max_k:
-            # There are no entities in any of the rings.
-            return None
-
-        ring = h3.k_ring_distances(geoid, k)[k]
-
-        for gid in ring:
-            if gid in entity_locations:
-                entities_at_location = entity_locations[gid]
-                if entities_at_location:
-                    for entity_id in entities_at_location:
-                        entity = entities[entity_id]
-                        if is_valid(entity):
-                            return entity
-
-        return cls.nearest_entity(geoid, entities, entity_locations, is_valid, k + 1, max_distance_km)
 
     @classmethod
     def nearest_entity_point_to_point(cls,
@@ -113,9 +157,6 @@ class H3Ops:
                     best_e = e
 
         return best_e
-
-
-
 
     @classmethod
     def great_circle_distance(cls, a: GeoId, b: GeoId) -> km:
@@ -278,5 +319,3 @@ class DictOps:
         else:
             updated_dict[obj_geoid] = updated_ids
         return updated_dict
-
-

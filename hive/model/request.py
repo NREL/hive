@@ -19,7 +19,7 @@ class Request(NamedTuple):
     destination: GeoId
     departure_time: SimTime
     cancel_time: SimTime
-    passengers: Tuple[Passenger]
+    passengers: Tuple[Passenger, ...]
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
 
@@ -99,6 +99,10 @@ class Request(NamedTuple):
                 )
             except ValueError:
                 return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
+
+    @property
+    def geoid(self):
+        return self.origin
 
     def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """
