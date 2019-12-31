@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, FrozenSet
 import functools as ft
 
 from hive.util.typealiases import *
@@ -57,10 +57,10 @@ class H3Ops:
     def nearest_entity(cls,
                        geoid: GeoId,
                        entities: Dict[EntityId, Entity],
-                       entity_search: Dict[GeoId, Tuple[GeoId, ...]],
+                       entity_search: Dict[GeoId, FrozenSet[GeoId, ...]],
                        entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
-                       is_valid: Callable = lambda x: True,
+                       is_valid: Callable[[Entity], bool] = lambda x: True,
                        max_distance_km: km = 100 * unit.kilometers
                        ) -> Optional[Entity]:
         """
@@ -113,28 +113,25 @@ class H3Ops:
     @classmethod
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
-                             entity_search: Dict[GeoId, Tuple[GeoId, ...]],
+                             entity_search: Dict[GeoId, FrozenSet[GeoId, ...]],
                              entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
                              entities: Dict[EntityId, Entity]) -> Tuple[Entity, ...]:
         """
+        gives us entities within a high-level search cell
 
-        :param search_cell:
-        :param entity_search:
-        :param entity_locations:
-        :param entities:
-        :return:
+        :param search_cell: the search-level h3 position we are looking at
+        :param entity_search: the upper-level search collection for this entity type
+        :param entity_locations: the lower-level location collection
+        :param entities: the actual entities
+        :return: any entities which are located at this search-level cell
         """
         locations_at_cell = entity_search.get(search_cell)
         if locations_at_cell is None:
             return ()
         else:
-            found_entities = ()
-            for loc in locations_at_cell:
-                for entity_id in entity_locations[loc]:
-                    entity = entities[entity_id]
-                    found_entities = found_entities + (entity,)
-            return found_entities
-
+            return tuple(entities[entity_id]
+                         for loc in locations_at_cell
+                         for entity_id in entity_locations[loc])
 
     @classmethod
     def nearest_entity_point_to_point(cls,
@@ -201,10 +198,10 @@ class TupleOps:
     T = TypeVar('T')
 
     @classmethod
-    def remove(cls, xs: Tuple[T, ...], value: T) -> Optional[Tuple[T, ...]]:
+    def remove(cls, xs: Tuple[T, ...], value: T) -> Tuple[T, ...]:
         removed = tuple(filter(lambda x: x != value, xs))
         if len(removed) == len(xs):
-            return None
+            return ()
         else:
             return removed
 
@@ -319,3 +316,87 @@ class DictOps:
         else:
             updated_dict[obj_geoid] = updated_ids
         return updated_dict
+
+    @classmethod
+    def add_to_search_dict(cls,
+                           xs: Dict[GeoId, FrozenSet[GeoId, ...]],
+                           location_geoid: GeoId,
+                           sim_h3_search_resolution: int) -> Dict[GeoId, FrozenSet[GeoId, ...]]:
+        """
+        updates Dicts used in the bi-level nearest neighbors search
+        performs a shallow copy and update, treating Dict as an immutable hash table
+        only keeps one copy of the lower-level key per upper-level key
+        :param xs: the collection we are adding to
+        :param location_geoid: the lower-level geo index used to store exact entity locations
+        :param sim_h3_search_resolution:
+        :return: the updated dictionary
+        """
+        updated_dict = copy(xs)
+        search_geoid = h3.h3_to_parent(location_geoid, sim_h3_search_resolution)
+        ids_at_location = updated_dict.get(search_geoid, frozenset())
+        updated_ids = ids_at_location.union([location_geoid])
+        updated_dict.update([(search_geoid, updated_ids)])
+        return updated_dict
+
+    @classmethod
+    def remove_from_search_dict(cls,
+                                locations: Dict[GeoId, Tuple[K, ...]],
+                                search: Dict[GeoId, FrozenSet[GeoId, ...]],
+                                location_geoid: GeoId,
+                                sim_h3_search_resolution: int) -> Dict[GeoId, FrozenSet[GeoId, ...]]:
+        """
+        updates Dicts used in the bi-level nearest neighbors search
+        performs a shallow copy and update, treating Dict as an immutable hash table
+        when a geoid has no ids after a remove, it deletes that geoid, to prevent geoid Dict memory leaks
+        :param locations: the actual locations, used to identify if other entities are still at this location
+        :param search: the search dict we are updating
+        :param location_geoid:
+        :param sim_h3_search_resolution:
+        :return:
+        """
+        other_entities_at_old_search = locations.get(location_geoid) and len(locations.get(location_geoid)) > 1
+        if other_entities_at_old_search:
+            return search
+        else:
+            search_geoid = h3.h3_to_parent(location_geoid, sim_h3_search_resolution)
+            updated_dict = copy(search)
+            ids_at_loc = updated_dict[search_geoid]
+            updated_ids = ids_at_loc.difference([location_geoid])
+            if len(updated_ids) == 0:
+                del updated_dict[search_geoid]
+            else:
+                updated_dict[search_geoid] = updated_ids
+            return updated_dict
+
+    @classmethod
+    def update_search_dict(cls,
+                           locations: Dict[GeoId, Tuple[K, ...]],
+                           search: Dict[GeoId, FrozenSet[GeoId, ...]],
+                           old_location_geoid: GeoId,
+                           new_location_geoid: GeoId,
+                           sim_h3_search_resolution: int) -> Dict[GeoId, FrozenSet[GeoId, ...]]:
+        """
+        checks if we are updating the location_geoid or removing it
+        checks to see if any entities are still at a location before removing them
+        from the upper-level lookup
+        :param locations: locations *before* executing a remove_from_location_dict operation
+        :param search: the search lookup we are modifying
+        :param old_location_geoid:
+        :param new_location_geoid:
+        :param sim_h3_search_resolution: the resolution that the upper-level search locations are stored at
+        :return: the updated search collection, or, no modification if
+        other entities are still located at that location geoid
+        """
+
+        remove_old_search = DictOps.remove_from_search_dict(
+            locations,
+            search,
+            old_location_geoid,
+            sim_h3_search_resolution
+        )
+        add_new_search = DictOps.add_to_search_dict(
+            remove_old_search,
+            new_location_geoid,
+            sim_h3_search_resolution
+        )
+        return add_new_search

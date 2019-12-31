@@ -35,7 +35,7 @@ def _build_vehicles():
             powertrain_id="leaf",
             powercurve_id="leaf",
             energy_source=es,
-            geoid=_base_geoid,
+            # geoid=_base_geoid,
             property_link=_road_network.property_link_from_geoid(_base_geoid),
         )
         vehicles.append(v)
@@ -53,7 +53,7 @@ def _build_stations():
     base_station = Station.build(id="bs1",
                                  geoid=_base_geoid,
                                  chargers={Charger.LEVEL_2: 20})
-    return (station_1, station_2, base_station)
+    return station_1, station_2, base_station
 
 
 def _build_bases():
@@ -61,7 +61,7 @@ def _build_bases():
                       geoid=_base_geoid,
                       station_id="bs1",
                       stall_count=20)
-    return (base,)
+    return base,
 
 
 vehicles = _build_vehicles()

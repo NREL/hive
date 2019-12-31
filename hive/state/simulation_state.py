@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import functools as ft
 from copy import copy
-from typing import NamedTuple, Dict, Optional, Union, cast
+from typing import NamedTuple, Dict, Optional, Union, cast, FrozenSet
 
 from h3 import h3
 
 from hive.dispatcher.instruction import Instruction
 from hive.model.base import Base
-from hive.model.energy.charger import Charger
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
@@ -58,10 +57,10 @@ class SimulationState(NamedTuple):
 
     # search collections   - a higher-level spatial representation used for search, which points to
     #                        lower-level location collections that are occupied by agents
-    v_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
-    r_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
-    s_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
-    b_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
+    v_search: Dict[GeoId, FrozenSet[GeoId, ...]] = {}
+    r_search: Dict[GeoId, FrozenSet[GeoId, ...]] = {}
+    s_search: Dict[GeoId, FrozenSet[GeoId, ...]] = {}
+    b_search: Dict[GeoId, FrozenSet[GeoId, ...]] = {}
 
     @property
     @ft.lru_cache()
@@ -88,9 +87,7 @@ class SimulationState(NamedTuple):
             return self._replace(
                 requests=DictOps.add_to_dict(self.requests, request.id, request),
                 r_locations=DictOps.add_to_location_dict(self.r_locations, request.geoid, request.id),
-                r_search=DictOps.add_to_location_dict(self.r_search,
-                                                      h3.h3_to_parent(request.geoid, self.sim_h3_search_resolution),
-                                                      request.geoid)
+                r_search=DictOps.add_to_search_dict(self.r_search, request.geoid, self.sim_h3_search_resolution)
             )
 
     def remove_request(self, request_id: RequestId) -> Union[Exception, SimulationState]:
@@ -107,13 +104,19 @@ class SimulationState(NamedTuple):
             return SimulationStateError(f"attempting to remove request {request_id} which is not in simulation")
         else:
             request = self.requests[request_id]
+            updated_requests = DictOps.remove_from_dict(self.requests, request.id)
+            updated_r_locations = DictOps.remove_from_location_dict(self.r_locations, request.geoid, request.id)
+            updated_r_search = DictOps.remove_from_search_dict(
+                locations=self.r_locations,
+                search=self.r_search,
+                location_geoid=request.geoid,
+                sim_h3_search_resolution=self.sim_h3_search_resolution
+            )
+
             return self._replace(
-                requests=DictOps.remove_from_dict(self.requests, request.id),
-                r_locations=DictOps.remove_from_location_dict(self.r_locations, request.geoid, request.id),
-                r_search=DictOps.remove_from_location_dict(self.r_search,
-                                                           h3.h3_to_parent(request.geoid,
-                                                                           self.sim_h3_search_resolution),
-                                                           request.geoid)
+                requests=updated_requests,
+                r_locations=updated_r_locations,
+                r_search=updated_r_search
             )
 
     # TODO: Think about making this generic wrt entities.
@@ -135,25 +138,29 @@ class SimulationState(NamedTuple):
                 )
             else:
 
-                # unset from old geoid add add to new one
+                # update request location
                 r_locations_removed = DictOps.remove_from_location_dict(self.r_locations,
                                                                         old_request.geoid,
                                                                         old_request.id)
                 r_locations_updated = DictOps.add_to_location_dict(r_locations_removed,
                                                                    updated_request.geoid,
                                                                    updated_request.id)
-
-                # TODO:
-                #  - manage removal, update of search level lookup here and in modify_vehicle
-                #  - continue to double-check search additions reference the correct collections/params
-
-                return self._replace(
+                sim_updated_location = self._replace(
                     requests=DictOps.add_to_dict(self.requests, updated_request.id, updated_request),
-                    r_locations=r_locations_updated,
-                    r_search=DictOps.add_to_location_dict(self.r_search,
-                                                          h3.h3_to_parent(updated_request.geoid,
-                                                                          self.sim_h3_search_resolution),
-                                                          updated_request.geoid)
+                    r_locations=r_locations_updated
+                )
+
+                # update request search dict
+                r_search_updated = DictOps.update_search_dict(
+                    locations=self.r_locations,
+                    search=self.r_search,
+                    old_location_geoid=old_request.geoid,
+                    new_location_geoid=updated_request.geoid,
+                    sim_h3_search_resolution=self.sim_h3_search_resolution
+                )
+
+                return sim_updated_location._replace(
+                    r_search=r_search_updated
                 )
 
     def add_vehicle(self, vehicle: Vehicle) -> Union[Exception, SimulationState]:
@@ -167,12 +174,12 @@ class SimulationState(NamedTuple):
         elif not self.road_network.geoid_within_geofence(vehicle.geoid):
             return SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
         else:
+            updated_v_locations = DictOps.add_to_location_dict(self.v_locations, vehicle.geoid, vehicle.id)
+            updated_v_search = DictOps.add_to_search_dict(self.v_search, vehicle.geoid, self.sim_h3_search_resolution)
             return self._replace(
                 vehicles=DictOps.add_to_dict(self.vehicles, vehicle.id, vehicle),
-                v_locations=DictOps.add_to_location_dict(self.v_locations, vehicle.geoid, vehicle.id),
-                v_search=DictOps.add_to_location_dict(self.v_search,
-                                                      h3.h3_to_parent(vehicle.geoid, self.sim_h3_search_resolution),
-                                                      vehicle.geoid)
+                v_locations=updated_v_locations,
+                v_search=updated_v_search
             )
 
     def modify_vehicle(self, updated_vehicle: Vehicle) -> Union[Exception, SimulationState]:
@@ -194,7 +201,7 @@ class SimulationState(NamedTuple):
                     vehicles=DictOps.add_to_dict(self.vehicles, updated_vehicle.id, updated_vehicle)
                 )
             else:
-
+                vehicles_updated = DictOps.add_to_dict(self.vehicles, updated_vehicle.id, updated_vehicle)
                 # unset from old geoid add add to new one
                 v_locations_removed = DictOps.remove_from_location_dict(self.v_locations,
                                                                         old_vehicle.geoid,
@@ -203,13 +210,19 @@ class SimulationState(NamedTuple):
                                                                    updated_vehicle.geoid,
                                                                    updated_vehicle.id)
 
+                # update vehicle location in search dict
+                v_search_updated = DictOps.update_search_dict(
+                    locations=self.v_locations,
+                    search=self.v_search,
+                    old_location_geoid=old_vehicle.geoid,
+                    new_location_geoid=updated_vehicle.geoid,
+                    sim_h3_search_resolution=self.sim_h3_search_resolution
+                )
+
                 return self._replace(
-                    vehicles=DictOps.add_to_dict(self.vehicles, updated_vehicle.id, updated_vehicle),
+                    vehicles=vehicles_updated,
                     v_locations=v_locations_updated,
-                    v_search=DictOps.add_to_location_dict(self.v_search,
-                                                          h3.h3_to_parent(updated_vehicle.geoid,
-                                                                          self.sim_h3_search_resolution),
-                                                          updated_vehicle.geoid)
+                    v_search=v_search_updated
                 )
 
     def apply_instruction(self, i: Instruction) -> Optional[SimulationState]:
@@ -293,13 +306,17 @@ class SimulationState(NamedTuple):
         else:
             vehicle = self.vehicles[vehicle_id]
 
+            updated_v_search = DictOps.remove_from_search_dict(
+                locations=self.v_locations,
+                search=self.v_search,
+                location_geoid=vehicle.geoid,
+                sim_h3_search_resolution=self.sim_h3_search_resolution
+            )
+
             return self._replace(
                 vehicles=DictOps.remove_from_dict(self.vehicles, vehicle_id),
                 v_locations=DictOps.remove_from_location_dict(self.v_locations, vehicle.geoid, vehicle_id),
-                v_search=DictOps.remove_from_location_dict(self.v_search,
-                                                           h3.h3_to_parent(vehicle.geoid,
-                                                                           self.sim_h3_search_resolution),
-                                                           vehicle.geoid)
+                v_search=updated_v_search
             )
 
     def pop_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, Tuple[SimulationState, Vehicle]]:
@@ -335,9 +352,7 @@ class SimulationState(NamedTuple):
             return self._replace(
                 stations=DictOps.add_to_dict(self.stations, station.id, station),
                 s_locations=DictOps.add_to_location_dict(self.s_locations, station.geoid, station.id),
-                s_search=DictOps.add_to_location_dict(self.s_search,
-                                                      h3.h3_to_parent(station.geoid, self.sim_h3_search_resolution),
-                                                      station.geoid)
+                s_search=DictOps.add_to_search_dict(self.s_search, station.geoid, self.sim_h3_search_resolution)
             )
 
     def remove_station(self, station_id: StationId) -> Union[Exception, SimulationState]:
@@ -353,13 +368,17 @@ class SimulationState(NamedTuple):
         else:
             station = self.stations[station_id]
 
+            updated_s_search = DictOps.remove_from_search_dict(
+                locations=self.s_locations,
+                search=self.s_search,
+                location_geoid=station.geoid,
+                sim_h3_search_resolution=self.sim_h3_search_resolution
+            )
+
             return self._replace(
                 stations=DictOps.remove_from_dict(self.stations, station_id),
                 s_locations=DictOps.remove_from_location_dict(self.s_locations, station.geoid, station_id),
-                s_search=DictOps.remove_from_location_dict(self.s_search,
-                                                           h3.h3_to_parent(station.geoid,
-                                                                           self.sim_h3_search_resolution),
-                                                           station.geoid)
+                s_search=updated_s_search
             )
 
     def modify_station(self, updated_station: Station) -> Union[Exception, SimulationState]:
@@ -390,9 +409,7 @@ class SimulationState(NamedTuple):
             return self._replace(
                 bases=DictOps.add_to_dict(self.bases, base.id, base),
                 b_locations=DictOps.add_to_location_dict(self.b_locations, base.geoid, base.id),
-                b_search=DictOps.add_to_location_dict(self.b_search,
-                                                      h3.h3_to_parent(base.geoid, self.sim_h3_search_resolution),
-                                                      base.geoid)
+                b_search=DictOps.add_to_search_dict(self.b_search, base.geoid, self.sim_h3_search_resolution)
             )
 
     def remove_base(self, base_id: BaseId) -> Union[Exception, SimulationState]:
@@ -408,12 +425,17 @@ class SimulationState(NamedTuple):
         else:
             base = self.bases[base_id]
 
+            updated_b_search = DictOps.remove_from_search_dict(
+                locations=self.b_locations,
+                search=self.b_search,
+                location_geoid=base.geoid,
+                sim_h3_search_resolution=self.sim_h3_search_resolution
+            )
+
             return self._replace(
                 bases=DictOps.remove_from_dict(self.bases, base_id),
                 b_locations=DictOps.remove_from_location_dict(self.b_locations, base.geoid, base_id),
-                b_search=DictOps.remove_from_location_dict(self.b_search,
-                                                           h3.h3_to_parent(base.geoid, self.sim_h3_search_resolution),
-                                                           base.geoid)
+                b_search=updated_b_search
             )
 
     def modify_base(self, updated_base: Base) -> Union[Exception, SimulationState]:

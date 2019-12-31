@@ -165,7 +165,7 @@ class GreedyDispatcherTestAssets:
                            mock_powertrain.get_id(),
                            "",
                            EnergySource.build("", EnergyType.ELECTRIC, 40*unit.kilowatthour),
-                           geoid,
+                           # geoid,
                            mock_property_link,
                            )
         return mock_veh
