@@ -85,7 +85,7 @@ class TestSimulationState(TestCase):
         sim_before_update = sim.add_vehicle(veh)
 
         # modify some value on the vehicle
-        new_geoid = h3.geo_to_h3(39.77, -105, sim_before_update.sim_h3_resolution)
+        new_geoid = h3.geo_to_h3(39.77, -105, sim_before_update.sim_h3_location_resolution)
         updated_vehicle = veh._replace(geoid=new_geoid)
 
         sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)

@@ -39,7 +39,8 @@ class SimulationState(NamedTuple):
     # simulation parameters
     sim_time: SimTime
     sim_timestep_duration_seconds: s
-    sim_h3_resolution: int
+    sim_h3_location_resolution: int
+    sim_h3_search_resolution: int
 
     # objects of the simulation
     stations: Dict[StationId, Station] = {}
@@ -49,12 +50,21 @@ class SimulationState(NamedTuple):
     powertrains: Dict[PowertrainId, Powertrain] = {}
     powercurves: Dict[PowercurveId, Powercurve] = {}
 
-    # location lookup collections
+    # location collections - the lowest-level spatial representation in Hive
     v_locations: Dict[GeoId, Tuple[VehicleId, ...]] = {}
     r_locations: Dict[GeoId, Tuple[RequestId, ...]] = {}
     s_locations: Dict[GeoId, Tuple[StationId, ...]] = {}
     b_locations: Dict[GeoId, Tuple[BaseId, ...]] = {}
 
+    # search collections   - a higher-level spatial representation used for search, which points to
+    #                        lower-level location collections that are occupied by agents
+    v_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
+    r_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
+    s_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
+    b_search: Dict[GeoId, Tuple[GeoId, ...]] = {}
+
+    @property
+    @ft.lru_cache()
     def current_time_seconds(self) -> s:
         """
         computes the current time in seconds
@@ -77,7 +87,10 @@ class SimulationState(NamedTuple):
         else:
             return self._replace(
                 requests=DictOps.add_to_dict(self.requests, request.id, request),
-                r_locations=DictOps.add_to_location_dict(self.r_locations, request.origin, request.id)
+                r_locations=DictOps.add_to_location_dict(self.r_locations, request.origin, request.id),
+                r_search=DictOps.add_to_location_dict(self.r_search,
+                                                      h3.h3_to_parent(request.origin, self.sim_h3_search_resolution),
+                                                      request.origin)
             )
 
     def remove_request(self, request_id: RequestId) -> Union[Exception, SimulationState]:
@@ -96,14 +109,18 @@ class SimulationState(NamedTuple):
             request = self.requests[request_id]
             return self._replace(
                 requests=DictOps.remove_from_dict(self.requests, request.id),
-                r_locations=DictOps.remove_from_location_dict(self.r_locations, request.origin, request.id)
+                r_locations=DictOps.remove_from_location_dict(self.r_locations, request.origin, request.id),
+                r_search=DictOps.remove_from_location_dict(self.r_search,
+                                                           h3.h3_to_parent(request.origin,
+                                                                           self.sim_h3_search_resolution),
+                                                           request.origin)
             )
 
     # TODO: Think about making this generic wrt entities.
     def modify_request(self, updated_request: Request) -> Union[Exception, SimulationState]:
         """
-        given an updated request, update the SimulationState with that request 
-        :param updated_request: 
+        given an updated request, update the SimulationState with that request
+        :param updated_request:
         :return: the updated simulation, or an error
         """
         if not isinstance(updated_request, Request):
@@ -128,8 +145,14 @@ class SimulationState(NamedTuple):
 
                 return self._replace(
                     requests=DictOps.add_to_dict(self.requests, updated_request.id, updated_request),
-                    r_locations=r_locations_updated
+                    r_locations=r_locations_updated,
+                    r_search=DictOps.add_to_location_dict(self.r_search,
+                                                          h3.h3_to_parent(updated_request.origin,
+                                                                          self.sim_h3_search_resolution),
+                                                          updated_request.origin)
                 )
+
+    # TODO: here! adding search dictionaries, follow the pattern
 
     def add_vehicle(self, vehicle: Vehicle) -> Union[Exception, SimulationState]:
         """
@@ -382,8 +405,8 @@ class SimulationState(NamedTuple):
     def add_powertrain(self, powertrain: Powertrain) -> Union[Exception, SimulationState]:
         """
         Adds a powertrain to the simulation
-        :param powertrain: 
-        :return: 
+        :param powertrain:
+        :return:
         """
         if not isinstance(powertrain, Powertrain):
             return TypeError(f"sim.add_base requires a base but received {type(powertrain)}")
@@ -395,8 +418,8 @@ class SimulationState(NamedTuple):
     def add_powercurve(self, powercurve: Powercurve) -> Union[Exception, SimulationState]:
         """
         Adds a powercurve to the simulation
-        :param powercurve: 
-        :return: 
+        :param powercurve:
+        :return:
         """
         if not isinstance(powercurve, Powercurve):
             return TypeError(f"sim.add_base requires a base but received {type(powercurve)}")
@@ -445,7 +468,7 @@ class SimulationState(NamedTuple):
         tests whether vehicle is at the request within the scope of the given geoid resolution
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param request_id: the request we are testing for proximity to a vehicle
-        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
         :return: bool
         """
         if vehicle_id not in self.vehicles:
@@ -456,7 +479,7 @@ class SimulationState(NamedTuple):
             vehicle = self.vehicles[vehicle_id].geoid
             request = self.requests[request_id].origin
 
-            return SimulationState._same_geoid(vehicle, request, self.sim_h3_resolution, override_resolution)
+            return SimulationState._same_geoid(vehicle, request, self.sim_h3_location_resolution, override_resolution)
 
     def vehicle_at_station(self,
                            vehicle_id: VehicleId,
@@ -466,7 +489,7 @@ class SimulationState(NamedTuple):
         tests whether vehicle is at the station within the scope of the given geoid resolution
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param station_id: the station we are testing for proximity to a vehicle
-        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
         :return: bool
         """
         if vehicle_id not in self.vehicles:
@@ -477,7 +500,7 @@ class SimulationState(NamedTuple):
             vehicle = self.vehicles[vehicle_id].geoid
             station = self.stations[station_id].geoid
 
-            return SimulationState._same_geoid(vehicle, station, self.sim_h3_resolution, override_resolution)
+            return SimulationState._same_geoid(vehicle, station, self.sim_h3_location_resolution, override_resolution)
 
     def vehicle_at_base(self,
                         vehicle_id: VehicleId,
@@ -487,7 +510,7 @@ class SimulationState(NamedTuple):
         tests whether vehicle is at the request within the scope of the given geoid resolution
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param base_id: the base we are testing for proximity to a vehicle
-        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_resolution
+        :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
         :return: bool
         """
         if vehicle_id not in self.vehicles:
@@ -498,7 +521,7 @@ class SimulationState(NamedTuple):
             vehicle = self.vehicles[vehicle_id].geoid
             base = self.bases[base_id].geoid
 
-            return SimulationState._same_geoid(vehicle, base, self.sim_h3_resolution, override_resolution)
+            return SimulationState._same_geoid(vehicle, base, self.sim_h3_location_resolution, override_resolution)
 
     def board_vehicle(self,
                       request_id: RequestId,
