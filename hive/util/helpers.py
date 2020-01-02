@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, FrozenSet
-import functools as ft
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, FrozenSet, NamedTuple
 
 from hive.util.typealiases import *
 from hive.util.units import unit, km, h
@@ -57,11 +56,10 @@ class H3Ops:
     def nearest_entity(cls,
                        geoid: GeoId,
                        entities: Dict[EntityId, Entity],
-                       entity_search: Dict[GeoId, FrozenSet[GeoId, ...]],
-                       entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+                       entity_search: Dict[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_distance_km: km = 100 * unit.kilometers
+                       max_distance_km: km = 10 * unit.kilometers
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
@@ -69,7 +67,6 @@ class H3Ops:
         :param geoid: the search origin
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
-        :param entity_locations: the location of objects of this entity type at the finest grid resolution
         :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
         :param is_valid: a function used to filter valid search results, such as checking stations for charger availability
         :param k: the number of concentric rings to check in the high-level search
@@ -92,18 +89,21 @@ class H3Ops:
 
                 # get all entities in this ring
                 found = (entity for cell in ring
-                         for entity in cls.get_entities_at_cell(cell, entity_search, entity_locations, entities))
+                         for entity in cls.get_entities_at_cell(cell, entity_search, entities))
 
                 best_dist = 1000000 * unit.kilometers
                 best_entity = None
 
+                count = 0
                 for entity in found:
                     dist = cls.great_circle_distance(geoid, entity.geoid)
                     if is_valid(entity) and dist < best_dist:
                         best_dist = dist
                         best_entity = entity
+                    count += 1
 
                 if best_entity is not None:
+                    # print(f"ring search depth {current_k} found {count} agents, best agent at dist {best_dist} km")
                     return best_entity
                 else:
                     return _search(current_k + 1)
@@ -113,8 +113,7 @@ class H3Ops:
     @classmethod
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
-                             entity_search: Dict[GeoId, FrozenSet[GeoId, ...]],
-                             entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+                             entity_search: Dict[GeoId, Tuple[EntityId, ...]],
                              entities: Dict[EntityId, Entity]) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
@@ -130,8 +129,7 @@ class H3Ops:
             return ()
         else:
             return tuple(entities[entity_id]
-                         for loc in locations_at_cell
-                         for entity_id in entity_locations[loc])
+                         for entity_id in locations_at_cell)
 
     @classmethod
     def nearest_entity_point_to_point(cls,
@@ -400,3 +398,64 @@ class DictOps:
             sim_h3_search_resolution
         )
         return add_new_search
+
+    class EntityUpdateResult(NamedTuple):
+        entities: Optional[Dict] = None
+        locations: Optional[Dict] = None
+        search: Optional[Dict] = None
+
+    @classmethod
+    def update_entity_dictionaries(cls,
+                                   updated_entity: V,
+                                   entities: Dict[K, Tuple[V, ...]],
+                                   locations: Dict[GeoId, Tuple[K, ...]],
+                                   search: Dict[GeoId, Tuple[K, ...]],
+                                   sim_h3_search_resolution: int) -> EntityUpdateResult:
+        """
+        updates all dictionaries related to an entity
+        :param updated_entity: an entity which itself should have an "id" and a "geoid" attribute
+        :param entities: the dictionary containing Entities by EntityId
+        :param locations: the finest-resolution geoindex of this entity type
+        :param search: the upper-level resolution geoindex
+        :param sim_h3_search_resolution: the h3 resolution of the search collection
+        :return: the updated dictionaries
+        """
+        old_entity = entities[updated_entity.id]
+        entities_updated = DictOps.add_to_dict(entities, updated_entity.id, updated_entity)
+
+        if old_entity.geoid == updated_entity.geoid:
+            return cls.EntityUpdateResult(
+                entities=entities_updated
+            )
+        else:
+            # unset from old geoid add add to new one
+            locations_removed = DictOps.remove_from_location_dict(locations,
+                                                                  old_entity.geoid,
+                                                                  old_entity.id)
+            locations_updated = DictOps.add_to_location_dict(locations_removed,
+                                                             updated_entity.geoid,
+                                                             updated_entity.id)
+
+            old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
+            updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
+
+            if old_search_geoid == updated_search_geoid:
+                # no update to search location
+                return cls.EntityUpdateResult(
+                    entities=entities_updated,
+                    locations=locations_updated
+                )
+            else:
+                # update request search dict location
+                search_removed = DictOps.remove_from_location_dict(search,
+                                                                   old_search_geoid,
+                                                                   old_entity.id)
+                search_updated = DictOps.add_to_location_dict(search_removed,
+                                                              updated_search_geoid,
+                                                              updated_entity.id)
+
+                return cls.EntityUpdateResult(
+                    entities=entities_updated,
+                    locations=locations_updated,
+                    search=search_updated
+                )

@@ -36,7 +36,6 @@ class GreedyDispatcher(Dispatcher):
             nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                    entities=simulation_state.stations,
                                                    entity_search=simulation_state.s_search,
-                                                   entity_locations=simulation_state.s_locations,
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                    is_valid=lambda s: s.has_available_charger(Charger.DCFC))
             if nearest_station:
@@ -74,7 +73,6 @@ class GreedyDispatcher(Dispatcher):
             nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
                                                    entities=simulation_state.vehicles,
                                                    entity_search=simulation_state.v_search,
-                                                   entity_locations=simulation_state.v_locations,
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                    is_valid=_is_valid_for_dispatch)
             if nearest_vehicle:
@@ -91,7 +89,6 @@ class GreedyDispatcher(Dispatcher):
             nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
                                                 entities=simulation_state.bases,
                                                 entity_search=simulation_state.b_search,
-                                                entity_locations=simulation_state.b_locations,
                                                 sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
             if nearest_base:
                 instruction = Instruction(vehicle_id=veh.id,
