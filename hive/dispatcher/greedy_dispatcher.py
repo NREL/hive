@@ -6,7 +6,7 @@ from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.dispatcher.dispatcher import Dispatcher
-from hive.util.helpers import H3Ops, DictOps
+from hive.util.helpers import H3Ops
 from hive.util.units import unit
 
 
@@ -26,74 +26,79 @@ class GreedyDispatcher(Dispatcher):
         :return:
         """
         instructions = []
+        vehicle_ids_given_instructions = []
 
-        vehicles_to_consider = simulation_state.vehicles.copy()
-        stations_to_consider = simulation_state.stations.copy()
-
-        low_soc_vehicles = [v for v in vehicles_to_consider.values()\
-                            if v.energy_source.soc <= self.LOW_SOC_TRESHOLD\
+        # 1. find vehicles that require charging
+        low_soc_vehicles = [v for v in simulation_state.vehicles.values()
+                            if v.energy_source.soc <= self.LOW_SOC_TRESHOLD
                             and v.vehicle_state != VehicleState.DISPATCH_STATION]
         for veh in low_soc_vehicles:
-            for _ in range(len(simulation_state.stations)):
-                nearest_station = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
-                                                                      entities=stations_to_consider,
-                                                                      entity_locations=simulation_state.s_locations,
-                                                                      )
-                if not nearest_station:
-                    raise NotImplementedError('No stations found. Consider raising max_distance_km to higher threshold.')
-                elif not nearest_station.has_available_charger(Charger.DCFC):
-                    stations_to_consider = DictOps.remove_from_dict(stations_to_consider, nearest_station.id)
-                else:
-                    break
+            nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
+                                                   entities=simulation_state.stations,
+                                                   entity_search=simulation_state.s_search,
+                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                                   is_valid=lambda s: s.has_available_charger(Charger.DCFC))
+            if nearest_station:
+                instruction = Instruction(vehicle_id=veh.id,
+                                          action=VehicleState.DISPATCH_STATION,
+                                          location=nearest_station.geoid,
+                                          station_id=nearest_station.id,
+                                          charger=Charger.DCFC,
+                                          )
 
-            instruction = Instruction(vehicle_id=veh.id,
-                                      action=VehicleState.DISPATCH_STATION,
-                                      location=nearest_station.geoid,
-                                      station_id=nearest_station.id,
-                                      charger=Charger.DCFC,
-                                      )
-            instructions.append(instruction)
-            vehicles_to_consider = DictOps.remove_from_dict(vehicles_to_consider, veh.id)
+                instructions.append(instruction)
+                vehicle_ids_given_instructions.append(veh.id)
+            else:
+                # user set the max search radius too low (should really be computed by
+                # HIVE based on the RoadNetwork at initialization anyway)
+                # also possible: no charging stations available. implement a queueing solution
+                # for agents who could wait to charge
+                continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
             _valid_states = [VehicleState.IDLE,
                              VehicleState.CHARGING_BASE,
                              VehicleState.RESERVE_BASE,
                              VehicleState.DISPATCH_BASE]
-            if vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and vehicle.vehicle_state in _valid_states:
+            if vehicle.id not in vehicle_ids_given_instructions and \
+                    vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and \
+                    vehicle.vehicle_state in _valid_states:
                 return True
             else:
                 return False
 
+        # 2. find requests that need a vehicle
         unassigned_requests = [r for r in simulation_state.requests.values() if not r.dispatched_vehicle]
         for request in unassigned_requests:
-            nearest_vehicle = H3Ops.nearest_entity_point_to_point(geoid=request.origin,
-                                                                  entities=vehicles_to_consider,
-                                                                  entity_locations=simulation_state.v_locations,
-                                                                  is_valid=_is_valid_for_dispatch,
-                                                                  )
+            nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
+                                                   entities=simulation_state.vehicles,
+                                                   entity_search=simulation_state.v_search,
+                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                                   is_valid=_is_valid_for_dispatch)
             if nearest_vehicle:
                 instruction = Instruction(vehicle_id=nearest_vehicle.id,
                                           action=VehicleState.DISPATCH_TRIP,
                                           location=request.origin,
                                           request_id=request.id)
                 instructions.append(instruction)
-                vehicles_to_consider = DictOps.remove_from_dict(vehicles_to_consider, nearest_vehicle.id)
+                vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
-        stationary_vehicles = [v for v in vehicles_to_consider.values() if v.idle_time_s > self.MAX_IDLE_S]
+        stationary_vehicles = [v for v in simulation_state.vehicles.values() if
+                               v.idle_time_s > self.MAX_IDLE_S and v.id not in vehicle_ids_given_instructions]
         for veh in stationary_vehicles:
-            nearest_base = H3Ops.nearest_entity_point_to_point(geoid=veh.geoid,
-                                                               entities=simulation_state.bases,
-                                                               entity_locations=simulation_state.b_locations,
-                                                               )
-            if not nearest_base:
-                raise NotImplementedError('No bases found. Consider raising max_distance_km to higher threshold.')
-
-            instruction = Instruction(vehicle_id=veh.id,
-                                      action=VehicleState.DISPATCH_BASE,
-                                      location=nearest_base.geoid)
-            instructions.append(instruction)
-            vehicles_to_consider = DictOps.remove_from_dict(vehicles_to_consider, veh.id)
+            nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
+                                                entities=simulation_state.bases,
+                                                entity_search=simulation_state.b_search,
+                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
+            if nearest_base:
+                instruction = Instruction(vehicle_id=veh.id,
+                                          action=VehicleState.DISPATCH_BASE,
+                                          location=nearest_base.geoid)
+                instructions.append(instruction)
+                vehicle_ids_given_instructions.append(veh.id)
+            else:
+                # user set the max search radius too low
+                continue
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
             if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
@@ -101,7 +106,9 @@ class GreedyDispatcher(Dispatcher):
             else:
                 return False
 
-        base_charge_vehicles = [v for v in vehicles_to_consider.values() if _should_base_charge(v)]
+        # 3. charge vehicles sitting at base
+        base_charge_vehicles = [v for v in simulation_state.vehicles.values() if
+                                v.id not in vehicle_ids_given_instructions and _should_base_charge(v)]
         for v in base_charge_vehicles:
             base_id = simulation_state.b_locations[v.geoid][0]
             base = simulation_state.bases[base_id]
@@ -112,5 +119,6 @@ class GreedyDispatcher(Dispatcher):
                                           charger=Charger.LEVEL_2,
                                           )
                 instructions.append(instruction)
+                vehicle_ids_given_instructions.append(v.id)
 
         return self, tuple(instructions)
