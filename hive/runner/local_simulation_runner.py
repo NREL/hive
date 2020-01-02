@@ -60,6 +60,7 @@ class LocalSimulationRunner(NamedTuple):
                 update_functions,
                 payload
             )
+
             updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(updated_payload.s,
                                                                                        updated_payload.d)
             reporter.report(updated_sim, instructions, updated_payload.r)

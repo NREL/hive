@@ -36,7 +36,7 @@ runner = LocalSimulationRunner(env=env)
 reporter = DetailedReporter(config.io)
 dispatcher = GreedyDispatcher()
 
-initial_sim, _ = initial_simulation_state(
+initial_sim, errors = initial_simulation_state(
     road_network=HaversineRoadNetwork(),
     vehicles=vehicles,
     stations=stations,
@@ -44,14 +44,19 @@ initial_sim, _ = initial_simulation_state(
     powertrains=powertrains,
     powercurves=powercurves,
     sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
+    sim_h3_search_resolution=7
 )
+
+print(errors)
 
 update_functions = (CancelRequests(), UpdateRequestsFromString(requests))
 
-sim_result = runner.run(
-    initial_simulation_state=initial_sim,
-    initial_dispatcher=dispatcher,
-    update_functions=update_functions,
-    reporter=reporter,
-)
+if __name__ == "__main__":
+
+    sim_result = runner.run(
+        initial_simulation_state=initial_sim,
+        initial_dispatcher=dispatcher,
+        update_functions=update_functions,
+        reporter=reporter,
+    )
 

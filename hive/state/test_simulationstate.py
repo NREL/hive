@@ -11,6 +11,7 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request
+from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
@@ -85,18 +86,15 @@ class TestSimulationState(TestCase):
         sim_before_update = sim.add_vehicle(veh)
 
         # modify some value on the vehicle
-        new_geoid = h3.geo_to_h3(39.77, -105, sim_before_update.sim_h3_resolution)
-        updated_vehicle = veh._replace(geoid=new_geoid)
+        updated_powertrain = "testing an update"
+        updated_vehicle = veh._replace(powertrain_id=updated_powertrain)
 
         sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
 
         # confirm sim reflects changes to vehicle
-        self.assertIn(veh.id,
-                      sim_after_update.v_locations[new_geoid],
-                      "new vehicle geoid was not updated correctly")
-        self.assertNotIn(veh.geoid,
-                         sim_after_update.v_locations,
-                         "old vehicle geoid was not updated correctly")
+        self.assertEqual(sim_after_update.vehicles[veh.id].powertrain_id,
+                         updated_powertrain,
+                         "new vehicle powertrain_id was not updated correctly")
 
     def test_remove_vehicle(self):
         veh = SimulationStateTestAssets.mock_vehicle()
@@ -542,8 +540,8 @@ class TestSimulationState(TestCase):
         sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
         high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
                                           EnergyType.ELECTRIC,
-                                          capacity=50*unit.kilowatthour,
-                                          ideal_energy_limit=40*unit.kilowatthour,
+                                          capacity=50 * unit.kilowatthour,
+                                          ideal_energy_limit=40 * unit.kilowatthour,
                                           soc=0.75)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
@@ -571,8 +569,8 @@ class TestSimulationState(TestCase):
         bas = SimulationStateTestAssets.mock_base(geoid=somewhere, station_id=sta.id)
         high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
                                           EnergyType.ELECTRIC,
-                                          capacity=50*unit.kilowatthour,
-                                          ideal_energy_limit=40*unit.kilowatthour,
+                                          capacity=50 * unit.kilowatthour,
+                                          ideal_energy_limit=40 * unit.kilowatthour,
                                           soc=0.75)
         veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
         sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta).add_base(bas)
@@ -593,6 +591,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(fully_charged_veh.vehicle_state,
                          VehicleState.RESERVE_BASE,
                          "Vehicle should have transitioned to RESERVE_BASE")
+
 
 class SimulationStateTestAssets:
     class MockPowertrain(Powertrain):
@@ -619,7 +618,7 @@ class SimulationStateTestAssets:
 
         def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: s = 1 * unit.seconds,
                    step_size_seconds: s = 1 * unit.seconds) -> 'EnergySource':
-            return energy_source.load_energy(0.1*unit.kilowatthour)
+            return energy_source.load_energy(0.1 * unit.kilowatthour)
 
     @classmethod
     def mock_request(cls,
@@ -648,9 +647,8 @@ class SimulationStateTestAssets:
                            mock_powercurve.get_id(),
                            EnergySource.build(powercurve_id=mock_powercurve.get_id(),
                                               energy_type=EnergyType.ELECTRIC,
-                                              capacity=40*unit.kilowatthour,
+                                              capacity=40 * unit.kilowatthour,
                                               soc=0.5),
-                           geoid,
                            mock_property_link,
                            )
         return mock_veh
