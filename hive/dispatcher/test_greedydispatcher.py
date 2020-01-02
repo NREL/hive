@@ -165,7 +165,6 @@ class GreedyDispatcherTestAssets:
                            mock_powertrain.get_id(),
                            "",
                            EnergySource.build("", EnergyType.ELECTRIC, 40*unit.kilowatthour),
-                           # geoid,
                            mock_property_link,
                            )
         return mock_veh
@@ -174,7 +173,7 @@ class GreedyDispatcherTestAssets:
     def mock_station(cls,
                      station_id="s1",
                      geoid: GeoId = h3.geo_to_h3(39.75, -105.01, 15)) -> Station:
-        return Station.build(station_id, geoid, {Charger.LEVEL_2: 5})
+        return Station.build(station_id, geoid, {Charger.LEVEL_2: 5, Charger.DCFC: 1})
 
     @classmethod
     def mock_base(cls,

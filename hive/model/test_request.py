@@ -57,8 +57,7 @@ class MyTestCase(unittest.TestCase):
                               Link("test", h3.geo_to_h3(0, 0, 15), h3.geo_to_h3(1, 1, 15)),
                               10,
                               10,
-                              1),
-                          geoid=h3.geo_to_h3(0, 0, 11))
+                              1))
         request_as_passengers = self.request.passengers
         updated_vehicle = vehicle.add_passengers(request_as_passengers)
 

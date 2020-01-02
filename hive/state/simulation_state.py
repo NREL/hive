@@ -324,7 +324,7 @@ class SimulationState(NamedTuple):
             return self._replace(
                 stations=DictOps.remove_from_dict(self.stations, station_id),
                 s_locations=DictOps.remove_from_location_dict(self.s_locations, station.geoid, station_id),
-                s_search=DictOps.remove_from_location_dict(self.s_locations, search_geoid, station_id)
+                s_search=DictOps.remove_from_location_dict(self.s_search, search_geoid, station_id)
             )
 
     def modify_station(self, updated_station: Station) -> Union[Exception, SimulationState]:

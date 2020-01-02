@@ -188,7 +188,6 @@ class TestSimulationStateOps(TestCase):
                                             EnergyType.ELECTRIC,
                                             capacity=50*unit.kilowatthour,
                                             ),
-                         mock_geoid,
                          mock_property_link)
 
     mock_veh_2 = Vehicle("m2",
@@ -198,7 +197,6 @@ class TestSimulationStateOps(TestCase):
                                             EnergyType.ELECTRIC,
                                             capacity=50*unit.kilowatthour,
                                             ),
-                         mock_geoid,
                          mock_property_link)
 
     mock_station_1 = Station.build("s1", h3.geo_to_h3(39.75, -105.01, 15), {Charger.LEVEL_2: 5})

@@ -35,7 +35,6 @@ def _build_vehicles():
             powertrain_id="leaf",
             powercurve_id="leaf",
             energy_source=es,
-            # geoid=_base_geoid,
             property_link=_road_network.property_link_from_geoid(_base_geoid),
         )
         vehicles.append(v)

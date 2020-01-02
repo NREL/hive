@@ -94,7 +94,6 @@ class TestLocalSimulationRunnerAssets:
                                              None,
                                              50 * unit.kilowatt
                                              ),
-            geoid=geoid,
             property_link=HaversineRoadNetwork().property_link_from_geoid(geoid)
         )
 

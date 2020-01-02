@@ -304,7 +304,6 @@ class TestVehicle(TestCase):
                            powertrain_id=mock_powertrain.get_id(),
                            powercurve_id=mock_powercurve.get_id(),
                            energy_source=mock_energy_source,
-                           geoid=geoid,
                            property_link=mock_property_link
                            )
         return mock_veh

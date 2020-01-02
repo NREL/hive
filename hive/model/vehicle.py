@@ -29,7 +29,6 @@ class Vehicle(NamedTuple):
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
-    # geoid: GeoId
     property_link: PropertyLink
 
     # within-simulation attributes
@@ -115,7 +114,6 @@ class Vehicle(NamedTuple):
                     powertrain_id=powertrain_id,
                     powercurve_id=powercurve_id,
                     energy_source=energy_source,
-                    # geoid=geoid,
                     property_link=start_link,
                 )
 
@@ -217,14 +215,12 @@ class Vehicle(NamedTuple):
         if not remaining_route:
             geoid = experienced_route[-1].link.end
             updated_location_vehicle = new_route_vehicle._replace(
-                # geoid=geoid,
                 property_link=road_network.property_link_from_geoid(geoid),
                 distance_traveled=self.distance_traveled + step_distance,
 
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
-                # geoid=experienced_route[-1].link.end,
                 property_link=remaining_route[0],
                 distance_traveled=self.distance_traveled + step_distance,
 
