@@ -176,8 +176,8 @@ class H3Ops:
         """
 
         threshold = 0.001
-        experienced_distance = available_time * property_link.speed
-        ratio_trip_experienced = experienced_distance / property_link.distance
+        experienced_distance = available_time.magnitude * property_link.speed.magnitude
+        ratio_trip_experienced = experienced_distance / property_link.distance.magnitude
         if ratio_trip_experienced < (0 + threshold):
             return property_link.start
         elif (1 - threshold) < ratio_trip_experienced:

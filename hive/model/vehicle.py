@@ -232,13 +232,14 @@ class Vehicle(NamedTuple):
         if self.vehicle_state != VehicleState.IDLE:
             raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
-        idle_energy_rate = 0.8 * (unit.kilowatthour / unit.hour)
+        idle_energy_rate = 0.8 # (unit.kilowatthour / unit.hour)
 
-        idle_energy_kwh = idle_energy_rate * time_step_s.to(unit.hour)
+        idle_energy_kwh = (idle_energy_rate * time_step_s / 3600.0) * unit.kilowatthour
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 
-        vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=less_energy_vehicle.idle_time_s + time_step_s)
+        next_idle_time = (less_energy_vehicle.idle_time_s.magnitude + time_step_s.magnitude) * unit.seconds
+        vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=next_idle_time)
 
         return vehicle_w_stats
 
