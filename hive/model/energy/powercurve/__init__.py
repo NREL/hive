@@ -24,15 +24,16 @@ powercurve_energy_types = {
 }
 
 
-def build_powercurve(name: str) -> Union[IOError, Powercurve]:
+def build_powercurve(name: str) -> Powercurve:
     """
     constructs EnergyCurve objects from file descriptions
+
     :param name: name of a valid energy curve type
     :return: an EnergyCurve, or, an error
     :raise IOError: if model file is invalid
     """
     if name not in powercurve_models:
-        return IOError(f"EnergyCurve with name {name} is not recognized, must be one of {powercurve_models.keys()}")
+        raise IOError(f"EnergyCurve with name {name} is not recognized, must be one of {powercurve_models.keys()}")
     else:
         file_path = powercurve_models[name]
         energycurve_config = yaml.safe_load(file_path)

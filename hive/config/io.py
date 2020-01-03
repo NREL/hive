@@ -19,9 +19,11 @@ def _setup_logger(name, log_file, level=logging.INFO):
 
 
 class IO(NamedTuple):
-    working_directory: str
+    output_directory: str
     vehicles_file: str
     requests_file: str
+    bases_file: str
+    stations_file: str
     run_log: str
     vehicle_log: str
     request_log: str
@@ -29,13 +31,15 @@ class IO(NamedTuple):
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {'working_directory': "/tmp"}
+        return {'output_directory': ""}
 
     @classmethod
     def required_config(cls) -> Dict[str, type]:
         return {
             'vehicles_file': str,
-            'requests_file': str
+            'requests_file': str,
+            'bases_file': str,
+            'stations_file': str,
         }
 
     @classmethod
@@ -49,20 +53,22 @@ class IO(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> IO:
-        working_dir = d['working_directory']
+        output_dir = d['output_directory']
         run_logger = _setup_logger(name='run_log',
-                                   log_file=os.path.join(working_dir, 'run.log'), )
+                                   log_file=os.path.join(output_dir, 'run.log'), )
         vehicle_logger = _setup_logger(name='vehicle_log',
-                                       log_file=os.path.join(working_dir, 'vehicle.log'))
+                                       log_file=os.path.join(output_dir, 'vehicle.log'))
         request_logger = _setup_logger(name='request_log',
-                                       log_file=os.path.join(working_dir, 'request.log'))
+                                       log_file=os.path.join(output_dir, 'request.log'))
         instruction_logger = _setup_logger(name='instruction_log',
-                                           log_file=os.path.join(working_dir, 'instruction.log'))
+                                           log_file=os.path.join(output_dir, 'instruction.log'))
 
         return IO(
-            working_directory=d['working_directory'],
+            output_directory=d['output_directory'],
             vehicles_file=d['vehicles_file'],
             requests_file=d['requests_file'],
+            bases_file=d['bases_file'],
+            stations_file=d['stations_file'],
             run_log=run_logger.name,
             vehicle_log=vehicle_logger.name,
             request_log=request_logger.name,

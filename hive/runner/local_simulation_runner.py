@@ -45,7 +45,7 @@ class LocalSimulationRunner(NamedTuple):
         time_steps = range(
             self.env.config.sim.start_time_seconds,
             self.env.config.sim.end_time_seconds,
-            self.env.config.sim.timestep_duration_seconds.magnitude
+            self.env.config.sim.timestep_duration_seconds
         )
 
         def _run_step(payload: RunnerPayload, t: int) -> RunnerPayload:
@@ -64,7 +64,8 @@ class LocalSimulationRunner(NamedTuple):
             updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(updated_payload.s,
                                                                                        updated_payload.d)
             reporter.report(updated_sim, instructions, updated_payload.r)
-            print(f"running step {updated_sim.sim_time} of {len(time_steps)}")
+            if updated_sim.sim_time % 100 == 0:
+                print(f"running step {updated_sim.sim_time} of {len(time_steps)}")
             return RunnerPayload(updated_sim, updated_dispatcher, ())
 
         final_payload = ft.reduce(

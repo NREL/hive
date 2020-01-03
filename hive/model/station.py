@@ -28,7 +28,7 @@ class Station(NamedTuple):
     @classmethod
     def from_row(cls, row: Dict[str, str],
                  builder: Dict[StationId, Station],
-                 sim_h3_resolution: int) -> Union[IOError, Station]:
+                 sim_h3_resolution: int) -> Station:
         """
         takes a csv row and turns it into a Station
         :param row: a row as interpreted by csv.DictReader
@@ -38,15 +38,15 @@ class Station(NamedTuple):
         :return: a Station, or an error
         """
         if 'station_id' not in row:
-            return IOError("cannot load a station without a 'station_id'")
+            raise IOError("cannot load a station without a 'station_id'")
         elif 'lat' not in row:
-            return IOError("cannot load a station without an 'lat' value")
+            raise IOError("cannot load a station without an 'lat' value")
         elif 'lon' not in row:
-            return IOError("cannot load a station without an 'lon' value")
+            raise IOError("cannot load a station without an 'lon' value")
         elif 'charger_type' not in row:
-            return IOError("cannot load a station without a 'charger_type' value")
+            raise IOError("cannot load a station without a 'charger_type' value")
         elif 'charger_count' not in row:
-            return IOError("cannot load a station without a 'charger_count' value")
+            raise IOError("cannot load a station without a 'charger_count' value")
         else:
             station_id = row['station_id']
             try:
@@ -56,7 +56,7 @@ class Station(NamedTuple):
                 charger_count = int(row['charger_count'])
 
                 if charger_type is None:
-                    return IOError(f"invalid charger type {row['charger']} for station {station_id}")
+                    raise IOError(f"invalid charger type {row['charger']} for station {station_id}")
                 elif station_id not in builder:
                     # create this station
                     return Station.build(
@@ -85,7 +85,7 @@ class Station(NamedTuple):
                     )
 
             except ValueError:
-                return IOError(f"unable to parse request {station_id} from row due to invalid value(s): {row}")
+                raise IOError(f"unable to parse request {station_id} from row due to invalid value(s): {row}")
 
     def has_available_charger(self, charger: Charger) -> bool:
         if charger in self.total_chargers:
