@@ -1,10 +1,10 @@
 import sys
-
-sys.path.append('..')
-
 import yaml
 import csv
 import os
+import time
+
+sys.path.append('..')
 
 from hive.config import *
 from hive.runner.local_simulation_runner import LocalSimulationRunner
@@ -45,7 +45,7 @@ build_errors = []
 with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
     builder = []
     powertrain_builder = {}
-    powercurve_builder = {} 
+    powercurve_builder = {}
     reader = csv.DictReader(vf)
     for row in reader:
         try:
@@ -60,7 +60,7 @@ with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
             build_errors.append(err)
         try:
             powercurve = build_powercurve(row['powercurve_id'])
-            powercurve_builder[powercurve.get_id()] = powercurve 
+            powercurve_builder[powercurve.get_id()] = powercurve
         except IOError as err:
             build_errors.append(err)
 
@@ -114,9 +114,12 @@ with open(requests_file, 'r', encoding='utf-8-sig') as rf:
 
 update_functions = (CancelRequests(), UpdateRequestsFromString(requests_string))
 
+start = time.time()
 sim_result = runner.run(
     initial_simulation_state=initial_sim,
     initial_dispatcher=dispatcher,
     update_functions=update_functions,
     reporter=reporter,
 )
+end = time.time()
+print(f'done! time elapsed: {round(end - start, 2)} seconds')

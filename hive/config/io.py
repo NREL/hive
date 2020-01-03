@@ -53,7 +53,11 @@ class IO(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> IO:
+        # TODO: Move logging outside of the config construction.
         output_dir = d['output_directory']
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+
         run_logger = _setup_logger(name='run_log',
                                    log_file=os.path.join(output_dir, 'run.log'), )
         vehicle_logger = _setup_logger(name='vehicle_log',

@@ -64,10 +64,9 @@ class TestH3Ops(TestCase):
                                                sim_h3_search_resolution=h3_search_res)
         sim_with_reqs = sim.add_request(req_near).add_request(req_far)
 
-        nearest = H3Ops.nearest_entity(somewhere,
-                                       sim_with_reqs.requests,
-                                       sim_with_reqs.r_search,
-                                       sim_with_reqs.r_locations,
-                                       sim_with_reqs.sim_h3_search_resolution)
+        nearest = H3Ops.nearest_entity(geoid=somewhere,
+                                       entities=sim_with_reqs.requests,
+                                       entity_search=sim_with_reqs.r_search,
+                                       sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
 
         self.assertEqual(nearest.geoid, req_near.geoid)
