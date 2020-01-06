@@ -26,8 +26,6 @@ ride hail fleets by providing the following features:
 - 100% Python (v 3.8) code with a small number of dependencies
 
 The project is currently closed-source and in alpha development, with plans to open-source in summer of 2020.
-The developer API can be found by loading [docs/index.html](/docs/index.html) after downloading
-the HIVE repository.
 
 ## Dependencies
 
@@ -63,6 +61,9 @@ To build the environment simply run:
 Then, activate the environment with:
 
     > conda activate hive
+    
+The developer API is a [Sphinx](http://www.sphinx-doc.org/en/master/) project which can be built by installing 
+Sphinx with type hints via `pip install sphinx-autodoc-typehints` and following the build instructions.
 
 ## Running a Scenario
 
