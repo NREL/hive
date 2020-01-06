@@ -15,6 +15,7 @@
 import os
 import sys
 sys.path.append(os.path.abspath('../..'))
+sys.path.append(os.path.abspath("./ext"))
 
 
 # -- Project information -----------------------------------------------------
@@ -45,7 +46,11 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'named_tuple',
+    'sphinx_autodoc_typehints',
 ]
+
+autodoc_member_order = 'bysource'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
