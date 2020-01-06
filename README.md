@@ -24,9 +24,12 @@ ride hail fleets by providing the following features:
 - 100% Python code
 
 The project is currently closed-source and in alpha development, with plans to open-source in summer of 2020.
-The developer API can be found at [docs/index.html](/docs/index.html).
+The developer API can be found by loading [docs/index.html](/docs/index.html) after downloading
+the HIVE repository.
 
 ## Dependencies
+
+At this point, HIVE 
 
 HIVE has only two major dependencies. Uber H3 is a geospatial index which HIVE uses for
 positioning and search. PyYAML is used to load YAML-based configuration and scenario files.
@@ -61,13 +64,33 @@ Then, activate the environment with:
 
 ## Running a Scenario
 
-Hive v0.3.0 comes packaged with a demo scenario for Downtown Denver. In order
-to run our demo scenario we just need to navigate to the app/ sub directory
-and run:
+![Map of Denver Downtown](app/scenarios/denver_demo.jpg)
 
+Running HIVE takes one argument, which is a configuration file. Hive v0.3.0 comes packaged with a demo scenario 
+for Downtown Denver, located at `app/scenarios/denver_demo.yaml`. This file names the inputs and the configuration
+Parameters for running HIVE. Additional parameters exist with default values assigned, which will be documented in 
+a future version of HIVE.
+
+In order to run our demo scenario we just need to navigate to the `app/` sub directory and run HIVE:
+
+    > cd app
     > python run.py scenarios/denver_demo.yaml
 
-This runs the demo scenario and writes outputs to `app/denver_demo_outputs`
+This runs the demo scenario and writes outputs to `app/denver_demo_outputs`. These output files can be parsed 
+by Pandas using `pd.read_json(output_file.json, lines=True)` (for Pandas > 0.19.0).
+
+## Roadmap
+
+HIVE intends to implement the following features:
+
+- Routing from OSM networks with time-varying speeds
+- Revised trip energy & recharging
+- Economics
+- Fleet control algorithms from literature for more optimal control
+- Gasoline vehicles
+- Integration into vehicle and grid energy models
+- Dynamic energy pricing
+- Distributed HPC cluster implementation for large problem inputs
 
 ## License
 
