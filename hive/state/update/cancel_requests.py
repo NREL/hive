@@ -11,6 +11,7 @@ class CancelRequests(SimulationUpdate):
     def update(self, simulation_state: SimulationState) -> SimulationUpdateResult:
         """
         cancels requests whose cancel time has been exceeded
+
         :param simulation_state: state to modify
         :return: state without cancelled requests, along with this update function
         """
@@ -29,6 +30,7 @@ class CancelRequests(SimulationUpdate):
 def _as_json(r_id: RequestId, sim: SimulationState) -> str:
     """
     stringified json report of a cancellation
+
     :param r_id: request cancelled
     :param sim: the state of the sim before cancellation occurs
     :return: a stringified json report

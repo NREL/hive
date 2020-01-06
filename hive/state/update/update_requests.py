@@ -12,6 +12,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                                   initial_sim_state: SimulationState) -> SimulationUpdateResult:
     """
     add requests from file when the simulation reaches the request's time
+
     :param it: expected to be a Request iterator which streams in row data taken from a DictReader
     :param initial_sim_state: the current sim state
     :return: sim state plus new requests
@@ -20,6 +21,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     def _update(acc: SimulationUpdateResult, row: Dict[str, str]) -> SimulationUpdateResult:
         """
         takes one row, attempts to parse it as a Request, and attempts to add it to the simulation
+
         :param acc: latest SimulationState and any update reports
         :param row: one row as loaded via DictReader
         :return: the updated sim and updated reporting
@@ -53,6 +55,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
 def _success_as_json(r_id: RequestId, sim: SimulationState) -> str:
     """
     stringified json report of a cancellation
+
     :param r_id: request cancelled
     :param sim: the state of the sim before cancellation occurs
     :return: a stringified json report
@@ -64,6 +67,7 @@ def _success_as_json(r_id: RequestId, sim: SimulationState) -> str:
 def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
     """
     stringified json report of a cancellation
+
     :param error_msg: error message
     :param sim: the state of the sim before cancellation occurs
     :return: a stringified json report of an error
@@ -74,6 +78,7 @@ def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
 def _eof_as_json(sim: SimulationState) -> str:
     """
     notification of end-of-file
+
     :param sim: the simulation state
     :return: a stringified end-of-file report
     """

@@ -15,6 +15,18 @@ from hive.util.units import unit, h, s, km
 
 
 class RouteTraversal(NamedTuple):
+    """
+    A tuple that represents the result of traversing a route.
+
+    :param remaining_time: The (estimated) time remaining in the route.
+    :type remaining_time: :py:obj:`hours`
+    :param travel_distance: The distance of the experienced route.
+    :type travel_distance: :py:obj:`kilometers`
+    :param experienced_route: The route that was traversed during a traversal.
+    :type experienced_route: :py:obj:`Route`
+    :param remaining_route: The route that remains after a traversal.
+    :type remaining_route: :py:obj:`Route`
+    """
     remaining_time: h = 0 * unit.hours
     traversal_distance: km = 0 * unit.kilometers
     experienced_route: Route = ()
@@ -23,6 +35,7 @@ class RouteTraversal(NamedTuple):
     def no_time_left(self):
         """
         if we have no more time, then end the traversal
+
         :return: True if the agent is out of time
         """
         return self.remaining_time.magnitude == 0
@@ -30,6 +43,7 @@ class RouteTraversal(NamedTuple):
     def add_traversal(self, t: LinkTraversal) -> RouteTraversal:
         """
         take the result of a link traversal and update the route traversal
+
         :param t: a link traversal
         :return: the updated route traversal
         """
@@ -53,6 +67,7 @@ class RouteTraversal(NamedTuple):
     def add_link_not_traversed(self, link: PropertyLink) -> RouteTraversal:
         """
         if a link wasn't traversed, be sure to add it to the remaining route
+
         :param link: a link for the remaining route
         :return: the updated RouteTraversal
         """
@@ -66,6 +81,7 @@ def traverse(route_estimate: Route,
              time_step: s) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
+
     :param route_estimate: the current route estimate
     :param road_network: the current road network state
     :param time_step: size of the time step for this traversal

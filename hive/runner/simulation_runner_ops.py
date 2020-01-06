@@ -10,8 +10,11 @@ from hive.state.simulation_state import SimulationState
 
 def step(simulation_state: SimulationState, dispatcher: Dispatcher) -> Tuple[SimulationState, Dispatcher, Tuple[Instruction, ...]]:
     """
-    take one step in the simulation
-    :return: simulation at time t+1
+    Steps the simulation by one time step.
+
+    :param simulation_state: Simulation state at time t
+    :param dispatcher: Dispatcher at time t
+    :return: simulation state, dispatcher at time t+1, instructions generated.
     """
     updated_dispatcher, instructions = dispatcher.generate_instructions(simulation_state)
     sim_with_instructions = simulation_state_ops.apply_instructions(simulation_state, instructions)

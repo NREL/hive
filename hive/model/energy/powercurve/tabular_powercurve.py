@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class TabularPowerCurveInput(TypedDict):
+    """
+    Inputs for the TabularPowerCurve
+    """
     name: str
     type: str
     power_type: str
@@ -26,7 +29,6 @@ class TabularPowerCurveInput(TypedDict):
 class TabularPowercurve(Powercurve):
     """
     builds a tabular, interpolated lookup model from a file
-    for energy curves
     """
 
     def __init__(self, data: TabularPowerCurveInput):

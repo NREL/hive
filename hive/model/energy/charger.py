@@ -7,18 +7,28 @@ from hive.util.units import unit, kw
 
 
 class Charger(Enum):
+    """
+    Represents a charger in the simulation.
+    """
     LEVEL_1 = 3.3 * unit.kilowatt
     LEVEL_2 = 7.2 * unit.kilowatt
     DCFC = 50 * unit.kilowatt
 
     @property
     def power(self) -> kw:
+        """
+        Returns the power of the charger in kilowatts
+
+        :rtype: :py:obj:`kilowats`
+        :return: charge power in kilowatts
+        """
         return self.value
 
     @classmethod
     def from_string(cls, s: str) -> Optional[Charger]:
         """
         converts a string into a Charger
+
         :return: the named charger, or None if name wasn't valid
         """
         s_lower = s.lower()

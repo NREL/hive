@@ -6,6 +6,7 @@ config.py
 .DS_Store
 *.pstats
 outputs/
+profiling/
 .idea
 
 # Byte-compiled / optimized / DLL files
@@ -111,3 +112,7 @@ ENV/
 
 # doit
 *.db
+/profiling/
+
+# sphinx documentation
+docs/build

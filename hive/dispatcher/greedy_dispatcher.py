@@ -20,11 +20,6 @@ class GreedyDispatcher(Dispatcher):
     MAX_IDLE_S = 600 * unit.seconds
 
     def generate_instructions(self, simulation_state: SimulationState, ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
-        """
-        Generates instructions for a given simulation state.
-        :param simulation_state:
-        :return:
-        """
         instructions = []
         vehicle_ids_given_instructions = []
 
@@ -32,6 +27,7 @@ class GreedyDispatcher(Dispatcher):
         low_soc_vehicles = [v for v in simulation_state.vehicles.values()
                             if v.energy_source.soc <= self.LOW_SOC_TRESHOLD
                             and v.vehicle_state != VehicleState.DISPATCH_STATION]
+        nearest_station = None
         for veh in low_soc_vehicles:
             nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                    entities=simulation_state.stations,

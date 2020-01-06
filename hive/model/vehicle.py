@@ -24,14 +24,46 @@ from h3 import h3
 
 
 class Vehicle(NamedTuple):
-    # user-defined attributes
+    """
+    Tuple that represents a vehicle in the simulation.
+
+    :param id: A unique vehicle id.
+    :type id: :py:obj:`VehicleId`
+    :param powertrain_id: Id for the vehicle's respective powertrain
+    :type powertrain_id: :py:obj:`PowertrainId`
+    :param powercurve_id: Id for the vehicle's respective powercurve
+    :type powercurve_id: :py:obj:`PowercurveId`
+    :param energy_source: The energy source for the vehicle
+    :type energy_source: :py:obj:`EnergySource`
+    :param geoid: The current location of the vehicle
+    :type geoid: :py:obj:`GeoId`
+    :param property_link: The current location of the vehicle on the road network
+    :type property_link: :py:obj:`PropertyLink`
+    :param route: The route of the vehicle. Could be empty.
+    :type route: :py:obj:`Route`
+    :param vehicle_state: The state that the vehicle is in.
+    :type vehicle_state: :py:obj:`VehicleState`
+    :param passengers: A map of passengers that are in the vehicle. Could be empty
+    :type passengers: :py:obj:`Dict[PasengerId, Passengers]`
+    :param station_intent: The station a vehicle is intending to charge at.
+    :type station_intent: :py:obj:`Optional[StationId]`
+    :param charger_intent: The charger type a vehicle intends to plug into.
+    :type charger_intent: :py:obj:`Optional[Charger]`
+    :param station: The station a vehicle is charging at.
+    :type station: :py:obj:`Optional[Station]`
+    :param plugged_in_charger: The charger type a vehicle is plugged into.
+    :type plugged_in_charger: :py:obj:`Optional[Charger]`
+    :param idle_time_s: A counter to track how long the vehicle has been idle.
+    :type idle_time_s: :py:obj:`seconds`
+    :param distance_traveled: A accumulator to track how far a vehicle has traveled.
+    :type distance_traveled: :py:obj:`kilometers`
+    """
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
     property_link: PropertyLink
 
-    # within-simulation attributes
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     passengers: Dict[PassengerId, Passenger] = {}
@@ -121,15 +153,25 @@ class Vehicle(NamedTuple):
                 raise IOError(f"a numeric value could not be parsed from {row}")
 
     def has_passengers(self) -> bool:
+        """
+        Returns whether or not the vehicle has passengers.
+
+        :return: Boolean
+        """
         return len(self.passengers) > 0
 
     def has_route(self) -> bool:
+        """
+        Returns whether or not the vehicle has a route.
+
+        :return: Boolean
+        """
         return len(self.route) != 0
 
     def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
         """
-        loads some passengers onto this vehicle
-        :param self:
+        Loads some passengers onto this vehicle
+
         :param new_passengers: the set of passengers we want to add
         :return: the updated vehicle
         """
@@ -140,6 +182,12 @@ class Vehicle(NamedTuple):
         return self._replace(passengers=updated_passengers)
 
     def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
+        """
+        Drops off passengers to their destination.
+
+        :param passenger_id:
+        :return: the updated vehicle
+        """
         if passenger_id not in self.passengers:
             return self
         updated_passengers = DictOps.remove_from_dict(self.passengers, passenger_id)
@@ -148,10 +196,22 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
-    def plug_in_to(self, station_id: StationId, charger: Charger):
+    def plug_in_to(self, station_id: StationId, charger: Charger) -> Vehicle:
+        """
+        Plugs a vehicle into a charger.
+
+        :param station_id: id of the station to plug into
+        :param charger: charger type to plug into
+        :return: the updated vehicle
+        """
         return self._replace(plugged_in_charger=charger, station=station_id)
 
-    def unplug(self):
+    def unplug(self) -> Vehicle:
+        """
+        Unplugs a vehicle from a charger.
+
+        :return: the updated vehicle
+        """
         return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
@@ -166,9 +226,9 @@ class Vehicle(NamedTuple):
 
         """
         applies a charge event to a vehicle
+
         :param powercurve: the vehicle's powercurve model
-        :param charger: the charger provided by the station
-        :param duration: duration of this time step
+        :param duration: duration of this time step in seconds
         :return: the updated Vehicle
         """
 
@@ -185,9 +245,10 @@ class Vehicle(NamedTuple):
     def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: s) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
-        :param road_network:
-        :param power_train:
-        :param time_step:
+
+        :param road_network: the road network
+        :param power_train: the vehicle's powertrain model
+        :param time_step: the duration of this move step in seconds
         :return: the updated vehicle or None if moving is not possible.
         """
         if not self.has_route():
@@ -229,6 +290,12 @@ class Vehicle(NamedTuple):
         return updated_location_vehicle
 
     def idle(self, time_step_s: s) -> Vehicle:
+        """
+        Performs an idle step.
+
+        :param time_step_s: duration of the idle step in seconds
+        :return: the updated vehicle
+        """
         if self.vehicle_state != VehicleState.IDLE:
             raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
@@ -244,12 +311,31 @@ class Vehicle(NamedTuple):
         return vehicle_w_stats
 
     def battery_swap(self, energy_source: EnergySource) -> Vehicle:
+        """
+        Replaces the vehicle energy source with a new energy source.
+
+        :param energy_source: the new energy source
+        :return: the updated vehicle
+        """
         return self._replace(energy_source=energy_source)
 
     def assign_route(self, route: Route) -> Vehicle:
+        """
+        Assigns a route to the vehicle
+
+        :param route: the route to be assigned
+        :return: the updated vehicle
+        """
         return self._replace(route=route)
 
-    def set_charge_intent(self, station_id: StationId, charger: Charger):
+    def set_charge_intent(self, station_id: StationId, charger: Charger) -> Vehicle:
+        """
+        Sets the intention for a vehicle to charge.
+
+        :param station_id: which station the vehicle intends to charge at
+        :param charger: the type of charger the vehicle intends to use
+        :return: the updated vehicle
+        """
         return self._replace(station_intent=station_id, charger_intent=charger)
 
     """
@@ -258,6 +344,12 @@ class Vehicle(NamedTuple):
     """
 
     def can_transition(self, vehicle_state: VehicleState) -> bool:
+        """
+        Returns whether or not a vehicle can transition to a new state from its current state
+
+        :param vehicle_state: the new state to transition to
+        :return: Boolean
+        """
         if not VehicleState.is_valid(vehicle_state):
             raise TypeError("Invalid vehicle state type.")
         elif self.vehicle_state == vehicle_state:
@@ -268,6 +360,12 @@ class Vehicle(NamedTuple):
             return True
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
+        """
+        Transitions the vehicle to a new state if possible.
+
+        :param vehicle_state: the new state to transition to
+        :return: the updated vehicle or None if not possible
+        """
         previous_vehicle_state = self.vehicle_state
         if previous_vehicle_state == vehicle_state:
             return self

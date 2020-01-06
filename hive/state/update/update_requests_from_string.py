@@ -16,6 +16,7 @@ class UpdateRequestsFromString(SimulationUpdate):
     def __init__(self, string_requests: str):
         """
         reads a requests file and builds a UpdateRequestsFromFile SimulationUpdate function
+
         :param string_requests: requests as a string, with header
         :return: a SimulationUpdate function based on the string data
         """
@@ -28,6 +29,7 @@ class UpdateRequestsFromString(SimulationUpdate):
     def update(self, initial_sim_state: SimulationState) -> SimulationUpdateResult:
         """
         add requests from file when the simulation reaches the request's time
+
         :param initial_sim_state: the current sim state
         :return: sim state plus new requests
         """
@@ -51,6 +53,7 @@ class RequestStringIterator:
     def __next__(self) -> Dict[str, str]:
         """
         attempts to grab the next row from the string
+
         :return: a row, or, raises a StopIteration when end-of-file
         :raises StopIteration: when source is empty, or, if all departures up to the present sim time have been found
         """

@@ -9,10 +9,28 @@ from h3 import h3
 
 class Request(NamedTuple):
     """
-    a ride hail request which is alive in the simulation but not yet serviced.
-    it should only exist if the current sim time >= self.departure_time.
-    it should be removed once the current sim time == self.cancel_time.
-    if a vehicle has been dispatched to service this Request, then it should
+    A ride hail request which is alive in the simulation but not yet serviced.
+    It should only exist if the current sim time >= self.departure_time.
+    It should be removed once the current sim time == self.cancel_time.
+    If a vehicle has been dispatched to service this Request, then it should hold the vehicle id
+    and the time that vehicle was dispatched to it.
+
+    :param id: A unique id for the request.
+    :type id: :py:obj:`RequestId`
+    :param origin: The geoid of the request origin.
+    :type origin: :py:obj:`GeoId`
+    :param destination: The geoid of the request destination.
+    :type destination: :py:obj:`GeoId`
+    :param departure_time: The time of departure.
+    :type departure_time: :py:obj:`SimTime`
+    :param cancel_time: The time when this request will cancel.
+    :type cancel_time: :py:obj:`SimTime`
+    :param passengers: A tuple of passengers associated with this request.
+    :type passengers: :py:obj:`Tuple[Passenger]`
+    :param dispatched_vehicle: The id of the vehicle dispatched to service this request.
+    :type dispatched_vehicle: :py:obj:`Optional[VehicleId]`
+    :param dispatched_vehicle_time: Time time which a vehicle was dispatched for this request.
+    :type dispatched_vehicle_time: :py:obj:`Optional[SimTime]`
     """
     id: RequestId
     origin: GeoId
@@ -31,16 +49,6 @@ class Request(NamedTuple):
               departure_time: SimTime,
               cancel_time: SimTime,
               passengers: int) -> Request:
-        """
-        constructor which tests assertions about the arguments for this Request
-        :param request_id:
-        :param origin:
-        :param destination:
-        :param departure_time:
-        :param cancel_time:
-        :param passengers:
-        :return:
-        """
         assert (departure_time >= 0)
         assert (cancel_time >= 0)
         assert (passengers > 0)
@@ -59,6 +67,7 @@ class Request(NamedTuple):
     def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Union[IOError, Request]:
         """
         takes a csv row and turns it into a Request
+
         :param row: a row as interpreted by csv.DictReader
         :param road_network: the road network loaded for this simulation
         :return: a Request, or an error
@@ -108,6 +117,7 @@ class Request(NamedTuple):
         """
         allows the dispatcher to update the request that a vehicle has been dispatched to them.
         this does not signal that the vehicle is guaranteed to pick them up.
+
         :param vehicle_id: the vehicle that is planning to service the request
         :param current_time: the current simulation time
         :return: the updated Request
@@ -118,8 +128,9 @@ class Request(NamedTuple):
         """
         used to override a request's origin location as the centroid of the spatial grid,
         to make guarantees about what conditions will make requests overlap with vehicles.
-        :param geoid:
-        :return:
+
+        :param geoid: The new request origin
+        :return: The updated request
         """
         return self._replace(
             origin=geoid

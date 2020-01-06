@@ -12,6 +12,16 @@ from hive.state.update import SimulationUpdate
 
 
 class RunnerPayload(NamedTuple):
+    """
+    Holds the simulation state, dispatcher and reports for the simulation run.
+
+    :param s: the simulation state
+    :type s: :py:obj:`SimulationState`
+    :param d: the dispatcher
+    :type d: :py:obj:`Dispatcher`
+    :param r: any reports generated for a timestep
+    :type r: :py:obj:`Tuple[str, ...]`
+    """
     s: SimulationState
     d: Dispatcher
     r: Tuple[str, ...] = ()
@@ -25,6 +35,12 @@ class RunnerPayload(NamedTuple):
 
 
 class LocalSimulationRunner(NamedTuple):
+    """
+    The local simulation runner.
+
+    :param env: The environment variables.
+    :type env: :py:obj:`Environment`
+    """
     env: Environment
 
     def run(self,
@@ -35,6 +51,7 @@ class LocalSimulationRunner(NamedTuple):
             ) -> RunnerPayload:
         """
         steps through time, running a simulation, and producing a simulation result
+
         :param initial_simulation_state: the simulation state before the day has begun
         :param initial_dispatcher: the initialized dispatcher
         :param update_functions: applied at the beginning of each time step to modify the sim
@@ -49,12 +66,6 @@ class LocalSimulationRunner(NamedTuple):
         )
 
         def _run_step(payload: RunnerPayload, t: int) -> RunnerPayload:
-            """
-            inner loop of a LocalSimulationRunner
-            :param payload: the sim state and dispatcher state
-            :param t: the (expected) time
-            :return: the resulting sim state
-            """
             updated_payload = ft.reduce(
                 lambda acc, fn: acc.apply_fn(fn),
                 update_functions,

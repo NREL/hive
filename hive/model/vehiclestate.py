@@ -6,8 +6,6 @@ from enum import Enum
 class VehicleState(Enum):
     """
     A finite set of vehicle states and rules for state transitions
-
-
     """
 
     # INACTIVE FLEET MANAGEMENT
@@ -25,7 +23,13 @@ class VehicleState(Enum):
     CHARGING_STATION = 8
 
     @classmethod
-    def is_valid(cls, state):
+    def is_valid(cls, state) -> bool:
+        """
+        Determines if a state is valid
+
+        :param state: vehicle state
+        :return: Boolean
+        """
         return state in _valid_vehicle_states
 
 
@@ -52,6 +56,12 @@ class VehicleStateCategory(Enum):
 
     @classmethod
     def from_vehicle_state(cls, vehicle_state: VehicleState) -> VehicleStateCategory:
+        """
+        maps a VehicleStateCategory from a VehicleState.
+
+        :param vehicle_state: the vehicle state
+        :return: the vehicle state category
+        """
         return _vehicle_state_category[vehicle_state]
 
 

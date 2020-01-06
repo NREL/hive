@@ -23,6 +23,7 @@ class UpdateRequestsFromFile(SimulationUpdate):
     def __init__(self, request_file: str):
         """
         reads a requests file and builds a UpdateRequestsFromFile SimulationUpdate function
+
         :param request_file: file path for requests
         :return: a SimulationUpdate function pointing at the first line of a request file
         """
@@ -36,6 +37,7 @@ class UpdateRequestsFromFile(SimulationUpdate):
     def update(self, initial_sim_state: SimulationState) -> SimulationUpdateResult:
         """
         add requests from file when the simulation reaches the request's time
+
         :param initial_sim_state: the current sim state
         :return: sim state plus new requests
         """
@@ -48,6 +50,7 @@ class RequestFileIterator:
     def __init__(self, reader: _csv.reader, file: TextIO, sim_time: SimTime):
         """
         creates an iterator up to a departure time boundary, inclusive
+
         :param reader: file reader
         :param file: source file handler
         :param sim_time: time we are scheduling up to and including
@@ -59,6 +62,7 @@ class RequestFileIterator:
     def __next__(self) -> Dict[str, str]:
         """
         attempts to grab the next row from the file
+
         :return: a row, or, raises a StopIteration when end-of-file
         :raises StopIteration: when file is empty, or, if all departures up to the present sim time have been found
         """

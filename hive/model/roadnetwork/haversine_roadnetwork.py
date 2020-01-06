@@ -16,6 +16,12 @@ class HaversineRoadNetwork(RoadNetwork):
     This assumes a fully connected graph between each node in which the shortest path is the link that connects any
     two nodes. LinkId is specified as a concatenation of the GeoId of its endpoints in which the order is given by
     origin and destination respectively.
+
+    :param AVG_SPEED: the average speed over the network
+    :type AVG_SPEED: :py:obj: kilometer/hour
+    :param sim_h3_resolution: the h3 simulation level resolution. default 15
+    :type sim_h3_resolution: :py:obj: int
+
     """
 
     # TODO: Replace speed with more accurate/dynamic estimate.
@@ -31,7 +37,7 @@ class HaversineRoadNetwork(RoadNetwork):
     def _link_id_to_geodis(self, link_id: LinkId) -> Tuple[GeoId, GeoId]:
         ids = link_id.split("-")
         if len(ids) != 2:
-            raise(TypeError("LinkId not in expected format of [GeoId]-[GeoId]"))
+            raise (TypeError("LinkId not in expected format of [GeoId]-[GeoId]"))
         start = ids[0]
         end = ids[1]
 
@@ -44,85 +50,49 @@ class HaversineRoadNetwork(RoadNetwork):
 
         property_link = self.get_link(link_id)
 
-        route = (property_link, )
+        route = (property_link,)
 
         return route
 
     def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
-        """
-        builds a location on the road network for a stationary simulation element
-        :param geoid:
-        :return:
-        """
         link_id = self._geoids_to_link_id(geoid, geoid)
         link = Link(link_id, geoid, geoid)
         return PropertyLink(link_id, link, 0, 0, 0)
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
-        """
-        gives the RoadNetwork a chance to update it's flow network based on the current simulation time
-        :param sim_time: the sim time to update the model to
-        :return: does not return
-        """
 
         # This particular road network implementation doesn't keep track of network flow so this method does nothing.
         return self
 
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
-        """
-        gets the link associated with the LinkId, or, if invalid, returns None
-        :param link_id: a link id
-        :return: a Link, or None if LinkId does not exist
-        """
+
         if not self.link_id_within_simulation(link_id):
             return None
 
         start, end = self._link_id_to_geodis(link_id)
         link = Link(link_id, start, end)
-        property_link = PropertyLink.build(link, self._AVG_SPEED)
+        property_link = PropertyLink.build(link, self.AVG_SPEED)
 
         return property_link
 
     def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-        """
-        gets the current properties for a given property link, or, if invalid, returns None
-        :param property_link: a property link
-        :return: a Property Link, or None if LinkId does not exist
-        """
+
         return property_link
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon of this road network instance
-        :param geoid: an h3 geoid
-        :return: True/False
-        """
+
         return True
 
     def link_id_within_geofence(self, link_id: LinkId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon of this road network instance
-        :param link_id: a position on the road network across the entire simulation
-        :return: True/False
-        """
+
         start, end = self._link_id_to_geodis(link_id)
         return self.geoid_within_geofence(start) and self.geoid_within_geofence(end)
 
     def geoid_within_simulation(self, geoid: GeoId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon the entire simulation,
-        which may include many (distributed) RoadNetwork instances
-        :param geoid: an h3 geoid
-        :return: True/False
-        """
+
         return True
 
     def link_id_within_simulation(self, link_id: LinkId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon the entire simulation,
-        which may include many (distributed) RoadNetwork instances
-        :param link_id: a position on the road network across the entire simulation
-        :return: True/False
-        """
+
         start, end = self._link_id_to_geodis(link_id)
         return self.geoid_within_simulation(start) and self.geoid_within_simulation(end)

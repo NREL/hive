@@ -8,7 +8,7 @@ from hive.util.helpers import SwitchCase
 from hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from hive.simulationstate.simulation_state import SimulationState
+    from hive.state.simulation_state import SimulationState
 
 
 class TerminalStateEffectArgs(NamedTuple):
@@ -17,6 +17,13 @@ class TerminalStateEffectArgs(NamedTuple):
 
 
 class TerminalStateEffectOps(SwitchCase):
+    """
+    A pattern matching class for catching terminal state conditions.
+
+    :param Key: The vehicle state to match.
+    :param Arguments: Any arguments that are needed to check the terminal state condition
+    :param Result: An updated simulation state based on the checking.
+    """
     Key: VehicleState
     Arguments: TerminalStateEffectArgs
     Result: SimulationState

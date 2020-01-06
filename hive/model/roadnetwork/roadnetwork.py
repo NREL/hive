@@ -18,14 +18,22 @@ class RoadNetwork(ABC):
 
     @abstractmethod
     def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
+        """
+        Returns a route between two road network property links
+
+        :param origin: PropertyLink of the origin
+        :param destination: PropertyLink of the destination
+        :return: A route.
+        """
         pass
 
     @abstractmethod
     def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
         """
         builds a location on the road network for a stationary simulation element
-        :param geoid:
-        :return:
+
+        :param geoid: geoid to map to network
+        :return: The nearest property link if it exists.
         """
         pass
 
@@ -33,8 +41,9 @@ class RoadNetwork(ABC):
     def update(self, sim_time: SimTime) -> RoadNetwork:
         """
         gives the RoadNetwork a chance to update it's flow network based on the current simulation time
+
         :param sim_time: the current simulation time
-        :return: does not return
+        :return: an updated RoadNetwork
         """
         pass
 
@@ -42,6 +51,7 @@ class RoadNetwork(ABC):
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
         """
         gets the link associated with the LinkId, or, if invalid, returns None
+
         :param link_id: a link id
         :return: a Link, or None if LinkId does not exist
         """
@@ -51,6 +61,7 @@ class RoadNetwork(ABC):
     def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
         """
         gets the current properties for a given property link, or, if invalid, returns None
+
         :param property_link: a property link
         :return: a Property Link, or None if LinkId does not exist
         """
@@ -60,6 +71,7 @@ class RoadNetwork(ABC):
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon of this road network instance
+
         :param geoid: an h3 geoid
         :return: True/False
         """
@@ -69,6 +81,7 @@ class RoadNetwork(ABC):
     def link_id_within_geofence(self, link_id: LinkId) -> bool:
         """
         confirms that the coordinate exists within the bounding polygon of this road network instance
+
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
@@ -79,6 +92,7 @@ class RoadNetwork(ABC):
         """
         confirms that the coordinate exists within the bounding polygon the entire simulation,
         which may include many (distributed) RoadNetwork instances
+
         :param geoid: an h3 geoid
         :return: True/False
         """
@@ -89,6 +103,7 @@ class RoadNetwork(ABC):
         """
         confirms that the coordinate exists within the bounding polygon the entire simulation,
         which may include many (distributed) RoadNetwork instances
+
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """

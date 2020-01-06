@@ -12,6 +12,7 @@ class SimulationUpdate(ABC):
     def update(self, simulation_state: SimulationState) -> SimulationUpdateResult:
         """
         takes a simulation state and modifies it, returning the updated simulation state
+
         :param simulation_state: the state to modify
         :return: the updated sim state, along with any reporting
         """
