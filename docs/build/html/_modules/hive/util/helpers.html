@@ -73,6 +73,7 @@
     <span class="k">def</span> <span class="nf">_default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">Arguments</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        called when &quot;key&quot; does not exist in the SwitchCase</span>
+
 <span class="sd">        :param arguments: the arguments to pass in the default case</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -100,13 +101,14 @@
                        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Entity</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.</span>
-<span class="sd">        :param max_distance_km:</span>
-<span class="sd">        :param is_valid:</span>
-<span class="sd">        :param entities:</span>
-<span class="sd">        :param k:</span>
-<span class="sd">        :param geoid:</span>
-<span class="sd">        :param entity_locations:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param geoid: Geoid to match to.</span>
+<span class="sd">        :param entities: Entities to search over.</span>
+<span class="sd">        :param entity_locations: Location of the entities</span>
+<span class="sd">        :param is_valid: Optional function to filter for valid entities.</span>
+<span class="sd">        :param k: the size of the k-ring</span>
+<span class="sd">        :param max_distance_km: the maximum distance in kilometers to search over</span>
+<span class="sd">        :return: an optional entity if found</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">resolution</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">h3_get_resolution</span><span class="p">(</span><span class="n">geoid</span><span class="p">)</span>
         <span class="n">k_dist_km</span> <span class="o">=</span> <span class="n">h3</span><span class="o">.</span><span class="n">edge_length</span><span class="p">(</span><span class="n">resolution</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;km&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span>
@@ -136,6 +138,15 @@
                                       <span class="n">entity_locations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">GeoId</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EntityId</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
                                       <span class="n">is_valid</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                                       <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Entity</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A nearest neighbor search that scans all entities and returns the one with the lowest distance to the geoid.</span>
+
+<span class="sd">        :param geoid: GeoId to match to</span>
+<span class="sd">        :param entities: Entities to search over</span>
+<span class="sd">        :param entity_locations: Location of entities</span>
+<span class="sd">        :param is_valid: Optional function to filter for valid entities</span>
+<span class="sd">        :return: an optional entity if found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">best_dist</span> <span class="o">=</span> <span class="mi">1000000</span> <span class="o">*</span> <span class="n">unit</span><span class="o">.</span><span class="n">kilometers</span>
         <span class="n">best_e</span> <span class="o">=</span> <span class="kc">None</span>
@@ -158,6 +169,7 @@
     <span class="k">def</span> <span class="nf">great_circle_distance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">GeoId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">km</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        computes the distance between two geoids</span>
+
 <span class="sd">        :param a: one geoid</span>
 <span class="sd">        :param b: another geoid</span>
 <span class="sd">        :return: the haversine distance between the two GeoIds</span>
@@ -171,6 +183,7 @@
     <span class="k">def</span> <span class="nf">point_along_link</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">property_link</span><span class="p">:</span> <span class="n">PropertyLink</span><span class="p">,</span> <span class="n">available_time</span><span class="p">:</span> <span class="n">h</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoId</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        finds the GeoId which is some percentage between two GeoIds along a line</span>
+
 <span class="sd">        :param property_link: the link we are finding a mid point along</span>
 <span class="sd">        :param available_time: the amount of time to traverse</span>
 <span class="sd">        :return: a GeoId along the Link</span>
@@ -251,6 +264,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        updates Dicts for arbitrary keys and values</span>
 <span class="sd">        performs a shallow copy and update, treating Dict as an immutable hash table</span>
+
 <span class="sd">        :param xs:</span>
 <span class="sd">        :param obj_id:</span>
 <span class="sd">        :param obj:</span>
@@ -265,6 +279,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        updates Dicts for arbitrary keys and values</span>
 <span class="sd">        performs a shallow copy and update, treating Dict as an immutable hash table</span>
+
 <span class="sd">        :param xs:</span>
 <span class="sd">        :param obj_id:</span>
 <span class="sd">        :param obj:</span>
@@ -282,6 +297,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        updates Dicts that track the geoid of entities</span>
 <span class="sd">        performs a shallow copy and update, treating Dict as an immutable hash table</span>
+
 <span class="sd">        :param xs:</span>
 <span class="sd">        :param obj_geoid:</span>
 <span class="sd">        :param obj_id:</span>
@@ -302,6 +318,7 @@
 <span class="sd">        updates Dicts that track the geoid of entities</span>
 <span class="sd">        performs a shallow copy and update, treating Dict as an immutable hash table</span>
 <span class="sd">        when a geoid has no ids after a remove, it deletes that geoid, to prevent geoid Dict memory leaks</span>
+
 <span class="sd">        :param xs:</span>
 <span class="sd">        :param obj_geoid:</span>
 <span class="sd">        :param obj_id:</span>

@@ -13,8 +13,6 @@ operations of mobility-service-provider fleets. 🐝
    :maxdepth: 3
 
 * :doc:`setup`
-* :doc:`user_guide/getting_started`
-* :doc:`user_guide/api_interaction`
 
 Modules
 =================
