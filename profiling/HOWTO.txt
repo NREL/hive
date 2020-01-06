@@ -1,2 +1,0 @@
-python -m cProfile -o profiling/run.pstats run.py
-python gprof2dot.py -f pstats run.pstats | dot -Tsvg -o profile_graph.svg

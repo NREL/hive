@@ -50,7 +50,7 @@ class Vehicle(NamedTuple):
         return self.property_link.link.start
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Union[IOError, Vehicle]:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Vehicle:
         """
         reads a csv row from file to generate a Vehicle
 
@@ -61,27 +61,27 @@ class Vehicle(NamedTuple):
         """
 
         if 'vehicle_id' not in row:
-            return IOError("cannot load a vehicle without a 'vehicle_id'")
+            raise IOError("cannot load a vehicle without a 'vehicle_id'")
         elif 'lat' not in row:
-            return IOError("cannot load a vehicle without a 'lat'")
+            raise IOError("cannot load a vehicle without a 'lat'")
         elif 'lon' not in row:
-            return IOError("cannot load a vehicle without a 'lon'")
+            raise IOError("cannot load a vehicle without a 'lon'")
         elif 'powertrain_id' not in row:
-            return IOError("cannot load a vehicle without a 'powertrain_id'")
+            raise IOError("cannot load a vehicle without a 'powertrain_id'")
         elif 'powercurve_id' not in row:
-            return IOError("cannot load a vehicle without a 'powercurve_id'")
+            raise IOError("cannot load a vehicle without a 'powercurve_id'")
         elif 'capacity' not in row:
-            return IOError("cannot load a vehicle without a 'capacity'")
+            raise IOError("cannot load a vehicle without a 'capacity'")
         elif 'ideal_energy_limit' not in row:
-            return IOError("cannot load a vehicle without a 'ideal_energy_limit'")
+            raise IOError("cannot load a vehicle without a 'ideal_energy_limit'")
         elif 'max_charge_acceptance' not in row:
-            return IOError("cannot load a vehicle without a 'max_charge_acceptance'")
+            raise IOError("cannot load a vehicle without a 'max_charge_acceptance'")
         elif 'initial_soc' not in row:
-            return IOError("cannot load a vehicle without a 'initial_soc'")
+            raise IOError("cannot load a vehicle without a 'initial_soc'")
         elif row['powertrain_id'] not in powertrain_models.keys():
-            return IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
+            raise IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
         elif row['powercurve_id'] not in powercurve_models.keys():
-            return IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
+            raise IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
         else:
             try:
                 vehicle_id = row['vehicle_id']
@@ -97,7 +97,7 @@ class Vehicle(NamedTuple):
                 initial_soc = float(row['initial_soc'])
 
                 if not 0.0 <= initial_soc <= 1.0:
-                    return IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
+                    raise IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
                 energy_source = EnergySource.build(powercurve_id,
                                                    energy_type,
@@ -118,7 +118,7 @@ class Vehicle(NamedTuple):
                 )
 
             except ValueError:
-                return IOError(f"a numeric value could not be parsed from {row}")
+                raise IOError(f"a numeric value could not be parsed from {row}")
 
     def has_passengers(self) -> bool:
         return len(self.passengers) > 0

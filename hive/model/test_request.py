@@ -84,7 +84,8 @@ class MyTestCase(unittest.TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         """
         row = next(DictReader(source.split()))
-        rn = HaversineRoadNetwork()
+        network = HaversineRoadNetwork()
+        rn = network
         req = Request.from_row(row, rn)
         self.assertEqual(req.id, "1_a")
         self.assertEqual(req.origin, h3.geo_to_h3(31.2074449,121.4294263,rn.sim_h3_resolution))

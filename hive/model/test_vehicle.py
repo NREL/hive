@@ -251,9 +251,8 @@ class TestVehicle(TestCase):
         row = next(DictReader(source.split()))
         road_network = HaversineRoadNetwork()
 
-        vehicle = Vehicle.from_row(row, road_network)
-
-        self.assertIsInstance(vehicle, IOError)
+        with self.assertRaises(IOError):
+            Vehicle.from_row(row, road_network)
 
     def test_from_row_bad_powercurve_id(self):
         source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
@@ -262,9 +261,8 @@ class TestVehicle(TestCase):
         row = next(DictReader(source.split()))
         road_network = HaversineRoadNetwork()
 
-        vehicle = Vehicle.from_row(row, road_network)
-
-        self.assertIsInstance(vehicle, IOError)
+        with self.assertRaises(IOError):
+            Vehicle.from_row(row, road_network)
 
     @classmethod
     def mock_powertrain(cls) -> Powertrain:

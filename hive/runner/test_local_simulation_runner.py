@@ -115,5 +115,13 @@ class TestLocalSimulationRunnerAssets:
 
     @classmethod
     def mock_config(cls) -> HiveConfig:
-        return HiveConfig.build({"sim": {'end_time_seconds': 1000},
-                                 "io": {'vehicles_file': '', 'requests_file': ''}})
+        return HiveConfig.build({"sim": {
+                                        'end_time_seconds': 1000,
+                                        'sim_name': 'test_sim',
+                                         },
+                                 "io": {
+                                     'vehicles_file': '',
+                                     'requests_file': '',
+                                     'bases_file': '',
+                                     'stations_file': '',
+                                 }})
