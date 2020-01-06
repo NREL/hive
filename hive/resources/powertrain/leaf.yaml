@@ -1,0 +1,29 @@
+name: "leaf"
+type: "tabular"
+consumption_model:
+  - mph: 2.5
+    whmi: 251.3
+  - mph: 7.5
+    whmi: 219.2
+  - mph: 12.5
+    whmi: 201.6
+  - mph: 17.5
+    whmi: 181.1
+  - mph: 22.5
+    whmi: 166.7
+  - mph: 27.5
+    whmi: 162.7
+  - mph: 32.5
+    whmi: 166.8
+  - mph: 37.5
+    whmi: 174.2
+  - mph: 42.5
+    whmi: 181.5
+  - mph: 47.5
+    whmi: 192.2
+  - mph: 52.5
+    whmi: 203.0
+  - mph: 57.5
+    whmi: 208.0
+  - mph: 62.5
+    whmi: 224.5

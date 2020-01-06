@@ -25,12 +25,5 @@ Then, activate the environment with:
 
     > conda activate hive
 
-Now, navigate to the root directory of the hive source code and run the setup.py
-script with the following command:
-
-.. code-block::
-
-    > python setup.py
-
 That's it! Check out the :doc:`/user_guide/getting_started`
 page for instructions on how to get hive up and running.

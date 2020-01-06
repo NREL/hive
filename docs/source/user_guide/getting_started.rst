@@ -1,5 +1,7 @@
 Getting Started
 ===============
+.. warning::
+    These instructions refer to v0.2. Stay tuned for instructions regarding v0.3
 
 Welcome to the hive simulation platform. This software is designed to allow you to simulate the impacts and operations of mobility fleets with varying parameters.
 
