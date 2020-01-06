@@ -29,8 +29,6 @@ The project is currently closed-source and in alpha development, with plans to o
 
 ## Dependencies
 
-At this point, HIVE 
-
 HIVE has only two major dependencies. Uber H3 is a geospatial index which HIVE uses for
 positioning and search. PyYAML is used to load YAML-based configuration and scenario files.
 
