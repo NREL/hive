@@ -1,4 +1,0 @@
-Model
-=================
-.. automodule:: hive.model
-   :members:
