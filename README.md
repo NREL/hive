@@ -10,18 +10,20 @@ the National Renewable Energy Laboratory in Golden, Colorado, USA.
 
 ## What is HIVE
 
-HIVE is an agent-based model (ABM) for modeling the performance of ride hail fleets over
+HIVE is model for evaluating the performance of ride hail fleets over
 arbitrary supply/demand scenarios. Models for mobility services often have a large barrier-
 to-entry due to the complex interactions of mode choice, economics, and model tuning required
 to use the leading mesoscopic transportation models (BEAM, POLARIS, MATSim, etc.). HIVE attempts
 to fill a gap for researchers seeking to study the economic and energy impacts of autonomous
 ride hail fleets by providing the following features:
 
+- agent-based model (ABM)
+- data-driven control interfaces for Model-Predicted Control and Reinforcement Learning research
+- easy integration/co-simulation (can be called alongside other software tools)
 - dynamic dispatch, trip energy, routing, and economics
     - price signals limited to fleet and energy grid with exogenous request data
-- simple to define/share scenarios
-- easy integration/co-simulation (can be called alongside other software tools)
-- 100% Python code
+- simple to define/share scenarios via configuration files and simulation snapshots
+- 100% Python (v 3.8) code with a small number of dependencies
 
 The project is currently closed-source and in alpha development, with plans to open-source in summer of 2020.
 The developer API can be found by loading [docs/index.html](/docs/index.html) after downloading
