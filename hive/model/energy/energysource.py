@@ -46,7 +46,17 @@ class EnergySource(NamedTuple):
               max_charge_acceptance_kw: kw = 50 * unit.kilowatt,
               soc: Ratio = 1.0,
               ) -> EnergySource:
-
+        """
+        builds an EnergySource for a Vehicle
+        :param powercurve_id: the id of the powercurve associated with charging this EnergySource
+        :param energy_type: the type of energy used
+        :param capacity: the fuel capacity of this EnergySource
+        :param ideal_energy_limit: the energy that this EnergySource is limited to based on
+        manufacturer requirements and implementation
+        :param max_charge_acceptance_kw: the maximum charge power this vehicle can accept
+        :param soc: the initial state of charge of this vehicle, in percentage
+        :return:
+        """
         if not ideal_energy_limit:
             ideal_energy_limit = capacity
 
@@ -78,7 +88,7 @@ class EnergySource(NamedTuple):
 
         :return: the SoC (0-1)
         """
-        return self.energy / self.capacity
+        return self.energy.magnitude / self.capacity.magnitude
 
     def is_at_ideal_energy_limit(self) -> bool:
         """
@@ -88,7 +98,7 @@ class EnergySource(NamedTuple):
         within some epsilon, considering that charging curves can prevent reaching this ideal
         value.
         """
-        return (self.energy + self.charge_threshold) >= self.ideal_energy_limit
+        return self.energy.magnitude + self.charge_epsilon.magnitude >= self.ideal_energy_limit.magnitude
 
     def not_at_ideal_energy_limit(self) -> bool:
         """
@@ -104,7 +114,9 @@ class EnergySource(NamedTuple):
 
         :return: bool 
         """
-        return (self.capacity - self.charge_threshold) < self.energy < (self.capacity + self.charge_threshold)
+        return (self.capacity.magnitude - self.charge_threshold.magnitude) < \
+            self.energy.magnitude < \
+            (self.capacity.magnitude + self.charge_threshold.magnitude)
 
     def is_empty(self) -> bool:
         """
@@ -121,9 +133,10 @@ class EnergySource(NamedTuple):
         :param fuel_used: fuel used in kilowatt-hours
         :return: the updated energy source
         """
-        updated_energy = self.energy - fuel_used
+        # slip out of units to make computation faster
+        updated_energy = (self.energy.magnitude - fuel_used.magnitude)
         assert updated_energy >= 0.0, StateOfChargeError("Battery fell below 0% SoC")
-        return self._replace(energy=updated_energy)
+        return self._replace(energy=updated_energy * unit.kilowatthour)
 
     def load_energy(self, fuel_gained: kwh) -> EnergySource:
         """
@@ -132,8 +145,8 @@ class EnergySource(NamedTuple):
         :param fuel_gained: the fuel gained for this vehicle due to a refuel event
         :return: the updated EnergySource with fuel added
         """
-        updated_energy = min(self.capacity, self.energy + fuel_gained)
-        return self._replace(energy=updated_energy)
+        updated_energy = min(self.capacity.magnitude, self.energy.magnitude + fuel_gained.magnitude)
+        return self._replace(energy=updated_energy * unit.kilowatthour)
 
     def __repr__(self) -> str:
         soc = self.soc * 100.0

@@ -40,7 +40,7 @@ class Base(NamedTuple):
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
-                 sim_h3_resolution: int) -> Union[IOError, Base]:
+                 sim_h3_resolution: int) -> Base:
         """
         takes a csv row and turns it into a Base
 
@@ -49,13 +49,13 @@ class Base(NamedTuple):
         :return: a Base, or an error
         """
         if 'base_id' not in row:
-            return IOError("cannot load a base without a 'base_id'")
+            raise IOError("cannot load a base without a 'base_id'")
         elif 'lat' not in row:
-            return IOError("cannot load a base without an 'lat' value")
+            raise IOError("cannot load a base without an 'lat' value")
         elif 'lon' not in row:
-            return IOError("cannot load a base without an 'lon' value")
+            raise IOError("cannot load a base without an 'lon' value")
         elif 'stall_count' not in row:
-            return IOError("cannot load a base without a 'stall_count' value")
+            raise IOError("cannot load a base without a 'stall_count' value")
         else:
             base_id = row['base_id']
             try:
@@ -75,7 +75,7 @@ class Base(NamedTuple):
                 )
 
             except ValueError:
-                return IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
+                raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
     def has_available_stall(self) -> bool:
         """

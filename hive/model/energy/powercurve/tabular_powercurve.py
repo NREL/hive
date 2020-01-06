@@ -57,21 +57,29 @@ class TabularPowercurve(Powercurve):
     def refuel(self,
                energy_source: EnergySource,
                charger: Charger,
-               duration_seconds: s = 1 * unit.seconds) -> EnergySource:
+               duration: s = 1 * unit.seconds) -> EnergySource:
+        """
+         (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
+         :param energy_source: a vehicle's source of energy
+         :param charger: has a capacity scaling effect on the energy_rate
+         :param duration: the amount of time to charge for
+         :return: energy rate in KwH for charging with the current state of the EnergySource
+         """
 
         # iterate for as many seconds in a time step, by step_size_seconds
-        t = 0 * unit.seconds
+        t = 0
         updated_energy = energy_source.copy()
-        scale_factor = energy_source.max_charge_acceptance_kw / self.max_charge_acceptance_kw
-        while t < duration_seconds and updated_energy.not_at_ideal_energy_limit():
+        scale_factor = energy_source.max_charge_acceptance_kw.magnitude / self.max_charge_acceptance_kw.magnitude
+        duration_secs = duration.to(unit.seconds).magnitude
+        while t < duration_secs and updated_energy.not_at_ideal_energy_limit():
             soc = updated_energy.soc * 100  # scaled to [0, 100]
 
             # charging.py line 76:
-            veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor * unit.kilowatt
-            charge_power_kw = min(veh_kw_rate, charger.power)
-            kwh = charge_power_kw * self.step_size_seconds.to(unit.hours)
+            veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor
+            charge_power_kw = min(veh_kw_rate, charger.power.magnitude)
+            kwh = charge_power_kw * self.step_size_seconds.to(unit.hours).magnitude
 
-            updated_energy = updated_energy.load_energy(kwh)
-            t += self.step_size_seconds
+            updated_energy = updated_energy.load_energy(kwh * unit.kilowatthour)
+            t += self.step_size_seconds.magnitude
 
         return updated_energy

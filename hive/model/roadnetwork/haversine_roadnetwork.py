@@ -25,8 +25,10 @@ class HaversineRoadNetwork(RoadNetwork):
     """
 
     # TODO: Replace speed with more accurate/dynamic estimate.
-    AVG_SPEED = 40 * (unit.kilometer / unit.hour)
-    sim_h3_resolution = 15
+    _AVG_SPEED = 40 * (unit.kilometer / unit.hour)
+
+    def __init__(self, sim_h3_resolution: int = 15):
+        self.sim_h3_resolution = sim_h3_resolution
 
     def _geoids_to_link_id(self, origin: GeoId, destination: GeoId) -> LinkId:
         link_id = origin + "-" + destination

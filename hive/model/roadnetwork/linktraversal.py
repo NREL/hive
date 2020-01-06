@@ -58,7 +58,7 @@ def traverse_up_to(road_network: RoadNetwork,
             return LinkTraversal(
                 traversed=property_link,
                 remaining=None,
-                remaining_time=available_time - property_link.travel_time
+                remaining_time=(available_time.magnitude - property_link.travel_time.magnitude) * unit.hour
             )
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,

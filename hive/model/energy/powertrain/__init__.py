@@ -19,7 +19,7 @@ powertrain_constructors = {
 }
 
 
-def build_powertrain(name: str) -> Union[IOError, Powertrain]:
+def build_powertrain(name: str) -> Powertrain:
     """
     constructs powertrain objects from file descriptions
 
@@ -28,7 +28,7 @@ def build_powertrain(name: str) -> Union[IOError, Powertrain]:
     :raise IOError: if model file is invalid
     """
     if name not in powertrain_models:
-        return IOError(
+        raise IOError(
             f"Powertrain with name {name} is not recognized; must be one of {powertrain_models.keys()}")
     else:
         file_path = powertrain_models[name]

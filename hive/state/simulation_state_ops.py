@@ -15,6 +15,7 @@ from hive.util.exception import *
 from hive.util.typealiases import SimTime
 from hive.util.units import unit, s
 
+
 def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
     """
     applies all the instructions to the simulation state, ignoring the ones that fail
@@ -50,11 +51,12 @@ def initial_simulation_state(
         vehicles: Tuple[Vehicle, ...] = (),
         stations: Tuple[Station, ...] = (),
         bases: Tuple[Base, ...] = (),
-        powertrains: Tuple[Type[Powertrain], ...] = (),
-        powercurves: Tuple[Type[Powercurve], ...] = (),
+        powertrains: Tuple[Powertrain, ...] = (),
+        powercurves: Tuple[Powercurve, ...] = (),
         start_time: SimTime = 0,
         sim_timestep_duration_seconds: s = 1 * unit.s,
-        sim_h3_resolution: int = 15
+        sim_h3_location_resolution: int = 15,
+        sim_h3_search_resolution: int = 7,
 ) -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
@@ -67,7 +69,8 @@ def initial_simulation_state(
     :param bases: the bases available in this simulation
     :param start_time: the start time for this simulation (by default, time step 0)
     :param sim_timestep_duration_seconds: the size of a time step in seconds
-    :param sim_h3_resolution: the h3 resolution for internal positioning (comparison ops can override)
+    :param sim_h3_location_resolution: the h3 resolution for internal positioning (comparison ops can override)
+    :param sim_h3_search_resolution: the h3 upper-resolution for the bi-level location search
     :return: a SimulationState, or a SimulationStateError
     """
 
@@ -76,7 +79,9 @@ def initial_simulation_state(
         road_network=road_network,
         sim_time=start_time,
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
-        sim_h3_resolution=sim_h3_resolution)
+        sim_h3_location_resolution=sim_h3_location_resolution,
+        sim_h3_search_resolution=sim_h3_search_resolution
+    )
     failures: Tuple[SimulationStateError, ...] = tuple()
 
     # add vehicles, stations, bases, powertrains, and powercurves
@@ -110,8 +115,8 @@ def initial_simulation_state(
 
 
 def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
-                        x: Union[Vehicle, Station, Base, Type[Powertrain], Type[Powercurve]]) \
-                        -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
+                    x: Union[Vehicle, Station, Base, Type[Powertrain], Type[Powercurve]]) \
+        -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     adds a single Vehicle, Station, Base, Powertrain, or Powercurve to the simulator, unless it is invalid
 
@@ -172,4 +177,3 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
     else:
         failure = SimulationStateError(f"not a Vehicle, Station, Base, Powertrain, or Powercurve: {x}")
         return this_simulation_state, (failure,) + this_failures
-

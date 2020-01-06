@@ -34,7 +34,7 @@ class TestLocalSimulationRunner(TestCase):
         req = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
         1,-37.001,122,-37.1,122,0,20,2
         """
-        req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_resolution)
+        req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_location_resolution)
         update_requests = UpdateRequestsFromString(req)
 
         result = runner.run(
@@ -94,7 +94,6 @@ class TestLocalSimulationRunnerAssets:
                                              None,
                                              50 * unit.kilowatt
                                              ),
-            geoid=geoid,
             property_link=HaversineRoadNetwork().property_link_from_geoid(geoid)
         )
 
@@ -116,5 +115,13 @@ class TestLocalSimulationRunnerAssets:
 
     @classmethod
     def mock_config(cls) -> HiveConfig:
-        return HiveConfig.build({"sim": {'end_time_seconds': 1000},
-                                 "io": {'vehicles_file': '', 'requests_file': ''}})
+        return HiveConfig.build({"sim": {
+                                        'end_time_seconds': 1000,
+                                        'sim_name': 'test_sim',
+                                         },
+                                 "io": {
+                                     'vehicles_file': '',
+                                     'requests_file': '',
+                                     'bases_file': '',
+                                     'stations_file': '',
+                                 }})

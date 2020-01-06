@@ -82,10 +82,10 @@ class PropertyLink(NamedTuple):
                 f"mismatch: attempting to update PropertyLink {self.link_id} with Link {updated_link.link_id}")
         else:
             dist = link_distance(updated_link)
-            tt = dist / self.speed
+            tt = dist.magnitude / self.speed.magnitude
             return self._replace(
                 link=updated_link,
                 distance=dist,
-                travel_time=tt
+                travel_time=tt * unit.hour
             )
 

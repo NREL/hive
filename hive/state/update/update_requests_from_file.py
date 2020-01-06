@@ -31,7 +31,7 @@ class UpdateRequestsFromFile(SimulationUpdate):
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
         else:
-            self.file = open(req_path, newline='')
+            self.file = open(req_path, 'r', encoding='utf-8-sig')
             self.requests = csv.DictReader(self.file)
 
     def update(self, initial_sim_state: SimulationState) -> SimulationUpdateResult:
