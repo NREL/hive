@@ -32,13 +32,15 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
     :return: a Request, or an exception if row is invalid
     """
     try:
-        # start time
+        # time
         date_time = datetime.strptime(row['pickup_datetime'], '%Y-%m-%d %H:%M:%S')
         start_of_day = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
         time_diff = date_time - start_of_day
+        departure_time = time_diff.seconds
+        cancel_time = min(departure_time + cancel_time, 86399)  # 11:59:59
 
         # agent id
-        id = id_number if use_date_in_request_id else f"{id_number}#{date_time.date()}"
+        id = f"{id_number}#{date_time.date()}" if use_date_in_request_id else id_number
 
         # locations
         o_lat, o_lon = float(row['pickup_latitude']), float(row['pickup_longitude'])
@@ -53,7 +55,7 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
             request_id=id,
             origin=origin,
             destination=destination,
-            departure_time=time_diff.seconds,
+            departure_time=departure_time,
             cancel_time=cancel_time,
             passengers=passengers
         )
