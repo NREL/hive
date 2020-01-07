@@ -71,7 +71,7 @@ class HaversineRoadNetwork(RoadNetwork):
 
         start, end = self._link_id_to_geodis(link_id)
         link = Link(link_id, start, end)
-        property_link = PropertyLink.build(link, self.AVG_SPEED)
+        property_link = PropertyLink.build(link, self._AVG_SPEED)
 
         return property_link
 
