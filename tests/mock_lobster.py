@@ -24,7 +24,7 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId
+from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime
 from hive.util.units import unit, kwh, kw, Ratio, s, kmph
 
 
@@ -288,9 +288,19 @@ def mock_sim(
     return sim
 
 
-def mock_config() -> HiveConfig:
+def mock_config(
+        start_time_seconds: SimTime = 0,
+        end_time_seconds: SimTime = 100,
+        timestep_duration_seconds: s = 1 * unit.seconds,
+        sim_h3_location_resolution: int = 15,
+        sim_h3_search_resolution: int = 9
+) -> HiveConfig:
     return HiveConfig.build({"sim": {
-        'end_time_seconds': 1000,
+        'start_time_seconds': start_time_seconds,
+        'end_time_seconds': end_time_seconds,
+        'timestep_duration_seconds': timestep_duration_seconds,
+        'sim_h3_resolution': sim_h3_location_resolution,
+        'sim_h3_search_resolution': sim_h3_search_resolution,
         'sim_name': 'test_sim',
     }})
 

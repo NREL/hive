@@ -9,9 +9,7 @@ from tests.mock_lobster import *
 class TestLocalSimulationRunner(TestCase):
 
     def test_run(self):
-        mock_conf = mock_config()
-        this_conf = mock_conf._replace(sim=mock_conf.sim._replace(end_time_seconds=20))
-        runner = mock_runner(this_conf)
+        runner = mock_runner(mock_config(end_time_seconds=20))
         initial_sim = mock_sim(
             vehicles=(mock_vehicle(lat=-37, lon=122, capacity=100 * unit.kilowatthours, ideal_energy_limit=None),),
             stations=(mock_station(lat=-36.999, lon=122),),
