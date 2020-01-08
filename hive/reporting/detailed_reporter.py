@@ -72,5 +72,6 @@ class DetailedReporter(Reporter):
         self._report_entities(logger=self.instruction_logger,
                               entities=instructions,
                               sim_time=sim_state.sim_time)
-        for report in reports:
-            self.run_logger.info(report)
+        if self.run_logger:
+            for report in reports:
+                self.run_logger.info(report)

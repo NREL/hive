@@ -32,7 +32,7 @@ with open(scenario_file, 'r') as f:
 
 config = HiveConfig.build(config_builder)
 
-run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 sim_output_dir = os.path.join(config.io.working_directory, run_name)
 if not os.path.isdir(sim_output_dir):
     os.makedirs(sim_output_dir)

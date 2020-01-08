@@ -41,7 +41,7 @@ class TestLocalSimulationRunner(TestCase):
             initial_simulation_state=initial_sim,
             initial_dispatcher=GreedyDispatcher(),
             update_functions=(CancelRequests(), update_requests),
-            reporter=DetailedReporter(runner.env.config.io)
+            reporter=DetailedReporter(runner.env.config.io, "")
         )
 
         at_destination = result.s.at_geoid(req_destination)

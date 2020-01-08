@@ -33,7 +33,7 @@ class IO(NamedTuple):
     def default_config(cls) -> Dict:
         return {
             'working_directory': "",
-            'run_log': 'run.log',
+            'run_log': None,
             'vehicle_log': None,
             'request_log': None,
             'instruction_log': None,
