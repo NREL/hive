@@ -19,17 +19,30 @@ class DetailedReporter(Reporter):
     """
 
     def __init__(self, io: IO):
-        self.run_logger = logging.getLogger(io.run_log)
-        self.vehicle_logger = logging.getLogger(io.vehicle_log)
-        self.request_logger = logging.getLogger(io.request_log)
-        self.instruction_logger = logging.getLogger(io.instruction_log)
+        if io.run_log:
+            self.run_logger = logging.getLogger(io.run_log)
+        else:
+            self.run_logger = None
+        if io.vehicle_log:
+            self.vehicle_logger = logging.getLogger(io.vehicle_log)
+        else:
+            self.vehicle_logger = None
+        if io.request_log:
+            self.request_logger = logging.getLogger(io.request_log)
+        else:
+            self.request_logger = None
+        if io.instruction_log:
+            self.instruction_logger = logging.getLogger(io.instruction_log)
+        else:
+            self.instruction_logger = None
 
     def _report_entities(self, logger, entities, sim_time):
-        for e in entities:
-            log_dict = e._asdict()
-            log_dict['sim_time'] = sim_time
-            entry = json.dumps(log_dict, default=str)
-            logger.info(entry)
+        if logger:
+            for e in entities:
+                log_dict = e._asdict()
+                log_dict['sim_time'] = sim_time
+                entry = json.dumps(log_dict, default=str)
+                logger.info(entry)
 
     def report(self,
                sim_state: SimulationState,

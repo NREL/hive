@@ -19,7 +19,7 @@ def _setup_logger(name, log_file, level=logging.INFO):
 
 
 class IO(NamedTuple):
-    output_directory: str
+    working_directory: str
     vehicles_file: str
     requests_file: str
     bases_file: str
@@ -31,7 +31,13 @@ class IO(NamedTuple):
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {'output_directory': ""}
+        return {
+            'working_directory': "",
+            'run_log': 'run.log',
+            'vehicle_log': None,
+            'request_log': None,
+            'instruction_log': None,
+        }
 
     @classmethod
     def required_config(cls) -> Dict[str, type]:
@@ -53,28 +59,14 @@ class IO(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> IO:
-        # TODO: Move logging outside of the config construction.
-        output_dir = d['output_directory']
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
-
-        run_logger = _setup_logger(name='run_log',
-                                   log_file=os.path.join(output_dir, 'run.log'), )
-        vehicle_logger = _setup_logger(name='vehicle_log',
-                                       log_file=os.path.join(output_dir, 'vehicle.log'))
-        request_logger = _setup_logger(name='request_log',
-                                       log_file=os.path.join(output_dir, 'request.log'))
-        instruction_logger = _setup_logger(name='instruction_log',
-                                           log_file=os.path.join(output_dir, 'instruction.log'))
-
         return IO(
-            output_directory=d['output_directory'],
+            working_directory=d['working_directory'],
             vehicles_file=d['vehicles_file'],
             requests_file=d['requests_file'],
             bases_file=d['bases_file'],
             stations_file=d['stations_file'],
-            run_log=run_logger.name,
-            vehicle_log=vehicle_logger.name,
-            request_log=request_logger.name,
-            instruction_log=instruction_logger.name,
+            run_log=d['run_log'],
+            vehicle_log=d['vehicle_log'],
+            request_log=d['request_log'],
+            instruction_log=d['instruction_log'],
         )
