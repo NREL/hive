@@ -1,14 +1,11 @@
+import json
+import random
 from csv import DictReader, DictWriter
 
 from h3 import h3
 from pkg_resources import resource_filename
-import json
-import random
-from shapely.geometry import shape, GeometryCollection, Polygon, Point
 
 from hive.external.nyc_tlc.nyc_tlc_parsers import parse_yellow_tripdata_row
-from hive.model import Vehicle
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.units import kwh, kw
 
 
