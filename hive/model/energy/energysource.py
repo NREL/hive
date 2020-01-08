@@ -36,6 +36,7 @@ class EnergySource(NamedTuple):
     energy: kwh
     max_charge_acceptance_kw: kw
     charge_threshold: kwh = 0.001 * unit.kilowatthour
+    charge_epsilon: kwh = 0.001 * unit.kilowatthour
 
     @classmethod
     def build(cls,
