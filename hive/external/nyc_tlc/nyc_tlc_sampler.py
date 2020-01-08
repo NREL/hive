@@ -1,4 +1,6 @@
 from csv import DictReader, DictWriter
+
+from h3 import h3
 from pkg_resources import resource_filename
 import json
 import random
@@ -72,16 +74,14 @@ def sample_vehicles_in_geofence(num: int,
     :param ideal_energy_limit:
     :param max_charge_acceptance_kw:
     """
-    with open(resource_filename("hive.resources.geofence", "nyc.geojson")) as f:
 
-        # load geojson file with boundary polygon
-        # should be the only feature, aka, at index 0 of the 'features' array
-        nyc_polygon = shape(json.load(f)["features"][0]['geometry'])
-        minx, miny, maxx, maxy = nyc_polygon.bounds[0], nyc_polygon.bounds[1], nyc_polygon.bounds[2], \
-                                 nyc_polygon.bounds[3]
-        xrange, yrange = maxx - minx, maxy - miny
-        print(nyc_polygon.bounds)
-        print(f"{xrange} by {yrange}")
+    # load geojson file with boundary polygon
+    with open(resource_filename("hive.resources.geofence", "nyc_single_polygon.geojson")) as f:
+
+        # needs to be a Polygon, not a MultiPolygon feature
+        geojson = json.load(f)
+        hexes = list(h3.polyfill(geojson['geometry'], 11))
+
         with open(out_file, 'w', newline='') as w:
             header = ["vehicle_id", "lat", "lon", "powertrain_id", "powercurve_id", "capacity", "ideal_energy_limit",
                       "max_charge_acceptance", "initial_soc"]
@@ -91,15 +91,8 @@ def sample_vehicles_in_geofence(num: int,
             for i in range(0, num):
                 vehicle_id = f"v{i}"
 
-                # generate a point
-                x = minx + random.random() * xrange
-                y = miny + random.random() * yrange
-                point = Point(x, y)
-                while not nyc_polygon.contains(point):
-                    x = minx + random.random() * xrange
-                    y = miny + random.random() * yrange
-                    point = Point(x, y)
-                lon, lat = x, y
+                random_hex = random.choice(hexes)
+                lat, lon = h3.h3_to_geo(random_hex)
 
                 row = {
                     'vehicle_id': vehicle_id,
