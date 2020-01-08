@@ -1,13 +1,9 @@
-from typing import Tuple, Optional
 from unittest import TestCase, skip
 
-from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
-from hive.util.typealiases import LinkId, GeoId
-
-from h3 import h3
+from tests.mock_lobster import *
 
 
-class TestHaversineRoadnetwork(TestCase):
+class TestHaversineRoadNetwork(TestCase):
     @skip("Test not implemented yet")
     def test_geoid_within_geofence(self):
         pass
@@ -24,8 +20,8 @@ class TestHaversineRoadnetwork(TestCase):
         """
         Test routing of the haversine roadnetwork
         """
-        network = HaversineRoadNetwork()
         sim_h3_resolution = 15
+        network = mock_network(h3_res=sim_h3_resolution)
 
         origin = h3.geo_to_h3(37, 122, sim_h3_resolution)
         destination = h3.geo_to_h3(37.01, 122, sim_h3_resolution)
