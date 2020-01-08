@@ -77,7 +77,11 @@ def sample_vehicles_in_geofence(num: int,
 
         # needs to be a Polygon, not a MultiPolygon feature
         geojson = json.load(f)
-        hexes = list(h3.polyfill(geojson['geometry'], 11))
+        hexes = list(h3.polyfill(
+            geo_json=geojson['geometry'],
+            res=10,
+            geo_json_conformant=True)
+        )
 
         with open(out_file, 'w', newline='') as w:
             header = ["vehicle_id", "lat", "lon", "powertrain_id", "powercurve_id", "capacity", "ideal_energy_limit",
@@ -88,8 +92,10 @@ def sample_vehicles_in_geofence(num: int,
             for i in range(0, num):
                 vehicle_id = f"v{i}"
 
-                random_hex = random.choice(hexes)
-                lat, lon = h3.h3_to_geo(random_hex)
+                random_upper_hex = random.choice(hexes)
+                children = list(h3.h3_to_children(random_upper_hex, 15))
+                random_lower_hex = random.choice(children)
+                lat, lon = h3.h3_to_geo(random_lower_hex)
 
                 row = {
                     'vehicle_id': vehicle_id,
