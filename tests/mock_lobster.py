@@ -16,6 +16,9 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
+from hive.state.simulation_state import SimulationState
+from hive.state.simulation_state_ops import initial_simulation_state
+from hive.util.exception import SimulationStateError
 from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId
 from hive.util.units import unit, kwh, kw, Ratio, s, kmph
 
@@ -129,7 +132,7 @@ def mock_vehicle(
 
 ) -> Vehicle:
     road_network = mock_network(h3_res)
-    energy_source = mock_energysource(
+    energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity=capacity,
@@ -186,11 +189,39 @@ def mock_powercurve(
     return MockPowercurve()
 
 
+def mock_sim(
+        sim_time: int = 0,
+        sim_timestep_duration_seconds: s = 60 * unit.seconds,
+        h3_location_res: int = 15,
+        h3_search_res: int = 10,
+        vehicles: Tuple[Vehicle, ...] = (),
+        stations: Tuple[Station, ...] = (),
+        bases: Tuple[Base, ...] = (),
+        powertrains: Tuple[Powertrain, ...] = (mock_powertrain(), ),
+        powercurves: Tuple[Powercurve, ...] = (mock_powercurve(), )
+) -> SimulationState:
+    sim, errors = initial_simulation_state(
+        road_network=mock_network(h3_location_res),
+        vehicles=vehicles,
+        stations=stations,
+        bases=bases,
+        powertrains=powertrains,
+        powercurves=powercurves,
+        start_time=sim_time,
+        sim_timestep_duration_seconds=sim_timestep_duration_seconds,
+        sim_h3_location_resolution=h3_location_res,
+        sim_h3_search_resolution=h3_search_res
+    )
+    if len(errors) > 0:
+        raise SimulationStateError(f"mock sim has invalid elements\n{errors}")
+    return sim
+
+
 def mock_haversine_zigzag_route(
         n: int = 3,
         lat_step_size: int = 5,
         lon_step_size: int = 5,
-        speed: kmph = 40 * kmph,
+        speed: kmph = 40 * (unit.kilometers/unit.hour),
         h3_res: int = 15
 ) -> Route:
     """
@@ -205,14 +236,13 @@ def mock_haversine_zigzag_route(
 
     def step(acc: Tuple[PropertyLink, ...], i: int) -> Tuple[PropertyLink, ...]:
         """
-
-        :param acc:
-        :param i:
-        :return:
+        constructs the next PropertyLink
+        :param acc: the route so far
+        :param i: what link we are making
+        :return: the route with another link added
         """
-        lat_pos, lon_pos = math.floor(i) * lat_step_size, math.ceil(i) * lon_step_size
-        # todo: calculate the step direction and get the destination position
-        lat_dest, lon_dest = 0, 0
+        lat_pos, lon_pos = math.floor(i / 2.0) * lat_step_size, math.floor((i + 1) / 2.0) * lon_step_size
+        lat_dest, lon_dest = math.floor((i + 1) / 2.0) * lat_step_size, math.floor((i + 2) / 2.0) * lon_step_size
         link = Link(f"link_{i}", h3.geo_to_h3(lat_pos, lon_pos, h3_res), h3.geo_to_h3(lat_dest, lon_dest, h3_res))
         p = PropertyLink.build(link, speed)
         return acc + (p, )
