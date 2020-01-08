@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from hive.dispatcher.instruction import Instruction
+from hive.manager.fleet_target import FleetStateTarget
 from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
@@ -19,7 +20,10 @@ class GreedyDispatcher(Dispatcher):
     LOW_SOC_TRESHOLD = 0.2
     MAX_IDLE_S = 600 * unit.seconds
 
-    def generate_instructions(self, simulation_state: SimulationState, ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
+    def generate_instructions(self,
+                              simulation_state: SimulationState,
+                              fleet_state_target: FleetStateTarget,
+                              ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         instructions = []
         vehicle_ids_given_instructions = []
 
