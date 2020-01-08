@@ -3,7 +3,6 @@ import yaml
 import csv
 import os
 import time
-import logging
 
 sys.path.append('..')
 
@@ -24,17 +23,6 @@ from datetime import datetime
 
 RESOURCES = os.path.join('..', 'hive', 'resources')
 
-
-def _setup_logger(name, log_file, level=logging.INFO):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-
-    fh = logging.FileHandler(log_file)
-    logger.addHandler(fh)
-
-    return logger
-
-
 if len(sys.argv) == 1:
     raise ImportError("please specify a scenario file to run.")
 
@@ -43,9 +31,15 @@ with open(scenario_file, 'r') as f:
     config_builder = yaml.safe_load(f)
 
 config = HiveConfig.build(config_builder)
+
+run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+sim_output_dir = os.path.join(config.io.working_directory, run_name)
+if not os.path.isdir(sim_output_dir):
+    os.makedirs(sim_output_dir)
+
 env = Environment(config=config)
 runner = LocalSimulationRunner(env=env)
-reporter = DetailedReporter(config.io)
+reporter = DetailedReporter(config.io, sim_output_dir)
 dispatcher = GreedyDispatcher()
 road_network = HaversineRoadNetwork(config.sim.sim_h3_resolution)
 
@@ -54,23 +48,6 @@ requests_file = os.path.join(RESOURCES, 'requests', config.io.requests_file)
 bases_file = os.path.join(RESOURCES, 'bases', config.io.bases_file)
 stations_file = os.path.join(RESOURCES, 'stations', config.io.stations_file)
 
-run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-sim_output_dir = os.path.join(config.io.working_directory, run_name)
-if not os.path.isdir(sim_output_dir):
-    os.makedirs(sim_output_dir)
-
-if config.io.run_log:
-    run_log = _setup_logger(name=config.io.run_log,
-                            log_file=os.path.join(sim_output_dir, config.io.run_log))
-if config.io.vehicle_log:
-    vehicle_log = _setup_logger(name=config.io.vehicle_log,
-                                log_file=os.path.join(sim_output_dir, config.io.vehicle_log))
-if config.io.request_log:
-    request_log = _setup_logger(name=config.io.request_log,
-                                log_file=os.path.join(sim_output_dir, config.io.request_log))
-if config.io.instruction_log:
-    instructions_log = _setup_logger(name=config.io.instruction_log,
-                                     log_file=os.path.join(sim_output_dir, config.io.instructions_log))
 
 build_errors = []
 
