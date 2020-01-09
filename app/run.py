@@ -19,6 +19,8 @@ from hive.model.energy.powertrain import build_powertrain
 from hive.model.energy.powercurve import build_powercurve
 from hive.util.units import unit
 
+from datetime import datetime
+
 RESOURCES = os.path.join('..', 'hive', 'resources')
 
 if len(sys.argv) == 1:
@@ -29,9 +31,15 @@ with open(scenario_file, 'r') as f:
     config_builder = yaml.safe_load(f)
 
 config = HiveConfig.build(config_builder)
+
+run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+sim_output_dir = os.path.join(config.io.working_directory, run_name)
+if not os.path.isdir(sim_output_dir):
+    os.makedirs(sim_output_dir)
+
 env = Environment(config=config)
 runner = LocalSimulationRunner(env=env)
-reporter = DetailedReporter(config.io)
+reporter = DetailedReporter(config.io, sim_output_dir)
 dispatcher = GreedyDispatcher()
 road_network = HaversineRoadNetwork(config.sim.sim_h3_resolution)
 
@@ -39,6 +47,7 @@ vehicles_file = os.path.join(RESOURCES, 'vehicles', config.io.vehicles_file)
 requests_file = os.path.join(RESOURCES, 'requests', config.io.requests_file)
 bases_file = os.path.join(RESOURCES, 'bases', config.io.bases_file)
 stations_file = os.path.join(RESOURCES, 'stations', config.io.stations_file)
+
 
 build_errors = []
 
