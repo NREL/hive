@@ -10,19 +10,19 @@ from hive.dispatcher.dispatcher import Dispatcher
 from hive.util.helpers import H3Ops
 from hive.util.units import unit
 
+import warnings
 
-class GreedyDispatcher(Dispatcher):
+
+class ManagedDispatcher(Dispatcher):
     """
-    A class that computes instructions for the fleet based on a given simulation state.
+    This dispatcher greedily assigns requests and reacts to the fleet targets set by the fleet manager.
     """
 
     # TODO: put these in init function to parameterize based on config file.
     LOW_SOC_TRESHOLD = 0.2
-    MAX_IDLE_S = 600 * unit.seconds
 
     def generate_instructions(self,
                               simulation_state: SimulationState,
-                              fleet_state_target: FleetStateTarget,
                               ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         instructions = []
         vehicle_ids_given_instructions = []
@@ -83,44 +83,18 @@ class GreedyDispatcher(Dispatcher):
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
-        stationary_vehicles = [v for v in simulation_state.vehicles.values() if
-                               v.idle_time_s > self.MAX_IDLE_S and v.id not in vehicle_ids_given_instructions]
+        # 3. determine if we need to activate or deactivate vehicles based on the fleet manager targets.
+        if 'ACTIVE' not in fleet_state_target:
+            warnings.warn('fleet manager did not provide ACTIVE target, skipping fleet balance step.')
+        else:
+            active_target = fleet_state_target['ACTIVE']
+            active_state_set = active_target.state_set
+            vehicles = simulation_state.vehicles.values()
+            n_active_vehicles = sum([1 for v in vehicles if v.vehicle_state in active_state_set])
+            active_diff = n_active_vehicles - active_target.n_vehicles
 
-        # 3. Send idle vehicles back to the base
-        for veh in stationary_vehicles:
-            nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
-                                                entities=simulation_state.bases,
-                                                entity_search=simulation_state.b_search,
-                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
-            if nearest_base:
-                instruction = Instruction(vehicle_id=veh.id,
-                                          action=VehicleState.DISPATCH_BASE,
-                                          location=nearest_base.geoid)
-                instructions.append(instruction)
-                vehicle_ids_given_instructions.append(veh.id)
-            else:
-                # user set the max search radius too low
-                continue
 
-        def _should_base_charge(vehicle: Vehicle) -> bool:
-            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
-                return True
-            else:
-                return False
 
-        # 4. charge vehicles sitting at base
-        base_charge_vehicles = [v for v in simulation_state.vehicles.values() if
-                                v.id not in vehicle_ids_given_instructions and _should_base_charge(v)]
-        for v in base_charge_vehicles:
-            base_id = simulation_state.b_locations[v.geoid][0]
-            base = simulation_state.bases[base_id]
-            if base.station_id:
-                instruction = Instruction(vehicle_id=v.id,
-                                          action=VehicleState.CHARGING_BASE,
-                                          station_id=base.station_id,
-                                          charger=Charger.LEVEL_2,
-                                          )
-                instructions.append(instruction)
-                vehicle_ids_given_instructions.append(v.id)
+
 
         return self, tuple(instructions)

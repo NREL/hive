@@ -4,8 +4,9 @@ from typing import Tuple
 
 from hive.state.simulation_state import SimulationState
 from hive.manager.manager import Manager
-from hive.manager.fleet_target import FleetTarget, FleetStateTarget
+from hive.manager.fleet_target import StateTarget, FleetStateTarget
 from hive.model.vehiclestate import VehicleState
+
 
 class BasicManager(Manager):
     """
@@ -28,9 +29,10 @@ class BasicManager(Manager):
             VehicleState.REPOSITIONING,
         })
 
-        active_target = FleetTarget(n_vehicles=random.randint(1, 100))
+        active_target = StateTarget(id='ACTIVE',
+                                    state_set=active_set,
+                                    n_vehicles=random.randint(1, 100))
 
-        fleet_state_target = {active_set: active_target}
+        fleet_state_target = {active_target.id: active_target}
 
         return self, fleet_state_target
-
