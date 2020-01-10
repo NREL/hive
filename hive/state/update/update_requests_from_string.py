@@ -1,44 +1,51 @@
+from __future__ import annotations
+
 from csv import DictReader
-from typing import List, Dict
+from typing import List, Dict, NamedTuple, Tuple, Optional
 
 from hive.state.simulation_state import SimulationState
-from hive.state.update.simulation_update import SimulationUpdate
+from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.state.update.update_requests import update_requests_from_iterator
 from hive.util.typealiases import SimTime
 
 
-class UpdateRequestsFromString(SimulationUpdate):
+class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
     """
     loads requests from a newline-delimited string in csv format
     """
+    header: str
+    requests: List[str]
+    num_rows: int
+    row_position: int = 0
 
-    def __init__(self, string_requests: str):
-        """
-        reads a requests file and builds a UpdateRequestsFromFile SimulationUpdate function
+    @classmethod
+    def build(cls, string_requests: str):
 
-        :param string_requests: requests as a string, with header
-        :return: a SimulationUpdate function based on the string data
-        """
         src = string_requests.split()
-        self.header = src[0]
-        self.requests = src[1:]
-        self.num_rows = len(self.requests)
-        self.row_position = 0
 
-    def update(self, initial_sim_state: SimulationState) -> SimulationUpdateResult:
+        return UpdateRequestsFromString(
+            header=src[0],
+            requests=src[1:],
+            num_rows=len(src) - 1
+        )
+
+    def update(self,
+               initial_sim_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromString]]:
         """
         add requests from file when the simulation reaches the request's time
 
         :param initial_sim_state: the current sim state
         :return: sim state plus new requests
         """
-        subset = [self.header,] + self.requests[self.row_position:]
+        subset = [self.header, ] + self.requests[self.row_position:]
         reader = DictReader(subset)
         it = RequestStringIterator(reader, initial_sim_state.sim_time, self.row_position)
         sim_updated = update_requests_from_iterator(it, initial_sim_state)
-        self.row_position = it.row_position
-        return sim_updated
+
+        next_update = self._replace(row_position=it.row_position)
+
+        return sim_updated, next_update
 
 
 class RequestStringIterator:

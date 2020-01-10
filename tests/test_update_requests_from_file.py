@@ -1,7 +1,5 @@
 from unittest import TestCase, skip
 
-from pkg_resources import resource_string
-
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
@@ -18,7 +16,7 @@ class TestUpdateRequestsFromFile(TestCase):
         # req_file = resource_string('hive.resources.scenarios.test_scenario', 'requests.csv')
         req_file = "/Users/rfitzger/dev/nrel/hive/hive/hive/resources/scenarios/test_scenario/requests.csv"
         fn = UpdateRequestsFromFile(req_file)
-        result = fn.update(sim)
+        result, _ = fn.update(sim)
         self.assertEqual(len(result.reports), 1, "should have reported the add")
         self.assertEqual(len(result.simulation_state.requests), 1, "should have added the req")
 
