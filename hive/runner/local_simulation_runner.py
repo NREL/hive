@@ -98,7 +98,7 @@ class LocalSimulationRunner(NamedTuple):
             reporter.report(updated_sim, instructions, updated_payload.r)
             if updated_sim.sim_time % 100 == 0:
                 print(f"running step {updated_sim.sim_time} of {len(time_steps)}")
-            return RunnerPayload(s=updated_sim, d=updated_dispatcher, f=payload.f, r=())
+            return RunnerPayload(s=updated_sim, d=updated_dispatcher, f=updated_payload.f, r=())
 
         final_payload = ft.reduce(
             _run_step,
