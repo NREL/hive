@@ -35,13 +35,13 @@ class TestLocalSimulationRunner(TestCase):
         1,-37.001,122,-37.1,122,0,20,2
         """
         req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_location_resolution)
-        update_requests = UpdateRequestsFromString(req)
+        update_requests = UpdateRequestsFromString.build(req)
 
         result = runner.run(
             initial_simulation_state=initial_sim,
             initial_dispatcher=GreedyDispatcher(),
             update_functions=(CancelRequests(), update_requests),
-            reporter=DetailedReporter(runner.env.config.io)
+            reporter=DetailedReporter(runner.env.config.io, "")
         )
 
         at_destination = result.s.at_geoid(req_destination)

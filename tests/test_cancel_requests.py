@@ -18,7 +18,7 @@ class TestCancelRequests(TestCase):
         req = TestCancelRequestsAssets.mock_request()
         sim = TestCancelRequestsAssets.mock_sim(start_time=600).add_request(req)
         cancel_requests = CancelRequests()
-        result = cancel_requests.update(sim)
+        result, _ = cancel_requests.update(sim)
         self.assertNotIn(req.id, result.simulation_state.requests, "request should have been removed")
         self.assertNotIn(req.origin, result.simulation_state.r_locations, "request location should have been removed")
         self.assertEqual(len(result.reports), 1, "should have produced a cancellation report")
@@ -27,7 +27,7 @@ class TestCancelRequests(TestCase):
         req = TestCancelRequestsAssets.mock_request()
         sim = TestCancelRequestsAssets.mock_sim(start_time=599).add_request(req)
         cancel_requests = CancelRequests()
-        result = cancel_requests.update(sim)
+        result, _ = cancel_requests.update(sim)
         self.assertIn(req.id, result.simulation_state.requests, "request should not have been removed")
         self.assertIn(req.origin, result.simulation_state.r_locations, "request location should not have been removed")
 

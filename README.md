@@ -65,7 +65,7 @@ Sphinx with type hints via `pip install sphinx-autodoc-typehints` and following 
 
 ## Running a Scenario
 
-![Map of Denver Downtown](app/scenarios/denver_demo.jpg?raw=true)
+![Map of Denver Downtown](docs/images/denver_demo.jpg?raw=true)
 
 Running HIVE takes one argument, which is a configuration file. Hive v0.3.0 comes packaged with a demo scenario 
 for Downtown Denver, located at `app/scenarios/denver_demo.yaml`. This file names the inputs and the configuration
