@@ -24,7 +24,7 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime
+from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime, LinkId
 from hive.util.units import unit, kwh, kw, Ratio, s, kmph
 
 
@@ -254,8 +254,8 @@ def mock_powercurve(
         def refuel(self, energy_source: EnergySource, charger: Charger,
                    duration_seconds: s = 1 * unit.seconds) -> EnergySource:
             added = charger.power * duration_seconds.magnitude / 3600 * unit.kilowatt_hour
-            energy_source.load_energy(added)
-            return energy_source
+            updated_energy_source = energy_source.load_energy(added)
+            return updated_energy_source
 
     return MockPowercurve()
 
@@ -351,3 +351,82 @@ def mock_haversine_zigzag_route(
         return acc + (p,)
 
     return ft.reduce(step, range(0, n), ())
+
+
+def mock_graph_links(h3_res: int = 15) -> Dict[str, PropertyLink]:
+    """
+    test_routetraversal is dependent on this graph topology + its attributes
+    """
+
+    links = {
+        "1": Link("1",
+                  h3.geo_to_h3(37, 122, h3_res),
+                  h3.geo_to_h3(37.008994, 122, h3_res)),
+        "2": Link("2",
+                  h3.geo_to_h3(37.008994, 122, h3_res),
+                  h3.geo_to_h3(37.017998, 122, h3_res)),
+        "3": Link("3",
+                  h3.geo_to_h3(37.017998, 122, h3_res),
+                  h3.geo_to_h3(37.026992, 122, h3_res)),
+    }
+
+    property_links = {
+        # distance of 1.0 KM, speed of 1 KM/time unit
+        "1": PropertyLink.build(links["1"], 1 * (unit.kilometer/unit.hour)),
+        "2": PropertyLink.build(links["2"], 1 * (unit.kilometer/unit.hour)),
+        "3": PropertyLink.build(links["3"], 1 * (unit.kilometer/unit.hour))
+    }
+    return property_links
+
+
+def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: int = 15) -> RoadNetwork:
+
+    links = mock_graph_links(h3_res=h3_res) if links is None else links
+
+    class MockGraphNetwork(RoadNetwork):
+        """
+        a road network that has a fixed set of network links and only implements "get_link"
+        """
+
+        def __init__(self, property_links: Dict[str, PropertyLink], h3_res: int):
+            self.sim_h3_resolution = h3_res
+
+            self.property_links = property_links
+
+        def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
+            pass
+
+        def update(self, sim_time: SimTime) -> RoadNetwork:
+            pass
+
+        def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
+            if link_id in self.property_links:
+                return self.property_links[link_id]
+            else:
+                return None
+
+        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
+            link_id = property_link.link.link_id
+            if link_id in self.property_links:
+                current_property_link = self.property_links[link_id]
+                updated_property_link = property_link.update_speed(current_property_link.speed)
+                return updated_property_link
+            else:
+                return None
+
+        def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+            pass
+
+        def geoid_within_geofence(self, geoid: GeoId) -> bool:
+            pass
+
+        def link_id_within_geofence(self, link_id: LinkId) -> bool:
+            pass
+
+        def geoid_within_simulation(self, geoid: GeoId) -> bool:
+            pass
+
+        def link_id_within_simulation(self, link_id: LinkId) -> bool:
+            pass
+
+    return MockGraphNetwork(links, h3_res)

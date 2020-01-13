@@ -1,35 +1,14 @@
-from typing import cast, Optional
-from unittest import TestCase, skip
+from unittest import TestCase
 
-from h3 import h3
-
-from hive.dispatcher.instruction import Instruction
-from hive.model.base import Base
-from hive.model.energy.charger import Charger
-from hive.model.energy.energysource import EnergySource
-from hive.model.energy.energytype import EnergyType
-from hive.model.energy.powercurve import Powercurve
-from hive.model.energy.powertrain import Powertrain
-from hive.model.request import Request
-from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.station import Station
 from hive.model.vehiclestate import VehicleState
-from hive.model.vehicle import Vehicle
-
-from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
-from hive.model.roadnetwork.routetraversal import Route
-from hive.model.roadnetwork.link import Link
-from hive.state.simulation_state import SimulationState
-from hive.state.simulation_state_ops import initial_simulation_state
-from hive.util.typealiases import *
-from hive.util.units import unit, kwh, s
+from tests.mock_lobster import *
 
 
 class TestSimulationState(TestCase):
 
     def test_add_request(self):
-        req = SimulationStateTestAssets.mock_request()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        req = mock_request()
+        sim = mock_sim()
         sim_with_req = sim.add_request(req)
         self.assertEqual(len(sim.requests), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_req.requests[req.id], req, "request contents should be idempotent")
@@ -40,8 +19,8 @@ class TestSimulationState(TestCase):
         self.assertEqual(at_loc[0], req.id, "the request's id should be found at it's geoid")
 
     def test_remove_request(self):
-        req = SimulationStateTestAssets.mock_request()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        req = mock_request()
+        sim = mock_sim()
         sim_with_req = sim.add_request(req)
         sim_after_remove = sim_with_req.remove_request(req.id)
 
@@ -54,9 +33,9 @@ class TestSimulationState(TestCase):
         """
         confirms that we didn't remove other requests at the same location
         """
-        req1 = SimulationStateTestAssets.mock_request(request_id="1")
-        req2 = SimulationStateTestAssets.mock_request(request_id="2")
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        req1 = mock_request(request_id="1")
+        req2 = mock_request(request_id="2")
+        sim = mock_sim()
         sim_with_reqs = sim.add_request(req1).add_request(req2)
         sim_remove_req1 = sim_with_reqs.remove_request(req1.id)
 
@@ -68,8 +47,8 @@ class TestSimulationState(TestCase):
                       "req2.id should still be found in r_locations")
 
     def test_add_vehicle(self):
-        veh = SimulationStateTestAssets.mock_vehicle()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        veh = mock_vehicle()
+        sim = mock_sim()
         sim_with_veh = sim.add_vehicle(veh)
 
         self.assertEqual(len(sim.vehicles), 0, "the original sim object should not have been mutated")
@@ -81,24 +60,24 @@ class TestSimulationState(TestCase):
         self.assertEqual(at_loc[0], veh.id, "the vehicle's id should be found at it's geoid")
 
     def test_update_vehicle(self):
-        veh = SimulationStateTestAssets.mock_vehicle()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        veh = mock_vehicle()
+        sim = mock_sim()
         sim_before_update = sim.add_vehicle(veh)
 
         # modify some value on the vehicle
-        updated_powertrain = "testing an update"
-        updated_vehicle = veh._replace(powertrain_id=updated_powertrain)
+        updated_powertrain_id = "testing an update"
+        updated_vehicle = veh._replace(powertrain_id=updated_powertrain_id)
 
         sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
 
         # confirm sim reflects changes to vehicle
         self.assertEqual(sim_after_update.vehicles[veh.id].powertrain_id,
-                         updated_powertrain,
+                         updated_powertrain_id,
                          "new vehicle powertrain_id was not updated correctly")
 
     def test_remove_vehicle(self):
-        veh = SimulationStateTestAssets.mock_vehicle()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        veh = mock_vehicle()
+        sim = mock_sim()
         sim_with_veh = sim.add_vehicle(veh)
         sim_after_remove = sim_with_veh.remove_vehicle(veh.id)
 
@@ -108,8 +87,8 @@ class TestSimulationState(TestCase):
         self.assertNotIn(veh.geoid, sim_after_remove.v_locations, "there should be no key for this geoid")
 
     def test_pop_vehicle(self):
-        veh = SimulationStateTestAssets.mock_vehicle()
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh)
+        veh = mock_vehicle()
+        sim = mock_sim().add_vehicle(veh)
         sim_after_pop, veh_after_pop = sim.pop_vehicle(veh.id)
 
         self.assertEqual(len(sim.vehicles), 1, "the sim with vehicle added should not have been mutated")
@@ -117,8 +96,8 @@ class TestSimulationState(TestCase):
         self.assertEqual(veh, veh_after_pop, "should be the same vehicle that gets popped")
 
     def test_add_station(self):
-        station = SimulationStateTestAssets.mock_station()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        station = mock_station()
+        sim = mock_sim()
         sim_after_station = sim.add_station(station)
 
         self.assertEqual(len(sim_after_station.stations), 1, "the sim should have one station added")
@@ -130,16 +109,16 @@ class TestSimulationState(TestCase):
         self.assertEqual(at_loc[0], station.id, "the station's id should be found at it's geoid")
 
     def test_remove_station(self):
-        station = SimulationStateTestAssets.mock_station()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        station = mock_station()
+        sim = mock_sim()
         sim_after_remove = sim.add_station(station).remove_station(station.id)
 
         self.assertNotIn(station.id, sim_after_remove.stations, "station should be removed")
         self.assertNotIn(station.geoid, sim_after_remove.s_locations, "nothing should be left at geoid")
 
     def test_add_base(self):
-        base = SimulationStateTestAssets.mock_base()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        base = mock_base()
+        sim = mock_sim()
         sim_after_base = sim.add_base(base)
 
         self.assertEqual(len(sim_after_base.bases), 1, "the sim should have one base added")
@@ -151,15 +130,15 @@ class TestSimulationState(TestCase):
         self.assertEqual(at_loc[0], base.id, "the base's id should be found at it's geoid")
 
     def test_remove_base(self):
-        base = SimulationStateTestAssets.mock_base()
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        base = mock_base()
+        sim = mock_sim()
         sim_after_remove = sim.add_base(base).remove_base(base.id)
 
         self.assertNotIn(base.id, sim_after_remove.bases, "base should be removed")
         self.assertNotIn(base.geoid, sim_after_remove.b_locations, "nothing should be left at geoid")
 
     def test_update_road_network(self):
-        sim = SimulationStateTestAssets.mock_empty_sim()
+        sim = mock_sim()
         update_time_argument = 1999
         updated_sim = sim.update_road_network(update_time_argument)
         updated_road_network = updated_sim.road_network
@@ -168,11 +147,11 @@ class TestSimulationState(TestCase):
     def test_at_vehicle_geoid(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        b = SimulationStateTestAssets.mock_base(geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req).add_station(sta).add_base(b)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere)
+        sta = mock_station_from_geoid(geoid=somewhere)
+        b = mock_base_from_geoid(geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_request(req).add_station(sta).add_base(b)
 
         result = sim.at_geoid(veh.geoid)
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
@@ -182,60 +161,60 @@ class TestSimulationState(TestCase):
 
     def test_vehicle_at_request(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
         result = sim.vehicle_at_request(veh.id, req.id)
         self.assertTrue(result, "the vehicle should be at the request")
 
     def test_vehicle_not_at_request(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
         result = sim.vehicle_at_request(veh.id, req.id)
         self.assertFalse(result, "the vehicle should not be at the request")
 
     def test_vehicle_at_station(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sta = mock_station_from_geoid(geoid=somewhere)
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
         result = sim.vehicle_at_station(veh.id, sta.id)
         self.assertTrue(result, "the vehicle should be at the station")
 
     def test_vehicle_not_at_station(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sta = mock_station_from_geoid(geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
         result = sim.vehicle_at_station(veh.id, sta.id)
         self.assertFalse(result, "the vehicle should not be at the station")
 
     def test_vehicle_at_base(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        base = SimulationStateTestAssets.mock_base(geoid=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(base)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        base = mock_base_from_geoid(geoid=somewhere)
+        sim = mock_sim().add_vehicle(veh).add_base(base)
         result = sim.vehicle_at_base(veh.id, base.id)
         self.assertTrue(result, "the vehicle should be at the base")
 
     def test_vehicle_not_at_base(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        base = SimulationStateTestAssets.mock_base(geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(base)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        base = mock_base_from_geoid(geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_base(base)
         result = sim.vehicle_at_base(veh.id, base.id)
         self.assertFalse(result, "the vehicle should not be at the base")
 
     def test_board_vehicle(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere, passengers=2)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere, passengers=2)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
 
         sim_boarded = sim.board_vehicle(req.id, veh.id)
 
@@ -251,9 +230,9 @@ class TestSimulationState(TestCase):
 
     def test_set_vehicle_intention_base(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        bas = SimulationStateTestAssets.mock_base(geoid=somewhere)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(bas)
+        bas = mock_base_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sim = mock_sim().add_vehicle(veh).add_base(bas)
 
         instruction = Instruction(veh.id, VehicleState.RESERVE_BASE)
         sim_updated = sim.apply_instruction(instruction)
@@ -266,9 +245,9 @@ class TestSimulationState(TestCase):
     def test_set_vehicle_intention_base_no_base(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        bas = SimulationStateTestAssets.mock_base(geoid=somewhere)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(bas)
+        bas = mock_base_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_base(bas)
 
         instruction = Instruction(veh.id, VehicleState.RESERVE_BASE)
         sim_updated = sim.apply_instruction(instruction)
@@ -277,9 +256,9 @@ class TestSimulationState(TestCase):
 
     def test_set_vehicle_intention_charge(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+        sta = mock_station_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
 
         instruction = Instruction(veh.id,
                                   VehicleState.CHARGING_STATION,
@@ -295,9 +274,9 @@ class TestSimulationState(TestCase):
     def test_set_vehicle_intention_charge_no_station(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+        sta = mock_station_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
 
         instruction = Instruction(veh.id,
                                   VehicleState.CHARGING_STATION,
@@ -309,9 +288,9 @@ class TestSimulationState(TestCase):
 
     def test_set_vehicle_intention_serve_trip(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere, passengers=2)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere, passengers=2)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
 
         instruction = Instruction(veh.id,
                                   VehicleState.SERVICING_TRIP,
@@ -328,9 +307,9 @@ class TestSimulationState(TestCase):
     def test_set_vehicle_intention_serve_trip_no_reqs(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere_else, passengers=2)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere_else, passengers=2)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
 
         instruction = Instruction(veh.id,
                                   VehicleState.SERVICING_TRIP,
@@ -342,11 +321,11 @@ class TestSimulationState(TestCase):
     def test_step_moving_vehicle(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere,
-                                                     destination=somewhere_else,
-                                                     passengers=2)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere,
+                                       destination=somewhere_else,
+                                       passengers=2)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
 
         instruction = Instruction(veh.id,
                                   VehicleState.SERVICING_TRIP,
@@ -362,9 +341,9 @@ class TestSimulationState(TestCase):
 
     def test_step_charging_vehicle(self):
         somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+        sta = mock_station_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
 
         instruction = Instruction(veh.id,
                                   VehicleState.CHARGING_STATION,
@@ -379,8 +358,8 @@ class TestSimulationState(TestCase):
                            "Vehicle should have gained energy")
 
     def test_step_idle_vehicle(self):
-        veh = SimulationStateTestAssets.mock_vehicle()
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh)
+        veh = mock_vehicle_from_geoid()
+        sim = mock_sim().add_vehicle(veh)
 
         sim_idle_veh = sim.step_simulation()
 
@@ -394,37 +373,37 @@ class TestSimulationState(TestCase):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere,
-                                                     destination=somewhere_else,
-                                                     passengers=2)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
+        req = mock_request_from_geoids(origin=somewhere,
+                                       destination=somewhere_else,
+                                       passengers=2)
+        sim = mock_sim(sim_timestep_duration_seconds=1000 * unit.seconds).add_vehicle(veh).add_request(req)
         instruction = Instruction(veh.id,
                                   VehicleState.SERVICING_TRIP,
                                   request_id=req.id)
-        sim = sim.apply_instruction(instruction)
+        sim_with_instruction = sim.apply_instruction(instruction)
 
-        self.assertIsNotNone(sim, "Vehicle should have transitioned to servicing trip")
+        self.assertIsNotNone(sim_with_instruction, "Vehicle should have transitioned to servicing trip")
 
-        for t in range(1000):
-            sim = sim.step_simulation()
+        sim_veh_at_dest_servicing = sim_with_instruction.step_simulation()  # gets to end of trip
+        sim_idle = sim_veh_at_dest_servicing.step_simulation()  # actually transitions to IDLE
 
-        idle_veh = sim.vehicles[veh.id]
+        idle_veh = sim_idle.vehicles[veh.id]
 
         self.assertEqual(idle_veh.vehicle_state, VehicleState.IDLE, "Vehicle should have transitioned to idle.")
         self.assertEqual(idle_veh.geoid, req.destination, "Vehicle should be at request destination.")
         self.assertEqual(idle_veh.has_passengers(), False, "Vehicle should not have any passengers.")
-        self.assertEqual(req.id not in sim.requests, True, "Request should have been removed from simulation.")
+        self.assertEqual(req.id not in sim_idle.requests, True, "Request should have been removed from simulation.")
 
     def test_terminal_state_starting_trip(self):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        req = SimulationStateTestAssets.mock_request(origin=somewhere_else,
-                                                     destination=somewhere,
-                                                     passengers=2)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_request(req)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        req = mock_request_from_geoids(origin=somewhere_else,
+                                       destination=somewhere,
+                                       passengers=2)
+        sim = mock_sim().add_vehicle(veh).add_request(req)
         instruction = Instruction(veh.id,
                                   VehicleState.DISPATCH_TRIP,
                                   request_id=req.id)
@@ -432,33 +411,35 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        # should take about 800 seconds to arrive at trip origin.
+        # should take about 800 seconds to arrive at trip origin, and
+        # 1 more state step of any size to transition state
 
-        for t in range(800):
-            sim = sim.step_simulation()
+        sim_at_req = sim._replace(sim_timestep_duration_seconds=800 * unit.seconds).step_simulation()
+        sim_with_req = sim_at_req._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        tripping_veh = sim.vehicles[veh.id]
+        tripping_veh = sim_with_req.vehicles[veh.id]
 
         self.assertEqual(tripping_veh.vehicle_state, VehicleState.SERVICING_TRIP)
 
-        # should take about 800 seconds to arrive at trip destination.
-        for t in range(800):
-            sim = sim.step_simulation()
+        # should take about 800 seconds to arrive at trip destination, and
+        # 1 more state step of any size to transition state
+        sim_at_dest = sim_with_req._replace(sim_timestep_duration_seconds=800 * unit.seconds).step_simulation()
+        sim_idle = sim_at_dest._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        idle_veh = sim.vehicles[veh.id]
+        idle_veh = sim_idle.vehicles[veh.id]
 
         self.assertEqual(idle_veh.vehicle_state, VehicleState.IDLE, "Vehicle should have transitioned to idle.")
         self.assertEqual(idle_veh.geoid, req.destination, "Vehicle should be at request destination.")
         self.assertEqual(idle_veh.has_passengers(), False, "Vehicle should not have any passengers.")
-        self.assertEqual(req.id not in sim.requests, True, "Request should have been removed from simulation.")
+        self.assertEqual(req.id not in sim_idle.requests, True, "Request should have been removed from simulation.")
 
     def test_terminal_state_dispatch_station(self):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sta = SimulationStateTestAssets.mock_station(station_id='s1', geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sta = mock_station_from_geoid(station_id='s1', geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
 
         instruction = Instruction(veh.id,
                                   VehicleState.DISPATCH_STATION,
@@ -468,11 +449,11 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(1000):
-            sim = sim.step_simulation()
+        sim_at_sta = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
+        sim_in_sta = sim_at_sta._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        charging_veh = sim.vehicles[veh.id]
-        station_w_veh = sim.stations[sta.id]
+        charging_veh = sim_in_sta.vehicles[veh.id]
+        station_w_veh = sim_in_sta.stations[sta.id]
 
         self.assertEqual(charging_veh.vehicle_state,
                          VehicleState.CHARGING_STATION,
@@ -486,9 +467,9 @@ class TestSimulationState(TestCase):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        base = SimulationStateTestAssets.mock_base(base_id='b1', geoid=somewhere_else)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_base(base)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        base = mock_base_from_geoid(base_id='b1', geoid=somewhere_else)
+        sim = mock_sim().add_vehicle(veh).add_base(base)
 
         instruction = Instruction(veh.id,
                                   VehicleState.DISPATCH_BASE,
@@ -497,10 +478,11 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(1000):
-            sim = sim.step_simulation()
+        # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
+        sim_at_base = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
+        sim_in_base = sim_at_base._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        veh_at_base = sim.vehicles[veh.id]
+        veh_at_base = sim_in_base.vehicles[veh.id]
 
         self.assertEqual(veh_at_base.vehicle_state,
                          VehicleState.RESERVE_BASE,
@@ -513,8 +495,8 @@ class TestSimulationState(TestCase):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.75, -105.1, 15)
         somewhere_else = h3.geo_to_h3(39.75, -105, 15)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh)
+        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        sim = mock_sim().add_vehicle(veh)
 
         instruction = Instruction(veh.id,
                                   VehicleState.REPOSITIONING,
@@ -523,10 +505,11 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(1000):
-            sim = sim.step_simulation()
+        # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
+        sim_at_new_pos = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
+        sim_in_new_state = sim_at_new_pos._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        veh_at_new_loc = sim.vehicles[veh.id]
+        veh_at_new_loc = sim_in_new_state.vehicles[veh.id]
 
         self.assertEqual(veh_at_new_loc.vehicle_state,
                          VehicleState.IDLE,
@@ -536,15 +519,15 @@ class TestSimulationState(TestCase):
                          "Vehicle should be located at somewhere_else")
 
     def test_terminal_state_charging(self):
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
-                                          EnergyType.ELECTRIC,
-                                          capacity=50 * unit.kilowatthour,
-                                          ideal_energy_limit=40 * unit.kilowatthour,
-                                          soc=0.75)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta)
+
+        sta = mock_station_from_geoid()
+        veh = mock_vehicle_from_geoid(
+            energy_type=EnergyType.ELECTRIC,
+            capacity=50 * unit.kilowatthour,
+            ideal_energy_limit=50 * unit.kilowatthour,
+            soc=0.75
+        )
+        sim = mock_sim().add_vehicle(veh).add_station(sta)
 
         instruction = Instruction(veh.id,
                                   VehicleState.CHARGING_STATION,
@@ -554,26 +537,26 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(1000):
-            sim = sim.step_simulation()
+        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
+        sim_charged = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
+        sim_in_new_state = sim_charged._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        fully_charged_veh = sim.vehicles[veh.id]
+        fully_charged_veh = sim_in_new_state.vehicles[veh.id]
 
         self.assertEqual(fully_charged_veh.vehicle_state,
                          VehicleState.IDLE,
                          "Vehicle should have transitioned to IDLE")
 
     def test_terminal_state_charging_base(self):
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        sta = SimulationStateTestAssets.mock_station(geoid=somewhere)
-        bas = SimulationStateTestAssets.mock_base(geoid=somewhere, station_id=sta.id)
-        high_battery = EnergySource.build(SimulationStateTestAssets.MockPowercurve().get_id(),
-                                          EnergyType.ELECTRIC,
-                                          capacity=50 * unit.kilowatthour,
-                                          ideal_energy_limit=40 * unit.kilowatthour,
-                                          soc=0.75)
-        veh = SimulationStateTestAssets.mock_vehicle(geoid=somewhere).battery_swap(high_battery)
-        sim = SimulationStateTestAssets.mock_empty_sim().add_vehicle(veh).add_station(sta).add_base(bas)
+        sta = mock_station_from_geoid()
+        bas = mock_base_from_geoid(station_id=sta.id)
+        veh = mock_vehicle_from_geoid(
+            energy_type=EnergyType.ELECTRIC,
+            capacity=50 * unit.kilowatthour,
+            ideal_energy_limit=40 * unit.kilowatthour,
+            soc=0.75
+        )
+        sim = mock_sim().add_vehicle(veh).add_station(sta).add_base(bas)
 
         instruction = Instruction(veh.id,
                                   VehicleState.CHARGING_BASE,
@@ -583,93 +566,12 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        for t in range(1000):
-            sim = sim.step_simulation()
+        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
+        sim_charged = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
+        sim_in_new_state = sim_charged._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
 
-        fully_charged_veh = sim.vehicles[veh.id]
+        fully_charged_veh = sim_in_new_state.vehicles[veh.id]
 
         self.assertEqual(fully_charged_veh.vehicle_state,
                          VehicleState.RESERVE_BASE,
                          "Vehicle should have transitioned to RESERVE_BASE")
-
-
-class SimulationStateTestAssets:
-    class MockPowertrain(Powertrain):
-        def get_id(self) -> PowertrainId:
-            return "mock_powertrain"
-
-        def get_energy_type(self) -> EnergyType:
-            return EnergyType.ELECTRIC
-
-        def energy_cost(self, route: Route) -> kwh:
-            # Uses very minimal energy to check terminal states.
-            return 0.01 * unit.kilowatthour
-
-    class MockPowercurve(Powercurve):
-        """
-        just adds 1 when charging
-        """
-
-        def get_id(self) -> PowercurveId:
-            return "mock_powercurve"
-
-        def get_energy_type(self) -> EnergyType:
-            return EnergyType.ELECTRIC
-
-        def refuel(self, energy_source: 'EnergySource', charger: 'Charger', duration_seconds: s = 1 * unit.seconds,
-                   step_size_seconds: s = 1 * unit.seconds) -> 'EnergySource':
-            return energy_source.load_energy(0.1 * unit.kilowatthour)
-
-    @classmethod
-    def mock_request(cls,
-                     request_id="r1",
-                     origin: GeoId = h3.geo_to_h3(39.74, -105, 15),
-                     destination: GeoId = h3.geo_to_h3(39.76, -105, 15),
-                     passengers: int = 2) -> Request:
-        return Request.build(
-            request_id=request_id,
-            origin=origin,
-            destination=destination,
-            departure_time=28800,
-            cancel_time=29400,
-            passengers=passengers
-        )
-
-    @classmethod
-    def mock_vehicle(cls,
-                     vehicle_id="m1",
-                     geoid: GeoId = h3.geo_to_h3(39.75, -105, 15)) -> Vehicle:
-        mock_powertrain = cls.MockPowertrain()
-        mock_powercurve = cls.MockPowercurve()
-        mock_property_link = HaversineRoadNetwork().property_link_from_geoid(geoid)
-        mock_veh = Vehicle(vehicle_id,
-                           mock_powertrain.get_id(),
-                           mock_powercurve.get_id(),
-                           EnergySource.build(powercurve_id=mock_powercurve.get_id(),
-                                              energy_type=EnergyType.ELECTRIC,
-                                              capacity=40 * unit.kilowatthour,
-                                              soc=0.5),
-                           mock_property_link,
-                           )
-        return mock_veh
-
-    @classmethod
-    def mock_station(cls,
-                     station_id="s1",
-                     geoid: GeoId = h3.geo_to_h3(39.75, -105.01, 15)) -> Station:
-        return Station.build(station_id, geoid, {Charger.DCFC: 5})
-
-    @classmethod
-    def mock_base(cls,
-                  base_id="b1",
-                  geoid: GeoId = h3.geo_to_h3(39.73, -105, 15),
-                  station_id: StationId = None) -> Base:
-        return Base.build(base_id, geoid, station_id, 5)
-
-    @classmethod
-    def mock_empty_sim(cls) -> SimulationState:
-        sim, failures = initial_simulation_state(HaversineRoadNetwork(),
-                                                 powertrains=(cls.MockPowertrain(),),
-                                                 powercurves=(cls.MockPowercurve(),))
-        assert len(failures) == 0, f"default sim used for tests had failures:\n {failures}"
-        return sim
