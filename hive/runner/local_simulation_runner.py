@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Tuple, Callable, Any, Type
 
-from hive.dispatcher import Dispatcher
+from hive.dispatcher import DispatcherInterface
 from hive.runner import simulation_runner_ops
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
@@ -23,7 +23,7 @@ class RunnerPayload(NamedTuple):
     :type r: :py:obj:`Tuple[str, ...]`
     """
     s: SimulationState
-    d: Dispatcher
+    d: DispatcherInterface
     f: Tuple[SimulationUpdateFunction, ...]
     r: Tuple[str, ...] = ()
 
@@ -69,7 +69,7 @@ class LocalSimulationRunner(NamedTuple):
 
     def run(self,
             initial_simulation_state: SimulationState,
-            initial_dispatcher: Dispatcher,
+            initial_dispatcher: DispatcherInterface,
             update_functions: Tuple[SimulationUpdateFunction, ...],
             reporter: Reporter,
             ) -> RunnerPayload:

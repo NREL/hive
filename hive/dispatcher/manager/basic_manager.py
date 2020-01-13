@@ -1,19 +1,21 @@
-import random
+from __future__ import annotations
 
-from typing import Tuple
+from typing import Tuple, NamedTuple
 
 from hive.state.simulation_state import SimulationState
-from hive.manager.manager import Manager
-from hive.manager.fleet_target import StateTarget, FleetStateTarget
+from hive.dispatcher.manager.manager_interface import ManagerInterface
+from hive.dispatcher.manager.fleet_target import StateTarget, FleetStateTarget
+from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.model.vehiclestate import VehicleState
 
 
-class BasicManager(Manager):
+class BasicManager(NamedTuple, ManagerInterface):
     """
     A class that computes an optimal fleet state.
     """
+    demand_forecaster: BasicForecaster
 
-    def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[Manager, FleetStateTarget]:
+    def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[BasicManager, FleetStateTarget]:
         """
         Generate fleet targets to be consumed by the dispatcher.
 
@@ -29,9 +31,11 @@ class BasicManager(Manager):
             VehicleState.REPOSITIONING,
         })
 
+        _, future_demand = self.demand_forecaster.generate_forecast(simulation_state)
+
         active_target = StateTarget(id='ACTIVE',
                                     state_set=active_set,
-                                    n_vehicles=random.randint(1, 100))
+                                    n_vehicles=future_demand.value)
 
         fleet_state_target = {active_target.id: active_target}
 

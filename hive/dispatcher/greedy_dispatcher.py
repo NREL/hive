@@ -1,29 +1,27 @@
-from typing import Tuple
+from typing import Tuple, NamedTuple
 
 from hive.dispatcher.instruction import Instruction
-from hive.manager.fleet_target import FleetStateTarget
 from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
-from hive.dispatcher.dispatcher import Dispatcher
+from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.util.helpers import H3Ops
 from hive.util.units import unit
 
 
-class GreedyDispatcher(Dispatcher):
+class GreedyDispatcher(NamedTuple, DispatcherInterface):
     """
     A class that computes instructions for the fleet based on a given simulation state.
     """
 
     # TODO: put these in init function to parameterize based on config file.
-    LOW_SOC_TRESHOLD = 0.2
-    MAX_IDLE_S = 600 * unit.seconds
+    LOW_SOC_TRESHOLD: float = 0.2
+    MAX_IDLE_S: int = 600 * unit.seconds
 
     def generate_instructions(self,
                               simulation_state: SimulationState,
-                              fleet_state_target: FleetStateTarget,
-                              ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
+                              ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
         instructions = []
         vehicle_ids_given_instructions = []
 

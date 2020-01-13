@@ -1,29 +1,29 @@
-from typing import Tuple
+from typing import Tuple, NamedTuple
 
 from hive.dispatcher.instruction import Instruction
-from hive.manager.fleet_target import FleetStateTarget
+from hive.dispatcher.manager.basic_manager import BasicManager
 from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
-from hive.dispatcher.dispatcher import Dispatcher
+from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.util.helpers import H3Ops
-from hive.util.units import unit
 
 import warnings
 
 
-class ManagedDispatcher(Dispatcher):
+class ManagedDispatcher(NamedTuple, DispatcherInterface):
     """
     This dispatcher greedily assigns requests and reacts to the fleet targets set by the fleet manager.
     """
+    manager: BasicManager
 
     # TODO: put these in init function to parameterize based on config file.
-    LOW_SOC_TRESHOLD = 0.2
+    LOW_SOC_TRESHOLD: float = 0.2
 
     def generate_instructions(self,
                               simulation_state: SimulationState,
-                              ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
+                              ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
         instructions = []
         vehicle_ids_given_instructions = []
 
@@ -83,18 +83,17 @@ class ManagedDispatcher(Dispatcher):
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
-        # 3. determine if we need to activate or deactivate vehicles based on the fleet manager targets.
-        if 'ACTIVE' not in fleet_state_target:
-            warnings.warn('fleet manager did not provide ACTIVE target, skipping fleet balance step.')
-        else:
-            active_target = fleet_state_target['ACTIVE']
-            active_state_set = active_target.state_set
-            vehicles = simulation_state.vehicles.values()
-            n_active_vehicles = sum([1 for v in vehicles if v.vehicle_state in active_state_set])
-            active_diff = n_active_vehicles - active_target.n_vehicles
-
-
-
+        # 3. try to meet active target set by fleet manager
+        _, fleet_state_target = self.manager.generate_fleet_target(simulation_state)
+        active_target = fleet_state_target['ACTIVE']
+        n_active = sum((1 for v in simulation_state.vehicles.values() if v.vehicle_state in active_target.state_set))
+        active_diff = n_active - active_target.n_vehicles
+        if active_diff < 0:
+            # we need abs(active_diff) more vehicles in service to meet demand
+            pass
+        elif active_diff > 0:
+            # we can remove active_diff vehicles from service
+            pass
 
 
         return self, tuple(instructions)
