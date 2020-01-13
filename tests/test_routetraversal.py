@@ -11,7 +11,7 @@ class TestRouteTraversal(TestCase):
         the mock problem is tuned to complete the route with a time step of just beyond 3 time units
         """
         network = mock_graph_network()
-        links = tuple(mock_graph_links().values())
+        links = mock_route()
 
         result = traverse(
             route_estimate=links,
@@ -28,7 +28,7 @@ class TestRouteTraversal(TestCase):
         up somewhere in the middle
         """
         network = mock_graph_network()
-        links = tuple(mock_graph_links().values())
+        links = mock_route()
         result = traverse(
             route_estimate=links,
             road_network=network,
@@ -40,7 +40,7 @@ class TestRouteTraversal(TestCase):
 
     def test_traverse_up_to_split(self):
         network = mock_graph_network()
-        links = tuple(mock_graph_links().values())
+        links = mock_route()
         test_link = links[0]
 
         result = traverse_up_to(
@@ -58,7 +58,7 @@ class TestRouteTraversal(TestCase):
 
     def test_traverse_up_to_no_split(self):
         network = mock_graph_network()
-        links = tuple(mock_graph_links().values())
+        links = mock_route()
         test_link = links[0]
 
         result = traverse_up_to(

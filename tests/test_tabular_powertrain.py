@@ -7,6 +7,7 @@ from hive.model.energy.powertrain.tabular_powertrain import TabularPowertrain
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.util.units import unit
+from tests.mock_lobster import *
 
 
 class TestTabularPowertrain(TestCase):
@@ -27,35 +28,7 @@ class TestTabularPowertrain(TestCase):
         :return:
         """
         powertrain = build_powertrain("leaf")
-        test_route = _TestAssets.mock_route()
+        # test_route = _TestAssets.mock_route()
+        test_route = mock_route(speed=45 * (unit.kilometer / unit.hour))
         cost = powertrain.energy_cost(test_route)
         self.assertAlmostEqual(cost.magnitude, .308, places=1)
-
-
-class _TestAssets:
-
-    sim_h3_resolution = 15
-
-    # each link is approx. 1000.09 meters long (1km)
-    links = {
-        "1": Link("1",
-                  h3.geo_to_h3(37, 122, sim_h3_resolution),
-                  h3.geo_to_h3(37.008994, 122, sim_h3_resolution)),
-        "2": Link("2",
-                  h3.geo_to_h3(37.008994, 122, sim_h3_resolution),
-                  h3.geo_to_h3(37.017998, 122, sim_h3_resolution)),
-        "3": Link("3",
-                  h3.geo_to_h3(37.017998, 122, sim_h3_resolution),
-                  h3.geo_to_h3(37.026992, 122, sim_h3_resolution)),
-    }
-
-    property_links = {
-        # 45kmph with leaf model should be about 102.5 watthours per km, or about 308 watthours for this trip
-        "1": PropertyLink.build(links["1"], 45 * (unit.kilometer/unit.hour)),
-        "2": PropertyLink.build(links["2"], 45 * (unit.kilometer/unit.hour)),
-        "3": PropertyLink.build(links["3"], 45 * (unit.kilometer/unit.hour))
-    }
-
-    @classmethod
-    def mock_route(cls):
-        return cls.property_links["1"], cls.property_links["2"], cls.property_links["3"]

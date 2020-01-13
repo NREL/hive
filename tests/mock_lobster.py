@@ -24,7 +24,8 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime, LinkId
+from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime, \
+    LinkId
 from hive.util.units import unit, kwh, kw, Ratio, s, kmph
 
 
@@ -353,7 +354,7 @@ def mock_haversine_zigzag_route(
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_graph_links(h3_res: int = 15) -> Dict[str, PropertyLink]:
+def mock_graph_links(h3_res: int = 15, speed: kmph = 1 * (unit.kilometer / unit.hour)) -> Dict[str, PropertyLink]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
     """
@@ -372,15 +373,18 @@ def mock_graph_links(h3_res: int = 15) -> Dict[str, PropertyLink]:
 
     property_links = {
         # distance of 1.0 KM, speed of 1 KM/time unit
-        "1": PropertyLink.build(links["1"], 1 * (unit.kilometer/unit.hour)),
-        "2": PropertyLink.build(links["2"], 1 * (unit.kilometer/unit.hour)),
-        "3": PropertyLink.build(links["3"], 1 * (unit.kilometer/unit.hour))
+        "1": PropertyLink.build(links["1"], speed),
+        "2": PropertyLink.build(links["2"], speed),
+        "3": PropertyLink.build(links["3"], speed)
     }
     return property_links
 
 
-def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: int = 15) -> RoadNetwork:
+def mock_route(h3_res: int = 15, speed: kmph = 1 * (unit.kilometer / unit.hour)) -> Tuple[PropertyLink, ...]:
+    return tuple(mock_graph_links(h3_res=h3_res, speed=speed).values())
 
+
+def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: int = 15) -> RoadNetwork:
     links = mock_graph_links(h3_res=h3_res) if links is None else links
 
     class MockGraphNetwork(RoadNetwork):
