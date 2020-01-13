@@ -121,7 +121,7 @@ if sim_state_errors:
 with open(requests_file, 'r', encoding='utf-8-sig') as rf:
     requests_string = rf.read()
 
-update_functions = (CancelRequests(), UpdateRequestsFromString(requests_string))
+update_functions = (CancelRequests(), UpdateRequestsFromString.build(requests_string))
 
 start = time.time()
 sim_result = runner.run(

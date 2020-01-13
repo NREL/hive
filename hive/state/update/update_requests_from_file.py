@@ -5,17 +5,17 @@ import _io
 import csv
 import functools as ft
 from pathlib import Path
-from typing import Dict, TextIO
+from typing import Dict, TextIO, NamedTuple, Tuple, Optional
 
 from hive.model.request import Request
 from hive.state.simulation_state import SimulationState, RequestId
-from hive.state.update.simulation_update import SimulationUpdate
+from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.state.update.update_requests import update_requests_from_iterator
 from hive.util.typealiases import SimTime
 
 
-class UpdateRequestsFromFile(SimulationUpdate):
+class UpdateRequestsFromFile(SimulationUpdateFunction):  # add NamedTuple
     """
     loads requests from a file, which is assumed to be sorted by Request
     """
@@ -34,7 +34,8 @@ class UpdateRequestsFromFile(SimulationUpdate):
             self.file = open(req_path, 'r', encoding='utf-8-sig')
             self.requests = csv.DictReader(self.file)
 
-    def update(self, initial_sim_state: SimulationState) -> SimulationUpdateResult:
+    def update(self,
+               initial_sim_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromFile]]:
         """
         add requests from file when the simulation reaches the request's time
 
@@ -43,7 +44,7 @@ class UpdateRequestsFromFile(SimulationUpdate):
         """
         it = RequestFileIterator(self.requests, self.file, initial_sim_state.sim_time)
 
-        return update_requests_from_iterator(it, initial_sim_state)
+        return update_requests_from_iterator(it, initial_sim_state), None
 
 
 class RequestFileIterator:

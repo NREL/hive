@@ -11,10 +11,10 @@ class TestUpdateRequestsFromString(TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
-        up = UpdateRequestsFromString(src)
+        fn = UpdateRequestsFromString.build(src)
         sim, errors = initial_simulation_state(HaversineRoadNetwork(), start_time=61200)
 
-        up_sim = up.update(sim)
+        up_sim, _ = fn.update(sim)
 
         self.assertEquals(len(up_sim.simulation_state.requests), 1, "only one request should have loaded")
         self.assertIn("1_a", up_sim.simulation_state.requests, "the first request should have been added")
@@ -27,12 +27,12 @@ class TestUpdateRequestsFromString(TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
-        up = UpdateRequestsFromString(src)
+        fn1 = UpdateRequestsFromString.build(src)
         sim, errors = initial_simulation_state(HaversineRoadNetwork(), start_time=61200)
 
-        up_sim = up.update(sim)
+        up_sim, fn2 = fn1.update(sim)
         later_sim = up_sim.simulation_state._replace(sim_time=64800)
-        up_later_sim = up.update(later_sim)
+        up_later_sim, _ = fn2.update(later_sim)
 
         self.assertEquals(len(up_later_sim.simulation_state.requests), 2, "both requests should have loaded")
         self.assertIn("1_b", up_later_sim.simulation_state.requests, "the second request should have been added")
@@ -45,17 +45,17 @@ class TestUpdateRequestsFromString(TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
-        up = UpdateRequestsFromString(src)
+        fn1 = UpdateRequestsFromString.build(src)
         sim, errors = initial_simulation_state(HaversineRoadNetwork(), start_time=86398)
 
-        up_sim = up.update(sim)
+        up_sim, fn2 = fn1.update(sim)
 
         self.assertEquals(len(up_sim.simulation_state.requests), 2, "both requests should have loaded")
         self.assertIn("1_a", up_sim.simulation_state.requests, "the first request should have been added")
         self.assertIn("1_b", up_sim.simulation_state.requests, "the second request should have been added")
 
         later_sim = up_sim.simulation_state._replace(sim_time=86399)
-        up_later_sim = up.update(later_sim)
+        up_later_sim, _ = fn2.update(later_sim)
 
         self.assertEquals(len(up_later_sim.simulation_state.requests), 2, "both requests should have loaded")
         self.assertEquals(up_later_sim.simulation_state.requests,
