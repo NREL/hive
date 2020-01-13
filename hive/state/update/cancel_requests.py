@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import functools as ft
+from typing import Tuple, Optional, NamedTuple
 
 from hive.state.simulation_state import SimulationState
-from hive.state.update.simulation_update import SimulationUpdate
+from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.typealiases import RequestId
 
 
-class CancelRequests(SimulationUpdate):
+class CancelRequests(NamedTuple, SimulationUpdateFunction):
 
-    def update(self, simulation_state: SimulationState) -> SimulationUpdateResult:
+    def update(self, simulation_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[CancelRequests]]:
         """
         cancels requests whose cancel time has been exceeded
 
@@ -24,7 +27,7 @@ class CancelRequests(SimulationUpdate):
             (simulation_state, ())
         )
 
-        return SimulationUpdateResult(updated, reports)
+        return SimulationUpdateResult(updated, reports), None
 
 
 def _as_json(r_id: RequestId, sim: SimulationState) -> str:
