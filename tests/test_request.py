@@ -1,16 +1,8 @@
 import unittest
 from csv import DictReader
 
-from hive.model.energy.energytype import EnergyType
-from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
-from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.energy.energysource import EnergySource
-from hive.model.request import Request
-from hive.model.vehicle import Vehicle
 from hive.model.passenger import create_passenger_id
-from hive.model.roadnetwork.link import Link
-from hive.util.units import unit
-from h3 import h3
+from tests.mock_lobster import *
 
 
 class MyTestCase(unittest.TestCase):
@@ -20,13 +12,17 @@ class MyTestCase(unittest.TestCase):
     departure_time = 28800
     cancel_time = 29400
     passengers = 2
-    request = Request.build(
+
+    request = mock_request(
         request_id=request_id,
-        origin=origin,
-        destination=destination,
-        departure_time=departure_time,
-        cancel_time=cancel_time,
-        passengers=passengers
+        o_lat=0,
+        o_lon=0,
+        d_lat=3,
+        d_lon=4,
+        h3_res=11,
+        departure_time=28800,
+        cancel_time=29400,
+        passengers=2
     )
 
     def test_request_constructor(self):
@@ -44,20 +40,8 @@ class MyTestCase(unittest.TestCase):
         """
         turning a request into passengers of a vehicle
         """
-        battery = EnergySource.build("unused",
-                                     EnergyType.ELECTRIC,
-                                     100.0*unit.kilowatthour,
-                                     )
-        vehicle = Vehicle(id="test_vehicle",
-                          powertrain_id="fake_powertrain_id",
-                          powercurve_id="fake",
-                          energy_source=battery,
-                          property_link=PropertyLink(
-                              "test",
-                              Link("test", h3.geo_to_h3(0, 0, 15), h3.geo_to_h3(1, 1, 15)),
-                              10,
-                              10,
-                              1))
+
+        vehicle = mock_vehicle()
         request_as_passengers = self.request.passengers
         updated_vehicle = vehicle.add_passengers(request_as_passengers)
 
@@ -88,8 +72,8 @@ class MyTestCase(unittest.TestCase):
         rn = network
         req = Request.from_row(row, rn)
         self.assertEqual(req.id, "1_a")
-        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449,121.4294263,rn.sim_h3_resolution))
-        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091,121.4532226,rn.sim_h3_resolution))
+        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, rn.sim_h3_resolution))
+        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, rn.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(req.cancel_time, 61800)
         self.assertEqual(len(req.passengers), 4)
