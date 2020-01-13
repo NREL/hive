@@ -1,17 +1,10 @@
 from csv import DictReader
 from unittest import TestCase
 
-from h3 import h3
-
-from hive.model.station import Station
-from hive.model.energy.charger import Charger
+from tests.mock_lobster import *
 
 
 class TestStation(TestCase):
-    _mock_station = Station.build("test_station",
-                                  h3.geo_to_h3(0, 0, 11),
-                                  {Charger.LEVEL_2: 1, Charger.DCFC: 1},
-                                  )
 
     def test_from_row(self):
         source = """station_id,lat,lon,charger_type,charger_count
@@ -74,19 +67,19 @@ class TestStation(TestCase):
         self.assertEqual(station2.total_chargers[Charger.DCFC], 15)
 
     def test_checkout_charger(self):
-        updated_station = self._mock_station.checkout_charger(Charger.DCFC)
+        updated_station = mock_station(chargers={Charger.DCFC: 1}).checkout_charger(Charger.DCFC)
 
         self.assertEqual(updated_station.available_chargers[Charger.DCFC], 0)
 
     def test_checkout_charger_none_avail(self):
-        updated_station = self._mock_station.checkout_charger(Charger.DCFC)
+        updated_station = mock_station(chargers={Charger.DCFC: 0})
 
         no_dcfc_station = updated_station.checkout_charger(Charger.DCFC)
 
         self.assertIsNone(no_dcfc_station)
 
     def test_return_charger(self):
-        updated_station = self._mock_station.checkout_charger(Charger.LEVEL_2)
+        updated_station = mock_station(chargers={Charger.LEVEL_2: 1}).checkout_charger(Charger.LEVEL_2)
 
         station_w_l2 = updated_station.return_charger(Charger.LEVEL_2)
 

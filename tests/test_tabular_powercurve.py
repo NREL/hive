@@ -9,7 +9,6 @@ from hive.util.units import unit
 
 class TestTabularPowercurve(TestCase):
 
-
     def test_leaf_build_energy_model(self):
         leaf_model = build_powercurve('leaf')
         self.assertIsInstance(leaf_model, TabularPowercurve)
