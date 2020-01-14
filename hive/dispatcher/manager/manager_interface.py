@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from typing import Tuple, TYPE_CHECKING
 
@@ -14,7 +16,7 @@ class ManagerInterface(metaclass=ABCNamedTupleMeta):
     """
 
     @abstractmethod
-    def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[Manager, FleetStateTarget]:
+    def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[ManagerInterface, FleetStateTarget]:
         """
         Generate fleet targets to be consumed by the dispatcher.
 
