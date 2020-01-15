@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, NamedTuple
 import functools as ft
 import math
 
@@ -6,6 +6,10 @@ from h3 import h3
 
 from hive.config import HiveConfig
 from hive.dispatcher.instruction import Instruction
+from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
+from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
+from hive.dispatcher.manager.manager_interface import ManagerInterface
+from hive.dispatcher.manager.fleet_target import FleetStateTarget, StateTarget
 from hive.model import Base, Station, Vehicle
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -18,6 +22,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
+from hive.model.vehiclestate import VehicleState
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.runner.local_simulation_runner import LocalSimulationRunner
@@ -434,3 +439,45 @@ def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: 
             pass
 
     return MockGraphNetwork(links, h3_res)
+
+
+def mock_forecaster() -> ForecasterInterface:
+    class MockForecaster(NamedTuple, ForecasterInterface):
+        def generate_forecast(
+                self,
+                simulation_state: SimulationState
+        ) -> Tuple[ForecasterInterface, Forecast]:
+            forecast = Forecast(type=ForecastType.DEMAND, value=1)
+            return self, forecast
+
+    return MockForecaster()
+
+
+def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
+    class MockManager(NamedTuple, ManagerInterface):
+        forecaster: ForecasterInterface
+
+        def generate_fleet_target(
+                self,
+                simulation_state: SimulationState
+        ) -> Tuple[ManagerInterface, FleetStateTarget]:
+            active_set = frozenset({
+                VehicleState.IDLE,
+                VehicleState.SERVICING_TRIP,
+                VehicleState.DISPATCH_TRIP,
+                VehicleState.DISPATCH_STATION,
+                VehicleState.CHARGING_STATION,
+                VehicleState.REPOSITIONING,
+            })
+
+            _, future_demand = self.forecaster.generate_forecast(simulation_state)
+
+            active_target = StateTarget(id='ACTIVE',
+                                        state_set=active_set,
+                                        n_vehicles=future_demand.value)
+
+            fleet_state_target = {active_target.id: active_target}
+
+            return self, fleet_state_target
+
+    return MockManager(forecaster=forecaster)

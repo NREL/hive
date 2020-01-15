@@ -1,23 +1,55 @@
+from __future__ import annotations
 from typing import Tuple, NamedTuple
 
+from pkg_resources import resource_filename
+from h3 import h3
+
 from hive.dispatcher.instruction import Instruction
+from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.util.helpers import H3Ops
-from hive.util.units import unit
+from hive.util.typealiases import GeoId
+
+import json
+import random
 
 
-class GreedyDispatcher(NamedTuple, DispatcherInterface):
+class ManagedDispatcher(NamedTuple, DispatcherInterface):
     """
-    A class that computes instructions for the fleet based on a given simulation state.
+    This dispatcher greedily assigns requests and reacts to the fleet targets set by the fleet manager.
     """
-
-    # TODO: put these in init function to parameterize based on config file.
+    manager: ManagerInterface
+    geofence: list
     LOW_SOC_TRESHOLD: float = 0.2
-    MAX_IDLE_S: int = 600 * unit.seconds
+
+    @classmethod
+    def build(cls,
+              manager: ManagerInterface,
+              geofence_file: str,
+              low_soc_threshold: float = 0.2) -> ManagedDispatcher:
+
+        with open(resource_filename("hive.resources.geofence", geofence_file)) as f:
+            geojson = json.load(f)
+            geofence = list(h3.polyfill(
+                geo_json=geojson['features'][0]['geometry'],
+                res=10,
+                geo_json_conformant=True)
+            )
+            return ManagedDispatcher(
+                manager=manager,
+                geofence=geofence,
+                LOW_SOC_TRESHOLD=low_soc_threshold
+            )
+
+    def _sample_random_location(self, sim_state_resolution: int) -> GeoId:
+        # TODO: replace denver with geofence from road network once implemented
+        random_hex = random.choice(self.geofence)
+        children = h3.h3_to_children(random_hex, sim_state_resolution)
+        return children.pop()
 
     def generate_instructions(self,
                               simulation_state: SimulationState,
@@ -54,10 +86,10 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = [VehicleState.IDLE,
+            _valid_states = (VehicleState.IDLE,
                              VehicleState.CHARGING_BASE,
                              VehicleState.RESERVE_BASE,
-                             VehicleState.DISPATCH_BASE]
+                             VehicleState.DISPATCH_BASE)
             if vehicle.id not in vehicle_ids_given_instructions and \
                     vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and \
                     vehicle.vehicle_state in _valid_states:
@@ -81,24 +113,53 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
-        stationary_vehicles = [v for v in simulation_state.vehicles.values() if
-                               v.idle_time_s > self.MAX_IDLE_S and v.id not in vehicle_ids_given_instructions]
-
-        # 3. Send idle vehicles back to the base
-        for veh in stationary_vehicles:
-            nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
-                                                entities=simulation_state.bases,
-                                                entity_search=simulation_state.b_search,
-                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
-            if nearest_base:
-                instruction = Instruction(vehicle_id=veh.id,
-                                          action=VehicleState.DISPATCH_BASE,
-                                          location=nearest_base.geoid)
+        # 3. try to meet active target set by fleet manager
+        _, fleet_state_target = self.manager.generate_fleet_target(simulation_state)
+        active_target = fleet_state_target['ACTIVE']
+        active_vehicles = [v for v in simulation_state.vehicles.values()
+                           if v.vehicle_state in active_target.state_set
+                           and v.id not in vehicle_ids_given_instructions]
+        n_active = len(active_vehicles)
+        active_diff = n_active - active_target.n_vehicles
+        _base_states = (
+            VehicleState.CHARGING_BASE,
+            VehicleState.RESERVE_BASE,
+        )
+        if active_diff < 0:
+            # we need abs(active_diff) more vehicles in service to meet demand
+            base_vehicles = [v for v in simulation_state.vehicles.values()
+                             if v.vehicle_state in _base_states
+                             and v.id not in vehicle_ids_given_instructions]
+            for i, veh in enumerate(base_vehicles):
+                if i + 1 > abs(active_diff):
+                    break
+                random_location = self._sample_random_location(simulation_state.sim_h3_location_resolution)
+                instruction = Instruction(
+                    vehicle_id=veh.id,
+                    action=VehicleState.REPOSITIONING,
+                    location=random_location,
+                )
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(veh.id)
-            else:
-                # user set the max search radius too low
-                continue
+        elif active_diff > 0:
+            # we can remove active_diff vehicles from service
+            for i, veh in enumerate(active_vehicles):
+                if i + 1 > active_diff:
+                    break
+
+                nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
+                                                    entities=simulation_state.bases,
+                                                    entity_search=simulation_state.b_search,
+                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
+                if nearest_base:
+                    instruction = Instruction(vehicle_id=veh.id,
+                                              action=VehicleState.DISPATCH_BASE,
+                                              location=nearest_base.geoid)
+                    instructions.append(instruction)
+                    vehicle_ids_given_instructions.append(veh.id)
+                else:
+                    # user set the max search radius too low
+                    continue
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
             if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
