@@ -29,13 +29,19 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         req = Request.from_row(row, acc.simulation_state.road_network)
         if isinstance(req, IOError):
             # request failed to parse from row
-            row_failure = _failure_as_json(str(req), initial_sim_state)
+            row_failure = _failure_as_json(str(req), acc.simulation_state)
             return acc.add_report(row_failure)
+        elif req.cancel_time <= acc.simulation_state.sim_time:
+            # cannot add request that should already be cancelled
+            current_time = acc.simulation_state.sim_time
+            msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
+            invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
+            return acc.add_report(invalid_cancel_time)
         else:
             sim_updated = acc.simulation_state.add_request(req)
             if isinstance(sim_updated, Exception):
                 # simulation failed to add this request
-                sim_failure = _failure_as_json(str(sim_updated), initial_sim_state)
+                sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
                 return acc.add_report(sim_failure)
             else:
                 # successfully added request
