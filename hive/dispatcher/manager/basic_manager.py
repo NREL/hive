@@ -5,7 +5,7 @@ from typing import Tuple, NamedTuple
 from hive.state.simulation_state import SimulationState
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.dispatcher.manager.fleet_target import StateTarget, FleetStateTarget
-from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
+from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.model.vehiclestate import VehicleState
 
 
@@ -13,7 +13,7 @@ class BasicManager(NamedTuple, ManagerInterface):
     """
     A class that computes an optimal fleet state.
     """
-    demand_forecaster: BasicForecaster
+    demand_forecaster: ForecasterInterface
 
     def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[BasicManager, FleetStateTarget]:
         """

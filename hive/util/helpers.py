@@ -6,6 +6,7 @@ from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, FrozenSet, 
 
 from hive.util.typealiases import *
 from hive.util.units import unit, km, h
+from hive.util.exception import H3Error
 
 import haversine
 
@@ -75,6 +76,9 @@ class H3Ops:
 
         :return: the nearest entity, or, None if not found within the constraints
         """
+        geoid_res = h3.h3_get_resolution(geoid)
+        if geoid_res < sim_h3_search_resolution:
+            raise H3Error('search resolution must be less than geoid resolution')
 
         k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2 * unit.kilometers
         max_k = ceil(max_distance_km.magnitude / k_dist_km.magnitude)

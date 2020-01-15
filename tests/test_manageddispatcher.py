@@ -1,18 +1,17 @@
 from unittest import TestCase
 
 from hive.dispatcher.managed_dispatcher import ManagedDispatcher
-from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
-from hive.dispatcher.manager.basic_manager import BasicManager
-from hive.model.vehiclestate import VehicleState
 from tests.mock_lobster import *
 
 
 class TestManagedDispatcher(TestCase):
 
     def test_match_vehicle(self):
-        forecaster = BasicForecaster()
-        manager = BasicManager(demand_forecaster=forecaster)
-        dispatcher = ManagedDispatcher(manager=manager)
+        manager = mock_manager(forecaster=mock_forecaster())
+        dispatcher = ManagedDispatcher.build(
+            manager=manager,
+            geofence_file='downtown_denver.geojson',
+        )
 
         # h3 resolution = 9
         somewhere = '89283470d93ffff'
@@ -35,24 +34,28 @@ class TestManagedDispatcher(TestCase):
                          "Should have picked closest vehicle")
 
     def test_no_vehicles(self):
-        forecaster = BasicForecaster()
-        manager = BasicManager(demand_forecaster=forecaster)
-        dispatcher = ManagedDispatcher(manager=manager)
+        manager = mock_manager(forecaster=mock_forecaster())
+        dispatcher = ManagedDispatcher.build(
+            manager=manager,
+            geofence_file='downtown_denver.geojson',
+        )
 
         # h3 resolution = 9
         somewhere = '89283470d93ffff'
 
         req = mock_request_from_geoids(origin=somewhere)
-        sim = mock_sim().add_request(req)
+        sim = mock_sim(h3_location_res=9, h3_search_res=9).add_request(req)
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
     def test_charge_vehicle(self):
-        forecaster = BasicForecaster()
-        manager = BasicManager(demand_forecaster=forecaster)
-        dispatcher = ManagedDispatcher(manager=manager)
+        manager = mock_manager(forecaster=mock_forecaster())
+        dispatcher = ManagedDispatcher.build(
+            manager=manager,
+            geofence_file='downtown_denver.geojson',
+        )
 
         # h3 resolution = 9
         somewhere = '89283470d93ffff'
@@ -62,7 +65,7 @@ class TestManagedDispatcher(TestCase):
         low_battery = EnergySource.build(
             DefaultIds.mock_powercurve_id(),
             EnergyType.ELECTRIC,
-            50*unit.kilowatthour,
+            50 * unit.kilowatthour,
             soc=0.1
         )
 
@@ -80,5 +83,54 @@ class TestManagedDispatcher(TestCase):
                          station.geoid,
                          "Should have picked location equal to test_station")
 
+    def test_activate_vehicles(self):
+        manager = mock_manager(forecaster=mock_forecaster())
+        dispatcher = ManagedDispatcher.build(
+            manager=manager,
+            geofence_file='downtown_denver.geojson',
+        )
 
+        # manger will always predict we need 1 activate vehicle. So, we start with one inactive vehicle and see
+        # if it is moved to active.
 
+        somewhere ='89283470d93ffff'
+
+        veh = mock_vehicle_from_geoid(geoid=somewhere).transition(VehicleState.RESERVE_BASE)
+        base = mock_base_from_geoid(geoid=somewhere, stall_count=2)
+
+        sim = mock_sim().add_vehicle(veh).add_base(base)
+
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
+
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
+        self.assertEqual(instructions[0].action,
+                         VehicleState.REPOSITIONING,
+                         "Should have instructed vehicle to reposition")
+
+    def test_deactivate_vehicles(self):
+        manager = mock_manager(forecaster=mock_forecaster())
+        dispatcher = ManagedDispatcher.build(
+            manager=manager,
+            geofence_file='downtown_denver.geojson',
+        )
+
+        # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
+        # if it is moved to base.
+
+        somewhere ='89283470d93ffff'
+        somewhere_else = '89283470d87ffff'
+
+        veh1 = mock_vehicle_from_geoid(vehicle_id='v1', geoid=somewhere)
+        veh2 = mock_vehicle_from_geoid(vehicle_id='v2', geoid=somewhere)
+        base = mock_base_from_geoid(geoid=somewhere_else, stall_count=2)
+
+        sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh1).add_vehicle(veh2).add_base(base)
+
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
+
+        print(instructions)
+
+        self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
+        self.assertEqual(instructions[0].action,
+                         VehicleState.DISPATCH_BASE,
+                         "Should have instructed one of the vehicles to return to base")

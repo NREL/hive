@@ -37,7 +37,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere = '89283470d93ffff'
 
         req = mock_request_from_geoids(origin=somewhere)
-        sim = mock_sim().add_request(req)
+        sim = mock_sim(h3_location_res=9, h3_search_res=9).add_request(req)
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
@@ -84,7 +84,7 @@ class TestGreedyDispatcher(TestCase):
         veh_med_battery = veh.battery_swap(med_battery)
         station = mock_station_from_geoid(station_id='test_station', geoid=somewhere_else)
         base = mock_base_from_geoid(geoid=somewhere, station_id=station.id)
-        sim = mock_sim().add_vehicle(veh_med_battery).add_station(station).add_base(base)
+        sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_med_battery).add_station(station).add_base(base)
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 

@@ -1,10 +1,11 @@
+from __future__ import annotations
 from typing import Tuple, NamedTuple
 
 from pkg_resources import resource_filename
 from h3 import h3
 
 from hive.dispatcher.instruction import Instruction
-from hive.dispatcher.manager.basic_manager import BasicManager
+from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
@@ -15,27 +16,38 @@ from hive.util.typealiases import GeoId
 
 import json
 import random
-import math
+
 
 class ManagedDispatcher(NamedTuple, DispatcherInterface):
     """
     This dispatcher greedily assigns requests and reacts to the fleet targets set by the fleet manager.
     """
-    manager: BasicManager
-
-    # TODO: put these in init function to parameterize based on config file.
+    manager: ManagerInterface
+    geofence: list
     LOW_SOC_TRESHOLD: float = 0.2
 
-    def _sample_random_location(self, sim_state_resolution: int) -> GeoId:
-        # TODO: replace denver with geofence from road network once implemented
-        with open(resource_filename("hive.resources.geofence", "downtown_denver.geojson")) as f:
+    @classmethod
+    def build(cls,
+              manager: ManagerInterface,
+              geofence_file: str,
+              low_soc_threshold: float = 0.2) -> ManagedDispatcher:
+
+        with open(resource_filename("hive.resources.geofence", geofence_file)) as f:
             geojson = json.load(f)
-            hexes = list(h3.polyfill(
+            geofence = list(h3.polyfill(
                 geo_json=geojson['features'][0]['geometry'],
                 res=10,
                 geo_json_conformant=True)
             )
-        random_hex = random.choice(hexes)
+            return ManagedDispatcher(
+                manager=manager,
+                geofence=geofence,
+                LOW_SOC_TRESHOLD=low_soc_threshold
+            )
+
+    def _sample_random_location(self, sim_state_resolution: int) -> GeoId:
+        # TODO: replace denver with geofence from road network once implemented
+        random_hex = random.choice(self.geofence)
         children = h3.h3_to_children(random_hex, sim_state_resolution)
         return children.pop()
 
@@ -104,7 +116,9 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         # 3. try to meet active target set by fleet manager
         _, fleet_state_target = self.manager.generate_fleet_target(simulation_state)
         active_target = fleet_state_target['ACTIVE']
-        active_vehicles = [v for v in simulation_state.vehicles.values() if v.vehicle_state in active_target.state_set]
+        active_vehicles = [v for v in simulation_state.vehicles.values()
+                           if v.vehicle_state in active_target.state_set
+                           and v.id not in vehicle_ids_given_instructions]
         n_active = len(active_vehicles)
         active_diff = n_active - active_target.n_vehicles
         _base_states = (
@@ -117,7 +131,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                              if v.vehicle_state in _base_states
                              and v.id not in vehicle_ids_given_instructions]
             for i, veh in enumerate(base_vehicles):
-                if i+1 > abs(active_diff):
+                if i + 1 > abs(active_diff):
                     break
                 random_location = self._sample_random_location(simulation_state.sim_h3_location_resolution)
                 instruction = Instruction(
@@ -130,7 +144,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         elif active_diff > 0:
             # we can remove active_diff vehicles from service
             for i, veh in enumerate(active_vehicles):
-                if i+1 > active_diff:
+                if i + 1 > active_diff:
                     break
 
                 nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
