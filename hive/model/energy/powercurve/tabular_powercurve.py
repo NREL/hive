@@ -76,7 +76,7 @@ class TabularPowercurve(Powercurve):
             # charging.py line 76:
             veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor
             charge_power_kw = min(veh_kw_rate, charger.power.magnitude)
-            kwh = charge_power_kw * self.step_size_seconds
+            kwh = charge_power_kw * (self.step_size_seconds / 3600.0)
 
             updated_energy = updated_energy.load_energy(kwh * unit.kilowatthour)
             t += self.step_size_seconds

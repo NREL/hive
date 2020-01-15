@@ -141,14 +141,14 @@ class TestVehicle(TestCase):
 
         moved_vehicle = vehicle_w_route.move(road_network=road_network,
                                              power_train=power_train,
-                                             duration=400 * unit.seconds)
+                                             duration=400)
         m2 = moved_vehicle.move(road_network=road_network,
                                 power_train=power_train,
-                                duration=400 * unit.seconds)
+                                duration=400)
         # vehicle should have arrived after second move.
         m3 = m2.move(road_network=road_network,
                      power_train=power_train,
-                     duration=10 * unit.seconds)
+                     duration=10)
 
         self.assertLess(moved_vehicle.energy_source.soc, 1)
         self.assertNotEqual(somewhere, moved_vehicle.geoid)
@@ -187,11 +187,11 @@ class TestVehicle(TestCase):
 
     def test_idle(self):
         idle_vehicle = mock_vehicle()
-        idle_vehicle_less_energy = idle_vehicle.idle(60 * unit.seconds)  # idle for 60 seconds
+        idle_vehicle_less_energy = idle_vehicle.idle(60)  # idle for 60 seconds
 
         self.assertLess(idle_vehicle_less_energy.energy_source.soc, idle_vehicle.energy_source.soc,
                         "Idle vehicles should have consumed energy.")
-        self.assertEqual(idle_vehicle_less_energy.idle_time_s, 60 * unit.seconds, "Should have recorded idle time.")
+        self.assertEqual(idle_vehicle_less_energy.idle_time_s, 60, "Should have recorded idle time.")
 
     def test_idle_reset(self):
         idle_vehicle = mock_vehicle().idle(60 * unit.seconds)

@@ -62,7 +62,6 @@ class SimulationState(NamedTuple):
     b_search: Dict[GeoId, Tuple[BaseId, ...]] = {}
 
     @property
-    @ft.lru_cache()
     def current_time_seconds(self) -> SimTime:
         """
         computes the current time in seconds
@@ -260,7 +259,7 @@ class SimulationState(NamedTuple):
         )
 
         return next_state._replace(
-            sim_time=self.sim_step + 1
+            sim_step=self.sim_step + 1
         )
 
     def remove_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, SimulationState]:

@@ -215,7 +215,7 @@ class Vehicle(NamedTuple):
         return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_s=0 * unit.seconds)
+        return self._replace(idle_time_s=0)
 
     def _reset_charge_intent(self) -> Vehicle:
         return self._replace(charger_intent=None, station_intent=None)
@@ -305,7 +305,7 @@ class Vehicle(NamedTuple):
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 
-        next_idle_time = (less_energy_vehicle.idle_time_s + time_step_s) * unit.seconds
+        next_idle_time = (less_energy_vehicle.idle_time_s + time_step_s)
         vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=next_idle_time)
 
         return vehicle_w_stats

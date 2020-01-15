@@ -31,9 +31,9 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             # request failed to parse from row
             row_failure = _failure_as_json(str(req), acc.simulation_state)
             return acc.add_report(row_failure)
-        elif req.cancel_time <= acc.simulation_state.sim_step:
+        elif req.cancel_time <= acc.simulation_state.current_time_seconds:
             # cannot add request that should already be cancelled
-            current_time = acc.simulation_state.sim_step
+            current_time = acc.simulation_state.current_time_seconds
             msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
             invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
             return acc.add_report(invalid_cancel_time)
