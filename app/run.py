@@ -12,7 +12,7 @@ from hive.runner.environment import Environment
 from hive.reporting.detailed_reporter import DetailedReporter
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
 from hive.state.simulation_state_ops import initial_simulation_state
-from hive.state.update import UpdateRequestsFromString, CancelRequests
+from hive.state.update import UpdateRequestsFromFile, CancelRequests
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model import Vehicle, Base, Station
 from hive.model.energy.powertrain import build_powertrain
@@ -118,10 +118,7 @@ initial_sim, sim_state_errors = initial_simulation_state(
 if sim_state_errors:
     raise Exception(sim_state_errors)
 
-with open(requests_file, 'r', encoding='utf-8-sig') as rf:
-    requests_string = rf.read()
-
-update_functions = (CancelRequests(), UpdateRequestsFromString.build(requests_string))
+update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests())
 
 start = time.time()
 sim_result = runner.run(

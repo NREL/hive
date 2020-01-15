@@ -42,7 +42,7 @@ class TestUpdateRequestsFromString(TestCase):
         should empty out the parser, which should behave when called afterward
         """
         src = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
-        1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
+        1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,86399,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
         fn1 = UpdateRequestsFromString.build(src)
