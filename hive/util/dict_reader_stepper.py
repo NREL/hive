@@ -90,7 +90,7 @@ class DictReaderStepper:
         except Exception as e:
             return e
 
-    def read_until_value(self, bounds: float) -> Tuple[Dict[str, str], ...]:
+    def read_until_value(self, bounds: float) -> Iterator[Dict[str, str]]:
         """
         reads rows from the DictReader as long as step_column_name is less than or equal to "value"
         :param bounds: the value, such as a second_of_day to compare against. we will read all new
@@ -98,7 +98,7 @@ class DictReaderStepper:
         :return: the updated DictReaderStepper and a tuple of rows, which may be empty if no new rows are consumable.
         """
         self._iterator.update_stop_value(bounds)
-        return tuple([row for row in self._iterator])
+        return self._iterator
 
     def close(self):
         self._file.close()
