@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from pkg_resources import resource_filename
 
-from hive.util.DictReaderStepper import *
+from hive.util.dict_reader_stepper import *
 
 
 class TestDictReaderStepper(TestCase):

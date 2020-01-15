@@ -7,7 +7,7 @@ from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.state.update.update_requests import update_requests_from_iterator
-from hive.util.DictReaderStepper import DictReaderStepper
+from hive.util.dict_reader_stepper import DictReaderStepper
 
 
 class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):  # add NamedTuple
