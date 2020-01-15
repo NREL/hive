@@ -55,7 +55,7 @@ class DetailedReporter(Reporter):
         if logger:
             for e in entities:
                 log_dict = e._asdict()
-                log_dict['sim_time'] = sim_time
+                log_dict['sim_step'] = sim_time
                 entry = json.dumps(log_dict, default=str)
                 logger.info(entry)
 
@@ -65,13 +65,13 @@ class DetailedReporter(Reporter):
                reports: Tuple[str, ...]):
         self._report_entities(logger=self.vehicle_logger,
                               entities=sim_state.vehicles.values(),
-                              sim_time=sim_state.sim_time)
+                              sim_time=sim_state.current_time_seconds)
         self._report_entities(logger=self.request_logger,
                               entities=sim_state.requests.values(),
-                              sim_time=sim_state.sim_time)
+                              sim_time=sim_state.current_time_seconds)
         self._report_entities(logger=self.instruction_logger,
                               entities=instructions,
-                              sim_time=sim_state.sim_time)
+                              sim_time=sim_state.current_time_seconds)
         if self.run_logger:
             for report in reports:
                 self.run_logger.info(report)

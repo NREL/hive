@@ -15,7 +15,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.units import unit, s, km
+from hive.util.units import unit, km
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
@@ -74,7 +74,7 @@ class Vehicle(NamedTuple):
     station: Optional[StationId] = None
     plugged_in_charger: Optional[Charger] = None
 
-    idle_time_s: s = 0 * unit.seconds
+    idle_time_s: SimTime = 0
     distance_traveled: km = 0.0 * unit.kilometers
 
     @property
@@ -222,13 +222,13 @@ class Vehicle(NamedTuple):
 
     def charge(self,
                powercurve: Powercurve,
-               duration: s) -> Vehicle:
+               duration: SimTime) -> Vehicle:
 
         """
         applies a charge event to a vehicle
 
         :param powercurve: the vehicle's powercurve model
-        :param duration: duration of this time step in seconds
+        :param duration: duration_seconds of this time step in seconds
         :return: the updated Vehicle
         """
 
@@ -242,19 +242,19 @@ class Vehicle(NamedTuple):
             updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
             return self._replace(energy_source=updated_energy_source)
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: s) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, duration: SimTime) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
 
         :param road_network: the road network
         :param power_train: the vehicle's powertrain model
-        :param time_step: the duration of this move step in seconds
+        :param duration: the duration_seconds of this move step in seconds
         :return: the updated vehicle or None if moving is not possible.
         """
         if not self.has_route():
             return self.transition(VehicleState.IDLE)
 
-        traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
+        traverse_result = traverse(route_estimate=self.route, road_network=road_network, duration_seconds=duration)
 
         if not traverse_result:
             # TODO: Need to think about edge case where vehicle gets route where origin=destination.
@@ -289,11 +289,11 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def idle(self, time_step_s: s) -> Vehicle:
+    def idle(self, time_step_s: SimTime) -> Vehicle:
         """
         Performs an idle step.
 
-        :param time_step_s: duration of the idle step in seconds
+        :param time_step_s: duration_seconds of the idle step in seconds
         :return: the updated vehicle
         """
         if self.vehicle_state != VehicleState.IDLE:
@@ -305,7 +305,7 @@ class Vehicle(NamedTuple):
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 
-        next_idle_time = (less_energy_vehicle.idle_time_s.magnitude + time_step_s.magnitude) * unit.seconds
+        next_idle_time = (less_energy_vehicle.idle_time_s + time_step_s) * unit.seconds
         vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=next_idle_time)
 
         return vehicle_w_stats

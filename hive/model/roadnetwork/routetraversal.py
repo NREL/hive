@@ -11,7 +11,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
-from hive.util.units import unit, h, s, km
+from hive.util.units import unit, km
 
 
 class RouteTraversal(NamedTuple):
@@ -27,7 +27,7 @@ class RouteTraversal(NamedTuple):
     :param remaining_route: The route that remains after a traversal.
     :type remaining_route: :py:obj:`Route`
     """
-    remaining_time: h = 0 * unit.hours
+    remaining_time: Hours = 0.0
     traversal_distance: km = 0 * unit.kilometers
     experienced_route: Route = ()
     remaining_route: Route = ()
@@ -38,7 +38,7 @@ class RouteTraversal(NamedTuple):
 
         :return: True if the agent is out of time
         """
-        return self.remaining_time.magnitude == 0
+        return self.remaining_time == 0.0
 
     def add_traversal(self, t: LinkTraversal) -> RouteTraversal:
         """
@@ -78,13 +78,13 @@ class RouteTraversal(NamedTuple):
 
 def traverse(route_estimate: Route,
              road_network: RoadNetwork,
-             time_step: s) -> Optional[Union[Exception, RouteTraversal]]:
+             duration_seconds: SimTime) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
     :param route_estimate: the current route estimate
     :param road_network: the current road network state
-    :param time_step: size of the time step for this traversal
+    :param duration_seconds: size of the time step for this traversal, in seconds
     :return: a route experience and updated route estimate;
              or, nothing if the route is consumed.
              an exception is possible if the current step is not found on the link or
@@ -112,7 +112,8 @@ def traverse(route_estimate: Route,
                     return updated_experienced_route, acc_failures
 
         # initial search state has a route traversal and an Optional[Exception]
-        initial = (RouteTraversal(remaining_time=time_step.to(unit.hours)), None)
+        duration_hours = float(duration_seconds) / 3600.0
+        initial = (RouteTraversal(remaining_time=duration_hours), None)
 
         traversal_result, error = ft.reduce(
             _traverse,

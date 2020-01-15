@@ -141,14 +141,14 @@ class TestVehicle(TestCase):
 
         moved_vehicle = vehicle_w_route.move(road_network=road_network,
                                              power_train=power_train,
-                                             time_step=400 * unit.seconds)
+                                             duration=400 * unit.seconds)
         m2 = moved_vehicle.move(road_network=road_network,
                                 power_train=power_train,
-                                time_step=400 * unit.seconds)
+                                duration=400 * unit.seconds)
         # vehicle should have arrived after second move.
         m3 = m2.move(road_network=road_network,
                      power_train=power_train,
-                     time_step=10 * unit.seconds)
+                     duration=10 * unit.seconds)
 
         self.assertLess(moved_vehicle.energy_source.soc, 1)
         self.assertNotEqual(somewhere, moved_vehicle.geoid)
