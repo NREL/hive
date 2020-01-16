@@ -30,11 +30,11 @@ class TestUpdateRequestsFromFile(TestCase):
         """
         sim_time = 12  # will pull in all requests with departure_time earlier than 12
         expected_reqs, expected_reports = 7, 20
-        sim = mock_sim(sim_time=sim_time)
+        sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file)
         result, _ = fn.update(sim)
-        self.assertEqual(len(result.reports), expected_reports, "should have reported the add")
-        self.assertEqual(len(result.simulation_state.requests), expected_reqs, "should have added the reqs")
+        self.assertEqual(expected_reports, len(result.reports), "should have reported the add")
+        self.assertEqual(expected_reqs, len(result.simulation_state.requests), "should have added the reqs")
         for req in result.simulation_state.requests.values():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")

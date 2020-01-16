@@ -22,10 +22,6 @@ mi = type(unit.mi)  # miles
 mph = type(unit.miles/unit.hour)  # miles per hour
 kmph = type(unit.kilometers/unit.hour)  # kilometers per hour
 
-# Time
-s = type(unit.second)  # seconds
-h = type(unit.hour)  # hours
-
 # Dimensionless
 Percentage = float  # between 0-100
 Ratio = float  # between 0-1

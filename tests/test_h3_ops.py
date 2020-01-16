@@ -23,8 +23,8 @@ class TestH3Ops(TestCase):
         bwd_link = PropertyLink.build(Link("test", end, start), 1 * kmph)
 
         # test moving forward and backward, each by a half-unit of time
-        fwd_result = H3Ops.point_along_link(fwd_link, 0.5 * unit.hour)
-        bwd_result = H3Ops.point_along_link(bwd_link, 0.5 * unit.hour)
+        fwd_result = H3Ops.point_along_link(fwd_link, 0.5)
+        bwd_result = H3Ops.point_along_link(bwd_link, 0.5)
 
         # check that the point is half-way
         fwd_lat, fwd_lon = h3.h3_to_geo(fwd_result)

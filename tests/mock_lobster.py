@@ -31,7 +31,7 @@ from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime, \
     LinkId
-from hive.util.units import unit, kwh, kw, Ratio, s, kmph
+from hive.util.units import unit, kwh, kw, Ratio, kmph
 
 
 class DefaultIds:
@@ -258,8 +258,8 @@ def mock_powercurve(
             return energy_type
 
         def refuel(self, energy_source: EnergySource, charger: Charger,
-                   duration_seconds: s = 1 * unit.seconds) -> EnergySource:
-            added = charger.power * duration_seconds.magnitude / 3600 * unit.kilowatt_hour
+                   duration_seconds: SimTime = 1) -> EnergySource:
+            added = charger.power * duration_seconds / 3600 * unit.kilowatt_hour
             updated_energy_source = energy_source.load_energy(added)
             return updated_energy_source
 
@@ -268,7 +268,7 @@ def mock_powercurve(
 
 def mock_sim(
         sim_time: int = 0,
-        sim_timestep_duration_seconds: s = 60 * unit.seconds,
+        sim_timestep_duration_seconds: SimTime = 60,
         h3_location_res: int = 15,
         h3_search_res: int = 10,
         vehicles: Tuple[Vehicle, ...] = (),
@@ -297,7 +297,7 @@ def mock_sim(
 def mock_config(
         start_time_seconds: SimTime = 0,
         end_time_seconds: SimTime = 100,
-        timestep_duration_seconds: s = 1 * unit.seconds,
+        timestep_duration_seconds: SimTime = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9
 ) -> HiveConfig:

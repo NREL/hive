@@ -16,7 +16,7 @@ class TestLocalSimulationRunner(TestCase):
             bases=(mock_base(stall_count=5, lat=-37, lon=121.999),),
         )
         req = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
-        1,-37.001,122,-37.1,122,0,20,2
+        1,-37.001,122,-37.1,122,0,3600,2
         """
         req_destination = h3.geo_to_h3(-37.1, 122, initial_sim.sim_h3_location_resolution)
         update_requests = UpdateRequestsFromString.build(req)

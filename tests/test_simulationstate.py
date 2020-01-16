@@ -377,7 +377,7 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere,
                                        destination=somewhere_else,
                                        passengers=2)
-        sim = mock_sim(sim_timestep_duration_seconds=1000 * unit.seconds).add_vehicle(veh).add_request(req)
+        sim = mock_sim(sim_timestep_duration_seconds=1000).add_vehicle(veh).add_request(req)
         instruction = Instruction(veh.id,
                                   VehicleState.SERVICING_TRIP,
                                   request_id=req.id)
@@ -414,8 +414,8 @@ class TestSimulationState(TestCase):
         # should take about 800 seconds to arrive at trip origin, and
         # 1 more state step of any size to transition state
 
-        sim_at_req = sim._replace(sim_timestep_duration_seconds=800 * unit.seconds).step_simulation()
-        sim_with_req = sim_at_req._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_at_req = sim._replace(sim_timestep_duration_seconds=800).step_simulation()
+        sim_with_req = sim_at_req._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         tripping_veh = sim_with_req.vehicles[veh.id]
 
@@ -423,8 +423,8 @@ class TestSimulationState(TestCase):
 
         # should take about 800 seconds to arrive at trip destination, and
         # 1 more state step of any size to transition state
-        sim_at_dest = sim_with_req._replace(sim_timestep_duration_seconds=800 * unit.seconds).step_simulation()
-        sim_idle = sim_at_dest._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_at_dest = sim_with_req._replace(sim_timestep_duration_seconds=800).step_simulation()
+        sim_idle = sim_at_dest._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         idle_veh = sim_idle.vehicles[veh.id]
 
@@ -449,8 +449,8 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
-        sim_at_sta = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
-        sim_in_sta = sim_at_sta._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_at_sta = sim._replace(sim_timestep_duration_seconds=1000).step_simulation()
+        sim_in_sta = sim_at_sta._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         charging_veh = sim_in_sta.vehicles[veh.id]
         station_w_veh = sim_in_sta.stations[sta.id]
@@ -479,8 +479,8 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
-        sim_at_base = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
-        sim_in_base = sim_at_base._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_at_base = sim._replace(sim_timestep_duration_seconds=1000).step_simulation()
+        sim_in_base = sim_at_base._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         veh_at_base = sim_in_base.vehicles[veh.id]
 
@@ -506,8 +506,8 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
-        sim_at_new_pos = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
-        sim_in_new_state = sim_at_new_pos._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_at_new_pos = sim._replace(sim_timestep_duration_seconds=1000).step_simulation()
+        sim_in_new_state = sim_at_new_pos._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         veh_at_new_loc = sim_in_new_state.vehicles[veh.id]
 
@@ -538,8 +538,8 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
-        sim_in_new_state = sim_charged._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_charged = sim._replace(sim_timestep_duration_seconds=1000).step_simulation()
+        sim_in_new_state = sim_charged._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
 
@@ -567,8 +567,8 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
         # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = sim._replace(sim_timestep_duration_seconds=1000 * unit.seconds).step_simulation()
-        sim_in_new_state = sim_charged._replace(sim_timestep_duration_seconds=1 * unit.seconds).step_simulation()
+        sim_charged = sim._replace(sim_timestep_duration_seconds=1000).step_simulation()
+        sim_in_new_state = sim_charged._replace(sim_timestep_duration_seconds=1).step_simulation()
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
 

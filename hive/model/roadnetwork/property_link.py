@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import NamedTuple, Union
 
-from hive.util.typealiases import LinkId, GeoId
+from hive.util.typealiases import LinkId, GeoId, Hours
 from hive.model.roadnetwork.link import Link, link_distance
-from hive.util.units import unit, km, kmph, h
+from hive.util.units import unit, km, kmph
 from hive.util.exception import UnitError
 
 
@@ -28,7 +28,7 @@ class PropertyLink(NamedTuple):
     link: Link
     distance: km
     speed: kmph
-    travel_time: h
+    travel_time: Hours
 
     # grade: float # nice in the future?'
 
@@ -45,7 +45,7 @@ class PropertyLink(NamedTuple):
             f"Expected speed in units kmph but got units {speed.units}"
         )
         dist = link_distance(link)
-        tt = dist / speed
+        tt = dist.magnitude / speed.magnitude
         return PropertyLink(link.link_id, link, dist, speed, tt)
 
     @property
@@ -86,6 +86,6 @@ class PropertyLink(NamedTuple):
             return self._replace(
                 link=updated_link,
                 distance=dist,
-                travel_time=tt * unit.hour
+                travel_time=tt
             )
 
