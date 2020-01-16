@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
-from hive.util.units import unit, s
+from hive.util.units import s
 
 if TYPE_CHECKING:
     from hive.model.energy.charger import Charger
@@ -40,7 +40,7 @@ class Powercurve(ABC):
     def refuel(self,
                energy_source: EnergySource,
                charger: Charger,
-               duration_seconds: s = 1 * unit.seconds) -> EnergySource:
+               duration_seconds: s = 1) -> EnergySource:
         """
         (estimated) energy rate due to fueling, based on EnergySource
 

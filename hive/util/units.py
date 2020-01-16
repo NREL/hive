@@ -1,31 +1,28 @@
-from pint import UnitRegistry
-
-unit = UnitRegistry()
-Q_ = unit.Quantity
-
-# Unit type hints for commonly used units.
-
 # Energy
-kwh = type(unit.kilowatthours)  # kilowatt-hours
-J = type(unit.joules)  # joules
+kwh = float  # kilowatt-hours
+J = float  # joules
 
 # Power
-kw = type(unit.kilowatt)  # kilowatt
+kw = float  # kilowatt
 
 # Distance
-m = type(unit.meter)  # meters
-km = type(unit.kilometer)  # kilometers
-ft = type(unit.feet)  # feet
-mi = type(unit.mi)  # miles
+m = float  # meters
+km = float  # kilometers
+ft = float  # feet
+mi = float  # miles
 
 # Speed
-mph = type(unit.miles/unit.hour)  # miles per hour
-kmph = type(unit.kilometers/unit.hour)  # kilometers per hour
+mph = float  # miles per hour
+kmph = float  # kilometers per hour
 
 # Time
-s = type(unit.second)  # seconds
-h = type(unit.hour)  # hours
+s = float  # seconds
+h = float  # hours
 
 # Dimensionless
 Percentage = float  # between 0-100
 Ratio = float  # between 0-1
+
+# Conversions
+HOURS_TO_SECONDS = 3600
+SECONDS_TO_HOURS = 1/3600

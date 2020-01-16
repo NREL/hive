@@ -3,16 +3,16 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from hive.util.units import unit, kw
+from hive.util.units import kw
 
 
 class Charger(Enum):
     """
     Represents a charger in the simulation.
     """
-    LEVEL_1 = 3.3 * unit.kilowatt
-    LEVEL_2 = 7.2 * unit.kilowatt
-    DCFC = 50 * unit.kilowatt
+    LEVEL_1 = 3.3  # kilowatt
+    LEVEL_2 = 7.2  # kilowatt
+    DCFC = 50  # kilowatt
 
     @property
     def power(self) -> kw:

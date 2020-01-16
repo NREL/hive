@@ -8,7 +8,7 @@ from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.routetraversal import Route
 from hive.util.typealiases import PowertrainId
-from hive.util.units import unit, kwh
+from hive.util.units import kwh
 
 
 class TabularPowertrainInput(TypedDict):
@@ -35,8 +35,8 @@ class TabularPowertrain(Powertrain):
         # linear interpolation function approximation via these lookup values
 
         consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
-        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # * (unit.miles/unit.hour)
-        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model)))  # * (unit.watthour/unit.mile)
+        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
+        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model)))  # watthour/mile
 
     def get_id(self) -> PowertrainId:
         return self.id
