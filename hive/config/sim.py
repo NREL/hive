@@ -4,12 +4,11 @@ from typing import NamedTuple, Dict, Union
 
 from hive.config import ConfigBuilder
 from hive.util.typealiases import SimTime
-from hive.util.units import unit, s
 
 
 class Sim(NamedTuple):
     sim_name: str
-    timestep_duration_seconds: s
+    timestep_duration_seconds: SimTime
     start_time_seconds: SimTime
     end_time_seconds: SimTime
     sim_h3_resolution: int

@@ -1,13 +1,13 @@
 from typing import Tuple, NamedTuple
 
-from hive.dispatcher.instruction import Instruction
-from hive.state.simulation_state import SimulationState
-from hive.model.vehiclestate import VehicleState
-from hive.model.vehicle import Vehicle
-from hive.model.energy.charger import Charger
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
+from hive.dispatcher.instruction import Instruction
+from hive.model.energy.charger import Charger
+from hive.model.vehicle import Vehicle
+from hive.model.vehiclestate import VehicleState
+from hive.state.simulation_state import SimulationState
 from hive.util.helpers import H3Ops
-from hive.util.units import unit
+from hive.util.typealiases import SimTime
 
 
 class GreedyDispatcher(NamedTuple, DispatcherInterface):
@@ -17,7 +17,7 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
 
     # TODO: put these in init function to parameterize based on config file.
     LOW_SOC_TRESHOLD: float = 0.2
-    MAX_IDLE_S: int = 600 * unit.seconds
+    MAX_IDLE_S: SimTime = 600
 
     def generate_instructions(self,
                               simulation_state: SimulationState,

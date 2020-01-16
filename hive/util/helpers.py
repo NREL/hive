@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, FrozenSet, NamedTuple
-
-from hive.util.typealiases import *
-from hive.util.units import unit, km, h
-from hive.util.exception import H3Error
+from math import ceil
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
 
 import haversine
-
 from h3 import h3
-from math import ceil
+
+from hive.util.exception import H3Error
+from hive.util.typealiases import *
+from hive.util.units import unit, km
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.property_link import PropertyLink
@@ -182,7 +181,7 @@ class H3Ops:
         return distance_km
 
     @classmethod
-    def point_along_link(cls, property_link: PropertyLink, available_time: h) -> GeoId:
+    def point_along_link(cls, property_link: PropertyLink, available_time: Hours) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 
@@ -192,7 +191,7 @@ class H3Ops:
         """
 
         threshold = 0.001
-        experienced_distance = available_time.magnitude * property_link.speed.magnitude
+        experienced_distance = available_time * property_link.speed.magnitude
         ratio_trip_experienced = experienced_distance / property_link.distance.magnitude
         if ratio_trip_experienced < (0 + threshold):
             return property_link.start

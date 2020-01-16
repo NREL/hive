@@ -16,9 +16,9 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=4*unit.hour
+            duration_seconds=4 * 3600
         )
-        self.assertGreater(result.remaining_time.magnitude, 0, "should have more time left")
+        self.assertGreater(result.remaining_time, 0, "should have more time left")
         self.assertEqual(len(result.remaining_route), 0, "should have no more route")
         self.assertEqual(len(result.experienced_route), 3, "should have hit all 3 links")
 
@@ -32,9 +32,9 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            time_step=1.5*unit.hour
+            duration_seconds=int(1.5 * 3600)  # 1.5 hours at 1kmph, 1km per link, 3 links
         )
-        self.assertEqual(result.remaining_time.magnitude, 0, "should have no more time left")
+        self.assertEqual(result.remaining_time, 0, "should have no more time left")
         self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
         self.assertEqual(len(result.experienced_route), 2, "should have traversed 2 links")
 
@@ -46,7 +46,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time=0.5*unit.hour,
+            available_time_hours=0.5,
         )
 
         traversed = result.traversed
@@ -64,7 +64,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time=4*unit.hour,
+            available_time_hours=4,
         )
 
         traversed = result.traversed

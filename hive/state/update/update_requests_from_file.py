@@ -40,7 +40,7 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):  # add Named
         :return: sim state plus new requests
         """
 
-        current_sim_time = sim_state.sim_time  # * sim_state.sim_timestep_duration_seconds.magnitude
+        current_sim_time = sim_state.current_time_seconds
         result = update_requests_from_iterator(self.reader.read_until_value(current_sim_time), sim_state)
 
         return result, None
