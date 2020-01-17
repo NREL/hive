@@ -151,16 +151,16 @@ class H3Ops:
         :return: an optional entity if found
         """
 
-        best_dist = 1000000 * unit.kilometers
+        best_dist_km = 1000000
         best_e = None
         for e_geoid, e_ids in entity_locations.items():
-            dist = cls.great_circle_distance(geoid, e_geoid)
+            dist_km = cls.great_circle_distance(geoid, e_geoid)
             for e_id in e_ids:
                 if e_id not in entities:
                     continue
                 e = entities[e_id]
-                if dist < best_dist and is_valid(e):
-                    best_dist = dist
+                if dist_km < best_dist_km and is_valid(e):
+                    best_dist_km = dist_km
                     best_e = e
 
         return best_e

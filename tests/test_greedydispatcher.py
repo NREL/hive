@@ -103,7 +103,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        stationary_vehicle = veh._replace(idle_time_s=1000)
+        stationary_vehicle = veh._replace(idle_time_seconds=1000)
         base = mock_base_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(stationary_vehicle).add_base(base)
 

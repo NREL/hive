@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from hive.model.vehiclestate import VehicleState
 from tests.mock_lobster import *
 
 
@@ -523,8 +522,8 @@ class TestSimulationState(TestCase):
         sta = mock_station_from_geoid()
         veh = mock_vehicle_from_geoid(
             energy_type=EnergyType.ELECTRIC,
-            capacity_kwh=50 * unit.kilowatthour,
-            ideal_energy_limit_kwh=50 * unit.kilowatthour,
+            capacity_kwh=50,
+            ideal_energy_limit_kwh=50,
             soc=0.75
         )
         sim = mock_sim().add_vehicle(veh).add_station(sta)

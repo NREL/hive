@@ -82,7 +82,7 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                 vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
         stationary_vehicles = [v for v in simulation_state.vehicles.values() if
-                               v.idle_time_s > self.MAX_IDLE_S and v.id not in vehicle_ids_given_instructions]
+                               v.idle_time_seconds > self.MAX_IDLE_S and v.id not in vehicle_ids_given_instructions]
 
         # 3. Send idle vehicles back to the base
         for veh in stationary_vehicles:

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Tuple, NamedTuple
+from typing import Optional, Dict, NamedTuple
 import functools as ft
 import math
 
