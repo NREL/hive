@@ -10,7 +10,7 @@ class TestDictReaderStepper(TestCase):
     def test_reading_up_to_a_time_bounds_should_leave_remaining_file_available(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         stepper = DictReaderStepper.from_file(test_filename, "departure_time")
-        stop_time = 12
+        stop_time = 720
         result = tuple(stepper.read_until_value(stop_time))
         self.assertEqual(len(result), 20, f"should have found 20 rows with departure time earlier than {stop_time}")
         self.assertEqual(float(stepper._iterator.history['departure_time']), stop_time, f"next has time {stop_time}")
@@ -21,8 +21,8 @@ class TestDictReaderStepper(TestCase):
     def test_reading_two_consecutive_times(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         stepper = DictReaderStepper.from_file(test_filename, "departure_time")
-        stop1 = 12
-        stop2 = 14
+        stop1 = 720
+        stop2 = 840
         result1 = tuple(stepper.read_until_value(stop1))
         result2 = tuple(stepper.read_until_value(stop2))
         self.assertEqual(len(result1), 20, f"should have found 20 rows with departure time [0, {stop1})")
@@ -44,7 +44,7 @@ class TestDictReaderStepper(TestCase):
     def test_no_second_file_reading_on_repeated_value(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         stepper = DictReaderStepper.from_file(test_filename, "departure_time")
-        stop = 12
+        stop = 720
         result1 = tuple(stepper.read_until_value(stop))
         result2 = tuple(stepper.read_until_value(stop))
         self.assertEqual(len(result1), 20, f"should have found 20 rows with departure time earlier than {stop}")
@@ -53,12 +53,12 @@ class TestDictReaderStepper(TestCase):
     def test_correct_management_of_stored_value_after_repeated_value(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         stepper = DictReaderStepper.from_file(test_filename, "departure_time")
-        stop1 = 12
+        stop1 = 720
         _ = tuple(stepper.read_until_value(stop1))
         _ = tuple(stepper.read_until_value(stop1))
 
         # show that second stop1 call means we should have done nothing since the first call
-        stop2 = 13
+        stop2 = 780
         result = tuple(stepper.read_until_value(stop2))
         self.assertEqual(len(result), 1, f"should have found 20 rows with departure time earlier than {stop2}")
         self.assertEqual(float(stepper._iterator.history['departure_time']), stop2, f"next has time {stop2}")
