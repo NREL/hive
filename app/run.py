@@ -17,7 +17,6 @@ from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model import Vehicle, Base, Station
 from hive.model.energy.powertrain import build_powertrain
 from hive.model.energy.powercurve import build_powercurve
-from hive.util.units import unit
 
 from datetime import datetime
 
@@ -111,7 +110,7 @@ initial_sim, sim_state_errors = initial_simulation_state(
     bases=bases,
     powertrains=powertrains,
     powercurves=powercurves,
-    sim_timestep_duration_seconds=config.sim.timestep_duration_seconds * unit.seconds,
+    sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
     sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
 )
 

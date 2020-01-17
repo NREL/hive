@@ -41,7 +41,7 @@ class Sim(NamedTuple):
     def from_dict(cls, d: Dict) -> Sim:
         return Sim(
             sim_name=d['sim_name'],
-            timestep_duration_seconds=d['timestep_duration_seconds'],
+            timestep_duration_seconds=int(d['timestep_duration_seconds']),
             start_time=d['start_time'],
             end_time=d['end_time'],
             sim_h3_resolution=d['sim_h3_resolution'],
