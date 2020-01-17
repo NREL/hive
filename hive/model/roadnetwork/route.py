@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.util.units import unit, km
+from hive.util.units import km
 
 Route = Tuple[PropertyLink, ...]
 """
@@ -9,7 +9,7 @@ any route in the system is a tuple of PropertyLinks
 """
 
 
-def route_distance(route: Route) -> km:
+def route_distance_km(route: Route) -> km:
     """
     Return the distance of the route in kilometers
 
@@ -17,8 +17,8 @@ def route_distance(route: Route) -> km:
     :rtype: :py:obj:`kilometers`
     :return: the distance in kilometers
     """
-    distance = 0 * unit.kilometers
+    distance_km = 0 
     for pl in route:
-        distance += pl.distance
+        distance_km += pl.distance_km
 
-    return distance
+    return distance_km

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 from copy import copy
-from typing import NamedTuple, Dict, Optional, Union, cast, FrozenSet
+from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
 
@@ -22,6 +22,7 @@ from hive.state.vehicle_transition_effect_ops import VehicleTransitionEffectOps,
 from hive.util.exception import *
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
+from hive.util.units import seconds
 
 
 class SimulationState(NamedTuple):
@@ -36,7 +37,7 @@ class SimulationState(NamedTuple):
 
     # simulation parameters
     initial_sim_time: SimTime
-    sim_timestep_duration_seconds: SimTime
+    sim_timestep_duration_seconds: seconds
     sim_h3_location_resolution: int
     sim_h3_search_resolution: int
     sim_step: SimStep = 0
@@ -62,9 +63,9 @@ class SimulationState(NamedTuple):
     b_search: Dict[GeoId, Tuple[BaseId, ...]] = {}
 
     @property
-    def current_time_seconds(self) -> SimTime:
+    def current_time(self) -> SimTime:
         """
-        computes the current time in seconds
+        computes the current time in seconds from the start of the simulation.
 
         :return: the current time in seconds
         """

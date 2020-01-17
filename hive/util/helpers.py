@@ -10,11 +10,13 @@ from h3 import h3
 
 from hive.util.exception import H3Error
 from hive.util.typealiases import *
-from hive.util.units import unit, km
+from hive.util.units import km, seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.property_link import PropertyLink
 
+Entity = TypeVar('Entity')
+EntityId = TypeVar('EntityId')
 
 class SwitchCase(ABC):
     Key = TypeVar('Key')
@@ -50,9 +52,6 @@ class SwitchCase(ABC):
 
 
 class H3Ops:
-    Entity = TypeVar('Entity')
-    EntityId = TypeVar('EntityId')
-
     @classmethod
     def nearest_entity(cls,
                        geoid: GeoId,
@@ -60,7 +59,7 @@ class H3Ops:
                        entity_search: Dict[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_distance_km: km = 10 * unit.kilometers
+                       max_distance_km: km = 10  # kilometers
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
@@ -79,11 +78,11 @@ class H3Ops:
         if geoid_res < sim_h3_search_resolution:
             raise H3Error('search resolution must be less than geoid resolution')
 
-        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2 * unit.kilometers
-        max_k = ceil(max_distance_km.magnitude / k_dist_km.magnitude)
+        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2  # kilometers
+        max_k = ceil(max_distance_km / k_dist_km)
         search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
 
-        def _search(current_k: int = 0) -> Optional['Entity']:
+        def _search(current_k: int = 0) -> Optional[Entity]:
             if current_k > max_k:
                 # There are no entities in any of the rings.
                 return None
@@ -95,14 +94,14 @@ class H3Ops:
                 found = (entity for cell in ring
                          for entity in cls.get_entities_at_cell(cell, entity_search, entities))
 
-                best_dist = 1000000 * unit.kilometers
+                best_dist_km = 1000000
                 best_entity = None
 
                 count = 0
                 for entity in found:
-                    dist = cls.great_circle_distance(geoid, entity.geoid)
-                    if is_valid(entity) and dist < best_dist:
-                        best_dist = dist
+                    dist_km = cls.great_circle_distance(geoid, entity.geoid)
+                    if is_valid(entity) and dist_km < best_dist_km:
+                        best_dist_km = dist_km
                         best_entity = entity
                     count += 1
 
@@ -177,22 +176,22 @@ class H3Ops:
         """
         a_coord = h3.h3_to_geo(a)
         b_coord = h3.h3_to_geo(b)
-        distance_km = haversine.haversine(a_coord, b_coord) * unit.kilometer
+        distance_km = haversine.haversine(a_coord, b_coord, unit='km')
         return distance_km
 
     @classmethod
-    def point_along_link(cls, property_link: PropertyLink, available_time: Hours) -> GeoId:
+    def point_along_link(cls, property_link: PropertyLink, available_time_seconds: seconds) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 
+        :param available_time_seconds: the amount of time to traverse
         :param property_link: the link we are finding a mid point along
-        :param available_time: the amount of time to traverse
         :return: a GeoId along the Link
         """
 
         threshold = 0.001
-        experienced_distance = available_time * property_link.speed.magnitude
-        ratio_trip_experienced = experienced_distance / property_link.distance.magnitude
+        experienced_distance_km = (available_time_seconds * SECONDS_TO_HOURS) * property_link.speed_kmph
+        ratio_trip_experienced = experienced_distance_km / property_link.distance_km
         if ratio_trip_experienced < (0 + threshold):
             return property_link.start
         elif (1 - threshold) < ratio_trip_experienced:

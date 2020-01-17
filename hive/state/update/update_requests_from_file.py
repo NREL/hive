@@ -10,7 +10,7 @@ from hive.state.update.update_requests import update_requests_from_iterator
 from hive.util.dict_reader_stepper import DictReaderStepper
 
 
-class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):  # add NamedTuple
+class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
     """
     loads requests from a file, which is assumed to be sorted by Request
     """
@@ -40,7 +40,7 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):  # add Named
         :return: sim state plus new requests
         """
 
-        current_sim_time = sim_state.current_time_seconds
+        current_sim_time = sim_state.current_time
         result = update_requests_from_iterator(self.reader.read_until_value(current_sim_time), sim_state)
 
         return result, None

@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import copy
-import re
-from typing import NamedTuple, Dict, Optional, Union
+from typing import NamedTuple, Dict, Optional
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
-from hive.model.energy.energytype import EnergyType
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.vehiclestate import VehicleState
@@ -15,7 +13,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.units import unit, km
+from hive.util.units import km, seconds, SECONDS_TO_HOURS
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
@@ -56,7 +54,7 @@ class Vehicle(NamedTuple):
     :param idle_time_s: A counter to track how long the vehicle has been idle.
     :type idle_time_s: :py:obj:`seconds`
     :param distance_traveled: A accumulator to track how far a vehicle has traveled.
-    :type distance_traveled: :py:obj:`kilometers`
+    :type distance_traveled_km: :py:obj:`kilometers`
     """
     id: VehicleId
     powertrain_id: PowertrainId
@@ -74,8 +72,8 @@ class Vehicle(NamedTuple):
     station: Optional[StationId] = None
     plugged_in_charger: Optional[Charger] = None
 
-    idle_time_s: SimTime = 0
-    distance_traveled: km = 0.0 * unit.kilometers
+    idle_time_seconds: seconds = 0
+    distance_traveled_km: km = 0.0
 
     @property
     def geoid(self):
@@ -122,10 +120,10 @@ class Vehicle(NamedTuple):
                 powertrain_id = row['powertrain_id']
                 powercurve_id = row['powercurve_id']
                 energy_type = powercurve_energy_types[powercurve_id]
-                capacity = float(row['capacity']) * unit.kilowatthours
+                capacity = float(row['capacity'])
                 iel_str = row['ideal_energy_limit']
-                ideal_energy_limit = float(iel_str) * unit.kilowatthours if len(iel_str) > 0 else None
-                max_charge_acceptance = float(row['max_charge_acceptance']) * unit.kilowatt
+                ideal_energy_limit = float(iel_str) if len(iel_str) > 0 else None
+                max_charge_acceptance = float(row['max_charge_acceptance'])
                 initial_soc = float(row['initial_soc'])
 
                 if not 0.0 <= initial_soc <= 1.0:
@@ -215,20 +213,20 @@ class Vehicle(NamedTuple):
         return self._replace(plugged_in_charger=None, station=None)
 
     def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_s=0)
+        return self._replace(idle_time_seconds=0)
 
     def _reset_charge_intent(self) -> Vehicle:
         return self._replace(charger_intent=None, station_intent=None)
 
     def charge(self,
                powercurve: Powercurve,
-               duration: SimTime) -> Vehicle:
+               duration_seconds: seconds) -> Vehicle:
 
         """
         applies a charge event to a vehicle
 
         :param powercurve: the vehicle's powercurve model
-        :param duration: duration_seconds of this time step in seconds
+        :param duration_seconds: duration_seconds of this time step in seconds
         :return: the updated Vehicle
         """
 
@@ -239,22 +237,26 @@ class Vehicle(NamedTuple):
             #  So, I think the simulation state should handle the charge end termination state.
             return self
         else:
-            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
+            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration_seconds)
             return self._replace(energy_source=updated_energy_source)
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, duration: SimTime) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: seconds) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
 
         :param road_network: the road network
         :param power_train: the vehicle's powertrain model
-        :param duration: the duration_seconds of this move step in seconds
+        :param duration_seconds: the duration_seconds of this move step in seconds
         :return: the updated vehicle or None if moving is not possible.
         """
         if not self.has_route():
             return self.transition(VehicleState.IDLE)
 
-        traverse_result = traverse(route_estimate=self.route, road_network=road_network, duration_seconds=duration)
+        traverse_result = traverse(
+            route_estimate=self.route,
+            road_network=road_network,
+            duration_seconds=duration_seconds,
+        )
 
         if not traverse_result:
             # TODO: Need to think about edge case where vehicle gets route where origin=destination.
@@ -264,7 +266,7 @@ class Vehicle(NamedTuple):
         experienced_route = traverse_result.experienced_route
 
         energy_used = power_train.energy_cost(experienced_route)
-        step_distance = traverse_result.traversal_distance
+        step_distance_km = traverse_result.traversal_distance_km
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
@@ -277,23 +279,23 @@ class Vehicle(NamedTuple):
             geoid = experienced_route[-1].link.end
             updated_location_vehicle = new_route_vehicle._replace(
                 property_link=road_network.property_link_from_geoid(geoid),
-                distance_traveled=self.distance_traveled + step_distance,
+                distance_traveled_km=self.distance_traveled_km + step_distance_km,
 
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
                 property_link=remaining_route[0],
-                distance_traveled=self.distance_traveled + step_distance,
+                distance_traveled_km=self.distance_traveled_km + step_distance_km,
 
             )
 
         return updated_location_vehicle
 
-    def idle(self, time_step_s: SimTime) -> Vehicle:
+    def idle(self, time_step_seconds: seconds) -> Vehicle:
         """
         Performs an idle step.
 
-        :param time_step_s: duration_seconds of the idle step in seconds
+        :param time_step_seconds: duration_seconds of the idle step in seconds
         :return: the updated vehicle
         """
         if self.vehicle_state != VehicleState.IDLE:
@@ -301,12 +303,12 @@ class Vehicle(NamedTuple):
 
         idle_energy_rate = 0.8 # (unit.kilowatthour / unit.hour)
 
-        idle_energy_kwh = (idle_energy_rate * time_step_s / 3600.0) * unit.kilowatthour
+        idle_energy_kwh = idle_energy_rate * (time_step_seconds * SECONDS_TO_HOURS)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 
-        next_idle_time = (less_energy_vehicle.idle_time_s + time_step_s)
-        vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=next_idle_time)
+        next_idle_time = (less_energy_vehicle.idle_time_seconds + time_step_seconds)
+        vehicle_w_stats = less_energy_vehicle._replace(idle_time_seconds=next_idle_time)
 
         return vehicle_w_stats
 

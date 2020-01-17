@@ -15,7 +15,7 @@ class Charger(Enum):
     DCFC = 50  # kilowatt
 
     @property
-    def power(self) -> kw:
+    def power_kw(self) -> kw:
         """
         Returns the power of the charger in kilowatts
 

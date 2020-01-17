@@ -29,9 +29,8 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import PowertrainId, PowercurveId, RequestId, VehicleId, BaseId, StationId, GeoId, SimTime, \
-    LinkId
-from hive.util.units import unit, kwh, kw, Ratio, kmph
+from hive.util.typealiases import *
+from hive.util.units import kwh, kw, Ratio, kmph, seconds, SECONDS_TO_HOURS
 
 
 class DefaultIds:
@@ -68,16 +67,16 @@ def mock_network(h3_res: int = 15) -> RoadNetwork:
 def mock_energy_source(
         powercurve_id: PowercurveId = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity: kwh = 100 * unit.kilowatthour,
-        max_charge_acceptance_kw: kw = 50.0 * unit.kilowatt,
-        ideal_energy_limit: kwh = 50.0 * unit.kilowatthour,
+        capacity_kwh: kwh = 100,
+        max_charge_acceptance_kw: kw = 50.0,
+        ideal_energy_limit_kwh: kwh = 50.0,
         soc: Ratio = 0.25,
 ) -> EnergySource:
     return EnergySource.build(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
-        capacity=capacity,
-        ideal_energy_limit=ideal_energy_limit,
+        capacity_kwh=capacity_kwh,
+        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc)
 
@@ -111,16 +110,20 @@ def mock_station(
         lat: float = 0,
         lon: float = 0,
         h3_res: int = 15,
-        chargers: Dict[Charger, int] = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
+        chargers=None
 ) -> Station:
+    if chargers is None:
+        chargers = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
     return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), chargers)
 
 
 def mock_station_from_geoid(
         station_id: StationId = DefaultIds.mock_station_id(),
         geoid: GeoId = h3.geo_to_h3(0, 0, 15),
-        chargers: Dict[Charger, int] = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
+        chargers=None
 ) -> Station:
+    if chargers is None:
+        chargers = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
     return Station.build(station_id, geoid, chargers)
 
 
@@ -131,8 +134,8 @@ def mock_request(
         d_lat: float = 10,
         d_lon: float = 10,
         h3_res: int = 15,
-        departure_time: int = 0,
-        cancel_time: int = 5,
+        departure_time: SimTime = 0,
+        cancel_time: SimTime = 5,
         passengers: int = 1
 ) -> Request:
     return Request.build(
@@ -149,8 +152,8 @@ def mock_request_from_geoids(
         request_id: RequestId = DefaultIds.mock_request_id(),
         origin: GeoId = h3.geo_to_h3(0, 0, 15),
         destination: GeoId = h3.geo_to_h3(10, 10, 15),
-        departure_time: int = 0,
-        cancel_time: int = 5,
+        departure_time: SimTime = 0,
+        cancel_time: SimTime = 5,
         passengers: int = 1
 ) -> Request:
     return Request.build(
@@ -171,18 +174,18 @@ def mock_vehicle(
         powertrain_id: str = DefaultIds.mock_powertrain_id(),
         powercurve_id: str = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity: kwh = 100 * unit.kilowatthour,
+        capacity_kwh: kwh = 100,
         soc: Ratio = 0.25,
-        ideal_energy_limit=50.0 * unit.kilowatthour,
-        max_charge_acceptance_kw: kw = 50.0 * unit.kilowatt,
+        ideal_energy_limit_kwh=50.0,
+        max_charge_acceptance_kw: kw = 50.0,
 
 ) -> Vehicle:
     road_network = mock_network(h3_res)
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
-        capacity=capacity,
-        ideal_energy_limit=ideal_energy_limit,
+        capacity_kwh=capacity_kwh,
+        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc
     )
@@ -203,17 +206,17 @@ def mock_vehicle_from_geoid(
         powertrain_id: str = DefaultIds.mock_powertrain_id(),
         powercurve_id: str = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity: kwh = 100 * unit.kilowatthour,
+        capacity_kwh: kwh = 100,
         soc: Ratio = 0.25,
-        ideal_energy_limit=50.0 * unit.kilowatthour,
-        max_charge_acceptance_kw: kw = 50.0 * unit.kilowatt,
+        ideal_energy_limit_kwh=50.0,
+        max_charge_acceptance_kw: kw = 50.0,
         road_network: RoadNetwork = mock_network(h3_res=15)
 ) -> Vehicle:
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
-        capacity=capacity,
-        ideal_energy_limit=ideal_energy_limit,
+        capacity_kwh=capacity_kwh,
+        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc
     )
@@ -231,7 +234,7 @@ def mock_vehicle_from_geoid(
 def mock_powertrain(
         powertrain_id: PowertrainId = DefaultIds.mock_powertrain_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        energy_cost: kwh = 0.01 * unit.kilowatt_hours
+        energy_cost_kwh: kwh = 0.01
 ) -> Powertrain:
     class MockPowertrain(Powertrain):
         def get_id(self) -> PowertrainId:
@@ -241,7 +244,7 @@ def mock_powertrain(
             return energy_type
 
         def energy_cost(self, route: Route) -> kwh:
-            return energy_cost
+            return energy_cost_kwh
 
     return MockPowertrain()
 
@@ -258,17 +261,17 @@ def mock_powercurve(
             return energy_type
 
         def refuel(self, energy_source: EnergySource, charger: Charger,
-                   duration_seconds: SimTime = 1) -> EnergySource:
-            added = charger.power * duration_seconds / 3600 * unit.kilowatt_hour
-            updated_energy_source = energy_source.load_energy(added)
+                   duration_seconds: seconds = 1) -> EnergySource:
+            added_kwh = charger.power_kw * (duration_seconds * SECONDS_TO_HOURS)
+            updated_energy_source = energy_source.load_energy(added_kwh)
             return updated_energy_source
 
     return MockPowercurve()
 
 
 def mock_sim(
-        sim_time: int = 0,
-        sim_timestep_duration_seconds: SimTime = 60,
+        sim_time: SimTime = 0,
+        sim_timestep_duration_seconds: seconds = 60,
         h3_location_res: int = 15,
         h3_search_res: int = 10,
         vehicles: Tuple[Vehicle, ...] = (),
@@ -295,15 +298,15 @@ def mock_sim(
 
 
 def mock_config(
-        start_time_seconds: SimTime = 0,
-        end_time_seconds: SimTime = 100,
-        timestep_duration_seconds: SimTime = 1,
+        start_time: SimTime = 0,
+        end_time: SimTime = 100,
+        timestep_duration_seconds: seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9
 ) -> HiveConfig:
     return HiveConfig.build({"sim": {
-        'start_time_seconds': start_time_seconds,
-        'end_time_seconds': end_time_seconds,
+        'start_time': start_time,
+        'end_time': end_time,
         'timestep_duration_seconds': timestep_duration_seconds,
         'sim_h3_resolution': sim_h3_location_resolution,
         'sim_h3_search_resolution': sim_h3_search_resolution,
@@ -330,7 +333,7 @@ def mock_haversine_zigzag_route(
         n: int = 3,
         lat_step_size: int = 5,
         lon_step_size: int = 5,
-        speed: kmph = 40 * (unit.kilometers / unit.hour),
+        speed_kmph: kmph = 40,
         h3_res: int = 15
 ) -> Route:
     """
@@ -338,7 +341,7 @@ def mock_haversine_zigzag_route(
     :param n: number of steps
     :param lat_step_size: lat-wise step size
     :param lon_step_size: lon-wise step size
-    :param speed: road speed
+    :param speed_kmph: road speed
     :param h3_res: h3 resolution
     :return: a route
     """
@@ -353,13 +356,13 @@ def mock_haversine_zigzag_route(
         lat_pos, lon_pos = math.floor(i / 2.0) * lat_step_size, math.floor((i + 1) / 2.0) * lon_step_size
         lat_dest, lon_dest = math.floor((i + 1) / 2.0) * lat_step_size, math.floor((i + 2) / 2.0) * lon_step_size
         link = Link(f"link_{i}", h3.geo_to_h3(lat_pos, lon_pos, h3_res), h3.geo_to_h3(lat_dest, lon_dest, h3_res))
-        p = PropertyLink.build(link, speed)
+        p = PropertyLink.build(link, speed_kmph)
         return acc + (p,)
 
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_graph_links(h3_res: int = 15, speed: kmph = 1 * (unit.kilometer / unit.hour)) -> Dict[str, PropertyLink]:
+def mock_graph_links(h3_res: int = 15, speed_kmph: kmph = 1) -> Dict[str, PropertyLink]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
     """
@@ -378,15 +381,15 @@ def mock_graph_links(h3_res: int = 15, speed: kmph = 1 * (unit.kilometer / unit.
 
     property_links = {
         # distance of 1.0 KM, speed of 1 KM/time unit
-        "1": PropertyLink.build(links["1"], speed),
-        "2": PropertyLink.build(links["2"], speed),
-        "3": PropertyLink.build(links["3"], speed)
+        "1": PropertyLink.build(links["1"], speed_kmph),
+        "2": PropertyLink.build(links["2"], speed_kmph),
+        "3": PropertyLink.build(links["3"], speed_kmph)
     }
     return property_links
 
 
-def mock_route(h3_res: int = 15, speed: kmph = 1 * (unit.kilometer / unit.hour)) -> Tuple[PropertyLink, ...]:
-    return tuple(mock_graph_links(h3_res=h3_res, speed=speed).values())
+def mock_route(h3_res: int = 15, speed_kmph: kmph = 1) -> Tuple[PropertyLink, ...]:
+    return tuple(mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values())
 
 
 def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: int = 15) -> RoadNetwork:
@@ -418,7 +421,7 @@ def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: 
             link_id = property_link.link.link_id
             if link_id in self.property_links:
                 current_property_link = self.property_links[link_id]
-                updated_property_link = property_link.update_speed(current_property_link.speed)
+                updated_property_link = property_link.update_speed(current_property_link.speed_kmph)
                 return updated_property_link
             else:
                 return None

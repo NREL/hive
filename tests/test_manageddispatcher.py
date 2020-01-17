@@ -65,7 +65,7 @@ class TestManagedDispatcher(TestCase):
         low_battery = EnergySource.build(
             DefaultIds.mock_powercurve_id(),
             EnergyType.ELECTRIC,
-            50 * unit.kilowatthour,
+            50,
             soc=0.1
         )
 

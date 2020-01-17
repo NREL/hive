@@ -31,9 +31,9 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             # request failed to parse from row
             row_failure = _failure_as_json(str(req), acc.simulation_state)
             return acc.add_report(row_failure)
-        elif req.cancel_time <= acc.simulation_state.current_time_seconds:
+        elif req.cancel_time <= acc.simulation_state.current_time:
             # cannot add request that should already be cancelled
-            current_time = acc.simulation_state.current_time_seconds
+            current_time = acc.simulation_state.current_time
             msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
             invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
             return acc.add_report(invalid_cancel_time)
@@ -78,7 +78,7 @@ def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
     :param sim: the state of the sim before cancellation occurs
     :return: a stringified json report of an error
     """
-    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.current_time_seconds}\",\"error\":\"{error_msg}\"}}"
+    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.current_time}\",\"error\":\"{error_msg}\"}}"
 
 
 def _eof_as_json(sim: SimulationState) -> str:
@@ -88,4 +88,4 @@ def _eof_as_json(sim: SimulationState) -> str:
     :param sim: the simulation state
     :return: a stringified end-of-file report
     """
-    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.current_time_seconds}\",\"message\":\"EOF\"}}"
+    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.current_time}\",\"message\":\"EOF\"}}"

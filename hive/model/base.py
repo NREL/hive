@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, NamedTuple, Dict, Union
+from typing import Optional, NamedTuple, Dict
 
 from h3 import h3
 

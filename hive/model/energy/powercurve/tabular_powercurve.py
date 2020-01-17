@@ -6,7 +6,7 @@ import numpy as np
 
 from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.model.energy.energytype import EnergyType
-from hive.util.units import s, SECONDS_TO_HOURS
+from hive.util.units import seconds, SECONDS_TO_HOURS
 from hive.util.typealiases import PowercurveId
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class TabularPowerCurveInput(TypedDict):
     type: str
     power_type: str
     reported_max_charge_acceptance_kw: int
-    step_size_seconds: s
+    step_size_seconds: seconds
     power_curve: List[Dict[float, float]]
 
 
@@ -57,7 +57,7 @@ class TabularPowercurve(Powercurve):
     def refuel(self,
                energy_source: EnergySource,
                charger: Charger,
-               duration_seconds: s = 1  # seconds
+               duration_seconds: seconds = 1  # seconds
                ) -> EnergySource:
 
         """
@@ -76,9 +76,9 @@ class TabularPowercurve(Powercurve):
             soc = updated_energy.soc * 100  # scaled to [0, 100]
 
             # charging.py line 76:
-            veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor
-            charge_power_kw = min(veh_kw_rate, charger.power)
-            kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)
+            veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor  # kilowatt
+            charge_power_kw = min(veh_kw_rate, charger.power_kw)  # kilowatt
+            kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours
 
             updated_energy = updated_energy.load_energy(kwh)  # kilowatt-hours
 

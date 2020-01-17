@@ -21,7 +21,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
 
         updated, reports = ft.reduce(
             lambda s, r_id: (s[0].remove_request(r_id), s[1] + (_as_json(r_id, s[0]),)) \
-                if s[0].current_time_seconds >= s[0].requests[r_id].cancel_time \
+                if s[0].current_time >= s[0].requests[r_id].cancel_time \
                 else s,
             simulation_state.requests.keys(),
             (simulation_state, ())
@@ -39,5 +39,5 @@ def _as_json(r_id: RequestId, sim: SimulationState) -> str:
     :return: a stringified json report
     """
     dep_t = sim.requests[r_id].departure_time
-    sim_t = sim.current_time_seconds
+    sim_t = sim.current_time
     return f"{{\"report\":\"cancel_request\",\"request_id\":\"{r_id}\",\"departure_time\":\"{dep_t}\",\"cancel_time\":\"{sim_t}\"}}"

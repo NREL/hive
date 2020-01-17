@@ -141,14 +141,14 @@ class TestVehicle(TestCase):
 
         moved_vehicle = vehicle_w_route.move(road_network=road_network,
                                              power_train=power_train,
-                                             duration=400)
+                                             duration_seconds=400)
         m2 = moved_vehicle.move(road_network=road_network,
                                 power_train=power_train,
-                                duration=400)
+                                duration_seconds=400)
         # vehicle should have arrived after second move.
         m3 = m2.move(road_network=road_network,
                      power_train=power_train,
-                     duration=10)
+                     duration_seconds=10)
 
         self.assertLess(moved_vehicle.energy_source.soc, 1)
         self.assertNotEqual(somewhere, moved_vehicle.geoid)
@@ -158,7 +158,7 @@ class TestVehicle(TestCase):
         self.assertNotEqual(moved_vehicle.property_link.link.start, m2.property_link.link.start)
 
         self.assertEqual(m3.vehicle_state, VehicleState.IDLE, 'Vehicle should have finished route')
-        self.assertGreater(m3.distance_traveled, 8.5 * unit.kilometer, 'Vehicle should have traveled around 8km')
+        self.assertGreater(m3.distance_traveled_km, 8.5 * unit.kilometer, 'Vehicle should have traveled around 8km')
 
     def test_charge(self):
         vehicle = mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to('s1', Charger.DCFC)
@@ -167,14 +167,14 @@ class TestVehicle(TestCase):
 
         result = vehicle.charge(power_curve, time_step_size_secs)
         self.assertAlmostEqual(
-            first=result.energy_source.energy,
-            second=vehicle.energy_source.energy + 0.01 * unit.kilowatthour,
+            first=result.energy_source.energy_kwh,
+            second=vehicle.energy_source.energy_kwh + 0.01 * unit.kilowatthour,
             places=2,
             msg="should have charged")
 
     def test_charge_when_full(self):
         vehicle = mock_vehicle(
-            capacity=100 * unit.kilowatthour,
+            capacity_kwh=100 * unit.kilowatthour,
             soc=1.0
         ).transition(VehicleState.CHARGING_STATION).plug_in_to('s1', Charger.DCFC)
         # vehicle_full = vehicle.battery_swap(TestVehicle.mock_energysource(cap=100 * unit.kilowatthour,
@@ -183,7 +183,7 @@ class TestVehicle(TestCase):
         time_step_size_secs = 1.0 * unit.seconds
 
         result = vehicle.charge(power_curve, time_step_size_secs)
-        self.assertEqual(result.energy_source.energy, vehicle.energy_source.energy, "should have not charged")
+        self.assertEqual(result.energy_source.energy_kwh, vehicle.energy_source.energy_kwh, "should have not charged")
 
     def test_idle(self):
         idle_vehicle = mock_vehicle()
@@ -215,15 +215,15 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.powercurve_id, 'leaf')
         self.assertEqual(vehicle.powertrain_id, 'leaf')
         self.assertEqual(vehicle.energy_source.powercurve_id, 'leaf')
-        self.assertEqual(vehicle.energy_source.ideal_energy_limit, 40.0 * unit.kilowatthours)
-        self.assertEqual(vehicle.energy_source.energy, 50.0 * unit.kilowatthours)
-        self.assertEqual(vehicle.energy_source.capacity, 50.0 * unit.kilowatthours)
+        self.assertEqual(vehicle.energy_source.ideal_energy_limit_kwh, 40.0 * unit.kilowatthours)
+        self.assertEqual(vehicle.energy_source.energy_kwh, 50.0 * unit.kilowatthours)
+        self.assertEqual(vehicle.energy_source.capacity_kwh, 50.0 * unit.kilowatthours)
         self.assertEqual(vehicle.energy_source.energy_type, EnergyType.ELECTRIC)
         self.assertEqual(vehicle.energy_source.max_charge_acceptance_kw, 50.0 * unit.kilowatt)
         self.assertEqual(len(vehicle.passengers), 0)
         self.assertEqual(vehicle.property_link.start, expected_geoid)
         self.assertEqual(vehicle.vehicle_state, VehicleState.IDLE)
-        self.assertEqual(vehicle.distance_traveled, 0)
+        self.assertEqual(vehicle.distance_traveled_km, 0)
         self.assertEqual(vehicle.idle_time_s, 0)
         self.assertEqual(vehicle.route, ())
         self.assertEqual(vehicle.station, None)

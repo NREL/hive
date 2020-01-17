@@ -29,6 +29,6 @@ class TestTabularPowertrain(TestCase):
         """
         powertrain = build_powertrain("leaf")
         # test_route = _TestAssets.mock_route()
-        test_route = mock_route(speed=45 * (unit.kilometer / unit.hour))
+        test_route = mock_route(speed_kmph=45 * (unit.kilometer / unit.hour))
         cost = powertrain.energy_cost(test_route)
         self.assertAlmostEqual(cost.magnitude, .308, places=1)
