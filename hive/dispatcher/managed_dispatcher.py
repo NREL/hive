@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import Tuple, NamedTuple
 
+import json
+import random
+
 from pkg_resources import resource_filename
 from h3 import h3
 
@@ -13,9 +16,6 @@ from hive.model.energy.charger import Charger
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import GeoId
-
-import json
-import random
 
 
 class ManagedDispatcher(NamedTuple, DispatcherInterface):
@@ -37,8 +37,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             geofence = list(h3.polyfill(
                 geo_json=geojson['features'][0]['geometry'],
                 res=10,
-                geo_json_conformant=True)
-            )
+                geo_json_conformant=True))
             return ManagedDispatcher(
                 manager=manager,
                 geofence=geofence,
@@ -54,6 +53,8 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
     def generate_instructions(self,
                               simulation_state: SimulationState,
                               ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
+        # TODO: alot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
+        #  too large. Should probably refactor.
         instructions = []
         vehicle_ids_given_instructions = []
 
@@ -86,16 +87,13 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = (VehicleState.IDLE,
+            _valid_states = [VehicleState.IDLE,
                              VehicleState.CHARGING_BASE,
                              VehicleState.RESERVE_BASE,
-                             VehicleState.DISPATCH_BASE)
-            if vehicle.id not in vehicle_ids_given_instructions and \
-                    vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and \
-                    vehicle.vehicle_state in _valid_states:
-                return True
-            else:
-                return False
+                             VehicleState.DISPATCH_BASE]
+            return bool(vehicle.id not in vehicle_ids_given_instructions and
+                        vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
+                        vehicle.vehicle_state in _valid_states)
 
         # 2. find requests that need a vehicle
         unassigned_requests = [r for r in simulation_state.requests.values() if not r.dispatched_vehicle]
@@ -162,10 +160,8 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     continue
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
-                return True
-            else:
-                return False
+            return bool(vehicle.vehicle_state == VehicleState.RESERVE_BASE and not
+            vehicle.energy_source.is_at_ideal_energy_limit())
 
         # 4. charge vehicles sitting at base
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if

@@ -18,4 +18,3 @@ class ABCNamedTupleMeta(ABCMeta, NamedTupleMeta):
         def do_something(self, it):
             return self.attr1 + it
     """
-    pass

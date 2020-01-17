@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from typing import NamedTuple, Dict, Optional
+from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -17,8 +18,6 @@ from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
-
-from h3 import h3
 
 
 class Vehicle(NamedTuple):
@@ -112,43 +111,42 @@ class Vehicle(NamedTuple):
             raise IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
         elif row['powercurve_id'] not in powercurve_models.keys():
             raise IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
-        else:
-            try:
-                vehicle_id = row['vehicle_id']
-                lat = float(row['lat'])
-                lon = float(row['lon'])
-                powertrain_id = row['powertrain_id']
-                powercurve_id = row['powercurve_id']
-                energy_type = powercurve_energy_types[powercurve_id]
-                capacity = float(row['capacity'])
-                iel_str = row['ideal_energy_limit']
-                ideal_energy_limit = float(iel_str) if len(iel_str) > 0 else None
-                max_charge_acceptance = float(row['max_charge_acceptance'])
-                initial_soc = float(row['initial_soc'])
+        try:
+            vehicle_id = row['vehicle_id']
+            lat = float(row['lat'])
+            lon = float(row['lon'])
+            powertrain_id = row['powertrain_id']
+            powercurve_id = row['powercurve_id']
+            energy_type = powercurve_energy_types[powercurve_id]
+            capacity = float(row['capacity'])
+            iel_str = row['ideal_energy_limit']
+            ideal_energy_limit = float(iel_str) if len(iel_str) > 0 else None
+            max_charge_acceptance = float(row['max_charge_acceptance'])
+            initial_soc = float(row['initial_soc'])
 
-                if not 0.0 <= initial_soc <= 1.0:
-                    raise IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
+            if not 0.0 <= initial_soc <= 1.0:
+                raise IOError(f"initial soc for vehicle: '{initial_soc}' must be in range [0,1]")
 
-                energy_source = EnergySource.build(powercurve_id,
-                                                   energy_type,
-                                                   capacity,
-                                                   ideal_energy_limit,
-                                                   max_charge_acceptance,
-                                                   initial_soc)
+            energy_source = EnergySource.build(powercurve_id,
+                                               energy_type,
+                                               capacity,
+                                               ideal_energy_limit,
+                                               max_charge_acceptance,
+                                               initial_soc)
 
-                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                start_link = road_network.property_link_from_geoid(geoid)
+            geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+            start_link = road_network.property_link_from_geoid(geoid)
 
-                return Vehicle(
-                    id=vehicle_id,
-                    powertrain_id=powertrain_id,
-                    powercurve_id=powercurve_id,
-                    energy_source=energy_source,
-                    property_link=start_link,
-                )
+            return Vehicle(
+                id=vehicle_id,
+                powertrain_id=powertrain_id,
+                powercurve_id=powercurve_id,
+                energy_source=energy_source,
+                property_link=start_link,
+            )
 
-            except ValueError:
-                raise IOError(f"a numeric value could not be parsed from {row}")
+        except ValueError:
+            raise IOError(f"a numeric value could not be parsed from {row}")
 
     def has_passengers(self) -> bool:
         """
@@ -236,9 +234,8 @@ class Vehicle(NamedTuple):
             # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
             #  So, I think the simulation state should handle the charge end termination state.
             return self
-        else:
-            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration_seconds)
-            return self._replace(energy_source=updated_energy_source)
+        updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration_seconds)
+        return self._replace(energy_source=updated_energy_source)
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: Seconds) -> Optional[Vehicle]:
         """
@@ -301,7 +298,7 @@ class Vehicle(NamedTuple):
         if self.vehicle_state != VehicleState.IDLE:
             raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
-        idle_energy_rate = 0.8 # (unit.kilowatthour / unit.hour)
+        idle_energy_rate = 0.8  # (unit.kilowatthour / unit.hour)
 
         idle_energy_kwh = idle_energy_rate * (time_step_seconds * SECONDS_TO_HOURS)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
@@ -358,8 +355,7 @@ class Vehicle(NamedTuple):
             return False
         elif self.has_passengers():
             return False
-        else:
-            return True
+        return True
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
         """
@@ -380,5 +376,4 @@ class Vehicle(NamedTuple):
                 return transitioned_vehicle._reset_charge_intent()
 
             return transitioned_vehicle
-        else:
-            return None
+        return None

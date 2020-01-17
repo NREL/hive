@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from typing import Iterator, Dict, Tuple, Union, TextIO
+from typing import Iterator, Dict, Union, TextIO
 
 
 class DictReaderIterator:
@@ -33,18 +33,16 @@ class DictReaderIterator:
                 tmp = self.history
                 self.history = None
                 return tmp
-            else:
-                # stored value is not in range
-                raise StopIteration
+            # stored value is not in range
+            raise StopIteration
         else:
             row = next(self.reader)
             if float(row[self.step_column_name]) < self.stop_value:
                 # value is within range
                 return row
-            else:
-                # set aside row for the future, end iteration
-                self.history = row
-                raise StopIteration
+            # set aside row for the future, end iteration
+            self.history = row
+            raise StopIteration
 
 
 class DictReaderStepper:

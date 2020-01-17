@@ -23,4 +23,3 @@ class ForecasterInterface(metaclass=ABCNamedTupleMeta):
         :param simulation_state: The current simulation state
         :return: the update Forecaster along with the forecast
         """
-        pass

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Dict, Optional
+from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
-
-from h3 import h3
 
 
 class Station(NamedTuple):
@@ -59,45 +58,43 @@ class Station(NamedTuple):
             raise IOError("cannot load a station without a 'charger_type' value")
         elif 'charger_count' not in row:
             raise IOError("cannot load a station without a 'charger_count' value")
-        else:
-            station_id = row['station_id']
-            try:
-                lat, lon = float(row['lat']), float(row['lon'])
-                geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
-                charger_type = Charger.from_string(row['charger_type'])
-                charger_count = int(row['charger_count'])
+        station_id = row['station_id']
+        try:
+            lat, lon = float(row['lat']), float(row['lon'])
+            geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
+            charger_type = Charger.from_string(row['charger_type'])
+            charger_count = int(row['charger_count'])
 
-                if charger_type is None:
-                    raise IOError(f"invalid charger type {row['charger']} for station {station_id}")
-                elif station_id not in builder:
-                    # create this station
-                    return Station.build(
-                        id=station_id,
-                        geoid=geoid,
-                        chargers={charger_type: charger_count}
-                    )
-                elif charger_type in builder[station_id].total_chargers:
-                    # combine counts from multiple rows which refer to this charger_type
-                    charger_already_loaded = builder[station_id].total_chargers[charger_type]
+            if charger_type is None:
+                raise IOError(f"invalid charger type {row['charger']} for station {station_id}")
+            elif station_id not in builder:
+                # create this station
+                return Station.build(
+                    id=station_id,
+                    geoid=geoid,
+                    chargers={charger_type: charger_count}
+                )
+            elif charger_type in builder[station_id].total_chargers:
+                # combine counts from multiple rows which refer to this charger_type
+                charger_already_loaded = builder[station_id].total_chargers[charger_type]
 
-                    return Station.build(
-                        id=station_id,
-                        geoid=geoid,
-                        chargers={charger_type: charger_count + charger_already_loaded}
-                    )
-                else:
-                    # update this station
-                    charger_already_loaded = builder[station_id].total_chargers
-                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
+                return Station.build(
+                    id=station_id,
+                    geoid=geoid,
+                    chargers={charger_type: charger_count + charger_already_loaded}
+                )
+            # update this station
+            charger_already_loaded = builder[station_id].total_chargers
+            updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
 
-                    return Station.build(
-                        id=station_id,
-                        geoid=geoid,
-                        chargers=updated_chargers
-                    )
+            return Station.build(
+                id=station_id,
+                geoid=geoid,
+                chargers=updated_chargers
+            )
 
-            except ValueError:
-                raise IOError(f"unable to parse request {station_id} from row due to invalid value(s): {row}")
+        except ValueError:
+            raise IOError(f"unable to parse request {station_id} from row due to invalid value(s): {row}")
 
     def has_available_charger(self, charger: Charger) -> bool:
         """
@@ -123,11 +120,10 @@ class Station(NamedTuple):
 
         if chargers < 1:
             return None
-        else:
-            updated_avail_chargers = self.available_chargers.copy()
-            updated_avail_chargers[charger] -= 1
+        updated_avail_chargers = self.available_chargers.copy()
+        updated_avail_chargers[charger] -= 1
 
-            return self._replace(available_chargers=updated_avail_chargers)
+        return self._replace(available_chargers=updated_avail_chargers)
 
     def return_charger(self, charger: Charger) -> Station:
         """
@@ -140,8 +136,7 @@ class Station(NamedTuple):
         chargers = self.available_chargers[charger]
         if (chargers + 1) > self.total_chargers[charger]:
             raise SimulationStateError("Station already has max chargers of this type")
-        else:
-            updated_avail_chargers = self.available_chargers.copy()
-            updated_avail_chargers[charger] += 1
+        updated_avail_chargers = self.available_chargers.copy()
+        updated_avail_chargers[charger] += 1
 
-            return self._replace(available_chargers=updated_avail_chargers)
+        return self._replace(available_chargers=updated_avail_chargers)

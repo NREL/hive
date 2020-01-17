@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Optional
+from copy import copy
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
 from hive.util.exception import StateOfChargeError
 from hive.util.units import Kw, KwH, Ratio
-
-from copy import copy
 
 
 class EnergySource(NamedTuple):

@@ -32,13 +32,12 @@ class Charger(Enum):
         :return: the named charger, or None if name wasn't valid
         """
         s_lower = s.lower()
-        if s_lower in _charger_types:
-            return _charger_types[s_lower]
-        else:
-            return None
+        if s_lower in _CHARGER_TYPES:
+            return _CHARGER_TYPES[s_lower]
+        return None
 
 
-_charger_types = {
+_CHARGER_TYPES = {
     "level_1": Charger.LEVEL_1,
     "level_2": Charger.LEVEL_2,
     "dcfc": Charger.DCFC

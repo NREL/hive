@@ -56,26 +56,25 @@ class Base(NamedTuple):
             raise IOError("cannot load a base without an 'lon' value")
         elif 'stall_count' not in row:
             raise IOError("cannot load a base without a 'stall_count' value")
-        else:
-            base_id = row['base_id']
-            try:
-                lat, lon = float(row['lat']), float(row['lon'])
-                geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
-                stall_count = int(row['stall_count'])
+        base_id = row['base_id']
+        try:
+            lat, lon = float(row['lat']), float(row['lon'])
+            geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
+            stall_count = int(row['stall_count'])
 
-                # allow user to leave station_id blank or use the word "none" to signify no station at base
-                station_id_name = row['station_id'] if len(row['station_id']) > 0 else "none"
-                station_id = None if station_id_name.lower() == "none" else station_id_name
+            # allow user to leave station_id blank or use the word "none" to signify no station at base
+            station_id_name = row['station_id'] if len(row['station_id']) > 0 else "none"
+            station_id = None if station_id_name.lower() == "none" else station_id_name
 
-                return Base.build(
-                    id=base_id,
-                    geoid=geoid,
-                    station_id=station_id,
-                    stall_count=stall_count
-                )
+            return Base.build(
+                id=base_id,
+                geoid=geoid,
+                station_id=station_id,
+                stall_count=stall_count
+            )
 
-            except ValueError:
-                raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
+        except ValueError:
+            raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
     def has_available_stall(self) -> bool:
         """
@@ -83,10 +82,7 @@ class Base(NamedTuple):
 
         :return: Boolean
         """
-        if self.available_stalls > 0:
-            return True
-        else:
-            return False
+        return bool(self.available_stalls > 0)
 
     def checkout_stall(self) -> Optional[Base]:
         """
@@ -97,8 +93,7 @@ class Base(NamedTuple):
         stalls = self.available_stalls
         if stalls < 1:
             return None
-        else:
-            return self._replace(available_stalls=stalls - 1)
+        return self._replace(available_stalls=stalls - 1)
 
     def return_stall(self) -> Base:
         """
@@ -109,5 +104,4 @@ class Base(NamedTuple):
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
             raise SimulationStateError('Base already has maximum sta')
-        else:
-            return self._replace(available_stalls=stalls + 1)
+        return self._replace(available_stalls=stalls + 1)
