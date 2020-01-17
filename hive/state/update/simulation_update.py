@@ -20,5 +20,4 @@ class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
         :return: the updated sim state, along with any reporting;
         as well, an Optionally-updated SimulationUpdate function
         """
-        pass
 

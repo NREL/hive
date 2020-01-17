@@ -26,7 +26,6 @@ class Powercurve(ABC):
 
         :return: PowercurveId
         """
-        pass
 
     @abstractmethod
     def get_energy_type(self) -> EnergyType:
@@ -35,7 +34,6 @@ class Powercurve(ABC):
 
         :return: an energy type
         """
-        pass
 
     @abstractmethod
     def refuel(self,
@@ -51,5 +49,4 @@ class Powercurve(ABC):
         :param duration_seconds: the amount of time to charge for
         :return: energy rate in KwH for charging with the current state of the EnergySource
         """
-        pass
 

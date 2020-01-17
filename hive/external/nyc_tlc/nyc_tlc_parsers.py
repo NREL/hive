@@ -40,7 +40,7 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
         cancel_time = min(departure_time + cancel_time, 86399)  # 11:59:59
 
         # agent id
-        id = f"{id_number}#{date_time.date()}" if use_date_in_request_id else id_number
+        agent_id = f"{id_number}#{date_time.date()}" if use_date_in_request_id else id_number
 
         # locations
         o_lat, o_lon = float(row['pickup_latitude']), float(row['pickup_longitude'])
@@ -52,7 +52,7 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
         passengers = int(row['passengers']) if 'passengers' in row else default_passengers
 
         return Request.build(
-            request_id=id,
+            request_id=agent_id,
             origin=origin,
             destination=destination,
             departure_time=departure_time,

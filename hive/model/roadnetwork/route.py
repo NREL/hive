@@ -17,7 +17,7 @@ def route_distance_km(route: Route) -> km:
     :rtype: :py:obj:`kilometers`
     :return: the distance in kilometers
     """
-    distance_km = 0 
+    distance_km = 0
     for pl in route:
         distance_km += pl.distance_km
 

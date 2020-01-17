@@ -20,7 +20,6 @@ class Powertrain(ABC):
 
         :return: the powertrain id
         """
-        pass
 
     @abstractmethod
     def get_energy_type(self) -> EnergyType:
@@ -29,7 +28,6 @@ class Powertrain(ABC):
 
         :return: an energy type
         """
-        pass
 
     @abstractmethod
     def energy_cost(self, route: Route) -> kwh:
@@ -39,5 +37,4 @@ class Powertrain(ABC):
         :param route: a route, either experienced, or, estimated
         :return: energy cost of this route
         """
-        pass
 

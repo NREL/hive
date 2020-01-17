@@ -19,5 +19,4 @@ class EnergyType(Enum):
         }
         if s in values.keys():
             return values[s]
-        else:
-            return None
+        return None

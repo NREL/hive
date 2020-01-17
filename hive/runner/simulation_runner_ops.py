@@ -8,7 +8,10 @@ from hive.state import simulation_state_ops
 from hive.state.simulation_state import SimulationState
 
 
-def step(simulation_state: SimulationState, dispatcher: DispatcherInterface) -> Tuple[SimulationState, DispatcherInterface, Tuple[Instruction, ...]]:
+def step(
+        simulation_state: SimulationState,
+        dispatcher: DispatcherInterface
+) -> Tuple[SimulationState, DispatcherInterface, Tuple[Instruction, ...]]:
     """
     Steps the simulation by one time step.
 

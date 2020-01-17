@@ -37,16 +37,14 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
             invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
             return acc.add_report(invalid_cancel_time)
-        else:
-            sim_updated = acc.simulation_state.add_request(req)
-            if isinstance(sim_updated, Exception):
-                # simulation failed to add this request
-                sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
-                return acc.add_report(sim_failure)
-            else:
-                # successfully added request
-                sim_success = _success_as_json(req.id, sim_updated)
-                return acc.update_sim(sim_updated, sim_success)
+        sim_updated = acc.simulation_state.add_request(req)
+        if isinstance(sim_updated, Exception):
+            # simulation failed to add this request
+            sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
+            return acc.add_report(sim_failure)
+        # successfully added request
+        sim_success = _success_as_json(req.id, sim_updated)
+        return acc.update_sim(sim_updated, sim_success)
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(

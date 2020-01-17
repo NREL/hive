@@ -27,9 +27,8 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         req_path = Path(request_file)
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
-        else:
-            stepper = DictReaderStepper.from_file(request_file, "departure_time")
-            return UpdateRequestsFromFile(stepper)
+        stepper = DictReaderStepper.from_file(request_file, "departure_time")
+        return UpdateRequestsFromFile(stepper)
 
     def update(self,
                sim_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromFile]]:

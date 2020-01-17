@@ -139,7 +139,7 @@ class TerminalStateEffectOps(SwitchCase):
 
         return sim_state
 
-    def _default(self, arguments: Arguments) -> Result:
+    def _default(self, arguments: Arguments) -> SimulationState:
         return arguments.simulation_state
 
     # todo: does having this as a field in the class mean it's constructed each time

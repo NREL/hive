@@ -25,7 +25,6 @@ class RoadNetwork(ABC):
         :param destination: PropertyLink of the destination
         :return: A route.
         """
-        pass
 
     @abstractmethod
     def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
@@ -35,7 +34,6 @@ class RoadNetwork(ABC):
         :param geoid: geoid to map to network
         :return: The nearest property link if it exists.
         """
-        pass
 
     @abstractmethod
     def update(self, sim_time: SimTime) -> RoadNetwork:
@@ -45,7 +43,6 @@ class RoadNetwork(ABC):
         :param sim_time: the current simulation time
         :return: an updated RoadNetwork
         """
-        pass
 
     @abstractmethod
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
@@ -55,7 +52,6 @@ class RoadNetwork(ABC):
         :param link_id: a link id
         :return: a Link, or None if LinkId does not exist
         """
-        pass
 
     @abstractmethod
     def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
@@ -65,7 +61,6 @@ class RoadNetwork(ABC):
         :param property_link: a property link
         :return: a Property Link, or None if LinkId does not exist
         """
-        pass
 
     @abstractmethod
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
@@ -75,7 +70,6 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
-        pass
 
     @abstractmethod
     def link_id_within_geofence(self, link_id: LinkId) -> bool:
@@ -85,7 +79,6 @@ class RoadNetwork(ABC):
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
-        pass
 
     @abstractmethod
     def geoid_within_simulation(self, geoid: GeoId) -> bool:
@@ -96,7 +89,6 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
-        pass
 
     @abstractmethod
     def link_id_within_simulation(self, link_id: LinkId) -> bool:
@@ -107,4 +99,3 @@ class RoadNetwork(ABC):
         :param link_id: a position on the road network across the entire simulation
         :return: True/False
         """
-        pass

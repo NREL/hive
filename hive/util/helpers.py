@@ -18,21 +18,23 @@ if TYPE_CHECKING:
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
 
+Key = TypeVar('Key')
+"""
+the type used to switch off of
+"""
+
+Arguments = TypeVar('Arguments')
+"""
+the type of the arguments fed to the inner switch clause
+"""
+
+Result = TypeVar('Result')
+"""
+the type returned from the SwitchCase (can be "Any")
+"""
+
+
 class SwitchCase(ABC):
-    Key = TypeVar('Key')
-    """
-    the type used to switch off of
-    """
-
-    Arguments = TypeVar('Arguments')
-    """
-    the type of the arguments fed to the inner switch clause
-    """
-
-    Result = TypeVar('Result')
-    """
-    the type returned from the SwitchCase (can be "Any")
-    """
 
     @abstractmethod
     def _default(self, arguments: Arguments) -> Result:
@@ -42,7 +44,6 @@ class SwitchCase(ABC):
         :param arguments: the arguments to pass in the default case
         :return:
         """
-        pass
 
     case_statement: Dict[Key, Callable[[Arguments], Result]] = {}
 
@@ -86,30 +87,28 @@ class H3Ops:
             if current_k > max_k:
                 # There are no entities in any of the rings.
                 return None
-            else:
-                # get the kth ring
-                ring = h3.k_ring(search_geoid, current_k)
+            # get the kth ring
+            ring = h3.k_ring(search_geoid, current_k)
 
-                # get all entities in this ring
-                found = (entity for cell in ring
-                         for entity in cls.get_entities_at_cell(cell, entity_search, entities))
+            # get all entities in this ring
+            found = (entity for cell in ring
+                     for entity in cls.get_entities_at_cell(cell, entity_search, entities))
 
-                best_dist_km = 1000000
-                best_entity = None
+            best_dist_km = 1000000
+            best_entity = None
 
-                count = 0
-                for entity in found:
-                    dist_km = cls.great_circle_distance(geoid, entity.geoid)
-                    if is_valid(entity) and dist_km < best_dist_km:
-                        best_dist_km = dist_km
-                        best_entity = entity
-                    count += 1
+            count = 0
+            for entity in found:
+                dist_km = cls.great_circle_distance(geoid, entity.geoid)
+                if is_valid(entity) and dist_km < best_dist_km:
+                    best_dist_km = dist_km
+                    best_entity = entity
+                count += 1
 
-                if best_entity is not None:
-                    # print(f"ring search depth {current_k} found {count} agents, best agent at dist {best_dist} km")
-                    return best_entity
-                else:
-                    return _search(current_k + 1)
+            if best_entity is not None:
+                # print(f"ring search depth {current_k} found {count} agents, best agent at dist {best_dist} km")
+                return best_entity
+            return _search(current_k + 1)
 
         return _search()
 
@@ -130,9 +129,8 @@ class H3Ops:
         locations_at_cell = entity_search.get(search_cell)
         if locations_at_cell is None:
             return ()
-        else:
-            return tuple(entities[entity_id]
-                         for entity_id in locations_at_cell)
+        return tuple(entities[entity_id]
+                     for entity_id in locations_at_cell)
 
     @classmethod
     def nearest_entity_point_to_point(cls,
@@ -196,14 +194,13 @@ class H3Ops:
             return property_link.start
         elif (1 - threshold) < ratio_trip_experienced:
             return property_link.end
-        else:
-            # find the point along the line
-            start = h3.h3_to_geo(property_link.start)
-            end = h3.h3_to_geo(property_link.end)
-            res = h3.h3_get_resolution(property_link.start)
-            lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
-            lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
-            return h3.geo_to_h3(lat, lon, res)
+        # find the point along the line
+        start = h3.h3_to_geo(property_link.start)
+        end = h3.h3_to_geo(property_link.end)
+        res = h3.h3_get_resolution(property_link.start)
+        lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
+        lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
+        return h3.geo_to_h3(lat, lon, res)
 
 
 class TupleOps:
@@ -214,36 +211,31 @@ class TupleOps:
         removed = tuple(filter(lambda x: x != value, xs))
         if len(removed) == len(xs):
             return ()
-        else:
-            return removed
+        return removed
 
     @classmethod
     def head(cls, xs: Tuple[T, ...]) -> T:
         if len(xs) == 0:
             raise IndexError("called head on empty Tuple")
-        else:
-            return xs[0]
+        return xs[0]
 
     @classmethod
     def head_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
         if len(xs) == 0:
             return None
-        else:
-            return xs[0]
+        return xs[0]
 
     @classmethod
     def last(cls, xs: Tuple[T, ...]) -> T:
         if len(xs) == 0:
             raise IndexError("called last on empty Tuple")
-        else:
-            return xs[-1]
+        return xs[-1]
 
     @classmethod
     def last_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
         if len(xs) == 0:
             return None
-        else:
-            return xs[-1]
+        return xs[-1]
 
     @classmethod
     def head_tail(cls, tup: Tuple[T, ...]):
@@ -251,8 +243,13 @@ class TupleOps:
             raise IndexError("called head_tail on empty Tuple")
         elif len(tup) == 1:
             return tup[0], ()
-        else:
-            return tup[0], tup[1:]
+        return tup[0], tup[1:]
+
+
+class EntityUpdateResult(NamedTuple):
+    entities: Optional[Dict] = None
+    locations: Optional[Dict] = None
+    search: Optional[Dict] = None
 
 
 class DictOps:
@@ -333,11 +330,6 @@ class DictOps:
             updated_dict[obj_geoid] = updated_ids
         return updated_dict
 
-    class EntityUpdateResult(NamedTuple):
-        entities: Optional[Dict] = None
-        locations: Optional[Dict] = None
-        search: Optional[Dict] = None
-
     @classmethod
     def update_entity_dictionaries(cls,
                                    updated_entity: V,
@@ -358,38 +350,37 @@ class DictOps:
         entities_updated = DictOps.add_to_dict(entities, updated_entity.id, updated_entity)
 
         if old_entity.geoid == updated_entity.geoid:
-            return cls.EntityUpdateResult(
+            return EntityUpdateResult(
                 entities=entities_updated
             )
-        else:
-            # unset from old geoid add add to new one
-            locations_removed = DictOps.remove_from_location_dict(locations,
-                                                                  old_entity.geoid,
-                                                                  old_entity.id)
-            locations_updated = DictOps.add_to_location_dict(locations_removed,
-                                                             updated_entity.geoid,
-                                                             updated_entity.id)
+        # unset from old geoid add add to new one
+        locations_removed = DictOps.remove_from_location_dict(locations,
+                                                              old_entity.geoid,
+                                                              old_entity.id)
+        locations_updated = DictOps.add_to_location_dict(locations_removed,
+                                                         updated_entity.geoid,
+                                                         updated_entity.id)
 
-            old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
-            updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
+        old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
+        updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
 
-            if old_search_geoid == updated_search_geoid:
-                # no update to search location
-                return cls.EntityUpdateResult(
-                    entities=entities_updated,
-                    locations=locations_updated
-                )
-            else:
-                # update request search dict location
-                search_removed = DictOps.remove_from_location_dict(search,
-                                                                   old_search_geoid,
-                                                                   old_entity.id)
-                search_updated = DictOps.add_to_location_dict(search_removed,
-                                                              updated_search_geoid,
-                                                              updated_entity.id)
+        if old_search_geoid == updated_search_geoid:
+            # no update to search location
+            return EntityUpdateResult(
+                entities=entities_updated,
+                locations=locations_updated
+            )
 
-                return cls.EntityUpdateResult(
-                    entities=entities_updated,
-                    locations=locations_updated,
-                    search=search_updated
-                )
+        # update request search dict location
+        search_removed = DictOps.remove_from_location_dict(search,
+                                                           old_search_geoid,
+                                                           old_entity.id)
+        search_updated = DictOps.add_to_location_dict(search_removed,
+                                                      updated_search_geoid,
+                                                      updated_entity.id)
+
+        return EntityUpdateResult(
+            entities=entities_updated,
+            locations=locations_updated,
+            search=search_updated
+        )

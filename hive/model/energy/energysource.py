@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Optional
+from copy import copy
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
 from hive.util.exception import StateOfChargeError
 from hive.util.units import kw, kwh, Ratio
-
-from copy import copy
 
 
 class EnergySource(NamedTuple):
@@ -35,7 +34,7 @@ class EnergySource(NamedTuple):
     capacity_kwh: kwh
     energy_kwh: kwh
     max_charge_acceptance_kw: kw
-    charge_threshold_kwh: kwh = 0.001  # kilowatthour 
+    charge_threshold_kwh: kwh = 0.001  # kilowatthour
 
     @classmethod
     def build(cls,

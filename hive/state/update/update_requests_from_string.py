@@ -31,17 +31,17 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
         )
 
     def update(self,
-               initial_sim_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromString]]:
+               simulation_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromString]]:
         """
         add requests from file when the simulation reaches the request's time
 
-        :param initial_sim_state: the current sim state
+        :param simulation_state: the current sim state
         :return: sim state plus new requests
         """
         subset = [self.header, ] + self.requests[self.row_position:]
         reader = DictReader(subset)
-        it = RequestStringIterator(reader, initial_sim_state.current_time, self.row_position)
-        sim_updated = update_requests_from_iterator(it, initial_sim_state)
+        it = RequestStringIterator(reader, simulation_state.current_time, self.row_position)
+        sim_updated = update_requests_from_iterator(it, simulation_state)
 
         next_update = self._replace(row_position=it.row_position)
 
@@ -68,6 +68,5 @@ class RequestStringIterator:
         row_time = int(row['departure_time'])
         if row_time > self.sim_time:
             raise StopIteration
-        else:
-            self.row_position = self.row_position + 1
-            return row
+        self.row_position = self.row_position + 1
+        return row

@@ -103,10 +103,10 @@ def sample_vehicles_in_geofence(num: int,
                     'lon': lon,
                     'powertrain_id': powertrain_id,
                     'powercurve_id': powercurve_id,
-                    'capacity': capacity.magnitude,
+                    'capacity': capacity,
                     'initial_soc': initial_soc,
-                    'ideal_energy_limit': ideal_energy_limit.magnitude,
-                    'max_charge_acceptance': max_charge_acceptance_kw.magnitude
+                    'ideal_energy_limit': ideal_energy_limit,
+                    'max_charge_acceptance': max_charge_acceptance_kw
                 }
 
                 writer.writerow(row)
