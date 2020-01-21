@@ -6,7 +6,11 @@ from copy import copy
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
 from hive.util.exception import StateOfChargeError
+<<<<<<< HEAD
 from hive.util.units import Kw, KwH, Ratio
+=======
+from hive.util.units import kw, kwh, Ratio
+>>>>>>> a7571bd842b9398a1710f24ba26a31a212a562a3
 
 
 class EnergySource(NamedTuple):
