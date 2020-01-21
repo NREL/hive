@@ -414,7 +414,8 @@ def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: 
         def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
             if link_id in self.property_links:
                 return self.property_links[link_id]
-            return None
+            else:
+                return None
 
         def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
             link_id = property_link.link.link_id
@@ -422,7 +423,8 @@ def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: 
                 current_property_link = self.property_links[link_id]
                 updated_property_link = property_link.update_speed(current_property_link.speed_kmph)
                 return updated_property_link
-            return None
+            else:
+                return None
 
         def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
             pass

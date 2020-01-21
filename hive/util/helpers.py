@@ -87,28 +87,30 @@ class H3Ops:
             if current_k > max_k:
                 # There are no entities in any of the rings.
                 return None
-            # get the kth ring
-            ring = h3.k_ring(search_geoid, current_k)
+            else:
+                # get the kth ring
+                ring = h3.k_ring(search_geoid, current_k)
 
-            # get all entities in this ring
-            found = (entity for cell in ring
-                     for entity in cls.get_entities_at_cell(cell, entity_search, entities))
+                # get all entities in this ring
+                found = (entity for cell in ring
+                         for entity in cls.get_entities_at_cell(cell, entity_search, entities))
 
-            best_dist_km = 1000000
-            best_entity = None
+                best_dist_km = 1000000
+                best_entity = None
 
-            count = 0
-            for entity in found:
-                dist_km = cls.great_circle_distance(geoid, entity.geoid)
-                if is_valid(entity) and dist_km < best_dist_km:
-                    best_dist_km = dist_km
-                    best_entity = entity
-                count += 1
+                count = 0
+                for entity in found:
+                    dist_km = cls.great_circle_distance(geoid, entity.geoid)
+                    if is_valid(entity) and dist_km < best_dist_km:
+                        best_dist_km = dist_km
+                        best_entity = entity
+                    count += 1
 
-            if best_entity is not None:
-                # print(f"ring search depth {current_k} found {count} agents, best agent at dist {best_dist} km")
-                return best_entity
-            return _search(current_k + 1)
+                if best_entity is not None:
+                    # print(f"ring search depth {current_k} found {count} agents, best agent at dist {best_dist} km")
+                    return best_entity
+                else:
+                    return _search(current_k + 1)
 
         return _search()
 
@@ -129,8 +131,9 @@ class H3Ops:
         locations_at_cell = entity_search.get(search_cell)
         if locations_at_cell is None:
             return ()
-        return tuple(entities[entity_id]
-                     for entity_id in locations_at_cell)
+        else:
+            return tuple(entities[entity_id]
+                         for entity_id in locations_at_cell)
 
     @classmethod
     def nearest_entity_point_to_point(cls,
@@ -194,13 +197,14 @@ class H3Ops:
             return property_link.start
         elif (1 - threshold) < ratio_trip_experienced:
             return property_link.end
-        # find the point along the line
-        start = h3.h3_to_geo(property_link.start)
-        end = h3.h3_to_geo(property_link.end)
-        res = h3.h3_get_resolution(property_link.start)
-        lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
-        lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
-        return h3.geo_to_h3(lat, lon, res)
+        else:
+            # find the point along the line
+            start = h3.h3_to_geo(property_link.start)
+            end = h3.h3_to_geo(property_link.end)
+            res = h3.h3_get_resolution(property_link.start)
+            lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
+            lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
+            return h3.geo_to_h3(lat, lon, res)
 
 
 class TupleOps:
@@ -211,7 +215,8 @@ class TupleOps:
         removed = tuple(filter(lambda x: x != value, xs))
         if len(removed) == len(xs):
             return ()
-        return removed
+        else:
+            return removed
 
     @classmethod
     def head(cls, xs: Tuple[T, ...]) -> T:
@@ -223,19 +228,22 @@ class TupleOps:
     def head_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
         if len(xs) == 0:
             return None
-        return xs[0]
+        else:
+            return xs[0]
 
     @classmethod
     def last(cls, xs: Tuple[T, ...]) -> T:
         if len(xs) == 0:
             raise IndexError("called last on empty Tuple")
-        return xs[-1]
+        else:
+            return xs[-1]
 
     @classmethod
     def last_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:
         if len(xs) == 0:
             return None
-        return xs[-1]
+        else:
+            return xs[-1]
 
     @classmethod
     def head_tail(cls, tup: Tuple[T, ...]):
@@ -243,7 +251,8 @@ class TupleOps:
             raise IndexError("called head_tail on empty Tuple")
         elif len(tup) == 1:
             return tup[0], ()
-        return tup[0], tup[1:]
+        else:
+            return tup[0], tup[1:]
 
 
 class EntityUpdateResult(NamedTuple):

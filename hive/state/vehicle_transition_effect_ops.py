@@ -88,18 +88,19 @@ class VehicleTransitionEffectOps(SwitchCase):
             return None
         elif station_id not in sim_state.stations:
             return None
+        else:
 
-        station = sim_state.stations[station_id]
+            station = sim_state.stations[station_id]
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(station.geoid)
-        route = sim_state.road_network.route(start, end)
+            start = vehicle.property_link
+            end = sim_state.road_network.property_link_from_geoid(station.geoid)
+            route = sim_state.road_network.route(start, end)
 
-        vehicle_w_route = vehicle.assign_route(route).set_charge_intent(station_id, charger)
+            vehicle_w_route = vehicle.assign_route(route).set_charge_intent(station_id, charger)
 
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
+            updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
 
-        return updated_sim_state
+            return updated_sim_state
 
     def _case_dispatch_base(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
@@ -109,18 +110,19 @@ class VehicleTransitionEffectOps(SwitchCase):
         # todo: confirm destination is a base?
         if not vehicle:
             return None
-        if not destination:
+        elif not destination:
             return None
+        else:
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(destination)
-        route = sim_state.road_network.route(start, end)
+            start = vehicle.property_link
+            end = sim_state.road_network.property_link_from_geoid(destination)
+            route = sim_state.road_network.route(start, end)
 
-        vehicle_w_route = vehicle.assign_route(route)
+            vehicle_w_route = vehicle.assign_route(route)
 
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
+            updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
 
-        return updated_sim_state
+            return updated_sim_state
 
     def _case_repositioning(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state
@@ -131,16 +133,17 @@ class VehicleTransitionEffectOps(SwitchCase):
             return None
         elif not destination:
             return None
+        else:
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(destination)
-        route = sim_state.road_network.route(start, end)
+            start = vehicle.property_link
+            end = sim_state.road_network.property_link_from_geoid(destination)
+            route = sim_state.road_network.route(start, end)
 
-        vehicle_w_route = vehicle.assign_route(route)
+            vehicle_w_route = vehicle.assign_route(route)
 
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
+            updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
 
-        return updated_sim_state
+            return updated_sim_state
 
     def _case_reserve_base(self, payload: VehicleTransitionEffectArgs) -> Optional[SimulationState]:
         sim_state = payload.simulation_state

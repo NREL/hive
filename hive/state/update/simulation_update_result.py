@@ -39,6 +39,7 @@ class SimulationUpdateResult(NamedTuple):
                 simulation_state=sim,
                 reports=(report,) + self.reports
             )
-        return self._replace(
-            simulation_state=sim
-        )
+        else:
+            return self._replace(
+                simulation_state=sim
+            )

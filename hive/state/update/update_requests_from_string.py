@@ -68,5 +68,6 @@ class RequestStringIterator:
         row_time = int(row['departure_time'])
         if row_time > self.sim_time:
             raise StopIteration
-        self.row_position = self.row_position + 1
-        return row
+        else:
+            self.row_position = self.row_position + 1
+            return row

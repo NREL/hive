@@ -80,13 +80,13 @@ class PropertyLink(NamedTuple):
         if self.link_id is not updated_link.link_id:
             return AttributeError(
                 f"mismatch: attempting to update PropertyLink {self.link_id} with Link {updated_link.link_id}")
-
-        dist_km = link_distance_km(updated_link)
-        tt_hours = dist_km / self.speed_kmph
-        tt_seconds = hours_to_seconds(tt_hours)
-        return self._replace(
-            link=updated_link,
-            distance_km=dist_km,
-            travel_time_seconds=tt_seconds,
-        )
+        else:
+            dist_km = link_distance_km(updated_link)
+            tt_hours = dist_km / self.speed_kmph
+            tt_seconds = hours_to_seconds(tt_hours)
+            return self._replace(
+                link=updated_link,
+                distance_km=dist_km,
+                travel_time_seconds=tt_seconds,
+            )
 

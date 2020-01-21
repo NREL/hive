@@ -34,7 +34,8 @@ class Charger(Enum):
         s_lower = s.lower()
         if s_lower in _CHARGER_TYPES:
             return _CHARGER_TYPES[s_lower]
-        return None
+        else:
+            return None
 
 
 _CHARGER_TYPES = {

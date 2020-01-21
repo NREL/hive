@@ -33,16 +33,18 @@ class DictReaderIterator:
                 tmp = self.history
                 self.history = None
                 return tmp
-            # stored value is not in range
-            raise StopIteration
+            else:
+                # stored value is not in range
+                raise StopIteration
         else:
             row = next(self.reader)
             if float(row[self.step_column_name]) < self.stop_value:
                 # value is within range
                 return row
-            # set aside row for the future, end iteration
-            self.history = row
-            raise StopIteration
+            else:
+                # set aside row for the future, end iteration
+                self.history = row
+                raise StopIteration
 
 
 class DictReaderStepper:

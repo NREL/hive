@@ -53,7 +53,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
     def generate_instructions(self,
                               simulation_state: SimulationState,
                               ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
-        # TODO: alot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
+        # TODO: a lot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
         #  too large. Should probably refactor.
         instructions = []
         vehicle_ids_given_instructions = []
@@ -87,10 +87,10 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = [VehicleState.IDLE,
+            _valid_states = (VehicleState.IDLE,
                              VehicleState.CHARGING_BASE,
                              VehicleState.RESERVE_BASE,
-                             VehicleState.DISPATCH_BASE]
+                             VehicleState.DISPATCH_BASE)
             return bool(vehicle.id not in vehicle_ids_given_instructions and
                         vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
                         vehicle.vehicle_state in _valid_states)
@@ -161,7 +161,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
             return bool(vehicle.vehicle_state == VehicleState.RESERVE_BASE and not
-            vehicle.energy_source.is_at_ideal_energy_limit())
+                        vehicle.energy_source.is_at_ideal_energy_limit())
 
         # 4. charge vehicles sitting at base
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if

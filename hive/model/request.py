@@ -89,25 +89,26 @@ class Request(NamedTuple):
             return IOError("cannot load a request without a 'cancel_time'")
         elif 'passengers' not in row:
             return IOError("cannot load a request without a number of 'passengers'")
-        request_id = row['request_id']
-        try:
-            o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
-            d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
-            o_geoid = h3.geo_to_h3(o_lat, o_lon, road_network.sim_h3_resolution)
-            d_geoid = h3.geo_to_h3(d_lat, d_lon, road_network.sim_h3_resolution)
-            departure_time = int(row['departure_time'])
-            cancel_time = int(row['cancel_time'])
-            passengers = int(row['passengers'])
-            return Request.build(
-                request_id=request_id,
-                origin=o_geoid,
-                destination=d_geoid,
-                departure_time=departure_time,
-                cancel_time=cancel_time,
-                passengers=passengers
-            )
-        except ValueError:
-            return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
+        else:
+            request_id = row['request_id']
+            try:
+                o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
+                d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
+                o_geoid = h3.geo_to_h3(o_lat, o_lon, road_network.sim_h3_resolution)
+                d_geoid = h3.geo_to_h3(d_lat, d_lon, road_network.sim_h3_resolution)
+                departure_time = int(row['departure_time'])
+                cancel_time = int(row['cancel_time'])
+                passengers = int(row['passengers'])
+                return Request.build(
+                    request_id=request_id,
+                    origin=o_geoid,
+                    destination=d_geoid,
+                    departure_time=departure_time,
+                    cancel_time=cancel_time,
+                    passengers=passengers
+                )
+            except ValueError:
+                return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
 
     @property
     def geoid(self):

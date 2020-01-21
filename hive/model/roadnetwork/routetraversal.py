@@ -120,4 +120,5 @@ def traverse(route_estimate: Route,
 
         if error is not None:
             return error
-        return traversal_result
+        else:
+            return traversal_result

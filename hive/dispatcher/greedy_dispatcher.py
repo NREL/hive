@@ -54,10 +54,10 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = [VehicleState.IDLE,
+            _valid_states = (VehicleState.IDLE,
                              VehicleState.CHARGING_BASE,
                              VehicleState.RESERVE_BASE,
-                             VehicleState.DISPATCH_BASE]
+                             VehicleState.DISPATCH_BASE)
             return bool(vehicle.id not in vehicle_ids_given_instructions and
                         vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
                         vehicle.vehicle_state in _valid_states)
