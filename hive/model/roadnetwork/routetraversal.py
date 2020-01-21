@@ -11,7 +11,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
-from hive.util.units import km, seconds
+from hive.util.units import Kilometers, Seconds
 
 
 class RouteTraversal(NamedTuple):
@@ -27,8 +27,8 @@ class RouteTraversal(NamedTuple):
     :param remaining_route: The route that remains after a traversal.
     :type remaining_route: :py:obj:`Route`
     """
-    remaining_time_seconds: seconds = 0
-    traversal_distance_km: km = 0
+    remaining_time_seconds: Seconds = 0
+    traversal_distance_km: Kilometers = 0
     experienced_route: Route = ()
     remaining_route: Route = ()
 
@@ -78,7 +78,7 @@ class RouteTraversal(NamedTuple):
 
 def traverse(route_estimate: Route,
              road_network: RoadNetwork,
-             duration_seconds: seconds) -> Optional[Union[Exception, RouteTraversal]]:
+             duration_seconds: Seconds) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 

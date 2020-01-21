@@ -1,23 +1,23 @@
 # Energy
-kwh = float  # kilowatt-hours
+KwH = float  # kilowatt-hours
 J = float  # joules
 
 # Power
-kw = float  # kilowatt
+Kw = float  # kilowatt
 
 # Distance
-m = float  # meters
-km = float  # kilometers
-ft = float  # feet
-mi = float  # miles
+Meters = float  # meters
+Kilometers = float  # kilometers
+Feet = float  # feet
+Miles = float  # miles
 
 # Speed
-mph = float  # miles per hour
-kmph = float  # kilometers per hour
+Mph = float  # miles per hour
+Kmph = float  # kilometers per hour
 
 # Time
-seconds = int  # seconds
-hours = float  # hours
+Seconds = int  # seconds
+Hours = float  # hours
 
 # Dimensionless
 Percentage = float  # between 0-100
@@ -28,7 +28,7 @@ Ratio = float  # between 0-1
 HOURS_TO_SECONDS = 3600
 
 
-def hours_to_seconds(hours: hours) -> seconds:
+def hours_to_seconds(hours: Hours) -> Seconds:
     seconds = hours * HOURS_TO_SECONDS
     return int(seconds)
 

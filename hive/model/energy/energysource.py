@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
 from hive.util.exception import StateOfChargeError
-from hive.util.units import kw, kwh, Ratio
+from hive.util.units import Kw, KwH, Ratio
 
 from copy import copy
 
@@ -31,19 +31,19 @@ class EnergySource(NamedTuple):
     """
     powercurve_id: PowercurveId
     energy_type: EnergyType
-    ideal_energy_limit_kwh: kwh
-    capacity_kwh: kwh
-    energy_kwh: kwh
-    max_charge_acceptance_kw: kw
-    charge_threshold_kwh: kwh = 0.001  # kilowatthour 
+    ideal_energy_limit_kwh: KwH
+    capacity_kwh: KwH
+    energy_kwh: KwH
+    max_charge_acceptance_kw: Kw
+    charge_threshold_kwh: KwH = 0.001  # kilowatthour
 
     @classmethod
     def build(cls,
               powercurve_id: PowercurveId,
               energy_type: EnergyType,
-              capacity_kwh: kwh,
-              ideal_energy_limit_kwh: Optional[kwh] = None,
-              max_charge_acceptance_kw: kw = 50,  # kilowatt
+              capacity_kwh: KwH,
+              ideal_energy_limit_kwh: Optional[KwH] = None,
+              max_charge_acceptance_kw: Kw = 50,  # kilowatt
               soc: Ratio = 1.0,
               ) -> EnergySource:
         """
@@ -117,7 +117,7 @@ class EnergySource(NamedTuple):
         """
         return self.energy_kwh <= 0.0
 
-    def use_energy(self, fuel_used: kwh) -> EnergySource:
+    def use_energy(self, fuel_used: KwH) -> EnergySource:
         """
         Uses energy and returns the updated energy source
 
@@ -129,7 +129,7 @@ class EnergySource(NamedTuple):
         assert updated_energy >= 0.0, StateOfChargeError("Battery fell below 0% SoC")
         return self._replace(energy_kwh=updated_energy)
 
-    def load_energy(self, fuel_gained_kwh: kwh) -> EnergySource:
+    def load_energy(self, fuel_gained_kwh: KwH) -> EnergySource:
         """
         adds energy up to the EnergySource's capacity
 

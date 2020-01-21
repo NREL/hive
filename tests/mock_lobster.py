@@ -30,7 +30,7 @@ from hive.state.simulation_state import SimulationState
 from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
-from hive.util.units import kwh, kw, Ratio, kmph, seconds, SECONDS_TO_HOURS
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS
 
 
 class DefaultIds:
@@ -67,9 +67,9 @@ def mock_network(h3_res: int = 15) -> RoadNetwork:
 def mock_energy_source(
         powercurve_id: PowercurveId = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity_kwh: kwh = 100,
-        max_charge_acceptance_kw: kw = 50.0,
-        ideal_energy_limit_kwh: kwh = 50.0,
+        capacity_kwh: KwH = 100,
+        max_charge_acceptance_kw: Kw = 50.0,
+        ideal_energy_limit_kwh: KwH = 50.0,
         soc: Ratio = 0.25,
 ) -> EnergySource:
     return EnergySource.build(
@@ -174,10 +174,10 @@ def mock_vehicle(
         powertrain_id: str = DefaultIds.mock_powertrain_id(),
         powercurve_id: str = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity_kwh: kwh = 100,
+        capacity_kwh: KwH = 100,
         soc: Ratio = 0.25,
         ideal_energy_limit_kwh=50.0,
-        max_charge_acceptance_kw: kw = 50.0,
+        max_charge_acceptance_kw: Kw = 50.0,
 
 ) -> Vehicle:
     road_network = mock_network(h3_res)
@@ -206,10 +206,10 @@ def mock_vehicle_from_geoid(
         powertrain_id: str = DefaultIds.mock_powertrain_id(),
         powercurve_id: str = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity_kwh: kwh = 100,
+        capacity_kwh: KwH = 100,
         soc: Ratio = 0.25,
         ideal_energy_limit_kwh=50.0,
-        max_charge_acceptance_kw: kw = 50.0,
+        max_charge_acceptance_kw: Kw = 50.0,
         road_network: RoadNetwork = mock_network(h3_res=15)
 ) -> Vehicle:
     energy_source = mock_energy_source(
@@ -234,7 +234,7 @@ def mock_vehicle_from_geoid(
 def mock_powertrain(
         powertrain_id: PowertrainId = DefaultIds.mock_powertrain_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
-        energy_cost_kwh: kwh = 0.01
+        energy_cost_kwh: KwH = 0.01
 ) -> Powertrain:
     class MockPowertrain(Powertrain):
         def get_id(self) -> PowertrainId:
@@ -243,7 +243,7 @@ def mock_powertrain(
         def get_energy_type(self) -> EnergyType:
             return energy_type
 
-        def energy_cost(self, route: Route) -> kwh:
+        def energy_cost(self, route: Route) -> KwH:
             return energy_cost_kwh
 
     return MockPowertrain()
@@ -261,7 +261,7 @@ def mock_powercurve(
             return energy_type
 
         def refuel(self, energy_source: EnergySource, charger: Charger,
-                   duration_seconds: seconds = 1) -> EnergySource:
+                   duration_seconds: Seconds = 1) -> EnergySource:
             added_kwh = charger.power_kw * (duration_seconds * SECONDS_TO_HOURS)
             updated_energy_source = energy_source.load_energy(added_kwh)
             return updated_energy_source
@@ -271,7 +271,7 @@ def mock_powercurve(
 
 def mock_sim(
         sim_time: SimTime = 0,
-        sim_timestep_duration_seconds: seconds = 60,
+        sim_timestep_duration_seconds: Seconds = 60,
         h3_location_res: int = 15,
         h3_search_res: int = 10,
         vehicles: Tuple[Vehicle, ...] = (),
@@ -300,7 +300,7 @@ def mock_sim(
 def mock_config(
         start_time: SimTime = 0,
         end_time: SimTime = 100,
-        timestep_duration_seconds: seconds = 1,
+        timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9
 ) -> HiveConfig:
@@ -333,7 +333,7 @@ def mock_haversine_zigzag_route(
         n: int = 3,
         lat_step_size: int = 5,
         lon_step_size: int = 5,
-        speed_kmph: kmph = 40,
+        speed_kmph: Kmph = 40,
         h3_res: int = 15
 ) -> Route:
     """
@@ -362,7 +362,7 @@ def mock_haversine_zigzag_route(
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_graph_links(h3_res: int = 15, speed_kmph: kmph = 1) -> Dict[str, PropertyLink]:
+def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, PropertyLink]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
     """
@@ -388,7 +388,7 @@ def mock_graph_links(h3_res: int = 15, speed_kmph: kmph = 1) -> Dict[str, Proper
     return property_links
 
 
-def mock_route(h3_res: int = 15, speed_kmph: kmph = 1) -> Tuple[PropertyLink, ...]:
+def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[PropertyLink, ...]:
     return tuple(mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values())
 
 

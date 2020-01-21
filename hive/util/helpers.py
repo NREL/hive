@@ -10,7 +10,7 @@ from h3 import h3
 
 from hive.util.exception import H3Error
 from hive.util.typealiases import *
-from hive.util.units import km, seconds, SECONDS_TO_HOURS
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.property_link import PropertyLink
@@ -59,7 +59,7 @@ class H3Ops:
                        entity_search: Dict[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_distance_km: km = 10  # kilometers
+                       max_distance_km: Kilometers = 10  # kilometers
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
@@ -166,7 +166,7 @@ class H3Ops:
         return best_e
 
     @classmethod
-    def great_circle_distance(cls, a: GeoId, b: GeoId) -> km:
+    def great_circle_distance(cls, a: GeoId, b: GeoId) -> Kilometers:
         """
         computes the distance between two geoids
 
@@ -180,7 +180,7 @@ class H3Ops:
         return distance_km
 
     @classmethod
-    def point_along_link(cls, property_link: PropertyLink, available_time_seconds: seconds) -> GeoId:
+    def point_along_link(cls, property_link: PropertyLink, available_time_seconds: Seconds) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 

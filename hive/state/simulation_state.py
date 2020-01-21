@@ -22,7 +22,7 @@ from hive.state.vehicle_transition_effect_ops import VehicleTransitionEffectOps,
 from hive.util.exception import *
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
-from hive.util.units import seconds
+from hive.util.units import Seconds
 
 
 class SimulationState(NamedTuple):
@@ -37,7 +37,7 @@ class SimulationState(NamedTuple):
 
     # simulation parameters
     initial_sim_time: SimTime
-    sim_timestep_duration_seconds: seconds
+    sim_timestep_duration_seconds: Seconds
     sim_h3_location_resolution: int
     sim_h3_search_resolution: int
     sim_step: SimStep = 0

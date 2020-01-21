@@ -13,7 +13,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.units import km, seconds, SECONDS_TO_HOURS
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
@@ -72,8 +72,8 @@ class Vehicle(NamedTuple):
     station: Optional[StationId] = None
     plugged_in_charger: Optional[Charger] = None
 
-    idle_time_seconds: seconds = 0
-    distance_traveled_km: km = 0.0
+    idle_time_seconds: Seconds = 0
+    distance_traveled_km: Kilometers = 0.0
 
     @property
     def geoid(self):
@@ -220,7 +220,7 @@ class Vehicle(NamedTuple):
 
     def charge(self,
                powercurve: Powercurve,
-               duration_seconds: seconds) -> Vehicle:
+               duration_seconds: Seconds) -> Vehicle:
 
         """
         applies a charge event to a vehicle
@@ -240,7 +240,7 @@ class Vehicle(NamedTuple):
             updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration_seconds)
             return self._replace(energy_source=updated_energy_source)
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: seconds) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: Seconds) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
 
@@ -291,7 +291,7 @@ class Vehicle(NamedTuple):
 
         return updated_location_vehicle
 
-    def idle(self, time_step_seconds: seconds) -> Vehicle:
+    def idle(self, time_step_seconds: Seconds) -> Vehicle:
         """
         Performs an idle step.
 

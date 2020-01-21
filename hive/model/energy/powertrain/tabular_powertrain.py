@@ -8,7 +8,7 @@ from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.routetraversal import Route
 from hive.util.typealiases import PowertrainId
-from hive.util.units import kwh, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH
+from hive.util.units import KwH, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH
 
 
 class TabularPowertrainInput(TypedDict):
@@ -44,7 +44,7 @@ class TabularPowertrain(Powertrain):
     def get_energy_type(self) -> EnergyType:
         return EnergyType.ELECTRIC
 
-    def property_link_cost(self, property_link: PropertyLink) -> kwh:
+    def property_link_cost(self, property_link: PropertyLink) -> KwH:
         """
         uses mph tabular value to calculate energy over a link
 
@@ -61,7 +61,7 @@ class TabularPowertrain(Powertrain):
         energy_kwh = energy_wh * WH_TO_KWH  # kilowatthour
         return energy_kwh
 
-    def energy_cost(self, route: Route) -> kwh:
+    def energy_cost(self, route: Route) -> KwH:
         return ft.reduce(
             lambda acc, link: acc + self.property_link_cost(link),
             route,

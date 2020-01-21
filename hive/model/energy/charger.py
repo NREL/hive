@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from hive.util.units import kw
+from hive.util.units import Kw
 
 
 class Charger(Enum):
@@ -15,7 +15,7 @@ class Charger(Enum):
     DCFC = 50  # kilowatt
 
     @property
-    def power_kw(self) -> kw:
+    def power_kw(self) -> Kw:
         """
         Returns the power of the charger in kilowatts
 

@@ -6,7 +6,7 @@ import numpy as np
 
 from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.model.energy.energytype import EnergyType
-from hive.util.units import seconds, SECONDS_TO_HOURS
+from hive.util.units import Seconds, SECONDS_TO_HOURS
 from hive.util.typealiases import PowercurveId
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class TabularPowerCurveInput(TypedDict):
     type: str
     power_type: str
     reported_max_charge_acceptance_kw: int
-    step_size_seconds: seconds
+    step_size_seconds: Seconds
     power_curve: List[Dict[float, float]]
 
 
@@ -57,7 +57,7 @@ class TabularPowercurve(Powercurve):
     def refuel(self,
                energy_source: EnergySource,
                charger: Charger,
-               duration_seconds: seconds = 1  # seconds
+               duration_seconds: Seconds = 1  # seconds
                ) -> EnergySource:
 
         """
