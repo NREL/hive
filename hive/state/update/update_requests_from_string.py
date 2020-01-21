@@ -40,7 +40,7 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
         """
         subset = [self.header, ] + self.requests[self.row_position:]
         reader = DictReader(subset)
-        it = RequestStringIterator(reader, initial_sim_state.current_time_seconds, self.row_position)
+        it = RequestStringIterator(reader, initial_sim_state.current_time, self.row_position)
         sim_updated = update_requests_from_iterator(it, initial_sim_state)
 
         next_update = self._replace(row_position=it.row_position)
@@ -51,7 +51,7 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
 class RequestStringIterator:
     def __init__(self, requests: DictReader, sim_time: SimTime, row_position: int):
         self.requests = requests
-        self.sim_step = sim_time
+        self.sim_time = sim_time
         self.row_position = row_position
 
     def __iter__(self):
@@ -66,7 +66,7 @@ class RequestStringIterator:
         """
         row = next(self.requests)
         row_time = int(row['departure_time'])
-        if row_time > self.sim_step:
+        if row_time > self.sim_time:
             raise StopIteration
         else:
             self.row_position = self.row_position + 1

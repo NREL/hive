@@ -84,8 +84,9 @@ class LocalSimulationRunner(NamedTuple):
         """
 
         time_steps = range(
-            self.env.config.sim.start_time_seconds,
-            self.env.config.sim.end_time_seconds
+            self.env.config.sim.start_time,
+            self.env.config.sim.end_time,
+            self.env.config.sim.timestep_duration_seconds,
         )
 
         def _run_step(payload: RunnerPayload, t: int) -> RunnerPayload:

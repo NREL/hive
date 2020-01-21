@@ -11,7 +11,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
-from hive.util.units import unit, km
+from hive.util.units import Kilometers, Seconds
 
 
 class RouteTraversal(NamedTuple):
@@ -19,7 +19,7 @@ class RouteTraversal(NamedTuple):
     A tuple that represents the result of traversing a route.
 
     :param remaining_time: The (estimated) time remaining in the route.
-    :type remaining_time: :py:obj:`hours`
+    :type remaining_time_seconds: :py:obj:`hours`
     :param travel_distance: The distance of the experienced route.
     :type travel_distance: :py:obj:`kilometers`
     :param experienced_route: The route that was traversed during a traversal.
@@ -27,8 +27,8 @@ class RouteTraversal(NamedTuple):
     :param remaining_route: The route that remains after a traversal.
     :type remaining_route: :py:obj:`Route`
     """
-    remaining_time: Hours = 0.0
-    traversal_distance: km = 0 * unit.kilometers
+    remaining_time_seconds: Seconds = 0
+    traversal_distance_km: Kilometers = 0
     experienced_route: Route = ()
     remaining_route: Route = ()
 
@@ -38,7 +38,7 @@ class RouteTraversal(NamedTuple):
 
         :return: True if the agent is out of time
         """
-        return self.remaining_time == 0.0
+        return self.remaining_time_seconds == 0.0
 
     def add_traversal(self, t: LinkTraversal) -> RouteTraversal:
         """
@@ -54,12 +54,12 @@ class RouteTraversal(NamedTuple):
             if t.remaining is None \
             else self.remaining_route + (t.remaining,)
         if t.traversed:
-            traversal_distance = self.traversal_distance + t.traversed.distance
+            traversal_distance = self.traversal_distance_km + t.traversed.distance_km
         else:
-            traversal_distance = self.traversal_distance
+            traversal_distance = self.traversal_distance_km
         return self._replace(
-            remaining_time=t.remaining_time,
-            traversal_distance= traversal_distance,
+            remaining_time_seconds=t.remaining_time_seconds,
+            traversal_distance_km= traversal_distance,
             experienced_route=updated_experienced_route,
             remaining_route=updated_remaining_route,
         )
@@ -78,7 +78,7 @@ class RouteTraversal(NamedTuple):
 
 def traverse(route_estimate: Route,
              road_network: RoadNetwork,
-             duration_seconds: SimTime) -> Optional[Union[Exception, RouteTraversal]]:
+             duration_seconds: Seconds) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
@@ -104,7 +104,7 @@ def traverse(route_estimate: Route,
                 return acc_traversal.add_link_not_traversed(property_link), acc_failures
             else:
                 # traverse this link as far as we can go
-                traverse_result = traverse_up_to(road_network, property_link, acc_traversal.remaining_time)
+                traverse_result = traverse_up_to(road_network, property_link, acc_traversal.remaining_time_seconds)
                 if isinstance(traverse_result, Exception):
                     return acc_traversal, traverse_result
                 else:
@@ -112,8 +112,7 @@ def traverse(route_estimate: Route,
                     return updated_experienced_route, acc_failures
 
         # initial search state has a route traversal and an Optional[Exception]
-        duration_hours = float(duration_seconds) / 3600.0
-        initial = (RouteTraversal(remaining_time=duration_hours), None)
+        initial = (RouteTraversal(remaining_time_seconds=duration_seconds), None)
 
         traversal_result, error = ft.reduce(
             _traverse,

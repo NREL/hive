@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from hive.model.roadnetwork.linktraversal import traverse_up_to
 from hive.model.roadnetwork.routetraversal import traverse
+from hive.util.units import hours_to_seconds
 from tests.mock_lobster import *
 
 
@@ -16,9 +17,9 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            duration_seconds=4 * 3600
+            duration_seconds=hours_to_seconds(4)
         )
-        self.assertGreater(result.remaining_time, 0, "should have more time left")
+        self.assertGreater(result.remaining_time_seconds, 0, "should have more time left")
         self.assertEqual(len(result.remaining_route), 0, "should have no more route")
         self.assertEqual(len(result.experienced_route), 3, "should have hit all 3 links")
 
@@ -32,9 +33,9 @@ class TestRouteTraversal(TestCase):
         result = traverse(
             route_estimate=links,
             road_network=network,
-            duration_seconds=int(1.5 * 3600)  # 1.5 hours at 1kmph, 1km per link, 3 links
+            duration_seconds=hours_to_seconds(1.5)  # 1.5 hours at 1kmph, 1km per link, 3 links
         )
-        self.assertEqual(result.remaining_time, 0, "should have no more time left")
+        self.assertEqual(result.remaining_time_seconds, 0, "should have no more time left")
         self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
         self.assertEqual(len(result.experienced_route), 2, "should have traversed 2 links")
 
@@ -46,7 +47,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time_hours=0.5,
+            available_time_seconds=hours_to_seconds(0.5),
         )
 
         traversed = result.traversed
@@ -64,7 +65,7 @@ class TestRouteTraversal(TestCase):
         result = traverse_up_to(
             road_network=network,
             property_link=test_link,
-            available_time_hours=4,
+            available_time_seconds=hours_to_seconds(4),
         )
 
         traversed = result.traversed

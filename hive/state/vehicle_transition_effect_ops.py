@@ -64,7 +64,7 @@ class VehicleTransitionEffectOps(SwitchCase):
         elif not request:
             return None
         else:
-            assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.current_time_seconds)
+            assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.current_time)
 
             start = vehicle.property_link
             end = sim_state.road_network.property_link_from_geoid(request.origin)

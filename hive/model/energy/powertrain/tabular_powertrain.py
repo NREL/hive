@@ -8,7 +8,7 @@ from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.routetraversal import Route
 from hive.util.typealiases import PowertrainId
-from hive.util.units import unit, kwh
+from hive.util.units import KwH, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH
 
 
 class TabularPowertrainInput(TypedDict):
@@ -35,8 +35,8 @@ class TabularPowertrain(Powertrain):
         # linear interpolation function approximation via these lookup values
 
         consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
-        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # * (unit.miles/unit.hour)
-        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model)))  # * (unit.watthour/unit.mile)
+        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
+        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model)))  # watthour/mile
 
     def get_id(self) -> PowertrainId:
         return self.id
@@ -44,24 +44,26 @@ class TabularPowertrain(Powertrain):
     def get_energy_type(self) -> EnergyType:
         return EnergyType.ELECTRIC
 
-    def property_link_cost(self, property_link: PropertyLink) -> kwh:
+    def property_link_cost(self, property_link: PropertyLink) -> KwH:
         """
         uses mph tabular value to calculate energy over a link
 
         :param property_link: the property link to calculate energy over.
         :return: energy in kilowatt-hours
         """
-        link_speed = property_link.speed.to((unit.miles / unit.hour)).magnitude
-        watthour_per_mile = np.interp(link_speed,
+        # link speed is in kilometer/hour
+        link_speed_mph = property_link.speed_kmph * KMPH_TO_MPH  # mph
+        watthour_per_mile = np.interp(link_speed_mph,
                                       self._consumption_mph,
-                                      self._consumption_whmi)  # * (unit.watthour / unit.mile)
-        energy_wh = (watthour_per_mile * property_link.distance.to(unit.mile).magnitude) * unit.watthour
-        return energy_wh.to(unit.kilowatthour)
+                                      self._consumption_whmi)  # watthour / mile
+        # link distance is in kilometers
+        energy_wh = (watthour_per_mile * property_link.distance_km * KM_TO_MILE)  # watthour
+        energy_kwh = energy_wh * WH_TO_KWH  # kilowatthour
+        return energy_kwh
 
-    def energy_cost(self, route: Route) -> kwh:
+    def energy_cost(self, route: Route) -> KwH:
         return ft.reduce(
             lambda acc, link: acc + self.property_link_cost(link),
             route,
-            0.0 * unit.kilowatthour
+            0.0
         )
-

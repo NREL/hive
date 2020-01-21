@@ -6,7 +6,7 @@ from h3 import h3
 from pkg_resources import resource_filename
 
 from hive.external.nyc_tlc.nyc_tlc_parsers import parse_yellow_tripdata_row
-from hive.util.units import kwh, kw
+from hive.util.units import KwH, Kw
 
 
 def down_sample_nyc_tlc_data(in_file: str,
@@ -56,10 +56,10 @@ def sample_vehicles_in_geofence(num: int,
                                 out_file: str,
                                 powertrain_id: str,
                                 powercurve_id: str,
-                                capacity: kwh,
+                                capacity: KwH,
                                 initial_soc: float,
-                                ideal_energy_limit: kwh,
-                                max_charge_acceptance_kw: kw):
+                                ideal_energy_limit: KwH,
+                                max_charge_acceptance_kw: Kw):
     """
     samples points in the NYC polygon and creates Vehicles from them, writing to an output file
     :param num: number of vehicles

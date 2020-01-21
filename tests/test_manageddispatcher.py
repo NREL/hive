@@ -62,12 +62,7 @@ class TestManagedDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        low_battery = EnergySource.build(
-            DefaultIds.mock_powercurve_id(),
-            EnergyType.ELECTRIC,
-            50 * unit.kilowatthour,
-            soc=0.1
-        )
+        low_battery = mock_energy_source(soc=0.1)
 
         veh_low_battery = veh.battery_swap(low_battery)
         station = mock_station_from_geoid(geoid=somewhere_else)

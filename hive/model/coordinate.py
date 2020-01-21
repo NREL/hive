@@ -5,7 +5,7 @@ from h3 import h3
 from haversine import haversine
 
 from hive.util.typealiases import *
-from hive.util.units import unit, km, Ratio
+from hive.util.units import Kilometers, Ratio
 
 
 class Coordinate(NamedTuple):
@@ -59,7 +59,7 @@ def dist_euclidian(a: Coordinate, b: Coordinate) -> float:
     return sqrt(pow((a.lat - b.lat), 2) + pow((a.lon - b.lon), 2))
 
 
-def dist_haversine(a: Coordinate, b: Coordinate) -> km:
+def dist_haversine(a: Coordinate, b: Coordinate) -> Kilometers:
     """
     Calculate the haversine distance between two coordinates.
 
@@ -68,7 +68,7 @@ def dist_haversine(a: Coordinate, b: Coordinate) -> km:
     :rtype: :py:obj:`km`
     :return: Distance between the two points in kilometers.
     """
-    return haversine(a, b) * unit.kilometer
+    return haversine(a, b)
 
 
 def interpolate_between_coordinates(a: Coordinate, b: Coordinate, ratio: Ratio) -> Coordinate:

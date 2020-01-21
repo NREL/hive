@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
-from hive.model.vehiclestate import VehicleState
 from tests.mock_lobster import *
 
 
@@ -54,7 +53,7 @@ class TestGreedyDispatcher(TestCase):
         low_battery = EnergySource.build(
             DefaultIds.mock_powercurve_id(),
             EnergyType.ELECTRIC,
-            50*unit.kilowatthour,
+            50,
             soc=0.1
         )
 
@@ -80,7 +79,7 @@ class TestGreedyDispatcher(TestCase):
 
         veh = mock_vehicle_from_geoid(vehicle_id='test_veh', geoid=somewhere)\
             .transition(VehicleState.RESERVE_BASE)
-        med_battery = EnergySource.build("", EnergyType.ELECTRIC, 50*unit.kilowatthour, soc=0.7)
+        med_battery = EnergySource.build("", EnergyType.ELECTRIC, 50, soc=0.7)
         veh_med_battery = veh.battery_swap(med_battery)
         station = mock_station_from_geoid(station_id='test_station', geoid=somewhere_else)
         base = mock_base_from_geoid(geoid=somewhere, station_id=station.id)
@@ -104,7 +103,7 @@ class TestGreedyDispatcher(TestCase):
         somewhere_else = '89283470d87ffff'
 
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        stationary_vehicle = veh._replace(idle_time_s=1000)
+        stationary_vehicle = veh._replace(idle_time_seconds=1000)
         base = mock_base_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(stationary_vehicle).add_base(base)
 

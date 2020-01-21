@@ -1,12 +1,7 @@
 from unittest import TestCase
 
-from h3 import h3
-
 from hive.model.energy.powertrain import build_powertrain
 from hive.model.energy.powertrain.tabular_powertrain import TabularPowertrain
-from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.property_link import PropertyLink
-from hive.util.units import unit
 from tests.mock_lobster import *
 
 
@@ -17,8 +12,8 @@ class TestTabularPowertrain(TestCase):
 
     def test_leaf_energy_cost_empty_route(self):
         powertrain = build_powertrain("leaf")
-        cost = powertrain.energy_cost(())
-        self.assertEqual(cost.magnitude, 0.0, "empty route should yield zero energy cost")
+        cost_kwh = powertrain.energy_cost(())
+        self.assertEqual(cost_kwh, 0.0, "empty route should yield zero energy cost")
 
     def test_leaf_energy_cost_real_route(self):
         """
@@ -28,7 +23,6 @@ class TestTabularPowertrain(TestCase):
         :return:
         """
         powertrain = build_powertrain("leaf")
-        # test_route = _TestAssets.mock_route()
-        test_route = mock_route(speed=45 * (unit.kilometer / unit.hour))
-        cost = powertrain.energy_cost(test_route)
-        self.assertAlmostEqual(cost.magnitude, .308, places=1)
+        test_route = mock_route(speed_kmph=45)
+        cost_kwh = powertrain.energy_cost(test_route)
+        self.assertAlmostEqual(cost_kwh, .308, places=1)

@@ -4,8 +4,8 @@ from typing import NamedTuple, Optional
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
-from hive.util.exception import StateOfChargeError, UnitError
-from hive.util.units import unit, kw, kwh, Ratio
+from hive.util.exception import StateOfChargeError
+from hive.util.units import Kw, KwH, Ratio
 
 from copy import copy
 
@@ -19,67 +19,58 @@ class EnergySource(NamedTuple):
     :param energy_type: The energy type of this energy source.
     :type energy_type: :py:obj:`EnergySource`
     :param ideal_energy_limit: Refueling is considered complete when this energy limit is reached.
-    :type ideal_energy_limit: :py:obj:`kwh`
+    :type ideal_energy_limit_kwh: :py:obj:`kwh`
     :param capacity: The total energy capacity of the energy source.
-    :type capacity: :py:obj:`kwh`
+    :type capacity_kwh: :py:obj:`kwh`
     :param energy: The current energy level of the energy source.
-    :type energy: :py:obj:`kwh`
+    :type energy_kwh: :py:obj:`kwh`
     :param max_charge_acceptance_kw: The maximum charge acceptance this energy source can handle (electric only)
     :type max_charge_acceptance_kw: :py:obj:`kw`
     :param charge_threshold: A threshold parameter to allow for some floating point error.
-    :type charge_threshold: :py:obj:`kwh`
+    :type charge_threshold_kwh: :py:obj:`kwh`
     """
     powercurve_id: PowercurveId
     energy_type: EnergyType
-    ideal_energy_limit: kwh
-    capacity: kwh
-    energy: kwh
-    max_charge_acceptance_kw: kw
-    charge_threshold: kwh = 0.001 * unit.kilowatthour
-    charge_epsilon: kwh = 0.001 * unit.kilowatthour
+    ideal_energy_limit_kwh: KwH
+    capacity_kwh: KwH
+    energy_kwh: KwH
+    max_charge_acceptance_kw: Kw
+    charge_threshold_kwh: KwH = 0.001  # kilowatthour
 
     @classmethod
     def build(cls,
               powercurve_id: PowercurveId,
               energy_type: EnergyType,
-              capacity: kwh,
-              ideal_energy_limit: Optional[kwh] = None,
-              max_charge_acceptance_kw: kw = 50 * unit.kilowatt,
+              capacity_kwh: KwH,
+              ideal_energy_limit_kwh: Optional[KwH] = None,
+              max_charge_acceptance_kw: Kw = 50,  # kilowatt
               soc: Ratio = 1.0,
               ) -> EnergySource:
         """
         builds an EnergySource for a Vehicle
         :param powercurve_id: the id of the powercurve associated with charging this EnergySource
         :param energy_type: the type of energy used
-        :param capacity: the fuel capacity of this EnergySource
-        :param ideal_energy_limit: the energy that this EnergySource is limited to based on
+        :param capacity_kwh: the fuel capacity of this EnergySource
+        :param ideal_energy_limit_kwh: the energy that this EnergySource is limited to based on
         manufacturer requirements and implementation
         :param max_charge_acceptance_kw: the maximum charge power this vehicle can accept
         :param soc: the initial state of charge of this vehicle, in percentage
         :return:
         """
-        if not ideal_energy_limit:
-            ideal_energy_limit = capacity
+        if not ideal_energy_limit_kwh:
+            ideal_energy_limit_kwh = capacity_kwh
 
         assert 0.0 <= soc <= 1.0, StateOfChargeError(
             f"constructing battery with illegal soc of {(soc * 100.0):.2f}%")
-        assert 0.0 <= ideal_energy_limit <= capacity, StateOfChargeError(
-            f"max charge acceptance {ideal_energy_limit} needs to be between zero and capacity {capacity} provided")
-        assert capacity.units == unit.kilowatthour, UnitError(
-            f"expected units of type {unit.kilowatthour}, but got {capacity.units}"
-        )
-        assert ideal_energy_limit.units == unit.kilowatthour, UnitError(
-            f"expected units of type {unit.kilowatthour}, but got {ideal_energy_limit.units}"
-        )
-        assert max_charge_acceptance_kw.units == unit.kilowatt, UnitError(
-            f"expected units of type {unit.kilowatt}, but got {max_charge_acceptance_kw.units}"
-        )
+        assert 0.0 <= ideal_energy_limit_kwh <= capacity_kwh, StateOfChargeError(
+            f"max charge acceptance {ideal_energy_limit_kwh} needs to be between \
+            zero and capacity {capacity_kwh} provided")
 
         return EnergySource(powercurve_id=powercurve_id,
                             energy_type=energy_type,
-                            ideal_energy_limit=ideal_energy_limit,
-                            capacity=capacity,
-                            energy=capacity * soc,
+                            ideal_energy_limit_kwh=ideal_energy_limit_kwh,
+                            capacity_kwh=capacity_kwh,
+                            energy_kwh=capacity_kwh * soc,
                             max_charge_acceptance_kw=max_charge_acceptance_kw)
 
     @property
@@ -89,7 +80,7 @@ class EnergySource(NamedTuple):
 
         :return: the SoC (0-1)
         """
-        return self.energy.magnitude / self.capacity.magnitude
+        return self.energy_kwh / self.capacity_kwh
 
     def is_at_ideal_energy_limit(self) -> bool:
         """
@@ -99,7 +90,7 @@ class EnergySource(NamedTuple):
         within some epsilon, considering that charging curves can prevent reaching this ideal
         value.
         """
-        return self.energy.magnitude + self.charge_epsilon.magnitude >= self.ideal_energy_limit.magnitude
+        return self.energy_kwh + self.charge_threshold_kwh >= self.ideal_energy_limit_kwh
 
     def not_at_ideal_energy_limit(self) -> bool:
         """
@@ -115,9 +106,8 @@ class EnergySource(NamedTuple):
 
         :return: bool 
         """
-        return (self.capacity.magnitude - self.charge_threshold.magnitude) < \
-            self.energy.magnitude < \
-            (self.capacity.magnitude + self.charge_threshold.magnitude)
+        return (self.capacity_kwh - self.charge_threshold_kwh) < \
+               self.energy_kwh < (self.capacity_kwh + self.charge_threshold_kwh)
 
     def is_empty(self) -> bool:
         """
@@ -125,9 +115,9 @@ class EnergySource(NamedTuple):
 
         :return: bool
         """
-        return self.energy <= 0.0
+        return self.energy_kwh <= 0.0
 
-    def use_energy(self, fuel_used: kwh) -> EnergySource:
+    def use_energy(self, fuel_used: KwH) -> EnergySource:
         """
         Uses energy and returns the updated energy source
 
@@ -135,25 +125,25 @@ class EnergySource(NamedTuple):
         :return: the updated energy source
         """
         # slip out of units to make computation faster
-        updated_energy = (self.energy.magnitude - fuel_used.magnitude)
+        updated_energy = (self.energy_kwh - fuel_used)
         assert updated_energy >= 0.0, StateOfChargeError("Battery fell below 0% SoC")
-        return self._replace(energy=updated_energy * unit.kilowatthour)
+        return self._replace(energy_kwh=updated_energy)
 
-    def load_energy(self, fuel_gained: kwh) -> EnergySource:
+    def load_energy(self, fuel_gained_kwh: KwH) -> EnergySource:
         """
         adds energy up to the EnergySource's capacity
 
-        :param fuel_gained: the fuel gained for this vehicle due to a refuel event
+        :param fuel_gained_kwh: the fuel gained for this vehicle due to a refuel event
         :return: the updated EnergySource with fuel added
         """
-        updated_energy = min(self.capacity.magnitude, self.energy.magnitude + fuel_gained.magnitude)
-        return self._replace(energy=updated_energy * unit.kilowatthour)
+        updated_energy = min(self.capacity_kwh, self.energy_kwh + fuel_gained_kwh)
+        return self._replace(energy_kwh=updated_energy)
 
     def __repr__(self) -> str:
         soc = self.soc * 100.0
-        max_chrg = self.ideal_energy_limit
+        max_chrg = self.ideal_energy_limit_kwh
 
-        return f"Battery({self.energy_type},cap={self.capacity}, max={max_chrg} soc={soc:.2f}%) "
+        return f"Battery({self.energy_type},cap_kwh={self.capacity_kwh}, max_kwh={max_chrg} soc={soc:.2f}%) "
 
     def copy(self) -> EnergySource:
         return copy(self)
