@@ -222,7 +222,8 @@ class TupleOps:
     def head(cls, xs: Tuple[T, ...]) -> T:
         if len(xs) == 0:
             raise IndexError("called head on empty Tuple")
-        return xs[0]
+        else:
+            return xs[0]
 
     @classmethod
     def head_optional(cls, xs: Tuple[T, ...]) -> Optional[T]:

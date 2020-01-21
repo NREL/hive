@@ -133,7 +133,8 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         result = this_simulation_state.add_vehicle(vehicle)
         if isinstance(result, SimulationStateError):
             return this_simulation_state, (result,) + this_failures
-        return result, this_failures
+        else:
+            return result, this_failures
 
     # add a Station
     elif isinstance(x, Station):
@@ -141,7 +142,8 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         result = this_simulation_state.add_station(station)
         if isinstance(result, SimulationStateError):
             return this_simulation_state, (result,) + this_failures
-        return result, this_failures
+        else:
+            return result, this_failures
 
     # add a Base
     elif isinstance(x, Base):
@@ -149,7 +151,8 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         result = this_simulation_state.add_base(base)
         if isinstance(result, SimulationStateError):
             return this_simulation_state, (result,) + this_failures
-        return result, this_failures
+        else:
+            return result, this_failures
 
     # add a Powertrain
     elif issubclass(type(x), Powertrain):
@@ -157,7 +160,8 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         result = this_simulation_state.add_powertrain(powertrain)
         if isinstance(result, SimulationStateError):
             return this_simulation_state, (result,) + this_failures
-        return result, this_failures
+        else:
+            return result, this_failures
 
     # add a Powercurve
     elif issubclass(type(x), Powercurve):
@@ -165,8 +169,10 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         result = this_simulation_state.add_powercurve(powercurve)
         if isinstance(result, SimulationStateError):
             return this_simulation_state, (result,) + this_failures
-        return result, this_failures
+        else:
+            return result, this_failures
 
-    # x is something else; do not modify simulation
-    failure = SimulationStateError(f"not a Vehicle, Station, Base, Powertrain, or Powercurve: {x}")
-    return this_simulation_state, (failure,) + this_failures
+    else:
+        # x is something else; do not modify simulation
+        failure = SimulationStateError(f"not a Vehicle, Station, Base, Powertrain, or Powercurve: {x}")
+        return this_simulation_state, (failure,) + this_failures
