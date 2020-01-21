@@ -54,16 +54,13 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = [VehicleState.IDLE,
+            _valid_states = (VehicleState.IDLE,
                              VehicleState.CHARGING_BASE,
                              VehicleState.RESERVE_BASE,
-                             VehicleState.DISPATCH_BASE]
-            if vehicle.id not in vehicle_ids_given_instructions and \
-                    vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and \
-                    vehicle.vehicle_state in _valid_states:
-                return True
-            else:
-                return False
+                             VehicleState.DISPATCH_BASE)
+            return bool(vehicle.id not in vehicle_ids_given_instructions and
+                        vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
+                        vehicle.vehicle_state in _valid_states)
 
         # 2. find requests that need a vehicle
         unassigned_requests = [r for r in simulation_state.requests.values() if not r.dispatched_vehicle]
@@ -101,10 +98,8 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            if vehicle.vehicle_state == VehicleState.RESERVE_BASE and not vehicle.energy_source.is_at_ideal_energy_limit():
-                return True
-            else:
-                return False
+            return bool(vehicle.vehicle_state == VehicleState.RESERVE_BASE and not
+                        vehicle.energy_source.is_at_ideal_energy_limit())
 
         # 4. charge vehicles sitting at base
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if

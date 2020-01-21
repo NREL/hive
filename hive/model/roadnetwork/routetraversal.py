@@ -102,14 +102,12 @@ def traverse(route_estimate: Route,
             acc_traversal, acc_failures = acc
             if acc_traversal.no_time_left():
                 return acc_traversal.add_link_not_traversed(property_link), acc_failures
-            else:
-                # traverse this link as far as we can go
-                traverse_result = traverse_up_to(road_network, property_link, acc_traversal.remaining_time_seconds)
-                if isinstance(traverse_result, Exception):
-                    return acc_traversal, traverse_result
-                else:
-                    updated_experienced_route = acc_traversal.add_traversal(traverse_result)
-                    return updated_experienced_route, acc_failures
+            # traverse this link as far as we can go
+            traverse_result = traverse_up_to(road_network, property_link, acc_traversal.remaining_time_seconds)
+            if isinstance(traverse_result, Exception):
+                return acc_traversal, traverse_result
+            updated_experienced_route = acc_traversal.add_traversal(traverse_result)
+            return updated_experienced_route, acc_failures
 
         # initial search state has a route traversal and an Optional[Exception]
         initial = (RouteTraversal(remaining_time_seconds=duration_seconds), None)

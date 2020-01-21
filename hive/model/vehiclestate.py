@@ -30,10 +30,10 @@ class VehicleState(Enum):
         :param state: vehicle state
         :return: Boolean
         """
-        return state in _valid_vehicle_states
+        return state in _VALID_VEHICLE_STATES
 
 
-_valid_vehicle_states = frozenset([
+_VALID_VEHICLE_STATES = frozenset([
     VehicleState.DISPATCH_BASE,
     VehicleState.CHARGING_BASE, # TODO: I think we should get rid of CHARGING_BASE and just use a single CHARGING.
     VehicleState.RESERVE_BASE,
@@ -62,10 +62,10 @@ class VehicleStateCategory(Enum):
         :param vehicle_state: the vehicle state
         :return: the vehicle state category
         """
-        return _vehicle_state_category[vehicle_state]
+        return _VEHICLE_STATE_CATEGORY[vehicle_state]
 
 
-_vehicle_state_category = {
+_VEHICLE_STATE_CATEGORY = {
     VehicleState.DISPATCH_BASE: VehicleStateCategory.MOVE,
     VehicleState.CHARGING_BASE: VehicleStateCategory.CHARGE,
     VehicleState.RESERVE_BASE: VehicleStateCategory.DO_NOTHING,

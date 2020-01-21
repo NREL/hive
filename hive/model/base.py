@@ -83,10 +83,7 @@ class Base(NamedTuple):
 
         :return: Boolean
         """
-        if self.available_stalls > 0:
-            return True
-        else:
-            return False
+        return bool(self.available_stalls > 0)
 
     def checkout_stall(self) -> Optional[Base]:
         """

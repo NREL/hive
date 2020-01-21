@@ -1,10 +1,11 @@
 from __future__ import annotations
+from h3 import h3
 from typing import NamedTuple, Optional, Dict, Union
+
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.typealiases import *
 
-from h3 import h3
 
 
 class Request(NamedTuple):

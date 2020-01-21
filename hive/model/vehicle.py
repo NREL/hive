@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from typing import NamedTuple, Dict, Optional
+from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -17,8 +18,6 @@ from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
-
-from h3 import h3
 
 
 class Vehicle(NamedTuple):
@@ -301,7 +300,7 @@ class Vehicle(NamedTuple):
         if self.vehicle_state != VehicleState.IDLE:
             raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
-        idle_energy_rate = 0.8 # (unit.kilowatthour / unit.hour)
+        idle_energy_rate = 0.8  # (unit.kilowatthour / unit.hour)
 
         idle_energy_kwh = idle_energy_rate * (time_step_seconds * SECONDS_TO_HOURS)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
@@ -378,7 +377,7 @@ class Vehicle(NamedTuple):
                 return transitioned_vehicle._reset_idle_stats()
             elif previous_vehicle_state == VehicleState.DISPATCH_STATION:
                 return transitioned_vehicle._reset_charge_intent()
-
-            return transitioned_vehicle
+            else:
+                return transitioned_vehicle
         else:
             return None

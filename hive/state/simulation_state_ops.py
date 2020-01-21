@@ -42,8 +42,7 @@ def _add_instruction(simulation_state: SimulationState, instruction: Instruction
     updated_sim = simulation_state.apply_instruction(instruction)
     if updated_sim is None:
         return simulation_state
-    else:
-        return updated_sim
+    return updated_sim
 
 
 def initial_simulation_state(
@@ -173,7 +172,7 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         else:
             return result, this_failures
 
-    # x is something else; do not modify simulation
     else:
+        # x is something else; do not modify simulation
         failure = SimulationStateError(f"not a Vehicle, Station, Base, Powertrain, or Powercurve: {x}")
         return this_simulation_state, (failure,) + this_failures

@@ -89,6 +89,7 @@ class VehicleTransitionEffectOps(SwitchCase):
         elif station_id not in sim_state.stations:
             return None
         else:
+
             station = sim_state.stations[station_id]
 
             start = vehicle.property_link
@@ -109,9 +110,10 @@ class VehicleTransitionEffectOps(SwitchCase):
         # todo: confirm destination is a base?
         if not vehicle:
             return None
-        if not destination:
+        elif not destination:
             return None
         else:
+
             start = vehicle.property_link
             end = sim_state.road_network.property_link_from_geoid(destination)
             route = sim_state.road_network.route(start, end)
@@ -132,6 +134,7 @@ class VehicleTransitionEffectOps(SwitchCase):
         elif not destination:
             return None
         else:
+
             start = vehicle.property_link
             end = sim_state.road_network.property_link_from_geoid(destination)
             route = sim_state.road_network.route(start, end)
@@ -214,7 +217,7 @@ class VehicleTransitionEffectOps(SwitchCase):
 
         return updated_sim_state
 
-    def _default(self, arguments: Arguments) -> Result:
+    def _default(self, arguments: Arguments) -> SimulationState:
         return arguments.simulation_state
 
     case_statement: Dict = {

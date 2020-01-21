@@ -1,5 +1,7 @@
-import sys
+from datetime import datetime
+
 import yaml
+import sys
 import csv
 import os
 import time
@@ -17,8 +19,6 @@ from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model import Vehicle, Base, Station
 from hive.model.energy.powertrain import build_powertrain
 from hive.model.energy.powercurve import build_powercurve
-
-from datetime import datetime
 
 RESOURCES = os.path.join('..', 'hive', 'resources')
 
@@ -46,7 +46,6 @@ vehicles_file = os.path.join(RESOURCES, 'vehicles', config.io.vehicles_file)
 requests_file = os.path.join(RESOURCES, 'requests', config.io.requests_file)
 bases_file = os.path.join(RESOURCES, 'bases', config.io.bases_file)
 stations_file = os.path.join(RESOURCES, 'stations', config.io.stations_file)
-
 
 build_errors = []
 

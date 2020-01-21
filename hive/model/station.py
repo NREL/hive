@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Dict, Optional
+from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
-
-from h3 import h3
 
 
 class Station(NamedTuple):
@@ -86,8 +85,7 @@ class Station(NamedTuple):
                         chargers={charger_type: charger_count + charger_already_loaded}
                     )
                 else:
-                    # update this station
-                    charger_already_loaded = builder[station_id].total_chargers
+                    # update this station charger_already_loaded = builder[station_id].total_chargers
                     updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
 
                     return Station.build(

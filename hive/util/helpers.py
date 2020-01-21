@@ -18,21 +18,23 @@ if TYPE_CHECKING:
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
 
+Key = TypeVar('Key')
+"""
+the type used to switch off of
+"""
+
+Arguments = TypeVar('Arguments')
+"""
+the type of the arguments fed to the inner switch clause
+"""
+
+Result = TypeVar('Result')
+"""
+the type returned from the SwitchCase (can be "Any")
+"""
+
+
 class SwitchCase(ABC):
-    Key = TypeVar('Key')
-    """
-    the type used to switch off of
-    """
-
-    Arguments = TypeVar('Arguments')
-    """
-    the type of the arguments fed to the inner switch clause
-    """
-
-    Result = TypeVar('Result')
-    """
-    the type returned from the SwitchCase (can be "Any")
-    """
 
     @abstractmethod
     def _default(self, arguments: Arguments) -> Result:
@@ -42,7 +44,6 @@ class SwitchCase(ABC):
         :param arguments: the arguments to pass in the default case
         :return:
         """
-        pass
 
     case_statement: Dict[Key, Callable[[Arguments], Result]] = {}
 
@@ -255,6 +256,12 @@ class TupleOps:
             return tup[0], tup[1:]
 
 
+class EntityUpdateResult(NamedTuple):
+    entities: Optional[Dict] = None
+    locations: Optional[Dict] = None
+    search: Optional[Dict] = None
+
+
 class DictOps:
     K = TypeVar('K')
     V = TypeVar('V')
@@ -333,11 +340,6 @@ class DictOps:
             updated_dict[obj_geoid] = updated_ids
         return updated_dict
 
-    class EntityUpdateResult(NamedTuple):
-        entities: Optional[Dict] = None
-        locations: Optional[Dict] = None
-        search: Optional[Dict] = None
-
     @classmethod
     def update_entity_dictionaries(cls,
                                    updated_entity: V,
@@ -358,38 +360,37 @@ class DictOps:
         entities_updated = DictOps.add_to_dict(entities, updated_entity.id, updated_entity)
 
         if old_entity.geoid == updated_entity.geoid:
-            return cls.EntityUpdateResult(
+            return EntityUpdateResult(
                 entities=entities_updated
             )
-        else:
-            # unset from old geoid add add to new one
-            locations_removed = DictOps.remove_from_location_dict(locations,
-                                                                  old_entity.geoid,
-                                                                  old_entity.id)
-            locations_updated = DictOps.add_to_location_dict(locations_removed,
-                                                             updated_entity.geoid,
-                                                             updated_entity.id)
+        # unset from old geoid add add to new one
+        locations_removed = DictOps.remove_from_location_dict(locations,
+                                                              old_entity.geoid,
+                                                              old_entity.id)
+        locations_updated = DictOps.add_to_location_dict(locations_removed,
+                                                         updated_entity.geoid,
+                                                         updated_entity.id)
 
-            old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
-            updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
+        old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
+        updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
 
-            if old_search_geoid == updated_search_geoid:
-                # no update to search location
-                return cls.EntityUpdateResult(
-                    entities=entities_updated,
-                    locations=locations_updated
-                )
-            else:
-                # update request search dict location
-                search_removed = DictOps.remove_from_location_dict(search,
-                                                                   old_search_geoid,
-                                                                   old_entity.id)
-                search_updated = DictOps.add_to_location_dict(search_removed,
-                                                              updated_search_geoid,
-                                                              updated_entity.id)
+        if old_search_geoid == updated_search_geoid:
+            # no update to search location
+            return EntityUpdateResult(
+                entities=entities_updated,
+                locations=locations_updated
+            )
 
-                return cls.EntityUpdateResult(
-                    entities=entities_updated,
-                    locations=locations_updated,
-                    search=search_updated
-                )
+        # update request search dict location
+        search_removed = DictOps.remove_from_location_dict(search,
+                                                           old_search_geoid,
+                                                           old_entity.id)
+        search_updated = DictOps.add_to_location_dict(search_removed,
+                                                      updated_search_geoid,
+                                                      updated_entity.id)
+
+        return EntityUpdateResult(
+            entities=entities_updated,
+            locations=locations_updated,
+            search=search_updated
+        )

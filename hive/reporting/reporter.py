@@ -25,4 +25,3 @@ class Reporter(ABC):
         :param reports: Any additional reports.
         :return: Does not return a value.
         """
-        pass
