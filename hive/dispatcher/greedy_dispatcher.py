@@ -1,7 +1,7 @@
 from typing import Tuple, NamedTuple
 
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
-from hive.dispatcher.instruction import Instruction
+from hive.model.instruction import *
 from hive.model.energy.charger import Charger
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState
@@ -37,12 +37,11 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                    is_valid=lambda s: s.has_available_charger(Charger.DCFC))
             if nearest_station:
-                instruction = Instruction(vehicle_id=veh.id,
-                                          action=VehicleState.DISPATCH_STATION,
-                                          location=nearest_station.geoid,
-                                          station_id=nearest_station.id,
-                                          charger=Charger.DCFC,
-                                          )
+                instruction = DispatchStationInstruction(
+                    vehicle_id=veh.id,
+                    station_id=nearest_station.id,
+                    charger=Charger.DCFC,
+                )
 
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(veh.id)
@@ -71,10 +70,10 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                    is_valid=_is_valid_for_dispatch)
             if nearest_vehicle:
-                instruction = Instruction(vehicle_id=nearest_vehicle.id,
-                                          action=VehicleState.DISPATCH_TRIP,
-                                          location=request.origin,
-                                          request_id=request.id)
+                instruction = DispatchTripInstruction(
+                    vehicle_id=nearest_vehicle.id,
+                    request_id=request.id,
+                )
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
@@ -88,9 +87,10 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
                                                 entity_search=simulation_state.b_search,
                                                 sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
             if nearest_base:
-                instruction = Instruction(vehicle_id=veh.id,
-                                          action=VehicleState.DISPATCH_BASE,
-                                          location=nearest_base.geoid)
+                instruction = DispatchBaseInstruction(
+                    vehicle_id=veh.id,
+                    destination=nearest_base.geoid,
+                )
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(veh.id)
             else:
@@ -108,11 +108,11 @@ class GreedyDispatcher(NamedTuple, DispatcherInterface):
             base_id = simulation_state.b_locations[v.geoid][0]
             base = simulation_state.bases[base_id]
             if base.station_id:
-                instruction = Instruction(vehicle_id=v.id,
-                                          action=VehicleState.CHARGING_BASE,
-                                          station_id=base.station_id,
-                                          charger=Charger.LEVEL_2,
-                                          )
+                instruction = ChargeBaseInstruction(
+                    vehicle_id=v.id,
+                    station_id=base.station_id,
+                    charger=Charger.LEVEL_2,
+                )
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(v.id)
 

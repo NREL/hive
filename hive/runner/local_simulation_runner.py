@@ -3,8 +3,6 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Tuple
 
-from hive.dispatcher import DispatcherInterface
-from hive.runner import simulation_runner_ops
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.reporting.reporter import Reporter
@@ -23,7 +21,6 @@ class RunnerPayload(NamedTuple):
     :type r: :py:obj:`Tuple[str, ...]`
     """
     s: SimulationState
-    d: DispatcherInterface
     f: Tuple[SimulationUpdateFunction, ...]
     r: Tuple[str, ...] = ()
 
@@ -69,7 +66,6 @@ class LocalSimulationRunner(NamedTuple):
 
     def run(self,
             initial_simulation_state: SimulationState,
-            initial_dispatcher: DispatcherInterface,
             update_functions: Tuple[SimulationUpdateFunction, ...],
             reporter: Reporter,
             ) -> RunnerPayload:
@@ -92,18 +88,17 @@ class LocalSimulationRunner(NamedTuple):
         def _run_step(payload: RunnerPayload, t: int) -> RunnerPayload:
 
             updated_payload = payload.apply_update_functions()
+            updated_sim = updated_payload.s
 
-            updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(updated_payload.s,
-                                                                                       updated_payload.d)
-            reporter.report(updated_sim, instructions, updated_payload.r)
+            reporter.report(updated_sim, updated_payload.r)
             if updated_sim.sim_step % 100 == 0:
                 print(f"running step {updated_sim.sim_step} of {len(time_steps)}")
-            return RunnerPayload(s=updated_sim, d=updated_dispatcher, f=updated_payload.f, r=())
+            return RunnerPayload(s=updated_sim, f=updated_payload.f, r=())
 
         final_payload = ft.reduce(
             _run_step,
             time_steps,
-            RunnerPayload(initial_simulation_state, initial_dispatcher, update_functions)
+            RunnerPayload(initial_simulation_state, update_functions)
         )
 
         return final_payload

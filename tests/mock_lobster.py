@@ -5,7 +5,7 @@ import math
 from h3 import h3
 
 from hive.config import HiveConfig
-from hive.dispatcher.instruction import Instruction
+from hive.model.instruction import Instruction
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.manager.manager_interface import ManagerInterface
@@ -322,7 +322,6 @@ def mock_reporter() -> Reporter:
     class MockReporter(Reporter):
         def report(self,
                    sim_state: SimulationState,
-                   instructions: Tuple[Instruction, ...],
                    reports: Tuple[str, ...]):
             pass
 

@@ -6,7 +6,6 @@ from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
 
-from hive.dispatcher.instruction import Instruction
 from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
@@ -17,8 +16,6 @@ from hive.model.energy.powertrain import Powertrain
 from hive.model.energy.powercurve import Powercurve
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
-from hive.state.vehicle_transition_effect_ops import VehicleTransitionEffectOps, \
-    VehicleTransitionEffectArgs
 from hive.util.exception import *
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
@@ -181,31 +178,6 @@ class SimulationState(NamedTuple):
             v_locations=result.locations if result.locations else self.v_locations,
             v_search=result.search if result.search else self.v_search
         )
-
-    def apply_instruction(self, i: Instruction) -> Optional[SimulationState]:
-        """
-        test if vehicle transition is valid, and if so, apply it, resolving any externalities in the process
-
-        :param i: the instruction to apply
-        :return: the updated simulation state or an exception on failure
-        """
-        if not isinstance(i, Instruction):
-            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(i.vehicle_id)}")
-        if i.vehicle_id not in self.vehicles:
-            raise SimulationStateError(f"attempting to update vehicle {i.vehicle_id} which is not in simulation")
-
-        vehicle = self.vehicles[i.vehicle_id]
-        if not vehicle.can_transition(i.action):
-            return None
-        # apply instruction to vehicle
-        updated_vehicle = vehicle.transition(i.action)
-        updated_vehicle_sim_state = self.modify_vehicle(updated_vehicle)
-
-        # Handle instantaneous effects
-        effect_args = VehicleTransitionEffectArgs(updated_vehicle_sim_state, i)
-        updated_sim_state = VehicleTransitionEffectOps.switch(i.action, effect_args)
-
-        return updated_sim_state
 
     def step_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
         """
@@ -443,14 +415,14 @@ class SimulationState(NamedTuple):
             road_network=self.road_network.update(sim_time)
         )
 
-    def at_geoid(self, geoid: GeoId) -> Union[Exception, AtLocationResponse]:
+    def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """
         returns a dictionary with the list of ids found at this location for all entities
         :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
         :return: an Optional AtLocationResponse
         """
         if not isinstance(geoid, GeoId):
-            return TypeError(f"sim.update_vehicle requires a vehicle but received {type(geoid)}")
+            raise TypeError(f"sim.update_vehicle requires a vehicle but received {type(geoid)}")
 
         vehicles = self.v_locations[geoid] if geoid in self.v_locations else ()
         requests = self.r_locations[geoid] if geoid in self.r_locations else ()
