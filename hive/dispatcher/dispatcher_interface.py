@@ -7,7 +7,7 @@ from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
-    from hive.dispatcher.instruction import Instruction
+    from hive.model.instruction import Instruction
 
 
 class DispatcherInterface(metaclass=ABCNamedTupleMeta):

@@ -7,7 +7,7 @@ import random
 from pkg_resources import resource_filename
 from h3 import h3
 
-from hive.dispatcher.instruction import Instruction
+from hive.model.instruction import *
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
@@ -70,12 +70,11 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                    is_valid=lambda s: s.has_available_charger(Charger.DCFC))
             if nearest_station:
-                instruction = Instruction(vehicle_id=veh.id,
-                                          action=VehicleState.DISPATCH_STATION,
-                                          location=nearest_station.geoid,
-                                          station_id=nearest_station.id,
-                                          charger=Charger.DCFC,
-                                          )
+                instruction = DispatchStationInstruction(
+                    vehicle_id=veh.id,
+                    station_id=nearest_station.id,
+                    charger=Charger.DCFC,
+                )
 
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(veh.id)
@@ -104,10 +103,11 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                    is_valid=_is_valid_for_dispatch)
             if nearest_vehicle:
-                instruction = Instruction(vehicle_id=nearest_vehicle.id,
-                                          action=VehicleState.DISPATCH_TRIP,
-                                          location=request.origin,
-                                          request_id=request.id)
+                instruction = DispatchTripInstruction(
+                    vehicle_id=nearest_vehicle.id,
+                    request_id=request.id,
+                )
+
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(nearest_vehicle.id)
 
@@ -132,11 +132,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 if i + 1 > abs(active_diff):
                     break
                 random_location = self._sample_random_location(simulation_state.sim_h3_location_resolution)
-                instruction = Instruction(
-                    vehicle_id=veh.id,
-                    action=VehicleState.REPOSITIONING,
-                    location=random_location,
-                )
+                instruction = RepositionInstruction(vehicle_id=veh.id, destination=random_location)
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(veh.id)
         elif active_diff > 0:
@@ -150,9 +146,10 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                                                     entity_search=simulation_state.b_search,
                                                     sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
                 if nearest_base:
-                    instruction = Instruction(vehicle_id=veh.id,
-                                              action=VehicleState.DISPATCH_BASE,
-                                              location=nearest_base.geoid)
+                    instruction = DispatchBaseInstruction(
+                        vehicle_id=veh.id,
+                        destination=nearest_base.geoid,
+                    )
                     instructions.append(instruction)
                     vehicle_ids_given_instructions.append(veh.id)
                 else:
@@ -170,11 +167,11 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             base_id = simulation_state.b_locations[v.geoid][0]
             base = simulation_state.bases[base_id]
             if base.station_id:
-                instruction = Instruction(vehicle_id=v.id,
-                                          action=VehicleState.CHARGING_BASE,
-                                          station_id=base.station_id,
-                                          charger=Charger.LEVEL_2,
-                                          )
+                instruction = ChargeBaseInstruction(
+                    vehicle_id=v.id,
+                    station_id=base.station_id,
+                    charger=Charger.LEVEL_2,
+                )
                 instructions.append(instruction)
                 vehicle_ids_given_instructions.append(v.id)
 

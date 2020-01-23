@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
+from hive.model.instruction import *
 from tests.mock_lobster import *
 
 
@@ -22,9 +23,9 @@ class TestGreedyDispatcher(TestCase):
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.DISPATCH_TRIP,
-                         "Should have instructed vehicle to dispatch")
+        self.assertIsInstance(instructions[0],
+                              DispatchTripInstruction,
+                              "Should have instructed vehicle to dispatch")
         self.assertEqual(instructions[0].vehicle_id,
                          close_veh.id,
                          "Should have picked closest vehicle")
@@ -64,12 +65,9 @@ class TestGreedyDispatcher(TestCase):
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.DISPATCH_STATION,
-                         "Should have instructed vehicle to dispatch to station")
-        self.assertEqual(instructions[0].location,
-                         station.geoid,
-                         "Should have picked location equal to test_station")
+        self.assertIsInstance(instructions[0],
+                              DispatchStationInstruction,
+                              "Should have instructed vehicle to dispatch to station")
 
     def test_charge_vehicle_base(self):
         dispatcher = GreedyDispatcher()
@@ -77,20 +75,21 @@ class TestGreedyDispatcher(TestCase):
         somewhere = '89283470d93ffff'
         somewhere_else = '89283470d87ffff'
 
-        veh = mock_vehicle_from_geoid(vehicle_id='test_veh', geoid=somewhere)\
+        veh = mock_vehicle_from_geoid(vehicle_id='test_veh', geoid=somewhere) \
             .transition(VehicleState.RESERVE_BASE)
         med_battery = EnergySource.build("", EnergyType.ELECTRIC, 50, soc=0.7)
         veh_med_battery = veh.battery_swap(med_battery)
         station = mock_station_from_geoid(station_id='test_station', geoid=somewhere_else)
         base = mock_base_from_geoid(geoid=somewhere, station_id=station.id)
-        sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_med_battery).add_station(station).add_base(base)
+        sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_med_battery).add_station(station).add_base(
+            base)
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.CHARGING_BASE,
-                         "Should have instructed vehicle to charge at base")
+        self.assertIsInstance(instructions[0],
+                              ChargeBaseInstruction,
+                              "Should have instructed vehicle to dispatch to base")
         self.assertEqual(instructions[0].station_id,
                          station.id,
                          "Should have picked station_id equal to test_station.id")
@@ -110,10 +109,6 @@ class TestGreedyDispatcher(TestCase):
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertIsNotNone(instructions, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.DISPATCH_BASE,
-                         "Should have instructed vehicle to dispatch to base")
-        self.assertEqual(instructions[0].location,
-                         base.geoid,
-                         "Should have picked location equal to test_station")
-
+        self.assertIsInstance(instructions[0],
+                              DispatchBaseInstruction,
+                              "Should have instructed vehicle to dispatch to base")

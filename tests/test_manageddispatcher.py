@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from hive.dispatcher.managed_dispatcher import ManagedDispatcher
+from hive.model.instruction import *
 from tests.mock_lobster import *
 
 
@@ -26,9 +27,9 @@ class TestManagedDispatcher(TestCase):
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.DISPATCH_TRIP,
-                         "Should have instructed vehicle to dispatch")
+        self.assertIsInstance(instructions[0],
+                              DispatchTripInstruction,
+                              "Should have instructed vehicle to dispatch")
         self.assertEqual(instructions[0].vehicle_id,
                          close_veh.id,
                          "Should have picked closest vehicle")
@@ -71,12 +72,10 @@ class TestManagedDispatcher(TestCase):
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.DISPATCH_STATION,
-                         "Should have instructed vehicle to dispatch to station")
-        self.assertEqual(instructions[0].location,
-                         station.geoid,
-                         "Should have picked location equal to test_station")
+        self.assertIsInstance(instructions[0],
+                              DispatchStationInstruction,
+                              "Should have instructed vehicle to dispatch to station")
+
 
     def test_activate_vehicles(self):
         manager = mock_manager(forecaster=mock_forecaster())
@@ -88,7 +87,7 @@ class TestManagedDispatcher(TestCase):
         # manger will always predict we need 1 activate vehicle. So, we start with one inactive vehicle and see
         # if it is moved to active.
 
-        somewhere ='89283470d93ffff'
+        somewhere = '89283470d93ffff'
 
         veh = mock_vehicle_from_geoid(geoid=somewhere).transition(VehicleState.RESERVE_BASE)
         base = mock_base_from_geoid(geoid=somewhere, stall_count=2)
@@ -98,9 +97,9 @@ class TestManagedDispatcher(TestCase):
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.REPOSITIONING,
-                         "Should have instructed vehicle to reposition")
+        self.assertIsInstance(instructions[0],
+                              RepositionInstruction,
+                              "Should have instructed vehicle to reposition")
 
     def test_deactivate_vehicles(self):
         manager = mock_manager(forecaster=mock_forecaster())
@@ -112,7 +111,7 @@ class TestManagedDispatcher(TestCase):
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
 
-        somewhere ='89283470d93ffff'
+        somewhere = '89283470d93ffff'
         somewhere_else = '89283470d87ffff'
 
         veh1 = mock_vehicle_from_geoid(vehicle_id='v1', geoid=somewhere)
@@ -126,6 +125,7 @@ class TestManagedDispatcher(TestCase):
         print(instructions)
 
         self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
-        self.assertEqual(instructions[0].action,
-                         VehicleState.DISPATCH_BASE,
-                         "Should have instructed one of the vehicles to return to base")
+        self.assertIsInstance(instructions[0],
+                              DispatchBaseInstruction,
+                              "Should have instructed vehicle to dispatch to base")
+
