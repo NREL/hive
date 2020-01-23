@@ -19,6 +19,9 @@ Kmph = float  # kilometers per hour
 Seconds = int  # seconds
 Hours = float  # hours
 
+# Currency
+Currency = float  # an arbitrary currency type, reified in hiveconfig.scenario.currency_name
+
 # Dimensionless
 Percentage = float  # between 0-100
 Ratio = float  # between 0-1

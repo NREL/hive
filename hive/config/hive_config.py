@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Optional
 
-from hive.config import *
+from hive.config import ConfigBuilder, IO, Sim, Network, Scenario
 
 
 class HiveConfig(NamedTuple):
     io: Optional[IO]
     sim: Optional[Sim]
     network: Optional[Network]
+    scenario: Optional[Scenario]
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
