@@ -14,7 +14,7 @@ from hive.runner.environment import Environment
 from hive.reporting.detailed_reporter import DetailedReporter
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
 from hive.state.simulation_state_ops import initial_simulation_state
-from hive.state.update import UpdateRequestsFromFile, CancelRequests
+from hive.state.update import UpdateRequestsFromFile, CancelRequests, StepSimulation
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model import Vehicle, Base, Station
 from hive.model.energy.powertrain import build_powertrain
@@ -116,12 +116,12 @@ initial_sim, sim_state_errors = initial_simulation_state(
 if sim_state_errors:
     raise Exception(sim_state_errors)
 
-update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests())
+# TODO: move this lower and make it ordered.
+update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests(), StepSimulation(dispatcher))
 
 start = time.time()
 sim_result = runner.run(
     initial_simulation_state=initial_sim,
-    initial_dispatcher=dispatcher,
     update_functions=update_functions,
     reporter=reporter,
 )

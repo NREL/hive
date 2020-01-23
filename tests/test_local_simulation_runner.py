@@ -1,8 +1,7 @@
 from unittest import TestCase
 
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
-from hive.state.update import UpdateRequestsFromString
-from hive.state.update.cancel_requests import CancelRequests
+from hive.state.update import UpdateRequestsFromString, CancelRequests, StepSimulation
 from tests.mock_lobster import *
 
 
@@ -23,8 +22,7 @@ class TestLocalSimulationRunner(TestCase):
 
         result = runner.run(
             initial_simulation_state=initial_sim,
-            initial_dispatcher=GreedyDispatcher(),
-            update_functions=(CancelRequests(), update_requests),
+            update_functions=(CancelRequests(), update_requests, StepSimulation(GreedyDispatcher())),
             reporter=mock_reporter()
         )
 

@@ -7,7 +7,6 @@ import logging
 import os
 
 from hive.state.simulation_state import SimulationState
-from hive.dispatcher.instruction import Instruction
 from hive.reporting.reporter import Reporter
 from hive.config import IO
 
@@ -45,11 +44,6 @@ class DetailedReporter(Reporter):
                                                 log_file=os.path.join(sim_output_dir, io.request_log))
         else:
             self.request_logger = None
-        if io.instruction_log:
-            self.instruction_logger = _setup_logger(name=io.instruction_log,
-                                                    log_file=os.path.join(sim_output_dir, io.instruction_log))
-        else:
-            self.instruction_logger = None
 
     def _report_entities(self, logger, entities, sim_time):
         if logger:
@@ -61,7 +55,6 @@ class DetailedReporter(Reporter):
 
     def report(self,
                sim_state: SimulationState,
-               instructions: Tuple[Instruction, ...],
                reports: Tuple[str, ...]):
         self._report_entities(logger=self.vehicle_logger,
                               entities=sim_state.vehicles.values(),
@@ -69,9 +62,7 @@ class DetailedReporter(Reporter):
         self._report_entities(logger=self.request_logger,
                               entities=sim_state.requests.values(),
                               sim_time=sim_state.current_time)
-        self._report_entities(logger=self.instruction_logger,
-                              entities=instructions,
-                              sim_time=sim_state.current_time)
+
         if self.run_logger:
             for report in reports:
                 self.run_logger.info(report)

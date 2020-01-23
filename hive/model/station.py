@@ -86,6 +86,7 @@ class Station(NamedTuple):
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
+                    charger_already_loaded = builder[station_id].total_chargers
                     updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
 
                     return Station.build(

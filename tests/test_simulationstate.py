@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from hive.model.instruction import *
 from tests.mock_lobster import *
 
 
@@ -233,8 +234,8 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_base(bas)
 
-        instruction = Instruction(veh.id, VehicleState.RESERVE_BASE)
-        sim_updated = sim.apply_instruction(instruction)
+        instruction = ReserveBaseInstruction(vehicle_id=veh.id)
+        sim_updated = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim_updated)
 
@@ -248,8 +249,8 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_base(bas)
 
-        instruction = Instruction(veh.id, VehicleState.RESERVE_BASE)
-        sim_updated = sim.apply_instruction(instruction)
+        instruction = ReserveBaseInstruction(vehicle_id=veh.id)
+        sim_updated = instruction.apply_instruction(sim)
 
         self.assertIsNone(sim_updated)
 
@@ -259,11 +260,12 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.CHARGING_STATION,
-                                  station_id=sta.id,
-                                  charger=Charger.DCFC)
-        sim_updated = sim.apply_instruction(instruction)
+        instruction = ChargeStationInstruction(
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger=Charger.DCFC
+        )
+        sim_updated = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim_updated)
 
@@ -277,11 +279,13 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.CHARGING_STATION,
-                                  station_id=sta.id,
-                                  charger=Charger.DCFC)
-        sim_updated = sim.apply_instruction(instruction)
+        instruction = ChargeStationInstruction(
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger=Charger.DCFC
+        )
+        sim_updated = instruction.apply_instruction(sim)
+
 
         self.assertIsNone(sim_updated)
 
@@ -291,10 +295,8 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere, passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.SERVICING_TRIP,
-                                  request_id=req.id)
-        sim_updated = sim.apply_instruction(instruction)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        sim_updated = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim_updated)
 
@@ -310,10 +312,8 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere_else, passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.SERVICING_TRIP,
-                                  request_id=req.id)
-        sim_updated = sim.apply_instruction(instruction)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        sim_updated = instruction.apply_instruction(sim)
 
         self.assertIsNone(sim_updated)
 
@@ -326,10 +326,10 @@ class TestSimulationState(TestCase):
                                        passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.SERVICING_TRIP,
-                                  request_id=req.id)
-        sim_moving_veh = sim.apply_instruction(instruction).step_simulation()
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        sim_updated = instruction.apply_instruction(sim)
+
+        sim_moving_veh = sim_updated.step_simulation()
 
         moved_veh = sim_moving_veh.vehicles[veh.id]
 
@@ -344,11 +344,13 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.CHARGING_STATION,
-                                  station_id=sta.id,
-                                  charger=Charger.DCFC)
-        sim_charging_veh = sim.apply_instruction(instruction).step_simulation()
+        instruction = ChargeStationInstruction(
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger=Charger.DCFC
+        )
+        sim_updated = instruction.apply_instruction(sim)
+        sim_charging_veh = sim_updated.step_simulation()
 
         charged_veh = sim_charging_veh.vehicles[veh.id]
 
@@ -377,10 +379,9 @@ class TestSimulationState(TestCase):
                                        destination=somewhere_else,
                                        passengers=2)
         sim = mock_sim(sim_timestep_duration_seconds=1000).add_vehicle(veh).add_request(req)
-        instruction = Instruction(veh.id,
-                                  VehicleState.SERVICING_TRIP,
-                                  request_id=req.id)
-        sim_with_instruction = sim.apply_instruction(instruction)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        sim_with_instruction = instruction.apply_instruction(sim)
+
 
         self.assertIsNotNone(sim_with_instruction, "Vehicle should have transitioned to servicing trip")
 
@@ -403,10 +404,8 @@ class TestSimulationState(TestCase):
                                        destination=somewhere,
                                        passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
-        instruction = Instruction(veh.id,
-                                  VehicleState.DISPATCH_TRIP,
-                                  request_id=req.id)
-        sim = sim.apply_instruction(instruction)
+        instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        sim = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
@@ -440,11 +439,8 @@ class TestSimulationState(TestCase):
         sta = mock_station_from_geoid(station_id='s1', geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.DISPATCH_STATION,
-                                  station_id=sta.id,
-                                  charger=Charger.DCFC)
-        sim = sim.apply_instruction(instruction)
+        instruction = DispatchStationInstruction(vehicle_id=veh.id, station_id=sta.id, charger=Charger.DCFC)
+        sim = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
@@ -470,10 +466,8 @@ class TestSimulationState(TestCase):
         base = mock_base_from_geoid(base_id='b1', geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_base(base)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.DISPATCH_BASE,
-                                  location=base.geoid)
-        sim = sim.apply_instruction(instruction)
+        instruction = DispatchBaseInstruction(vehicle_id=veh.id, destination=base.geoid)
+        sim = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
@@ -497,10 +491,8 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.REPOSITIONING,
-                                  location=somewhere_else)
-        sim = sim.apply_instruction(instruction)
+        instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else)
+        sim = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
@@ -528,11 +520,12 @@ class TestSimulationState(TestCase):
         )
         sim = mock_sim().add_vehicle(veh).add_station(sta)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.CHARGING_STATION,
-                                  station_id=sta.id,
-                                  charger=Charger.DCFC)
-        sim = sim.apply_instruction(instruction)
+        instruction = ChargeStationInstruction(
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger=Charger.DCFC
+        )
+        sim = instruction.apply_instruction(sim)
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 
@@ -557,11 +550,13 @@ class TestSimulationState(TestCase):
         )
         sim = mock_sim().add_vehicle(veh).add_station(sta).add_base(bas)
 
-        instruction = Instruction(veh.id,
-                                  VehicleState.CHARGING_BASE,
-                                  station_id=bas.station_id,
-                                  charger=Charger.DCFC)
-        sim = sim.apply_instruction(instruction)
+        instruction = ChargeBaseInstruction(
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger=Charger.DCFC
+        )
+        sim = instruction.apply_instruction(sim)
+
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 

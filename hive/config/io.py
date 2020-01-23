@@ -26,7 +26,6 @@ class IO(NamedTuple):
     run_log: str
     vehicle_log: str
     request_log: str
-    instruction_log: str
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -35,7 +34,6 @@ class IO(NamedTuple):
             'run_log': None,
             'vehicle_log': None,
             'request_log': None,
-            'instruction_log': None,
         }
 
     @classmethod
@@ -67,5 +65,4 @@ class IO(NamedTuple):
             run_log=d['run_log'],
             vehicle_log=d['vehicle_log'],
             request_log=d['request_log'],
-            instruction_log=d['instruction_log'],
         )
