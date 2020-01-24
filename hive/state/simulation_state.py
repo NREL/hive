@@ -6,14 +6,13 @@ from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
 
+from hive.runner.environment import Environment
 from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.energy.powertrain import Powertrain
-from hive.model.energy.powercurve import Powercurve
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
 from hive.util.exception import *
@@ -44,8 +43,6 @@ class SimulationState(NamedTuple):
     bases: Dict[BaseId, Base] = {}
     vehicles: Dict[VehicleId, Vehicle] = {}
     requests: Dict[RequestId, Request] = {}
-    powertrains: Dict[PowertrainId, Powertrain] = {}
-    powercurves: Dict[PowercurveId, Powercurve] = {}
 
     # location collections - the lowest-level spatial representation in Hive
     v_locations: Dict[GeoId, Tuple[VehicleId, ...]] = {}
@@ -179,7 +176,7 @@ class SimulationState(NamedTuple):
             v_search=result.search if result.search else self.v_search
         )
 
-    def step_vehicle(self, vehicle_id: VehicleId) -> SimulationState:
+    def step_vehicle(self, vehicle_id: VehicleId, env: Environment) -> SimulationState:
         """
         Steps a vehicle in time, checking for arrival at a terminal state condition.
 
@@ -199,12 +196,12 @@ class SimulationState(NamedTuple):
         # Apply time based effects.
         vehicle = sim_state_w_effects.vehicles[vehicle_id]
         if VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.MOVE:
-            powertrain = sim_state_w_effects.powertrains[vehicle.powertrain_id]
+            powertrain = env.powertrains[vehicle.powertrain_id]
             vehicle = vehicle.move(sim_state_w_effects.road_network,
                                    powertrain,
                                    sim_state_w_effects.sim_timestep_duration_seconds)
         elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
-            powercurve = sim_state_w_effects.powercurves[vehicle.powercurve_id]
+            powercurve = env.powercurves[vehicle.powercurve_id]
             vehicle = vehicle.charge(powercurve, sim_state_w_effects.sim_timestep_duration_seconds)
         elif vehicle.vehicle_state == VehicleState.IDLE:
             vehicle = vehicle.idle(sim_state_w_effects.sim_timestep_duration_seconds)
@@ -213,14 +210,14 @@ class SimulationState(NamedTuple):
 
         return updated_sim_state
 
-    def step_simulation(self) -> SimulationState:
+    def step_simulation(self, env: Environment) -> SimulationState:
         """
         advances this simulation
 
         :return: the simulation after calling step_vehicle() on all vehicles
         """
         next_state = ft.reduce(
-            lambda acc, v_id: acc.step_vehicle(v_id),
+            lambda acc, v_id: acc.step_vehicle(v_id, env),
             self.vehicles.keys(),
             self
         )
@@ -376,32 +373,6 @@ class SimulationState(NamedTuple):
 
         return self._replace(
             bases=DictOps.add_to_dict(self.bases, updated_base.id, updated_base)
-        )
-
-    def add_powertrain(self, powertrain: Powertrain) -> Union[Exception, SimulationState]:
-        """
-        Adds a powertrain to the simulation
-        :param powertrain:
-        :return:
-        """
-        if not isinstance(powertrain, Powertrain):
-            return TypeError(f"sim.add_base requires a base but received {type(powertrain)}")
-
-        return self._replace(
-            powertrains=DictOps.add_to_dict(self.powertrains, powertrain.get_id(), powertrain),
-        )
-
-    def add_powercurve(self, powercurve: Powercurve) -> Union[Exception, SimulationState]:
-        """
-        Adds a powercurve to the simulation
-        :param powercurve:
-        :return:
-        """
-        if not isinstance(powercurve, Powercurve):
-            return TypeError(f"sim.add_base requires a base but received {type(powercurve)}")
-
-        return self._replace(
-            powercurves=DictOps.add_to_dict(self.powercurves, powercurve.get_id(), powercurve),
         )
 
     def update_road_network(self, sim_time: SimTime) -> SimulationState:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import Tuple, Optional, NamedTuple
 
+from hive.runner.environment import Environment
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.model.instruction.instruction_interface import Instruction
 from hive.state.simulation_state import SimulationState
@@ -13,16 +14,21 @@ from hive.state.update.simulation_update_result import SimulationUpdateResult
 class StepSimulation(NamedTuple, SimulationUpdateFunction):
     dispatcher: DispatcherInterface
 
-    def update(self, simulation_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[StepSimulation]]:
+    def update(
+            self,
+            simulation_state: SimulationState,
+            env: Environment,
+    ) -> Tuple[SimulationUpdateResult, Optional[StepSimulation]]:
         """
         cancels requests whose cancel time has been exceeded
 
         :param simulation_state: state to modify
+        :param env:
         :return: state without cancelled requests, along with this update function
         """
         updated_dispatcher, instructions = self.dispatcher.generate_instructions(simulation_state)
         sim_with_instructions = self._apply_instructions(simulation_state, instructions)
-        sim_next_time_step = sim_with_instructions.step_simulation()
+        sim_next_time_step = sim_with_instructions.step_simulation(env)
 
         return SimulationUpdateResult(sim_next_time_step, ()), self._replace(dispatcher=updated_dispatcher)
 
