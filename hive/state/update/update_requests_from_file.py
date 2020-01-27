@@ -43,7 +43,7 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         """
 
         current_sim_time = sim_state.current_time
-        result = update_requests_from_iterator(self.reader.read_until_value(current_sim_time), sim_state)
+        result = update_requests_from_iterator(self.reader.read_until_value(current_sim_time), sim_state, env)
 
         return result, None
 

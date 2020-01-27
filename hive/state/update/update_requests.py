@@ -3,13 +3,15 @@ from typing import Dict, Iterator
 import functools as ft
 
 from hive.model.request import Request
+from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.typealiases import RequestId
 
 
 def update_requests_from_iterator(it: Iterator[Dict[str, str]],
-                                  initial_sim_state: SimulationState) -> SimulationUpdateResult:
+                                  initial_sim_state: SimulationState,
+                                  env: Environment) -> SimulationUpdateResult:
     """
     add requests from file when the simulation reaches the request's time
 
@@ -18,7 +20,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     :return: sim state plus new requests
     """
 
-    def _update(acc: SimulationUpdateResult, row: Dict[str, str]) -> SimulationUpdateResult:
+    def _update(acc: SimulationUpdateResult, row: Dict[str, str], env: Environment) -> SimulationUpdateResult:
         """
         takes one row, attempts to parse it as a Request, and attempts to add it to the simulation
 
@@ -26,7 +28,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :param row: one row as loaded via DictReader
         :return: the updated sim and updated reporting
         """
-        req = Request.from_row(row, acc.simulation_state.road_network)
+        req = Request.from_row(row, env)
         if isinstance(req, IOError):
             # request failed to parse from row
             row_failure = _failure_as_json(str(req), acc.simulation_state)
@@ -50,7 +52,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(
-        _update,
+        ft.partial(_update, env=env),
         it,
         SimulationUpdateResult(initial_sim_state)
     )

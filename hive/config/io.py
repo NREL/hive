@@ -21,6 +21,8 @@ class IO(NamedTuple):
     working_directory: str
     vehicles_file: str
     requests_file: str
+    parse_dates: bool
+    date_format: str
     bases_file: str
     stations_file: str
     run_log: str
@@ -34,6 +36,8 @@ class IO(NamedTuple):
             'run_log': None,
             'vehicle_log': None,
             'request_log': None,
+            'parse_dates': False,
+            'date_format': '%Y-%m-%d %H:%M:%S',
         }
 
     @classmethod
@@ -60,6 +64,8 @@ class IO(NamedTuple):
             working_directory=d['working_directory'],
             vehicles_file=d['vehicles_file'],
             requests_file=d['requests_file'],
+            parse_dates=d['parse_dates'],
+            date_format=d['date_format'],
             bases_file=d['bases_file'],
             stations_file=d['stations_file'],
             run_log=d['run_log'],

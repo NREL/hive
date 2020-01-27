@@ -297,16 +297,29 @@ def mock_config(
         end_time: SimTime = 100,
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
-        sim_h3_search_resolution: int = 9
+        sim_h3_search_resolution: int = 9,
+        parse_dates: bool = False,
+        date_format: str = '%Y-%m-%d %H:%M:%S',
 ) -> HiveConfig:
-    return HiveConfig.build({"sim": {
-        'start_time': start_time,
-        'end_time': end_time,
-        'timestep_duration_seconds': timestep_duration_seconds,
-        'sim_h3_resolution': sim_h3_location_resolution,
-        'sim_h3_search_resolution': sim_h3_search_resolution,
-        'sim_name': 'test_sim',
-    }})
+    return HiveConfig.build({
+        "sim": {
+            'start_time': start_time,
+            'end_time': end_time,
+            'timestep_duration_seconds': timestep_duration_seconds,
+            'sim_h3_resolution': sim_h3_location_resolution,
+            'sim_h3_search_resolution': sim_h3_search_resolution,
+            'sim_name': 'test_sim',
+        },
+        "io": {
+            'vehicles_file': '',
+            'requests_file': '',
+            'bases_file': '',
+            'stations_file': '',
+            'parse_dates': parse_dates,
+            'date_format': date_format,
+        }
+
+    })
 
 
 def mock_env(
