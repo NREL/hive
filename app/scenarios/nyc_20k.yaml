@@ -1,7 +1,7 @@
 sim:
   sim_name: nyc_20k
   timestep_duration_seconds: 60
-io:
+output:
   output_directory: nyc_20k_out
   requests_file: nyc_20k.csv
   vehicles_file: nyc_200.csv

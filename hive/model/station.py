@@ -7,6 +7,7 @@ from hive.model.energy.charger import Charger
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
+from hive.util.units import Currency
 
 
 class Station(NamedTuple):
@@ -26,6 +27,7 @@ class Station(NamedTuple):
     geoid: GeoId
     total_chargers: Dict[Charger, int]
     available_chargers: Dict[Charger, int]
+    charger_prices: Dict[Charger, Currency]
 
     @classmethod
     def build(cls,
@@ -33,7 +35,10 @@ class Station(NamedTuple):
               geoid: GeoId,
               chargers: Dict[Charger, int]
               ):
-        return Station(id, geoid, chargers, chargers)
+        prices = {}
+        for charger in chargers.keys():
+            prices.update({charger: 0.0})
+        return Station(id, geoid, chargers, chargers, prices)
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -144,3 +149,8 @@ class Station(NamedTuple):
             updated_avail_chargers[charger] += 1
 
             return self._replace(available_chargers=updated_avail_chargers)
+
+    def update_prices(self, new_prices: Dict[Charger, Currency]) -> Station:
+        return self._replace(
+            charger_prices=DictOps.merge_dicts(self.charger_prices, new_prices)
+        )

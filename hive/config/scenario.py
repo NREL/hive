@@ -6,6 +6,11 @@ from hive.config import ConfigBuilder
 
 
 class Scenario(NamedTuple):
+    scenario_directory: str
+    vehicles_file: str
+    requests_file: str
+    bases_file: str
+    stations_file: str
     currency_name: str
     currency_symbol: str
 
@@ -32,6 +37,11 @@ class Scenario(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Scenario:
         return Scenario(
+            scenario_directory=d['scenario_directory'],
+            vehicles_file=d['vehicles_file'],
+            requests_file=d['requests_file'],
+            bases_file=d['bases_file'],
+            stations_file=d['stations_file'],
             currency_name=d['currency_name'],
             currency_symbol=d['currency_symbol']
         )

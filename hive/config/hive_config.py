@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from typing import NamedTuple, Dict, Union, Optional
 
-from hive.config import ConfigBuilder, IO, Sim, Network, Scenario
+from hive.config import ConfigBuilder, Output, Sim, Network, Scenario
 
 
 class HiveConfig(NamedTuple):
-    io: Optional[IO]
+    io: Optional[Output]
     sim: Optional[Sim]
     network: Optional[Network]
     scenario: Optional[Scenario]
+
+    timestamp: str = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
@@ -22,7 +26,7 @@ class HiveConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
-        io_build = IO.build(d['io']) if 'io' in d else None
+        io_build = Output.build(d['io']) if 'io' in d else None
         sim_build = Sim.build(d['sim']) if 'sim' in d else None
         network_build = Network.build(d['network']) if 'network' in d else None
         scenario_build = Scenario.build(d['scenario']) if 'scenario' in d else None
@@ -42,3 +46,7 @@ class HiveConfig(NamedTuple):
                 network=network_build,
                 scenario=scenario_build
             )
+
+    def run_name(self) -> str:
+        sim_name: str = self.sim.sim_name if self.sim else ""
+        return sim_name + '_' + self.timestamp
