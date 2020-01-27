@@ -57,13 +57,15 @@ with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
         except IOError as err:
             build_errors.append(err)
         try:
-            powertrain = build_powertrain(row['powertrain_id'])
-            env = env.add_powertrain(powertrain)
+            if row['powertrain_id'] not in env.powertrains:
+                powertrain = build_powertrain(row['powertrain_id'])
+                env = env.add_powertrain(powertrain)
         except IOError as err:
             build_errors.append(err)
         try:
-            powercurve = build_powercurve(row['powercurve_id'])
-            env = env.add_powercurve(powercurve)
+            if row['powercurve_id'] not in env.powercurves:
+                powercurve = build_powercurve(row['powercurve_id'])
+                env = env.add_powercurve(powercurve)
         except IOError as err:
             build_errors.append(err)
 
