@@ -3,6 +3,7 @@ from __future__ import annotations
 from csv import DictReader
 from typing import List, Dict, NamedTuple, Tuple, Optional
 
+from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
@@ -31,11 +32,13 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
         )
 
     def update(self,
-               simulation_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromString]]:
+               simulation_state: SimulationState,
+               env: Environment) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromString]]:
         """
         add requests from file when the simulation reaches the request's time
 
         :param simulation_state: the current sim state
+        :param env:
         :return: sim state plus new requests
         """
         subset = [self.header, ] + self.requests[self.row_position:]

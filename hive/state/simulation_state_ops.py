@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Type, Union, Tuple, cast
+from typing import Union, Tuple, cast
 
 from hive.model.base import Base
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.energy.powertrain.powertrain import Powertrain
-from hive.model.energy.powercurve.powercurve import Powercurve
 from hive.state.simulation_state import SimulationState
 from hive.util.exception import *
 from hive.util.typealiases import SimTime
@@ -20,8 +18,6 @@ def initial_simulation_state(
         vehicles: Tuple[Vehicle, ...] = (),
         stations: Tuple[Station, ...] = (),
         bases: Tuple[Base, ...] = (),
-        powertrains: Tuple[Powertrain, ...] = (),
-        powercurves: Tuple[Powercurve, ...] = (),
         start_time: SimTime = 0,
         sim_timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
@@ -53,7 +49,7 @@ def initial_simulation_state(
     )
     failures: Tuple[SimulationStateError, ...] = tuple()
 
-    # add vehicles, stations, bases, powertrains, and powercurves
+    # add vehicles, stations, bases
     has_vehicles = ft.reduce(
         _add_to_builder,
         vehicles,
@@ -69,22 +65,12 @@ def initial_simulation_state(
         bases,
         has_vehicles_and_stations
     )
-    has_powertrains = ft.reduce(
-        _add_to_builder,
-        powertrains,
-        has_bases
-    )
-    has_everything = ft.reduce(
-        _add_to_builder,
-        powercurves,
-        has_powertrains
-    )
 
-    return has_everything
+    return has_bases
 
 
 def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]],
-                    x: Union[Vehicle, Station, Base, Type[Powertrain], Type[Powercurve]]) \
+                    x: Union[Vehicle, Station, Base]) \
         -> Tuple[SimulationState, Tuple[SimulationStateError, ...]]:
     """
     adds a single Vehicle, Station, Base, Powertrain, or Powercurve to the simulator, unless it is invalid
@@ -124,25 +110,7 @@ def _add_to_builder(acc: Tuple[SimulationState, Tuple[SimulationStateError, ...]
         else:
             return result, this_failures
 
-    # add a Powertrain
-    elif issubclass(type(x), Powertrain):
-        powertrain = cast(Powertrain, x)
-        result = this_simulation_state.add_powertrain(powertrain)
-        if isinstance(result, SimulationStateError):
-            return this_simulation_state, (result,) + this_failures
-        else:
-            return result, this_failures
-
-    # add a Powercurve
-    elif issubclass(type(x), Powercurve):
-        powercurve = cast(Powercurve, x)
-        result = this_simulation_state.add_powercurve(powercurve)
-        if isinstance(result, SimulationStateError):
-            return this_simulation_state, (result,) + this_failures
-        else:
-            return result, this_failures
-
     else:
         # x is something else; do not modify simulation
-        failure = SimulationStateError(f"not a Vehicle, Station, Base, Powertrain, or Powercurve: {x}")
+        failure = SimulationStateError(f"not a Vehicle, Station, or Base: {x}")
         return this_simulation_state, (failure,) + this_failures

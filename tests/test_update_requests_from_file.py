@@ -15,9 +15,10 @@ class TestUpdateRequestsFromFile(TestCase):
         """
         sim_time = 180  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
+        env = mock_env()
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file)
-        result, _ = fn.update(sim)
+        result, _ = fn.update(sim, env)
         self.assertEqual(len(result.reports), 2, "should have reported the add")
         self.assertEqual(len(result.simulation_state.requests), 2, "should have added the reqs")
         for req in result.simulation_state.requests.values():
@@ -31,9 +32,10 @@ class TestUpdateRequestsFromFile(TestCase):
         sim_time = 720  # will pull in all requests with departure_time earlier than 720
         expected_reqs, expected_reports = 7, 20
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
+        env = mock_env()
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file)
-        result, _ = fn.update(sim)
+        result, _ = fn.update(sim, env)
         self.assertEqual(expected_reports, len(result.reports), "should have reported the add")
         self.assertEqual(expected_reqs, len(result.simulation_state.requests), "should have added the reqs")
         for req in result.simulation_state.requests.values():

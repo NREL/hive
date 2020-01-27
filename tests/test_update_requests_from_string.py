@@ -1,8 +1,7 @@
 from unittest import TestCase
 
 from hive.state.update.update_requests_from_string import UpdateRequestsFromString
-from hive.state.simulation_state_ops import initial_simulation_state
-from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from tests.mock_lobster import *
 
 
 class TestUpdateRequestsFromString(TestCase):
@@ -12,9 +11,10 @@ class TestUpdateRequestsFromString(TestCase):
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
         fn = UpdateRequestsFromString.build(src)
-        sim, errors = initial_simulation_state(HaversineRoadNetwork(), start_time=61200)
+        sim = mock_sim(sim_time=61200)
+        env = mock_env()
 
-        up_sim, _ = fn.update(sim)
+        up_sim, _ = fn.update(sim, env)
 
         self.assertEquals(len(up_sim.simulation_state.requests), 1, "only one request should have loaded")
         self.assertIn("1_a", up_sim.simulation_state.requests, "the first request should have been added")
@@ -28,11 +28,12 @@ class TestUpdateRequestsFromString(TestCase):
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
         fn1 = UpdateRequestsFromString.build(src)
-        sim, errors = initial_simulation_state(HaversineRoadNetwork(), start_time=61200)
+        sim = mock_sim(sim_time=61200)
+        env = mock_env()
 
-        up_sim, fn2 = fn1.update(sim)
+        up_sim, fn2 = fn1.update(sim, env)
         later_sim = up_sim.simulation_state._replace(initial_sim_time=64800)
-        up_later_sim, _ = fn2.update(later_sim)
+        up_later_sim, _ = fn2.update(later_sim, env)
 
         self.assertEquals(len(up_later_sim.simulation_state.requests), 2, "both requests should have loaded")
         self.assertIn("1_b", up_later_sim.simulation_state.requests, "the second request should have been added")
@@ -46,16 +47,17 @@ class TestUpdateRequestsFromString(TestCase):
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
         fn1 = UpdateRequestsFromString.build(src)
-        sim, errors = initial_simulation_state(HaversineRoadNetwork(), start_time=86398)
+        sim = mock_sim(sim_time=86398)
+        env = mock_env()
 
-        up_sim, fn2 = fn1.update(sim)
+        up_sim, fn2 = fn1.update(sim, env)
 
         self.assertEquals(len(up_sim.simulation_state.requests), 2, "both requests should have loaded")
         self.assertIn("1_a", up_sim.simulation_state.requests, "the first request should have been added")
         self.assertIn("1_b", up_sim.simulation_state.requests, "the second request should have been added")
 
         later_sim = up_sim.simulation_state._replace(initial_sim_time=86399)
-        up_later_sim, _ = fn2.update(later_sim)
+        up_later_sim, _ = fn2.update(later_sim, env)
 
         self.assertEquals(len(up_later_sim.simulation_state.requests), 2, "both requests should have loaded")
         self.assertEquals(up_later_sim.simulation_state.requests,
