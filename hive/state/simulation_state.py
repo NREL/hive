@@ -214,9 +214,8 @@ class SimulationState(NamedTuple):
 
             # determine price of charge event
             kwh_transacted = (charged_vehicle.energy_source.energy_kwh - vehicle.energy_source.energy_kwh)  # kwh
-            kw_transacted = kwh_transacted * (SECONDS_IN_HOUR / sim_state_w_effects.sim_timestep_duration_seconds)  # kw
-            charger_price = station.charger_prices.get(charged_vehicle.charger_intent)
-            charging_price = kw_transacted * charger_price if charger_price else 0.0
+            charger_price = station.charger_prices.get(charged_vehicle.charger_intent)  # Currency
+            charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
             # update currency balance for vehicle, station
             updated_vehicle = charged_vehicle.send_payment(charging_price)

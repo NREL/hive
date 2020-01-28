@@ -24,8 +24,8 @@ def default_charging_prices() -> Iterator[Dict[str, str]]:
     """
     return iter([{"time": "0",
                   "station_id": "default",
-                  "charger_type": charger.value,
-                  "price_kw": "0.0"
+                  "charger_type": charger.name,
+                  "price_kwh": "0.0"
                   } for charger in Charger.to_tuple()])
 
 
@@ -123,21 +123,26 @@ def add_row_to_this_update(acc: Tuple[Dict[str, Dict[Charger, Currency]], Tuple[
     :return: the updated accumulator
     """
     rows, failures = acc
+
     try:
+        price = float(row['price_kwh'])
+        charger = Charger.from_string(row["charger_type"])
         if "station_id" in row:
-            this_entry = rows[row["station_id"]] if rows.get(row["station_id"]) else {}
-            this_entry.update({Charger.from_string(row["charger_type"]): float(row["price_kw"])})
-            updated = DictOps.add_to_dict(rows,row["station_id"],this_entry)
+            station_id = row["station_id"]
+            this_entry = rows[station_id] if rows.get(station_id) else {}
+            this_entry.update({charger: price})
+            updated = DictOps.add_to_dict(rows, station_id, this_entry)
             return updated, failures
         elif "geoid" in row:
-            this_entry = rows[row["geoid"]] if rows.get(row["geoid"]) else {}
-            this_entry.update({Charger.from_string(row["charger_type"]): float(row["price_kw"])})
-            updated = DictOps.add_to_dict(rows,row["geoid"],this_entry)
+            geoid = row["geoid"]
+            this_entry = rows[geoid] if rows.get(geoid) else {}
+            this_entry.update({charger: price})
+            updated = DictOps.add_to_dict(rows, geoid, this_entry)
             return updated, failures
         else:
             return rows, (f"missing geoid|station_id for row: {row}",) + failures
     except Exception as e:
-        return rows, (str(e),)
+        return rows, (f"error: {e.args} for row {row}",)
 
 
 def update_station_prices(result: SimulationUpdateResult,
@@ -183,12 +188,11 @@ def map_to_station_ids(this_update: Dict[str, Dict[Charger, Currency]],
 
                 # find the set of all station search geoids corresponding with the
                 # provided station charge price geoid
-                search_geoids = (k, )
+                search_geoids = (k,)
                 if res > sim.sim_h3_search_resolution:
-                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution), )
+                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution),)
                 elif res < sim.sim_h3_search_resolution:
                     search_geoids = tuple(h3.h3_to_children(k, sim.sim_h3_search_resolution))
-                    search_geoids
 
                 station_ids = (station_id for search_geoid in search_geoids if sim.s_search.get(search_geoid)
                                for station_id in sim.s_search.get(search_geoid))

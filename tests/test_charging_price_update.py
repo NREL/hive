@@ -19,9 +19,9 @@ class TestChargingPriceUpdate(TestCase):
         s1_prices = result.simulation_state.stations[s1].charger_prices
         s2_prices = result.simulation_state.stations[s2].charger_prices
         bs1_prices = result.simulation_state.stations[bs1].charger_prices
-        self.assertEqual(s1_prices.get(Charger.DCFC), 0.05, "station s1 has a DCFC price of 0.05 per kw")
-        self.assertEqual(s2_prices.get(Charger.DCFC), 0.05, "station s1 has a DCFC price of 0.05 per kw")
-        self.assertEqual(bs1_prices.get(Charger.LEVEL_2), 0.005, "station s1 has a LEVEL_2 price of 0.005 per kw")
+        self.assertEqual(s1_prices.get(Charger.DCFC), 0.5, "station s1 has a DCFC price of 0.5 per kwh")
+        self.assertEqual(s2_prices.get(Charger.DCFC), 0.5, "station s1 has a DCFC price of 0.5 per kwh")
+        self.assertEqual(bs1_prices.get(Charger.LEVEL_2), 0.05, "station s1 has a LEVEL_2 price of 0.05 per kwh")
         fn.reader.close()
 
     def test_charge_price_update_from_geoid_file(self):
@@ -40,9 +40,9 @@ class TestChargingPriceUpdate(TestCase):
         s1_prices = result.simulation_state.stations[s1].charger_prices
         s2_prices = result.simulation_state.stations[s2].charger_prices
         bs1_prices = result.simulation_state.stations[bs1].charger_prices
-        self.assertEqual(s1_prices.get(Charger.DCFC), 0.03, "station s1 has a DCFC price of 0.03 per kw")
-        self.assertEqual(s2_prices.get(Charger.DCFC), 0.03, "station s1 has a DCFC price of 0.03 per kw")
-        self.assertEqual(bs1_prices.get(Charger.LEVEL_2), 0.003, "station s1 has a LEVEL_2 price of 0.003 per kw")
+        self.assertEqual(s1_prices.get(Charger.DCFC), 0.3, "station s1 has a DCFC price of 0.3 per kwh")
+        self.assertEqual(s2_prices.get(Charger.DCFC), 0.3, "station s1 has a DCFC price of 0.3 per kwh")
+        self.assertEqual(bs1_prices.get(Charger.LEVEL_2), 0.03, "station s1 has a LEVEL_2 price of 0.03 per kwh")
         fn.reader.close()
 
     def test_charge_price_default_price_is_zero(self):
@@ -73,10 +73,10 @@ class TestChargingPriceUpdate(TestCase):
         env = mock_env()
         price1, price2 = 0.03, 0.05
         update = iter([
-            {"time": "0", "station_id": "default", "charger_type": "DCFC", "price_kw": str(price1)},
-            {"time": "1", "station_id": "default", "charger_type": "DCFC", "price_kw": "1234.5678"},
-            {"time": "1", "station_id": "default", "charger_type": "DCFC", "price_kw": str(price2)},
-            {"time": "2", "station_id": "default", "charger_type": "DCFC", "price_kw": "-765.4321"},
+            {"time": "0", "station_id": "default", "charger_type": "DCFC", "price_kwh": str(price1)},
+            {"time": "1", "station_id": "default", "charger_type": "DCFC", "price_kwh": "1234.5678"},
+            {"time": "1", "station_id": "default", "charger_type": "DCFC", "price_kwh": str(price2)},
+            {"time": "2", "station_id": "default", "charger_type": "DCFC", "price_kwh": "-765.4321"},
         ])
         fn1 = ChargingPriceUpdate.build(fallback_values=update)
 

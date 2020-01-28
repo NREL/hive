@@ -8,7 +8,7 @@ import os
 
 from hive.state.simulation_state import SimulationState
 from hive.reporting.reporter import Reporter
-from hive.config import Output
+from hive.config import IO
 
 
 class DetailedReporter(Reporter):
@@ -18,7 +18,7 @@ class DetailedReporter(Reporter):
     :param io: io config
     """
 
-    def __init__(self, io: Output, sim_output_dir: str):
+    def __init__(self, io: IO, sim_output_dir: str):
 
         def _setup_logger(name, log_file, level=logging.INFO):
             logger = logging.getLogger(name)
