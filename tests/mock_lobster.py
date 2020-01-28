@@ -5,7 +5,6 @@ import math
 from h3 import h3
 
 from hive.config import HiveConfig
-from hive.model.instruction import Instruction
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.manager.manager_interface import ManagerInterface
@@ -277,16 +276,12 @@ def mock_sim(
         vehicles: Tuple[Vehicle, ...] = (),
         stations: Tuple[Station, ...] = (),
         bases: Tuple[Base, ...] = (),
-        powertrains: Tuple[Powertrain, ...] = (mock_powertrain(),),
-        powercurves: Tuple[Powercurve, ...] = (mock_powercurve(),)
 ) -> SimulationState:
     sim, errors = initial_simulation_state(
         road_network=mock_network(h3_location_res),
         vehicles=vehicles,
         stations=stations,
         bases=bases,
-        powertrains=powertrains,
-        powercurves=powercurves,
         start_time=sim_time,
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,
@@ -314,8 +309,26 @@ def mock_config(
     }})
 
 
+def mock_env(
+        config: HiveConfig = mock_config(),
+        powercurves: Optional[Dict[PowercurveId, Powercurve]] = None,
+        powertrains: Optional[Dict[PowertrainId, Powertrain]] = None,
+) -> Environment:
+    if powercurves is None:
+        powercurves = {mock_powercurve().get_id(): mock_powercurve()}
+    if powertrains is None:
+        powertrains = {mock_powertrain().get_id(): mock_powertrain()}
+
+    env = Environment(
+        config=config,
+        powertrains=powertrains,
+        powercurves=powercurves,
+    )
+    return env
+
+
 def mock_runner(config: HiveConfig = mock_config()) -> LocalSimulationRunner:
-    return LocalSimulationRunner(env=Environment(config=config))
+    return LocalSimulationRunner(env=mock_env(config=config))
 
 
 def mock_reporter() -> Reporter:

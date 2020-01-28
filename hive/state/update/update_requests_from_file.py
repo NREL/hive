@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import NamedTuple, Tuple, Optional
 
+from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
@@ -32,7 +33,8 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
             return UpdateRequestsFromFile(stepper)
 
     def update(self,
-               sim_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromFile]]:
+               sim_state: SimulationState,
+               env: Environment) -> Tuple[SimulationUpdateResult, Optional[UpdateRequestsFromFile]]:
         """
         add requests from file when the simulation reaches the request's time
 

@@ -37,8 +37,6 @@ if not os.path.isdir(sim_output_dir):
     os.makedirs(sim_output_dir)
 
 env = Environment(config=config)
-runner = LocalSimulationRunner(env=env)
-reporter = DetailedReporter(config.io, sim_output_dir)
 dispatcher = GreedyDispatcher()
 road_network = HaversineRoadNetwork(config.sim.sim_h3_resolution)
 
@@ -51,8 +49,6 @@ build_errors = []
 
 with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
     builder = []
-    powertrain_builder = {}
-    powercurve_builder = {}
     reader = csv.DictReader(vf)
     for row in reader:
         try:
@@ -61,19 +57,19 @@ with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
         except IOError as err:
             build_errors.append(err)
         try:
-            powertrain = build_powertrain(row['powertrain_id'])
-            powertrain_builder[powertrain.get_id()] = powertrain
+            if row['powertrain_id'] not in env.powertrains:
+                powertrain = build_powertrain(row['powertrain_id'])
+                env = env.add_powertrain(powertrain)
         except IOError as err:
             build_errors.append(err)
         try:
-            powercurve = build_powercurve(row['powercurve_id'])
-            powercurve_builder[powercurve.get_id()] = powercurve
+            if row['powercurve_id'] not in env.powercurves:
+                powercurve = build_powercurve(row['powercurve_id'])
+                env = env.add_powercurve(powercurve)
         except IOError as err:
             build_errors.append(err)
 
     vehicles = tuple(builder)
-    powertrains = tuple(powertrain_builder.values())
-    powercurves = tuple(powercurve_builder.values())
 
 with open(bases_file, 'r', encoding='utf-8-sig') as bf:
     builder = []
@@ -107,8 +103,6 @@ initial_sim, sim_state_errors = initial_simulation_state(
     vehicles=vehicles,
     stations=stations,
     bases=bases,
-    powertrains=powertrains,
-    powercurves=powercurves,
     sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
     sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
 )
@@ -119,6 +113,8 @@ if sim_state_errors:
 # TODO: move this lower and make it ordered.
 update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests(), StepSimulation(dispatcher))
 
+runner = LocalSimulationRunner(env=env)
+reporter = DetailedReporter(config.io, sim_output_dir)
 start = time.time()
 sim_result = runner.run(
     initial_simulation_state=initial_sim,

@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import Tuple, Optional, NamedTuple
 
+from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
@@ -11,7 +12,10 @@ from hive.util.typealiases import RequestId
 
 class CancelRequests(NamedTuple, SimulationUpdateFunction):
 
-    def update(self, simulation_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[CancelRequests]]:
+    def update(
+            self,
+            simulation_state: SimulationState,
+            env: Environment) -> Tuple[SimulationUpdateResult, Optional[CancelRequests]]:
         """
         cancels requests whose cancel time has been exceeded
 
