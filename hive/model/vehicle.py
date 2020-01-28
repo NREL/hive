@@ -4,17 +4,18 @@ import copy
 from typing import NamedTuple, Dict, Optional
 from h3 import h3
 
+from hive.model import Station
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency, SECONDS_IN_HOUR
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
@@ -67,9 +68,10 @@ class Vehicle(NamedTuple):
 
     station_intent: Optional[StationId] = None
     charger_intent: Optional[Charger] = None
-
     station: Optional[StationId] = None
     plugged_in_charger: Optional[Charger] = None
+
+    balance: Currency = 0.0
 
     idle_time_seconds: Seconds = 0
     distance_traveled_km: Kilometers = 0.0
@@ -219,25 +221,37 @@ class Vehicle(NamedTuple):
 
     def charge(self,
                powercurve: Powercurve,
+               station: Station,
                duration_seconds: Seconds) -> Vehicle:
 
         """
         applies a charge event to a vehicle
 
         :param powercurve: the vehicle's powercurve model
+        :param station: the station we are charging at
         :param duration_seconds: duration_seconds of this time step in seconds
         :return: the updated Vehicle
         """
 
         if not self.plugged_in_charger:
             raise EntityError("Vehicle cannot charge without a charger.")
-        if self.energy_source.is_at_ideal_energy_limit():
+        elif self.energy_source.is_at_ideal_energy_limit():
             # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
             #  So, I think the simulation state should handle the charge end termination state.
             return self
         else:
+            # charge
             updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration_seconds)
-            return self._replace(energy_source=updated_energy_source)
+
+            # determine cost of charge
+            kwh_transacted = (updated_energy_source.energy_kwh - self.energy_source.energy_kwh)  # kwh
+            kw_transacted = kwh_transacted * (SECONDS_IN_HOUR / duration_seconds)  # kw
+            charger_price = station.charger_prices.get(self.plugged_in_charger)
+            currency_transacted = kw_transacted * charger_price if charger_price else 0.0
+            return self._replace(
+                energy_source=updated_energy_source,
+                balance=self.balance - currency_transacted
+            )
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: Seconds) -> Optional[Vehicle]:
         """
@@ -375,6 +389,13 @@ class Vehicle(NamedTuple):
 
             if previous_vehicle_state == VehicleState.IDLE:
                 return transitioned_vehicle._reset_idle_stats()
+            elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
+                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
+                # unplug the charger
+                return transitioned_vehicle._replace(
+                    plugged_in_charger=None,
+                    station=None
+                )
             elif previous_vehicle_state == VehicleState.DISPATCH_STATION:
                 return transitioned_vehicle._reset_charge_intent()
             else:

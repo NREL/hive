@@ -65,7 +65,7 @@ class TabularPowercurve(Powercurve):
          :param energy_source: a vehicle's source of energy
          :param charger: has a capacity scaling effect on the energy_rate
          :param duration_seconds: the amount of time to charge for
-         :return: energy rate in KwH for charging with the current state of the EnergySource
+         :return: the energy source charged for this duration using this charger
          """
 
         # iterate for as many seconds in a time step, by step_size_seconds
@@ -75,12 +75,11 @@ class TabularPowercurve(Powercurve):
         while t < duration_seconds and updated_energy.not_at_ideal_energy_limit():
             soc = updated_energy.soc * 100  # scaled to [0, 100]
 
-            # charging.py line 76:
             veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor  # kilowatt
             charge_power_kw = min(veh_kw_rate, charger.power_kw)  # kilowatt
             kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours
 
-            updated_energy = updated_energy.load_energy(kwh)  # kilowatt-hours
+            updated_energy = updated_energy.load_energy(kwh)
 
             t += self.step_size_seconds
 

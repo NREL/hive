@@ -200,18 +200,25 @@ class SimulationState(NamedTuple):
         vehicle = sim_state_w_effects.vehicles[vehicle_id]
         if VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.MOVE:
             powertrain = sim_state_w_effects.powertrains[vehicle.powertrain_id]
-            vehicle = vehicle.move(sim_state_w_effects.road_network,
-                                   powertrain,
-                                   sim_state_w_effects.sim_timestep_duration_seconds)
+            updated_vehicle = vehicle.move(sim_state_w_effects.road_network,
+                                           powertrain,
+                                           sim_state_w_effects.sim_timestep_duration_seconds)
+
+            return sim_state_w_effects.modify_vehicle(updated_vehicle)
+
         elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
+            # perform a charging event
             powercurve = sim_state_w_effects.powercurves[vehicle.powercurve_id]
-            vehicle = vehicle.charge(powercurve, sim_state_w_effects.sim_timestep_duration_seconds)
+            stations_at_location = self.at_geoid(vehicle.geoid).get('stations')
+            station = stations_at_location[0] if stations_at_location else None
+            updated_vehicle = vehicle.charge(powercurve, station, sim_state_w_effects.sim_timestep_duration_seconds)
+
+            return sim_state_w_effects.modify_vehicle(updated_vehicle)
+
         elif vehicle.vehicle_state == VehicleState.IDLE:
-            vehicle = vehicle.idle(sim_state_w_effects.sim_timestep_duration_seconds)
+            updated_vehicle = vehicle.idle(sim_state_w_effects.sim_timestep_duration_seconds)
 
-        updated_sim_state = sim_state_w_effects.modify_vehicle(vehicle)
-
-        return updated_sim_state
+            return sim_state_w_effects.modify_vehicle(updated_vehicle)
 
     def step_simulation(self) -> SimulationState:
         """

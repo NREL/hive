@@ -36,6 +36,8 @@ def hours_to_seconds(hours: Hours) -> Seconds:
     return int(seconds)
 
 
+SECONDS_IN_HOUR = 3600
+
 SECONDS_TO_HOURS = 1 / 3600
 
 #    Speed
