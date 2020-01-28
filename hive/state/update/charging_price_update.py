@@ -39,7 +39,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
     @classmethod
     def build(cls,
               charging_file: Optional[str] = None,
-              default_values: Iterator[Dict[str, str]] = default_charging_prices()
+              fallback_values: Iterator[Dict[str, str]] = default_charging_prices()
               ) -> ChargingPriceUpdate:
         """
         reads a requests file and builds a ChargingPriceUpdate SimulationUpdateFunction
@@ -47,12 +47,12 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         charger types to a kw price of zero Currency units per kw
 
         :param charging_file: optional file path for charger pricing by time of day
-        :param default_values: if file path not provided, this is the fallback
+        :param fallback_values: if file path not provided, this is the fallback
         :return: a SimulationUpdate function pointing at the first line of a request file
         """
 
         if not charging_file:
-            stepper = DictReaderStepper.from_iterator(default_values, "time")
+            stepper = DictReaderStepper.from_iterator(fallback_values, "time")
             return ChargingPriceUpdate(stepper, True)
         else:
             req_path = Path(charging_file)

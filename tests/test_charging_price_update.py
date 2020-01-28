@@ -78,7 +78,7 @@ class TestChargingPriceUpdate(TestCase):
             {"time": "1", "station_id": "default", "charger_type": "DCFC", "price_kw": str(price2)},
             {"time": "2", "station_id": "default", "charger_type": "DCFC", "price_kw": "-765.4321"},
         ])
-        fn1 = ChargingPriceUpdate.build(default_values=update)
+        fn1 = ChargingPriceUpdate.build(fallback_values=update)
 
         # the first update should pull in the first row of data;
         # the second update should pull in the second and third row
