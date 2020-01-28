@@ -1,9 +1,6 @@
 from typing import TypedDict, Tuple
 
-from hive.model.request import Request
-from hive.model.vehicle import Vehicle
-from hive.model.station import Station
-from hive.model.base import Base
+from hive.util.typealiases import RequestId, VehicleId, StationId, BaseId
 
 
 class AtLocationResponse(TypedDict):
@@ -19,7 +16,7 @@ class AtLocationResponse(TypedDict):
     :param bases: bases at the location
     :type bases: :py:obj:`Tuple[Base, ...]`
     """
-    requests: Tuple[Request, ...]
-    vehicles: Tuple[Vehicle, ...]
-    stations: Tuple[Station, ...]
-    bases: Tuple[Base, ...]
+    requests: Tuple[RequestId, ...]
+    vehicles: Tuple[VehicleId, ...]
+    stations: Tuple[StationId, ...]
+    bases: Tuple[BaseId, ...]

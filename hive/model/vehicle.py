@@ -4,7 +4,6 @@ import copy
 from typing import NamedTuple, Dict, Optional
 from h3 import h3
 
-from hive.model import Station
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
@@ -15,7 +14,7 @@ from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency, SECONDS_IN_HOUR
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
@@ -43,19 +42,14 @@ class Vehicle(NamedTuple):
     :type vehicle_state: :py:obj:`VehicleState`
     :param passengers: A map of passengers that are in the vehicle. Could be empty
     :type passengers: :py:obj:`Dict[PasengerId, Passengers]`
-    :param station_intent: The station a vehicle is intending to charge at.
-    :type station_intent: :py:obj:`Optional[StationId]`
     :param charger_intent: The charger type a vehicle intends to plug into.
     :type charger_intent: :py:obj:`Optional[Charger]`
-    :param station: The station a vehicle is charging at.
-    :type station: :py:obj:`Optional[Station]`
-    :param plugged_in_charger: The charger type a vehicle is plugged into.
-    :type plugged_in_charger: :py:obj:`Optional[Charger]`
     :param idle_time_s: A counter to track how long the vehicle has been idle.
     :type idle_time_s: :py:obj:`seconds`
     :param distance_traveled: A accumulator to track how far a vehicle has traveled.
     :type distance_traveled_km: :py:obj:`kilometers`
     """
+    #
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
@@ -65,14 +59,9 @@ class Vehicle(NamedTuple):
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     passengers: Dict[PassengerId, Passenger] = {}
-
-    station_intent: Optional[StationId] = None
     charger_intent: Optional[Charger] = None
-    station: Optional[StationId] = None
-    plugged_in_charger: Optional[Charger] = None
 
     balance: Currency = 0.0
-
     idle_time_seconds: Seconds = 0
     distance_traveled_km: Kilometers = 0.0
 
@@ -195,33 +184,14 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
-    def plug_in_to(self, station_id: StationId, charger: Charger) -> Vehicle:
-        """
-        Plugs a vehicle into a charger.
-
-        :param station_id: id of the station to plug into
-        :param charger: charger type to plug into
-        :return: the updated vehicle
-        """
-        return self._replace(plugged_in_charger=charger, station=station_id)
-
-    def unplug(self) -> Vehicle:
-        """
-        Unplugs a vehicle from a charger.
-
-        :return: the updated vehicle
-        """
-        return self._replace(plugged_in_charger=None, station=None)
-
     def _reset_idle_stats(self) -> Vehicle:
         return self._replace(idle_time_seconds=0)
 
     def _reset_charge_intent(self) -> Vehicle:
-        return self._replace(charger_intent=None, station_intent=None)
+        return self._replace(charger_intent=None)
 
     def charge(self,
                powercurve: Powercurve,
-               station: Station,
                duration_seconds: Seconds) -> Vehicle:
 
         """
@@ -233,24 +203,17 @@ class Vehicle(NamedTuple):
         :return: the updated Vehicle
         """
 
-        if not self.plugged_in_charger:
-            raise EntityError("Vehicle cannot charge without a charger.")
+        if not self.charger_intent:
+            raise EntityError("Vehicle attempting to charge but has no charger intent")
         elif self.energy_source.is_at_ideal_energy_limit():
-            # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
-            #  So, I think the simulation state should handle the charge end termination state.
+            # should not reach here, terminal state mechanism should catch this condition first
             return self
         else:
-            # charge
-            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration_seconds)
+            # charge energy source
+            updated_energy_source = powercurve.refuel(self.energy_source, self.charger_intent, duration_seconds)
 
-            # determine cost of charge
-            kwh_transacted = (updated_energy_source.energy_kwh - self.energy_source.energy_kwh)  # kwh
-            kw_transacted = kwh_transacted * (SECONDS_IN_HOUR / duration_seconds)  # kw
-            charger_price = station.charger_prices.get(self.plugged_in_charger)
-            currency_transacted = kw_transacted * charger_price if charger_price else 0.0
             return self._replace(
-                energy_source=updated_energy_source,
-                balance=self.balance - currency_transacted
+                energy_source=updated_energy_source
             )
 
     def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: Seconds) -> Optional[Vehicle]:
@@ -343,7 +306,7 @@ class Vehicle(NamedTuple):
         """
         return self._replace(route=route)
 
-    def set_charge_intent(self, station_id: StationId, charger: Charger) -> Vehicle:
+    def set_charge_intent(self, charger: Charger) -> Vehicle:
         """
         Sets the intention for a vehicle to charge.
 
@@ -351,7 +314,23 @@ class Vehicle(NamedTuple):
         :param charger: the type of charger the vehicle intends to use
         :return: the updated vehicle
         """
-        return self._replace(station_intent=station_id, charger_intent=charger)
+        return self._replace(charger_intent=charger)
+
+    def send_payment(self, amount: Currency) -> Vehicle:
+        """
+        updates the Vehicle's balance based on sending a payment
+        :param amount: the amount to pay
+        :return: the updated Vehicle
+        """
+        return self._replace(balance=self.balance - amount)
+
+    def receive_payment(self, amount: Currency) -> Vehicle:
+        """
+        updates the Vehicle's balance based on receiving a payment
+        :param amount: the amount to be paid
+        :return: the updated Vehicle
+        """
+        return self._replace(balance=self.balance + amount)
 
     """
     TRANSITION FUNCTIONS
@@ -388,15 +367,15 @@ class Vehicle(NamedTuple):
             transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
 
             if previous_vehicle_state == VehicleState.IDLE:
+                # end of idling
                 return transitioned_vehicle._reset_idle_stats()
             elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
                     VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
-                # unplug the charger
-                return transitioned_vehicle._replace(
-                    plugged_in_charger=None,
-                    station=None
-                )
-            elif previous_vehicle_state == VehicleState.DISPATCH_STATION:
+                # interrupted charge session
+                return transitioned_vehicle._reset_charge_intent()
+            elif previous_vehicle_state == VehicleState.DISPATCH_STATION and \
+                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
+                # interrupted charge dispatch
                 return transitioned_vehicle._reset_charge_intent()
             else:
                 return transitioned_vehicle

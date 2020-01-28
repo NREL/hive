@@ -28,6 +28,7 @@ class Station(NamedTuple):
     total_chargers: Dict[Charger, int]
     available_chargers: Dict[Charger, int]
     charger_prices: Dict[Charger, Currency]
+    balance: Currency = 0.0
 
     @classmethod
     def build(cls,
@@ -154,3 +155,11 @@ class Station(NamedTuple):
         return self._replace(
             charger_prices=DictOps.merge_dicts(self.charger_prices, new_prices)
         )
+
+    def receive_payment(self, currency_received: Currency) -> Station:
+        """
+        pay for charging costs
+        :param currency_received: the currency received for a charge event
+        :return: the updated Station
+        """
+        return self._replace(balance=self.balance + currency_received)
