@@ -55,15 +55,6 @@ class SimulationState(NamedTuple):
     s_search: Dict[GeoId, Tuple[StationId, ...]] = {}
     b_search: Dict[GeoId, Tuple[BaseId, ...]] = {}
 
-    @property
-    def current_time(self) -> SimTime:
-        """
-        computes the current time in seconds from the start of the simulation.
-
-        :return: the current time in seconds
-        """
-        return self.sim_time
-
     def add_request(self, request: Request) -> Union[Exception, SimulationState]:
         """
         adds a request to the SimulationState

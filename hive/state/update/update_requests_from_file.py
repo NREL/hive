@@ -52,7 +52,7 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         :return: sim state plus new requests
         """
 
-        current_sim_time = sim_state.current_time
+        current_sim_time = sim_state.sim_time
 
         if env.config.sim.date_format:
             def stop_condition(value: str) -> bool:

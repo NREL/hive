@@ -58,10 +58,10 @@ class DetailedReporter(Reporter):
                reports: Tuple[str, ...]):
         self._report_entities(logger=self.vehicle_logger,
                               entities=sim_state.vehicles.values(),
-                              sim_time=sim_state.current_time)
+                              sim_time=sim_state.sim_time)
         self._report_entities(logger=self.request_logger,
                               entities=sim_state.requests.values(),
-                              sim_time=sim_state.current_time)
+                              sim_time=sim_state.sim_time)
 
         if self.run_logger:
             for report in reports:

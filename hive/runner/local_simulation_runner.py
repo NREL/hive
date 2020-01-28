@@ -93,7 +93,7 @@ class LocalSimulationRunner(NamedTuple):
 
             reporter.report(updated_sim, updated_payload.r)
             if updated_sim.sim_time % 3600 == 0:
-                print(f"running time {updated_sim.sim_time} of {self.env.config.sim.end_time}")
+                print(f"simulating {updated_sim.sim_time} of {self.env.config.sim.end_time} seconds")
             return RunnerPayload(s=updated_sim, f=updated_payload.f, r=())
 
         final_payload = ft.reduce(
