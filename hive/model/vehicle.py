@@ -49,18 +49,20 @@ class Vehicle(NamedTuple):
     :param distance_traveled: A accumulator to track how far a vehicle has traveled.
     :type distance_traveled_km: :py:obj:`kilometers`
     """
-    #
+    # core vehicle properties
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
     property_link: PropertyLink
 
+    # vehicle planning/operational properties
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
     passengers: Dict[PassengerId, Passenger] = {}
     charger_intent: Optional[Charger] = None
 
+    # vehicle analytical properties
     balance: Currency = 0.0
     idle_time_seconds: Seconds = 0
     distance_traveled_km: Kilometers = 0.0
@@ -240,6 +242,51 @@ class Vehicle(NamedTuple):
 
         return vehicle_w_stats
 
+    def can_transition(self, vehicle_state: VehicleState) -> bool:
+        """
+        Returns whether or not a vehicle can transition to a new state from its current state
+
+        :param vehicle_state: the new state to transition to
+        :return: Boolean
+        """
+        if not VehicleState.is_valid(vehicle_state):
+            raise TypeError("Invalid vehicle state type.")
+        elif self.vehicle_state == vehicle_state:
+            return False
+        elif self.has_passengers():
+            return False
+        else:
+            return True
+
+    def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
+        """
+        Transitions the vehicle to a new state if possible.
+
+        :param vehicle_state: the new state to transition to
+        :return: the updated vehicle or None if not possible
+        """
+        previous_vehicle_state = self.vehicle_state
+        if previous_vehicle_state == vehicle_state:
+            return self
+        elif self.can_transition(vehicle_state):
+            transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
+
+            if previous_vehicle_state == VehicleState.IDLE:
+                # end of idling
+                return transitioned_vehicle._reset_idle_stats()
+            elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
+                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
+                # interrupted charge session
+                return transitioned_vehicle._reset_charge_intent()
+            elif previous_vehicle_state == VehicleState.DISPATCH_STATION and \
+                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
+                # interrupted charge dispatch
+                return transitioned_vehicle._reset_charge_intent()
+            else:
+                return transitioned_vehicle
+        else:
+            return None
+
     def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
         """
         Loads some passengers onto this vehicle
@@ -331,47 +378,3 @@ class Vehicle(NamedTuple):
         """
         return self._replace(balance=self.balance + amount)
 
-    def can_transition(self, vehicle_state: VehicleState) -> bool:
-        """
-        Returns whether or not a vehicle can transition to a new state from its current state
-
-        :param vehicle_state: the new state to transition to
-        :return: Boolean
-        """
-        if not VehicleState.is_valid(vehicle_state):
-            raise TypeError("Invalid vehicle state type.")
-        elif self.vehicle_state == vehicle_state:
-            return False
-        elif self.has_passengers():
-            return False
-        else:
-            return True
-
-    def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
-        """
-        Transitions the vehicle to a new state if possible.
-
-        :param vehicle_state: the new state to transition to
-        :return: the updated vehicle or None if not possible
-        """
-        previous_vehicle_state = self.vehicle_state
-        if previous_vehicle_state == vehicle_state:
-            return self
-        elif self.can_transition(vehicle_state):
-            transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
-
-            if previous_vehicle_state == VehicleState.IDLE:
-                # end of idling
-                return transitioned_vehicle._reset_idle_stats()
-            elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
-                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
-                # interrupted charge session
-                return transitioned_vehicle._reset_charge_intent()
-            elif previous_vehicle_state == VehicleState.DISPATCH_STATION and \
-                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
-                # interrupted charge dispatch
-                return transitioned_vehicle._reset_charge_intent()
-            else:
-                return transitioned_vehicle
-        else:
-            return None
