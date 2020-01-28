@@ -103,6 +103,7 @@ initial_sim, sim_state_errors = initial_simulation_state(
     vehicles=vehicles,
     stations=stations,
     bases=bases,
+    start_time=config.sim.start_time,
     sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
     sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
 )
@@ -111,7 +112,7 @@ if sim_state_errors:
     raise Exception(sim_state_errors)
 
 # TODO: move this lower and make it ordered.
-update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests(), StepSimulation(dispatcher))
+update_functions = (UpdateRequestsFromFile.build(requests_file, env), CancelRequests(), StepSimulation(dispatcher))
 
 runner = LocalSimulationRunner(env=env)
 reporter = DetailedReporter(config.io, sim_output_dir)

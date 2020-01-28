@@ -8,7 +8,6 @@ from hive.runner.environment import Environment
 from hive.util.typealiases import *
 
 
-
 class Request(NamedTuple):
     """
     A ride hail request which is alive in the simulation but not yet serviced.
@@ -98,19 +97,19 @@ class Request(NamedTuple):
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
-                if env.config.io.parse_dates:
+                if env.config.sim.date_format:
                     try:
-                        departure_dt = datetime.strptime(row['departure_time'], env.config.io.date_format)
-                        cancel_dt = datetime.strptime(row['cancel_time'], env.config.io.date_format)
+                        departure_dt = datetime.strptime(row['departure_time'], env.config.sim.date_format)
+                        cancel_dt = datetime.strptime(row['cancel_time'], env.config.sim.date_format)
                     except ValueError:
-                        raise IOError("Unable to parse datetime. Make sure the format matches config.io.date_format")
+                        raise IOError("Unable to parse datetime. Make sure the format matches config.sim.date_format")
                     departure_time = int(departure_dt.timestamp())
                     cancel_time = int(cancel_dt.timestamp())
 
                 else:
                     if not row['departure_time'].isdigit() or not row['cancel_time'].isdigit():
                         raise IOError('Time must be an integer. \
-                                        If you want to use a datetime string, set config.io.parse_dates to True')
+                                        If you want to use a datetime string, set config.io.dateformat')
                     departure_time = int(row['departure_time'])
                     cancel_time = int(row['cancel_time'])
 

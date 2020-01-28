@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import csv
-from typing import Iterator, Dict, Union, TextIO
-
+from typing import Iterator, Dict, Union, TextIO, Callable
 
 class DictReaderIterator:
     """
@@ -12,14 +11,15 @@ class DictReaderIterator:
     def __init__(self,
                  reader: Iterator[Dict[str, str]],
                  step_column_name: str,
-                 stop_value: float):
+                 stop_condition: Callable,
+                 ):
         self.reader = reader
         self.history = None
         self.step_column_name = step_column_name
-        self.stop_value = stop_value
+        self.stop_condition = stop_condition
 
-    def update_stop_value(self, new_value: float):
-        self.stop_value = new_value
+    def update_stop_condition(self, stop_condition: Callable):
+        self.stop_condition = stop_condition
 
     def __iter__(self):
         return self
@@ -28,7 +28,7 @@ class DictReaderIterator:
 
         if self.history:
             # we stored an extra value from last time; return that
-            if float(self.history[self.step_column_name]) < self.stop_value:
+            if self.stop_condition(self.history[self.step_column_name]):
                 # stored value is within range
                 tmp = self.history
                 self.history = None
@@ -38,7 +38,7 @@ class DictReaderIterator:
                 raise StopIteration
         else:
             row = next(self.reader)
-            if float(row[self.step_column_name]) < self.stop_value:
+            if self.stop_condition(row[self.step_column_name]):
                 # value is within range
                 return row
             else:
@@ -61,7 +61,7 @@ class DictReaderStepper:
                  dict_reader: Iterator[Dict[str, str]],
                  file_reference: TextIO,
                  step_column_name: str,
-                 initial_stop_value: float = 0
+                 initial_stop_condition: Callable
                  ):
         """
         creates a DictReaderStepper with an internal DictReaderIterator
@@ -69,14 +69,14 @@ class DictReaderStepper:
         :param step_column_name: the column we are comparing new bounds against
         :param initial_stop_value: the initial bounds - set low (zero) for ascending, high (inf) for descending
         """
-        self._iterator = DictReaderIterator(dict_reader, step_column_name, initial_stop_value)
+        self._iterator = DictReaderIterator(dict_reader, step_column_name, initial_stop_condition)
         self._file = file_reference
 
     @classmethod
     def from_file(cls,
                   file: str,
                   step_column_name: str,
-                  initial_stop_value: float = 0) -> Union[Exception, DictReaderStepper]:
+                  initial_stop_condition: Callable) -> Union[Exception, DictReaderStepper]:
         """
         alternative constructor that takes a file path and returns a DictReaderStepper, or, a failure
         :param file: the file path
@@ -86,18 +86,18 @@ class DictReaderStepper:
         """
         try:
             f = open(file, 'r')
-            return cls(csv.DictReader(f), f, step_column_name, initial_stop_value)
+            return cls(csv.DictReader(f), f, step_column_name, initial_stop_condition)
         except Exception as e:
             return e
 
-    def read_until_value(self, bounds: float) -> Iterator[Dict[str, str]]:
+    def read_until_stop_condition(self, stop_condition: Callable) -> Iterator[Dict[str, str]]:
         """
         reads rows from the DictReader as long as step_column_name is less than or equal to "value"
         :param bounds: the value, such as a second_of_day to compare against. we will read all new
                       rows as long as each row's value is less than or equal to this
         :return: the updated DictReaderStepper and a tuple of rows, which may be empty if no new rows are consumable.
         """
-        self._iterator.update_stop_value(bounds)
+        self._iterator.update_stop_condition(stop_condition)
         return self._iterator
 
     def close(self):

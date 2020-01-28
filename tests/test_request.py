@@ -88,7 +88,10 @@ class MyTestCase(unittest.TestCase):
             'cancel_time': '2019-01-09 16:11:11',
             'passengers': '4'
         }
-        config = mock_config(parse_dates=True, date_format="%Y-%m-%d %H:%M:%S")
+        config = mock_config(
+            start_time="2019-01-09 00:00:00",
+            end_time="2019-01-10 00:00:00",
+            date_format="%Y-%m-%d %H:%M:%S")
         env = mock_env(config)
         req = Request.from_row(row, env)
         self.assertEqual(req.departure_time, 1547057471)
@@ -104,7 +107,10 @@ class MyTestCase(unittest.TestCase):
             'cancel_time': '2019-01-09 16:11:11',
             'passengers': '4'
         }
-        config = mock_config(parse_dates=True, date_format="%Y-%m-%d %H:%M:%S")
+        config = mock_config(
+            start_time="2019-01-09 00:00:00",
+            end_time="2019-01-10 00:00:00",
+            date_format="%Y-%m-%d %H:%M:%S")
         env = mock_env(config)
         with self.assertRaises(IOError):
             Request.from_row(row, env)
