@@ -140,55 +140,8 @@ class Vehicle(NamedTuple):
             except ValueError:
                 raise IOError(f"a numeric value could not be parsed from {row}")
 
-    def has_passengers(self) -> bool:
-        """
-        Returns whether or not the vehicle has passengers.
-
-        :return: Boolean
-        """
-        return len(self.passengers) > 0
-
-    def has_route(self) -> bool:
-        """
-        Returns whether or not the vehicle has a route.
-
-        :return: Boolean
-        """
-        return len(self.route) != 0
-
-    def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
-        """
-        Loads some passengers onto this vehicle
-
-        :param new_passengers: the set of passengers we want to add
-        :return: the updated vehicle
-        """
-        updated_passengers = copy.copy(self.passengers)
-        for passenger in new_passengers:
-            passenger_with_vehicle_id = passenger.add_vehicle_id(self.id)
-            updated_passengers[passenger.id] = passenger_with_vehicle_id
-        return self._replace(passengers=updated_passengers)
-
-    def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
-        """
-        Drops off passengers to their destination.
-
-        :param passenger_id:
-        :return: the updated vehicle
-        """
-        if passenger_id not in self.passengers:
-            return self
-        updated_passengers = DictOps.remove_from_dict(self.passengers, passenger_id)
-        return self._replace(passengers=updated_passengers)
-
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
-
-    def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_seconds=0)
-
-    def _reset_charge_intent(self) -> Vehicle:
-        return self._replace(charger_intent=None)
 
     def charge(self,
                powercurve: Powercurve,
@@ -211,7 +164,6 @@ class Vehicle(NamedTuple):
         else:
             # charge energy source
             updated_energy_source = powercurve.refuel(self.energy_source, self.charger_intent, duration_seconds)
-
             return self._replace(
                 energy_source=updated_energy_source
             )
@@ -288,6 +240,47 @@ class Vehicle(NamedTuple):
 
         return vehicle_w_stats
 
+    def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
+        """
+        Loads some passengers onto this vehicle
+
+        :param new_passengers: the set of passengers we want to add
+        :return: the updated vehicle
+        """
+        updated_passengers = copy.copy(self.passengers)
+        for passenger in new_passengers:
+            passenger_with_vehicle_id = passenger.add_vehicle_id(self.id)
+            updated_passengers[passenger.id] = passenger_with_vehicle_id
+        return self._replace(passengers=updated_passengers)
+
+    def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
+        """
+        Drops off passengers to their destination.
+
+        :param passenger_id:
+        :return: the updated vehicle
+        """
+        if passenger_id not in self.passengers:
+            return self
+        updated_passengers = DictOps.remove_from_dict(self.passengers, passenger_id)
+        return self._replace(passengers=updated_passengers)
+
+    def has_passengers(self) -> bool:
+        """
+        Returns whether or not the vehicle has passengers.
+
+        :return: Boolean
+        """
+        return len(self.passengers) > 0
+
+    def has_route(self) -> bool:
+        """
+        Returns whether or not the vehicle has a route.
+
+        :return: Boolean
+        """
+        return len(self.route) != 0
+
     def battery_swap(self, energy_source: EnergySource) -> Vehicle:
         """
         Replaces the vehicle energy source with a new energy source.
@@ -316,6 +309,12 @@ class Vehicle(NamedTuple):
         """
         return self._replace(charger_intent=charger)
 
+    def _reset_idle_stats(self) -> Vehicle:
+        return self._replace(idle_time_seconds=0)
+
+    def _reset_charge_intent(self) -> Vehicle:
+        return self._replace(charger_intent=None)
+
     def send_payment(self, amount: Currency) -> Vehicle:
         """
         updates the Vehicle's balance based on sending a payment
@@ -331,11 +330,6 @@ class Vehicle(NamedTuple):
         :return: the updated Vehicle
         """
         return self._replace(balance=self.balance + amount)
-
-    """
-    TRANSITION FUNCTIONS
-    --------------------
-    """
 
     def can_transition(self, vehicle_state: VehicleState) -> bool:
         """
