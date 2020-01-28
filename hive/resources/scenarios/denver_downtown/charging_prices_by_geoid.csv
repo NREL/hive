@@ -1,0 +1,12 @@
+time,geoid,charger_type,price_kw
+0,86268cdafffffff,DCFC,0.01
+0,86268cdafffffff,LEVEL_2,0.001
+28800,86268cdafffffff,DCFC,0.05
+28800,86268cdafffffff,LEVEL_2,0.005
+36000,86268cdafffffff,DCFC,0.03
+36000,86268cdafffffff,LEVEL_2,0.003
+57600,86268cdafffffff,DCFC,0.05
+57600,86268cdafffffff,LEVEL_2,0.005
+64800,86268cdafffffff,DCFC,0.01
+64800,86268cdafffffff,LEVEL_2,0.001
+

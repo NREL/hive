@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 from hive.model.energy.charger import Charger
+from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
@@ -22,10 +23,10 @@ def default_charging_prices() -> Iterator[Dict[str, str]]:
     :return: a price update function which will set all chargers to a Currency of zero
     """
     return iter([{"time": "0",
-             "station_id": "default",
-             "charger_type": charger.value,
-             "price_kw": "0.0"
-             } for charger in Charger.to_tuple()])
+                  "station_id": "default",
+                  "charger_type": charger.value,
+                  "price_kw": "0.0"
+                  } for charger in Charger.to_tuple()])
 
 
 class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
@@ -62,11 +63,13 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
                 return ChargingPriceUpdate(stepper, False)
 
     def update(self,
-               sim_state: SimulationState) -> Tuple[SimulationUpdateResult, Optional[ChargingPriceUpdate]]:
+               sim_state: SimulationState,
+               env: Environment) -> Tuple[SimulationUpdateResult, Optional[ChargingPriceUpdate]]:
         """
         update charging price when the simulation reaches the update's time
 
         :param sim_state: the current sim state
+        :param env: static environment variables
         :return: sim state plus new requests
         """
 
@@ -119,26 +122,22 @@ def add_row_to_this_update(acc: Tuple[Dict[str, Dict[Charger, Currency]], Tuple[
     :param row: the row to add
     :return: the updated accumulator
     """
-    sim, failures = acc
+    rows, failures = acc
     try:
         if "station_id" in row:
-            updated = DictOps.add_to_dict(
-                sim,
-                row["station_id"],
-                {Charger.from_string(row["charger_type"]): float(row["price_kw"])}
-            )
+            this_entry = rows[row["station_id"]] if rows.get(row["station_id"]) else {}
+            this_entry.update({Charger.from_string(row["charger_type"]): float(row["price_kw"])})
+            updated = DictOps.add_to_dict(rows,row["station_id"],this_entry)
             return updated, failures
         elif "geoid" in row:
-            updated = DictOps.add_to_dict(
-                sim,
-                row["geoid"],
-                {Charger.from_string(row["charger_type"]): float(row["price_kw"])}
-            )
+            this_entry = rows[row["geoid"]] if rows.get(row["geoid"]) else {}
+            this_entry.update({Charger.from_string(row["charger_type"]): float(row["price_kw"])})
+            updated = DictOps.add_to_dict(rows,row["geoid"],this_entry)
             return updated, failures
         else:
-            return sim, (f"failed to update charger for row: {row}",) + failures
+            return rows, (f"missing geoid|station_id for row: {row}",) + failures
     except Exception as e:
-        return sim, (str(e),)
+        return rows, (str(e),)
 
 
 def update_station_prices(result: SimulationUpdateResult,
@@ -184,14 +183,15 @@ def map_to_station_ids(this_update: Dict[str, Dict[Charger, Currency]],
 
                 # find the set of all station search geoids corresponding with the
                 # provided station charge price geoid
-                search_geoids = set(k)
-                if res < sim.sim_h3_search_resolution:
-                    search_geoids = set(h3.h3_to_parent(k, sim.sim_h3_search_resolution))
-                elif res > sim.sim_h3_search_resolution:
-                    search_geoids = h3.h3_to_children(k, sim.sim_h3_search_resolution)
+                search_geoids = (k, )
+                if res > sim.sim_h3_search_resolution:
+                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution), )
+                elif res < sim.sim_h3_search_resolution:
+                    search_geoids = tuple(h3.h3_to_children(k, sim.sim_h3_search_resolution))
+                    search_geoids
 
-                station_ids = [station_id for station_id in
-                               sim.s_search[search_geoid] for search_geoid in search_geoids]
+                station_ids = (station_id for search_geoid in search_geoids if sim.s_search.get(search_geoid)
+                               for station_id in sim.s_search.get(search_geoid))
 
                 # all of these station ids should get entries matching the provided geoid
                 for station_id in station_ids:
