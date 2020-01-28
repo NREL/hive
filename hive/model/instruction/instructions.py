@@ -93,7 +93,7 @@ class DispatchStationInstruction(NamedTuple, Instruction):
         end = sim_state.road_network.property_link_from_geoid(station.geoid)
         route = sim_state.road_network.route(start, end)
 
-        vehicle = vehicle.assign_route(route).set_charge_intent(station.id, self.charger)
+        vehicle = vehicle.assign_route(route).set_charge_intent(self.charger)
 
         updated_sim_state = sim_state.modify_vehicle(vehicle)
 
@@ -117,15 +117,14 @@ class ChargeStationInstruction(NamedTuple, Instruction):
 
         if not vehicle.can_transition(VehicleState.CHARGING_STATION):
             return None
-        vehicle = vehicle.transition(VehicleState.CHARGING_STATION)
+        updated_vehicle = vehicle.transition(VehicleState.CHARGING_STATION).set_charge_intent(self.charger)
 
-        at_location = sim_state.at_geoid(vehicle.geoid)
+        at_location = sim_state.at_geoid(updated_vehicle.geoid)
         if not at_location['stations']:
             return None
 
         station_less_charger = station.checkout_charger(self.charger)
-        vehicle_w_charger = vehicle.plug_in_to(station.id, self.charger)
-        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(vehicle_w_charger)
+        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(updated_vehicle)
 
         return updated_sim_state
 
@@ -147,15 +146,14 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
 
         if not vehicle.can_transition(VehicleState.CHARGING_BASE):
             return None
-        vehicle = vehicle.transition(VehicleState.CHARGING_BASE)
+        updated_vehicle = vehicle.set_charge_intent(self.charger).transition(VehicleState.CHARGING_BASE)
 
-        at_location = sim_state.at_geoid(vehicle.geoid)
+        at_location = sim_state.at_geoid(updated_vehicle.geoid)
         if not at_location['bases']:
             return None
 
         station_less_charger = station.checkout_charger(self.charger)
-        vehicle_w_charger = vehicle.plug_in_to(station.id, self.charger)
-        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(vehicle_w_charger)
+        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(updated_vehicle)
 
         return updated_sim_state
 

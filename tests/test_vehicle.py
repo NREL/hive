@@ -160,7 +160,7 @@ class TestVehicle(TestCase):
         self.assertGreater(m3.distance_traveled_km, 8.5, 'Vehicle should have traveled around 8km')
 
     def test_charge(self):
-        vehicle = mock_vehicle().transition(VehicleState.CHARGING_STATION).plug_in_to('s1', Charger.DCFC)
+        vehicle = mock_vehicle().set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
         power_curve = mock_powercurve()
         time_step_size_secs = 1
 
@@ -175,7 +175,7 @@ class TestVehicle(TestCase):
         vehicle = mock_vehicle(
             capacity_kwh=100,
             soc=1.0
-        ).transition(VehicleState.CHARGING_STATION).plug_in_to('s1', Charger.DCFC)
+        ).set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
         power_curve = mock_powercurve()
         time_step_size_secs = 1
 
@@ -223,9 +223,6 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.distance_traveled_km, 0)
         self.assertEqual(vehicle.idle_time_seconds, 0)
         self.assertEqual(vehicle.route, ())
-        self.assertEqual(vehicle.station, None)
-        self.assertEqual(vehicle.station_intent, None)
-        self.assertEqual(vehicle.plugged_in_charger, None)
         self.assertEqual(vehicle.charger_intent, None)
 
     def test_from_row_bad_powertrain_id(self):

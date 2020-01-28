@@ -19,6 +19,9 @@ Kmph = float  # kilometers per hour
 Seconds = int  # seconds
 Hours = float  # hours
 
+# Currency
+Currency = float  # an arbitrary currency type, reified in hiveconfig.scenario.currency_name
+
 # Dimensionless
 Percentage = float  # between 0-100
 Ratio = float  # between 0-1
@@ -32,6 +35,8 @@ def hours_to_seconds(hours: Hours) -> Seconds:
     seconds = hours * HOURS_TO_SECONDS
     return int(seconds)
 
+
+SECONDS_IN_HOUR = 3600
 
 SECONDS_TO_HOURS = 1 / 3600
 
