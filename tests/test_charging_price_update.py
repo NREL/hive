@@ -13,7 +13,7 @@ class TestChargingPriceUpdate(TestCase):
         sim = mock_sim(stations=(mock_station("s1"), mock_station("s2"), mock_station("bs1"), ), sim_time=28801)
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
-        file = resource_filename("hive.resources.scenarios.denver_downtown", "charging_prices_by_station_id.csv")
+        file = resource_filename("hive.resources.charging_prices", "charging_prices_by_station_id.csv")
         fn = ChargingPriceUpdate.build(charging_file=file)
         result, _ = fn.update(sim, env)
         s1_prices = result.simulation_state.stations[s1].charger_prices
@@ -34,7 +34,7 @@ class TestChargingPriceUpdate(TestCase):
         sim = mock_sim(stations=stations, sim_time=36001)
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
-        file = resource_filename("hive.resources.scenarios.denver_downtown", "charging_prices_by_geoid.csv")
+        file = resource_filename("hive.resources.charging_prices", "charging_prices_by_geoid.csv")
         fn = ChargingPriceUpdate.build(charging_file=file)
         result, _ = fn.update(sim, env)
         s1_prices = result.simulation_state.stations[s1].charger_prices
