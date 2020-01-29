@@ -4,29 +4,30 @@ from pkg_resources import resource_filename
 from typing import Callable
 
 from hive.util.dict_reader_stepper import *
+from hive.util.parsers import time_parser
 
 
 class TestDictReaderStepper(TestCase):
     def _generate_stop_condition(self, stop_time: int) -> Callable:
-        def stop_condition(value: str) -> bool:
-            return int(value) < stop_time
+        def stop_condition(value: int) -> bool:
+            return value < stop_time
         return stop_condition
 
     def test_reading_up_to_a_time_bounds_should_leave_remaining_file_available(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         stop_time = 25920
         stop_condition = self._generate_stop_condition(stop_time)
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", self._generate_stop_condition(0))
+        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         result = tuple(stepper.read_until_stop_condition(stop_condition))
         self.assertEqual(len(result), 20, f"should have found 20 rows with departure time earlier than {stop_time}")
         self.assertEqual(
-            int(stepper._iterator.history['departure_time']),
+            time_parser(stepper._iterator.history['departure_time']),
             stop_time,
             f"next has time {stop_time}"
         )
         for row in result:
             self.assertLess(
-                int(row['departure_time']), 
+                time_parser(row['departure_time']), 
                 stop_time,
                 f"should be less than {stop_time}"
             )
@@ -34,7 +35,7 @@ class TestDictReaderStepper(TestCase):
 
     def test_reading_two_consecutive_times(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", self._generate_stop_condition(0))
+        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         stop1 = 25920
         stop2 = 26040
         result1 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
@@ -43,30 +44,30 @@ class TestDictReaderStepper(TestCase):
         self.assertEqual(len(result2), 5, f"should have found 5 rows with departure time [{stop1}, {stop2})")
         for row in result1:
             self.assertLess(
-                int(row['departure_time']),
+                time_parser(row['departure_time']),
                 stop1,
                 f"should be less than {stop1}")
         for row in result2:
             self.assertGreaterEqual(
-                int(row['departure_time']),
+                time_parser(row['departure_time']),
                 stop1,
                 f"should be gte {stop1}")
             self.assertLess(
-                int(row['departure_time']),
+                time_parser(row['departure_time']),
                 stop2,
                 f"should be less than {stop2}")
         stepper.close()
 
     def test_no_agents_after_end_of_file(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", self._generate_stop_condition(0))
+        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(9999998)))
         result = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(9999999)))
         self.assertEqual(len(result), 0, "should find no more agents after end of time")
 
     def test_no_second_file_reading_on_repeated_value(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", self._generate_stop_condition(0))
+        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         stop = 25920
         result1 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop)))
         result2 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop)))
@@ -75,7 +76,7 @@ class TestDictReaderStepper(TestCase):
 
     def test_correct_management_of_stored_value_after_repeated_value(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", self._generate_stop_condition(0))
+        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         stop1 = 25920
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
@@ -85,17 +86,17 @@ class TestDictReaderStepper(TestCase):
         result = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop2)))
         self.assertEqual(len(result), 1, f"should have found 20 rows with departure time earlier than {stop2}")
         self.assertEqual(
-            int(stepper._iterator.history['departure_time']),
+            time_parser(stepper._iterator.history['departure_time']),
             stop2,
             f"next has time {stop2}"
         )
         for row in result:
             self.assertGreaterEqual(
-                int(row['departure_time']),
+                time_parser(row['departure_time']),
                 stop1,
                 f"should be gte {stop1}"
             )
             self.assertLess(
-                int(row['departure_time']),
+                time_parser(row['departure_time']),
                 stop2,
                 f"should be less than {stop2}")
