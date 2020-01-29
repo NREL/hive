@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import csv
-from typing import Iterator, Dict, Union, TextIO, Callable
+from typing import Iterator, Dict, Union, TextIO, Optional, Callable
+
 
 class DictReaderIterator:
     """
@@ -59,7 +60,7 @@ class DictReaderStepper:
 
     def __init__(self,
                  dict_reader: Iterator[Dict[str, str]],
-                 file_reference: TextIO,
+                 file_reference: Optional[TextIO],
                  step_column_name: str,
                  initial_stop_condition: Callable
                  ):
@@ -82,13 +83,32 @@ class DictReaderStepper:
         :param file: the file path
         :param step_column_name: the column we are comparing new bounds against
         :param initial_stop_value: the initial bounds - set low (zero) for ascending, high (inf) for descending
-        :return:
+               note: descending not yet implemented
+        :return: a new reader or an exception
         """
         try:
             f = open(file, 'r')
             return cls(csv.DictReader(f), f, step_column_name, initial_stop_condition)
         except Exception as e:
             return e
+
+    @classmethod
+    def from_iterator(cls,
+                      data: Iterator[Dict[str, str]],
+                      step_column_name: str,
+                      initial_stop_condition: Callable) -> DictReaderStepper:
+        """
+        allows for substituting a simple Dict Iterator in place of loading from
+        a file, allowing for programmatic data loading (for debugging, or, for
+        dealing with default file contents)
+
+        :param data: a provider of row-wise data similar to a CSV
+        :param step_column_name: the key we are expecting in each Dict that we are comparing new bounds against
+        :param initial_stop_value: the initial bounds - set low (zero) for ascending, high (inf) for descending
+               note: descending not yet implemented
+        :return: a new reader or an exception
+        """
+        return cls(data, None, step_column_name, initial_stop_condition)
 
     def read_until_stop_condition(self, stop_condition: Callable) -> Iterator[Dict[str, str]]:
         """

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Optional, Tuple
 
 from hive.util.units import Kw
 
@@ -36,6 +36,10 @@ class Charger(Enum):
             return _CHARGER_TYPES[s_lower]
         else:
             return None
+
+    @classmethod
+    def to_tuple(cls) -> Tuple[Charger, ...]:
+        return cls.LEVEL_1, cls.LEVEL_2, cls.DCFC
 
 
 _CHARGER_TYPES = {

@@ -47,6 +47,6 @@ class Powercurve(ABC):
         :param energy_source: a vehicle's source of energy
         :param charger: has a capacity scaling effect on the energy_rate
         :param duration_seconds: the amount of time to charge for
-        :return: energy rate in KwH for charging with the current state of the EnergySource
+        :return: the energy source charged for this duration using this charger
         """
 

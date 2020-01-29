@@ -297,6 +297,18 @@ class DictOps:
         return updated_dict
 
     @classmethod
+    def merge_dicts(cls, old: Dict[K, V], new: Dict[K, V]) -> Dict[K, V]:
+        """
+        merges two Dictionaries, replacing old kv pairs with new ones
+        :param old: the old Dict
+        :param new: the new Dict
+        :return: a merged Dict
+        """
+        tmp = copy(old)
+        tmp.update(new)
+        return tmp
+
+    @classmethod
     def add_to_location_dict(cls,
                              xs: Dict[str, Tuple[V, ...]],
                              obj_geoid: str,
