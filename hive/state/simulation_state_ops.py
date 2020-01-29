@@ -3,7 +3,9 @@ from __future__ import annotations
 import functools as ft
 from typing import Union, Tuple, cast
 
+from hive.config import HiveConfig, IO, Sim
 from hive.model.base import Base
+from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -14,10 +16,8 @@ from hive.util.units import Seconds
 
 
 def initial_simulation_state(
-        road_network: RoadNetwork,
-        vehicles: Tuple[Vehicle, ...] = (),
-        stations: Tuple[Station, ...] = (),
-        bases: Tuple[Base, ...] = (),
+        io: IO,
+        sim: Sim,
         start_time: SimTime = 0,
         sim_timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
@@ -26,18 +26,86 @@ def initial_simulation_state(
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
 
-    :param powercurves: 
-    :param powertrains: 
-    :param road_network: the (initial) road network
-    :param vehicles: the vehicles available in this simulation
-    :param stations: the stations available in this simulation
-    :param bases: the bases available in this simulation
+    :param io: the configuration used to load the files related to this SimulationState
+    :param sim: the
     :param start_time: the start time for this simulation (by default, time step 0)
     :param sim_timestep_duration_seconds: the size of a time step in seconds
     :param sim_h3_location_resolution: the h3 resolution for internal positioning (comparison ops can override)
     :param sim_h3_search_resolution: the h3 upper-resolution for the bi-level location search
     :return: a SimulationState, or a SimulationStateError
     """
+
+    vehicles_file = os.path.join(RESOURCES, 'vehicles', io.vehicles_file)
+    requests_file = os.path.join(RESOURCES, 'requests', io.requests_file)
+    bases_file = os.path.join(RESOURCES, 'bases', io.bases_file)
+    stations_file = os.path.join(RESOURCES, 'stations', io.stations_file)
+
+    road_network = HaversineRoadNetwork(sim_h3_location_resolution)
+
+    build_errors = []
+
+    with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
+        builder = []
+        reader = csv.DictReader(vf)
+        for row in reader:
+            try:
+                vehicle = Vehicle.from_row(row, road_network)
+                builder.append(vehicle)
+            except IOError as err:
+                build_errors.append(err)
+            try:
+                if row['powertrain_id'] not in env.powertrains:
+                    powertrain = build_powertrain(row['powertrain_id'])
+                    env = env.add_powertrain(powertrain)
+            except IOError as err:
+                build_errors.append(err)
+            try:
+                if row['powercurve_id'] not in env.powercurves:
+                    powercurve = build_powercurve(row['powercurve_id'])
+                    env = env.add_powercurve(powercurve)
+            except IOError as err:
+                build_errors.append(err)
+
+        vehicles = tuple(builder)
+
+    with open(bases_file, 'r', encoding='utf-8-sig') as bf:
+        builder = []
+        reader = csv.DictReader(bf)
+        for row in reader:
+            try:
+                base = Base.from_row(row, config.sim.sim_h3_resolution)
+                builder.append(base)
+            except IOError as err:
+                build_errors.append(err)
+
+        bases = tuple(builder)
+
+    with open(stations_file, 'r', encoding='utf-8-sig') as sf:
+        builder = {}
+        reader = csv.DictReader(sf)
+        for row in reader:
+            try:
+                station = Station.from_row(row, builder, config.sim.sim_h3_resolution)
+                builder[station.id] = station
+            except IOError as err:
+                build_errors.append(err)
+
+        stations = tuple(builder.values())
+
+    if build_errors:
+        raise Exception(build_errors)
+
+    initial_sim, sim_state_errors = initial_simulation_state(
+        road_network=road_network,
+        vehicles=vehicles,
+        stations=stations,
+        bases=bases,
+        sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
+        sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
+    )
+
+    if sim_state_errors:
+        raise Exception(sim_state_errors)
 
     # copy in fields which do not require additional work
     simulation_state_builder = SimulationState(
