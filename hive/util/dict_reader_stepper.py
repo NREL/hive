@@ -62,13 +62,13 @@ class DictReaderStepper:
                  dict_reader: Iterator[Dict[str, str]],
                  file_reference: Optional[TextIO],
                  step_column_name: str,
-                 initial_stop_condition: Callable
+                 initial_stop_condition: Callable = lambda x: x < 0
                  ):
         """
         creates a DictReaderStepper with an internal DictReaderIterator
         :param dict_reader: the dict reader, reading rows from a csv file
         :param step_column_name: the column we are comparing new bounds against
-        :param initial_stop_value: the initial bounds - set low (zero) for ascending, high (inf) for descending
+        :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
         """
         self._iterator = DictReaderIterator(dict_reader, step_column_name, initial_stop_condition)
         self._file = file_reference
@@ -77,12 +77,12 @@ class DictReaderStepper:
     def from_file(cls,
                   file: str,
                   step_column_name: str,
-                  initial_stop_condition: Callable) -> Union[Exception, DictReaderStepper]:
+                  initial_stop_condition: Callable = lambda x: x < 0) -> Union[Exception, DictReaderStepper]:
         """
         alternative constructor that takes a file path and returns a DictReaderStepper, or, a failure
         :param file: the file path
         :param step_column_name: the column we are comparing new bounds against
-        :param initial_stop_value: the initial bounds - set low (zero) for ascending, high (inf) for descending
+        :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
                note: descending not yet implemented
         :return: a new reader or an exception
         """
@@ -96,7 +96,7 @@ class DictReaderStepper:
     def from_iterator(cls,
                       data: Iterator[Dict[str, str]],
                       step_column_name: str,
-                      initial_stop_condition: Callable) -> DictReaderStepper:
+                      initial_stop_condition: Callable = lambda x: x < 0) -> DictReaderStepper:
         """
         allows for substituting a simple Dict Iterator in place of loading from
         a file, allowing for programmatic data loading (for debugging, or, for
@@ -104,7 +104,7 @@ class DictReaderStepper:
 
         :param data: a provider of row-wise data similar to a CSV
         :param step_column_name: the key we are expecting in each Dict that we are comparing new bounds against
-        :param initial_stop_value: the initial bounds - set low (zero) for ascending, high (inf) for descending
+        :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
                note: descending not yet implemented
         :return: a new reader or an exception
         """
@@ -113,8 +113,8 @@ class DictReaderStepper:
     def read_until_stop_condition(self, stop_condition: Callable) -> Iterator[Dict[str, str]]:
         """
         reads rows from the DictReader as long as step_column_name is less than or equal to "value"
-        :param bounds: the value, such as a second_of_day to compare against. we will read all new
-                      rows as long as each row's value is less than or equal to this
+        :param stop_condition: the condition to validate. we will read all new
+                      rows as long as each row's value evaluates to True
         :return: the updated DictReaderStepper and a tuple of rows, which may be empty if no new rows are consumable.
         """
         self._iterator.update_stop_condition(stop_condition)

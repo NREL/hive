@@ -298,7 +298,6 @@ def mock_config(
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
-        date_format: Optional[str] = None,
 ) -> HiveConfig:
     return HiveConfig.build({
         "sim": {
@@ -308,7 +307,6 @@ def mock_config(
             'sim_h3_resolution': sim_h3_location_resolution,
             'sim_h3_search_resolution': sim_h3_search_resolution,
             'sim_name': 'test_sim',
-            'date_format': date_format,
         },
         "io": {
             'vehicles_file': '',

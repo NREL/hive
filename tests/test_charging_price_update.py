@@ -14,7 +14,7 @@ class TestChargingPriceUpdate(TestCase):
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
         file = resource_filename("hive.resources.charging_prices", "charging_prices_by_station_id.csv")
-        fn = ChargingPriceUpdate.build(charging_file=file, env=env)
+        fn = ChargingPriceUpdate.build(charging_file=file)
         result, _ = fn.update(sim, env)
         s1_prices = result.simulation_state.stations[s1].charger_prices
         s2_prices = result.simulation_state.stations[s2].charger_prices
@@ -35,7 +35,7 @@ class TestChargingPriceUpdate(TestCase):
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
         file = resource_filename("hive.resources.charging_prices", "charging_prices_by_geoid.csv")
-        fn = ChargingPriceUpdate.build(charging_file=file, env=env)
+        fn = ChargingPriceUpdate.build(charging_file=file)
         result, _ = fn.update(sim, env)
         s1_prices = result.simulation_state.stations[s1].charger_prices
         s2_prices = result.simulation_state.stations[s2].charger_prices
@@ -57,7 +57,7 @@ class TestChargingPriceUpdate(TestCase):
             sim_timestep_duration_seconds=1,
         )
         env = mock_env()
-        fn = ChargingPriceUpdate.build(env=env)
+        fn = ChargingPriceUpdate.build()
         result, _ = fn.update(sim, env)
         prices = result.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices
         self.assertEqual(prices.get(Charger.LEVEL_1), 0.0, "LEVEL_1 charging should be free by default")
@@ -78,7 +78,7 @@ class TestChargingPriceUpdate(TestCase):
             {"time": "1", "station_id": "default", "charger_type": "DCFC", "price_kwh": str(price2)},
             {"time": "2", "station_id": "default", "charger_type": "DCFC", "price_kwh": "-765.4321"},
         ])
-        fn1 = ChargingPriceUpdate.build(fallback_values=update, env=env)
+        fn1 = ChargingPriceUpdate.build(fallback_values=update)
 
         # the first update should pull in the first row of data;
         # the second update should pull in the second and third row

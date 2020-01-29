@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union
+from typing import NamedTuple, Dict
 from datetime import datetime
 
 from hive.config import ConfigBuilder
@@ -13,7 +13,6 @@ class Sim(NamedTuple):
     timestep_duration_seconds: Seconds
     start_time: SimTime
     end_time: SimTime
-    date_format: str
     sim_h3_resolution: int
     sim_h3_search_resolution: int
 
@@ -45,21 +44,17 @@ class Sim(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Sim:
-        date_format = d['date_format']
-        if date_format:
-            try:
-                start_dt = datetime.strptime(d['start_time'], date_format)
-                end_dt = datetime.strptime(d['end_time'], date_format)
-            except ValueError:
-                raise IOError("Unable to parse datetime. Make sure the format matches config.sim.date_format")
-            start_time = int(start_dt.timestamp())
-            end_time = int(end_dt.timestamp())
-        else:
+        try:
+            start_time = int(datetime.fromisoformat(d['start_time']).timestamp())
+            end_time = int(datetime.fromisoformat(d['end_time']).timestamp())
+        except TypeError:
             try:
                 start_time = int(d['start_time'])
                 end_time = int(d['end_time'])
             except ValueError:
-                raise IOError("Unable to parse datetime. Make sure the format matches config.sim.date_format")
+                raise IOError(
+                    "Unable to parse datetime. \
+                    Make sure the time is either a unix time integer or an ISO 8601 string")
 
         return Sim(
             sim_name=d['sim_name'],
@@ -68,5 +63,4 @@ class Sim(NamedTuple):
             end_time=end_time,
             sim_h3_resolution=d['sim_h3_resolution'],
             sim_h3_search_resolution=d['sim_h3_search_resolution'],
-            date_format=date_format,
         )

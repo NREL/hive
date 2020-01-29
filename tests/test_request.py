@@ -77,25 +77,6 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(req.cancel_time, 61800)
         self.assertEqual(len(req.passengers), 4)
 
-    def test_from_row_datetime_good(self):
-        row = {
-            'request_id': '1_a',
-            'o_lat': '0',
-            'o_lon': '0',
-            'd_lat': '0',
-            'd_lon': '0',
-            'departure_time': '2019-01-09 11:11:11',
-            'cancel_time': '2019-01-09 16:11:11',
-            'passengers': '4'
-        }
-        config = mock_config(
-            start_time="2019-01-09 00:00:00",
-            end_time="2019-01-10 00:00:00",
-            date_format="%Y-%m-%d %H:%M:%S")
-        env = mock_env(config)
-        req = Request.from_row(row, env)
-        self.assertEqual(req.departure_time, 1547057471)
-
     def test_from_row_datetime_bad(self):
         row = {
             'request_id': '1_a',
@@ -108,12 +89,12 @@ class MyTestCase(unittest.TestCase):
             'passengers': '4'
         }
         config = mock_config(
-            start_time="2019-01-09 00:00:00",
-            end_time="2019-01-10 00:00:00",
-            date_format="%Y-%m-%d %H:%M:%S")
+            start_time="2019-01-09T00:00:00-07:00",
+            end_time="2019-01-10T00:00:00-07:00",
+        )
         env = mock_env(config)
-        with self.assertRaises(IOError):
-            Request.from_row(row, env)
+        request = Request.from_row(row, env)
+        self.assertIsInstance(request, IOError)
 
 
 

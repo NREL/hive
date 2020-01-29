@@ -26,20 +26,11 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         :param request_file: file path for requests
         :return: a SimulationUpdate function pointing at the first line of a request file
         """
-
-        if env.config.sim.date_format:
-            def stop_condition(value: str) -> bool:
-                dt = datetime.strptime(value, env.config.sim.date_format)
-                return dt.timestamp() < 0
-        else:
-            def stop_condition(value: str) -> bool:
-                return int(value) < 0
-
         req_path = Path(request_file)
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
         else:
-            stepper = DictReaderStepper.from_file(request_file, "departure_time", stop_condition)
+            stepper = DictReaderStepper.from_file(request_file, "departure_time")
             return UpdateRequestsFromFile(stepper)
 
     def update(self,
@@ -55,13 +46,8 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
 
         current_sim_time = sim_state.sim_time
 
-        if env.config.sim.date_format:
-            def stop_condition(value: str) -> bool:
-                dt = datetime.strptime(value, env.config.sim.date_format)
-                return dt.timestamp() < current_sim_time
-        else:
-            def stop_condition(value: str) -> bool:
-                return int(value) < current_sim_time
+        def stop_condition(value: str) -> bool:
+            return int(value) < current_sim_time
 
         result = update_requests_from_iterator(
             self.reader.read_until_stop_condition(stop_condition),

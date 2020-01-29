@@ -16,9 +16,9 @@ class TestUpdateRequestsFromFile(TestCase):
         sim_time = 25380  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
         config = mock_config(
-            start_time="1970-01-01 00:00:00",
-            end_time="1970-01-02 00:00:00",
-            date_format="%Y-%m-%d %H:%M:%S")
+            start_time="2019-01-09T00:00:00-07:00",
+            end_time="2019-01-10T00:00:00-07:00",
+        )
         env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file, env)
@@ -37,9 +37,9 @@ class TestUpdateRequestsFromFile(TestCase):
         expected_reqs, expected_reports = 7, 20
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
         config = mock_config(
-            start_time="1970-01-01 00:00:00",
-            end_time="1970-01-02 00:00:00",
-            date_format="%Y-%m-%d %H:%M:%S")
+            start_time="2019-01-09T00:00:00-07:00",
+            end_time="2019-01-10T00:00:00-07:00",
+        )
         env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file, env)

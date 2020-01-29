@@ -1,7 +1,6 @@
 from __future__ import annotations
 from h3 import h3
 from typing import NamedTuple, Optional, Dict, Union
-from datetime import datetime
 
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.runner.environment import Environment
@@ -70,7 +69,7 @@ class Request(NamedTuple):
         takes a csv row and turns it into a Request
 
         :param row: a row as interpreted by csv.DictReader
-        :param road_network: the road network loaded for this simulation
+        :param env: the static environment variables
         :return: a Request, or an error
         """
         if 'request_id' not in row:
@@ -97,21 +96,11 @@ class Request(NamedTuple):
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
-                if env.config.sim.date_format:
-                    try:
-                        departure_dt = datetime.strptime(row['departure_time'], env.config.sim.date_format)
-                        cancel_dt = datetime.strptime(row['cancel_time'], env.config.sim.date_format)
-                    except ValueError:
-                        raise IOError("Unable to parse datetime. Make sure the format matches config.sim.date_format")
-                    departure_time = int(departure_dt.timestamp())
-                    cancel_time = int(cancel_dt.timestamp())
-
-                else:
-                    if not row['departure_time'].isdigit() or not row['cancel_time'].isdigit():
-                        raise IOError('Time must be an integer. \
-                                        If you want to use a datetime string, set config.io.dateformat')
-                    departure_time = int(row['departure_time'])
-                    cancel_time = int(row['cancel_time'])
+                if not row['departure_time'].isdigit() or not row['cancel_time'].isdigit():
+                    return IOError('Time must be a unix time integer. \
+                                    If your time is a datetime, you must convert it to a timestamp first.')
+                departure_time = int(row['departure_time'])
+                cancel_time = int(row['cancel_time'])
 
                 passengers = int(row['passengers'])
                 return Request.build(
@@ -123,7 +112,7 @@ class Request(NamedTuple):
                     passengers=passengers
                 )
             except ValueError:
-                raise IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
+                return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
 
     @property
     def geoid(self):

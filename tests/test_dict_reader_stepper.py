@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from pkg_resources import resource_filename
-from datetime import datetime
 from typing import Callable
 
 from hive.util.dict_reader_stepper import *
@@ -10,8 +9,7 @@ from hive.util.dict_reader_stepper import *
 class TestDictReaderStepper(TestCase):
     def _generate_stop_condition(self, stop_time: int) -> Callable:
         def stop_condition(value: str) -> bool:
-            dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-            return dt.timestamp() < stop_time
+            return int(value) < stop_time
         return stop_condition
 
     def test_reading_up_to_a_time_bounds_should_leave_remaining_file_available(self):
@@ -22,13 +20,13 @@ class TestDictReaderStepper(TestCase):
         result = tuple(stepper.read_until_stop_condition(stop_condition))
         self.assertEqual(len(result), 20, f"should have found 20 rows with departure time earlier than {stop_time}")
         self.assertEqual(
-            datetime.strptime(stepper._iterator.history['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+            int(stepper._iterator.history['departure_time']),
             stop_time,
             f"next has time {stop_time}"
         )
         for row in result:
             self.assertLess(
-                datetime.strptime(row['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+                int(row['departure_time']), 
                 stop_time,
                 f"should be less than {stop_time}"
             )
@@ -45,16 +43,16 @@ class TestDictReaderStepper(TestCase):
         self.assertEqual(len(result2), 5, f"should have found 5 rows with departure time [{stop1}, {stop2})")
         for row in result1:
             self.assertLess(
-                datetime.strptime(row['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+                int(row['departure_time']),
                 stop1,
                 f"should be less than {stop1}")
         for row in result2:
             self.assertGreaterEqual(
-                datetime.strptime(row['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+                int(row['departure_time']),
                 stop1,
                 f"should be gte {stop1}")
             self.assertLess(
-                datetime.strptime(row['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+                int(row['departure_time']),
                 stop2,
                 f"should be less than {stop2}")
         stepper.close()
@@ -87,17 +85,17 @@ class TestDictReaderStepper(TestCase):
         result = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop2)))
         self.assertEqual(len(result), 1, f"should have found 20 rows with departure time earlier than {stop2}")
         self.assertEqual(
-            datetime.strptime(stepper._iterator.history['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+            int(stepper._iterator.history['departure_time']),
             stop2,
             f"next has time {stop2}"
         )
         for row in result:
             self.assertGreaterEqual(
-                datetime.strptime(row['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+                int(row['departure_time']),
                 stop1,
                 f"should be gte {stop1}"
             )
             self.assertLess(
-                datetime.strptime(row['departure_time'], "%Y-%m-%d %H:%M:%S").timestamp(),
+                int(row['departure_time']),
                 stop2,
                 f"should be less than {stop2}")
