@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict
+from datetime import datetime
 
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
@@ -38,8 +39,9 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
     @classmethod
     def build(cls,
+              env: Environment,
               charging_file: Optional[str] = None,
-              fallback_values: Iterator[Dict[str, str]] = default_charging_prices()
+              fallback_values: Iterator[Dict[str, str]] = default_charging_prices(),
               ) -> ChargingPriceUpdate:
         """
         reads a requests file and builds a ChargingPriceUpdate SimulationUpdateFunction
@@ -51,15 +53,23 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         :return: a SimulationUpdate function pointing at the first line of a request file
         """
 
+        if env.config.sim.date_format:
+            def stop_condition(value: str) -> bool:
+                dt = datetime.strptime(value, env.config.sim.date_format)
+                return dt.timestamp() < 0
+        else:
+            def stop_condition(value: str) -> bool:
+                return int(value) < 0
+
         if not charging_file:
-            stepper = DictReaderStepper.from_iterator(fallback_values, "time")
+            stepper = DictReaderStepper.from_iterator(fallback_values, "time", stop_condition)
             return ChargingPriceUpdate(stepper, True)
         else:
             req_path = Path(charging_file)
             if not req_path.is_file():
                 raise IOError(f"{charging_file} is not a valid path to a request file")
             else:
-                stepper = DictReaderStepper.from_file(charging_file, "time")
+                stepper = DictReaderStepper.from_file(charging_file, "time", stop_condition)
                 return ChargingPriceUpdate(stepper, False)
 
     def update(self,
@@ -73,12 +83,20 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         :return: sim state plus new requests
         """
 
-        current_sim_time = sim_state.current_time
+        current_sim_time = sim_state.sim_time
+
+        if env.config.sim.date_format:
+            def stop_condition(value: str) -> bool:
+                dt = datetime.strptime(value, env.config.sim.date_format)
+                return dt.timestamp() < current_sim_time
+        else:
+            def stop_condition(value: str) -> bool:
+                return int(value) < current_sim_time
 
         # parse the most recently available charger price data up to the current sim time
         charger_update, failures = ft.reduce(
             add_row_to_this_update,
-            self.reader.read_until_value(current_sim_time),
+            self.reader.read_until_stop_condition(stop_condition),
             ({}, ())
         )
 

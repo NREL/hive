@@ -48,6 +48,7 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         """
         add requests from file when the simulation reaches the request's time
 
+        :param env: the static environment variables
         :param sim_state: the current sim state
         :return: sim state plus new requests
         """
