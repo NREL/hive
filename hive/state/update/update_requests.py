@@ -3,13 +3,15 @@ from typing import Dict, Iterator
 import functools as ft
 
 from hive.model.request import Request
+from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.typealiases import RequestId
 
 
 def update_requests_from_iterator(it: Iterator[Dict[str, str]],
-                                  initial_sim_state: SimulationState) -> SimulationUpdateResult:
+                                  initial_sim_state: SimulationState,
+                                  env: Environment) -> SimulationUpdateResult:
     """
     add requests from file when the simulation reaches the request's time
 
@@ -18,7 +20,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     :return: sim state plus new requests
     """
 
-    def _update(acc: SimulationUpdateResult, row: Dict[str, str]) -> SimulationUpdateResult:
+    def _update(acc: SimulationUpdateResult, row: Dict[str, str], env: Environment) -> SimulationUpdateResult:
         """
         takes one row, attempts to parse it as a Request, and attempts to add it to the simulation
 
@@ -26,22 +28,28 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :param row: one row as loaded via DictReader
         :return: the updated sim and updated reporting
         """
-        req = Request.from_row(row, acc.simulation_state.road_network)
+        req = Request.from_row(row, env)
         if isinstance(req, IOError):
             # request failed to parse from row
             row_failure = _failure_as_json(str(req), acc.simulation_state)
+            #TODO: Add to error logger
+            print(f"[warning] {req}")
             return acc.add_report(row_failure)
-        elif req.cancel_time <= acc.simulation_state.current_time:
+        elif req.cancel_time <= acc.simulation_state.sim_time:
             # cannot add request that should already be cancelled
-            current_time = acc.simulation_state.current_time
+            current_time = acc.simulation_state.sim_time
             msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
             invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
+            #TODO: Add to error logger
+            print(invalid_cancel_time)
             return acc.add_report(invalid_cancel_time)
         else:
             sim_updated = acc.simulation_state.add_request(req)
             if isinstance(sim_updated, Exception):
                 # simulation failed to add this request
                 sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
+                # TODO: Add to error logger
+                print(f"[warning] {sim_updated}")
                 return acc.add_report(sim_failure)
             else:
                 # successfully added request
@@ -50,7 +58,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(
-        _update,
+        ft.partial(_update, env=env),
         it,
         SimulationUpdateResult(initial_sim_state)
     )
@@ -78,7 +86,7 @@ def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
     :param sim: the state of the sim before cancellation occurs
     :return: a stringified json report of an error
     """
-    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.current_time}\",\"error\":\"{error_msg}\"}}"
+    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.sim_time}\",\"error\":\"{error_msg}\"}}"
 
 
 def _eof_as_json(sim: SimulationState) -> str:
@@ -88,4 +96,4 @@ def _eof_as_json(sim: SimulationState) -> str:
     :param sim: the simulation state
     :return: a stringified end-of-file report
     """
-    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.current_time}\",\"message\":\"EOF\"}}"
+    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.sim_time}\",\"message\":\"EOF\"}}"

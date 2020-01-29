@@ -32,11 +32,10 @@ class SimulationState(NamedTuple):
     road_network: RoadNetwork
 
     # simulation parameters
-    initial_sim_time: SimTime
+    sim_time: SimTime
     sim_timestep_duration_seconds: Seconds
     sim_h3_location_resolution: int
     sim_h3_search_resolution: int
-    sim_step: SimStep = 0
 
     # objects of the simulation
     stations: Dict[StationId, Station] = {}
@@ -55,15 +54,6 @@ class SimulationState(NamedTuple):
     r_search: Dict[GeoId, Tuple[RequestId, ...]] = {}
     s_search: Dict[GeoId, Tuple[StationId, ...]] = {}
     b_search: Dict[GeoId, Tuple[BaseId, ...]] = {}
-
-    @property
-    def current_time(self) -> SimTime:
-        """
-        computes the current time in seconds from the start of the simulation.
-
-        :return: the current time in seconds
-        """
-        return self.initial_sim_time + (self.sim_step * self.sim_timestep_duration_seconds)
 
     def add_request(self, request: Request) -> Union[Exception, SimulationState]:
         """
@@ -246,7 +236,7 @@ class SimulationState(NamedTuple):
         )
 
         return next_state._replace(
-            sim_step=self.sim_step + 1
+            sim_time=self.sim_time + self.sim_timestep_duration_seconds
         )
 
     def remove_vehicle(self, vehicle_id: VehicleId) -> Union[Exception, SimulationState]:

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, NamedTuple
+from typing import Optional, Dict, NamedTuple, Union
 import functools as ft
 import math
 
@@ -293,20 +293,29 @@ def mock_sim(
 
 
 def mock_config(
-        start_time: SimTime = 0,
-        end_time: SimTime = 100,
+        start_time: Union[str, int] = 0,
+        end_time: Union[str, int] = 100,
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
-        sim_h3_search_resolution: int = 9
+        sim_h3_search_resolution: int = 9,
 ) -> HiveConfig:
-    return HiveConfig.build({"sim": {
-        'start_time': start_time,
-        'end_time': end_time,
-        'timestep_duration_seconds': timestep_duration_seconds,
-        'sim_h3_resolution': sim_h3_location_resolution,
-        'sim_h3_search_resolution': sim_h3_search_resolution,
-        'sim_name': 'test_sim',
-    }})
+    return HiveConfig.build({
+        "sim": {
+            'start_time': start_time,
+            'end_time': end_time,
+            'timestep_duration_seconds': timestep_duration_seconds,
+            'sim_h3_resolution': sim_h3_location_resolution,
+            'sim_h3_search_resolution': sim_h3_search_resolution,
+            'sim_name': 'test_sim',
+        },
+        "io": {
+            'vehicles_file': '',
+            'requests_file': '',
+            'bases_file': '',
+            'stations_file': '',
+        }
+
+    })
 
 
 def mock_env(

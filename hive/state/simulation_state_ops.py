@@ -42,7 +42,7 @@ def initial_simulation_state(
     # copy in fields which do not require additional work
     simulation_state_builder = SimulationState(
         road_network=road_network,
-        initial_sim_time=start_time,
+        sim_time=start_time,
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=sim_h3_location_resolution,
         sim_h3_search_resolution=sim_h3_search_resolution

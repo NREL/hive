@@ -32,7 +32,7 @@ class TestUpdateRequestsFromString(TestCase):
         env = mock_env()
 
         up_sim, fn2 = fn1.update(sim, env)
-        later_sim = up_sim.simulation_state._replace(initial_sim_time=64800)
+        later_sim = up_sim.simulation_state._replace(sim_time=64800)
         up_later_sim, _ = fn2.update(later_sim, env)
 
         self.assertEquals(len(up_later_sim.simulation_state.requests), 2, "both requests should have loaded")
@@ -56,7 +56,7 @@ class TestUpdateRequestsFromString(TestCase):
         self.assertIn("1_a", up_sim.simulation_state.requests, "the first request should have been added")
         self.assertIn("1_b", up_sim.simulation_state.requests, "the second request should have been added")
 
-        later_sim = up_sim.simulation_state._replace(initial_sim_time=86399)
+        later_sim = up_sim.simulation_state._replace(sim_time=86399)
         up_later_sim, _ = fn2.update(later_sim, env)
 
         self.assertEquals(len(up_later_sim.simulation_state.requests), 2, "both requests should have loaded")

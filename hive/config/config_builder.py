@@ -11,7 +11,7 @@ class ConfigBuilder:
               default_config: Dict,
               required_config: Dict[str, type],
               config_constructor: Callable[[Dict], Union[Exception, T]],
-              config: Dict = None) -> Union[Exception, T]:
+              config: Dict = None) -> T:
         """
         constructs a Config from a configuration Dict
         :param default_config: a dictionary containing default config values
@@ -25,8 +25,11 @@ class ConfigBuilder:
         for key, key_type in required_config.items():
             value = c.get(key)
             if value is None:
-                return AttributeError(f"expected required config key {key} of type {key_type} not found")
+                raise AttributeError(f"expected required config key {key} of type {key_type} not found")
+            elif type(key_type) is tuple:
+                if all(not isinstance(value, kt) for kt in key_type):
+                    raise AttributeError(f"value {value} at config key {key} not correct type {key_type}")
             elif not isinstance(value, key_type):
-                return AttributeError(f"value {value} at config key {key} not correct type {key_type}")
+                raise AttributeError(f"value {value} at config key {key} not correct type {key_type}")
 
         return config_constructor(c)

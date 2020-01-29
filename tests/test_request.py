@@ -68,15 +68,35 @@ class MyTestCase(unittest.TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         """
         row = next(DictReader(source.split()))
-        network = HaversineRoadNetwork()
-        rn = network
-        req = Request.from_row(row, rn)
+        env = mock_env()
+        req = Request.from_row(row, env)
         self.assertEqual(req.id, "1_a")
-        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, rn.sim_h3_resolution))
-        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, rn.sim_h3_resolution))
+        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
+        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(req.cancel_time, 61800)
         self.assertEqual(len(req.passengers), 4)
+
+    def test_from_row_datetime_bad(self):
+        row = {
+            'request_id': '1_a',
+            'o_lat': '0',
+            'o_lon': '0',
+            'd_lat': '0',
+            'd_lon': '0',
+            'departure_time': '01-09-2019 11:11:11',
+            'cancel_time': '2019-01-09 16:11:11',
+            'passengers': '4'
+        }
+        config = mock_config(
+            start_time="2019-01-09T00:00:00-07:00",
+            end_time="2019-01-10T00:00:00-07:00",
+        )
+        env = mock_env(config)
+        request = Request.from_row(row, env)
+        self.assertIsInstance(request, IOError)
+
+
 
 
 if __name__ == '__main__':

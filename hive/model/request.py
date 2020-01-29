@@ -3,9 +3,9 @@ from h3 import h3
 from typing import NamedTuple, Optional, Dict, Union
 
 from hive.model.passenger import Passenger, create_passenger_id
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.runner.environment import Environment
 from hive.util.typealiases import *
-
+from hive.util.parsers import time_parser
 
 
 class Request(NamedTuple):
@@ -65,39 +65,46 @@ class Request(NamedTuple):
                        tuple(request_as_passengers))
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Union[IOError, Request]:
+    def from_row(cls, row: Dict[str, str], env: Environment) -> Union[Exception, Request]:
         """
         takes a csv row and turns it into a Request
 
         :param row: a row as interpreted by csv.DictReader
-        :param road_network: the road network loaded for this simulation
+        :param env: the static environment variables
         :return: a Request, or an error
         """
         if 'request_id' not in row:
-            return IOError("cannot load a request without a 'request_id'")
+            raise IOError("cannot load a request without a 'request_id'")
         elif 'o_lat' not in row:
-            return IOError("cannot load a request without an 'o_lat' value")
+            raise IOError("cannot load a request without an 'o_lat' value")
         elif 'o_lon' not in row:
-            return IOError("cannot load a request without an 'o_lon' value")
+            raise IOError("cannot load a request without an 'o_lon' value")
         elif 'd_lat' not in row:
-            return IOError("cannot load a request without a 'd_lat' value")
+            raise IOError("cannot load a request without a 'd_lat' value")
         elif 'd_lon' not in row:
-            return IOError("cannot load a request without a 'd_lon' value")
+            raise IOError("cannot load a request without a 'd_lon' value")
         elif 'departure_time' not in row:
-            return IOError("cannot load a request without a 'departure_time'")
+            raise IOError("cannot load a request without a 'departure_time'")
         elif 'cancel_time' not in row:
-            return IOError("cannot load a request without a 'cancel_time'")
+            raise IOError("cannot load a request without a 'cancel_time'")
         elif 'passengers' not in row:
-            return IOError("cannot load a request without a number of 'passengers'")
+            raise IOError("cannot load a request without a number of 'passengers'")
         else:
             request_id = row['request_id']
             try:
                 o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
                 d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
-                o_geoid = h3.geo_to_h3(o_lat, o_lon, road_network.sim_h3_resolution)
-                d_geoid = h3.geo_to_h3(d_lat, d_lon, road_network.sim_h3_resolution)
-                departure_time = int(row['departure_time'])
-                cancel_time = int(row['cancel_time'])
+                o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
+                d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
+
+                departure_time = time_parser(row['departure_time'])
+                if isinstance(departure_time, IOError):
+                    return departure_time
+
+                cancel_time = time_parser(row['cancel_time'])
+                if isinstance(cancel_time, IOError):
+                    return cancel_time
+
                 passengers = int(row['passengers'])
                 return Request.build(
                     request_id=request_id,

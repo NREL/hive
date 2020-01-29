@@ -30,6 +30,8 @@ with open(scenario_file, 'r') as f:
     config_builder = yaml.safe_load(f)
 
 config = HiveConfig.build(config_builder)
+if isinstance(config, Exception):
+    raise config
 
 run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 sim_output_dir = os.path.join(config.io.working_directory, run_name)
@@ -103,6 +105,7 @@ initial_sim, sim_state_errors = initial_simulation_state(
     vehicles=vehicles,
     stations=stations,
     bases=bases,
+    start_time=config.sim.start_time,
     sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
     sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
 )
