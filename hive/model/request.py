@@ -5,6 +5,7 @@ from typing import NamedTuple, Optional, Dict, Union
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.runner.environment import Environment
 from hive.util.typealiases import *
+from hive.util.parsers import time_parser
 
 
 class Request(NamedTuple):
@@ -96,11 +97,13 @@ class Request(NamedTuple):
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
-                if not row['departure_time'].isdigit() or not row['cancel_time'].isdigit():
-                    return IOError('Time must be a unix time integer. \
-                                    If your time is a datetime, you must convert it to a timestamp first.')
-                departure_time = int(row['departure_time'])
-                cancel_time = int(row['cancel_time'])
+                departure_time = time_parser(row['departure_time'])
+                if isinstance(departure_time, IOError):
+                    return departure_time
+
+                cancel_time = time_parser(row['cancel_time'])
+                if isinstance(cancel_time, IOError):
+                    return cancel_time
 
                 passengers = int(row['passengers'])
                 return Request.build(

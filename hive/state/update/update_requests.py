@@ -32,18 +32,24 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         if isinstance(req, IOError):
             # request failed to parse from row
             row_failure = _failure_as_json(str(req), acc.simulation_state)
+            #TODO: Add to error logger
+            print(f"[warning] {req}")
             return acc.add_report(row_failure)
         elif req.cancel_time <= acc.simulation_state.sim_time:
             # cannot add request that should already be cancelled
             current_time = acc.simulation_state.sim_time
             msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
             invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
+            #TODO: Add to error logger
+            print(invalid_cancel_time)
             return acc.add_report(invalid_cancel_time)
         else:
             sim_updated = acc.simulation_state.add_request(req)
             if isinstance(sim_updated, Exception):
                 # simulation failed to add this request
                 sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
+                # TODO: Add to error logger
+                print(f"[warning] {sim_updated}")
                 return acc.add_report(sim_failure)
             else:
                 # successfully added request

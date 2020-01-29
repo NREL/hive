@@ -33,6 +33,7 @@ class DictReaderIterator:
             # we stored an extra value from last time; return that
             value = self.parser(self.history[self.step_column_name])
             if isinstance(value, IOError):
+                # TODO: pass this to an error log
                 print(value)
             elif self.stop_condition(value):
                 # stored value is within range
@@ -46,6 +47,7 @@ class DictReaderIterator:
             row = next(self.reader)
             value = self.parser(row[self.step_column_name])
             if isinstance(value, IOError):
+                # TODO: pass this to an error log
                 print(value)
             elif self.stop_condition(value):
                 # value is within range
