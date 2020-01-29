@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict
-from datetime import datetime
+from typing import NamedTuple, Dict, Union
 
 from hive.config import ConfigBuilder
 from hive.util.typealiases import SimTime
 from hive.util.units import Seconds
+from hive.util.parsers import time_parser
 
 
 class Sim(NamedTuple):
@@ -34,7 +34,7 @@ class Sim(NamedTuple):
         }
 
     @classmethod
-    def build(cls, config: Dict = None) -> Sim:
+    def build(cls, config: Dict = None) -> Union[IOError, Sim]:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
@@ -43,18 +43,14 @@ class Sim(NamedTuple):
         )
 
     @classmethod
-    def from_dict(cls, d: Dict) -> Sim:
-        try:
-            start_time = int(datetime.fromisoformat(d['start_time']).timestamp())
-            end_time = int(datetime.fromisoformat(d['end_time']).timestamp())
-        except TypeError:
-            try:
-                start_time = int(d['start_time'])
-                end_time = int(d['end_time'])
-            except ValueError:
-                raise IOError(
-                    "Unable to parse datetime. \
-                    Make sure the time is either a unix time integer or an ISO 8601 string")
+    def from_dict(cls, d: Dict) -> Union[IOError, Sim]:
+        start_time = time_parser(d['start_time'])
+        if isinstance(start_time, IOError):
+            return start_time
+
+        end_time = time_parser(d['end_time'])
+        if isinstance(end_time, IOError):
+            return end_time
 
         return Sim(
             sim_name=d['sim_name'],

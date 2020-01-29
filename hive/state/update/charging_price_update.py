@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Iterator, Dict
+from typing import NamedTuple, Tuple, Optional, Iterator, Dict, Union
 
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
@@ -11,8 +11,9 @@ from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.helpers import DictOps
-from hive.util.typealiases import GeoId, StationId
+from hive.util.typealiases import StationId
 from hive.util.units import Currency
+from hive.util.parsers import time_parser
 
 from h3 import h3
 
@@ -52,14 +53,14 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         """
 
         if not charging_file:
-            stepper = DictReaderStepper.from_iterator(fallback_values, "time")
+            stepper = DictReaderStepper.from_iterator(fallback_values, "time", parser=time_parser)
             return ChargingPriceUpdate(stepper, True)
         else:
             req_path = Path(charging_file)
             if not req_path.is_file():
                 raise IOError(f"{charging_file} is not a valid path to a request file")
             else:
-                stepper = DictReaderStepper.from_file(charging_file, "time")
+                stepper = DictReaderStepper.from_file(charging_file, "time", parser=time_parser)
                 return ChargingPriceUpdate(stepper, False)
 
     def update(self,
@@ -75,8 +76,8 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
         current_sim_time = sim_state.sim_time
 
-        def stop_condition(value: str) -> bool:
-            return int(value) < current_sim_time
+        def stop_condition(value: int) -> bool:
+            return value < current_sim_time
 
         # parse the most recently available charger price data up to the current sim time
         charger_update, failures = ft.reduce(
