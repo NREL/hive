@@ -3,12 +3,11 @@ from unittest import TestCase
 from h3 import h3
 
 from hive.model.request import Request
-from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.state.simulation_state_ops import initial_simulation_state
 from hive.util.helpers import H3Ops
 from hive.util.units import hours_to_seconds
+from tests.mock_lobster import mock_sim
 
 
 class TestH3Ops(TestCase):
@@ -58,9 +57,7 @@ class TestH3Ops(TestCase):
         req_near = Request("req_near", near_to_somewhere, somewhere, 0, 0, ())
         req_far = Request("req_far", far_from_somewhere, somewhere, 0, 0, ())
 
-        sim, errors = initial_simulation_state(HaversineRoadNetwork(),
-                                               sim_h3_location_resolution=h3_resolution,
-                                               sim_h3_search_resolution=h3_search_res)
+        sim = mock_sim(h3_location_res=h3_resolution, h3_search_res=h3_search_res)
         sim_with_reqs = sim.add_request(req_near).add_request(req_far)
 
         nearest = H3Ops.nearest_entity(geoid=somewhere,
