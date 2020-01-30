@@ -23,6 +23,7 @@ class IO(NamedTuple):
             'run_log': None,
             'vehicle_log': None,
             'request_log': None,
+            'rate_structure_file': None,
         }
 
     @classmethod
@@ -30,7 +31,6 @@ class IO(NamedTuple):
         return {
             'vehicles_file': str,
             'requests_file': str,
-            'rate_structure_file': str,
             'bases_file': str,
             'stations_file': str,
         }

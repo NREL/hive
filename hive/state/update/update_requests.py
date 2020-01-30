@@ -23,27 +23,30 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
     rate_structure: RequestRateStructure
 
     @classmethod
-    def build(cls, request_file: str, rate_structure_file: str):
+    def build(cls, request_file: str, rate_structure_file: Optional[str] = None):
         """
         reads a requests file and builds a UpdateRequestsFromFile SimulationUpdateFunction
 
         :param request_file: file path for requests
+        :param rate_structure_file:
         :return: a SimulationUpdate function pointing at the first line of a request file
         """
-        req_path = Path(request_file)
-        rate_structure_path = Path(rate_structure_file)
-        if not req_path.is_file():
-            raise IOError(f"{request_file} is not a valid path to a request file")
-        elif not rate_structure_path.is_file():
-            raise IOError(f"{rate_structure_file} is not a valid path to a request file")
-        else:
-            stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
-
+        rate_structure = RequestRateStructure()
+        if rate_structure_file:
+            rate_structure_path = Path(rate_structure_file)
+            if not rate_structure_path.is_file():
+                raise IOError(f"{rate_structure_file} is not a valid path to a request file")
             with open(rate_structure_file, 'r', encoding='utf-8-sig') as rsf:
                 reader = DictReader(rsf)
                 rate_structure = RequestRateStructure.from_row(next(reader))
 
-            return UpdateRequests(stepper, rate_structure)
+        req_path = Path(request_file)
+        if not req_path.is_file():
+            raise IOError(f"{request_file} is not a valid path to a request file")
+
+        stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
+
+        return UpdateRequests(stepper, rate_structure)
 
     def update(self,
                sim_state: SimulationState,
