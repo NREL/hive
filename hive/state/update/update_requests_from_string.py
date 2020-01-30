@@ -3,6 +3,7 @@ from __future__ import annotations
 from csv import DictReader
 from typing import List, Dict, NamedTuple, Tuple, Optional
 
+from hive.model.request import RequestRateStructure
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
@@ -18,17 +19,19 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
     header: str
     requests: List[str]
     num_rows: int
+    rate_structure: RequestRateStructure
     row_position: int = 0
 
     @classmethod
-    def build(cls, string_requests: str):
+    def build(cls, string_requests: str, rate_structure: RequestRateStructure):
 
         src = string_requests.split()
 
         return UpdateRequestsFromString(
             header=src[0],
             requests=src[1:],
-            num_rows=len(src) - 1
+            num_rows=len(src) - 1,
+            rate_structure=rate_structure,
         )
 
     def update(self,
@@ -44,7 +47,7 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
         subset = [self.header, ] + self.requests[self.row_position:]
         reader = DictReader(subset)
         it = RequestStringIterator(reader, simulation_state.sim_time, self.row_position)
-        sim_updated = update_requests_from_iterator(it, simulation_state, env)
+        sim_updated = update_requests_from_iterator(it, simulation_state, env, rate_structure=self.rate_structure)
 
         next_update = self._replace(row_position=it.row_position)
 

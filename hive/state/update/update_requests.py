@@ -2,7 +2,7 @@ from typing import Dict, Iterator
 
 import functools as ft
 
-from hive.model.request import Request
+from hive.model.request import Request, RequestRateStructure
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update_result import SimulationUpdateResult
@@ -11,16 +11,23 @@ from hive.util.typealiases import RequestId
 
 def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                                   initial_sim_state: SimulationState,
-                                  env: Environment) -> SimulationUpdateResult:
+                                  env: Environment,
+                                  rate_structure: RequestRateStructure,
+                                  ) -> SimulationUpdateResult:
     """
     add requests from file when the simulation reaches the request's time
 
     :param it: expected to be a Request iterator which streams in row data taken from a DictReader
     :param initial_sim_state: the current sim state
+    :param rate_structure:
+    :param env:
     :return: sim state plus new requests
     """
 
-    def _update(acc: SimulationUpdateResult, row: Dict[str, str], env: Environment) -> SimulationUpdateResult:
+    def _update(acc: SimulationUpdateResult, row: Dict[str, str],
+                env: Environment,
+                rate_structure: RequestRateStructure,
+                ) -> SimulationUpdateResult:
         """
         takes one row, attempts to parse it as a Request, and attempts to add it to the simulation
 
@@ -44,7 +51,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             print(invalid_cancel_time)
             return acc.add_report(invalid_cancel_time)
         else:
-            sim_updated = acc.simulation_state.add_request(req)
+            sim_updated = acc.simulation_state.add_request(req.assign_value(rate_structure))
             if isinstance(sim_updated, Exception):
                 # simulation failed to add this request
                 sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
@@ -58,7 +65,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(
-        ft.partial(_update, env=env),
+        ft.partial(_update, env=env, rate_structure=rate_structure),
         it,
         SimulationUpdateResult(initial_sim_state)
     )

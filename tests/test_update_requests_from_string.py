@@ -10,7 +10,7 @@ class TestUpdateRequestsFromString(TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
-        fn = UpdateRequestsFromString.build(src)
+        fn = UpdateRequestsFromString.build(src, mock_rate_structure())
         sim = mock_sim(sim_time=61200)
         env = mock_env()
 
@@ -27,7 +27,7 @@ class TestUpdateRequestsFromString(TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
-        fn1 = UpdateRequestsFromString.build(src)
+        fn1 = UpdateRequestsFromString.build(src, mock_rate_structure())
         sim = mock_sim(sim_time=61200)
         env = mock_env()
 
@@ -46,7 +46,7 @@ class TestUpdateRequestsFromString(TestCase):
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,86399,4
         1_b,31.2109091,121.4532226,31.2074449,121.4294263,64800,86399,4
         """
-        fn1 = UpdateRequestsFromString.build(src)
+        fn1 = UpdateRequestsFromString.build(src, mock_rate_structure())
         sim = mock_sim(sim_time=86398)
         env = mock_env()
 

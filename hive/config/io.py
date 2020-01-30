@@ -9,6 +9,7 @@ class IO(NamedTuple):
     working_directory: str
     vehicles_file: str
     requests_file: str
+    rate_structure_file: str
     bases_file: str
     stations_file: str
     run_log: str
@@ -29,6 +30,7 @@ class IO(NamedTuple):
         return {
             'vehicles_file': str,
             'requests_file': str,
+            'rate_structure_file': str,
             'bases_file': str,
             'stations_file': str,
         }
@@ -48,6 +50,7 @@ class IO(NamedTuple):
             working_directory=d['working_directory'],
             vehicles_file=d['vehicles_file'],
             requests_file=d['requests_file'],
+            rate_structure_file=d['rate_structure_file'],
             bases_file=d['bases_file'],
             stations_file=d['stations_file'],
             run_log=d['run_log'],
