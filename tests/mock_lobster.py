@@ -277,7 +277,7 @@ def mock_sim(
 ) -> SimulationState:
     sim = SimulationState(
         road_network=mock_network(h3_location_res),
-        initial_sim_time=sim_time,
+        sim_time=sim_time,
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,
         sim_h3_search_resolution=h3_search_res,
