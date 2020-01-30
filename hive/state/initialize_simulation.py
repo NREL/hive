@@ -37,7 +37,7 @@ def initialize_simulation(
 
     sim_initial = SimulationState(
         road_network=road_network,
-        initial_sim_time=config.sim.start_time,
+        sim_time=config.sim.start_time,
         sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
         sim_h3_location_resolution=config.sim.sim_h3_resolution,
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
