@@ -43,8 +43,8 @@ class UpdateRequestsFromString(NamedTuple, SimulationUpdateFunction):
         """
         subset = [self.header, ] + self.requests[self.row_position:]
         reader = DictReader(subset)
-        it = RequestStringIterator(reader, simulation_state.current_time, self.row_position)
-        sim_updated = update_requests_from_iterator(it, simulation_state)
+        it = RequestStringIterator(reader, simulation_state.sim_time, self.row_position)
+        sim_updated = update_requests_from_iterator(it, simulation_state, env)
 
         next_update = self._replace(row_position=it.row_position)
 

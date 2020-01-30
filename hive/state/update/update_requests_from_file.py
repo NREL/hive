@@ -9,6 +9,7 @@ from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.state.update.update_requests import update_requests_from_iterator
 from hive.util.dict_reader_stepper import DictReaderStepper
+from hive.util.parsers import time_parser
 
 
 class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
@@ -29,7 +30,7 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
         else:
-            stepper = DictReaderStepper.from_file(request_file, "departure_time")
+            stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
             return UpdateRequestsFromFile(stepper)
 
     def update(self,
@@ -38,12 +39,20 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         """
         add requests from file when the simulation reaches the request's time
 
+        :param env: the static environment variables
         :param sim_state: the current sim state
         :return: sim state plus new requests
         """
 
-        current_sim_time = sim_state.current_time
-        result = update_requests_from_iterator(self.reader.read_until_value(current_sim_time), sim_state)
+        current_sim_time = sim_state.sim_time
+
+        def stop_condition(value: int) -> bool:
+            return value < current_sim_time
+
+        result = update_requests_from_iterator(
+            self.reader.read_until_stop_condition(stop_condition),
+            sim_state,
+            env
+        )
 
         return result, None
-

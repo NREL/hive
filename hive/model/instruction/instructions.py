@@ -28,7 +28,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_TRIP)
 
-        assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.current_time)
+        assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.sim_time)
 
         start = vehicle.property_link
         end = sim_state.road_network.property_link_from_geoid(request.origin)

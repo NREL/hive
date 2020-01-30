@@ -13,9 +13,13 @@ class TestUpdateRequestsFromFile(TestCase):
         """
         test invariant: the below file resource exists
         """
-        sim_time = 180  # will pull in all requests with departure_time earlier than 180
+        sim_time = 25380  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
-        env = mock_env()
+        config = mock_config(
+            start_time="2019-01-09T00:00:00-07:00",
+            end_time="2019-01-10T00:00:00-07:00",
+        )
+        env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file)
         result, _ = fn.update(sim, env)
@@ -29,10 +33,14 @@ class TestUpdateRequestsFromFile(TestCase):
         won't add requests whos cancel_time has already been exceeded, will instead report them
         test invariant: the below file resource exists
         """
-        sim_time = 720  # will pull in all requests with departure_time earlier than 720
+        sim_time = 25920  # will pull in all requests with departure_time earlier than 720
         expected_reqs, expected_reports = 7, 20
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
-        env = mock_env()
+        config = mock_config(
+            start_time="2019-01-09T00:00:00-07:00",
+            end_time="2019-01-10T00:00:00-07:00",
+        )
+        env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         fn = UpdateRequestsFromFile.build(req_file)
         result, _ = fn.update(sim, env)

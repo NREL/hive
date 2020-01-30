@@ -63,14 +63,14 @@ class TestConfigBuilder(TestCase):
             'c': Link("ya", "asdf", "jkl;")
         }
 
-        test_class = ConfigBuilder.build(
-            default_config={},
-            required_config=required,
-            config_constructor=TestConfigBuilderAssets.constructor,
-            config=config
-        )
+        with self.assertRaises(AttributeError):
+            test_class = ConfigBuilder.build(
+                default_config={},
+                required_config=required,
+                config_constructor=TestConfigBuilderAssets.constructor,
+                config=config
+            )
 
-        self.assertIsInstance(test_class, AttributeError)
 
     def test_build_ignores_extra_fields(self):
         config = {

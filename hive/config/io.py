@@ -1,20 +1,8 @@
 from __future__ import annotations
 
-import logging
-
-from typing import NamedTuple, Dict, Union
+from typing import NamedTuple, Dict
 
 from hive.config import ConfigBuilder
-
-
-def _setup_logger(name, log_file, level=logging.INFO):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-
-    fh = logging.FileHandler(log_file)
-    logger.addHandler(fh)
-
-    return logger
 
 
 class IO(NamedTuple):
@@ -46,7 +34,7 @@ class IO(NamedTuple):
         }
 
     @classmethod
-    def build(cls, config: Dict = None) -> Union[Exception, IO]:
+    def build(cls, config: Dict = None) -> IO:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),

@@ -25,6 +25,8 @@ with open(scenario_file, 'r') as f:
     config_builder = yaml.safe_load(f)
 
 config = HiveConfig.build(config_builder)
+if isinstance(config, Exception):
+    raise config
 
 run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 sim_output_dir = os.path.join(config.io.working_directory, run_name)
