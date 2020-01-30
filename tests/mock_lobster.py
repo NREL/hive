@@ -329,6 +329,7 @@ def mock_config(
         "io": {
             'vehicles_file': '',
             'requests_file': '',
+            'rate_structure_file': '',
             'bases_file': '',
             'stations_file': '',
         }

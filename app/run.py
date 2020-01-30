@@ -13,7 +13,7 @@ from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
 from hive.reporting.detailed_reporter import DetailedReporter
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.initialize_simulation import initialize_simulation
-from hive.state.update import UpdateRequestsFromFile, CancelRequests, StepSimulation
+from hive.state.update import UpdateRequests, CancelRequests, StepSimulation
 
 if len(sys.argv) == 1:
     raise ImportError("please specify a scenario file to run.")
@@ -40,7 +40,7 @@ rate_structure_file = resource_filename("hive.resources.service_prices", config.
 
 # TODO: move this lower and make it ordered.
 update_functions = (
-    UpdateRequestsFromFile.build(requests_file, rate_structure_file),
+    UpdateRequests.build(requests_file, rate_structure_file),
     CancelRequests(),
     StepSimulation(dispatcher),
 )

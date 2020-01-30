@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from pkg_resources import resource_filename
 
-from hive.state.update.update_requests_from_file import UpdateRequestsFromFile
+from hive.state.update.update_requests import UpdateRequests
 
 from tests.mock_lobster import *
 
@@ -22,7 +22,7 @@ class TestUpdateRequestsFromFile(TestCase):
         env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
-        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
+        fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.reports), 2, "should have reported the add")
         self.assertEqual(len(result.simulation_state.requests), 2, "should have added the reqs")
@@ -44,7 +44,7 @@ class TestUpdateRequestsFromFile(TestCase):
         env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
-        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
+        fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(expected_reports, len(result.reports), "should have reported the add")
         self.assertEqual(expected_reqs, len(result.simulation_state.requests), "should have added the reqs")
@@ -65,7 +65,7 @@ class TestUpdateRequestsFromFile(TestCase):
         env = mock_env(config)
         req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
-        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
+        fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         for req in result.simulation_state.requests.values():
             print(req)

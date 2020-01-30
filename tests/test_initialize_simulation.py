@@ -17,6 +17,7 @@ class TestInitializeSimulation(TestCase):
                 },
                 "io": {
                     "requests_file": "denver_demo_requests.csv",
+                    "rate_structure_file": "rate_structure.csv",
                     "vehicles_file": "denver_demo_vehicles.csv",
                     "bases_file": "denver_demo_bases.csv",
                     "stations_file": "denver_demo_stations.csv"
