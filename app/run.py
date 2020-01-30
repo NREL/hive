@@ -6,14 +6,14 @@ from datetime import datetime
 import yaml
 from pkg_resources import resource_filename
 
+sys.path.append('..')
+
 from hive.config import *
 from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
 from hive.reporting.detailed_reporter import DetailedReporter
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.initialize_simulation import initialize_simulation
 from hive.state.update import UpdateRequestsFromFile, CancelRequests, StepSimulation
-
-sys.path.append('..')
 
 if len(sys.argv) == 1:
     raise ImportError("please specify a scenario file to run.")
