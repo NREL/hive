@@ -36,9 +36,14 @@ dispatcher = GreedyDispatcher()
 simulation_state, environment = initialize_simulation(config)
 
 requests_file = resource_filename("hive.resources.requests", config.io.requests_file)
+rate_structure_file = resource_filename("hive.resources.service_prices", config.io.rate_structure_file)
 
 # TODO: move this lower and make it ordered.
-update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests(), StepSimulation(dispatcher))
+update_functions = (
+    UpdateRequestsFromFile.build(requests_file, rate_structure_file),
+    CancelRequests(),
+    StepSimulation(dispatcher),
+)
 
 runner = LocalSimulationRunner(env=environment)
 reporter = DetailedReporter(config.io, sim_output_dir)
