@@ -12,44 +12,84 @@ from hive.util.units import KwH, Kw
 def down_sample_nyc_tlc_data(in_file: str,
                              out_file: str,
                              sample_size: int,
-                             cancel_time: int = 300,
-                             sim_h3_location_resolution: int = 15):
+                             request_cancel_time_buffer: int = 300,
+                             sim_h3_location_resolution: int = 15,
+                             boundary_h3_resolution: int = 10):
     """
     down-samples in input TLC data file for Yellow cab data
 
     :param in_file: the source TLC data file
     :param out_file: a file in HIVE Request data format
     :param sample_size: number of agents to sample - performs no randomization
-    :param cancel_time: the cancel time to set on each agent
+    :param request_cancel_time_buffer: the cancel time to set on each agent
     :param sim_h3_location_resolution:
+    :param boundary_h3_resolution: the resolution for the bounding set of the nyc polygon
     :return:
     """
-    with open(in_file) as f:
-        with open(out_file, 'w', newline='') as w:
-            reader = DictReader(f)
-            header = ['request_id', 'o_lat', 'o_lon', 'd_lat', 'd_lon', 'departure_time', 'cancel_time', 'passengers']
-            writer = DictWriter(w, header)
-            writer.writeheader()
-            i = 0
-            while i < sample_size:
-                row = next(reader)
-                req = parse_yellow_tripdata_row(row, i, cancel_time, sim_h3_location_resolution)
-                if not isinstance(req, Exception):
-                    # request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
-                    out_row = {
-                        'request_id': req.id,
-                        'o_lat': row['pickup_latitude'],
-                        'o_lon': row['pickup_longitude'],
-                        'd_lat': row['dropoff_latitude'],
-                        'd_lon': row['dropoff_longitude'],
-                        'departure_time': req.departure_time,
-                        'cancel_time': req.cancel_time,
-                        'passengers': len(req.passengers)
-                    }
-                    writer.writerow(out_row)
-                    i += 1
-                else:
-                    print(f"row for id {i} failed: {row}")
+
+    # this could clearly be generalized for other polygons/request sets
+    with open(resource_filename("hive.resources.geofence", "nyc_single_polygon.geojson")) as f:
+
+        # needs to be a Polygon, not a MultiPolygon feature
+        # used for ETL to confirm that requests sampled are in fact within the study area (some are not)
+        geojson = json.load(f)
+        hexes = h3.polyfill(
+            geo_json=geojson['geometry'],
+            res=boundary_h3_resolution,
+            geo_json_conformant=True
+        )
+
+        with open(in_file) as f:
+            with open(out_file, 'w', newline='') as w:
+                reader = DictReader(f)
+                header = [
+                    'request_id',
+                    'o_lat',
+                    'o_lon',
+                    'd_lat',
+                    'd_lon',
+                    'departure_time',
+                    'cancel_time',
+                    'passengers'
+                ]
+
+                writer = DictWriter(w, header)
+                writer.writeheader()
+
+                # while loop state
+                attempted_count = 0
+                absolute_cutoff = sample_size * 2  # arbitrary cutoff here; errors should be few
+                recorded_count = 0
+
+                while recorded_count < sample_size and attempted_count < absolute_cutoff:
+                    # parse the next row of data
+                    row = next(reader)
+                    req = parse_yellow_tripdata_row(
+                        row,
+                        recorded_count,
+                        request_cancel_time_buffer,
+                        sim_h3_location_resolution
+                    )
+
+                    if not isinstance(req, Exception) and h3.h3_to_parent(req.geoid, boundary_h3_resolution) in hexes:
+                        # request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
+                        out_row = {
+                            'request_id': req.id,
+                            'o_lat': row['pickup_latitude'],
+                            'o_lon': row['pickup_longitude'],
+                            'd_lat': row['dropoff_latitude'],
+                            'd_lon': row['dropoff_longitude'],
+                            'departure_time': req.departure_time,
+                            'cancel_time': req.cancel_time,
+                            'passengers': len(req.passengers)
+                        }
+                        writer.writerow(out_row)
+                        recorded_count += 1
+                    else:
+                        print(f"row for id {recorded_count} failed: {row}")
+
+    if attempted_count == absolute_cutoff:
+        raise IOError(f"too many errors, input file {in_file} (and corresponding file {out_file}) may be corrupt")
 
 
 def sample_vehicles_in_geofence(num: int,

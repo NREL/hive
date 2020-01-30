@@ -46,7 +46,8 @@ class Base(NamedTuple):
 
         :param row: a row as interpreted by csv.DictReader
         :param sim_h3_resolution: the h3 resolution that events are experienced at
-        :return: a Base, or an error
+        :return: a Base
+        :raises IOError if the row was bad
         """
         if 'base_id' not in row:
             raise IOError("cannot load a base without a 'base_id'")

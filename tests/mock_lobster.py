@@ -26,8 +26,6 @@ from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
-from hive.state.simulation_state_ops import initial_simulation_state
-from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS
 
@@ -277,19 +275,29 @@ def mock_sim(
         stations: Tuple[Station, ...] = (),
         bases: Tuple[Base, ...] = (),
 ) -> SimulationState:
-    sim, errors = initial_simulation_state(
+    sim = SimulationState(
         road_network=mock_network(h3_location_res),
-        vehicles=vehicles,
-        stations=stations,
-        bases=bases,
-        start_time=sim_time,
+        sim_time=sim_time,
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,
-        sim_h3_search_resolution=h3_search_res
+        sim_h3_search_resolution=h3_search_res,
     )
-    if len(errors) > 0:
-        raise SimulationStateError(f"mock sim has invalid elements\n{errors}")
-    return sim
+    if isinstance(sim, Exception):
+        raise sim
+
+    sim_v = ft.reduce(lambda s, veh: s.add_vehicle(veh), vehicles, sim) if vehicles else sim
+    if isinstance(sim_v, Exception):
+        raise sim_v
+
+    sim_s = ft.reduce(lambda s, sta: s.add_station(sta), stations, sim_v) if stations else sim_v
+    if isinstance(sim_s, Exception):
+        raise sim_s
+
+    sim_b = ft.reduce(lambda s, bas: s.add_base(bas), bases, sim_s) if bases else sim_s
+    if isinstance(sim_b, Exception):
+        raise sim_b
+
+    return sim_b
 
 
 def mock_config(
