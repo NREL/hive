@@ -6,6 +6,8 @@ from hive.model.passenger import Passenger, create_passenger_id
 from hive.runner.environment import Environment
 from hive.util.typealiases import *
 from hive.util.parsers import time_parser
+from hive.util.units import Currency, KM_TO_MILE
+from hive.util.helpers import H3Ops
 
 
 class Request(NamedTuple):
@@ -39,6 +41,7 @@ class Request(NamedTuple):
     departure_time: SimTime
     cancel_time: SimTime
     passengers: Tuple[Passenger, ...]
+    value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
 
@@ -143,3 +146,14 @@ class Request(NamedTuple):
         return self._replace(
             origin=geoid
         )
+
+    def assign_value(self, rate_structure: RequestRateStructure) -> Request:
+        """
+        used to assign a value to this request based on it's properties as well as possible surge pricing.
+
+        :param rate_structure: the rate structure to apply to the request value
+        :return: the updated request
+        """
+        distance_miles = H3Ops.great_circle_distance(self.origin, self.destination) * KM_TO_MILE
+        price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
+        return self._replace(value=max(rate_structure.minimum_price, price))

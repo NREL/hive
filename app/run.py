@@ -13,7 +13,7 @@ from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
 from hive.reporting.detailed_reporter import DetailedReporter
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.initialize_simulation import initialize_simulation
-from hive.state.update import UpdateRequestsFromFile, CancelRequests, StepSimulation
+from hive.state.update import UpdateRequests, CancelRequests, StepSimulation
 
 if len(sys.argv) == 1:
     raise ImportError("please specify a scenario file to run.")
@@ -36,9 +36,14 @@ dispatcher = GreedyDispatcher()
 simulation_state, environment = initialize_simulation(config)
 
 requests_file = resource_filename("hive.resources.requests", config.io.requests_file)
+rate_structure_file = resource_filename("hive.resources.service_prices", config.io.rate_structure_file)
 
 # TODO: move this lower and make it ordered.
-update_functions = (UpdateRequestsFromFile.build(requests_file), CancelRequests(), StepSimulation(dispatcher))
+update_functions = (
+    UpdateRequests.build(requests_file, rate_structure_file),
+    CancelRequests(),
+    StepSimulation(dispatcher),
+)
 
 runner = LocalSimulationRunner(env=environment)
 reporter = DetailedReporter(config.io, sim_output_dir)

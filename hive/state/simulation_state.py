@@ -506,7 +506,7 @@ class SimulationState(NamedTuple):
 
         vehicle = self.vehicles[vehicle_id]
         request = self.requests[request_id]
-        updated_vehicle = vehicle.add_passengers(request.passengers)
+        updated_vehicle = vehicle.add_passengers(request.passengers).receive_payment(request.value)
 
         updated_vehicles = copy(self.vehicles)
         updated_vehicles.update([(vehicle_id, updated_vehicle)])

@@ -15,7 +15,7 @@ from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
-from hive.model.request import Request
+from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
@@ -27,7 +27,7 @@ from hive.runner.environment import Environment
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
 from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency
 
 
 class DefaultIds:
@@ -123,6 +123,16 @@ def mock_station_from_geoid(
         chargers = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
     return Station.build(station_id, geoid, chargers)
 
+def mock_rate_structure(
+        base_price: Currency = 2.2,
+        price_per_mile: Currency = 1.6,
+        minimum_price: Currency = 5
+) -> RequestRateStructure:
+    return RequestRateStructure(
+        base_price=base_price,
+        price_per_mile=price_per_mile,
+        minimum_price=minimum_price,
+    )
 
 def mock_request(
         request_id: RequestId = DefaultIds.mock_request_id(),
@@ -319,6 +329,7 @@ def mock_config(
         "io": {
             'vehicles_file': '',
             'requests_file': '',
+            'rate_structure_file': '',
             'bases_file': '',
             'stations_file': '',
         }
