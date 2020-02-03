@@ -10,6 +10,8 @@ io:
   vehicles_file: denver_demo_vehicles.csv
   bases_file: denver_demo_bases.csv
   stations_file: denver_demo_stations.csv
+  geofence_file: downtown_denver.geojson
   vehicle_log: vehicle.log
   request_log: request.log
+  run_log: run.log
 

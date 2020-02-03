@@ -45,7 +45,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             )
 
     def _sample_random_location(self, sim_state_resolution: int) -> GeoId:
-        # TODO: replace denver with geofence from road network once implemented
+        # TODO: replace with geofence from road network once implemented
         random_hex = random.choice(self.geofence)
         children = h3.h3_to_children(random_hex, sim_state_resolution)
         return children.pop()
@@ -83,6 +83,8 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 # HIVE based on the RoadNetwork at initialization anyway)
                 # also possible: no charging stations available. implement a queueing solution
                 # for agents who could wait to charge
+                print('Could not find station.')
+                print(simulation_state.stations)
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
@@ -94,8 +96,12 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                         vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
                         vehicle.vehicle_state in _valid_states)
 
-        # 2. find requests that need a vehicle
-        unassigned_requests = [r for r in simulation_state.requests.values() if not r.dispatched_vehicle]
+        # 2. find requests that need a vehicle. Sorted by price high to low
+        unassigned_requests = sorted(
+            [r for r in simulation_state.requests.values() if not r.dispatched_vehicle],
+            key=lambda r: r.value,
+            reverse=True,
+        )
         for request in unassigned_requests:
             nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
                                                    entities=simulation_state.vehicles,
@@ -137,9 +143,16 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 vehicle_ids_given_instructions.append(veh.id)
         elif active_diff > 0:
             # we can remove active_diff vehicles from service
+            non_interrupt_states = (
+                VehicleState.DISPATCH_STATION,
+                VehicleState.CHARGING_STATION,
+                VehicleState.SERVICING_TRIP,
+            )
             for i, veh in enumerate(active_vehicles):
                 if i + 1 > active_diff:
                     break
+                elif veh.vehicle_state in non_interrupt_states:
+                    continue
 
                 nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
                                                     entities=simulation_state.bases,
