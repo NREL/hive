@@ -11,7 +11,7 @@ from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 
 class BasicForecaster(NamedTuple, ForecasterInterface):
     """
-    A class that computes an optimal fleet state.
+    A forecaster that has perfect demand knowledge.
     """
 
     def generate_forecast(self, simulation_state: SimulationState) -> Tuple[BasicForecaster, Forecast]:
