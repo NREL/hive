@@ -164,7 +164,8 @@ def mock_request_from_geoids(
         destination: GeoId = h3.geo_to_h3(10, 10, 15),
         departure_time: SimTime = 0,
         cancel_time: SimTime = 5,
-        passengers: int = 1
+        passengers: int = 1,
+        value: Currency = 0
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -172,7 +173,8 @@ def mock_request_from_geoids(
         destination=destination,
         departure_time=departure_time,
         cancel_time=cancel_time,
-        passengers=passengers
+        passengers=passengers,
+        value=value,
     )
 
 
