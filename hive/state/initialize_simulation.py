@@ -4,6 +4,7 @@ import csv
 import functools as ft
 from typing import Tuple, Dict
 
+import immutables
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
@@ -134,7 +135,7 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """
 
-    def _add_row_unsafe(builder: Dict[str, Station], row: Dict[str, str]) ->  Dict[str, Station]:
+    def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) ->  immutables.Map[str, Station]:
         station = Station.from_row(row, builder, simulation_state.sim_h3_location_resolution)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
@@ -149,7 +150,7 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
     # grab all stations (some may exist on multiple rows)
     with open(stations_file, 'r', encoding='utf-8-sig') as bf:
         reader = csv.DictReader(bf)
-        stations_builder = ft.reduce(_add_row_unsafe, reader, {})
+        stations_builder = ft.reduce(_add_row_unsafe, reader, immutables.Map())
 
     # add all stations to the simulation once we know they are complete
     sim_with_stations = ft.reduce(_add_station_unsafe, stations_builder.values(), simulation_state)

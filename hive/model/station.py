@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Dict, Optional
+import functools as ft
+
+import immutables
 from h3 import h3
 
 from hive.model.energy.charger import Charger
@@ -25,20 +28,22 @@ class Station(NamedTuple):
     """
     id: StationId
     geoid: GeoId
-    total_chargers: Dict[Charger, int]
-    available_chargers: Dict[Charger, int]
-    charger_prices: Dict[Charger, Currency]
+    total_chargers: immutables.Map[Charger, int]
+    available_chargers: immutables.Map[Charger, int]
+    charger_prices: immutables.Map[Charger, Currency]
     balance: Currency = 0.0
 
     @classmethod
     def build(cls,
               id: StationId,
               geoid: GeoId,
-              chargers: Dict[Charger, int]
+              chargers: immutables.Map[Charger, int]
               ):
-        prices = {}
-        for charger in chargers.keys():
-            prices.update({charger: 0.0})
+        prices = ft.reduce(
+            lambda prices_builder, charger: prices_builder.set(charger, 0.0),
+            chargers.keys(),
+            immutables.Map()
+        )
         return Station(id, geoid, chargers, chargers, prices)
 
     @classmethod
@@ -79,7 +84,7 @@ class Station(NamedTuple):
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
-                        chargers={charger_type: charger_count}
+                        chargers=immutables.Map({charger_type: charger_count})
                     )
                 elif charger_type in builder[station_id].total_chargers:
                     # combine counts from multiple rows which refer to this charger_type
@@ -88,7 +93,7 @@ class Station(NamedTuple):
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
-                        chargers={charger_type: charger_count + charger_already_loaded}
+                        chargers=immutables.Map({charger_type: charger_count + charger_already_loaded})
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
@@ -111,28 +116,22 @@ class Station(NamedTuple):
         :param charger: charger type to be queried.
         :return: Boolean
         """
-        if charger in self.total_chargers:
-            if self.available_chargers[charger] > 0:
-                return True
-
-        return False
+        return charger in self.total_chargers and self.available_chargers[charger] > 0
 
     def checkout_charger(self, charger: Charger) -> Optional[Station]:
         """
         Checks out a charger of type `charger` and returns an updated station if there are any available
 
         :param charger: the charger type to be checked out
-        :return: Updated station or None
+        :return: Updated station or None if no chargers available
         """
-        chargers = self.available_chargers[charger]
 
-        if chargers < 1:
-            return None
-        else:
-            updated_avail_chargers = self.available_chargers.copy()
-            updated_avail_chargers[charger] -= 1
-
+        if self.has_available_charger(charger):
+            previous_charger_count = self.available_chargers.get(charger)
+            updated_avail_chargers = self.available_chargers.set(charger, previous_charger_count - 1)
             return self._replace(available_chargers=updated_avail_chargers)
+        else:
+            return None
 
     def return_charger(self, charger: Charger) -> Station:
         """
@@ -142,16 +141,16 @@ class Station(NamedTuple):
         :param charger: Charger to be returned
         :return: The updated station with returned charger
         """
-        chargers = self.available_chargers[charger]
-        if (chargers + 1) > self.total_chargers[charger]:
-            raise SimulationStateError("Station already has max chargers of this type")
-        else:
-            updated_avail_chargers = self.available_chargers.copy()
-            updated_avail_chargers[charger] += 1
-
+        if charger in self.available_chargers:
+            previous_charger_count = self.available_chargers.get(charger)
+            if previous_charger_count > self.total_chargers.get(charger):
+                raise SimulationStateError("Station already has max chargers of this type")
+            updated_avail_chargers = self.available_chargers.set(charger, previous_charger_count + 1)
             return self._replace(available_chargers=updated_avail_chargers)
+        else:
+            return self
 
-    def update_prices(self, new_prices: Dict[Charger, Currency]) -> Station:
+    def update_prices(self, new_prices: immutables.Map[Charger, Currency]) -> Station:
         return self._replace(
             charger_prices=DictOps.merge_dicts(self.charger_prices, new_prices)
         )

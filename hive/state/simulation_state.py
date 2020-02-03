@@ -5,6 +5,7 @@ from copy import copy
 from typing import NamedTuple, Dict, Optional, Union, cast
 
 from h3 import h3
+import immutables
 
 from hive.runner.environment import Environment
 from hive.model.base import Base
@@ -38,22 +39,22 @@ class SimulationState(NamedTuple):
     sim_h3_search_resolution: int
 
     # objects of the simulation
-    stations: Dict[StationId, Station] = {}
-    bases: Dict[BaseId, Base] = {}
-    vehicles: Dict[VehicleId, Vehicle] = {}
-    requests: Dict[RequestId, Request] = {}
+    stations: immutables.Map[StationId, Station] = immutables.Map()
+    bases: immutables.Map[BaseId, Base] = immutables.Map()
+    vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
+    requests: immutables.Map[RequestId, Request] = immutables.Map()
 
     # location collections - the lowest-level spatial representation in Hive
-    v_locations: Dict[GeoId, Tuple[VehicleId, ...]] = {}
-    r_locations: Dict[GeoId, Tuple[RequestId, ...]] = {}
-    s_locations: Dict[GeoId, Tuple[StationId, ...]] = {}
-    b_locations: Dict[GeoId, Tuple[BaseId, ...]] = {}
+    v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
+    r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
+    s_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
+    b_locations: immutables.Map[GeoId, Tuple[BaseId, ...]] = immutables.Map()
 
     # search collections   - a higher-level spatial representation used for ring search
-    v_search: Dict[GeoId, Tuple[VehicleId, ...]] = {}
-    r_search: Dict[GeoId, Tuple[RequestId, ...]] = {}
-    s_search: Dict[GeoId, Tuple[StationId, ...]] = {}
-    b_search: Dict[GeoId, Tuple[BaseId, ...]] = {}
+    v_search: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
+    r_search: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
+    s_search: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
+    b_search: immutables.Map[GeoId, Tuple[BaseId, ...]] = immutables.Map()
 
     def add_request(self, request: Request) -> Union[Exception, SimulationState]:
         """
@@ -508,8 +509,9 @@ class SimulationState(NamedTuple):
         request = self.requests[request_id]
         updated_vehicle = vehicle.add_passengers(request.passengers).receive_payment(request.value)
 
-        updated_vehicles = copy(self.vehicles)
-        updated_vehicles.update([(vehicle_id, updated_vehicle)])
+        updated_vehicles = self.vehicles.set(vehicle_id, updated_vehicle)
+        # updated_vehicles = copy(self.vehicles)
+        # updated_vehicles.update([(vehicle_id, updated_vehicle)])
 
         return self._replace(
             vehicles=updated_vehicles,

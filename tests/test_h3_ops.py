@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import immutables
 from h3 import h3
 
 from hive.model.request import Request
@@ -37,8 +38,8 @@ class TestH3Ops(TestCase):
         somewhere = h3.geo_to_h3(39.748971, -104.992323, 15)
         close_to_somewhere = h3.geo_to_h3(39.753600, -104.993369, 15)
         far_from_somewhere = h3.geo_to_h3(39.728882, -105.002792, 15)
-        entities = {'1': 1, '2': 2, '3': 3, '4': 4}
-        entity_locations = {close_to_somewhere: ('1', '2'), far_from_somewhere: ('3', '4')}
+        entities = immutables.Map({'1': 1, '2': 2, '3': 3, '4': 4})
+        entity_locations = immutables.Map({close_to_somewhere: ('1', '2'), far_from_somewhere: ('3', '4')})
 
         nearest_entity = H3Ops.nearest_entity_point_to_point(somewhere, entities, entity_locations)
 

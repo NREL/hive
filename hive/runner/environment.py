@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import NamedTuple, Dict
 
+import immutables
+
 from hive.config import HiveConfig
 from hive.model.energy.powertrain import Powertrain
 from hive.model.energy.powercurve import Powercurve
@@ -16,8 +18,8 @@ class Environment(NamedTuple):
     :type config: :py:obj:`HiveConfig`
     """
     config: HiveConfig
-    powertrains: Dict[PowertrainId, Powertrain] = {}
-    powercurves: Dict[PowercurveId, Powercurve] = {}
+    powertrains: immutables.Map[PowertrainId, Powertrain] = immutables.Map()
+    powercurves: immutables.Map[PowercurveId, Powercurve] = immutables.Map()
 
     def add_powertrain(self, powertrain: Powertrain) -> Environment:
         """

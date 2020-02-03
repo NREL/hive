@@ -4,6 +4,8 @@ import functools as ft
 from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict, Union
 
+import immutables
+
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
@@ -83,7 +85,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         charger_update, failures = ft.reduce(
             add_row_to_this_update,
             self.reader.read_until_stop_condition(stop_condition),
-            ({}, ())
+            (immutables.Map(), ())
         )
 
         if len(charger_update) == 0:
@@ -116,8 +118,9 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             return result, self
 
 
-def add_row_to_this_update(acc: Tuple[Dict[str, Dict[Charger, Currency]], Tuple[str, ...]],
-                           row: Dict[str, str]) -> Tuple[Dict[str, Dict[Charger, Currency]], Tuple[str, ...]]:
+def add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]],
+                           row: Dict[str, str]
+                           ) -> Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]]:
     """
     adds a single row to an accumulator that is storing only the most recently
     observed {StationId|GeoId}/charger/currency combinations
@@ -133,15 +136,13 @@ def add_row_to_this_update(acc: Tuple[Dict[str, Dict[Charger, Currency]], Tuple[
         charger = Charger.from_string(row["charger_type"])
         if "station_id" in row:
             station_id = row["station_id"]
-            this_entry = rows[station_id] if rows.get(station_id) else {}
-            this_entry.update({charger: price})
-            updated = DictOps.add_to_dict(rows, station_id, this_entry)
+            this_entry = rows[station_id] if rows.get(station_id) else immutables.Map()
+            updated = DictOps.add_to_dict(rows, station_id, this_entry.set(charger, price))
             return updated, failures
         elif "geoid" in row:
             geoid = row["geoid"]
-            this_entry = rows[geoid] if rows.get(geoid) else {}
-            this_entry.update({charger: price})
-            updated = DictOps.add_to_dict(rows, geoid, this_entry)
+            this_entry = rows[geoid] if rows.get(geoid) else immutables.Map()
+            updated = DictOps.add_to_dict(rows, geoid, this_entry.set(charger, price))
             return updated, failures
         else:
             return rows, (f"missing geoid|station_id for row: {row}",) + failures
@@ -151,7 +152,7 @@ def add_row_to_this_update(acc: Tuple[Dict[str, Dict[Charger, Currency]], Tuple[
 
 def update_station_prices(result: SimulationUpdateResult,
                           station_id: StationId,
-                          prices_update: Dict[Charger, Currency]) -> SimulationUpdateResult:
+                          prices_update: immutables.Map[Charger, Currency]) -> SimulationUpdateResult:
     """
     updates a simulation state with prices for a station by station id
     :param result: the simulation state in a partial update state
@@ -172,15 +173,15 @@ def update_station_prices(result: SimulationUpdateResult,
             return result.update_sim(updated_sim)
 
 
-def map_to_station_ids(this_update: Dict[str, Dict[Charger, Currency]],
-                       sim: SimulationState) -> Dict[StationId, Dict[Charger, Currency]]:
+def map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
+                       sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds
     :param this_update: the update, which may be by StationId or GeoId
     :param sim: the SimulationState provides h3 resolution and lookup tables
     :return: the price data organized by StationId
     """
-    updated = {}
+    updated = {}  # refactor using immutables.Map()?
     for k in this_update.keys():
         if k in sim.stations:
             # k is a StationId; leave as is
@@ -209,4 +210,4 @@ def map_to_station_ids(this_update: Dict[str, Dict[Charger, Currency]],
                 # todo: handle failure here
                 pass
 
-    return updated
+    return immutables.Map(updated)
