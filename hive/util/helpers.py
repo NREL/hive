@@ -57,8 +57,8 @@ class H3Ops:
     @classmethod
     def nearest_entity(cls,
                        geoid: GeoId,
-                       entities: Dict[EntityId, Entity],
-                       entity_search: Dict[GeoId, Tuple[EntityId, ...]],
+                       entities: immutables.Map[EntityId, Entity],
+                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        is_valid: Callable[[Entity], bool] = lambda x: True,
                        max_distance_km: Kilometers = 10  # kilometers
@@ -118,8 +118,8 @@ class H3Ops:
     @classmethod
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
-                             entity_search: Dict[GeoId, Tuple[EntityId, ...]],
-                             entities: Dict[EntityId, Entity]) -> Tuple[Entity, ...]:
+                             entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+                             entities: immutables.Map[EntityId, Entity]) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
