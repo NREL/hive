@@ -10,6 +10,8 @@ from hive.model.energy.charger import Charger
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
 
+CHARGE_STATES = {VehicleState.CHARGING_STATION, VehicleState.CHARGING_BASE}
+
 
 class DispatchTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
@@ -25,6 +27,15 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 
         if not vehicle.can_transition(VehicleState.DISPATCH_TRIP):
             return None
+
+        if vehicle.vehicle_state in CHARGE_STATES:
+            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+            # TODO: we should think about the implications of not having an explicit paring between the vehicle
+            #  and the station. what if we had two stations at the same location?
+            station_id = stations_at_location[0]
+            station = sim_state.stations[station_id]
+            update_station = station.return_charger(vehicle.charger_intent)
+            sim_state = sim_state.modify_station(update_station)
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_TRIP)
 
@@ -57,6 +68,13 @@ class ServeTripInstruction(NamedTuple, Instruction):
         if not vehicle.can_transition(VehicleState.SERVICING_TRIP):
             return None
 
+        if vehicle.vehicle_state in CHARGE_STATES:
+            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+            station_id = stations_at_location[0]
+            station = sim_state.stations[station_id]
+            update_station = station.return_charger(vehicle.charger_intent)
+            sim_state = sim_state.modify_station(update_station)
+
         vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
 
         start = vehicle.property_link
@@ -86,6 +104,13 @@ class DispatchStationInstruction(NamedTuple, Instruction):
 
         if not vehicle.can_transition(VehicleState.DISPATCH_STATION):
             return None
+
+        if vehicle.vehicle_state in CHARGE_STATES:
+            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+            station_id = stations_at_location[0]
+            station = sim_state.stations[station_id]
+            update_station = station.return_charger(vehicle.charger_intent)
+            sim_state = sim_state.modify_station(update_station)
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_STATION)
 
@@ -170,6 +195,13 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
         if not vehicle.can_transition(VehicleState.DISPATCH_BASE):
             return None
 
+        if vehicle.vehicle_state in CHARGE_STATES:
+            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+            station_id = stations_at_location[0]
+            station = sim_state.stations[station_id]
+            update_station = station.return_charger(vehicle.charger_intent)
+            sim_state = sim_state.modify_station(update_station)
+
         vehicle = vehicle.transition(VehicleState.DISPATCH_BASE)
 
         start = vehicle.property_link
@@ -194,6 +226,13 @@ class RepositionInstruction(NamedTuple, Instruction):
 
         if not vehicle.can_transition(VehicleState.REPOSITIONING):
             return None
+
+        if vehicle.vehicle_state in CHARGE_STATES:
+            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+            station_id = stations_at_location[0]
+            station = sim_state.stations[station_id]
+            update_station = station.return_charger(vehicle.charger_intent)
+            sim_state = sim_state.modify_station(update_station)
 
         vehicle = vehicle.transition(VehicleState.REPOSITIONING)
 
@@ -222,6 +261,13 @@ class ReserveBaseInstruction(NamedTuple, Instruction):
 
         if not vehicle.can_transition(VehicleState.RESERVE_BASE):
             return None
+
+        if vehicle.vehicle_state in CHARGE_STATES:
+            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+            station_id = stations_at_location[0]
+            station = sim_state.stations[station_id]
+            update_station = station.return_charger(vehicle.charger_intent)
+            sim_state = sim_state.modify_station(update_station)
 
         vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
         updated_sim_state = sim_state.modify_vehicle(vehicle)
