@@ -1,170 +1,246 @@
-import os
-import sys
-import unittest
-import math
+from csv import DictReader
+from unittest import TestCase
 
-from build_test_env import setup_env
-
-sys.path.append('../')
-from hive.vehicle import Vehicle
-from hive import units
-
-class VehicleTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.SIM_ENV = setup_env()
-        cls.test_route = [
-                 ((30.202783, -97.666996), 0.07102958574108299, 'Dispatch to Request'),
-                 ((30.208332, -97.662686), 0.493413042415615, 'Dispatch to Request'),
-                 ((30.213601, -97.66001), 0.5533686206813949, 'Dispatch to Request'),
-                 ((30.21996, -97.671558), 0.833339376843311, 'Dispatch to Request'),
-                 ((30.224305, -97.680064), 0.5935336394729871, 'Serving Trip'),
-                 ((30.232749, -97.683968), 0.630330923757084, 'Serving Trip'),
-                 ((30.244267, -97.69055), 0.8694615030109061, 'Serving Trip'),
-                 ((30.251038, -97.682555), 0.8056719805472987, 'Serving Trip'),
-                 ((30.251642, -97.682966), 0.5294079882310436, 'Serving Trip'),
-                 ((30.250266, -97.690443), 0.42695224167341106, 'Serving Trip'),
-                 ((30.25596, -97.692917), 0.4757713994751649, 'Serving Trip'),
-                 ((30.26561, -97.695509), 0.7007186438184752, 'Serving Trip'),
-                 ((30.275509, -97.699186), 0.694840492799603, 'Serving Trip'),
-                 ((30.283419, -97.70453), 0.6628251622923864, 'Serving Trip'),
-                 ((30.291561, -97.707424), 0.5641935018816682, 'Serving Trip'),
-                 ((30.300444, -97.712642), 0.7402605716551385, 'Serving Trip'),
-                 ((30.30841, -97.71562), 0.6912386337771323, 'Serving Trip'),
-                 ((30.318853, -97.712776), 0.7062616633594612, 'Serving Trip'),
-                 ((30.321547, -97.717621), 0.4580678953234347, 'Serving Trip'),
-                 ((30.326714, -97.727055), 0.6993308732057084, 'Serving Trip'),
-                 ((30.332404, -97.734766), 0.6373112489855863, 'Serving Trip'),
-                 ((30.338078, -97.739318), 0.59537288582694, 'Serving Trip'),
-                 ((30.34189, -97.737495), 0.2661897347404363, 'Serving Trip'),
-                 ((30.342606, -97.737133), 0.10273534051690625, 'Serving Trip')
-                 ]
-        cls.test_route_distance = 0
-        for step in cls.test_route:
-            cls.test_route_distance += step[1]
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_vehicle_cmd_make_trip(self):
-        test_vehicle = self.SIM_ENV['fleet'][2]
-        test_vehicle.x = self.test_route[0][0][0]
-        test_vehicle.y = self.test_route[0][0][1]
-
-        test_vehicle.cmd_make_trip(
-                            route = self.test_route,
-                            passengers = 1,
-                            )
-
-        sim_steps = len(self.test_route)
-        for t in range(sim_steps+1):
-            test_vehicle.step()
-
-        end_x = self.test_route[-1][0][0]
-        end_y = self.test_route[-1][0][1]
-
-        self.assertTrue(test_vehicle.x == end_x)
-        self.assertTrue(test_vehicle.y == end_y)
-        self.assertTrue(test_vehicle._route == None)
-        self.assertTrue(test_vehicle.activity == 'Idle')
-
-    def test_vehicle_cmd_move(self):
-        test_vehicle = self.SIM_ENV['fleet'][2]
-        test_vehicle.x = self.test_route[0][0][0]
-        test_vehicle.y = self.test_route[0][0][1]
-
-        end_x = self.test_route[-1][0][0]
-        end_y = self.test_route[-1][0][1]
-
-        test_vehicle.cmd_move(self.test_route)
-
-        sim_steps = len(self.test_route)
-        for t in range(sim_steps+1):
-            test_vehicle.step()
-
-        self.assertTrue(test_vehicle.x == end_x)
-        self.assertTrue(test_vehicle.y == end_y)
-        self.assertTrue(test_vehicle._route == None)
-
-    def test_vehicle_cmd_charge(self):
-        test_vehicle = self.SIM_ENV['fleet'][2]
-        test_station = self.SIM_ENV['stations'][2]
-
-        pre_avail_plugs = test_station.avail_plugs
-
-        router = self.SIM_ENV['dispatcher']._route_engine
-        route = router.route(
-                        test_vehicle.x,
-                        test_vehicle.y,
-                        test_station.X,
-                        test_station.Y,
-                        activity='Moving to Station')
-
-        test_vehicle.cmd_charge(test_station, route)
-
-        sim_steps = len(route)
-
-        for t in range(sim_steps+1):
-            test_vehicle.step()
-
-        self.assertTrue(test_vehicle.x == test_station.X)
-        self.assertTrue(test_vehicle.y == test_station.Y)
-        self.assertTrue(test_vehicle._station == test_station)
-        self.assertTrue(test_station.avail_plugs == pre_avail_plugs - 1)
-
-        test_vehicle.energy_kwh = test_vehicle.BATTERY_CAPACITY * 0.5
-
-        max_s = test_vehicle.BATTERY_CAPACITY / test_station.PLUG_POWER_KW * units.HOURS_TO_SECONDS
-        max_iter = max_s / self.SIM_ENV['sim_clock'].TIMESTEP_S
-
-        i = 0
-        while test_vehicle.activity == 'Charging at Station':
-            i += 1
-            if i > max_iter:
-                raise RuntimeError("Vehicle charging too long")
-            test_vehicle.step()
-
-        self.assertTrue(test_vehicle.soc > self.SIM_ENV['env_params']['UPPER_SOC_THRESH_STATION'] - 0.1)
-        self.assertTrue(test_vehicle.soc < self.SIM_ENV['env_params']['UPPER_SOC_THRESH_STATION'])
-        self.assertEqual(test_station.avail_plugs, pre_avail_plugs)
-
-    def test_vehicle_cmd_return_to_base(self):
-        test_vehicle = self.SIM_ENV['fleet'][3]
-        test_base = self.SIM_ENV['bases'][0]
-
-        pre_avail_plugs = test_base.avail_plugs
-
-        router = self.SIM_ENV['dispatcher']._route_engine
-        route = router.route(
-            test_vehicle.x,
-            test_vehicle.y,
-            test_base.X,
-            test_base.Y,
-            activity = "Returning to Base")
-
-        test_vehicle.cmd_return_to_base(test_base, route)
-
-        sim_steps = len(route)
-
-        for t in range(sim_steps+1):
-            test_vehicle.step()
-
-        test_vehicle.energy_kwh = test_vehicle.BATTERY_CAPACITY * 0.5
-        test_vehicle.step()
-
-        self.assertEqual(test_vehicle.x, test_base.X)
-        self.assertEqual(test_vehicle.y, test_base.Y)
-        self.assertEqual(test_vehicle._base, test_base)
-        self.assertEqual(test_vehicle._station, test_base)
-        self.assertEqual(test_base.avail_plugs, pre_avail_plugs - 1)
-        self.assertEqual(test_vehicle.activity,  "Charging at Station")
+from tests.mock_lobster import *
 
 
+class TestVehicle(TestCase):
+    def test_has_passengers(self):
+        updated_vehicle = mock_vehicle().add_passengers(mock_request().passengers)
+        self.assertEqual(updated_vehicle.has_passengers(), True, "should have passengers")
 
+    def test_has_route(self):
+        updated_vehicle = mock_vehicle()._replace(route=mock_route())
+        self.assertEqual(updated_vehicle.has_route(), True, "should have a route")
 
+    def test_add_passengers(self):
+        no_pass_veh = mock_vehicle()
+        mock_req = mock_request()
 
-if __name__ == "__main__":
-    unittest.main()
+        with_pass_veh = no_pass_veh.add_passengers(mock_req.passengers)
+        self.assertEqual(len(with_pass_veh.passengers), len(mock_req.passengers))
+
+    def test_battery_swap(self):
+        veh = mock_vehicle()
+        new_soc = 0.99
+        batt = mock_energy_source(soc=new_soc)
+        updated_vehicle = veh.battery_swap(batt)
+
+        self.assertEqual(updated_vehicle.energy_source.soc, new_soc, "should have the new battery's soc")
+
+    def test_transition_idle(self):
+        non_idling_vehicle = mock_vehicle()._replace(route=mock_route(),
+                                                     vehicle_state=VehicleState.REPOSITIONING)
+        transitioned = non_idling_vehicle.transition(VehicleState.IDLE)
+        self.assertEqual(transitioned.vehicle_state, VehicleState.IDLE, "should have transitioned into an idle state")
+
+    def test_transition_repositioning(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.REPOSITIONING)
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_dispatch_trip(self):
+        """
+        given a Vehicle in an IDLE state,
+        - assign it to a DISPATCH_TRIP state via Vehicle.transition_dispatch_trip
+          - confirm the vehicle state is correctly updated
+        """
+        idle_vehicle = mock_vehicle()
+
+        # check on transition function result
+        transitioned = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_servicing_trip(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.SERVICING_TRIP)
+
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_dispatch_station(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_charging_station(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.CHARGING_STATION)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_dispatch_base(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.DISPATCH_BASE)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_charging_base(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.CHARGING_BASE)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_transition_reserve_base(self):
+        idle_vehicle = mock_vehicle()
+
+        transitioned = idle_vehicle.transition(VehicleState.RESERVE_BASE)
+        self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
+        self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
+                         "vehicle position should not be changed")
+
+    def test_can_transition_good(self):
+        idle_veh = mock_vehicle()
+        veh_serving_trip = idle_veh.transition(VehicleState.IDLE)
+
+        veh_can_trans = veh_serving_trip.can_transition(VehicleState.DISPATCH_TRIP)
+
+        self.assertEqual(veh_can_trans, True)
+
+    def test_can_transition_bad(self):
+        mock_req = mock_request()
+        idle_veh = mock_vehicle()
+        veh_serving_trip = idle_veh.transition(VehicleState.SERVICING_TRIP)
+        veh_w_pass = veh_serving_trip.add_passengers(mock_req.passengers)
+
+        veh_can_trans = veh_w_pass.can_transition(VehicleState.IDLE)
+
+        self.assertEqual(veh_can_trans, False, "shouldn't be able to go IDLE with passengers aboard")
+
+    def test_move(self):
+        # approx 8.5 km distance.
+        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
+        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+
+        vehicle = mock_vehicle_from_geoid(geoid=somewhere).transition(VehicleState.REPOSITIONING)
+        power_train = mock_powertrain()
+        road_network = mock_network()
+
+        start = road_network.property_link_from_geoid(somewhere)
+        end = road_network.property_link_from_geoid(somewhere_else)
+
+        route = road_network.route(start, end)
+
+        vehicle_w_route = vehicle.assign_route(route)
+
+        moved_vehicle = vehicle_w_route.move(road_network=road_network,
+                                             power_train=power_train,
+                                             duration_seconds=400)
+        m2 = moved_vehicle.move(road_network=road_network,
+                                power_train=power_train,
+                                duration_seconds=400)
+        # vehicle should have arrived after second move.
+        m3 = m2.move(road_network=road_network,
+                     power_train=power_train,
+                     duration_seconds=10)
+
+        self.assertLess(moved_vehicle.energy_source.soc, 1)
+        self.assertNotEqual(somewhere, moved_vehicle.geoid)
+        self.assertNotEqual(somewhere, moved_vehicle.property_link.link.start)
+
+        self.assertNotEqual(moved_vehicle.geoid, m2.geoid)
+        self.assertNotEqual(moved_vehicle.property_link.link.start, m2.property_link.link.start)
+
+        self.assertEqual(m3.vehicle_state, VehicleState.IDLE, 'Vehicle should have finished route')
+        self.assertGreater(m3.distance_traveled_km, 8.5, 'Vehicle should have traveled around 8km')
+
+    def test_charge(self):
+        vehicle = mock_vehicle().set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
+        power_curve = mock_powercurve()
+        time_step_size_secs = 1
+
+        result = vehicle.charge(power_curve, time_step_size_secs)
+        self.assertAlmostEqual(
+            first=result.energy_source.energy_kwh,
+            second=vehicle.energy_source.energy_kwh + 0.01,
+            places=2,
+            msg="should have charged")
+
+    def test_charge_when_full(self):
+        vehicle = mock_vehicle(
+            capacity_kwh=100,
+            soc=1.0
+        ).set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
+        power_curve = mock_powercurve()
+        time_step_size_secs = 1
+
+        result = vehicle.charge(power_curve, time_step_size_secs)
+        self.assertEqual(result.energy_source.energy_kwh, vehicle.energy_source.energy_kwh, "should have not charged")
+
+    def test_idle(self):
+        idle_vehicle = mock_vehicle()
+        idle_vehicle_less_energy = idle_vehicle.idle(60)  # idle for 60 seconds
+
+        self.assertLess(idle_vehicle_less_energy.energy_source.soc, idle_vehicle.energy_source.soc,
+                        "Idle vehicles should have consumed energy.")
+        self.assertEqual(idle_vehicle_less_energy.idle_time_seconds, 60, "Should have recorded idle time.")
+
+    def test_idle_reset(self):
+        idle_vehicle = mock_vehicle().idle(60)
+
+        dispatch_vehicle = idle_vehicle.transition(VehicleState.DISPATCH_TRIP)
+
+        self.assertEqual(dispatch_vehicle.idle_time_seconds, 0, "Should have reset idle time.")
+
+    def test_from_row(self):
+        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
+                    v1,37,122,leaf,leaf,50.0,40,50,1.0"""
+
+        row = next(DictReader(source.split()))
+        road_network = HaversineRoadNetwork()
+        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+
+        vehicle = Vehicle.from_row(row, road_network)
+
+        self.assertEqual(vehicle.id, "v1")
+        self.assertEqual(vehicle.geoid, expected_geoid)
+        self.assertEqual(vehicle.powercurve_id, 'leaf')
+        self.assertEqual(vehicle.powertrain_id, 'leaf')
+        self.assertEqual(vehicle.energy_source.powercurve_id, 'leaf')
+        self.assertEqual(vehicle.energy_source.ideal_energy_limit_kwh, 40.0)
+        self.assertEqual(vehicle.energy_source.energy_kwh, 50.0)
+        self.assertEqual(vehicle.energy_source.capacity_kwh, 50.0)
+        self.assertEqual(vehicle.energy_source.energy_type, EnergyType.ELECTRIC)
+        self.assertEqual(vehicle.energy_source.max_charge_acceptance_kw, 50.0)
+        self.assertEqual(len(vehicle.passengers), 0)
+        self.assertEqual(vehicle.property_link.start, expected_geoid)
+        self.assertEqual(vehicle.vehicle_state, VehicleState.IDLE)
+        self.assertEqual(vehicle.distance_traveled_km, 0)
+        self.assertEqual(vehicle.idle_time_seconds, 0)
+        self.assertEqual(vehicle.route, ())
+        self.assertEqual(vehicle.charger_intent, None)
+
+    def test_from_row_bad_powertrain_id(self):
+        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
+                    v1,37,122,beef!@#$,leaf,50.0,40,50,1.0"""
+
+        row = next(DictReader(source.split()))
+        road_network = HaversineRoadNetwork()
+
+        with self.assertRaises(IOError):
+            Vehicle.from_row(row, road_network)
+
+    def test_from_row_bad_powercurve_id(self):
+        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
+                    v1,37,122,leaf,asdjfkl;asdfjkl;,50.0,40,50,1.0"""
+
+        row = next(DictReader(source.split()))
+        road_network = HaversineRoadNetwork()
+
+        with self.assertRaises(IOError):
+            Vehicle.from_row(row, road_network)
