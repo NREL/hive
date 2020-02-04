@@ -2,6 +2,7 @@ from typing import Optional, Dict, NamedTuple, Union
 import functools as ft
 import math
 
+import immutables
 from h3 import h3
 
 from hive.config import HiveConfig
@@ -110,7 +111,7 @@ def mock_station(
         chargers=None
 ) -> Station:
     if chargers is None:
-        chargers = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
+        chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
     return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), chargers)
 
 
@@ -120,7 +121,7 @@ def mock_station_from_geoid(
         chargers=None
 ) -> Station:
     if chargers is None:
-        chargers = {Charger.LEVEL_2: 1, Charger.DCFC: 1}
+        chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
     return Station.build(station_id, geoid, chargers)
 
 def mock_rate_structure(
@@ -343,9 +344,9 @@ def mock_env(
         powertrains: Optional[Dict[PowertrainId, Powertrain]] = None,
 ) -> Environment:
     if powercurves is None:
-        powercurves = {mock_powercurve().get_id(): mock_powercurve()}
+        powercurves = immutables.Map({mock_powercurve().get_id(): mock_powercurve()})
     if powertrains is None:
-        powertrains = {mock_powertrain().get_id(): mock_powertrain()}
+        powertrains = immutables.Map({mock_powertrain().get_id(): mock_powertrain()})
 
     env = Environment(
         config=config,
@@ -519,7 +520,7 @@ def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
                                         state_set=active_set,
                                         n_vehicles=future_demand.value)
 
-            fleet_state_target = {active_target.id: active_target}
+            fleet_state_target = immutables.Map({active_target.id: active_target})
 
             return self, fleet_state_target
 

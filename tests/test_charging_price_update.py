@@ -27,9 +27,9 @@ class TestChargingPriceUpdate(TestCase):
     def test_charge_price_update_from_geoid_file(self):
         # prices are set to bump at 28800 (8 am)
         stations = (
-            mock_station("s1", 39.752233, -104.976061, chargers={Charger.DCFC: 10}),
-            mock_station("s2", 39.759521,-104.97526, chargers={Charger.DCFC: 10}),
-            mock_station("bs1", 39.754695,-104.988116, chargers={Charger.LEVEL_2: 10}),
+            mock_station("s1", 39.752233, -104.976061, chargers=immutables.Map({Charger.DCFC: 10})),
+            mock_station("s2", 39.759521,-104.97526, chargers=immutables.Map({Charger.DCFC: 10})),
+            mock_station("bs1", 39.754695,-104.988116, chargers=immutables.Map({Charger.LEVEL_2: 10})),
         )
         sim = mock_sim(stations=stations, sim_time=36001)
         env = mock_env()
@@ -46,11 +46,11 @@ class TestChargingPriceUpdate(TestCase):
         fn.reader.close()
 
     def test_charge_price_default_price_is_zero(self):
-        station = mock_station(chargers={
+        station = mock_station(chargers=immutables.Map({
                 Charger.LEVEL_1: 1,
                 Charger.LEVEL_2: 1,
                 Charger.DCFC: 1
-        })
+        }))
         sim = mock_sim(
             stations=(station, ),
             sim_time=1,

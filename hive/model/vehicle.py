@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import copy
 from typing import NamedTuple, Dict, Optional
+
+import immutables
 from h3 import h3
 
 from hive.model.energy.charger import Charger
@@ -59,7 +61,7 @@ class Vehicle(NamedTuple):
     # vehicle planning/operational properties
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    passengers: Dict[PassengerId, Passenger] = {}
+    passengers: immutables.Map[PassengerId, Passenger] = immutables.Map()
     charger_intent: Optional[Charger] = None
 
     # vehicle analytical properties
@@ -294,11 +296,11 @@ class Vehicle(NamedTuple):
         :param new_passengers: the set of passengers we want to add
         :return: the updated vehicle
         """
-        updated_passengers = copy.copy(self.passengers)
-        for passenger in new_passengers:
-            passenger_with_vehicle_id = passenger.add_vehicle_id(self.id)
-            updated_passengers[passenger.id] = passenger_with_vehicle_id
-        return self._replace(passengers=updated_passengers)
+        with self.passengers.mutate() as p:
+            for new in new_passengers:
+                new_with_veh_id = new.add_vehicle_id(self.id)
+                p.set(new_with_veh_id.id, new_with_veh_id)
+            return self._replace(passengers=p.finish())
 
     def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
         """

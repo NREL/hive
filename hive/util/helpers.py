@@ -6,6 +6,7 @@ from math import ceil
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
 
 import haversine
+import immutables
 from h3 import h3
 
 from hive.util.exception import H3Error
@@ -56,8 +57,8 @@ class H3Ops:
     @classmethod
     def nearest_entity(cls,
                        geoid: GeoId,
-                       entities: Dict[EntityId, Entity],
-                       entity_search: Dict[GeoId, Tuple[EntityId, ...]],
+                       entities: immutables.Map[EntityId, Entity],
+                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        is_valid: Callable[[Entity], bool] = lambda x: True,
                        max_distance_km: Kilometers = 10  # kilometers
@@ -117,8 +118,8 @@ class H3Ops:
     @classmethod
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
-                             entity_search: Dict[GeoId, Tuple[EntityId, ...]],
-                             entities: Dict[EntityId, Entity]) -> Tuple[Entity, ...]:
+                             entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+                             entities: immutables.Map[EntityId, Entity]) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
@@ -267,7 +268,7 @@ class DictOps:
     V = TypeVar('V')
 
     @classmethod
-    def add_to_dict(cls, xs: Dict[K, V], obj_id: K, obj: V) -> Dict[K, V]:
+    def add_to_dict(cls, xs: immutables.Map[K, V], obj_id: K, obj: V) -> immutables.Map[K, V]:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -277,42 +278,39 @@ class DictOps:
         :param obj:
         :return:
         """
-        updated_dict = copy(xs)
-        updated_dict.update([(obj_id, obj)])
-        return updated_dict
+        return xs.set(obj_id, obj)
 
     @classmethod
-    def remove_from_dict(cls, xs: Dict[K, V], obj_id: K) -> Dict[K, V]:
+    def remove_from_dict(cls, xs: immutables.Map[K, V], obj_id: K) -> immutables.Map[K, V]:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
 
         :param xs:
         :param obj_id:
-        :param obj:
         :return:
         """
-        updated_dict = copy(xs)
-        del updated_dict[obj_id]
-        return updated_dict
+        return xs.delete(obj_id)
 
     @classmethod
-    def merge_dicts(cls, old: Dict[K, V], new: Dict[K, V]) -> Dict[K, V]:
+    def merge_dicts(cls, old: immutables.Map[K, V], new: immutables.Map[K, V]) -> immutables.Map[K, V]:
         """
         merges two Dictionaries, replacing old kv pairs with new ones
         :param old: the old Dict
         :param new: the new Dict
         :return: a merged Dict
         """
-        tmp = copy(old)
-        tmp.update(new)
+        with old.mutate() as mutable:
+            for k, v in new.items():
+                mutable.set(k, v)
+            tmp = mutable.finish()
         return tmp
 
     @classmethod
     def add_to_location_dict(cls,
-                             xs: Dict[str, Tuple[V, ...]],
+                             xs: immutables.Map[str, Tuple[V, ...]],
                              obj_geoid: str,
-                             obj_id: str) -> Dict[str, Tuple[V, ...]]:
+                             obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -322,17 +320,15 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        updated_dict = copy(xs)
-        ids_at_location = updated_dict.get(obj_geoid, ())
+        ids_at_location = xs.get(obj_geoid, ())
         updated_ids = (obj_id,) + ids_at_location
-        updated_dict.update([(obj_geoid, updated_ids)])
-        return updated_dict
+        return xs.set(obj_geoid, updated_ids)
 
     @classmethod
     def remove_from_location_dict(cls,
-                                  xs: Dict[str, Tuple[V, ...]],
+                                  xs: immutables.Map[str, Tuple[V, ...]],
                                   obj_geoid: str,
-                                  obj_id: str) -> Dict[str, Tuple[V, ...]]:
+                                  obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -343,21 +339,16 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        updated_dict = copy(xs)
-        ids_at_loc = updated_dict[obj_geoid]
+        ids_at_loc = xs.get(obj_geoid, ())
         updated_ids = TupleOps.remove(ids_at_loc, obj_id)
-        if len(updated_ids) == 0:
-            del updated_dict[obj_geoid]
-        else:
-            updated_dict[obj_geoid] = updated_ids
-        return updated_dict
+        return xs.delete(obj_geoid) if len(updated_ids) == 0 else xs.set(obj_geoid, updated_ids)
 
     @classmethod
     def update_entity_dictionaries(cls,
                                    updated_entity: V,
-                                   entities: Dict[K, Tuple[V, ...]],
-                                   locations: Dict[GeoId, Tuple[K, ...]],
-                                   search: Dict[GeoId, Tuple[K, ...]],
+                                   entities: immutables.Map[K, Tuple[V, ...]],
+                                   locations: immutables.Map[GeoId, Tuple[K, ...]],
+                                   search: immutables.Map[GeoId, Tuple[K, ...]],
                                    sim_h3_search_resolution: int) -> EntityUpdateResult:
         """
         updates all dictionaries related to an entity

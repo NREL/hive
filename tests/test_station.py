@@ -35,7 +35,7 @@ class TestStation(TestCase):
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
         station = Station.from_row(row1, {}, sim_h3_resolution)
-        builder = {station.id: station}
+        builder = immutables.Map({station.id: station})
         station2 = Station.from_row(row2, builder, sim_h3_resolution)
 
         self.assertEqual(station2.id, "s1")
@@ -58,7 +58,7 @@ class TestStation(TestCase):
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
         station = Station.from_row(row1, {}, sim_h3_resolution)
-        builder = {station.id: station}
+        builder = immutables.Map({station.id: station})
         station2 = Station.from_row(row2, builder, sim_h3_resolution)
 
         self.assertEqual(station2.id, "s1")
@@ -67,19 +67,19 @@ class TestStation(TestCase):
         self.assertEqual(station2.total_chargers[Charger.DCFC], 15)
 
     def test_checkout_charger(self):
-        updated_station = mock_station(chargers={Charger.DCFC: 1}).checkout_charger(Charger.DCFC)
+        updated_station = mock_station(chargers=immutables.Map({Charger.DCFC: 1})).checkout_charger(Charger.DCFC)
 
         self.assertEqual(updated_station.available_chargers[Charger.DCFC], 0)
 
     def test_checkout_charger_none_avail(self):
-        updated_station = mock_station(chargers={Charger.DCFC: 0})
+        updated_station = mock_station(chargers=immutables.Map({Charger.DCFC: 0}))
 
         no_dcfc_station = updated_station.checkout_charger(Charger.DCFC)
 
         self.assertIsNone(no_dcfc_station)
 
     def test_return_charger(self):
-        updated_station = mock_station(chargers={Charger.LEVEL_2: 1}).checkout_charger(Charger.LEVEL_2)
+        updated_station = mock_station(chargers=immutables.Map({Charger.LEVEL_2: 1})).checkout_charger(Charger.LEVEL_2)
 
         station_w_l2 = updated_station.return_charger(Charger.LEVEL_2)
 
