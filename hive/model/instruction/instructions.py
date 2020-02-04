@@ -13,6 +13,18 @@ if TYPE_CHECKING:
 CHARGE_STATES = {VehicleState.CHARGING_STATION, VehicleState.CHARGING_BASE}
 
 
+def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> SimulationState:
+    vehicle = sim_state.vehicles[vehicle_id]
+    stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+    # TODO: we should think about the implications of not having an explicit paring between the vehicle
+    #  and the station. what if we had two stations at the same location?
+    station_id = stations_at_location[0]
+    station = sim_state.stations[station_id]
+    update_station = station.return_charger(vehicle.charger_intent)
+    sim_state = sim_state.modify_station(update_station)
+    return sim_state
+
+
 class DispatchTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
@@ -29,13 +41,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
-            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-            # TODO: we should think about the implications of not having an explicit paring between the vehicle
-            #  and the station. what if we had two stations at the same location?
-            station_id = stations_at_location[0]
-            station = sim_state.stations[station_id]
-            update_station = station.return_charger(vehicle.charger_intent)
-            sim_state = sim_state.modify_station(update_station)
+            sim_state = _return_charger_patch(sim_state, vehicle.id)
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_TRIP)
 
@@ -69,11 +75,7 @@ class ServeTripInstruction(NamedTuple, Instruction):
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
-            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-            station_id = stations_at_location[0]
-            station = sim_state.stations[station_id]
-            update_station = station.return_charger(vehicle.charger_intent)
-            sim_state = sim_state.modify_station(update_station)
+            sim_state = _return_charger_patch(sim_state, vehicle.id)
 
         vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
 
@@ -106,11 +108,7 @@ class DispatchStationInstruction(NamedTuple, Instruction):
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
-            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-            station_id = stations_at_location[0]
-            station = sim_state.stations[station_id]
-            update_station = station.return_charger(vehicle.charger_intent)
-            sim_state = sim_state.modify_station(update_station)
+            sim_state = _return_charger_patch(sim_state, vehicle.id)
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_STATION)
 
@@ -196,11 +194,7 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
-            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-            station_id = stations_at_location[0]
-            station = sim_state.stations[station_id]
-            update_station = station.return_charger(vehicle.charger_intent)
-            sim_state = sim_state.modify_station(update_station)
+            sim_state = _return_charger_patch(sim_state, vehicle.id)
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_BASE)
 
@@ -228,11 +222,7 @@ class RepositionInstruction(NamedTuple, Instruction):
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
-            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-            station_id = stations_at_location[0]
-            station = sim_state.stations[station_id]
-            update_station = station.return_charger(vehicle.charger_intent)
-            sim_state = sim_state.modify_station(update_station)
+            sim_state = _return_charger_patch(sim_state, vehicle.id)
 
         vehicle = vehicle.transition(VehicleState.REPOSITIONING)
 
@@ -263,11 +253,7 @@ class ReserveBaseInstruction(NamedTuple, Instruction):
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
-            stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-            station_id = stations_at_location[0]
-            station = sim_state.stations[station_id]
-            update_station = station.return_charger(vehicle.charger_intent)
-            sim_state = sim_state.modify_station(update_station)
+            sim_state = _return_charger_patch(sim_state, vehicle.id)
 
         vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
         updated_sim_state = sim_state.modify_vehicle(vehicle)
