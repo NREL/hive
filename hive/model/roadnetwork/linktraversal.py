@@ -1,12 +1,10 @@
 from typing import Optional, Union, NamedTuple
 
-from h3 import h3
-
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.helpers import H3Ops
-from hive.util.units import unit, h, km
+from hive.util.units import Seconds
 
 
 class LinkTraversal(NamedTuple):
@@ -18,23 +16,23 @@ class LinkTraversal(NamedTuple):
     :param remaining: represents any part of the link that remains to be traversed
     :type remaining: :py:obj:`Optional[PropertyLink]`
     :param remaining_time: represents any time the agent has left to traverse additional links
-    :type remaining_time: :py:obj:`hours`
+    :type remaining_time_seconds: :py:obj:`hours`
     """
     traversed: Optional[PropertyLink]
     remaining: Optional[PropertyLink]
-    remaining_time: h
+    remaining_time_seconds: Seconds
 
 
 def traverse_up_to(road_network: RoadNetwork,
                    property_link: PropertyLink,
-                   available_time: h) -> Union[Exception, LinkTraversal]:
+                   available_time_seconds: Seconds) -> Union[Exception, LinkTraversal]:
     """
     using the ground truth road network, and some agent Link traversal, attempt to traverse
     the link, based on travel time calculations from the Link's PropertyLink attributes.
 
     :param road_network: the road network
     :param property_link: the plan the agent has to traverse a subset of a road network link
-    :param available_time: the remaining time the agent has in this time step
+    :param available_time_seconds: the remaining time the agent has in this time step
     :return: the updated traversal, or, an exception.
              on update, if there is any remaining traversal, return an updated Link.
              if no traversal remains, return None.
@@ -49,23 +47,23 @@ def traverse_up_to(road_network: RoadNetwork,
         return LinkTraversal(
             traversed=None,
             remaining=None,
-            remaining_time=available_time
+            remaining_time_seconds=available_time_seconds
         )
     else:
-        # traverse up to available_time across this link
-        if property_link.travel_time <= available_time:
+        # traverse up to available_time_hours across this link
+        if property_link.travel_time_seconds <= available_time_seconds:
             # we can complete this link, so we return (remaining) Link = None
             return LinkTraversal(
                 traversed=property_link,
                 remaining=None,
-                remaining_time=(available_time.magnitude - property_link.travel_time.magnitude) * unit.hour
+                remaining_time_seconds=(available_time_seconds - property_link.travel_time_seconds)
             )
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
             # leaving no remaining time.
 
             # find the point in this link to split into two sub-links
-            mid_geoid = H3Ops.point_along_link(property_link, available_time)
+            mid_geoid = H3Ops.point_along_link(property_link, available_time_seconds)
 
             # create two sub-links, one for the part that was traversed, and one for the remaining part
             traversed = property_link.update_link(Link(property_link.link_id, property_link.start, mid_geoid))
@@ -74,6 +72,6 @@ def traverse_up_to(road_network: RoadNetwork,
             return LinkTraversal(
                 traversed=traversed,
                 remaining=remaining,
-                remaining_time=0 * unit.hours
+                remaining_time_seconds=0,
             )
 

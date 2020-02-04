@@ -6,7 +6,7 @@ from h3 import h3
 
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId
-from hive.util.units import unit, km, Ratio
+from hive.util.units import Kilometers, Ratio
 
 
 class Link(NamedTuple):
@@ -46,7 +46,7 @@ def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
     return line[index]
 
 
-def link_distance(link: Link) -> km:
+def link_distance_km(link: Link) -> Kilometers:
     """
     determines the distance of a link
 

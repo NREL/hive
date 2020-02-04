@@ -2,35 +2,40 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, FrozenSet, NamedTuple
-
-from hive.util.typealiases import *
-from hive.util.units import unit, km, h
+from math import ceil
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
 
 import haversine
-
+import immutables
 from h3 import h3
-from math import ceil
+
+from hive.util.exception import H3Error
+from hive.util.typealiases import *
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.property_link import PropertyLink
 
+Entity = TypeVar('Entity')
+EntityId = TypeVar('EntityId')
+
+Key = TypeVar('Key')
+"""
+the type used to switch off of
+"""
+
+Arguments = TypeVar('Arguments')
+"""
+the type of the arguments fed to the inner switch clause
+"""
+
+Result = TypeVar('Result')
+"""
+the type returned from the SwitchCase (can be "Any")
+"""
+
 
 class SwitchCase(ABC):
-    Key = TypeVar('Key')
-    """
-    the type used to switch off of
-    """
-
-    Arguments = TypeVar('Arguments')
-    """
-    the type of the arguments fed to the inner switch clause
-    """
-
-    Result = TypeVar('Result')
-    """
-    the type returned from the SwitchCase (can be "Any")
-    """
 
     @abstractmethod
     def _default(self, arguments: Arguments) -> Result:
@@ -40,7 +45,6 @@ class SwitchCase(ABC):
         :param arguments: the arguments to pass in the default case
         :return:
         """
-        pass
 
     case_statement: Dict[Key, Callable[[Arguments], Result]] = {}
 
@@ -50,17 +54,14 @@ class SwitchCase(ABC):
 
 
 class H3Ops:
-    Entity = TypeVar('Entity')
-    EntityId = TypeVar('EntityId')
-
     @classmethod
     def nearest_entity(cls,
                        geoid: GeoId,
-                       entities: Dict[EntityId, Entity],
-                       entity_search: Dict[GeoId, Tuple[EntityId, ...]],
+                       entities: immutables.Map[EntityId, Entity],
+                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_distance_km: km = 10 * unit.kilometers
+                       max_distance_km: Kilometers = 10  # kilometers
                        ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
@@ -75,12 +76,15 @@ class H3Ops:
 
         :return: the nearest entity, or, None if not found within the constraints
         """
+        geoid_res = h3.h3_get_resolution(geoid)
+        if geoid_res < sim_h3_search_resolution:
+            raise H3Error('search resolution must be less than geoid resolution')
 
-        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2 * unit.kilometers
-        max_k = ceil(max_distance_km.magnitude / k_dist_km.magnitude)
+        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2  # kilometers
+        max_k = ceil(max_distance_km / k_dist_km)
         search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
 
-        def _search(current_k: int = 0) -> Optional['Entity']:
+        def _search(current_k: int = 0) -> Optional[Entity]:
             if current_k > max_k:
                 # There are no entities in any of the rings.
                 return None
@@ -92,14 +96,14 @@ class H3Ops:
                 found = (entity for cell in ring
                          for entity in cls.get_entities_at_cell(cell, entity_search, entities))
 
-                best_dist = 1000000 * unit.kilometers
+                best_dist_km = 1000000
                 best_entity = None
 
                 count = 0
                 for entity in found:
-                    dist = cls.great_circle_distance(geoid, entity.geoid)
-                    if is_valid(entity) and dist < best_dist:
-                        best_dist = dist
+                    dist_km = cls.great_circle_distance(geoid, entity.geoid)
+                    if is_valid(entity) and dist_km < best_dist_km:
+                        best_dist_km = dist_km
                         best_entity = entity
                     count += 1
 
@@ -114,8 +118,8 @@ class H3Ops:
     @classmethod
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
-                             entity_search: Dict[GeoId, Tuple[EntityId, ...]],
-                             entities: Dict[EntityId, Entity]) -> Tuple[Entity, ...]:
+                             entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+                             entities: immutables.Map[EntityId, Entity]) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
@@ -149,22 +153,22 @@ class H3Ops:
         :return: an optional entity if found
         """
 
-        best_dist = 1000000 * unit.kilometers
+        best_dist_km = 1000000
         best_e = None
         for e_geoid, e_ids in entity_locations.items():
-            dist = cls.great_circle_distance(geoid, e_geoid)
+            dist_km = cls.great_circle_distance(geoid, e_geoid)
             for e_id in e_ids:
                 if e_id not in entities:
                     continue
                 e = entities[e_id]
-                if dist < best_dist and is_valid(e):
-                    best_dist = dist
+                if dist_km < best_dist_km and is_valid(e):
+                    best_dist_km = dist_km
                     best_e = e
 
         return best_e
 
     @classmethod
-    def great_circle_distance(cls, a: GeoId, b: GeoId) -> km:
+    def great_circle_distance(cls, a: GeoId, b: GeoId) -> Kilometers:
         """
         computes the distance between two geoids
 
@@ -174,22 +178,22 @@ class H3Ops:
         """
         a_coord = h3.h3_to_geo(a)
         b_coord = h3.h3_to_geo(b)
-        distance_km = haversine.haversine(a_coord, b_coord) * unit.kilometer
+        distance_km = haversine.haversine(a_coord, b_coord, unit='km')
         return distance_km
 
     @classmethod
-    def point_along_link(cls, property_link: PropertyLink, available_time: h) -> GeoId:
+    def point_along_link(cls, property_link: PropertyLink, available_time_seconds: Seconds) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 
+        :param available_time_seconds: the amount of time to traverse
         :param property_link: the link we are finding a mid point along
-        :param available_time: the amount of time to traverse
         :return: a GeoId along the Link
         """
 
         threshold = 0.001
-        experienced_distance = available_time.magnitude * property_link.speed.magnitude
-        ratio_trip_experienced = experienced_distance / property_link.distance.magnitude
+        experienced_distance_km = (available_time_seconds * SECONDS_TO_HOURS) * property_link.speed_kmph
+        ratio_trip_experienced = experienced_distance_km / property_link.distance_km
         if ratio_trip_experienced < (0 + threshold):
             return property_link.start
         elif (1 - threshold) < ratio_trip_experienced:
@@ -253,12 +257,18 @@ class TupleOps:
             return tup[0], tup[1:]
 
 
+class EntityUpdateResult(NamedTuple):
+    entities: Optional[Dict] = None
+    locations: Optional[Dict] = None
+    search: Optional[Dict] = None
+
+
 class DictOps:
     K = TypeVar('K')
     V = TypeVar('V')
 
     @classmethod
-    def add_to_dict(cls, xs: Dict[K, V], obj_id: K, obj: V) -> Dict[K, V]:
+    def add_to_dict(cls, xs: immutables.Map[K, V], obj_id: K, obj: V) -> immutables.Map[K, V]:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -268,30 +278,39 @@ class DictOps:
         :param obj:
         :return:
         """
-        updated_dict = copy(xs)
-        updated_dict.update([(obj_id, obj)])
-        return updated_dict
+        return xs.set(obj_id, obj)
 
     @classmethod
-    def remove_from_dict(cls, xs: Dict[K, V], obj_id: K) -> Dict[K, V]:
+    def remove_from_dict(cls, xs: immutables.Map[K, V], obj_id: K) -> immutables.Map[K, V]:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
 
         :param xs:
         :param obj_id:
-        :param obj:
         :return:
         """
-        updated_dict = copy(xs)
-        del updated_dict[obj_id]
-        return updated_dict
+        return xs.delete(obj_id)
+
+    @classmethod
+    def merge_dicts(cls, old: immutables.Map[K, V], new: immutables.Map[K, V]) -> immutables.Map[K, V]:
+        """
+        merges two Dictionaries, replacing old kv pairs with new ones
+        :param old: the old Dict
+        :param new: the new Dict
+        :return: a merged Dict
+        """
+        with old.mutate() as mutable:
+            for k, v in new.items():
+                mutable.set(k, v)
+            tmp = mutable.finish()
+        return tmp
 
     @classmethod
     def add_to_location_dict(cls,
-                             xs: Dict[str, Tuple[V, ...]],
+                             xs: immutables.Map[str, Tuple[V, ...]],
                              obj_geoid: str,
-                             obj_id: str) -> Dict[str, Tuple[V, ...]]:
+                             obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -301,17 +320,15 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        updated_dict = copy(xs)
-        ids_at_location = updated_dict.get(obj_geoid, ())
+        ids_at_location = xs.get(obj_geoid, ())
         updated_ids = (obj_id,) + ids_at_location
-        updated_dict.update([(obj_geoid, updated_ids)])
-        return updated_dict
+        return xs.set(obj_geoid, updated_ids)
 
     @classmethod
     def remove_from_location_dict(cls,
-                                  xs: Dict[str, Tuple[V, ...]],
+                                  xs: immutables.Map[str, Tuple[V, ...]],
                                   obj_geoid: str,
-                                  obj_id: str) -> Dict[str, Tuple[V, ...]]:
+                                  obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -322,26 +339,16 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        updated_dict = copy(xs)
-        ids_at_loc = updated_dict[obj_geoid]
+        ids_at_loc = xs.get(obj_geoid, ())
         updated_ids = TupleOps.remove(ids_at_loc, obj_id)
-        if len(updated_ids) == 0:
-            del updated_dict[obj_geoid]
-        else:
-            updated_dict[obj_geoid] = updated_ids
-        return updated_dict
-
-    class EntityUpdateResult(NamedTuple):
-        entities: Optional[Dict] = None
-        locations: Optional[Dict] = None
-        search: Optional[Dict] = None
+        return xs.delete(obj_geoid) if len(updated_ids) == 0 else xs.set(obj_geoid, updated_ids)
 
     @classmethod
     def update_entity_dictionaries(cls,
                                    updated_entity: V,
-                                   entities: Dict[K, Tuple[V, ...]],
-                                   locations: Dict[GeoId, Tuple[K, ...]],
-                                   search: Dict[GeoId, Tuple[K, ...]],
+                                   entities: immutables.Map[K, Tuple[V, ...]],
+                                   locations: immutables.Map[GeoId, Tuple[K, ...]],
+                                   search: immutables.Map[GeoId, Tuple[K, ...]],
                                    sim_h3_search_resolution: int) -> EntityUpdateResult:
         """
         updates all dictionaries related to an entity
@@ -356,38 +363,37 @@ class DictOps:
         entities_updated = DictOps.add_to_dict(entities, updated_entity.id, updated_entity)
 
         if old_entity.geoid == updated_entity.geoid:
-            return cls.EntityUpdateResult(
+            return EntityUpdateResult(
                 entities=entities_updated
             )
-        else:
-            # unset from old geoid add add to new one
-            locations_removed = DictOps.remove_from_location_dict(locations,
-                                                                  old_entity.geoid,
-                                                                  old_entity.id)
-            locations_updated = DictOps.add_to_location_dict(locations_removed,
-                                                             updated_entity.geoid,
-                                                             updated_entity.id)
+        # unset from old geoid add add to new one
+        locations_removed = DictOps.remove_from_location_dict(locations,
+                                                              old_entity.geoid,
+                                                              old_entity.id)
+        locations_updated = DictOps.add_to_location_dict(locations_removed,
+                                                         updated_entity.geoid,
+                                                         updated_entity.id)
 
-            old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
-            updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
+        old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
+        updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
 
-            if old_search_geoid == updated_search_geoid:
-                # no update to search location
-                return cls.EntityUpdateResult(
-                    entities=entities_updated,
-                    locations=locations_updated
-                )
-            else:
-                # update request search dict location
-                search_removed = DictOps.remove_from_location_dict(search,
-                                                                   old_search_geoid,
-                                                                   old_entity.id)
-                search_updated = DictOps.add_to_location_dict(search_removed,
-                                                              updated_search_geoid,
-                                                              updated_entity.id)
+        if old_search_geoid == updated_search_geoid:
+            # no update to search location
+            return EntityUpdateResult(
+                entities=entities_updated,
+                locations=locations_updated
+            )
 
-                return cls.EntityUpdateResult(
-                    entities=entities_updated,
-                    locations=locations_updated,
-                    search=search_updated
-                )
+        # update request search dict location
+        search_removed = DictOps.remove_from_location_dict(search,
+                                                           old_search_geoid,
+                                                           old_entity.id)
+        search_updated = DictOps.add_to_location_dict(search_removed,
+                                                      updated_search_geoid,
+                                                      updated_entity.id)
+
+        return EntityUpdateResult(
+            entities=entities_updated,
+            locations=locations_updated,
+            search=search_updated
+        )

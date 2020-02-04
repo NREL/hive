@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict, NamedTuple, TYPE_CHECKING
+from typing import Dict, NamedTuple, TYPE_CHECKING, Optional
 
 from hive.model.vehiclestate import VehicleState
 from hive.util.exception import *
 from hive.util.helpers import SwitchCase
-from hive.util.typealiases import VehicleId
+from hive.util.typealiases import VehicleId, StationId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
@@ -69,23 +69,23 @@ class TerminalStateEffectOps(SwitchCase):
         sim_state = arguments.simulation_state
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
-        at_location = sim_state.at_geoid(vehicle.geoid)
-        charger = vehicle.charger_intent
-        station_id = vehicle.station_intent
+        stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+        station_id_at_location: Optional[StationId] = stations_at_location[0] if stations_at_location else None
 
-        if station_id in at_location['stations'] and not vehicle.has_route():
-            station = sim_state.stations[station_id]
+        if station_id_at_location and vehicle.charger_intent and not vehicle.has_route():
+            station = sim_state.stations[station_id_at_location]
+            charger = vehicle.charger_intent
 
             if station.has_available_charger(charger):
-                station = station.checkout_charger(charger)
-                vehicle = vehicle.transition(VehicleState.CHARGING_STATION).plug_in_to(station.id, charger)
-                sim_state = sim_state.modify_vehicle(vehicle).modify_station(station)
+                updated_station = station.checkout_charger(charger)
+                updated_vehicle = vehicle.transition(VehicleState.CHARGING_STATION)
+                return sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
             else:
                 # FUTURE: Add station queuing?
-                vehicle = vehicle.transition(VehicleState.IDLE)
-                sim_state = sim_state.modify_vehicle(vehicle)
-
-        return sim_state
+                updated_vehicle = vehicle.transition(VehicleState.IDLE)
+                return sim_state.modify_vehicle(updated_vehicle)
+        else:
+            return sim_state
 
     def _case_dispatch_base(self, arguments: TerminalStateEffectArgs) -> SimulationState:
         sim_state = arguments.simulation_state
@@ -115,12 +115,15 @@ class TerminalStateEffectOps(SwitchCase):
         sim_state = arguments.simulation_state
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
+        stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
 
-        if vehicle.energy_source.is_at_ideal_energy_limit():
-            station = sim_state.stations[vehicle.station]
-            updated_station = station.return_charger(vehicle.plugged_in_charger)
+        station_id: Optional[StationId] = stations_at_location[0] if stations_at_location else None
 
-            updated_vehicle = vehicle.transition(VehicleState.IDLE).unplug()
+        if station_id and vehicle.energy_source.is_at_ideal_energy_limit():
+            station = sim_state.stations[station_id]
+            updated_station = station.return_charger(vehicle.charger_intent)
+
+            updated_vehicle = vehicle.transition(VehicleState.IDLE)
             sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
 
         return sim_state
@@ -129,17 +132,19 @@ class TerminalStateEffectOps(SwitchCase):
         sim_state = arguments.simulation_state
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
+        stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+        station_id: Optional[StationId] = stations_at_location[0] if stations_at_location else None
 
-        if vehicle.energy_source.is_at_ideal_energy_limit():
-            station = sim_state.stations[vehicle.station]
-            updated_station = station.return_charger(vehicle.plugged_in_charger)
+        if station_id and vehicle.energy_source.is_at_ideal_energy_limit():
+            station = sim_state.stations[station_id]
+            updated_station = station.return_charger(vehicle.charger_intent)
 
-            updated_vehicle = vehicle.transition(VehicleState.RESERVE_BASE).unplug()
+            updated_vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
             sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
 
         return sim_state
 
-    def _default(self, arguments: Arguments) -> Result:
+    def _default(self, arguments: Arguments) -> SimulationState:
         return arguments.simulation_state
 
     # todo: does having this as a field in the class mean it's constructed each time

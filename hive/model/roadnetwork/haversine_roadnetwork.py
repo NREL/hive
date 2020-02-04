@@ -7,7 +7,6 @@ from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.util.typealiases import GeoId, LinkId, SimTime
-from hive.util.units import unit
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -25,7 +24,7 @@ class HaversineRoadNetwork(RoadNetwork):
     """
 
     # TODO: Replace speed with more accurate/dynamic estimate.
-    _AVG_SPEED = 40 * (unit.kilometer / unit.hour)
+    _AVG_SPEED_KMPH = 40  # kilometer / hour
 
     def __init__(self, sim_h3_resolution: int = 15):
         self.sim_h3_resolution = sim_h3_resolution
@@ -71,7 +70,7 @@ class HaversineRoadNetwork(RoadNetwork):
 
         start, end = self._link_id_to_geodis(link_id)
         link = Link(link_id, start, end)
-        property_link = PropertyLink.build(link, self.AVG_SPEED)
+        property_link = PropertyLink.build(link, self._AVG_SPEED_KMPH)
 
         return property_link
 

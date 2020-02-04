@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, NamedTuple, Dict, Union
+from typing import Optional, NamedTuple, Dict
 
 from h3 import h3
 
@@ -46,7 +46,8 @@ class Base(NamedTuple):
 
         :param row: a row as interpreted by csv.DictReader
         :param sim_h3_resolution: the h3 resolution that events are experienced at
-        :return: a Base, or an error
+        :return: a Base
+        :raises IOError if the row was bad
         """
         if 'base_id' not in row:
             raise IOError("cannot load a base without a 'base_id'")
@@ -83,10 +84,7 @@ class Base(NamedTuple):
 
         :return: Boolean
         """
-        if self.available_stalls > 0:
-            return True
-        else:
-            return False
+        return bool(self.available_stalls > 0)
 
     def checkout_stall(self) -> Optional[Base]:
         """

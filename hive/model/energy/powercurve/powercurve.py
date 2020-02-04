@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import PowercurveId
-from hive.util.units import unit, s
+from hive.util.units import Seconds
+
 
 if TYPE_CHECKING:
     from hive.model.energy.charger import Charger
@@ -25,7 +26,6 @@ class Powercurve(ABC):
 
         :return: PowercurveId
         """
-        pass
 
     @abstractmethod
     def get_energy_type(self) -> EnergyType:
@@ -34,20 +34,19 @@ class Powercurve(ABC):
 
         :return: an energy type
         """
-        pass
 
     @abstractmethod
     def refuel(self,
                energy_source: EnergySource,
                charger: Charger,
-               duration_seconds: s = 1 * unit.seconds) -> EnergySource:
+               duration_seconds: Seconds = 1) -> EnergySource:
+
         """
         (estimated) energy rate due to fueling, based on EnergySource
 
         :param energy_source: a vehicle's source of energy
         :param charger: has a capacity scaling effect on the energy_rate
         :param duration_seconds: the amount of time to charge for
-        :return: energy rate in KwH for charging with the current state of the EnergySource
+        :return: the energy source charged for this duration using this charger
         """
-        pass
 

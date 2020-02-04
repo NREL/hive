@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Tuple, Callable, Any, Type
+from typing import NamedTuple, Tuple, TYPE_CHECKING
 
-from hive.dispatcher import Dispatcher
-from hive.runner import simulation_runner_ops
-from hive.runner.environment import Environment
-from hive.state.simulation_state import SimulationState
-from hive.reporting.reporter import Reporter
-from hive.state.update import SimulationUpdate
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
+    from hive.state.simulation_state import SimulationState
+    from hive.reporting.reporter import Reporter
+    from hive.state.update import SimulationUpdateFunction
 
 
 class RunnerPayload(NamedTuple):
@@ -23,14 +22,38 @@ class RunnerPayload(NamedTuple):
     :type r: :py:obj:`Tuple[str, ...]`
     """
     s: SimulationState
-    d: Dispatcher
+    f: Tuple[SimulationUpdateFunction, ...]
     r: Tuple[str, ...] = ()
 
-    def apply_fn(self, fn: SimulationUpdate) -> RunnerPayload:
-        result = fn.update(self.s)
-        return self._replace(
+    def apply_fn(self, fn: SimulationUpdateFunction, env: Environment) -> RunnerPayload:
+        """
+        applies an update function to this payload. if the update function
+        was also updated, then store the updated version of the update function
+        invariant: the update functions (self.f) were emptied before applying these
+        (we don't want to duplicate them!)
+        :param fn: an update function
+        :param env: the simulation environment
+        :return: the updated payload, with update function applied to the simulation,
+        and the update function possibly updated itself
+        """
+        result, updated_fn = fn.update(self.s, env)
+        next_update_fns = self.f + (updated_fn, ) if updated_fn else self.f + (fn, )
+        updated_payload = self._replace(
             s=result.simulation_state,
-            r=self.r + result.reports
+            r=self.r + result.reports,
+            f=next_update_fns
+        )
+        return updated_payload
+
+    def apply_update_functions(self, env: Environment) -> RunnerPayload:
+        """
+        apply one time step of the update functions
+        :return: the RunnerPayload with SimulationState and update functions (SimulationUpdateFunction) updated
+        """
+        return ft.reduce(
+            lambda acc, fn: acc.apply_fn(fn, env),
+            self.f,
+            self._replace(f=())
         )
 
 
@@ -45,8 +68,7 @@ class LocalSimulationRunner(NamedTuple):
 
     def run(self,
             initial_simulation_state: SimulationState,
-            initial_dispatcher: Dispatcher,
-            update_functions: Tuple[SimulationUpdate, ...],
+            update_functions: Tuple[SimulationUpdateFunction, ...],
             reporter: Reporter,
             ) -> RunnerPayload:
         """
@@ -60,29 +82,25 @@ class LocalSimulationRunner(NamedTuple):
         """
 
         time_steps = range(
-            self.env.config.sim.start_time_seconds,
-            self.env.config.sim.end_time_seconds,
-            self.env.config.sim.timestep_duration_seconds
+            self.env.config.sim.start_time,
+            self.env.config.sim.end_time,
+            self.env.config.sim.timestep_duration_seconds,
         )
 
         def _run_step(payload: RunnerPayload, t: int) -> RunnerPayload:
-            updated_payload = ft.reduce(
-                lambda acc, fn: acc.apply_fn(fn),
-                update_functions,
-                payload
-            )
 
-            updated_sim, updated_dispatcher, instructions = simulation_runner_ops.step(updated_payload.s,
-                                                                                       updated_payload.d)
-            reporter.report(updated_sim, instructions, updated_payload.r)
-            if updated_sim.sim_time % 100 == 0:
-                print(f"running step {updated_sim.sim_time} of {len(time_steps)}")
-            return RunnerPayload(updated_sim, updated_dispatcher, ())
+            updated_payload = payload.apply_update_functions(self.env)
+            updated_sim = updated_payload.s
+
+            reporter.report(updated_sim, updated_payload.r)
+            if updated_sim.sim_time % 3600 == 0:
+                print(f"simulating {updated_sim.sim_time} of {self.env.config.sim.end_time} seconds")
+            return RunnerPayload(s=updated_sim, f=updated_payload.f, r=())
 
         final_payload = ft.reduce(
             _run_step,
             time_steps,
-            RunnerPayload(initial_simulation_state, initial_dispatcher)
+            RunnerPayload(initial_simulation_state, update_functions)
         )
 
         return final_payload

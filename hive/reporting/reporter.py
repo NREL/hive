@@ -4,7 +4,6 @@ from typing import Tuple
 from abc import ABC, abstractmethod
 
 from hive.state.simulation_state import SimulationState
-from hive.dispatcher.instruction import Instruction
 
 
 class Reporter(ABC):
@@ -15,7 +14,6 @@ class Reporter(ABC):
     @abstractmethod
     def report(self,
                sim_state: SimulationState,
-               instructions: Tuple[Instruction, ...],
                reports: Tuple[str, ...]):
         """
         Takes in a simulation state and a tuple of instructions and writes the appropriate information.
@@ -25,4 +23,3 @@ class Reporter(ABC):
         :param reports: Any additional reports.
         :return: Does not return a value.
         """
-        pass

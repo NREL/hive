@@ -66,6 +66,7 @@ class UnitError(Exception):
     """
     errors related to units
     """
+
     def __init__(self, msg):
         self.message = msg
 
@@ -76,6 +77,18 @@ class UnitError(Exception):
 class EntityError(Exception):
     """
     errors related to methods on entities such as vehicles or stations.
+    """
+
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)
+
+
+class H3Error(Exception):
+    """
+    errors related to H3 operations
     """
 
     def __init__(self, msg):

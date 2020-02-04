@@ -1,26 +1,24 @@
 from __future__ import annotations
 
-import copy
-import re
-from typing import NamedTuple, Dict, Optional, Union
+from typing import NamedTuple, Dict, Optional
+
+import immutables
+from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
-from hive.model.energy.energytype import EnergyType
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import *
 from hive.util.helpers import DictOps
-from hive.util.units import unit, s, km
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency
 from hive.util.exception import EntityError
 from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
 from hive.model.energy.powertrain import Powertrain, powertrain_models
-
-from h3 import h3
 
 
 class Vehicle(NamedTuple):
@@ -45,37 +43,30 @@ class Vehicle(NamedTuple):
     :type vehicle_state: :py:obj:`VehicleState`
     :param passengers: A map of passengers that are in the vehicle. Could be empty
     :type passengers: :py:obj:`Dict[PasengerId, Passengers]`
-    :param station_intent: The station a vehicle is intending to charge at.
-    :type station_intent: :py:obj:`Optional[StationId]`
     :param charger_intent: The charger type a vehicle intends to plug into.
     :type charger_intent: :py:obj:`Optional[Charger]`
-    :param station: The station a vehicle is charging at.
-    :type station: :py:obj:`Optional[Station]`
-    :param plugged_in_charger: The charger type a vehicle is plugged into.
-    :type plugged_in_charger: :py:obj:`Optional[Charger]`
     :param idle_time_s: A counter to track how long the vehicle has been idle.
     :type idle_time_s: :py:obj:`seconds`
     :param distance_traveled: A accumulator to track how far a vehicle has traveled.
-    :type distance_traveled: :py:obj:`kilometers`
+    :type distance_traveled_km: :py:obj:`kilometers`
     """
+    # core vehicle properties
     id: VehicleId
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
     property_link: PropertyLink
 
+    # vehicle planning/operational properties
     route: Route = ()
     vehicle_state: VehicleState = VehicleState.IDLE
-    passengers: Dict[PassengerId, Passenger] = {}
-
-    station_intent: Optional[StationId] = None
+    passengers: immutables.Map[PassengerId, Passenger] = immutables.Map()
     charger_intent: Optional[Charger] = None
 
-    station: Optional[StationId] = None
-    plugged_in_charger: Optional[Charger] = None
-
-    idle_time_s: s = 0 * unit.seconds
-    distance_traveled: km = 0.0 * unit.kilometers
+    # vehicle analytical properties
+    balance: Currency = 0.0
+    idle_time_seconds: Seconds = 0
+    distance_traveled_km: Kilometers = 0.0
 
     @property
     def geoid(self):
@@ -122,10 +113,10 @@ class Vehicle(NamedTuple):
                 powertrain_id = row['powertrain_id']
                 powercurve_id = row['powercurve_id']
                 energy_type = powercurve_energy_types[powercurve_id]
-                capacity = float(row['capacity']) * unit.kilowatthours
+                capacity = float(row['capacity'])
                 iel_str = row['ideal_energy_limit']
-                ideal_energy_limit = float(iel_str) * unit.kilowatthours if len(iel_str) > 0 else None
-                max_charge_acceptance = float(row['max_charge_acceptance']) * unit.kilowatt
+                ideal_energy_limit = float(iel_str) if len(iel_str) > 0 else None
+                max_charge_acceptance = float(row['max_charge_acceptance'])
                 initial_soc = float(row['initial_soc'])
 
                 if not 0.0 <= initial_soc <= 1.0:
@@ -152,109 +143,51 @@ class Vehicle(NamedTuple):
             except ValueError:
                 raise IOError(f"a numeric value could not be parsed from {row}")
 
-    def has_passengers(self) -> bool:
-        """
-        Returns whether or not the vehicle has passengers.
-
-        :return: Boolean
-        """
-        return len(self.passengers) > 0
-
-    def has_route(self) -> bool:
-        """
-        Returns whether or not the vehicle has a route.
-
-        :return: Boolean
-        """
-        return len(self.route) != 0
-
-    def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
-        """
-        Loads some passengers onto this vehicle
-
-        :param new_passengers: the set of passengers we want to add
-        :return: the updated vehicle
-        """
-        updated_passengers = copy.copy(self.passengers)
-        for passenger in new_passengers:
-            passenger_with_vehicle_id = passenger.add_vehicle_id(self.id)
-            updated_passengers[passenger.id] = passenger_with_vehicle_id
-        return self._replace(passengers=updated_passengers)
-
-    def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
-        """
-        Drops off passengers to their destination.
-
-        :param passenger_id:
-        :return: the updated vehicle
-        """
-        if passenger_id not in self.passengers:
-            return self
-        updated_passengers = DictOps.remove_from_dict(self.passengers, passenger_id)
-        return self._replace(passengers=updated_passengers)
-
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
 
-    def plug_in_to(self, station_id: StationId, charger: Charger) -> Vehicle:
-        """
-        Plugs a vehicle into a charger.
-
-        :param station_id: id of the station to plug into
-        :param charger: charger type to plug into
-        :return: the updated vehicle
-        """
-        return self._replace(plugged_in_charger=charger, station=station_id)
-
-    def unplug(self) -> Vehicle:
-        """
-        Unplugs a vehicle from a charger.
-
-        :return: the updated vehicle
-        """
-        return self._replace(plugged_in_charger=None, station=None)
-
-    def _reset_idle_stats(self) -> Vehicle:
-        return self._replace(idle_time_s=0 * unit.seconds)
-
-    def _reset_charge_intent(self) -> Vehicle:
-        return self._replace(charger_intent=None, station_intent=None)
-
     def charge(self,
                powercurve: Powercurve,
-               duration: s) -> Vehicle:
+               duration_seconds: Seconds) -> Vehicle:
 
         """
         applies a charge event to a vehicle
 
         :param powercurve: the vehicle's powercurve model
-        :param duration: duration of this time step in seconds
+        :param station: the station we are charging at
+        :param duration_seconds: duration_seconds of this time step in seconds
         :return: the updated Vehicle
         """
 
-        if not self.plugged_in_charger:
-            raise EntityError("Vehicle cannot charge without a charger.")
-        if self.energy_source.is_at_ideal_energy_limit():
-            # TODO: we have to return the plug to the charger. But, this is outside the scope of the vehicle..
-            #  So, I think the simulation state should handle the charge end termination state.
+        if not self.charger_intent:
+            raise EntityError("Vehicle attempting to charge but has no charger intent")
+        elif self.energy_source.is_at_ideal_energy_limit():
+            # should not reach here, terminal state mechanism should catch this condition first
             return self
         else:
-            updated_energy_source = powercurve.refuel(self.energy_source, self.plugged_in_charger, duration)
-            return self._replace(energy_source=updated_energy_source)
+            # charge energy source
+            updated_energy_source = powercurve.refuel(self.energy_source, self.charger_intent, duration_seconds)
+            return self._replace(
+                energy_source=updated_energy_source
+            )
 
-    def move(self, road_network: RoadNetwork, power_train: Powertrain, time_step: s) -> Optional[Vehicle]:
+    def move(self, road_network: RoadNetwork, power_train: Powertrain, duration_seconds: Seconds) -> Optional[Vehicle]:
         """
         Moves the vehicle and consumes energy.
 
         :param road_network: the road network
         :param power_train: the vehicle's powertrain model
-        :param time_step: the duration of this move step in seconds
+        :param duration_seconds: the duration_seconds of this move step in seconds
         :return: the updated vehicle or None if moving is not possible.
         """
         if not self.has_route():
             return self.transition(VehicleState.IDLE)
 
-        traverse_result = traverse(route_estimate=self.route, road_network=road_network, time_step=time_step)
+        traverse_result = traverse(
+            route_estimate=self.route,
+            road_network=road_network,
+            duration_seconds=duration_seconds,
+        )
 
         if not traverse_result:
             # TODO: Need to think about edge case where vehicle gets route where origin=destination.
@@ -264,7 +197,7 @@ class Vehicle(NamedTuple):
         experienced_route = traverse_result.experienced_route
 
         energy_used = power_train.energy_cost(experienced_route)
-        step_distance = traverse_result.traversal_distance
+        step_distance_km = traverse_result.traversal_distance_km
 
         updated_energy_source = self.energy_source.use_energy(energy_used)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
@@ -277,71 +210,38 @@ class Vehicle(NamedTuple):
             geoid = experienced_route[-1].link.end
             updated_location_vehicle = new_route_vehicle._replace(
                 property_link=road_network.property_link_from_geoid(geoid),
-                distance_traveled=self.distance_traveled + step_distance,
+                distance_traveled_km=self.distance_traveled_km + step_distance_km,
 
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
                 property_link=remaining_route[0],
-                distance_traveled=self.distance_traveled + step_distance,
+                distance_traveled_km=self.distance_traveled_km + step_distance_km,
 
             )
 
         return updated_location_vehicle
 
-    def idle(self, time_step_s: s) -> Vehicle:
+    def idle(self, time_step_seconds: Seconds) -> Vehicle:
         """
         Performs an idle step.
 
-        :param time_step_s: duration of the idle step in seconds
+        :param time_step_seconds: duration_seconds of the idle step in seconds
         :return: the updated vehicle
         """
         if self.vehicle_state != VehicleState.IDLE:
             raise EntityError("vehicle.idle() method called but vehicle not in IDLE state.")
 
-        idle_energy_rate = 0.8 # (unit.kilowatthour / unit.hour)
+        idle_energy_rate = 0.8  # (unit.kilowatthour / unit.hour)
 
-        idle_energy_kwh = (idle_energy_rate * time_step_s / 3600.0) * unit.kilowatthour
+        idle_energy_kwh = idle_energy_rate * (time_step_seconds * SECONDS_TO_HOURS)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
         less_energy_vehicle = self.battery_swap(updated_energy_source)
 
-        next_idle_time = (less_energy_vehicle.idle_time_s.magnitude + time_step_s.magnitude) * unit.seconds
-        vehicle_w_stats = less_energy_vehicle._replace(idle_time_s=next_idle_time)
+        next_idle_time = (less_energy_vehicle.idle_time_seconds + time_step_seconds)
+        vehicle_w_stats = less_energy_vehicle._replace(idle_time_seconds=next_idle_time)
 
         return vehicle_w_stats
-
-    def battery_swap(self, energy_source: EnergySource) -> Vehicle:
-        """
-        Replaces the vehicle energy source with a new energy source.
-
-        :param energy_source: the new energy source
-        :return: the updated vehicle
-        """
-        return self._replace(energy_source=energy_source)
-
-    def assign_route(self, route: Route) -> Vehicle:
-        """
-        Assigns a route to the vehicle
-
-        :param route: the route to be assigned
-        :return: the updated vehicle
-        """
-        return self._replace(route=route)
-
-    def set_charge_intent(self, station_id: StationId, charger: Charger) -> Vehicle:
-        """
-        Sets the intention for a vehicle to charge.
-
-        :param station_id: which station the vehicle intends to charge at
-        :param charger: the type of charger the vehicle intends to use
-        :return: the updated vehicle
-        """
-        return self._replace(station_intent=station_id, charger_intent=charger)
-
-    """
-    TRANSITION FUNCTIONS
-    --------------------
-    """
 
     def can_transition(self, vehicle_state: VehicleState) -> bool:
         """
@@ -373,10 +273,109 @@ class Vehicle(NamedTuple):
             transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
 
             if previous_vehicle_state == VehicleState.IDLE:
+                # end of idling
                 return transitioned_vehicle._reset_idle_stats()
-            elif previous_vehicle_state == VehicleState.DISPATCH_STATION:
+            elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
+                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
+                # interrupted charge session
                 return transitioned_vehicle._reset_charge_intent()
-
-            return transitioned_vehicle
+            elif previous_vehicle_state == VehicleState.DISPATCH_STATION and \
+                    VehicleStateCategory.from_vehicle_state(vehicle_state) != VehicleStateCategory.CHARGE:
+                # interrupted charge dispatch
+                return transitioned_vehicle._reset_charge_intent()
+            else:
+                return transitioned_vehicle
         else:
             return None
+
+    def add_passengers(self, new_passengers: Tuple[Passenger, ...]) -> Vehicle:
+        """
+        Loads some passengers onto this vehicle
+
+        :param new_passengers: the set of passengers we want to add
+        :return: the updated vehicle
+        """
+        with self.passengers.mutate() as p:
+            for new in new_passengers:
+                new_with_veh_id = new.add_vehicle_id(self.id)
+                p.set(new_with_veh_id.id, new_with_veh_id)
+            return self._replace(passengers=p.finish())
+
+    def drop_off_passenger(self, passenger_id: PassengerId) -> Vehicle:
+        """
+        Drops off passengers to their destination.
+
+        :param passenger_id:
+        :return: the updated vehicle
+        """
+        if passenger_id not in self.passengers:
+            return self
+        updated_passengers = DictOps.remove_from_dict(self.passengers, passenger_id)
+        return self._replace(passengers=updated_passengers)
+
+    def has_passengers(self) -> bool:
+        """
+        Returns whether or not the vehicle has passengers.
+
+        :return: Boolean
+        """
+        return len(self.passengers) > 0
+
+    def has_route(self) -> bool:
+        """
+        Returns whether or not the vehicle has a route.
+
+        :return: Boolean
+        """
+        return len(self.route) != 0
+
+    def battery_swap(self, energy_source: EnergySource) -> Vehicle:
+        """
+        Replaces the vehicle energy source with a new energy source.
+
+        :param energy_source: the new energy source
+        :return: the updated vehicle
+        """
+        return self._replace(energy_source=energy_source)
+
+    def assign_route(self, route: Route) -> Vehicle:
+        """
+        Assigns a route to the vehicle
+
+        :param route: the route to be assigned
+        :return: the updated vehicle
+        """
+        return self._replace(route=route)
+
+    def set_charge_intent(self, charger: Charger) -> Vehicle:
+        """
+        Sets the intention for a vehicle to charge.
+
+        :param station_id: which station the vehicle intends to charge at
+        :param charger: the type of charger the vehicle intends to use
+        :return: the updated vehicle
+        """
+        return self._replace(charger_intent=charger)
+
+    def _reset_idle_stats(self) -> Vehicle:
+        return self._replace(idle_time_seconds=0)
+
+    def _reset_charge_intent(self) -> Vehicle:
+        return self._replace(charger_intent=None)
+
+    def send_payment(self, amount: Currency) -> Vehicle:
+        """
+        updates the Vehicle's balance based on sending a payment
+        :param amount: the amount to pay
+        :return: the updated Vehicle
+        """
+        return self._replace(balance=self.balance - amount)
+
+    def receive_payment(self, amount: Currency) -> Vehicle:
+        """
+        updates the Vehicle's balance based on receiving a payment
+        :param amount: the amount to be paid
+        :return: the updated Vehicle
+        """
+        return self._replace(balance=self.balance + amount)
+
