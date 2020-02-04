@@ -116,6 +116,7 @@ class TerminalStateEffectOps(SwitchCase):
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
         stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+
         station_id: Optional[StationId] = stations_at_location[0] if stations_at_location else None
 
         if station_id and vehicle.energy_source.is_at_ideal_energy_limit():
