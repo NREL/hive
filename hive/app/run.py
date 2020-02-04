@@ -28,12 +28,17 @@ def run():
     entry point for a hive run
     :return: 0 if success, 1 if error
     """
+
+    _welcome_to_hive()
+
     if len(sys.argv) == 1:
         print("please specify a scenario file to run.")
         return 1
 
     try:
         scenario_file = sys.argv[1]
+        print(f"attempting to load config: {scenario_file}")
+
         cwd = os.getcwd()
         scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
 
@@ -49,6 +54,8 @@ def run():
         sim_output_dir = os.path.join(config.io.working_directory, run_name)
         if not os.path.isdir(sim_output_dir):
             os.makedirs(sim_output_dir)
+
+        print("initializing scenario")
 
         simulation_state, environment = initialize_simulation(config)
 
@@ -72,6 +79,9 @@ def run():
 
         runner = LocalSimulationRunner(env=environment)
         reporter = DetailedReporter(config.io, sim_output_dir)
+
+        print("running HIVE")
+
         start = time.time()
         sim_result = runner.run(
             initial_simulation_state=simulation_state,
@@ -92,11 +102,12 @@ def run():
         raise e
 
 
-def _summary_stats(sim: SimulationState):
+def _summary_stats(final_sim: SimulationState):
     """
     just some quick-and-dirty summary stats here
     :param sim: the final sim state
     """
+
     class VehicleResultsAccumulator(NamedTuple):
         balance: float = 0.0
         vkt: float = 0.0
@@ -114,14 +125,14 @@ def _summary_stats(sim: SimulationState):
     # collect all vehicle data
     v_acc = ft.reduce(
         lambda acc, veh: acc.add_vehicle(veh),
-        sim.vehicles.values(),
+        final_sim.vehicles.values(),
         VehicleResultsAccumulator()
     )
 
     # collect all station data
     station_income = ft.reduce(
         lambda income, station: income + station.balance,
-        sim.stations.values(),
+        final_sim.stations.values(),
         0.0
     )
 
@@ -130,3 +141,19 @@ def _summary_stats(sim: SimulationState):
     print(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
     print(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")
     print(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100.0:.2f}%")
+
+
+def _welcome_to_hive():
+    welcome = """
+##     ##  ####  ##     ##  #######
+##     ##   ##   ##     ##  ##
+#########   ##   ##     ##  ######
+##     ##   ##    ##   ##   ##
+##     ##  ####     ###     #######
+
+                .' '.            __
+       .        .   .           (__\_
+        .         .         . -{{_(|8)
+          ' .  . ' ' .  . '     (__/
+    """
+    print(welcome)

@@ -202,6 +202,6 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     station_id=base.station_id,
                     charger=Charger.LEVEL_2,
                 )
-                instructions = instructions + (instruction,)
+                instructions = instructions + (instruction, )
 
         return self, instructions
