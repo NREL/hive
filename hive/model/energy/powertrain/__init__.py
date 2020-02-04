@@ -1,5 +1,3 @@
-from typing import Union
-
 import yaml
 from pkg_resources import resource_string
 

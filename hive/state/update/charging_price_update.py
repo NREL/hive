@@ -20,7 +20,7 @@ from hive.util.parsers import time_parser
 from h3 import h3
 
 
-def default_charging_prices() -> Iterator[Dict[str, str]]:
+def _default_charging_prices() -> Iterator[Dict[str, str]]:
     """
     used to build the default set of prices
     :return: a price update function which will set all chargers to a Currency of zero
@@ -42,7 +42,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
     @classmethod
     def build(cls,
               charging_file: Optional[str] = None,
-              fallback_values: Iterator[Dict[str, str]] = default_charging_prices(),
+              fallback_values: Iterator[Dict[str, str]] = _default_charging_prices(),
               ) -> ChargingPriceUpdate:
         """
         reads a requests file and builds a ChargingPriceUpdate SimulationUpdateFunction
@@ -83,7 +83,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
         # parse the most recently available charger price data up to the current sim time
         charger_update, failures = ft.reduce(
-            add_row_to_this_update,
+            _add_row_to_this_update,
             self.reader.read_until_stop_condition(stop_condition),
             (immutables.Map(), ())
         )
@@ -97,7 +97,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             # the default constructor creates one station_id called "default" and we
             # apply it to every station here.
             result = ft.reduce(
-                lambda sim, s_id: update_station_prices(sim, s_id, charger_update['default']),
+                lambda sim, s_id: _update_station_prices(sim, s_id, charger_update['default']),
                 sim_state.stations.keys(),
                 SimulationUpdateResult(sim_state)
             )
@@ -106,19 +106,19 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         else:
             # apply update to all stations
             # if these updates are in the form of GeoIds, map them to StationIds
-            as_station_updates = map_to_station_ids(charger_update, sim_state)
+            as_station_updates = _map_to_station_ids(charger_update, sim_state)
             station_ids_to_update = set(sim_state.stations.keys()).union(as_station_updates.keys())
 
             # we are applying only the updates related to valid StationIds with updates
             result = ft.reduce(
-                lambda sim, s_id: update_station_prices(sim, s_id, as_station_updates[s_id]),
+                lambda sim, s_id: _update_station_prices(sim, s_id, as_station_updates[s_id]),
                 station_ids_to_update,
                 SimulationUpdateResult(sim_state)
             )
             return result, self
 
 
-def add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]],
+def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]],
                            row: Dict[str, str]
                            ) -> Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]]:
     """
@@ -150,7 +150,7 @@ def add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charger
         return rows, (f"error: {e.args} for row {row}",)
 
 
-def update_station_prices(result: SimulationUpdateResult,
+def _update_station_prices(result: SimulationUpdateResult,
                           station_id: StationId,
                           prices_update: immutables.Map[Charger, Currency]) -> SimulationUpdateResult:
     """
@@ -173,7 +173,7 @@ def update_station_prices(result: SimulationUpdateResult,
             return result.update_sim(updated_sim)
 
 
-def map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
+def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
                        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds

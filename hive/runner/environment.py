@@ -1,13 +1,13 @@
 from __future__ import annotations
-from typing import NamedTuple, Dict
+from typing import NamedTuple
 
 import immutables
 
 from hive.config import HiveConfig
-from hive.model.energy.powertrain import Powertrain
-from hive.model.energy.powercurve import Powercurve
 from hive.util.typealiases import PowercurveId, PowertrainId
 from hive.util.helpers import DictOps
+from hive.model.energy.powertrain import Powertrain
+from hive.model.energy.powercurve import Powercurve
 
 
 class Environment(NamedTuple):
