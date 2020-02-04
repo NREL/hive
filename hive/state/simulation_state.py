@@ -1,25 +1,26 @@
 from __future__ import annotations
 
 import functools as ft
-from copy import copy
-from typing import NamedTuple, Dict, Optional, Union, cast
+from typing import NamedTuple, Optional, Union, cast, Tuple, TYPE_CHECKING
 
-from h3 import h3
 import immutables
+from h3 import h3
 
-from hive.runner.environment import Environment
-from hive.model.base import Base
-from hive.model.request import Request
-from hive.model.station import Station
-from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
 from hive.util.exception import *
 from hive.util.helpers import DictOps
-from hive.util.typealiases import *
-from hive.util.units import Seconds, SECONDS_IN_HOUR
+from hive.model.station import Station
+from hive.model.vehicle import Vehicle
+from hive.model.base import Base
+from hive.model.request import Request
+from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
+
+if TYPE_CHECKING:
+    from hive.model.roadnetwork.roadnetwork import RoadNetwork
+    from hive.runner.environment import Environment
+    from hive.util.units import Seconds
 
 
 class SimulationState(NamedTuple):

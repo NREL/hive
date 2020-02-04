@@ -52,7 +52,10 @@ def initialize_simulation(
     return sim_with_stations, env_updated
 
 
-def _build_vehicles(vehicles_file: str, simulation_state: SimulationState, environment: Environment) -> Tuple[SimulationState, Environment]:
+def _build_vehicles(
+        vehicles_file: str,
+        simulation_state: SimulationState,
+        environment: Environment) -> Tuple[SimulationState, Environment]:
     """
     adds all vehicles from the provided vehicles file
 
