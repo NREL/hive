@@ -36,7 +36,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         with open(resource_filename("hive.resources.geofence", geofence_file)) as f:
             geojson = json.load(f)
             geofence = list(h3.polyfill(
-                geo_json=geojson['features'][0]['geometry'],
+                geo_json=geojson['features'][0]['geometry'] if 'features' in geojson else geojson['geometry'],
                 res=10,
                 geo_json_conformant=True))
             return ManagedDispatcher(

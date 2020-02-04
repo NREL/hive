@@ -6,10 +6,11 @@ sim:
 io:
   working_directory: denver_demo_outputs
   requests_file: denver_demo_requests.csv
-  rate_structure_file: rate_structure.csv
   vehicles_file: denver_demo_vehicles.csv
   bases_file: denver_demo_bases.csv
   stations_file: denver_demo_stations.csv
+  charging_price_file: denver_charging_prices_by_geoid.csv
+  rate_structure_file: rate_structure.csv
   geofence_file: downtown_denver.geojson
   vehicle_log: vehicle.log
   request_log: request.log

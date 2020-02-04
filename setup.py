@@ -33,10 +33,10 @@ setup(
         "haversine>=2.1",
         "numpy>=1.17"
     ],
-    include_package_data=True,
-    package_data={
-        "hive.resources": ["*"]
-    },
+    # include_package_data=True,
+    # package_data={
+    #     "hive.resources": ["*"]
+    # },
     entry_points={
         'console_scripts': ['hive=hive.app.run:run'],
     },

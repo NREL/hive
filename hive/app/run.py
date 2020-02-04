@@ -19,6 +19,8 @@ from hive.reporting.detailed_reporter import DetailedReporter
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.initialize_simulation import initialize_simulation
 from hive.state.update import UpdateRequests, CancelRequests, StepSimulation
+from state.update import ChargingPriceUpdate
+from hive.state.simulation_state import SimulationState
 
 
 def run():
@@ -40,8 +42,8 @@ def run():
 
         config = HiveConfig.build(config_builder)
         if isinstance(config, Exception):
-            print(config.args)
-            return 1
+            # perhaps in the future, more robust handling here
+            raise config
 
         run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         sim_output_dir = os.path.join(config.io.working_directory, run_name)
@@ -52,6 +54,7 @@ def run():
 
         requests_file = resource_filename("hive.resources.requests", config.io.requests_file)
         rate_structure_file = resource_filename("hive.resources.service_prices", config.io.rate_structure_file)
+        charging_price_file = resource_filename("hive.resources.charging_prices", config.io.charging_price_file)
 
         manager = BasicManager(demand_forecaster=BasicForecaster())
         dispatcher = ManagedDispatcher.build(
@@ -61,6 +64,7 @@ def run():
 
         # TODO: move this lower and make it ordered.
         update_functions = (
+            ChargingPriceUpdate.build(charging_price_file),
             UpdateRequests.build(requests_file, rate_structure_file),
             CancelRequests(),
             StepSimulation(dispatcher),
@@ -79,40 +83,50 @@ def run():
         print("\n")
         print(f'done! time elapsed: {round(end - start, 2)} seconds')
 
-        class VehicleResultsAccumulator(NamedTuple):
-            balance: float = 0.0
-            vkt: float = 0.0
-            avg_soc: float = 0.0
-            count: int = 0
-
-            def add_vehicle(self, vehicle: Vehicle) -> VehicleResultsAccumulator:
-                return self._replace(
-                    balance=self.balance + vehicle.balance,
-                    vkt=self.vkt + vehicle.distance_traveled_km,
-                    avg_soc=self.avg_soc + ((vehicle.energy_source.soc - self.avg_soc) / (self.count + 1)),
-                    count=self.count + 1
-                )
-
-        v_acc = ft.reduce(
-            lambda acc, veh: acc.add_vehicle(veh),
-            sim_result.s.vehicles.values(),
-            VehicleResultsAccumulator()
-        )
-
-        station_income = ft.reduce(
-            lambda income, station: income + station.balance,
-            sim_result.s.stations.values(),
-            0.0
-        )
-
-        print("\n")
-        print(f"STATION  CURRENCY BALANCE:             $ {station_income:.2f}")
-        print(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
-        print(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")
-        print(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100.0:.2f}%")
+        _summary_stats(sim_result.s)
 
         return 0
 
     except Exception as e:
-        print(e.args)
-        return 1
+        # perhaps in the future, a more robust handling here
+        raise e
+
+
+def _summary_stats(sim: SimulationState):
+    """
+    just some quick-and-dirty summary stats here
+    :param sim: the final sim state
+    """
+    class VehicleResultsAccumulator(NamedTuple):
+        balance: float = 0.0
+        vkt: float = 0.0
+        avg_soc: float = 0.0
+        count: int = 0
+
+        def add_vehicle(self, vehicle: Vehicle) -> VehicleResultsAccumulator:
+            return self._replace(
+                balance=self.balance + vehicle.balance,
+                vkt=self.vkt + vehicle.distance_traveled_km,
+                avg_soc=self.avg_soc + ((vehicle.energy_source.soc - self.avg_soc) / (self.count + 1)),
+                count=self.count + 1
+            )
+
+    # collect all vehicle data
+    v_acc = ft.reduce(
+        lambda acc, veh: acc.add_vehicle(veh),
+        sim.vehicles.values(),
+        VehicleResultsAccumulator()
+    )
+
+    # collect all station data
+    station_income = ft.reduce(
+        lambda income, station: income + station.balance,
+        sim.stations.values(),
+        0.0
+    )
+
+    print("\n")
+    print(f"STATION  CURRENCY BALANCE:             $ {station_income:.2f}")
+    print(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
+    print(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")
+    print(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100.0:.2f}%")
