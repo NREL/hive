@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from os import path
 
 # Get the long description from the README file
@@ -22,8 +22,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering"
     ],
-    # package_dir={"": "hive"},
-    # packages=find_packages(where="hive", exclude=["tests", "tests/*"]),
     packages=["hive"],
     python_requires=">=3.8",
     install_requires=[
@@ -33,10 +31,10 @@ setup(
         "haversine>=2.1",
         "numpy>=1.17"
     ],
-    # include_package_data=True,
-    # package_data={
-    #     "hive.resources": ["*"]
-    # },
+    include_package_data=True,
+    package_data={
+        "hive.resources": ["*"]
+    },
     entry_points={
         'console_scripts': ['hive=hive.app.run:run'],
     },
