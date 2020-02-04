@@ -1,6 +1,6 @@
 from __future__ import annotations
 from h3 import h3
-from typing import NamedTuple, Optional, Dict, Union
+from typing import NamedTuple, Optional, Dict, Union, TYPE_CHECKING
 
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.runner.environment import Environment
@@ -8,6 +8,9 @@ from hive.util.typealiases import *
 from hive.util.parsers import time_parser
 from hive.util.units import Currency, KM_TO_MILE
 from hive.util.helpers import H3Ops
+
+if TYPE_CHECKING:
+    from hive.model.request import RequestRateStructure
 
 
 class Request(NamedTuple):
@@ -52,7 +55,9 @@ class Request(NamedTuple):
               destination: GeoId,
               departure_time: SimTime,
               cancel_time: SimTime,
-              passengers: int) -> Request:
+              passengers: int,
+              value: Currency = 0,
+              ) -> Request:
         assert (departure_time >= 0)
         assert (cancel_time >= 0)
         assert (passengers > 0)
@@ -65,7 +70,9 @@ class Request(NamedTuple):
                        destination,
                        departure_time,
                        cancel_time,
-                       tuple(request_as_passengers))
+                       tuple(request_as_passengers),
+                       value,
+                       )
 
     @classmethod
     def from_row(cls, row: Dict[str, str], env: Environment) -> Union[Exception, Request]:

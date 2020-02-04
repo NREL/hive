@@ -1,6 +1,7 @@
 from typing import Optional, Dict, NamedTuple, Union
 import functools as ft
 import math
+from pkg_resources import resource_filename
 
 import immutables
 from h3 import h3
@@ -124,6 +125,7 @@ def mock_station_from_geoid(
         chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
     return Station.build(station_id, geoid, chargers)
 
+
 def mock_rate_structure(
         base_price: Currency = 2.2,
         price_per_mile: Currency = 1.6,
@@ -134,6 +136,7 @@ def mock_rate_structure(
         price_per_mile=price_per_mile,
         minimum_price=minimum_price,
     )
+
 
 def mock_request(
         request_id: RequestId = DefaultIds.mock_request_id(),
@@ -162,7 +165,8 @@ def mock_request_from_geoids(
         destination: GeoId = h3.geo_to_h3(10, 10, 15),
         departure_time: SimTime = 0,
         cancel_time: SimTime = 5,
-        passengers: int = 1
+        passengers: int = 1,
+        value: Currency = 0
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -170,7 +174,8 @@ def mock_request_from_geoids(
         destination=destination,
         departure_time=departure_time,
         cancel_time=cancel_time,
-        passengers=passengers
+        passengers=passengers,
+        value=value,
     )
 
 
@@ -333,6 +338,7 @@ def mock_config(
             'rate_structure_file': '',
             'bases_file': '',
             'stations_file': '',
+            'geofence_file': 'downtown_denver.geojson',
         }
 
     })

@@ -20,8 +20,9 @@ class TestInitializeSimulation(TestCase):
                     "rate_structure_file": "rate_structure.csv",
                     "vehicles_file": "denver_demo_vehicles.csv",
                     "bases_file": "denver_demo_bases.csv",
-                    "stations_file": "denver_demo_stations.csv"
-                }
+                    "stations_file": "denver_demo_stations.csv",
+                    "geofence_file": "downtown_denver.geojson",
+        }
             }
         )
         sim, env = initialize_simulation(conf)

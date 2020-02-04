@@ -12,6 +12,8 @@ class IO(NamedTuple):
     rate_structure_file: str
     bases_file: str
     stations_file: str
+    geofence_file: str
+
     run_log: str
     vehicle_log: str
     request_log: str
@@ -33,6 +35,7 @@ class IO(NamedTuple):
             'requests_file': str,
             'bases_file': str,
             'stations_file': str,
+            'geofence_file': str,
         }
 
     @classmethod
@@ -53,6 +56,7 @@ class IO(NamedTuple):
             rate_structure_file=d['rate_structure_file'],
             bases_file=d['bases_file'],
             stations_file=d['stations_file'],
+            geofence_file=d['geofence_file'],
             run_log=d['run_log'],
             vehicle_log=d['vehicle_log'],
             request_log=d['request_log'],

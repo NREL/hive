@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools as ft
+import json
 from typing import Tuple, Optional, NamedTuple
 
 from hive.runner.environment import Environment
@@ -9,6 +10,7 @@ from hive.model.instruction.instruction_interface import Instruction
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
+from hive.util.typealiases import SimTime
 
 
 class StepSimulation(NamedTuple, SimulationUpdateFunction):
@@ -29,8 +31,9 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         updated_dispatcher, instructions = self.dispatcher.generate_instructions(simulation_state)
         sim_with_instructions = self._apply_instructions(simulation_state, instructions)
         sim_next_time_step = sim_with_instructions.step_simulation(env)
+        reports = tuple(self._as_json(i, simulation_state.sim_time) for i in instructions)
 
-        return SimulationUpdateResult(sim_next_time_step, ()), self._replace(dispatcher=updated_dispatcher)
+        return SimulationUpdateResult(sim_next_time_step, reports=reports), self._replace(dispatcher=updated_dispatcher)
 
     def _apply_instructions(
             self,
@@ -61,3 +64,12 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         if updated_sim is None:
             return simulation_state
         return updated_sim
+
+    def _as_json(self, instruction: Instruction, sim_time: SimTime) -> str:
+        i_dict = instruction._asdict()
+        i_dict['sim_time'] = sim_time
+        i_dict['report'] = "instruction"
+        i_dict['instruction_type'] = instruction.__class__.__name__
+        return json.dumps(i_dict, default=str)
+
+

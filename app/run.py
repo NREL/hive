@@ -9,7 +9,9 @@ from pkg_resources import resource_filename
 sys.path.append('..')
 
 from hive.config import *
-from hive.dispatcher.greedy_dispatcher import GreedyDispatcher
+from hive.dispatcher.managed_dispatcher import ManagedDispatcher
+from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
+from hive.dispatcher.manager.basic_manager import BasicManager
 from hive.reporting.detailed_reporter import DetailedReporter
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.initialize_simulation import initialize_simulation
@@ -31,12 +33,16 @@ sim_output_dir = os.path.join(config.io.working_directory, run_name)
 if not os.path.isdir(sim_output_dir):
     os.makedirs(sim_output_dir)
 
-dispatcher = GreedyDispatcher()
-
 simulation_state, environment = initialize_simulation(config)
 
 requests_file = resource_filename("hive.resources.requests", config.io.requests_file)
 rate_structure_file = resource_filename("hive.resources.service_prices", config.io.rate_structure_file)
+
+manager = BasicManager(demand_forecaster=BasicForecaster())
+dispatcher = ManagedDispatcher.build(
+    manager=manager,
+    geofence_file=config.io.geofence_file,
+)
 
 # TODO: move this lower and make it ordered.
 update_functions = (

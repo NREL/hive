@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import random
-
 from typing import Tuple, NamedTuple
 
 from hive.state.simulation_state import SimulationState
@@ -11,7 +9,7 @@ from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 
 class BasicForecaster(NamedTuple, ForecasterInterface):
     """
-    A class that computes an optimal fleet state.
+    A forecaster that generates a prediction based on the current demand.
     """
 
     def generate_forecast(self, simulation_state: SimulationState) -> Tuple[BasicForecaster, Forecast]:
@@ -21,8 +19,8 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
         :param simulation_state: The current simulation state
         :return: the update Manager along with the fleet target
         """
-        random_demand = random.randint(1, 100)
+        current_demand = len(simulation_state.requests)
 
-        demand_forecast = Forecast(type=ForecastType.DEMAND, value=random_demand)
+        demand_forecast = Forecast(type=ForecastType.DEMAND, value=current_demand + 10)
 
         return self, demand_forecast

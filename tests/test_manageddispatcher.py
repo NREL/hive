@@ -122,10 +122,37 @@ class TestManagedDispatcher(TestCase):
 
         dispatcher, instructions = dispatcher.generate_instructions(sim)
 
-        print(instructions)
-
         self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0],
                               DispatchBaseInstruction,
                               "Should have instructed vehicle to dispatch to base")
 
+    def test_valuable_requests(self):
+        manager = mock_manager(forecaster=mock_forecaster())
+        dispatcher = ManagedDispatcher.build(
+            manager=manager,
+            geofence_file='downtown_denver.geojson',
+        )
+
+        # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
+        # if it is moved to base.
+
+        somewhere = '89283470d93ffff'
+        somewhere_else = '89283470d87ffff'
+
+        veh1 = mock_vehicle_from_geoid(vehicle_id='v1', geoid=somewhere)
+        expensive_req = mock_request_from_geoids(request_id='expensive', origin=somewhere_else, value=100)
+        cheap_req = mock_request_from_geoids(request_id='cheap', origin=somewhere_else, value=10)
+
+        sim = mock_sim(h3_location_res=9, h3_search_res=9)\
+            .add_vehicle(veh1).add_request(expensive_req).add_request(cheap_req)
+
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
+
+        print(instructions)
+
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions[0],
+                              DispatchTripInstruction,
+                              "Should have instructed vehicle to dispatch")
+        self.assertEqual(instructions[0].request_id, 'expensive', 'Should have picked expensive request')
