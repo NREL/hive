@@ -14,6 +14,10 @@ CHARGE_STATES = {VehicleState.CHARGING_STATION, VehicleState.CHARGING_BASE}
 
 
 def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> SimulationState:
+    """
+    Patch for condition in which a vehicle charge event is interrupted.
+    TODO: Refactor this logic into some kind of exit method on a vehicle state that gets called on a transition.
+    """
     vehicle = sim_state.vehicles[vehicle_id]
     stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
     # TODO: we should think about the implications of not having an explicit paring between the vehicle
