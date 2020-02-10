@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 
 # Get the long description from the README file
@@ -22,7 +22,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering"
     ],
-    packages=["hive"],
+    packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
         "h3>=3.4.3",
