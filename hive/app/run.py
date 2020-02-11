@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 from hive.model import Vehicle
 from hive.state.simulation_state import SimulationState
-from hive.runner import load_local_simulation
+from hive.runner import load_simulation
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def run() -> int:
         cwd = os.getcwd()
         scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
 
-        runner, reporter, initial_payload = load_local_simulation(scenario_path)
+        runner, reporter, initial_payload = load_simulation(scenario_path)
 
         log.info("running HIVE")
 
