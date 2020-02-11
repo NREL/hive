@@ -154,7 +154,7 @@ HIVE intends to implement the following features:
 
 ## License
 
-Highly Integrated Vehicle Ecosystem (HIVE)  Copyright ©2019   Alliance for Sustainable Energy, LLC All Rights Reserved
+Highly Integrated Vehicle Ecosystem (HIVE)  Copyright ©2020   Alliance for Sustainable Energy, LLC All Rights Reserved
 
 This computer software was produced by Alliance for Sustainable Energy, LLC under Contract No. DE-AC36-08GO28308 with
 the U.S. Department of Energy. For 5 years from the date permission to assert copyright was obtained, the Government is

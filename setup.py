@@ -36,10 +36,10 @@ setup(
         "hive.resources": ["*"]
     },
     entry_points={
-        'console_scripts': ['hive=hive.app.run:run'],
+        'console_scripts': ['hive=hive.run.run_app:run_app'],
     },
     author="National Renewable Energy Laboratory",
     author_email="Reinicke, Nicholas <Nicholas.Reinicke@nrel.gov>",
-    license="Copyright ©2019 Alliance for Sustainable Energy, LLC All Rights Reserved",
+    license="Copyright ©2020 Alliance for Sustainable Energy, LLC All Rights Reserved",
     keywords="transportation simulation ride-hail data-driven agent-based model ABM"
 )

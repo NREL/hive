@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from hive import RunnerPayload
 from hive.dispatcher.managed_dispatcher import ManagedDispatcher
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.manager.basic_manager import BasicManager
@@ -33,10 +34,11 @@ class TestLocalSimulationRunner(TestCase):
             manager=manager,
             geofence_file=config.io.geofence_file,
         )
+        update_functions = (CancelRequests(), StepSimulation(dispatcher))
+        runner_payload = RunnerPayload(initial_sim, update_functions)
 
         result = runner.run(
-            initial_simulation_state=initial_sim,
-            update_functions=(CancelRequests(), StepSimulation(dispatcher)),
+            runner_payload,
             reporter=mock_reporter()
         )
 
