@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import functools as ft
 from typing import NamedTuple, TYPE_CHECKING, Callable, Optional
+import logging
 
 from hive.runner.runner_payload import RunnerPayload
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.reporting.reporter import Reporter
+
+log = logging.getLogger(__name__)
 
 
 class LocalSimulationRunner(NamedTuple):
@@ -64,12 +67,14 @@ class LocalSimulationRunner(NamedTuple):
 
 def _run_step_in_context(env: Environment, reporter: Reporter) -> Callable:
     def _run_step(payload: RunnerPayload, t: int) -> RunnerPayload:
-        updated_payload = payload.apply_update_functions(env)
+
+        # applies the most recent version of each update function
+        updated_payload = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
 
         reporter.report(updated_sim, updated_payload.r)
         if updated_sim.sim_time % 3600 == 0:
-            print(f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds")
-        return RunnerPayload(s=updated_sim, f=updated_payload.f, r=())
+            log.info(f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds")
+        return updated_payload.clear_reports()
 
     return _run_step

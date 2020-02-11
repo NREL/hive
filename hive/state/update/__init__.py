@@ -1,3 +1,4 @@
+from hive.state.update.update import Update
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.state.update.update_requests import UpdateRequests

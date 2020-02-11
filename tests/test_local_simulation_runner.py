@@ -12,6 +12,7 @@ class TestLocalSimulationRunner(TestCase):
 
     def test_run(self):
         config = mock_config(end_time=20, timestep_duration_seconds=1)
+        env = mock_env(config)
         runner = mock_runner(config)
         req = mock_request(
             request_id='1',
@@ -29,13 +30,8 @@ class TestLocalSimulationRunner(TestCase):
             bases=(mock_base(stall_count=5, lat=-37, lon=121.999),),
         ).add_request(req)
 
-        manager = BasicManager(demand_forecaster=BasicForecaster())
-        dispatcher = ManagedDispatcher.build(
-            manager=manager,
-            geofence_file=config.io.geofence_file,
-        )
-        update_functions = (CancelRequests(), StepSimulation(dispatcher))
-        runner_payload = RunnerPayload(initial_sim, update_functions)
+        update = mock_update()
+        runner_payload = RunnerPayload(initial_sim, env, update)
 
         result = runner.run(
             runner_payload,

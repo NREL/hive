@@ -1,7 +1,6 @@
 from typing import Optional, Dict, NamedTuple, Union
 import functools as ft
 import math
-from pkg_resources import resource_filename
 
 import immutables
 from h3 import h3
@@ -28,8 +27,11 @@ from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
+from hive.state.update import Update
 from hive.util.typealiases import *
 from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency
+from hive.state.update.update import Update, _default_dispatcher
+from state.update import StepSimulation
 
 
 class DefaultIds:
@@ -531,3 +533,11 @@ def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
             return self, fleet_state_target
 
     return MockManager(forecaster=forecaster)
+
+
+def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:
+    if config:
+        return Update.build(config, overriding_dispatcher)
+    else:
+        dispatcher = _default_dispatcher(mock_config())
+        return Update((), StepSimulation(dispatcher))
