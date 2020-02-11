@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, TYPE_CHECKING
 
 import functools as ft
 
-from hive.runner import RunnerPayload
 from hive.config import HiveConfig
 from hive.dispatcher import DispatcherInterface, ManagedDispatcher
 from hive.dispatcher.forecaster import BasicForecaster
 from hive.dispatcher.manager import BasicManager
 from hive.state.update import *
 from pkg_resources import resource_filename
+
+if TYPE_CHECKING:
+    from hive.runner import RunnerPayload
 
 
 def _default_dispatcher(config: HiveConfig) -> DispatcherInterface:
@@ -61,7 +63,7 @@ class Update(NamedTuple):
 
         return Update(pre_step_update, step_update)
 
-    def apply_update(self, runner_payload: RunnerPayload) -> RunnerPayload:
+    def apply_update(self, runner_payload: RunnerPayload) -> [RunnerPayload, Tuple[str, ...]]:
         """
         applies the update at a time step, calling each SimulationUpdateFunction in order
         :param runner_payload: the current SimulationState and assets at the current simtime
@@ -81,11 +83,11 @@ class Update(NamedTuple):
         # resolve changes to Update
         next_update = Update(pre_step_result.updated_step_fns, updated_step_fn)
 
-        return runner_payload._replace(
+        updated_payload = runner_payload._replace(
             s=update_result.simulation_state,
-            u=next_update,
-            r=runner_payload.r + update_result.reports
+            u=next_update
         )
+        return updated_payload, update_result.reports
 
 
 def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
@@ -104,10 +106,7 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
 
     # if we received an updated version of this SimulationUpdateFunction, store it
     next_update_fns = p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)
-    updated_payload = p.runner_payload._replace(
-        s=result.simulation_state,
-        r=p.runner_payload.r + result.reports,
-    )
+    updated_payload = p.runner_payload._replace(s=result.simulation_state)
 
     return p._replace(
         runner_payload=updated_payload,

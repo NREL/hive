@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Tuple
 from abc import ABC, abstractmethod
 
-from hive.state.simulation_state import SimulationState
-
 
 class Reporter(ABC):
     """
@@ -13,7 +11,7 @@ class Reporter(ABC):
 
     @abstractmethod
     def report(self,
-               sim_state: SimulationState,
+               sim_state: 'SimulationState',
                reports: Tuple[str, ...]):
         """
         Takes in a simulation state and a tuple of instructions and writes the appropriate information.

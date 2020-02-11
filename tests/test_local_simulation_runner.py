@@ -1,10 +1,6 @@
 from unittest import TestCase
 
-from hive import RunnerPayload
-from hive.dispatcher.managed_dispatcher import ManagedDispatcher
-from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
-from hive.dispatcher.manager.basic_manager import BasicManager
-from hive.state.update import CancelRequests, StepSimulation
+from hive.runner import RunnerPayload
 from tests.mock_lobster import *
 
 

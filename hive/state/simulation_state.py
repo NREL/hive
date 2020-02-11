@@ -12,9 +12,9 @@ from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, Termina
 from hive.util.exception import *
 from hive.util.helpers import DictOps
 from hive.model.station import Station
+from hive.model.request import Request
 from hive.model.vehicle import Vehicle
 from hive.model.base import Base
-from hive.model.request import Request
 from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
 
 if TYPE_CHECKING:

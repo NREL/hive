@@ -6,7 +6,6 @@ import json
 import logging
 import os
 
-from hive.state.simulation_state import SimulationState
 from hive.reporting.reporter import Reporter
 from hive.config import IO
 
@@ -54,7 +53,7 @@ class DetailedReporter(Reporter):
                 logger.info(entry)
 
     def report(self,
-               sim_state: SimulationState,
+               sim_state: 'SimulationState',
                reports: Tuple[str, ...]):
         self._report_entities(logger=self.vehicle_logger,
                               entities=sim_state.vehicles.values(),
