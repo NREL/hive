@@ -1,27 +1,16 @@
 from __future__ import annotations
 
+import functools as ft
 from typing import NamedTuple, Tuple, TYPE_CHECKING
 
-import functools as ft
-
 from hive.config import HiveConfig
-from hive.dispatcher import DispatcherInterface, ManagedDispatcher
-from hive.dispatcher.forecaster import BasicForecaster
-from hive.dispatcher.manager import BasicManager
+from hive.dispatcher import DispatcherInterface
+from hive.dispatcher import default_dispatcher
 from hive.state.update import *
 from pkg_resources import resource_filename
 
 if TYPE_CHECKING:
     from hive.runner import RunnerPayload
-
-
-def _default_dispatcher(config: HiveConfig) -> DispatcherInterface:
-    manager = BasicManager(demand_forecaster=BasicForecaster())
-    dispatcher = ManagedDispatcher.build(
-        manager=manager,
-        geofence_file=config.io.geofence_file,
-    )
-    return dispatcher
 
 
 class UpdatePayload(NamedTuple):
@@ -43,7 +32,7 @@ class Update(NamedTuple):
         :param overriding_dispatcher: any overriding dispatcher functionality
         :return: the Update that will be applied at each time step
         """
-        dispatcher = overriding_dispatcher if overriding_dispatcher else _default_dispatcher(config)
+        dispatcher = overriding_dispatcher if overriding_dispatcher else default_dispatcher(config)
 
         requests_file = resource_filename("hive.resources.requests", config.io.requests_file)
         rate_structure_file = resource_filename("hive.resources.service_prices", config.io.rate_structure_file)
