@@ -14,6 +14,8 @@ from hive.runner import load_simulation
 from state.update import Update
 
 log = logging.getLogger(__name__)
+log.setLevel("INFO")
+log.addHandler(logging.StreamHandler(sys.stdout))
 
 
 def run() -> int:

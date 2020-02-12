@@ -65,7 +65,8 @@ def _run_step_in_context(env: Environment) -> Callable:
 
         env.reporter.report(updated_sim, reports)
         if updated_sim.sim_time % 3600 == 0:
-            log.info(f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds")
+            # this should use the run logger instead of printing
+            print(f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds")
         return updated_payload
 
     return _run_step
