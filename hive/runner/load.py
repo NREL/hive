@@ -4,13 +4,15 @@ from datetime import datetime
 from typing import Tuple
 
 import yaml
+from hive.runner import Environment
+from hive.state import SimulationState
 from hive.config import HiveConfig
 from hive.state import initialize_simulation
 
 log = logging.getLogger(__name__)
 
 
-def load_simulation(scenario_file_path: str) -> Tuple['SimulationState', 'Environment']:
+def load_simulation(scenario_file_path: str) -> Tuple[SimulationState, Environment]:
     """
     takes a scenario path and attempts to build all assets required to run a scenario
     :param scenario_file_path: the path to the scenario file we are using

@@ -3,7 +3,6 @@ from h3 import h3
 from typing import NamedTuple, Optional, Dict, Union, TYPE_CHECKING
 
 from hive.model.passenger import Passenger, create_passenger_id
-from hive.runner.environment import Environment
 from hive.util.typealiases import *
 from hive.util.parsers import time_parser
 from hive.util.units import Currency, KM_TO_MILE
@@ -11,6 +10,7 @@ from hive.util.helpers import H3Ops
 
 if TYPE_CHECKING:
     from hive.model.request import RequestRateStructure
+    from hive.runner.environment import Environment
 
 
 class Request(NamedTuple):
