@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from hive.runner import RunnerPayload
-from state.update.cancel_requests import CancelRequests
+from hive.state.update.cancel_requests import CancelRequests
 
 from tests.mock_lobster import *
 from hive.runner import LocalSimulationRunner

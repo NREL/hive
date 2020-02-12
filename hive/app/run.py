@@ -11,7 +11,7 @@ from hive.runner import LocalSimulationRunner, RunnerPayload
 from hive.model import Vehicle
 from hive.state.simulation_state import SimulationState
 from hive.runner import load_simulation
-from state.update import Update
+from hive.state.update import Update
 
 log = logging.getLogger(__name__)
 log.setLevel("INFO")
