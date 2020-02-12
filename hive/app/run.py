@@ -7,9 +7,11 @@ import sys
 import time
 from typing import NamedTuple
 
+from hive.runner import LocalSimulationRunner, RunnerPayload
 from hive.model import Vehicle
 from hive.state.simulation_state import SimulationState
 from hive.runner import load_simulation
+from state.update import Update
 
 log = logging.getLogger(__name__)
 
@@ -33,15 +35,13 @@ def run() -> int:
         cwd = os.getcwd()
         scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
 
-        runner, reporter, initial_payload = load_simulation(scenario_path)
-
+        sim, environment = load_simulation(scenario_path)
+        update = Update.build(environment.config)
+        initial_payload = RunnerPayload(sim, environment, update)
         log.info("running HIVE")
 
         start = time.time()
-        sim_result = runner.run(
-            runner_payload=initial_payload,
-            reporter=reporter,
-        )
+        sim_result = LocalSimulationRunner.run(initial_payload)
 
         end = time.time()
         log.info("\n")
