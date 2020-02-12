@@ -1,17 +1,17 @@
 from unittest import TestCase
 
-from hive.dispatcher.managed_dispatcher import ManagedDispatcher
-from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
-from hive.dispatcher.manager.basic_manager import BasicManager
-from hive.state.update import CancelRequests, StepSimulation
+from hive.runner import RunnerPayload
+from hive.state.update.cancel_requests import CancelRequests
+
 from tests.mock_lobster import *
+from hive.runner import LocalSimulationRunner
 
 
 class TestLocalSimulationRunner(TestCase):
 
     def test_run(self):
         config = mock_config(end_time=20, timestep_duration_seconds=1)
-        runner = mock_runner(config)
+        env = mock_env(config)
         req = mock_request(
             request_id='1',
             o_lat=-37.001,
@@ -28,17 +28,10 @@ class TestLocalSimulationRunner(TestCase):
             bases=(mock_base(stall_count=5, lat=-37, lon=121.999),),
         ).add_request(req)
 
-        manager = BasicManager(demand_forecaster=BasicForecaster())
-        dispatcher = ManagedDispatcher.build(
-            manager=manager,
-            geofence_file=config.io.geofence_file,
-        )
+        update = mock_update()
+        runner_payload = RunnerPayload(initial_sim, env, update)
 
-        result = runner.run(
-            initial_simulation_state=initial_sim,
-            update_functions=(CancelRequests(), StepSimulation(dispatcher)),
-            reporter=mock_reporter()
-        )
+        result = LocalSimulationRunner.run(runner_payload)
 
         at_destination = result.s.at_geoid(req.destination)
         self.assertIn(DefaultIds.mock_vehicle_id(), at_destination['vehicles'],
@@ -46,3 +39,24 @@ class TestLocalSimulationRunner(TestCase):
 
         self.assertAlmostEqual(11.1, result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km, places=1)
 
+    def test_step(self):
+        config = mock_config()
+        env = mock_env(config)
+        sim = mock_sim()
+        update = Update((CancelRequests()), StepSimulation(default_dispatcher(config)))
+        runner_payload = RunnerPayload(sim, env, update)
+
+        stepped = LocalSimulationRunner.step(runner_payload)
+
+        self.assertNotEqual(stepped, None, "should have stepped the simulation")
+
+    def test_step_after_end_time(self):
+        config = mock_config(end_time=20, start_time=40, timestep_duration_seconds=1)
+        env = mock_env(config)
+        sim = mock_sim(sim_time=40)
+        update = Update((CancelRequests()), StepSimulation(default_dispatcher(config)))
+        runner_payload = RunnerPayload(sim, env, update)
+
+        stepped = LocalSimulationRunner.step(runner_payload)
+
+        self.assertEqual(stepped, None, "we should not be able to step a simulation that has exceeded end_time")

@@ -10,7 +10,7 @@ from h3 import h3
 from hive.model.instruction import *
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.dispatcher.manager.fleet_target import FleetStateTarget
-from hive.state.simulation_state import SimulationState
+# from hive.state.simulation_state import SimulationState
 from hive.model.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
@@ -54,7 +54,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
     def _handle_fleet_targets(
             self,
             fleet_state_target: FleetStateTarget,
-            simulation_state: SimulationState,
+            simulation_state: 'SimulationState',
             vehicle_ids_given_instructions: Tuple[VehicleId, ...],
     ) -> Tuple[Instruction, ...]:
 
@@ -112,7 +112,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         return fleet_state_instructions
 
     def generate_instructions(self,
-                              simulation_state: SimulationState,
+                              simulation_state: 'SimulationState',
                               ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
         # TODO: a lot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
         #  too large. Should probably refactor.

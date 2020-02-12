@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import csv
+from datetime import datetime
 import functools as ft
+import os
 from typing import Tuple, Dict
 
 import immutables
+from hive.reporting import DetailedReporter
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
@@ -34,6 +37,11 @@ def initialize_simulation(
     bases_file = resource_filename("hive.resources.bases", config.io.bases_file)
     stations_file = resource_filename("hive.resources.stations", config.io.stations_file)
 
+    run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    sim_output_dir = os.path.join(config.io.working_directory, run_name)
+    if not os.path.isdir(sim_output_dir):
+        os.makedirs(sim_output_dir)
+
     road_network = HaversineRoadNetwork(config.sim.sim_h3_resolution)
 
     sim_initial = SimulationState(
@@ -43,7 +51,9 @@ def initialize_simulation(
         sim_h3_location_resolution=config.sim.sim_h3_resolution,
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
-    env_initial = Environment(config=config)
+
+    reporter = DetailedReporter(config.io, sim_output_dir)
+    env_initial = Environment(config=config, reporter=reporter)
 
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
     sim_with_bases = _build_bases(bases_file, sim_with_vehicles)

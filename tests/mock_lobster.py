@@ -1,16 +1,15 @@
-from typing import Optional, Dict, NamedTuple, Union
 import functools as ft
 import math
-from pkg_resources import resource_filename
+from typing import Optional, Dict, NamedTuple, Union
 
 import immutables
 from h3 import h3
-
 from hive.config import HiveConfig
-from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
+from hive.dispatcher import default_dispatcher
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
-from hive.dispatcher.manager.manager_interface import ManagerInterface
+from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.manager.fleet_target import FleetStateTarget, StateTarget
+from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.model import Base, Station, Vehicle
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -26,10 +25,11 @@ from hive.model.roadnetwork.route import Route
 from hive.model.vehiclestate import VehicleState
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
-from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.simulation_state import SimulationState
+from hive.state.update.update import Update
 from hive.util.typealiases import *
 from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency
+from hive.state.update.step_simulation import StepSimulation
 
 
 class DefaultIds:
@@ -362,10 +362,6 @@ def mock_env(
     return env
 
 
-def mock_runner(config: HiveConfig = mock_config()) -> LocalSimulationRunner:
-    return LocalSimulationRunner(env=mock_env(config=config))
-
-
 def mock_reporter() -> Reporter:
     class MockReporter(Reporter):
         def report(self,
@@ -531,3 +527,11 @@ def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
             return self, fleet_state_target
 
     return MockManager(forecaster=forecaster)
+
+
+def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:
+    if config:
+        return Update.build(config, overriding_dispatcher)
+    else:
+        dispatcher = default_dispatcher(mock_config())
+        return Update((), StepSimulation(dispatcher))

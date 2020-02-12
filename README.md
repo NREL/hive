@@ -62,15 +62,15 @@ that git downloaded:
    
 Then you can run hive as a command line application:
 
-    > hive hive/resources/scenarios/denver_downtown.yaml
+    > hive hive/resources/scenarios/denver_demo.yaml
 
 #### run as a vanilla python module
 
-To run from the console, run the module (along with a scenario file, such as `denver_downtown.yaml`):
+To run from the console, run the module (along with a scenario file, such as `denver_demo.yaml`):
        
     > cd hive
-    > python -m hive hive/resources/scenarios/denver_downtown.yaml 
-    
+    > python -m hive hive/resources/scenarios/denver_demo.yaml 
+
 
 #### build api documentation (optional)
 
@@ -155,7 +155,7 @@ HIVE intends to implement the following features:
 
 ## License
 
-Highly Integrated Vehicle Ecosystem (HIVE)  Copyright ©2019   Alliance for Sustainable Energy, LLC All Rights Reserved
+Highly Integrated Vehicle Ecosystem (HIVE)  Copyright ©2020   Alliance for Sustainable Energy, LLC All Rights Reserved
 
 This computer software was produced by Alliance for Sustainable Energy, LLC under Contract No. DE-AC36-08GO28308 with
 the U.S. Department of Energy. For 5 years from the date permission to assert copyright was obtained, the Government is

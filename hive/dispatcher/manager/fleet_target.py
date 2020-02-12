@@ -1,5 +1,6 @@
 from typing import NamedTuple, Dict, FrozenSet
 
+import immutables
 from hive.model.vehiclestate import VehicleState
 
 VehicleStateSet = FrozenSet[VehicleState]
@@ -15,4 +16,4 @@ class StateTarget(NamedTuple):
     # spatial_distribution
 
 
-FleetStateTarget = Dict[StateTargetId, StateTarget]
+FleetStateTarget = immutables.Map[StateTargetId, StateTarget]
