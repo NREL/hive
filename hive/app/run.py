@@ -19,7 +19,7 @@ from hive.reporting.detailed_reporter import DetailedReporter
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.state.initialize_simulation import initialize_simulation
 from hive.state.update import UpdateRequests, CancelRequests, StepSimulation
-from state.update import ChargingPriceUpdate
+from hive.state.update import ChargingPriceUpdate
 from hive.state.simulation_state import SimulationState
 
 
@@ -157,3 +157,7 @@ def _welcome_to_hive():
           ' .  . ' ' .  . '     (__/
     """
     print(welcome)
+
+
+if __name__ == "__main__":
+    run()

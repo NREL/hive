@@ -58,7 +58,7 @@ HIVE is currently available on [github.nrel.gov](github.nrel.gov). You must be c
 to load hive as a command line application via pip, tell pip to install hive by pointing to the directory
 that git downloaded:
 
-    > python -m pip -e <path/to/hive>
+    > python -m pip install -e <path/to/hive>
    
 Then you can run hive as a command line application:
 
@@ -70,6 +70,7 @@ To run from the console, run the module (along with a scenario file, such as `de
        
     > cd hive
     > python -m hive hive/resources/scenarios/denver_downtown.yaml 
+    
 
 #### build api documentation (optional)
 
