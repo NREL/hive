@@ -29,7 +29,7 @@ from hive.state.simulation_state import SimulationState
 from hive.state.update.update import Update
 from hive.util.typealiases import *
 from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency
-from state.update import StepSimulation
+from state.update.step_simulation import StepSimulation
 
 
 class DefaultIds:

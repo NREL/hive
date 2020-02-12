@@ -1,6 +1,7 @@
 from typing import Tuple, TYPE_CHECKING
 
-from hive.reporting import Reporter
+from hive.reporting.reporter import Reporter
+# from hive.state.simulation_state import SimulationState
 
 
 class NoReporting(Reporter):
