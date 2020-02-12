@@ -112,4 +112,8 @@ def _welcome_to_hive():
         .         .         . -{{_(|8)
           ' .  . ' ' .  . '     (__/
     """
+
     log.info(welcome)
+
+if __name__ == "__main__":
+    run()
