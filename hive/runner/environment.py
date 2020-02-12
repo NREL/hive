@@ -6,7 +6,7 @@ import immutables
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.util.helpers import DictOps
-from reporting.no_reporting import NoReporting
+from hive.reporting.no_reporting import NoReporting
 
 if TYPE_CHECKING:
     from hive.reporting import Reporter
