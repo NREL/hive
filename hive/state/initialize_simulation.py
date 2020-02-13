@@ -15,6 +15,7 @@ from hive.model.base import Base
 from hive.model.energy.powercurve import build_powercurve
 from hive.model.energy.powertrain import build_powertrain
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.runner.environment import Environment
@@ -36,13 +37,15 @@ def initialize_simulation(
     vehicles_file = resource_filename("hive.resources.vehicles", config.io.vehicles_file)
     bases_file = resource_filename("hive.resources.bases", config.io.bases_file)
     stations_file = resource_filename("hive.resources.stations", config.io.stations_file)
+    geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
 
     run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     sim_output_dir = os.path.join(config.io.working_directory, run_name)
     if not os.path.isdir(sim_output_dir):
         os.makedirs(sim_output_dir)
 
-    road_network = HaversineRoadNetwork(config.sim.sim_h3_resolution)
+    geofence = GeoFence.from_geojson_file(geofence_file)
+    road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
 
     sim_initial = SimulationState(
         road_network=road_network,

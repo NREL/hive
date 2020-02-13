@@ -5,7 +5,8 @@ from typing import Optional
 
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.route import Route
-from hive.util.typealiases import GeoId, LinkId, SimTime
+from hive.model.roadnetwork.geofence import GeoFence
+from hive.util.typealiases import GeoId, LinkId, H3Resolution
 
 
 class RoadNetwork(ABC):
@@ -14,7 +15,8 @@ class RoadNetwork(ABC):
     is used to compute routes for agents in the simulation
     """
 
-    sim_h3_resolution: int
+    sim_h3_resolution: H3Resolution
+    geofence: GeoFence
 
     @abstractmethod
     def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
@@ -35,14 +37,6 @@ class RoadNetwork(ABC):
         :return: The nearest property link if it exists.
         """
 
-    @abstractmethod
-    def update(self, sim_time: SimTime) -> RoadNetwork:
-        """
-        gives the RoadNetwork a chance to update it's flow network based on the current simulation time
-
-        :param sim_time: the current simulation time
-        :return: an updated RoadNetwork
-        """
 
     @abstractmethod
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
@@ -71,31 +65,3 @@ class RoadNetwork(ABC):
         :return: True/False
         """
 
-    @abstractmethod
-    def link_id_within_geofence(self, link_id: LinkId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon of this road network instance
-
-        :param link_id: a position on the road network across the entire simulation
-        :return: True/False
-        """
-
-    @abstractmethod
-    def geoid_within_simulation(self, geoid: GeoId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon the entire simulation,
-        which may include many (distributed) RoadNetwork instances
-
-        :param geoid: an h3 geoid
-        :return: True/False
-        """
-
-    @abstractmethod
-    def link_id_within_simulation(self, link_id: LinkId) -> bool:
-        """
-        confirms that the coordinate exists within the bounding polygon the entire simulation,
-        which may include many (distributed) RoadNetwork instances
-
-        :param link_id: a position on the road network across the entire simulation
-        :return: True/False
-        """

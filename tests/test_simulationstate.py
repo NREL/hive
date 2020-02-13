@@ -137,16 +137,9 @@ class TestSimulationState(TestCase):
         self.assertNotIn(base.id, sim_after_remove.bases, "base should be removed")
         self.assertNotIn(base.geoid, sim_after_remove.b_locations, "nothing should be left at geoid")
 
-    def test_update_road_network(self):
-        sim = mock_sim()
-        update_time_argument = 1999
-        updated_sim = sim.update_road_network(update_time_argument)
-        updated_road_network = updated_sim.road_network
-        self.assertIsInstance(updated_road_network, HaversineRoadNetwork)
-
     def test_at_vehicle_geoid(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere)
         sta = mock_station_from_geoid(geoid=somewhere)
@@ -160,7 +153,7 @@ class TestSimulationState(TestCase):
         self.assertNotIn(b.id, result['bases'], "should not have found this base")
 
     def test_vehicle_at_request(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere)
         sim = mock_sim().add_vehicle(veh).add_request(req)
@@ -168,8 +161,8 @@ class TestSimulationState(TestCase):
         self.assertTrue(result, "the vehicle should be at the request")
 
     def test_vehicle_not_at_request(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_request(req)
@@ -177,7 +170,7 @@ class TestSimulationState(TestCase):
         self.assertFalse(result, "the vehicle should not be at the request")
 
     def test_vehicle_at_station(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sta = mock_station_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
@@ -185,8 +178,8 @@ class TestSimulationState(TestCase):
         self.assertTrue(result, "the vehicle should be at the station")
 
     def test_vehicle_not_at_station(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sta = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
@@ -194,7 +187,7 @@ class TestSimulationState(TestCase):
         self.assertFalse(result, "the vehicle should not be at the station")
 
     def test_vehicle_at_base(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         base = mock_base_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_base(base)
@@ -202,8 +195,8 @@ class TestSimulationState(TestCase):
         self.assertTrue(result, "the vehicle should be at the base")
 
     def test_vehicle_not_at_base(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         base = mock_base_from_geoid(geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_base(base)
@@ -211,7 +204,7 @@ class TestSimulationState(TestCase):
         self.assertFalse(result, "the vehicle should not be at the base")
 
     def test_board_vehicle(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere, passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
@@ -229,7 +222,7 @@ class TestSimulationState(TestCase):
         self.assertNotIn(req.id, sim_boarded.requests, "request should be removed from sim")
 
     def test_set_vehicle_intention_base(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         bas = mock_base_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_base(bas)
@@ -243,8 +236,8 @@ class TestSimulationState(TestCase):
         self.assertEqual(updated_veh.vehicle_state, VehicleState.RESERVE_BASE)
 
     def test_set_vehicle_intention_base_no_base(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         bas = mock_base_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_base(bas)
@@ -255,7 +248,7 @@ class TestSimulationState(TestCase):
         self.assertIsNone(sim_updated)
 
     def test_set_vehicle_intention_charge(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
@@ -273,8 +266,8 @@ class TestSimulationState(TestCase):
         self.assertEqual(updated_veh.vehicle_state, VehicleState.CHARGING_STATION)
 
     def test_set_vehicle_intention_charge_no_station(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
@@ -286,11 +279,10 @@ class TestSimulationState(TestCase):
         )
         sim_updated = instruction.apply_instruction(sim)
 
-
         self.assertIsNone(sim_updated)
 
     def test_set_vehicle_intention_serve_trip(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere, passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
@@ -306,8 +298,8 @@ class TestSimulationState(TestCase):
         self.assertTrue(updated_veh.has_route())
 
     def test_set_vehicle_intention_serve_trip_no_reqs(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere_else, passengers=2)
         sim = mock_sim().add_vehicle(veh).add_request(req)
@@ -318,8 +310,8 @@ class TestSimulationState(TestCase):
         self.assertIsNone(sim_updated)
 
     def test_step_moving_vehicle(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere,
                                        destination=somewhere_else,
@@ -340,7 +332,7 @@ class TestSimulationState(TestCase):
                            'Vehicle should consume energy while moving.')
 
     def test_step_charging_vehicle(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
@@ -375,8 +367,8 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_ending_trip(self):
         # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
         req = mock_request_from_geoids(origin=somewhere,
                                        destination=somewhere_else,
@@ -385,7 +377,6 @@ class TestSimulationState(TestCase):
         sim = mock_sim(sim_timestep_duration_seconds=1000).add_vehicle(veh).add_request(req)
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
         sim_with_instruction = instruction.apply_instruction(sim)
-
 
         self.assertIsNotNone(sim_with_instruction, "Vehicle should have transitioned to servicing trip")
 
@@ -401,8 +392,8 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_starting_trip(self):
         # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere_else,
                                        destination=somewhere,
@@ -438,8 +429,8 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_dispatch_station(self):
         # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sta = mock_station_from_geoid(station_id='s1', geoid=somewhere_else)
         sim = mock_sim().add_vehicle(veh).add_station(sta)
@@ -466,10 +457,11 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_dispatch_base(self):
         # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         base = mock_base_from_geoid(base_id='b1', geoid=somewhere_else)
+        mock = mock_sim().add_vehicle(veh)
         sim = mock_sim().add_vehicle(veh).add_base(base)
         env = mock_env()
 
@@ -493,8 +485,8 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_repositioning(self):
         # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim().add_vehicle(veh)
         env = mock_env()
@@ -518,7 +510,6 @@ class TestSimulationState(TestCase):
                          "Vehicle should be located at somewhere_else")
 
     def test_terminal_state_charging(self):
-
         sta = mock_station_from_geoid()
         veh = mock_vehicle_from_geoid(
             energy_type=EnergyType.ELECTRIC,
@@ -566,7 +557,6 @@ class TestSimulationState(TestCase):
         )
         sim = instruction.apply_instruction(sim)
         env = mock_env()
-
 
         self.assertIsNotNone(sim, "Vehicle should have set intention.")
 

@@ -123,9 +123,9 @@ class TestVehicle(TestCase):
         self.assertEqual(veh_can_trans, False, "shouldn't be able to go IDLE with passengers aboard")
 
     def test_move(self):
-        # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.75, -105.1, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        # approx .5 km distance.
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.7579, -104.978, 15)
 
         vehicle = mock_vehicle_from_geoid(geoid=somewhere).transition(VehicleState.REPOSITIONING)
         power_train = mock_powertrain()
@@ -140,7 +140,7 @@ class TestVehicle(TestCase):
 
         moved_vehicle = vehicle_w_route.move(road_network=road_network,
                                              power_train=power_train,
-                                             duration_seconds=400)
+                                             duration_seconds=10)
         m2 = moved_vehicle.move(road_network=road_network,
                                 power_train=power_train,
                                 duration_seconds=400)
@@ -157,7 +157,7 @@ class TestVehicle(TestCase):
         self.assertNotEqual(moved_vehicle.property_link.link.start, m2.property_link.link.start)
 
         self.assertEqual(m3.vehicle_state, VehicleState.IDLE, 'Vehicle should have finished route')
-        self.assertGreater(m3.distance_traveled_km, 8.5, 'Vehicle should have traveled around 8km')
+        self.assertGreater(m3.distance_traveled_km, .5, 'Vehicle should have traveled around 8km')
 
     def test_charge(self):
         vehicle = mock_vehicle().set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
@@ -199,11 +199,11 @@ class TestVehicle(TestCase):
 
     def test_from_row(self):
         source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
-                    v1,37,122,leaf,leaf,50.0,40,50,1.0"""
+                    v1,39.7539,-104.976,leaf,leaf,50.0,40,50,1.0"""
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
-        expected_geoid = h3.geo_to_h3(37, 122, road_network.sim_h3_resolution)
+        road_network = mock_network()
+        expected_geoid = h3.geo_to_h3(39.7539, -104.976, road_network.sim_h3_resolution)
 
         vehicle = Vehicle.from_row(row, road_network)
 
@@ -227,20 +227,20 @@ class TestVehicle(TestCase):
 
     def test_from_row_bad_powertrain_id(self):
         source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
-                    v1,37,122,beef!@#$,leaf,50.0,40,50,1.0"""
+                    v1,39.7539,-104.976,beef!@#$,leaf,50.0,40,50,1.0"""
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
+        road_network = mock_network()
 
         with self.assertRaises(IOError):
             Vehicle.from_row(row, road_network)
 
     def test_from_row_bad_powercurve_id(self):
         source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
-                    v1,37,122,leaf,asdjfkl;asdfjkl;,50.0,40,50,1.0"""
+                    v1,39.7539,-104.976,leaf,asdjfkl;asdfjkl;,50.0,40,50,1.0"""
 
         row = next(DictReader(source.split()))
-        road_network = HaversineRoadNetwork()
+        road_network = mock_network()
 
         with self.assertRaises(IOError):
             Vehicle.from_row(row, road_network)

@@ -38,12 +38,9 @@ Dictionary, which will be available in Python 3.9.
 - [PyYAML](https://github.com/yaml/pyyaml)
 - [immutables](https://github.com/MagicStack/immutables)
 
-While HIVE is also dependent on the following libraries, there are plans to remove them.
-Pint is a units library, Haversine provides the Haversine distance function. Numpy is being
+While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being
 used to interpolate tabular data.  
 
-- [pint](https://pint.readthedocs.io/en/0.10/)
-- [haversine](https://github.com/mapado/haversine)
 - [numpy](https://www.numpy.org/)
 
 ## Setup

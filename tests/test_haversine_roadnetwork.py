@@ -4,17 +4,17 @@ from tests.mock_lobster import *
 
 
 class TestHaversineRoadNetwork(TestCase):
-    @skip("Test not implemented yet")
     def test_geoid_within_geofence(self):
-        pass
+        somewhere_out_of_geofence = h3.geo_to_h3(0, 0, 15)
+        somewhere_within_geofence = h3.geo_to_h3(39.76138151, -104.982001, 15)
 
-    @skip("Test not implemented yet")
-    def test_link_id_within_geofence(self):
-        pass
+        network = mock_network()
 
-    @skip("Test not implemented yet")
-    def test_geoid_within_simulation(self):
-        pass
+        out_of_geofence = network.geoid_within_geofence(somewhere_out_of_geofence)
+        within_geofence = network.geoid_within_geofence(somewhere_within_geofence)
+
+        self.assertEqual(out_of_geofence, False, 'should not have found geoid in geofence')
+        self.assertEqual(within_geofence, True, 'should have found geoid in geofence')
 
     def test_route(self):
         """
@@ -35,8 +35,3 @@ class TestHaversineRoadNetwork(TestCase):
         self.assertEqual(route[0].start, origin, "Route should start from origin")
         self.assertEqual(route[0].end, destination, "Route should end at destination")
         self.assertAlmostEqual(route[0].distance_km, 1.1, places=1, msg="Route should be approx. 1.1km")
-
-
-
-
-

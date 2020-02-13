@@ -6,7 +6,8 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.property_link import PropertyLink
-from hive.util.typealiases import GeoId, LinkId, SimTime
+from hive.model.roadnetwork.geofence import GeoFence
+from hive.util.typealiases import GeoId, LinkId, H3Resolution
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -26,8 +27,13 @@ class HaversineRoadNetwork(RoadNetwork):
     # TODO: Replace speed with more accurate/dynamic estimate.
     _AVG_SPEED_KMPH = 40  # kilometer / hour
 
-    def __init__(self, sim_h3_resolution: int = 15):
+    def __init__(
+            self,
+            geofence: GeoFence,
+            sim_h3_resolution: H3Resolution = 15,
+    ):
         self.sim_h3_resolution = sim_h3_resolution
+        self.geofence = geofence
 
     def _geoids_to_link_id(self, origin: GeoId, destination: GeoId) -> LinkId:
         link_id = origin + "-" + destination
@@ -58,15 +64,7 @@ class HaversineRoadNetwork(RoadNetwork):
         link = Link(link_id, geoid, geoid)
         return PropertyLink(link_id, link, 0, 0, 0)
 
-    def update(self, sim_time: SimTime) -> RoadNetwork:
-
-        # This particular road network implementation doesn't keep track of network flow so this method does nothing.
-        return self
-
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
-
-        if not self.link_id_within_simulation(link_id):
-            return None
 
         start, end = self._link_id_to_geodis(link_id)
         link = Link(link_id, start, end)
@@ -75,23 +73,9 @@ class HaversineRoadNetwork(RoadNetwork):
         return property_link
 
     def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-
         return property_link
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
+        return self.geofence.contains(geoid)
 
-        return True
 
-    def link_id_within_geofence(self, link_id: LinkId) -> bool:
-
-        start, end = self._link_id_to_geodis(link_id)
-        return self.geoid_within_geofence(start) and self.geoid_within_geofence(end)
-
-    def geoid_within_simulation(self, geoid: GeoId) -> bool:
-
-        return True
-
-    def link_id_within_simulation(self, link_id: LinkId) -> bool:
-
-        start, end = self._link_id_to_geodis(link_id)
-        return self.geoid_within_simulation(start) and self.geoid_within_simulation(end)

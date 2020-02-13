@@ -174,7 +174,7 @@ class H3Ops:
         :param b: another geoid
         :return: the haversine distance between the two GeoIds
         """
-        avg_earth_radius_km = 6371 
+        avg_earth_radius_km = 6371
 
         lat1, lon1 = h3.h3_to_geo(a)
         lat2, lon2 = h3.h3_to_geo(b)
@@ -188,7 +188,6 @@ class H3Ops:
         d = sin(lat * 0.5) ** 2 + cos(lat1) * cos(lat2) * sin(lon * 0.5) ** 2
 
         return 2 * avg_earth_radius_km * asin(sqrt(d))
-
 
     @classmethod
     def point_along_link(cls, property_link: PropertyLink, available_time_seconds: Seconds) -> GeoId:

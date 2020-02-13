@@ -52,9 +52,9 @@ class TestH3Ops(TestCase):
 
         h3_resolution = 15
         h3_search_res = 7
-        somewhere = h3.geo_to_h3(39.748971, -104.992323, h3_resolution)
-        near_to_somewhere = h3.geo_to_h3(39.753600, -104.993369, h3_resolution)
-        far_from_somewhere = h3.geo_to_h3(39.728882, -105.002792, h3_resolution)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, h3_resolution)
+        near_to_somewhere = h3.geo_to_h3(39.754, -104.975, h3_resolution)
+        far_from_somewhere = h3.geo_to_h3(39.755, -104.976, h3_resolution)
         req_near = Request("req_near", near_to_somewhere, somewhere, 0, 0, ())
         req_far = Request("req_far", far_from_somewhere, somewhere, 0, 0, ())
 

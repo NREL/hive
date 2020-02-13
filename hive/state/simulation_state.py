@@ -65,11 +65,10 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state, or an error
         """
         if not isinstance(request, Request):
-            return TypeError(f"sim.add_request requires a request but received a {type(request)}")
+            raise TypeError(f"sim.add_request requires a request but received a {type(request)}")
         elif not self.road_network.geoid_within_geofence(request.origin):
-            return SimulationStateError(f"origin {request.origin} not within road network geofence")
-        elif not self.road_network.geoid_within_simulation(request.destination):
-            return SimulationStateError(f"destination {request.destination} not within entire road network")
+            print(request.origin)
+            raise SimulationStateError(f"origin {request.origin} not within road network geofence")
         search_geoid = h3.h3_to_parent(request.geoid, self.sim_h3_search_resolution)
         return self._replace(
             requests=DictOps.add_to_dict(self.requests, request.id, request),
@@ -87,9 +86,9 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state (does not report failure)
         """
         if not isinstance(request_id, RequestId):
-            return TypeError(f"remove_request() takes a RequestId (str), not a {type(request_id)}")
+            raise TypeError(f"remove_request() takes a RequestId (str), not a {type(request_id)}")
         if request_id not in self.requests:
-            return SimulationStateError(f"attempting to remove request {request_id} which is not in simulation")
+            raise SimulationStateError(f"attempting to remove request {request_id} which is not in simulation")
         request = self.requests[request_id]
         search_geoid = h3.h3_to_parent(request.geoid, self.sim_h3_search_resolution)
         updated_requests = DictOps.remove_from_dict(self.requests, request.id)
@@ -109,7 +108,7 @@ class SimulationState(NamedTuple):
         :return: the updated simulation, or an error
         """
         if not isinstance(updated_request, Request):
-            return TypeError(f"sim.update_request requires a request but received {type(updated_request)}")
+            raise TypeError(f"sim.update_request requires a request but received {type(updated_request)}")
 
         result = DictOps.update_entity_dictionaries(updated_request,
                                                     self.requests,
@@ -131,9 +130,9 @@ class SimulationState(NamedTuple):
         :return: updated SimulationState, or SimulationStateError
         """
         if not isinstance(vehicle, Vehicle):
-            return TypeError(f"sim.add_vehicle requires a vehicle but received {type(vehicle)}")
+            raise TypeError(f"sim.add_vehicle requires a vehicle but received {type(vehicle)}")
         elif not self.road_network.geoid_within_geofence(vehicle.geoid):
-            return SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
+            raise SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
 
         search_geoid = h3.h3_to_parent(vehicle.geoid, self.sim_h3_search_resolution)
         updated_v_locations = DictOps.add_to_location_dict(self.v_locations, vehicle.geoid, vehicle.id)
@@ -152,9 +151,13 @@ class SimulationState(NamedTuple):
         :return: the updated simulation, or an error
         """
         if not isinstance(updated_vehicle, Vehicle):
-            return TypeError(f"sim.update_vehicle requires a vehicle but received {type(updated_vehicle)}")
-        elif not self.road_network.geoid_within_geofence(updated_vehicle.geoid):
-            return SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
+            raise TypeError(f"sim.update_vehicle requires a vehicle but received {type(updated_vehicle)}")
+
+        # TODO: since the geofence is is made up of hexes, it is possible to exit the geofence mid route when
+        #   traveling between two protruding hexes. I think we can allow this since we garuntee that a request
+        #   o-d pair will always be within the geofence.
+        # elif not self.road_network.geoid_within_geofence(updated_vehicle.geoid):
+        #     raise SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
 
         result = DictOps.update_entity_dictionaries(updated_vehicle,
                                                     self.vehicles,
@@ -249,9 +252,9 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state
         """
         if not isinstance(vehicle_id, VehicleId):
-            return TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
+            raise TypeError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
         if vehicle_id not in self.vehicles:
-            return SimulationStateError(f"attempting to remove vehicle {vehicle_id} which is not in simulation")
+            raise SimulationStateError(f"attempting to remove vehicle {vehicle_id} which is not in simulation")
 
         vehicle = self.vehicles[vehicle_id]
         search_geoid = h3.h3_to_parent(vehicle.geoid, self.sim_h3_search_resolution)
@@ -271,9 +274,9 @@ class SimulationState(NamedTuple):
         :return: either a Tuple containing the updated state and the vehicle, or, an error
         """
         if not isinstance(vehicle_id, VehicleId):
-            return TypeError(f"sim.pop_vehicle requires a vehicle_id (str) but received {type(vehicle_id)}")
+            raise TypeError(f"sim.pop_vehicle requires a vehicle_id (str) but received {type(vehicle_id)}")
         elif vehicle_id not in self.vehicles:
-            return SimulationStateError(f"attempting to pop vehicle {vehicle_id} which is not in simulation")
+            raise SimulationStateError(f"attempting to pop vehicle {vehicle_id} which is not in simulation")
 
         remove_result = self.remove_vehicle(vehicle_id)
         if isinstance(remove_result, SimulationStateError):
@@ -290,9 +293,9 @@ class SimulationState(NamedTuple):
         :return: the updated SimulationState, or a SimulationStateError
         """
         if not isinstance(station, Station):
-            return TypeError(f"sim.add_station requires a station but received {type(station)}")
+            raise TypeError(f"sim.add_station requires a station but received {type(station)}")
         elif not self.road_network.geoid_within_geofence(station.geoid):
-            return SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
+            raise SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
 
         search_geoid = h3.h3_to_parent(station.geoid, self.sim_h3_search_resolution)
         return self._replace(
@@ -309,9 +312,9 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state, or an exception
         """
         if not isinstance(station_id, StationId):
-            return TypeError(f"sim.remove_station requires a StationId (str) but received {type(station_id)}")
+            raise TypeError(f"sim.remove_station requires a StationId (str) but received {type(station_id)}")
         elif station_id not in self.stations:
-            return SimulationStateError(f"cannot remove station {station_id}, it does not exist")
+            raise SimulationStateError(f"cannot remove station {station_id}, it does not exist")
 
         station = self.stations[station_id]
         search_geoid = h3.h3_to_parent(station.geoid, self.sim_h3_search_resolution)
@@ -330,7 +333,7 @@ class SimulationState(NamedTuple):
         :return: the updated simulation, or an error
         """
         if not isinstance(updated_station, Station):
-            return TypeError(f"sim.update_station requires a station but received {type(updated_station)}")
+            raise TypeError(f"sim.update_station requires a station but received {type(updated_station)}")
 
         return self._replace(
             stations=DictOps.add_to_dict(self.stations, updated_station.id, updated_station)
@@ -344,9 +347,9 @@ class SimulationState(NamedTuple):
         :return: the updated SimulationState, or a SimulationStateError
         """
         if not isinstance(base, Base):
-            return TypeError(f"sim.add_base requires a base but received {type(base)}")
+            raise TypeError(f"sim.add_base requires a base but received {type(base)}")
         if not self.road_network.geoid_within_geofence(base.geoid):
-            return SimulationStateError(f"cannot add base {base.id} to sim: not within road network geofence")
+            raise SimulationStateError(f"cannot add base {base.id} to sim: not within road network geofence")
 
         search_geoid = h3.h3_to_parent(base.geoid, self.sim_h3_search_resolution)
         return self._replace(
@@ -363,9 +366,9 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state, or an exception
         """
         if not isinstance(base_id, BaseId):
-            return TypeError(f"sim.remove_base requires a BaseId (str) but received {type(base_id)}")
+            raise TypeError(f"sim.remove_base requires a BaseId (str) but received {type(base_id)}")
         elif base_id not in self.bases:
-            return SimulationStateError(f"cannot remove base {base_id}, it does not exist")
+            raise SimulationStateError(f"cannot remove base {base_id}, it does not exist")
 
         base = self.bases[base_id]
         search_geoid = h3.h3_to_parent(base.geoid, self.sim_h3_search_resolution)
@@ -384,7 +387,7 @@ class SimulationState(NamedTuple):
         :return: the updated simulation, or an error
         """
         if not isinstance(updated_base, Base):
-            return TypeError(f"sim.update_base requires a base but received {type(updated_base)}")
+            raise TypeError(f"sim.update_base requires a base but received {type(updated_base)}")
 
         return self._replace(
             bases=DictOps.add_to_dict(self.bases, updated_base.id, updated_base)
@@ -436,9 +439,9 @@ class SimulationState(NamedTuple):
         :return: bool
         """
         if vehicle_id not in self.vehicles:
-            return SimulationStateError(f"vehicle {vehicle_id} not in this simulation")
+            raise SimulationStateError(f"vehicle {vehicle_id} not in this simulation")
         elif request_id not in self.requests:
-            return SimulationStateError(f"request {request_id} not in this simulation")
+            raise SimulationStateError(f"request {request_id} not in this simulation")
 
         vehicle = self.vehicles[vehicle_id].geoid
         request = self.requests[request_id].origin
@@ -458,9 +461,9 @@ class SimulationState(NamedTuple):
         :return: bool
         """
         if vehicle_id not in self.vehicles:
-            return SimulationStateError(f"vehicle {vehicle_id} not in this simulation")
+            raise SimulationStateError(f"vehicle {vehicle_id} not in this simulation")
         elif station_id not in self.stations:
-            return SimulationStateError(f"station {station_id} not in this simulation")
+            raise SimulationStateError(f"station {station_id} not in this simulation")
         else:
             vehicle = self.vehicles[vehicle_id].geoid
             station = self.stations[station_id].geoid
@@ -480,9 +483,9 @@ class SimulationState(NamedTuple):
         :return: bool
         """
         if vehicle_id not in self.vehicles:
-            return SimulationStateError(f"vehicle {vehicle_id} not in this simulation")
+            raise SimulationStateError(f"vehicle {vehicle_id} not in this simulation")
         elif base_id not in self.bases:
-            return SimulationStateError(f"station {base_id} not in this simulation")
+            raise SimulationStateError(f"station {base_id} not in this simulation")
 
         vehicle = self.vehicles[vehicle_id].geoid
         base = self.bases[base_id].geoid
@@ -500,10 +503,10 @@ class SimulationState(NamedTuple):
         :return: updated simulation state, or an error. vehicle position is idempotent.
         """
         if vehicle_id not in self.vehicles:
-            return SimulationStateError(
+            raise SimulationStateError(
                 f"request {request_id} attempting to board vehicle {vehicle_id} which does not exist")
         elif request_id not in self.requests:
-            return SimulationStateError(
+            raise SimulationStateError(
                 f"request {request_id} does not exist but is attempting to board vehicle {vehicle_id}")
 
         vehicle = self.vehicles[vehicle_id]
@@ -536,7 +539,7 @@ class SimulationState(NamedTuple):
         if override_resolution is None:
             return a == b
         elif override_resolution > sim_h3_resolution:
-            return SimulationStateError(
+            raise SimulationStateError(
                 f"cannot override geoid resolution {sim_h3_resolution} to smaller hex {override_resolution}")
         elif override_resolution == sim_h3_resolution:
             return a == b
