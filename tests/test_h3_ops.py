@@ -67,3 +67,11 @@ class TestH3Ops(TestCase):
                                        sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
 
         self.assertEqual(nearest.geoid, req_near.geoid)
+
+    def test_great_circle_distance(self):
+        london = h3.geo_to_h3(51.5007, 0.1246, 10)
+        new_york = h3.geo_to_h3(40.6892, 74.0445, 10)
+
+        distance_km = H3Ops.great_circle_distance(london, new_york)
+
+        self.assertAlmostEqual(distance_km, 5574.8, places=1)

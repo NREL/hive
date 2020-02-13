@@ -2,12 +2,9 @@ name: hive
 channels:
   - defaults
 dependencies:
-  - numpy
-  - pip
-  - pytest=5.2
   - python=3.8
   - pip:
     - h3==3.4.3
     - PyYAML==5.1
-    - haversine==2.1
+    - numpy==1.17
     - immutables==0.11

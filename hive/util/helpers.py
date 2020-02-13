@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
-from copy import copy
-from math import ceil
+from math import radians, cos, sin, asin, sqrt, ceil
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
 
-import haversine
 import immutables
 from h3 import h3
 
@@ -176,10 +174,21 @@ class H3Ops:
         :param b: another geoid
         :return: the haversine distance between the two GeoIds
         """
-        a_coord = h3.h3_to_geo(a)
-        b_coord = h3.h3_to_geo(b)
-        distance_km = haversine.haversine(a_coord, b_coord, unit='km')
-        return distance_km
+        avg_earth_radius_km = 6371 
+
+        lat1, lon1 = h3.h3_to_geo(a)
+        lat2, lon2 = h3.h3_to_geo(b)
+
+        # convert all latitudes/longitudes from decimal degrees to radians
+        lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
+
+        # calculate haversine
+        lat = lat2 - lat1
+        lon = lon2 - lon1
+        d = sin(lat * 0.5) ** 2 + cos(lat1) * cos(lat2) * sin(lon * 0.5) ** 2
+
+        return 2 * avg_earth_radius_km * asin(sqrt(d))
+
 
     @classmethod
     def point_along_link(cls, property_link: PropertyLink, available_time_seconds: Seconds) -> GeoId:
