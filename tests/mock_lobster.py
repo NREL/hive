@@ -29,7 +29,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.update import Update
 from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
 from hive.state.update.step_simulation import StepSimulation
 
 
@@ -469,6 +469,12 @@ def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: 
             self.property_links = property_links
 
         def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
+            pass
+
+        def distance_km(self, origin: PropertyLink, destination: PropertyLink) -> Kilometers:
+            pass
+
+        def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
             pass
 
         def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:

@@ -7,6 +7,7 @@ from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
+from hive.util.units import Kilometers
 
 
 class RoadNetwork(ABC):
@@ -29,6 +30,26 @@ class RoadNetwork(ABC):
         """
 
     @abstractmethod
+    def distance_km(self, origin: PropertyLink, destination: PropertyLink) -> Kilometers:
+        """
+        Returns the road network distance between two property links
+
+        :param origin: PropertyLink of the origin
+        :param destination: PropertyLink of the destination
+        :return: the distance in kilometers.
+        """
+
+    @abstractmethod
+    def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
+        """
+        Returns the road network distance between two geoids
+
+        :param origin: PropertyLink of the origin
+        :param destination: PropertyLink of the destination
+        :return: the distance in kilometers.
+        """
+
+    @abstractmethod
     def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
         """
         builds a location on the road network for a stationary simulation element
@@ -36,7 +57,6 @@ class RoadNetwork(ABC):
         :param geoid: geoid to map to network
         :return: The nearest property link if it exists.
         """
-
 
     @abstractmethod
     def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
@@ -64,4 +84,3 @@ class RoadNetwork(ABC):
         :param geoid: an h3 geoid
         :return: True/False
         """
-

@@ -8,6 +8,8 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
+from hive.util.helpers import H3Ops
+from hive.util.units import Kilometers
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -58,6 +60,12 @@ class HaversineRoadNetwork(RoadNetwork):
         route = (property_link,)
 
         return route
+
+    def distance_km(self, origin: PropertyLink, destination: PropertyLink) -> Kilometers:
+        return H3Ops.great_circle_distance(origin.start, destination.end)
+
+    def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
+        return H3Ops.great_circle_distance(origin, destination)
 
     def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
         link_id = self._geoids_to_link_id(geoid, geoid)

@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional, Dict, Union, TYPE_CHECKING
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.util.typealiases import *
 from hive.util.parsers import time_parser
-from hive.util.units import Currency, KM_TO_MILE
+from hive.util.units import Currency, KM_TO_MILE, Kilometers
 from hive.util.helpers import H3Ops
 
 if TYPE_CHECKING:
@@ -154,13 +154,13 @@ class Request(NamedTuple):
             origin=geoid
         )
 
-    def assign_value(self, rate_structure: RequestRateStructure) -> Request:
+    def assign_value(self, rate_structure: RequestRateStructure, distance_km: Kilometers) -> Request:
         """
         used to assign a value to this request based on it's properties as well as possible surge pricing.
 
         :param rate_structure: the rate structure to apply to the request value
         :return: the updated request
         """
-        distance_miles = H3Ops.great_circle_distance(self.origin, self.destination) * KM_TO_MILE
+        distance_miles = distance_km * KM_TO_MILE
         price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
         return self._replace(value=max(rate_structure.minimum_price, price))
