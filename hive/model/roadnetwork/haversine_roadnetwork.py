@@ -29,7 +29,7 @@ class HaversineRoadNetwork(RoadNetwork):
 
     def __init__(
             self,
-            geofence: GeoFence,
+            geofence: Optional[GeoFence] = None,
             sim_h3_resolution: H3Resolution = 15,
     ):
         self.sim_h3_resolution = sim_h3_resolution
@@ -76,6 +76,9 @@ class HaversineRoadNetwork(RoadNetwork):
         return property_link
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
-        return self.geofence.contains(geoid)
+        if not self.geofence:
+            raise RuntimeError("Geofence not specified.")
+        else:
+            return self.geofence.contains(geoid)
 
 

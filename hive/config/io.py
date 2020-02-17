@@ -11,7 +11,7 @@ class IO(NamedTuple):
     requests_file: str
     bases_file: str
     stations_file: str
-    geofence_file: str
+    geofence_file: Optional[str]
     rate_structure_file: Optional[str]
     charging_price_file: Optional[str]
 
@@ -26,6 +26,7 @@ class IO(NamedTuple):
             'run_log': None,
             'vehicle_log': None,
             'request_log': None,
+            'geofence_file': None,
             'rate_structure_file': None,
             'charging_price_file': None
         }
@@ -37,7 +38,6 @@ class IO(NamedTuple):
             'requests_file': str,
             'bases_file': str,
             'stations_file': str,
-            'geofence_file': str,
         }
 
     @classmethod
