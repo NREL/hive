@@ -131,10 +131,7 @@ class TestVehicle(TestCase):
         power_train = mock_powertrain()
         road_network = mock_network()
 
-        start = road_network.property_link_from_geoid(somewhere)
-        end = road_network.property_link_from_geoid(somewhere_else)
-
-        route = road_network.route(start, end)
+        route = road_network.route(somewhere, somewhere_else)
 
         vehicle_w_route = vehicle.assign_route(route)
 
@@ -151,10 +148,10 @@ class TestVehicle(TestCase):
 
         self.assertLess(moved_vehicle.energy_source.soc, 1)
         self.assertNotEqual(somewhere, moved_vehicle.geoid)
-        self.assertNotEqual(somewhere, moved_vehicle.property_link.link.start)
+        self.assertNotEqual(somewhere, moved_vehicle.link.start)
 
         self.assertNotEqual(moved_vehicle.geoid, m2.geoid)
-        self.assertNotEqual(moved_vehicle.property_link.link.start, m2.property_link.link.start)
+        self.assertNotEqual(moved_vehicle.link.start, m2.link.start)
 
         self.assertEqual(m3.vehicle_state, VehicleState.IDLE, 'Vehicle should have finished route')
         self.assertGreater(m3.distance_traveled_km, .5, 'Vehicle should have traveled around 8km')
@@ -218,7 +215,7 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.energy_source.energy_type, EnergyType.ELECTRIC)
         self.assertEqual(vehicle.energy_source.max_charge_acceptance_kw, 50.0)
         self.assertEqual(len(vehicle.passengers), 0)
-        self.assertEqual(vehicle.property_link.start, expected_geoid)
+        self.assertEqual(vehicle.link.start, expected_geoid)
         self.assertEqual(vehicle.vehicle_state, VehicleState.IDLE)
         self.assertEqual(vehicle.distance_traveled_km, 0)
         self.assertEqual(vehicle.idle_time_seconds, 0)

@@ -19,7 +19,6 @@ from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.property_link import PropertyLink
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
@@ -29,7 +28,8 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.update import Update
 from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers, hours_to_seconds
+from hive.util.helpers import H3Ops
 from hive.state.update.step_simulation import StepSimulation
 
 
@@ -223,13 +223,13 @@ def mock_vehicle(
         soc=soc
     )
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-    property_link = road_network.property_link_from_geoid(geoid)
+    link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         energy_source=energy_source,
-        property_link=property_link
+        link=link
     )
 
 
@@ -254,13 +254,13 @@ def mock_vehicle_from_geoid(
         soc=soc
     )
 
-    property_link = road_network.property_link_from_geoid(geoid)
+    link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         energy_source=energy_source,
-        property_link=property_link
+        link=link
     )
 
 
@@ -409,53 +409,60 @@ def mock_haversine_zigzag_route(
     :return: a route
     """
 
-    def step(acc: Tuple[PropertyLink, ...], i: int) -> Tuple[PropertyLink, ...]:
+    def step(acc: Tuple[Link, ...], i: int) -> Tuple[Link, ...]:
         """
-        constructs the next PropertyLink
+        constructs the next Link
         :param acc: the route so far
         :param i: what link we are making
         :return: the route with another link added
         """
         lat_pos, lon_pos = math.floor(i / 2.0) * lat_step_size, math.floor((i + 1) / 2.0) * lon_step_size
         lat_dest, lon_dest = math.floor((i + 1) / 2.0) * lat_step_size, math.floor((i + 2) / 2.0) * lon_step_size
-        link = Link(f"link_{i}", h3.geo_to_h3(lat_pos, lon_pos, h3_res), h3.geo_to_h3(lat_dest, lon_dest, h3_res))
-        p = PropertyLink.build(link, speed_kmph)
-        return acc + (p,)
+        start = h3.geo_to_h3(lat_pos, lon_pos, h3_res)
+        end = h3.geo_to_h3(lat_dest, lon_dest, h3_res)
+        distance_km = H3Ops.great_circle_distance(start, end)
+        link = Link(
+            link_id=f"link_{i}",
+            start=start,
+            end=end,
+            distance_km=distance_km,
+            speed_kmph=speed_kmph,
+            travel_time_seconds=hours_to_seconds(distance_km / speed_kmph),
+        )
+        return acc + (link,)
 
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, PropertyLink]:
+def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
     """
 
     links = {
-        "1": Link("1",
-                  h3.geo_to_h3(37, 122, h3_res),
-                  h3.geo_to_h3(37.008994, 122, h3_res)),
-        "2": Link("2",
-                  h3.geo_to_h3(37.008994, 122, h3_res),
-                  h3.geo_to_h3(37.017998, 122, h3_res)),
-        "3": Link("3",
-                  h3.geo_to_h3(37.017998, 122, h3_res),
-                  h3.geo_to_h3(37.026992, 122, h3_res)),
+        "1": Link.build_from_speed_kmph("1",
+                                        h3.geo_to_h3(37, 122, h3_res),
+                                        h3.geo_to_h3(37.008994, 122, h3_res),
+                                        speed_kmph=speed_kmph,
+                                        ),
+        "2": Link.build_from_speed_kmph("2",
+                                        h3.geo_to_h3(37.008994, 122, h3_res),
+                                        h3.geo_to_h3(37.017998, 122, h3_res),
+                                        speed_kmph=speed_kmph),
+        "3": Link.build_from_speed_kmph("3",
+                                        h3.geo_to_h3(37.017998, 122, h3_res),
+                                        h3.geo_to_h3(37.026992, 122, h3_res),
+                                        speed_kmph=speed_kmph),
     }
 
-    property_links = {
-        # distance of 1.0 KM, speed of 1 KM/time unit
-        "1": PropertyLink.build(links["1"], speed_kmph),
-        "2": PropertyLink.build(links["2"], speed_kmph),
-        "3": PropertyLink.build(links["3"], speed_kmph)
-    }
-    return property_links
+    return links
 
 
-def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[PropertyLink, ...]:
+def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
     return tuple(mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values())
 
 
-def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: int = 15) -> RoadNetwork:
+def mock_graph_network(links: Optional[Dict[str, Link]] = None, h3_res: int = 15) -> RoadNetwork:
     links = mock_graph_links(h3_res=h3_res) if links is None else links
 
     class MockGraphNetwork(RoadNetwork):
@@ -463,36 +470,21 @@ def mock_graph_network(links: Optional[Dict[str, PropertyLink]] = None, h3_res: 
         a road network that has a fixed set of network links and only implements "get_link"
         """
 
-        def __init__(self, property_links: Dict[str, PropertyLink], h3_res: int):
+        def __init__(self, links: Dict[str, Link], h3_res: int):
             self.sim_h3_resolution = h3_res
 
-            self.property_links = property_links
+            self.links = links
 
         def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
             pass
 
-        def distance_km(self, origin: PropertyLink, destination: PropertyLink) -> Kilometers:
+        def distance_km(self, origin: Link, destination: Link) -> Kilometers:
             pass
 
         def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
             pass
 
-        def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
-            if link_id in self.property_links:
-                return self.property_links[link_id]
-            else:
-                return None
-
-        def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-            link_id = property_link.link.link_id
-            if link_id in self.property_links:
-                current_property_link = self.property_links[link_id]
-                updated_property_link = property_link.update_speed(current_property_link.speed_kmph)
-                return updated_property_link
-            else:
-                return None
-
-        def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+        def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
             pass
 
         def geoid_within_geofence(self, geoid: GeoId) -> bool:

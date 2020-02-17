@@ -8,7 +8,7 @@ from h3 import h3
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
-from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.link import Link
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.routetraversal import traverse
@@ -55,7 +55,7 @@ class Vehicle(NamedTuple):
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
-    property_link: PropertyLink
+    link: Link
 
     # vehicle planning/operational properties
     route: Route = ()
@@ -70,7 +70,7 @@ class Vehicle(NamedTuple):
 
     @property
     def geoid(self):
-        return self.property_link.link.start
+        return self.link.start
 
     @classmethod
     def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Vehicle:
@@ -130,14 +130,14 @@ class Vehicle(NamedTuple):
                                                    initial_soc)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                start_link = road_network.property_link_from_geoid(geoid)
+                start_link = road_network.link_from_geoid(geoid)
 
                 return Vehicle(
                     id=vehicle_id,
                     powertrain_id=powertrain_id,
                     powercurve_id=powercurve_id,
                     energy_source=energy_source,
-                    property_link=start_link,
+                    link=start_link,
                 )
 
             except ValueError:
@@ -207,15 +207,15 @@ class Vehicle(NamedTuple):
         new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
 
         if not remaining_route:
-            geoid = experienced_route[-1].link.end
+            geoid = experienced_route[-1].end
             updated_location_vehicle = new_route_vehicle._replace(
-                property_link=road_network.property_link_from_geoid(geoid),
+                link=road_network.link_from_geoid(geoid),
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
 
             )
         else:
             updated_location_vehicle = new_route_vehicle._replace(
-                property_link=remaining_route[0],
+                link=remaining_route[0],
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
 
             )

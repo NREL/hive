@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from typing import Tuple, Optional
 
-from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
 from hive.util.helpers import H3Ops
-from hive.util.units import Kilometers
+from hive.util.units import Kilometers, hours_to_seconds
 
 
 class HaversineRoadNetwork(RoadNetwork):
@@ -50,43 +49,42 @@ class HaversineRoadNetwork(RoadNetwork):
 
         return start, end
 
-    def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
-        start = origin.link.start
-        end = destination.link.end
-        link_id = self._geoids_to_link_id(start, end)
+    def route(self, origin: GeoId, destination: GeoId) -> Route:
+        link_id = self._geoids_to_link_id(origin, destination)
+        link_dist_km = self.distance_by_geoid_km(origin, destination)
+        link_travel_time_seconds = hours_to_seconds(link_dist_km / self._AVG_SPEED_KMPH)
+        link = Link(
+            link_id=link_id,
+            start=origin,
+            end=destination,
+            distance_km=link_dist_km,
+            speed_kmph=self._AVG_SPEED_KMPH,
+            travel_time_seconds=link_travel_time_seconds,
+        )
 
-        property_link = self.get_link(link_id)
-
-        route = (property_link,)
+        route = (link,)
 
         return route
 
-    def distance_km(self, origin: PropertyLink, destination: PropertyLink) -> Kilometers:
+    def distance_km(self, origin: Link, destination: Link) -> Kilometers:
         return H3Ops.great_circle_distance(origin.start, destination.end)
 
     def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         return H3Ops.great_circle_distance(origin, destination)
 
-    def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+    def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
         link_id = self._geoids_to_link_id(geoid, geoid)
-        link = Link(link_id, geoid, geoid)
-        return PropertyLink(link_id, link, 0, 0, 0)
-
-    def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
-
-        start, end = self._link_id_to_geodis(link_id)
-        link = Link(link_id, start, end)
-        property_link = PropertyLink.build(link, self._AVG_SPEED_KMPH)
-
-        return property_link
-
-    def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-        return property_link
+        return Link(
+            link_id=link_id,
+            start=geoid,
+            end=geoid,
+            distance_km=0,
+            speed_kmph=0,
+            travel_time_seconds=0,
+        )
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         if not self.geofence:
             raise RuntimeError("Geofence not specified.")
         else:
             return self.geofence.contains(geoid)
-
-

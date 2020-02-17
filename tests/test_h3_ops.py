@@ -5,7 +5,6 @@ from h3 import h3
 
 from hive.model.request import Request
 from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.property_link import PropertyLink
 from hive.util.helpers import H3Ops
 from hive.util.units import hours_to_seconds
 from tests.mock_lobster import mock_sim
@@ -18,8 +17,8 @@ class TestH3Ops(TestCase):
         end = h3.geo_to_h3(37.008994, 122, 15)
 
         # create links with 1km speed
-        fwd_link = PropertyLink.build(Link("test", start, end), 1)
-        bwd_link = PropertyLink.build(Link("test", end, start), 1)
+        fwd_link = Link.build_from_speed_kmph("test", start, end, speed_kmph=1)
+        bwd_link = Link.build_from_speed_kmph("test", end, start, speed_kmph=1)
 
         # test moving forward and backward, each by a half-unit of time
         fwd_result = H3Ops.point_along_link(fwd_link, hours_to_seconds(0.5))

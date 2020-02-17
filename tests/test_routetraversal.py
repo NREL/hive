@@ -40,13 +40,11 @@ class TestRouteTraversal(TestCase):
         self.assertEqual(len(result.experienced_route), 2, "should have traversed 2 links")
 
     def test_traverse_up_to_split(self):
-        network = mock_graph_network()
         links = mock_route()
         test_link = links[0]
 
         result = traverse_up_to(
-            road_network=network,
-            property_link=test_link,
+            link=test_link,
             available_time_seconds=hours_to_seconds(0.5),
         )
 
@@ -58,13 +56,11 @@ class TestRouteTraversal(TestCase):
         self.assertEqual(traversed.end, remaining.start, "Traversed end should match remaining start")
 
     def test_traverse_up_to_no_split(self):
-        network = mock_graph_network()
         links = mock_route()
         test_link = links[0]
 
         result = traverse_up_to(
-            road_network=network,
-            property_link=test_link,
+            link=test_link,
             available_time_seconds=hours_to_seconds(4),
         )
 

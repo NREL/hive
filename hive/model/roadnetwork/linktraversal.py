@@ -1,8 +1,6 @@
 from typing import Optional, Union, NamedTuple
 
 from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.helpers import H3Ops
 from hive.util.units import Seconds
 
@@ -18,13 +16,12 @@ class LinkTraversal(NamedTuple):
     :param remaining_time: represents any time the agent has left to traverse additional links
     :type remaining_time_seconds: :py:obj:`hours`
     """
-    traversed: Optional[PropertyLink]
-    remaining: Optional[PropertyLink]
+    traversed: Optional[Link]
+    remaining: Optional[Link]
     remaining_time_seconds: Seconds
 
 
-def traverse_up_to(road_network: RoadNetwork,
-                   property_link: PropertyLink,
+def traverse_up_to(link: Link,
                    available_time_seconds: Seconds) -> Union[Exception, LinkTraversal]:
     """
     using the ground truth road network, and some agent Link traversal, attempt to traverse
@@ -39,10 +36,9 @@ def traverse_up_to(road_network: RoadNetwork,
              regardless, return the agent's remaining time after traversing
              if there was any error, return the exception instead.
     """
-    property_link = road_network.get_current_property_link(property_link)
-    if property_link is None:
-        return AttributeError(f"attempting to traverse link {property_link.link_id} which does not exist")
-    elif property_link.start == property_link.end:
+    if link is None:
+        return AttributeError(f"attempting to traverse link {link.link_id} which does not exist")
+    elif link.start == link.end:
         # already done!
         return LinkTraversal(
             traversed=None,
@@ -51,23 +47,23 @@ def traverse_up_to(road_network: RoadNetwork,
         )
     else:
         # traverse up to available_time_hours across this link
-        if property_link.travel_time_seconds <= available_time_seconds:
+        if link.travel_time_seconds <= available_time_seconds:
             # we can complete this link, so we return (remaining) Link = None
             return LinkTraversal(
-                traversed=property_link,
+                traversed=link,
                 remaining=None,
-                remaining_time_seconds=(available_time_seconds - property_link.travel_time_seconds)
+                remaining_time_seconds=(available_time_seconds - link.travel_time_seconds)
             )
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
             # leaving no remaining time.
 
             # find the point in this link to split into two sub-links
-            mid_geoid = H3Ops.point_along_link(property_link, available_time_seconds)
+            mid_geoid = H3Ops.point_along_link(link, available_time_seconds)
 
             # create two sub-links, one for the part that was traversed, and one for the remaining part
-            traversed = property_link.update_link(Link(property_link.link_id, property_link.start, mid_geoid))
-            remaining = property_link.update_link(Link(property_link.link_id, mid_geoid, property_link.end))
+            traversed = Link.build_from_speed_kmph(link.link_id, link.start, mid_geoid, speed_kmph=link.speed_kmph)
+            remaining = Link.build_from_speed_kmph(link.link_id, mid_geoid, link.end, speed_kmph=link.speed_kmph)
 
             return LinkTraversal(
                 traversed=traversed,

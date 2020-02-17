@@ -4,9 +4,9 @@ from typing import NamedTuple
 
 from h3 import h3
 
-from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId
-from hive.util.units import Kilometers, Ratio
+from hive.util.units import Kilometers, Kmph, Seconds, Ratio, hours_to_seconds
+from hive.util.helpers import H3Ops
 
 
 class Link(NamedTuple):
@@ -29,6 +29,31 @@ class Link(NamedTuple):
     link_id: LinkId
     start: GeoId
     end: GeoId
+    distance_km: Kilometers
+    speed_kmph: Kmph
+    travel_time_seconds: Seconds
+
+    @classmethod
+    def build_from_speed_kmph(cls, link_id: LinkId, start: GeoId, end: GeoId, speed_kmph: Kmph) -> Link:
+        distance_km = H3Ops.great_circle_distance(start, end)
+        travel_time_seconds = hours_to_seconds(distance_km/speed_kmph)
+        return Link(
+            link_id=link_id,
+            start=start,
+            end=end,
+            distance_km=distance_km,
+            speed_kmph=speed_kmph,
+            travel_time_seconds=travel_time_seconds,
+        )
+
+    def update_speed(self, speed_kmph: Kmph) -> Link:
+        """
+        Update the speed of the property link
+
+        :param speed_kmph: speed to update to
+        :return: an updated PropertyLink
+        """
+        return self._replace(speed_kmph=speed_kmph)
 
 
 def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
@@ -44,15 +69,3 @@ def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
     index = int(len(line) * ratio)
 
     return line[index]
-
-
-def link_distance_km(link: Link) -> Kilometers:
-    """
-    determines the distance of a link
-
-    :param link: some road network link, possibly with a different start/end point from
-    the matching link in the road network
-    :rtype: :py:obj:`kilometers`
-    :return: the distance of this link, in kilometers
-    """
-    return H3Ops.great_circle_distance(link.start, link.end)

@@ -3,10 +3,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.util.typealiases import GeoId, LinkId, H3Resolution
+from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kilometers
 
 
@@ -20,22 +20,22 @@ class RoadNetwork(ABC):
     geofence: Optional[GeoFence]
 
     @abstractmethod
-    def route(self, origin: PropertyLink, destination: PropertyLink) -> Route:
+    def route(self, origin: Link, destination: Link) -> Route:
         """
         Returns a route between two road network property links
 
-        :param origin: PropertyLink of the origin
-        :param destination: PropertyLink of the destination
+        :param origin: Link of the origin
+        :param destination: Link of the destination
         :return: A route.
         """
 
     @abstractmethod
-    def distance_km(self, origin: PropertyLink, destination: PropertyLink) -> Kilometers:
+    def distance_km(self, origin: Link, destination: Link) -> Kilometers:
         """
         Returns the road network distance between two property links
 
-        :param origin: PropertyLink of the origin
-        :param destination: PropertyLink of the destination
+        :param origin: Link of the origin
+        :param destination: Link of the destination
         :return: the distance in kilometers.
         """
 
@@ -44,36 +44,18 @@ class RoadNetwork(ABC):
         """
         Returns the road network distance between two geoids
 
-        :param origin: PropertyLink of the origin
-        :param destination: PropertyLink of the destination
+        :param origin: Link of the origin
+        :param destination: Link of the destination
         :return: the distance in kilometers.
         """
 
     @abstractmethod
-    def property_link_from_geoid(self, geoid: GeoId) -> Optional[PropertyLink]:
+    def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
         """
         builds a location on the road network for a stationary simulation element
 
         :param geoid: geoid to map to network
         :return: The nearest property link if it exists.
-        """
-
-    @abstractmethod
-    def get_link(self, link_id: LinkId) -> Optional[PropertyLink]:
-        """
-        gets the link associated with the LinkId, or, if invalid, returns None
-
-        :param link_id: a link id
-        :return: a Link, or None if LinkId does not exist
-        """
-
-    @abstractmethod
-    def get_current_property_link(self, property_link: PropertyLink) -> Optional[PropertyLink]:
-        """
-        gets the current properties for a given property link, or, if invalid, returns None
-
-        :param property_link: a property link
-        :return: a Property Link, or None if LinkId does not exist
         """
 
     @abstractmethod

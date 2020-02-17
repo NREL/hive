@@ -26,10 +26,7 @@ class TestHaversineRoadNetwork(TestCase):
         origin = h3.geo_to_h3(37, 122, sim_h3_resolution)
         destination = h3.geo_to_h3(37.01, 122, sim_h3_resolution)
 
-        start = network.property_link_from_geoid(origin)
-        end = network.property_link_from_geoid(destination)
-
-        route = network.route(start, end)
+        route = network.route(origin, destination)
 
         self.assertEqual(len(route), 1, "Route should have only one link")
         self.assertEqual(route[0].start, origin, "Route should start from origin")
