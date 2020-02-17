@@ -2,6 +2,8 @@ import functools as ft
 import math
 from typing import Optional, Dict, NamedTuple, Union
 
+from pkg_resources import resource_filename
+
 import immutables
 from h3 import h3
 from hive.config import HiveConfig
@@ -18,6 +20,7 @@ from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
@@ -83,6 +86,15 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
     )
 
 
+def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
+    road_network_file = resource_filename('hive.resources.road_network', 'downtown_denver.xml')
+    return OSMRoadNetwork(
+        road_network_file=road_network_file,
+        geofence=mock_geofence(resolution=geofence_res),
+        sim_h3_resolution=h3_res,
+    )
+
+
 def mock_energy_source(
         powercurve_id: PowercurveId = DefaultIds.mock_powercurve_id(),
         energy_type: EnergyType = EnergyType.ELECTRIC,
@@ -106,10 +118,12 @@ def mock_base(
         lon: float = -104.974,
         h3_res: int = 15,
         station_id: Optional[StationId] = None,
-        stall_count: int = 1
+        stall_count: int = 1,
+        road_network: RoadNetwork = mock_network(),
 ) -> Base:
     return Base.build(base_id,
                       h3.geo_to_h3(lat, lon, h3_res),
+                      road_network,
                       station_id,
                       stall_count,
                       )
@@ -119,9 +133,10 @@ def mock_base_from_geoid(
         base_id: BaseId = DefaultIds.mock_base_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.9740, 15),
         station_id: Optional[StationId] = None,
-        stall_count: int = 1
+        stall_count: int = 1,
+        road_network: RoadNetwork = mock_network(),
 ) -> Base:
-    return Base.build(base_id, geoid, station_id, stall_count)
+    return Base.build(base_id, geoid, road_network, station_id, stall_count)
 
 
 def mock_station(
@@ -129,21 +144,23 @@ def mock_station(
         lat: float = 39.7539,
         lon: float = -104.974,
         h3_res: int = 15,
-        chargers=None
+        chargers=None,
+        road_network: RoadNetwork = mock_network(),
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), chargers)
+    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers)
 
 
 def mock_station_from_geoid(
         station_id: StationId = DefaultIds.mock_station_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
-        chargers=None
+        chargers=None,
+        road_network:RoadNetwork = mock_network()
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
-    return Station.build(station_id, geoid, chargers)
+    return Station.build(station_id, geoid, road_network, chargers)
 
 
 def mock_rate_structure(

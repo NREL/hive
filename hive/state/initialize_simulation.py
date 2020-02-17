@@ -126,7 +126,7 @@ def _build_bases(bases_file: str, simulation_state: SimulationState) -> Simulati
     """
 
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
-        base = Base.from_row(row, simulation_state.sim_h3_location_resolution)
+        base = Base.from_row(row, simulation_state.road_network)
         updated_sim = sim.add_base(base)
         if isinstance(updated_sim, Exception):
             raise updated_sim
@@ -152,7 +152,7 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
     """
 
     def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) ->  immutables.Map[str, Station]:
-        station = Station.from_row(row, builder, simulation_state.sim_h3_location_resolution)
+        station = Station.from_row(row, builder, simulation_state.road_network)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
 

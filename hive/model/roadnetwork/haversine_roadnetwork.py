@@ -52,14 +52,12 @@ class HaversineRoadNetwork(RoadNetwork):
     def route(self, origin: GeoId, destination: GeoId) -> Route:
         link_id = self._geoids_to_link_id(origin, destination)
         link_dist_km = self.distance_by_geoid_km(origin, destination)
-        link_travel_time_seconds = hours_to_seconds(link_dist_km / self._AVG_SPEED_KMPH)
         link = Link(
             link_id=link_id,
             start=origin,
             end=destination,
             distance_km=link_dist_km,
             speed_kmph=self._AVG_SPEED_KMPH,
-            travel_time_seconds=link_travel_time_seconds,
         )
 
         route = (link,)
@@ -80,7 +78,6 @@ class HaversineRoadNetwork(RoadNetwork):
             end=geoid,
             distance_km=0,
             speed_kmph=0,
-            travel_time_seconds=0,
         )
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:

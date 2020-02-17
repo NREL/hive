@@ -31,19 +31,20 @@ class Link(NamedTuple):
     end: GeoId
     distance_km: Kilometers
     speed_kmph: Kmph
-    travel_time_seconds: Seconds
+
+    @property
+    def travel_time_seconds(self) -> Seconds:
+        return hours_to_seconds(self.distance_km/self.speed_kmph)
 
     @classmethod
     def build_from_speed_kmph(cls, link_id: LinkId, start: GeoId, end: GeoId, speed_kmph: Kmph) -> Link:
         distance_km = H3Ops.great_circle_distance(start, end)
-        travel_time_seconds = hours_to_seconds(distance_km/speed_kmph)
         return Link(
             link_id=link_id,
             start=start,
             end=end,
             distance_km=distance_km,
             speed_kmph=speed_kmph,
-            travel_time_seconds=travel_time_seconds,
         )
 
     def update_speed(self, speed_kmph: Kmph) -> Link:
