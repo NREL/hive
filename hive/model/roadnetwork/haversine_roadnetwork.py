@@ -64,9 +64,6 @@ class HaversineRoadNetwork(RoadNetwork):
 
         return route
 
-    def distance_km(self, origin: Link, destination: Link) -> Kilometers:
-        return H3Ops.great_circle_distance(origin.start, destination.end)
-
     def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         return H3Ops.great_circle_distance(origin, destination)
 

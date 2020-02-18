@@ -7,7 +7,7 @@ from hive.model.request import Request
 from hive.model.roadnetwork.link import Link
 from hive.util.helpers import H3Ops
 from hive.util.units import hours_to_seconds
-from tests.mock_lobster import mock_sim
+from tests.mock_lobster import *
 
 
 class TestH3Ops(TestCase):
@@ -54,8 +54,8 @@ class TestH3Ops(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, h3_resolution)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, h3_resolution)
         far_from_somewhere = h3.geo_to_h3(39.755, -104.976, h3_resolution)
-        req_near = Request("req_near", near_to_somewhere, somewhere, 0, 0, ())
-        req_far = Request("req_far", far_from_somewhere, somewhere, 0, 0, ())
+        req_near = mock_request_from_geoids(origin=somewhere, destination=near_to_somewhere)
+        req_far = mock_request_from_geoids(origin=somewhere, destination=far_from_somewhere)
 
         sim = mock_sim(h3_location_res=h3_resolution, h3_search_res=h3_search_res)
         sim_with_reqs = sim.add_request(req_near).add_request(req_far)

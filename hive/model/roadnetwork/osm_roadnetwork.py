@@ -68,7 +68,7 @@ class OSMRoadNetwork(RoadNetwork):
             nid_1 = nx_route[0]
 
             link = Link(
-                link_id=str(nid_1) + "-" +  str(nid_1),
+                link_id=str(nid_1) + "-" + str(nid_1),
                 start=self.G.nodes[nid_1]['geoid'],
                 end=self.G.nodes[nid_1]['geoid'],
                 distance_km=0,
@@ -86,7 +86,13 @@ class OSMRoadNetwork(RoadNetwork):
             link_id = str(nid_1) + "-" + str(nid_2)
             distance_km = route_attributes[i]['length'] * M_TO_KM
             speed_string = route_attributes[i]['maxspeed']
+
+            # TODO: implement more robust parsing
             if speed_string == 'nan':
+                speed_kmph = 40
+            elif '[' in speed_string:
+                speed_kmph = 40
+            elif isinstance(speed_string, list):
                 speed_kmph = 40
             elif 'mph' in speed_string:
                 speed_mph = float(speed_string.split(' ')[0])
@@ -106,14 +112,27 @@ class OSMRoadNetwork(RoadNetwork):
 
         return route
 
-    def distance_km(self, origin: Link, destination: Link) -> Kilometers:
-        pass
-
     def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
-        pass
+        route = self.route(origin, destination)
+        distance_km = 0
+        for link in route:
+            distance_km += link.distance_km
+        return distance_km
 
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
-        pass
+        if geoid in self.geoid_to_node_id:
+            nid = self.geoid_to_node_id[geoid]
+        else:
+            lat, lon = h3.h3_to_geo(geoid)
+            nid = ox.get_nearest_node(self.G, (lat, lon))
+
+        return Link(
+            link_id=str(nid) + "-" + str(nid),
+            start=self.G.nodes[nid]['geoid'],
+            end=self.G.nodes[nid]['geoid'],
+            distance_km=0,
+            speed_kmph=0,
+        )
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         if not self.geofence:

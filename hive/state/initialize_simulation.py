@@ -15,6 +15,7 @@ from hive.model.base import Base
 from hive.model.energy.powercurve import build_powercurve
 from hive.model.energy.powertrain import build_powertrain
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
@@ -37,15 +38,27 @@ def initialize_simulation(
     vehicles_file = resource_filename("hive.resources.vehicles", config.io.vehicles_file)
     bases_file = resource_filename("hive.resources.bases", config.io.bases_file)
     stations_file = resource_filename("hive.resources.stations", config.io.stations_file)
-    geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
 
     run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     sim_output_dir = os.path.join(config.io.working_directory, run_name)
     if not os.path.isdir(sim_output_dir):
         os.makedirs(sim_output_dir)
 
-    geofence = GeoFence.from_geojson_file(geofence_file)
-    road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
+    if config.io.geofence_file:
+        geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
+        geofence = GeoFence.from_geojson_file(geofence_file)
+    else:
+        geofence = None
+
+    if not config.io.road_network_file:
+        road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
+    else:
+        road_network_file = resource_filename("hive.resources.road_network", config.io.road_network_file)
+        road_network = OSMRoadNetwork(
+            geofence=geofence,
+            sim_h3_resolution=config.sim.sim_h3_resolution,
+            road_network_file=road_network_file,
+        )
 
     sim_initial = SimulationState(
         road_network=road_network,
@@ -78,7 +91,7 @@ def _build_vehicles(
     :return: the SimulationState with vehicles in it
     :raises Exception: from IOErrors parsing the vehicle, powertrain, or powercurve files
     """
-    
+
     def _add_row_unsafe(
             payload: Tuple[SimulationState, Environment],
             row: Dict[str, str]) -> Tuple[SimulationState, Environment]:
@@ -111,7 +124,7 @@ def _build_vehicles(
         reader = csv.DictReader(vf)
         initial_payload = simulation_state, environment
         sim_with_vehicles = ft.reduce(_add_row_unsafe, reader, initial_payload)
-    
+
     return sim_with_vehicles
 
 
@@ -151,7 +164,7 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """
 
-    def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) ->  immutables.Map[str, Station]:
+    def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) -> immutables.Map[str, Station]:
         station = Station.from_row(row, builder, simulation_state.road_network)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder

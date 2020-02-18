@@ -30,16 +30,6 @@ class RoadNetwork(ABC):
         """
 
     @abstractmethod
-    def distance_km(self, origin: Link, destination: Link) -> Kilometers:
-        """
-        Returns the road network distance between two property links
-
-        :param origin: Link of the origin
-        :param destination: Link of the destination
-        :return: the distance in kilometers.
-        """
-
-    @abstractmethod
     def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         """
         Returns the road network distance between two geoids

@@ -100,7 +100,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :param row: one row as loaded via DictReader
         :return: the updated sim and updated reporting
         """
-        req = Request.from_row(row, env)
+        req = Request.from_row(row, env, acc.simulation_state.road_network)
         if isinstance(req, IOError):
             # request failed to parse from row
             row_failure = _failure_as_json(str(req), acc.simulation_state)
