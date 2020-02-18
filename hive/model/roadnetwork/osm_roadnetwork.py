@@ -4,7 +4,7 @@ import osmnx as ox
 import networkx as nx
 from h3 import h3
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 from networkx.classes.multidigraph import MultiDiGraph
 
@@ -30,12 +30,14 @@ class OSMRoadNetwork(RoadNetwork):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
 
-        G, geoid_to_node_id = self._map_node_to_geoid(ox.graph_from_file(road_network_file))
+        G, geoid_to_node_id = self._parse_road_network_graph(ox.graph_from_file(road_network_file))
 
         self.G = G
         self.geoid_to_node_id = geoid_to_node_id
 
-    def _map_node_to_geoid(self, g: MultiDiGraph):
+    def _parse_road_network_graph(self, g: MultiDiGraph) -> Tuple[MultiDiGraph, Dict]:
+        if not nx.is_strongly_connected(g):
+            raise RuntimeError("Only strongly connected graphs are allowed.")
         geoid_map = {}
         geoid_to_node_id = {}
         for nid in g.nodes():

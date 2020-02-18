@@ -7,7 +7,6 @@ from typing import Optional, Union
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.linktraversal import traverse_up_to
 from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
@@ -77,13 +76,11 @@ class RouteTraversal(NamedTuple):
 
 
 def traverse(route_estimate: Route,
-             road_network: RoadNetwork,
              duration_seconds: Seconds) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
     :param route_estimate: the current route estimate
-    :param road_network: the current road network state
     :param duration_seconds: size of the time step for this traversal, in seconds
     :return: a route experience and updated route estimate;
              or, nothing if the route is consumed.

@@ -185,7 +185,6 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(
             route_estimate=self.route,
-            road_network=road_network,
             duration_seconds=duration_seconds,
         )
 

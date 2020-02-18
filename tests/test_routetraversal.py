@@ -11,12 +11,10 @@ class TestRouteTraversal(TestCase):
         """
         the mock problem is tuned to complete the route with a time step of just beyond 3 time units
         """
-        network = mock_graph_network()
         links = mock_route()
 
         result = traverse(
             route_estimate=links,
-            road_network=network,
             duration_seconds=hours_to_seconds(4)
         )
         self.assertGreater(result.remaining_time_seconds, 0, "should have more time left")
@@ -28,11 +26,9 @@ class TestRouteTraversal(TestCase):
         the mock problem needs more than 1.5 time to complete the route. should end
         up somewhere in the middle
         """
-        network = mock_graph_network()
         links = mock_route()
         result = traverse(
             route_estimate=links,
-            road_network=network,
             duration_seconds=hours_to_seconds(1.5)  # 1.5 hours at 1kmph, 1km per link, 3 links
         )
         self.assertEqual(result.remaining_time_seconds, 0, "should have no more time left")
