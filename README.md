@@ -32,19 +32,19 @@ The project is currently closed-source and in alpha development, with plans to o
 HIVE has only three major dependencies. Uber H3 is a geospatial index which HIVE uses for
 positioning and search. PyYAML is used to load YAML-based configuration and scenario files.
 Immutables provides the implementation of an immutable map to replace the standard Python 
-Dictionary, which will be available in Python 3.9.
+Dictionary, which will be available in Python 3.9. Networkx provides a graph library used
+as a road network.
 
 - [H3](https://github.com/uber/h3)
 - [PyYAML](https://github.com/yaml/pyyaml)
 - [immutables](https://github.com/MagicStack/immutables)
+- [networkx](https://github.com/networkx/networkx)
 
-While HIVE is also dependent on the following libraries, there are plans to remove them.
-Pint is a units library, Haversine provides the Haversine distance function. Numpy is being
-used to interpolate tabular data.  
+While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being
+used to interpolate tabular data. Osmnx is being used to interact with open street maps.  
 
-- [pint](https://pint.readthedocs.io/en/0.10/)
-- [haversine](https://github.com/mapado/haversine)
 - [numpy](https://www.numpy.org/)
+- [osmnx](https://github.com/gboeing/osmnx)
 
 ## Setup
 

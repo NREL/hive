@@ -7,6 +7,8 @@ import immutables
 from h3 import h3
 
 from hive.model.energy.charger import Charger
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.link import Link
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
@@ -27,16 +29,21 @@ class Station(NamedTuple):
     :type available_chargers: :py:obj:`Dict[Charger, int]`
     """
     id: StationId
-    geoid: GeoId
+    link: Link
     total_chargers: immutables.Map[Charger, int]
     available_chargers: immutables.Map[Charger, int]
     charger_prices: immutables.Map[Charger, Currency]
     balance: Currency = 0.0
 
+    @property
+    def geoid(self) -> GeoId:
+        return self.link.start
+
     @classmethod
     def build(cls,
               id: StationId,
               geoid: GeoId,
+              road_network: RoadNetwork,
               chargers: immutables.Map[Charger, int]
               ):
         prices = ft.reduce(
@@ -44,19 +51,20 @@ class Station(NamedTuple):
             chargers.keys(),
             immutables.Map()
         )
-        return Station(id, geoid, chargers, chargers, prices)
+        link = road_network.link_from_geoid(geoid)
+        return Station(id, link, chargers, chargers, prices)
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
                  builder: Dict[StationId, Station],
-                 sim_h3_resolution: int) -> Station:
+                 road_network: RoadNetwork,
+                 ) -> Station:
         """
         takes a csv row and turns it into a Station
 
         :param row: a row as interpreted by csv.DictReader
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
-        :param sim_h3_resolution: the h3 resolution that events are experienced at
         :return: a Station, or an error
         """
         if 'station_id' not in row:
@@ -73,7 +81,7 @@ class Station(NamedTuple):
             station_id = row['station_id']
             try:
                 lat, lon = float(row['lat']), float(row['lon'])
-                geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
+                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 charger_type = Charger.from_string(row['charger_type'])
                 charger_count = int(row['charger_count'])
 
@@ -84,6 +92,7 @@ class Station(NamedTuple):
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
+                        road_network=road_network,
                         chargers=immutables.Map({charger_type: charger_count})
                     )
                 elif charger_type in builder[station_id].total_chargers:
@@ -93,6 +102,7 @@ class Station(NamedTuple):
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
+                        road_network=road_network,
                         chargers=immutables.Map({charger_type: charger_count + charger_already_loaded})
                     )
                 else:
@@ -103,6 +113,7 @@ class Station(NamedTuple):
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
+                        road_network=road_network,
                         chargers=updated_chargers
                     )
 

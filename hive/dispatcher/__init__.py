@@ -14,6 +14,5 @@ def default_dispatcher(config: HiveConfig) -> DispatcherInterface:
     manager = BasicManager(demand_forecaster=BasicForecaster())
     dispatcher = ManagedDispatcher.build(
         manager=manager,
-        geofence_file=config.io.geofence_file,
     )
     return dispatcher

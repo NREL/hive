@@ -51,8 +51,8 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 
         assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.sim_time)
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(request.origin)
+        start = vehicle.geoid
+        end = request.origin
         route = sim_state.road_network.route(start, end)
 
         vehicle = vehicle.assign_route(route)
@@ -83,8 +83,8 @@ class ServeTripInstruction(NamedTuple, Instruction):
 
         vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(request.destination)
+        start = vehicle.geoid
+        end = request.destination
         route = sim_state.road_network.route(start, end)
 
         vehicle = vehicle.assign_route(route)
@@ -116,8 +116,8 @@ class DispatchStationInstruction(NamedTuple, Instruction):
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_STATION)
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(station.geoid)
+        start = vehicle.geoid
+        end = station.geoid
         route = sim_state.road_network.route(start, end)
 
         vehicle = vehicle.assign_route(route).set_charge_intent(self.charger)
@@ -202,8 +202,8 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_BASE)
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(self.destination)
+        start = vehicle.geoid
+        end = self.destination
         route = sim_state.road_network.route(start, end)
 
         vehicle_w_route = vehicle.assign_route(route)
@@ -230,8 +230,8 @@ class RepositionInstruction(NamedTuple, Instruction):
 
         vehicle = vehicle.transition(VehicleState.REPOSITIONING)
 
-        start = vehicle.property_link
-        end = sim_state.road_network.property_link_from_geoid(self.destination)
+        start = vehicle.geoid
+        end = self.destination
         route = sim_state.road_network.route(start, end)
 
         vehicle_w_route = vehicle.assign_route(route)
