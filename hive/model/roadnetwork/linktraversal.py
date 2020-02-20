@@ -62,8 +62,8 @@ def traverse_up_to(link: Link,
             mid_geoid = H3Ops.point_along_link(link, available_time_seconds)
 
             # create two sub-links, one for the part that was traversed, and one for the remaining part
-            traversed = Link.build_from_speed_kmph(link.link_id, link.start, mid_geoid, speed_kmph=link.speed_kmph)
-            remaining = Link.build_from_speed_kmph(link.link_id, mid_geoid, link.end, speed_kmph=link.speed_kmph)
+            traversed = Link.build(link.link_id, link.start, mid_geoid, speed_kmph=link.speed_kmph)
+            remaining = Link.build(link.link_id, mid_geoid, link.end, speed_kmph=link.speed_kmph)
 
             return LinkTraversal(
                 traversed=traversed,

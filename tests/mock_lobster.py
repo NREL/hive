@@ -461,19 +461,19 @@ def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
 
     links = {
-        "1": Link.build_from_speed_kmph("1",
-                                        h3.geo_to_h3(37, 122, h3_res),
-                                        h3.geo_to_h3(37.008994, 122, h3_res),
-                                        speed_kmph=speed_kmph,
-                                        ),
-        "2": Link.build_from_speed_kmph("2",
-                                        h3.geo_to_h3(37.008994, 122, h3_res),
-                                        h3.geo_to_h3(37.017998, 122, h3_res),
-                                        speed_kmph=speed_kmph),
-        "3": Link.build_from_speed_kmph("3",
-                                        h3.geo_to_h3(37.017998, 122, h3_res),
-                                        h3.geo_to_h3(37.026992, 122, h3_res),
-                                        speed_kmph=speed_kmph),
+        "1": Link.build("1",
+                        h3.geo_to_h3(37, 122, h3_res),
+                        h3.geo_to_h3(37.008994, 122, h3_res),
+                        speed_kmph=speed_kmph,
+                        ),
+        "2": Link.build("2",
+                        h3.geo_to_h3(37.008994, 122, h3_res),
+                        h3.geo_to_h3(37.017998, 122, h3_res),
+                        speed_kmph=speed_kmph),
+        "3": Link.build("3",
+                        h3.geo_to_h3(37.017998, 122, h3_res),
+                        h3.geo_to_h3(37.026992, 122, h3_res),
+                        speed_kmph=speed_kmph),
     }
 
     return links

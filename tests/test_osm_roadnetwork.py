@@ -17,9 +17,6 @@ class TestOSMRoadNetwork(TestCase):
         self.assertEqual(within_geofence, True, 'should have found geoid in geofence')
 
     def test_route(self):
-        """
-        Test routing of the haversine roadnetwork
-        """
         sim_h3_resolution = 15
         network = mock_osm_network(h3_res=sim_h3_resolution)
 

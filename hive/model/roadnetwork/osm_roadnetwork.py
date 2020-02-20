@@ -18,7 +18,7 @@ from hive.util.units import Kilometers, M_TO_KM, MPH_TO_KMPH
 
 class OSMRoadNetwork(RoadNetwork):
     """
-    Implements an open street maps road network utilizing the osmnx library
+    Implements an open street maps road network utilizing the osmnx and networkx libraries
     """
 
     def __init__(
@@ -51,9 +51,22 @@ class OSMRoadNetwork(RoadNetwork):
         return g, geoid_to_node_id
 
     def route(self, origin: GeoId, destination: GeoId) -> Route:
+        """
+        Returns a route containing road network links between the origin and destination geoids.
+
+        Right now, the origin and destination are snapped to the nearest network node.
+
+        # TODO: consider implementing a way to snap incoming points to the nearest edge intersection.
+
+        :param origin: the geoid of the origin
+        :param destination: the geoid of the destination
+        :return: a route between the origin and destination
+        """
         if origin in self.geoid_to_node_id:
+            # no need to search for nearest node since we already have it
             origin_node = self.geoid_to_node_id[origin]
         else:
+            # find the closest node on the network
             lat, lon = h3.h3_to_geo(origin)
             origin_node = ox.get_nearest_node(self.G, (lat, lon))
 
@@ -67,6 +80,7 @@ class OSMRoadNetwork(RoadNetwork):
         route_attributes = ox.get_route_edge_attributes(self.G, nx_route)
 
         if len(nx_route) == 1:
+            # special case in which the origin and destination correspond to the same node on the network
             nid_1 = nx_route[0]
 
             link = Link(
@@ -90,6 +104,12 @@ class OSMRoadNetwork(RoadNetwork):
             speed_string = route_attributes[i]['maxspeed']
 
             # TODO: implement more robust parsing
+            # maxspeed comes in several variants:
+            #   - 'nan'
+            #   - 'X mph'
+            #   - 'X kmph'
+            #   - '['nan', 'X mph']
+
             if speed_string == 'nan':
                 speed_kmph = 40
             elif '[' in speed_string:
@@ -115,6 +135,13 @@ class OSMRoadNetwork(RoadNetwork):
         return route
 
     def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
+        """
+        Returns the road network distance between the origin and destination
+
+        :param origin: the geoid of the origin
+        :param destination: the geoid of the destination
+        :return: the road network distance in kilometers
+        """
         route = self.route(origin, destination)
         distance_km = 0
         for link in route:
@@ -122,6 +149,13 @@ class OSMRoadNetwork(RoadNetwork):
         return distance_km
 
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
+        """
+        Returns a link from a single geoid. This link has the same origin and destination and
+        has a speed and distance of 0. These links are used to map static objects to the road network.
+
+        :param geoid: the geoid to snap to the road newtork
+        :return: the link on the road network that is closest to the geoid
+        """
         if geoid in self.geoid_to_node_id:
             nid = self.geoid_to_node_id[geoid]
         else:
@@ -137,6 +171,12 @@ class OSMRoadNetwork(RoadNetwork):
         )
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
+        """
+        Determines if a specific geoid is contained within the road network geofence.
+
+        :param geoid: the geoid to test
+        :return: True/False
+        """
         if not self.geofence:
             raise RuntimeError("Geofence not specified.")
         else:

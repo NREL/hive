@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from h3 import h3
 
@@ -37,8 +37,16 @@ class Link(NamedTuple):
         return hours_to_seconds(self.distance_km/self.speed_kmph)
 
     @classmethod
-    def build_from_speed_kmph(cls, link_id: LinkId, start: GeoId, end: GeoId, speed_kmph: Kmph) -> Link:
-        distance_km = H3Ops.great_circle_distance(start, end)
+    def build(
+            cls,
+            link_id: LinkId,
+            start: GeoId,
+            end: GeoId,
+            speed_kmph: Kmph,
+            distance_km: Optional[Kilometers],
+    ) -> Link:
+        if not distance_km:
+            distance_km = H3Ops.great_circle_distance(start, end)
         return Link(
             link_id=link_id,
             start=start,

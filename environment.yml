@@ -3,6 +3,7 @@ channels:
   - defaults
 dependencies:
   - python=3.8
+  - osnmx=0.11
   - pip:
     - h3==3.4.3
     - PyYAML==5.1

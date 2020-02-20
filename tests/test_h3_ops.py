@@ -17,8 +17,8 @@ class TestH3Ops(TestCase):
         end = h3.geo_to_h3(37.008994, 122, 15)
 
         # create links with 1km speed
-        fwd_link = Link.build_from_speed_kmph("test", start, end, speed_kmph=1)
-        bwd_link = Link.build_from_speed_kmph("test", end, start, speed_kmph=1)
+        fwd_link = Link.build("test", start, end, speed_kmph=1)
+        bwd_link = Link.build("test", end, start, speed_kmph=1)
 
         # test moving forward and backward, each by a half-unit of time
         fwd_result = H3Ops.point_along_link(fwd_link, hours_to_seconds(0.5))
