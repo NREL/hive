@@ -1,6 +1,8 @@
 __doc__ = """
 dispatchers assign requests to vehicles and reposition unassigned vehicles
 """
+from pkg_resources import resource_filename
+
 import hive.dispatcher.forecaster
 import hive.dispatcher.manager
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
@@ -11,7 +13,8 @@ from hive.config import HiveConfig
 
 
 def default_dispatcher(config: HiveConfig) -> DispatcherInterface:
-    manager = BasicManager(demand_forecaster=BasicForecaster())
+    demand_forecast_file = resource_filename("hive.resources.demand_forecast", config.io.demand_forecast_file)
+    manager = BasicManager(demand_forecaster=BasicForecaster.build(demand_forecast_file))
     dispatcher = ManagedDispatcher.build(
         manager=manager,
     )

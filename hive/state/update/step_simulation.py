@@ -28,7 +28,7 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         :param env:
         :return: state without cancelled requests, along with this update function
         """
-        updated_dispatcher, instructions = self.dispatcher.generate_instructions(simulation_state)
+        updated_dispatcher, instructions = self.dispatcher.generate_instructions(simulation_state, env.reporter)
         sim_with_instructions = self._apply_instructions(simulation_state, instructions)
         sim_next_time_step = sim_with_instructions.step_simulation(env)
         reports = tuple(self._as_json(i, simulation_state.sim_time) for i in instructions)

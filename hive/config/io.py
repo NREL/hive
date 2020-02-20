@@ -15,6 +15,7 @@ class IO(NamedTuple):
     geofence_file: Optional[str]
     rate_structure_file: Optional[str]
     charging_price_file: Optional[str]
+    demand_forecast_file: Optional[str]
 
     run_log: Optional[str]
     vehicle_log: Optional[str]
@@ -30,7 +31,8 @@ class IO(NamedTuple):
             'road_network_file': None,
             'geofence_file': None,
             'rate_structure_file': None,
-            'charging_price_file': None
+            'charging_price_file': None,
+            'demand_forecast_file': None,
         }
 
     @classmethod
@@ -59,6 +61,7 @@ class IO(NamedTuple):
             requests_file=d['requests_file'],
             rate_structure_file=d['rate_structure_file'],
             charging_price_file=d['charging_price_file'],
+            demand_forecast_file=d['demand_forecast_file'],
             bases_file=d['bases_file'],
             stations_file=d['stations_file'],
             road_network_file=d['road_network_file'],

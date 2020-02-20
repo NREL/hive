@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Tuple, NamedTuple
 
 import random
+import json
 
 from h3 import h3
 
@@ -13,6 +14,7 @@ from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.model.roadnetwork import RoadNetwork
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
+from hive.reporting.reporter import Reporter
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import GeoId, VehicleId
 
@@ -101,6 +103,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
 
     def generate_instructions(self,
                               simulation_state: 'SimulationState',
+                              reporter: Reporter,
                               ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
         # TODO: a lot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
         #  too large. Should probably refactor.
@@ -117,6 +120,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                                                    entities=simulation_state.stations,
                                                    entity_search=simulation_state.s_search,
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                                   max_distance_km=100,
                                                    is_valid=lambda s: s.has_available_charger(Charger.DCFC))
             if nearest_station:
                 instruction = DispatchStationInstruction(
@@ -132,13 +136,17 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 # HIVE based on the RoadNetwork at initialization anyway)
                 # also possible: no charging stations available. implement a queueing solution
                 # for agents who could wait to charge
+                print("warning, no open stations found")
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = (VehicleState.IDLE,
-                             VehicleState.CHARGING_BASE,
-                             VehicleState.RESERVE_BASE,
-                             VehicleState.DISPATCH_BASE)
+            _valid_states = (
+                VehicleState.IDLE,
+                VehicleState.REPOSITIONING,
+                # VehicleState.CHARGING_BASE,
+                # VehicleState.RESERVE_BASE,
+                # VehicleState.DISPATCH_BASE,
+            )
             return bool(vehicle.id not in vehicle_ids_given_instructions and
                         vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
                         vehicle.vehicle_state in _valid_states)
@@ -164,9 +172,13 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 instructions = instructions + (instruction,)
                 vehicle_ids_given_instructions = vehicle_ids_given_instructions + (nearest_vehicle.id,)
 
-        # 3. try to meet active target set by fleet manager in 15 minute intervals
-        if simulation_state.sim_time % 900 == 0:
+        # 3. try to meet active target set by fleet manager in 30 minute intervals
+        if simulation_state.sim_time % (15*60) == 0:
             _, fleet_state_target = self.manager.generate_fleet_target(simulation_state)
+            report = fleet_state_target['ACTIVE']._asdict()
+            report['type'] = 'fleet_state_target'
+            report['sim_time'] = simulation_state.sim_time
+            reporter.single_report(json.dumps(report, default=str))
             fleet_state_instructions = self._handle_fleet_targets(
                 fleet_state_target,
                 simulation_state,

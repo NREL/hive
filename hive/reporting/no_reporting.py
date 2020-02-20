@@ -8,3 +8,6 @@ class NoReporting(Reporter):
 
     def report(self, sim_state: 'SimulationState', reports: Tuple[str, ...]):
         pass
+
+    def single_report(self, report: str):
+        pass
