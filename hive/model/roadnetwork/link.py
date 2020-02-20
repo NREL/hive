@@ -43,7 +43,7 @@ class Link(NamedTuple):
             start: GeoId,
             end: GeoId,
             speed_kmph: Kmph,
-            distance_km: Optional[Kilometers],
+            distance_km: Optional[Kilometers] = None,
     ) -> Link:
         if not distance_km:
             distance_km = H3Ops.great_circle_distance(start, end)
