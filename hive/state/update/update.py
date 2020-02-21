@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 class UpdatePayload(NamedTuple):
     runner_payload: RunnerPayload
     updated_step_fns: Tuple[SimulationUpdateFunction, ...] = ()
+    reports: Tuple[str, ...] = ()
 
 
 class Update(NamedTuple):
@@ -80,7 +81,10 @@ class Update(NamedTuple):
             s=update_result.simulation_state,
             u=next_update
         )
-        return updated_payload, update_result.reports
+
+        reports = pre_step_result.reports + update_result.reports
+
+        return updated_payload, reports
 
 
 def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
@@ -103,5 +107,6 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
 
     return p._replace(
         runner_payload=updated_payload,
-        updated_step_fns=next_update_fns
+        updated_step_fns=next_update_fns,
+        reports=p.reports + result.reports
     )
