@@ -7,8 +7,8 @@ from tests.mock_lobster import *
 class TestInstructions(TestCase):
 
     def test_set_vehicle_intention_charge(self):
-        somewhere = h3.geo_to_h3(39.75, -105.01, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -105, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.2)
         sim = mock_sim().add_vehicle(veh).add_station(sta)

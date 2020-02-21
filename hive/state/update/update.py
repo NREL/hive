@@ -70,6 +70,9 @@ class Update(NamedTuple):
             UpdatePayload(runner_payload)
         )
 
+        if isinstance(pre_step_result.runner_payload.s, Exception):
+            raise pre_step_result.runner_payload.s
+
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
         update_result, updated_step_fn = self.step_update.update(pre_step_result.runner_payload.s,
                                                                  pre_step_result.runner_payload.e)
@@ -100,6 +103,9 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
     and the update function possibly updated itself
     """
     result, updated_fn = fn.update(p.runner_payload.s, p.runner_payload.e)
+
+    if isinstance(result.simulation_state, Exception):
+        raise result.simulation_state
 
     # if we received an updated version of this SimulationUpdateFunction, store it
     next_update_fns = p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)

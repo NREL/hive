@@ -69,7 +69,8 @@ class MyTestCase(unittest.TestCase):
         """
         row = next(DictReader(source.split()))
         env = mock_env()
-        req = Request.from_row(row, env)
+        network = mock_network()
+        req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
         self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
@@ -93,7 +94,8 @@ class MyTestCase(unittest.TestCase):
             end_time="2019-01-10T00:00:00-07:00",
         )
         env = mock_env(config)
-        request = Request.from_row(row, env)
+        network = mock_network()
+        request = Request.from_row(row, env, network)
         self.assertIsInstance(request, IOError)
 
 

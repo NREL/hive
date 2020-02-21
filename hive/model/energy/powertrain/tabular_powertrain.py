@@ -5,7 +5,7 @@ import numpy as np
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powertrain.powertrain import Powertrain
-from hive.model.roadnetwork.property_link import PropertyLink
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.routetraversal import Route
 from hive.util.typealiases import PowertrainId
 from hive.util.units import KwH, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH
@@ -44,26 +44,26 @@ class TabularPowertrain(Powertrain):
     def get_energy_type(self) -> EnergyType:
         return EnergyType.ELECTRIC
 
-    def property_link_cost(self, property_link: PropertyLink) -> KwH:
+    def link_cost(self, link: Link) -> KwH:
         """
         uses mph tabular value to calculate energy over a link
 
-        :param property_link: the property link to calculate energy over.
+        :param link: the link to calculate energy over.
         :return: energy in kilowatt-hours
         """
         # link speed is in kilometer/hour
-        link_speed_mph = property_link.speed_kmph * KMPH_TO_MPH  # mph
+        link_speed_mph = link.speed_kmph * KMPH_TO_MPH  # mph
         watthour_per_mile = np.interp(link_speed_mph,
                                       self._consumption_mph,
                                       self._consumption_whmi)  # watthour / mile
         # link distance is in kilometers
-        energy_wh = (watthour_per_mile * property_link.distance_km * KM_TO_MILE)  # watthour
+        energy_wh = (watthour_per_mile * link.distance_km * KM_TO_MILE)  # watthour
         energy_kwh = energy_wh * WH_TO_KWH  # kilowatthour
         return energy_kwh
 
     def energy_cost(self, route: Route) -> KwH:
         return ft.reduce(
-            lambda acc, link: acc + self.property_link_cost(link),
+            lambda acc, link: acc + self.link_cost(link),
             route,
             0.0
         )

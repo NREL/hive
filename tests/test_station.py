@@ -10,12 +10,13 @@ class TestStation(TestCase):
         source = """station_id,lat,lon,charger_type,charger_count
                  s1,37,122,DCFC,10
                  """
+        network = mock_network()
 
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row, {}, sim_h3_resolution)
+        station = Station.from_row(row, {}, network)
 
         self.assertEqual(station.id, "s1")
         self.assertEqual(station.geoid, expected_geoid)
@@ -28,15 +29,17 @@ class TestStation(TestCase):
                   s1,37,122,LEVEL_2,5
                   """
 
+        network = mock_network()
+
         reader = DictReader(source.split())
         row1 = next(reader)
         row2 = next(reader)
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row1, {}, sim_h3_resolution)
+        station = Station.from_row(row1, {}, network)
         builder = immutables.Map({station.id: station})
-        station2 = Station.from_row(row2, builder, sim_h3_resolution)
+        station2 = Station.from_row(row2, builder, network)
 
         self.assertEqual(station2.id, "s1")
         self.assertEqual(station2.geoid, expected_geoid)
@@ -51,15 +54,17 @@ class TestStation(TestCase):
                   s1,37,122,DCFC,5
                   """
 
+        network = mock_network()
+
         reader = DictReader(source.split())
         row1 = next(reader)
         row2 = next(reader)
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row1, {}, sim_h3_resolution)
+        station = Station.from_row(row1, {}, network)
         builder = immutables.Map({station.id: station})
-        station2 = Station.from_row(row2, builder, sim_h3_resolution)
+        station2 = Station.from_row(row2, builder, network)
 
         self.assertEqual(station2.id, "s1")
         self.assertEqual(station2.geoid, expected_geoid)

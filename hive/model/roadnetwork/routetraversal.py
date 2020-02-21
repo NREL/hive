@@ -6,8 +6,7 @@ from typing import Optional, Union
 
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.linktraversal import traverse_up_to
-from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
@@ -64,7 +63,7 @@ class RouteTraversal(NamedTuple):
             remaining_route=updated_remaining_route,
         )
 
-    def add_link_not_traversed(self, link: PropertyLink) -> RouteTraversal:
+    def add_link_not_traversed(self, link: Link) -> RouteTraversal:
         """
         if a link wasn't traversed, be sure to add it to the remaining route
 
@@ -77,13 +76,11 @@ class RouteTraversal(NamedTuple):
 
 
 def traverse(route_estimate: Route,
-             road_network: RoadNetwork,
              duration_seconds: Seconds) -> Optional[Union[Exception, RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
     :param route_estimate: the current route estimate
-    :param road_network: the current road network state
     :param duration_seconds: size of the time step for this traversal, in seconds
     :return: a route experience and updated route estimate;
              or, nothing if the route is consumed.
@@ -98,12 +95,12 @@ def traverse(route_estimate: Route,
 
         # function that steps through the route
         def _traverse(acc: Tuple[RouteTraversal, Optional[Exception]],
-                      property_link: PropertyLink) -> Tuple[RouteTraversal, Optional[Exception]]:
+                      link: Link) -> Tuple[RouteTraversal, Optional[Exception]]:
             acc_traversal, acc_failures = acc
             if acc_traversal.no_time_left():
-                return acc_traversal.add_link_not_traversed(property_link), acc_failures
+                return acc_traversal.add_link_not_traversed(link), acc_failures
             # traverse this link as far as we can go
-            traverse_result = traverse_up_to(road_network, property_link, acc_traversal.remaining_time_seconds)
+            traverse_result = traverse_up_to(link, acc_traversal.remaining_time_seconds)
             if isinstance(traverse_result, Exception):
                 return acc_traversal, traverse_result
             updated_experienced_route = acc_traversal.add_traversal(traverse_result)

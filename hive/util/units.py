@@ -42,9 +42,11 @@ SECONDS_TO_HOURS = 1 / 3600
 
 #    Speed
 KMPH_TO_MPH = 0.621371
+MPH_TO_KMPH = 1/KMPH_TO_MPH
 
 #    Distance
 KM_TO_MILE = 0.621371
+M_TO_KM = 1/1000
 
 #    Energy
 WH_TO_KWH = 0.001

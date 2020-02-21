@@ -15,6 +15,8 @@ from hive.model.base import Base
 from hive.model.energy.powercurve import build_powercurve
 from hive.model.energy.powertrain import build_powertrain
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.runner.environment import Environment
@@ -42,7 +44,21 @@ def initialize_simulation(
     if not os.path.isdir(sim_output_dir):
         os.makedirs(sim_output_dir)
 
-    road_network = HaversineRoadNetwork(config.sim.sim_h3_resolution)
+    if config.io.geofence_file:
+        geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
+        geofence = GeoFence.from_geojson_file(geofence_file)
+    else:
+        geofence = None
+
+    if not config.io.road_network_file:
+        road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
+    else:
+        road_network_file = resource_filename("hive.resources.road_network", config.io.road_network_file)
+        road_network = OSMRoadNetwork(
+            geofence=geofence,
+            sim_h3_resolution=config.sim.sim_h3_resolution,
+            road_network_file=road_network_file,
+        )
 
     sim_initial = SimulationState(
         road_network=road_network,
@@ -75,7 +91,7 @@ def _build_vehicles(
     :return: the SimulationState with vehicles in it
     :raises Exception: from IOErrors parsing the vehicle, powertrain, or powercurve files
     """
-    
+
     def _add_row_unsafe(
             payload: Tuple[SimulationState, Environment],
             row: Dict[str, str]) -> Tuple[SimulationState, Environment]:
@@ -108,7 +124,7 @@ def _build_vehicles(
         reader = csv.DictReader(vf)
         initial_payload = simulation_state, environment
         sim_with_vehicles = ft.reduce(_add_row_unsafe, reader, initial_payload)
-    
+
     return sim_with_vehicles
 
 
@@ -123,7 +139,7 @@ def _build_bases(bases_file: str, simulation_state: SimulationState) -> Simulati
     """
 
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
-        base = Base.from_row(row, simulation_state.sim_h3_location_resolution)
+        base = Base.from_row(row, simulation_state.road_network)
         updated_sim = sim.add_base(base)
         if isinstance(updated_sim, Exception):
             raise updated_sim
@@ -148,8 +164,8 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """
 
-    def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) ->  immutables.Map[str, Station]:
-        station = Station.from_row(row, builder, simulation_state.sim_h3_location_resolution)
+    def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) -> immutables.Map[str, Station]:
+        station = Station.from_row(row, builder, simulation_state.road_network)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
 

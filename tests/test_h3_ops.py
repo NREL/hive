@@ -5,10 +5,9 @@ from h3 import h3
 
 from hive.model.request import Request
 from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.property_link import PropertyLink
 from hive.util.helpers import H3Ops
 from hive.util.units import hours_to_seconds
-from tests.mock_lobster import mock_sim
+from tests.mock_lobster import *
 
 
 class TestH3Ops(TestCase):
@@ -18,8 +17,8 @@ class TestH3Ops(TestCase):
         end = h3.geo_to_h3(37.008994, 122, 15)
 
         # create links with 1km speed
-        fwd_link = PropertyLink.build(Link("test", start, end), 1)
-        bwd_link = PropertyLink.build(Link("test", end, start), 1)
+        fwd_link = Link.build("test", start, end, speed_kmph=1)
+        bwd_link = Link.build("test", end, start, speed_kmph=1)
 
         # test moving forward and backward, each by a half-unit of time
         fwd_result = H3Ops.point_along_link(fwd_link, hours_to_seconds(0.5))
@@ -52,11 +51,11 @@ class TestH3Ops(TestCase):
 
         h3_resolution = 15
         h3_search_res = 7
-        somewhere = h3.geo_to_h3(39.748971, -104.992323, h3_resolution)
-        near_to_somewhere = h3.geo_to_h3(39.753600, -104.993369, h3_resolution)
-        far_from_somewhere = h3.geo_to_h3(39.728882, -105.002792, h3_resolution)
-        req_near = Request("req_near", near_to_somewhere, somewhere, 0, 0, ())
-        req_far = Request("req_far", far_from_somewhere, somewhere, 0, 0, ())
+        somewhere = h3.geo_to_h3(39.7539, -104.974, h3_resolution)
+        near_to_somewhere = h3.geo_to_h3(39.754, -104.975, h3_resolution)
+        far_from_somewhere = h3.geo_to_h3(39.755, -104.976, h3_resolution)
+        req_near = mock_request_from_geoids(origin=somewhere, destination=near_to_somewhere)
+        req_far = mock_request_from_geoids(origin=somewhere, destination=far_from_somewhere)
 
         sim = mock_sim(h3_location_res=h3_resolution, h3_search_res=h3_search_res)
         sim_with_reqs = sim.add_request(req_near).add_request(req_far)
@@ -67,3 +66,11 @@ class TestH3Ops(TestCase):
                                        sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
 
         self.assertEqual(nearest.geoid, req_near.geoid)
+
+    def test_great_circle_distance(self):
+        london = h3.geo_to_h3(51.5007, 0.1246, 10)
+        new_york = h3.geo_to_h3(40.6892, 74.0445, 10)
+
+        distance_km = H3Ops.great_circle_distance(london, new_york)
+
+        self.assertAlmostEqual(distance_km, 5574.8, places=1)

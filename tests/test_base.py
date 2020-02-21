@@ -10,11 +10,12 @@ class TestBase(TestCase):
         source = """base_id,lat,lon,stall_count,station_id
                     b1,37,122,10,s1"""
 
+        network = mock_network()
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        base = Base.from_row(row, sim_h3_resolution)
+        base = Base.from_row(row, network)
 
         self.assertEqual(base.id, "b1")
         self.assertEqual(base.geoid, expected_geoid)
@@ -25,11 +26,12 @@ class TestBase(TestCase):
         source = """base_id,lat,lon,stall_count,station_id
                     b1,37,122,10,"""
 
+        network = mock_network()
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        base = Base.from_row(row, sim_h3_resolution)
+        base = Base.from_row(row, network)
 
         self.assertEqual(base.id, "b1")
         self.assertEqual(base.geoid, expected_geoid)
@@ -40,11 +42,12 @@ class TestBase(TestCase):
         source = """base_id,lat,lon,stall_count,station_id
                     b1,37,122,10,none"""
 
+        network = mock_network()
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        base = Base.from_row(row, sim_h3_resolution)
+        base = Base.from_row(row, network)
 
         self.assertEqual(base.id, "b1")
         self.assertEqual(base.geoid, expected_geoid)

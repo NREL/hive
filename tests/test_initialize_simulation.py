@@ -3,6 +3,11 @@ from unittest import TestCase
 from hive.state.initialize_simulation import initialize_simulation
 from tests.mock_lobster import *
 
+import shutil
+import os
+
+from datetime import datetime
+
 
 class TestInitializeSimulation(TestCase):
 
@@ -22,7 +27,7 @@ class TestInitializeSimulation(TestCase):
                     "bases_file": "denver_demo_bases.csv",
                     "stations_file": "denver_demo_stations.csv",
                     "geofence_file": "downtown_denver.geojson",
-        }
+                }
             }
         )
         sim, env = initialize_simulation(conf)
@@ -31,3 +36,11 @@ class TestInitializeSimulation(TestCase):
         self.assertEqual(len(sim.bases), 1, "should have loaded 1 base")
         self.assertIn("leaf", env.powercurves, "should have loaded leaf powercurve model")
         self.assertIn("leaf", env.powertrains, "should have loaded leaf powertrain model")
+
+        # Clean up the output directories
+        output_string = 'test_sim_' + datetime.now().strftime('%Y-%m-%d')
+        for d in os.listdir(os.getcwd()):
+            if output_string in d:
+                shutil.rmtree(d, ignore_errors=True)
+
+

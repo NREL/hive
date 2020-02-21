@@ -62,6 +62,8 @@ def _run_step_in_context(env: Environment) -> Callable:
         # applies the most recent version of each update function
         updated_payload, reports = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
+        if isinstance(updated_sim, Exception):
+            raise(updated_sim)
 
         env.reporter.report(updated_sim, reports)
         if updated_sim.sim_time % 3600 == 0:

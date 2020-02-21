@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, FrozenSet
 
 # MODEL ID TYPES
 RequestId = str
@@ -13,7 +13,9 @@ PassengerId = str
 GeoId = str  # h3 geohash
 LinkId = str # road network link
 RouteStepPointer = int
+H3Resolution = int
 H3Line = Tuple[GeoId, ...]
+GeoFenceSet = FrozenSet[GeoId]
 
 SimTime = int  # time in seconds consistent across inputs (epoch time preferred)
 SimStep = int  # the iteration of the simulation
