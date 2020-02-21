@@ -2,7 +2,6 @@ from typing import NamedTuple, Dict
 from unittest import TestCase
 
 from hive.config import ConfigBuilder
-from hive.model.roadnetwork.link import Link
 
 
 class TestConfigBuilder(TestCase):
@@ -24,10 +23,10 @@ class TestConfigBuilder(TestCase):
         self.assertEqual(test_class.b, defaults['b'])
 
     def test_build_has_required_fields(self):
-        required = {
-            'a': int,
-            'b': str,
-        }
+        required = (
+            'a',
+            'b',
+        )
 
         config = {
             'a': 6,
@@ -46,10 +45,10 @@ class TestConfigBuilder(TestCase):
         self.assertEqual(test_class.b, config['b'])
 
     def test_build_missing_required_field(self):
-        required = {
-            'a': int,
-            'b': str,
-        }
+        required = (
+            'a',
+            'b',
+        )
 
         config = {
             'a': 6,

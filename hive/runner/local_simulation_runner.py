@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import functools as ft
 from typing import NamedTuple, TYPE_CHECKING, Callable, Optional
-import logging
 
 from hive.runner.runner_payload import RunnerPayload
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
-
-log = logging.getLogger(__name__)
 
 
 class LocalSimulationRunner(NamedTuple):
@@ -63,9 +60,9 @@ def _run_step_in_context(env: Environment) -> Callable:
         updated_payload, reports = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
         if isinstance(updated_sim, Exception):
-            raise(updated_sim)
+            raise (updated_sim)
 
-        env.reporter.report(updated_sim, reports)
+        env.reporter.log_sim_state(updated_sim)
         if updated_sim.sim_time % 3600 == 0:
             # this should use the run logger instead of printing
             print(f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds")

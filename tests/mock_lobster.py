@@ -405,9 +405,9 @@ def mock_env(
 
 def mock_reporter() -> Reporter:
     class MockReporter(Reporter):
-        def report(self,
-                   sim_state: SimulationState,
-                   reports: Tuple[str, ...]):
+        def log_sim_state(self,
+                          sim_state: SimulationState,
+                          ):
             pass
 
     return MockReporter()

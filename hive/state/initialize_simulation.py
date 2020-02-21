@@ -7,7 +7,7 @@ import os
 from typing import Tuple, Dict
 
 import immutables
-from hive.reporting import DetailedReporter
+from hive.reporting import BasicReporter
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
@@ -68,7 +68,9 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
-    reporter = DetailedReporter(config.io, sim_output_dir)
+    if (config.io.log_time_step * 60) < config.sim.timestep_duration_seconds:
+        raise RuntimeError("log time step must be greater than simulation time step")
+    reporter = BasicReporter(config.io, sim_output_dir)
     env_initial = Environment(config=config, reporter=reporter)
 
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
