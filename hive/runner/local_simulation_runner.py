@@ -59,13 +59,21 @@ def _run_step_in_context(env: Environment) -> Callable:
         # applies the most recent version of each update function
         updated_payload, reports = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
-        if isinstance(updated_sim, Exception):
-            raise (updated_sim)
 
-        env.reporter.log_sim_state(updated_sim)
-        if updated_sim.sim_time % 3600 == 0:
-            # this should use the run logger instead of printing
-            print(f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds")
+        if isinstance(updated_sim, Exception):
+            report = {'error': updated_sim}
+            env.reporter.error_logger.info(report)
+
+        if updated_sim.sim_time % (env.config.io.log_time_step * 60) == 0:
+            env.reporter.log_sim_state(updated_sim)
+
+            if updated_sim.sim_time % 3600 == 0:
+                # this should use the run logger instead of printing
+                msg = f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds"
+                env.reporter.run_logger.info(msg)
+
+            # TODO: log extra reports
+
         return updated_payload
 
     return _run_step

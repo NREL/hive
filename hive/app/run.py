@@ -40,12 +40,12 @@ def run() -> int:
         sim, environment = load_simulation(scenario_path)
         update = Update.build(environment.config)
         initial_payload = RunnerPayload(sim, environment, update)
-        log.info("running HIVE")
+        log.info("running HIVE.. \n")
 
         start = time.time()
         sim_result = LocalSimulationRunner.run(initial_payload)
-
         end = time.time()
+
         log.info("\n")
         log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
 
