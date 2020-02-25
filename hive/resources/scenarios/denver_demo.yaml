@@ -15,6 +15,5 @@ io:
   demand_forecast_file: denver_demand.csv
   road_network_file: downtown_denver.xml
   vehicle_log: vehicle.log
-#  request_log: request.log
   run_log: run.log
 

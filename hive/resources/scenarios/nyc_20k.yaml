@@ -1,5 +1,5 @@
 sim:
-  sim_name: nyc_20k_perfect_forecast_1400_30min
+  sim_name: nyc_20k
   timestep_duration_seconds: 60
   start_time: 0
   end_time: 86400
@@ -7,7 +7,7 @@ sim:
 io:
   working_directory: nyc_20k_out
   requests_file: nyc_20k.csv
-  vehicles_file: nyc_1400.csv
+  vehicles_file: nyc_200.csv
   bases_file: nyc_bases.csv
   stations_file: nyc_stations.csv
   rate_structure_file: rate_structure.csv
