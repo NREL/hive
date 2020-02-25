@@ -21,6 +21,7 @@ class UpdatePayload(NamedTuple):
     runner_payload: RunnerPayload
     updated_step_fns: Tuple[SimulationUpdateFunction, ...] = ()
     reports: Tuple[str, ...] = ()
+    errors: Tuple[Exception, ...] = ()
 
 
 class Update(NamedTuple):
@@ -69,9 +70,6 @@ class Update(NamedTuple):
             self.pre_step_update,
             UpdatePayload(runner_payload)
         )
-
-        if isinstance(pre_step_result.runner_payload.s, Exception):
-            raise pre_step_result.runner_payload.s
 
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
         update_result, updated_step_fn = self.step_update.update(pre_step_result.runner_payload.s,

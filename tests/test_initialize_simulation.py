@@ -30,7 +30,7 @@ class TestInitializeSimulation(TestCase):
                 }
             }
         )
-        sim, env = initialize_simulation(conf)
+        sim, env = initialize_simulation(conf, "")
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 3, "should have loaded 3 stations")
         self.assertEqual(len(sim.bases), 1, "should have loaded 1 base")
@@ -42,5 +42,7 @@ class TestInitializeSimulation(TestCase):
         for d in os.listdir(os.getcwd()):
             if output_string in d:
                 shutil.rmtree(d, ignore_errors=True)
+
+        os.remove('sim.log')
 
 

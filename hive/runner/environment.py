@@ -32,6 +32,8 @@ class Environment(NamedTuple):
     powertrains: immutables.Map[PowertrainId, Powertrain] = immutables.Map()
     powercurves: immutables.Map[PowercurveId, Powercurve] = immutables.Map()
 
+    sim_output_dir: str = ""
+
     def add_powertrain(self, powertrain: Powertrain) -> Environment:
         """
         Adds a powertrain to the environment

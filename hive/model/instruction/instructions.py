@@ -7,6 +7,10 @@ from hive.model.vehiclestate import VehicleState
 from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId
 from hive.model.energy.charger import Charger
 
+import logging
+
+log = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
 
@@ -35,13 +39,16 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.debug(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
         if self.request_id not in sim_state.requests:
+            log.debug(f"request {self.request_id} not found in simulation ")
             return None
         request = sim_state.requests[self.request_id]
 
         if not vehicle.can_transition(VehicleState.DISPATCH_TRIP):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_TRIP')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
