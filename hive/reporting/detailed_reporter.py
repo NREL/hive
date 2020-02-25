@@ -65,3 +65,6 @@ class DetailedReporter(Reporter):
         if self.run_logger:
             for report in reports:
                 self.run_logger.info(report)
+
+    def single_report(self, report: str):
+        self.run_logger.info(report)

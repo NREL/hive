@@ -380,6 +380,7 @@ def mock_config(
             'bases_file': '',
             'stations_file': '',
             'geofence_file': 'downtown_denver.geojson',
+            'demand_forecast_file': 'nyc_demand.csv'
         }
 
     })
@@ -408,6 +409,8 @@ def mock_reporter() -> Reporter:
         def report(self,
                    sim_state: SimulationState,
                    reports: Tuple[str, ...]):
+            pass
+        def single_report(self, report: str):
             pass
 
     return MockReporter()
@@ -554,6 +557,7 @@ def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
             return self, fleet_state_target
 
     return MockManager(forecaster=forecaster)
+
 
 
 def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:

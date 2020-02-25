@@ -21,3 +21,7 @@ class Reporter(ABC):
         :param reports: Any additional reports.
         :return: Does not return a value.
         """
+
+    @abstractmethod
+    def single_report(self, report: str):
+        pass
