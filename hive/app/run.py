@@ -57,6 +57,8 @@ def run() -> int:
 
         _summary_stats(sim_result.s)
 
+        environment.reporter.sim_log_file.close()
+
         return 0
 
     except Exception as e:

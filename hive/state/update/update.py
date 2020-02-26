@@ -20,8 +20,7 @@ if TYPE_CHECKING:
 class UpdatePayload(NamedTuple):
     runner_payload: RunnerPayload
     updated_step_fns: Tuple[SimulationUpdateFunction, ...] = ()
-    reports: Tuple[str, ...] = ()
-    errors: Tuple[Exception, ...] = ()
+    reports: Tuple[dict, ...] = ()
 
 
 class Update(NamedTuple):
@@ -58,7 +57,7 @@ class Update(NamedTuple):
 
         return Update(pre_step_update, step_update)
 
-    def apply_update(self, runner_payload: RunnerPayload) -> [RunnerPayload, Tuple[str, ...]]:
+    def apply_update(self, runner_payload: RunnerPayload) -> [RunnerPayload, Tuple[dict, ...]]:
         """
         applies the update at a time step, calling each SimulationUpdateFunction in order
         :param runner_payload: the current SimulationState and assets at the current simtime
@@ -101,9 +100,6 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
     and the update function possibly updated itself
     """
     result, updated_fn = fn.update(p.runner_payload.s, p.runner_payload.e)
-
-    if isinstance(result.simulation_state, Exception):
-        raise result.simulation_state
 
     # if we received an updated version of this SimulationUpdateFunction, store it
     next_update_fns = p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)

@@ -10,7 +10,7 @@ class Reporter(ABC):
 
     @property
     @abstractmethod
-    def sim_logger(self):
+    def sim_log_file(self):
         pass
 
 

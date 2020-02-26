@@ -20,7 +20,7 @@ class TestInstructions(TestCase):
             charger=Charger.DCFC
         )
         sim_updated = instruction.apply_instruction(sim)
-        sim_stepped = sim_updated.step_simulation(env)
+        sim_stepped = step_simulation(sim_updated, env)
 
         # The station only has 1 DCFC charger
         updated_station = sim_stepped.stations[sta.id]
@@ -32,7 +32,7 @@ class TestInstructions(TestCase):
         )
 
         sim_interrupt_charge = new_instruction.apply_instruction(sim_stepped)
-        sim_stepped_again = sim_interrupt_charge.step_simulation(env)
+        sim_stepped_again = step_simulation(sim_interrupt_charge, env)
 
         self.assertIsNotNone(sim_stepped_again)
 

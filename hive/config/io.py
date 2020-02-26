@@ -19,9 +19,6 @@ class IO(NamedTuple):
     rate_structure_file: Optional[str]
     charging_price_file: Optional[str]
 
-    # Log files
-    sim_log_file: Optional[str]
-
     log_vehicles: bool
     log_requests: bool
     log_stations: bool
@@ -39,8 +36,6 @@ class IO(NamedTuple):
             'geofence_file': None,
             'rate_structure_file': None,
             'charging_price_file': None,
-
-            'sim_log_file': 'sim.log',
 
             'log_vehicles': False,
             'log_requests': False,
@@ -82,8 +77,6 @@ class IO(NamedTuple):
             stations_file=d['stations_file'],
             road_network_file=d['road_network_file'],
             geofence_file=d['geofence_file'],
-
-            sim_log_file=d['sim_log_file'],
 
             log_vehicles=d['log_vehicles'],
             log_requests=d['log_requests'],

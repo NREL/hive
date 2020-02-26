@@ -84,7 +84,7 @@ class TestChargingPriceUpdate(TestCase):
         # the second update should pull in the second and third row
         # the fourth row should not have been read
         result1, fn2 = fn1.update(sim, env)
-        sim_ffwd = result1.simulation_state.step_simulation(env)
+        sim_ffwd = step_simulation(result1.simulation_state, env)
         result2, fn3 = fn2.update(sim_ffwd, env)
 
         self.assertEqual(len(result1.reports), 0, "should have no errors")

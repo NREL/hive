@@ -33,7 +33,7 @@ from hive.state.update.update import Update
 from hive.util.typealiases import *
 from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers, hours_to_seconds
 from hive.util.helpers import H3Ops
-from hive.state.update.step_simulation import StepSimulation
+from hive.state.update.step_simulation import StepSimulation, step_simulation
 
 
 class DefaultIds:
@@ -156,7 +156,7 @@ def mock_station_from_geoid(
         station_id: StationId = DefaultIds.mock_station_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
         chargers=None,
-        road_network:RoadNetwork = mock_network()
+        road_network: RoadNetwork = mock_network()
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
@@ -397,6 +397,7 @@ def mock_env(
 
     env = Environment(
         config=config,
+        reporter=mock_reporter(),
         powertrains=powertrains,
         powercurves=powercurves,
     )
@@ -405,9 +406,14 @@ def mock_env(
 
 def mock_reporter() -> Reporter:
     class MockReporter(Reporter):
+        sim_log_file = None
+
         def log_sim_state(self,
                           sim_state: SimulationState,
                           ):
+            pass
+
+        def sim_report(self, report: dict):
             pass
 
     return MockReporter()

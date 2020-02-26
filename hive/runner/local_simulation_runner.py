@@ -64,10 +64,6 @@ def _run_step_in_context(env: Environment) -> Callable:
         updated_payload, reports = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
 
-        if isinstance(updated_sim, Exception):
-            report = {'error': updated_sim}
-            log.info(report)
-
         if updated_sim.sim_time % (env.config.io.log_time_step * 60) == 0:
             env.reporter.log_sim_state(updated_sim)
 
@@ -75,7 +71,8 @@ def _run_step_in_context(env: Environment) -> Callable:
                 msg = f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds"
                 log.info(msg)
 
-            # TODO: log extra reports
+        for report in reports:
+            env.reporter.sim_report(report)
 
         return updated_payload
 

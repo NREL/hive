@@ -22,10 +22,11 @@ def load_simulation(scenario_file_path: str) -> Tuple[SimulationState, Environme
     with open(scenario_file_path, 'r') as f:
         config_builder = yaml.safe_load(f)
 
-    config = HiveConfig.build(config_builder)
-    if isinstance(config, Exception):
-        run_log.error("attempted to load scenario config file but failed")
-        raise config
+    try:
+        config = HiveConfig.build(config_builder)
+    except Exception as e:
+        run_log.exception("attempted to load scenario config file but failed")
+        raise e
 
     run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     sim_output_dir = os.path.join(config.io.working_directory, run_name)

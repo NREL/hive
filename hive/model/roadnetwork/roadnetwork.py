@@ -20,7 +20,7 @@ class RoadNetwork(ABC):
     geofence: Optional[GeoFence]
 
     @abstractmethod
-    def route(self, origin: Link, destination: Link) -> Route:
+    def route(self, origin: GeoId, destination: GeoId) -> Route:
         """
         Returns a route between two road network property links
 

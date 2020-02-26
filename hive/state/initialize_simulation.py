@@ -99,8 +99,8 @@ def _build_vehicles(
         veh = Vehicle.from_row(row, sim.road_network)
         updated_sim = sim.add_vehicle(veh)
 
-        if isinstance(updated_sim, Exception):
-            raise updated_sim
+        if not updated_sim:
+            return payload
         else:
             if row['powertrain_id'] not in env.powertrains and row['powercurve_id'] not in env.powercurves:
                 powertrain = build_powertrain(row['powertrain_id'])
@@ -140,8 +140,8 @@ def _build_bases(bases_file: str, simulation_state: SimulationState) -> Simulati
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
         base = Base.from_row(row, simulation_state.road_network)
         updated_sim = sim.add_base(base)
-        if isinstance(updated_sim, Exception):
-            raise updated_sim
+        if not updated_sim:
+            return updated_sim
         else:
             return updated_sim
 
@@ -170,8 +170,8 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
 
     def _add_station_unsafe(sim: SimulationState, station: Station) -> SimulationState:
         sim_with_station = sim.add_station(station)
-        if isinstance(sim_with_station, Exception):
-            raise sim_with_station
+        if not sim_with_station:
+            return sim
         else:
             return sim_with_station
 
