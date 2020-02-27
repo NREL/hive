@@ -30,7 +30,7 @@ class BasicManager(NamedTuple, ManagerInterface):
             VehicleState.REPOSITIONING,
         })
 
-        _, future_demand = self.demand_forecaster.generate_forecast(simulation_state)
+        updated_forecaster, future_demand = self.demand_forecaster.generate_forecast(simulation_state)
 
         active_target = StateTarget(id='ACTIVE',
                                     state_set=active_set,
@@ -38,4 +38,6 @@ class BasicManager(NamedTuple, ManagerInterface):
 
         fleet_state_target = {active_target.id: active_target}
 
-        return self, fleet_state_target
+        next_manager = self._replace(demand_forecaster=updated_forecaster)
+
+        return next_manager, fleet_state_target
