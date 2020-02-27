@@ -21,8 +21,9 @@ class TestManagedDispatcher(TestCase):
         close_veh = mock_vehicle_from_geoid(vehicle_id='close_veh', geoid=near_to_somewhere)
         far_veh = mock_vehicle_from_geoid(vehicle_id='far_veh', geoid=far_from_somewhere)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_request(req).add_vehicle(close_veh).add_vehicle(far_veh)
+        env = mock_env()
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -42,8 +43,9 @@ class TestManagedDispatcher(TestCase):
 
         req = mock_request_from_geoids(origin=somewhere)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_request(req)
+        env = mock_env()
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
         self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
@@ -62,8 +64,9 @@ class TestManagedDispatcher(TestCase):
         veh_low_battery = veh.battery_swap(low_battery)
         station = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_low_battery).add_station(station)
+        env = mock_env()
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -86,8 +89,9 @@ class TestManagedDispatcher(TestCase):
         base = mock_base_from_geoid(geoid=somewhere, stall_count=2)
 
         sim = mock_sim().add_vehicle(veh).add_base(base)
+        env = mock_env()
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -111,8 +115,9 @@ class TestManagedDispatcher(TestCase):
         base = mock_base_from_geoid(geoid=somewhere_else, stall_count=2)
 
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh1).add_vehicle(veh2).add_base(base)
+        env = mock_env()
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
         self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0],
@@ -137,8 +142,9 @@ class TestManagedDispatcher(TestCase):
 
         sim = mock_sim(h3_location_res=9, h3_search_res=9)\
             .add_vehicle(veh1).add_request(expensive_req).add_request(cheap_req)
+        env = mock_env()
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
         print(instructions)
 

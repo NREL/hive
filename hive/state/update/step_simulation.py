@@ -9,7 +9,7 @@ from hive.model.instruction.instruction_interface import Instruction
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
-from hive.util.typealiases import SimTime, VehicleId
+from hive.util.typealiases import VehicleId
 
 
 def step_simulation(simulation_state: SimulationState, env: Environment) -> SimulationState:
@@ -60,19 +60,13 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         :param env:
         :return: state without cancelled requests, along with this update function
         """
-        updated_dispatcher, instructions = self.dispatcher.generate_instructions(simulation_state)
+        updated_dispatcher, instructions = self.dispatcher.generate_instructions(simulation_state, env=env)
         sim_with_instructions = apply_instructions(simulation_state, instructions)
         sim_next_time_step = step_simulation(
             simulation_state=sim_with_instructions,
             env=env,
         )
-        reports = tuple(self._gen_report(i, simulation_state.sim_time) for i in instructions)
 
-        return SimulationUpdateResult(sim_next_time_step, reports=reports), self._replace(dispatcher=updated_dispatcher)
+        return SimulationUpdateResult(sim_next_time_step), self._replace(dispatcher=updated_dispatcher)
 
-    def _gen_report(self, instruction: Instruction, sim_time: SimTime) -> dict:
-        i_dict = instruction._asdict()
-        i_dict['sim_time'] = sim_time
-        i_dict['report_type'] = "dispatcher"
-        i_dict['instruction_type'] = instruction.__class__.__name__
-        return i_dict
+

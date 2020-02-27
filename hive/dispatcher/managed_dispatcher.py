@@ -6,6 +6,7 @@ import random
 from h3 import h3
 
 from hive.model.instruction import *
+from hive.runner.environment import Environment
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.dispatcher.manager.fleet_target import FleetStateTarget
 from hive.model.vehiclestate import VehicleState
@@ -14,7 +15,7 @@ from hive.model.energy.charger import Charger
 from hive.model.roadnetwork import RoadNetwork
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.util.helpers import H3Ops
-from hive.util.typealiases import GeoId, VehicleId
+from hive.util.typealiases import GeoId, VehicleId, SimTime
 
 
 class ManagedDispatcher(NamedTuple, DispatcherInterface):
@@ -33,8 +34,18 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             manager=manager,
             LOW_SOC_TRESHOLD=low_soc_threshold
         )
+    
+    @staticmethod
+    def _report_instruction(instruction: Instruction, sim_time: SimTime, env: Environment):
+        i_dict = instruction._asdict()
+        i_dict['sim_time'] = sim_time
+        i_dict['report_type'] = "dispatcher"
+        i_dict['instruction_type'] = instruction.__class__.__name__
+        
+        env.reporter.sim_report(i_dict)
 
-    def _sample_random_location(self, road_network: RoadNetwork) -> GeoId:
+    @staticmethod
+    def _sample_random_location(road_network: RoadNetwork) -> GeoId:
         random_hex = random.choice(tuple(road_network.geofence.geofence_set))
         children = h3.h3_to_children(random_hex, road_network.sim_h3_resolution)
         return children.pop()
@@ -44,10 +55,14 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             fleet_state_target: FleetStateTarget,
             simulation_state: 'SimulationState',
             vehicle_ids_given_instructions: Tuple[VehicleId, ...],
+            env: Environment,
     ) -> Tuple[Instruction, ...]:
 
         fleet_state_instructions = ()
         active_target = fleet_state_target['ACTIVE']
+
+        self._report_instruction(active_target, simulation_state.sim_time, env)
+
         active_vehicles = [v for v in simulation_state.vehicles.values()
                            if v.vehicle_state in active_target.state_set
                            and v.id not in vehicle_ids_given_instructions]
@@ -91,6 +106,9 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                         vehicle_id=veh.id,
                         destination=nearest_base.geoid,
                     )
+                    
+                    self._report_instruction(instruction, simulation_state.sim_time, env)
+                    
                     fleet_state_instructions = fleet_state_instructions + (instruction,)
                     vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
                 else:
@@ -101,6 +119,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
 
     def generate_instructions(self,
                               simulation_state: 'SimulationState',
+                              env: Environment,
                               ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
         # TODO: a lot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
         #  too large. Should probably refactor.
@@ -111,7 +130,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         low_soc_vehicles = [v for v in simulation_state.vehicles.values()
                             if v.energy_source.soc <= self.LOW_SOC_TRESHOLD
                             and v.vehicle_state != VehicleState.DISPATCH_STATION]
-        nearest_station = None
+        
         for veh in low_soc_vehicles:
             nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                    entities=simulation_state.stations,
@@ -125,6 +144,8 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     charger=Charger.DCFC,
                 )
 
+                self._report_instruction(instruction, simulation_state.sim_time, env)
+        
                 instructions = instructions + (instruction,)
                 vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
             else:
@@ -160,6 +181,8 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     vehicle_id=nearest_vehicle.id,
                     request_id=request.id,
                 )
+                
+                self._report_instruction(instruction, simulation_state.sim_time, env)
 
                 instructions = instructions + (instruction,)
                 vehicle_ids_given_instructions = vehicle_ids_given_instructions + (nearest_vehicle.id,)
@@ -171,6 +194,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 fleet_state_target,
                 simulation_state,
                 vehicle_ids_given_instructions,
+                env,
             )
             instructions = instructions + fleet_state_instructions
 
@@ -190,6 +214,9 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     station_id=base.station_id,
                     charger=Charger.LEVEL_2,
                 )
+                
+                self._report_instruction(instruction, simulation_state.sim_time, env)
+                
                 instructions = instructions + (instruction,)
 
         return self, instructions
