@@ -26,7 +26,8 @@ class IO(NamedTuple):
     log_dispatcher: bool
     log_manager: bool
 
-    log_time_step: Seconds
+    log_period_seconds: Seconds
+    progress_period_seconds: Seconds
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -45,7 +46,8 @@ class IO(NamedTuple):
             'log_dispatcher': False,
             'log_manager': False,
 
-            'log_time_step': 1,
+            'log_period_seconds': 60,
+            'progress_period_seconds': 3600,
         }
 
     @classmethod
@@ -87,6 +89,7 @@ class IO(NamedTuple):
             log_dispatcher=d['log_dispatcher'],
             log_manager=d['log_manager'],
 
-            log_time_step=d['log_time_step'],
+            log_period_seconds=d['log_period_seconds'],
+            progress_period_seconds=d['progress_period_seconds'],
 
         )

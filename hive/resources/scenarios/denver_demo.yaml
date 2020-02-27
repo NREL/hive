@@ -21,4 +21,4 @@ io:
   log_stations: False
   log_dispatcher: True
 
-  log_time_step: 1
+  log_period_seconds: 60
