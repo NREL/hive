@@ -119,6 +119,7 @@ class TestManagedDispatcher(TestCase):
 
         dispatcher, instructions = dispatcher.generate_instructions(sim, env)
 
+
         self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0],
                               DispatchBaseInstruction,

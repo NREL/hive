@@ -14,6 +14,7 @@ from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 if TYPE_CHECKING:
     from hive.model.roadnetwork.link import Link
 
+
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
 

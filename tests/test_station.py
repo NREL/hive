@@ -89,3 +89,8 @@ class TestStation(TestCase):
         station_w_l2 = updated_station.return_charger(Charger.LEVEL_2)
 
         self.assertEqual(station_w_l2.available_chargers[Charger.LEVEL_2], 1)
+
+    def test_has_available_charge(self):
+        station = mock_station()
+
+        self.assertEqual(station.has_available_charger(Charger.DCFC), True, 'station should have 1 DCFC charger')

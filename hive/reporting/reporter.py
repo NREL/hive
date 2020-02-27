@@ -13,7 +13,6 @@ class Reporter(ABC):
     def sim_log_file(self):
         pass
 
-
     @abstractmethod
     def log_sim_state(self, sim_state: 'SimulationState'):
         """
