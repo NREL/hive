@@ -67,12 +67,12 @@ def _run_step_in_context(env: Environment) -> Callable:
         if updated_sim.sim_time % (env.config.io.log_time_step * 60) == 0:
             env.reporter.log_sim_state(updated_sim)
 
-            if updated_sim.sim_time % 3600 == 0:
-                msg = f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds"
-                log.info(msg)
+            for report in reports:
+                env.reporter.sim_report(report)
 
-        for report in reports:
-            env.reporter.sim_report(report)
+        if updated_sim.sim_time % 3600 == 0:
+            msg = f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds"
+            log.info(msg)
 
         return updated_payload
 
