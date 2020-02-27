@@ -12,10 +12,10 @@ from hive.model import Vehicle
 from hive.state.simulation_state import SimulationState
 from hive.runner import load_simulation
 from hive.state.update import Update
+from hive.app.logging_config import LOGGING_CONFIG
 
+root_log = logging.getLogger()
 log = logging.getLogger(__name__)
-log.setLevel("INFO")
-log.addHandler(logging.StreamHandler(sys.stdout))
 
 
 def run() -> int:
@@ -32,24 +32,32 @@ def run() -> int:
 
     try:
         scenario_file = sys.argv[1]
-        log.info(f"attempting to load config: {scenario_file}")
 
         cwd = os.getcwd()
         scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
 
         sim, environment = load_simulation(scenario_path)
+
+        log_fh = logging.FileHandler(os.path.join(environment.sim_output_dir, 'run.log'))
+        formatter = logging.Formatter(LOGGING_CONFIG['formatters']['simple']['format'])
+        log_fh.setFormatter(formatter)
+        root_log.addHandler(log_fh)
+
+        log.info(f"successfully loaded config: {scenario_file}")
+
         update = Update.build(environment.config)
         initial_payload = RunnerPayload(sim, environment, update)
-        log.info("running HIVE")
 
         start = time.time()
         sim_result = LocalSimulationRunner.run(initial_payload)
-
         end = time.time()
+
         log.info("\n")
         log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
 
         _summary_stats(sim_result.s)
+
+        environment.reporter.sim_log_file.close()
 
         return 0
 
@@ -114,6 +122,7 @@ def _welcome_to_hive():
     """
 
     log.info(welcome)
+
 
 if __name__ == "__main__":
     run()

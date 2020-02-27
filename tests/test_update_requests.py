@@ -35,7 +35,7 @@ class TestUpdateRequestsFromFile(TestCase):
         test invariant: the below file resource exists
         """
         sim_time = 25920  # will pull in all requests with departure_time earlier than 720
-        expected_reqs, expected_reports = 7, 20
+        expected_reqs = 7
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
         config = mock_config(
             start_time="2019-01-09T00:00:00-07:00",
@@ -46,7 +46,6 @@ class TestUpdateRequestsFromFile(TestCase):
         rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
-        self.assertEqual(expected_reports, len(result.reports), "should have reported the add")
         self.assertEqual(expected_reqs, len(result.simulation_state.requests), "should have added the reqs")
         for req in result.simulation_state.requests.values():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")

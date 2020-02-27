@@ -4,11 +4,11 @@ from abc import abstractmethod
 from typing import Tuple, TYPE_CHECKING
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
-from hive.reporting.reporter import Reporter
 
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
     from hive.model.instruction import Instruction
+    from hive.runner.environment import Environment
 
 
 class DispatcherInterface(metaclass=ABCNamedTupleMeta):
@@ -20,11 +20,11 @@ class DispatcherInterface(metaclass=ABCNamedTupleMeta):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-            reporter: Reporter,
-    ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
+    ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...], Tuple[dict, ...]]:
         """
         Generates instructions for a given simulation state.
 
         :param simulation_state:
-        :return: the updated Dispatcher along with all instructions for this time step
+        :param env:
+        :return: the updated Dispatcher along with all instructions for this time step and reports
         """

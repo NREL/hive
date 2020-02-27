@@ -7,13 +7,17 @@ from hive.model.vehiclestate import VehicleState
 from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId
 from hive.model.energy.charger import Charger
 
+import logging
+
+log = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
 
 CHARGE_STATES = {VehicleState.CHARGING_STATION, VehicleState.CHARGING_BASE}
 
 
-def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> SimulationState:
+def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> Optional[SimulationState]:
     """
     Patch for condition in which a vehicle charge event is interrupted.
     TODO: Refactor this logic into some kind of exit method on a vehicle state that gets called on a transition.
@@ -35,17 +39,22 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
         if self.request_id not in sim_state.requests:
+            log.warning(f"request {self.request_id} not found in simulation ")
             return None
         request = sim_state.requests[self.request_id]
 
         if not vehicle.can_transition(VehicleState.DISPATCH_TRIP):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_TRIP')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
             sim_state = _return_charger_patch(sim_state, vehicle.id)
+            if not sim_state:
+                return None
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_TRIP)
 
@@ -58,6 +67,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
         vehicle = vehicle.assign_route(route)
 
         updated_sim_state = sim_state.modify_request(assigned_request).modify_vehicle(vehicle)
+
         return updated_sim_state
 
 
@@ -67,19 +77,25 @@ class ServeTripInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
         if self.request_id not in sim_state.requests:
+            log.warning(f"request {self.request_id} not found in simulation ")
             return None
         request = sim_state.requests[self.request_id]
         if not sim_state.vehicle_at_request(vehicle.id, request.id):
+            log.debug(f'vehicle {self.vehicle_id} cannot service trip {self.request_id}. not in the same location')
             return None
 
         if not vehicle.can_transition(VehicleState.SERVICING_TRIP):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to SERVICING_TRIP')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
             sim_state = _return_charger_patch(sim_state, vehicle.id)
+            if not sim_state:
+                return None
 
         vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
 
@@ -89,6 +105,8 @@ class ServeTripInstruction(NamedTuple, Instruction):
 
         vehicle = vehicle.assign_route(route)
         sim_boarded = sim_state.board_vehicle(request.id, vehicle.id)
+        if not sim_boarded:
+            return None
 
         updated_sim_state = sim_boarded.modify_vehicle(vehicle)
 
@@ -102,17 +120,22 @@ class DispatchStationInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
         if self.station_id not in sim_state.stations:
+            log.warning(f"station {self.station_id} not found in simulation ")
             return None
         station = sim_state.stations[self.station_id]
 
         if not vehicle.can_transition(VehicleState.DISPATCH_STATION):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_STATION')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
             sim_state = _return_charger_patch(sim_state, vehicle.id)
+            if not sim_state:
+                return None
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_STATION)
 
@@ -134,20 +157,25 @@ class ChargeStationInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
         if self.station_id not in sim_state.stations:
+            log.warning(f"station {self.station_id} not found in simulation ")
             return None
         station = sim_state.stations[self.station_id]
         if not station.has_available_charger(self.charger):
+            log.debug(f"vehicle {self.vehicle_id} can't charge at station {self.station_id}. no plugs available")
             return None
 
         if not vehicle.can_transition(VehicleState.CHARGING_STATION):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING_STATION')
             return None
         updated_vehicle = vehicle.transition(VehicleState.CHARGING_STATION).set_charge_intent(self.charger)
 
         at_location = sim_state.at_geoid(updated_vehicle.geoid)
         if not at_location['stations']:
+            log.debug(f"vehicle {self.vehicle_id} not at station {self.station_id}")
             return None
 
         station_less_charger = station.checkout_charger(self.charger)
@@ -163,20 +191,25 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
         if self.station_id not in sim_state.stations:
+            log.warning(f"station {self.station_id} not found in simulation ")
             return None
         station = sim_state.stations[self.station_id]
         if not station.has_available_charger(self.charger):
+            log.debug(f"vehicle {self.vehicle_id} can't charge at station {self.station_id}. no plugs available")
             return None
 
         if not vehicle.can_transition(VehicleState.CHARGING_BASE):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING_BASE')
             return None
         updated_vehicle = vehicle.set_charge_intent(self.charger).transition(VehicleState.CHARGING_BASE)
 
         at_location = sim_state.at_geoid(updated_vehicle.geoid)
-        if not at_location['bases']:
+        if not at_location['stations']:
+            log.debug(f"vehicle {self.vehicle_id} not at station {self.station_id}")
             return None
 
         station_less_charger = station.checkout_charger(self.charger)
@@ -191,14 +224,18 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
 
         if not vehicle.can_transition(VehicleState.DISPATCH_BASE):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_BASE')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
             sim_state = _return_charger_patch(sim_state, vehicle.id)
+            if not sim_state:
+                return None
 
         vehicle = vehicle.transition(VehicleState.DISPATCH_BASE)
 
@@ -219,14 +256,18 @@ class RepositionInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
 
         if not vehicle.can_transition(VehicleState.REPOSITIONING):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to REPOSITIONING')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
             sim_state = _return_charger_patch(sim_state, vehicle.id)
+            if not sim_state:
+                return None
 
         vehicle = vehicle.transition(VehicleState.REPOSITIONING)
 
@@ -246,18 +287,23 @@ class ReserveBaseInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
         if self.vehicle_id not in sim_state.vehicles:
+            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
             return None
         vehicle = sim_state.vehicles[self.vehicle_id]
 
         at_location = sim_state.at_geoid(vehicle.geoid)
         if not at_location['bases']:
+            log.debug(f"vehicle {self.vehicle_id} not at base")
             return None
 
         if not vehicle.can_transition(VehicleState.RESERVE_BASE):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to RESERVE_BASE')
             return None
 
         if vehicle.vehicle_state in CHARGE_STATES:
             sim_state = _return_charger_patch(sim_state, vehicle.id)
+            if not sim_state:
+                return None
 
         vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
         updated_sim_state = sim_state.modify_vehicle(vehicle)

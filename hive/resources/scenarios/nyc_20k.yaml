@@ -14,5 +14,10 @@ io:
   charging_price_file: nyc_fixed.csv
   geofence_file: nyc_single_polygon.geojson
   demand_forecast_file: nyc_demand.csv
-  vehicle_log: vehicle.log
-  run_log: run.log
+  road_network_file: nyc_manhattan.xml
+
+  log_vehicles: True
+  log_requests: True
+  log_stations: True
+  log_dispatcher: True
+

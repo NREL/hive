@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import Tuple, NamedTuple
 
 import random
-import json
 
 from h3 import h3
 
@@ -14,9 +13,8 @@ from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.model.roadnetwork import RoadNetwork
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
-from hive.reporting.reporter import Reporter
 from hive.util.helpers import H3Ops
-from hive.util.typealiases import GeoId, VehicleId
+from hive.util.typealiases import GeoId, VehicleId, SimTime
 
 
 class ManagedDispatcher(NamedTuple, DispatcherInterface):
@@ -36,7 +34,17 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             LOW_SOC_TRESHOLD=low_soc_threshold
         )
 
-    def _sample_random_location(self, road_network: RoadNetwork) -> GeoId:
+    @staticmethod
+    def _gen_report(instruction: Instruction, sim_time: SimTime) -> dict:
+        i_dict = instruction._asdict()
+        i_dict['sim_time'] = sim_time
+        i_dict['report_type'] = "dispatcher"
+        i_dict['instruction_type'] = instruction.__class__.__name__
+
+        return i_dict
+
+    @staticmethod
+    def _sample_random_location(road_network: RoadNetwork) -> GeoId:
         random_hex = random.choice(tuple(road_network.geofence.geofence_set))
         children = h3.h3_to_children(random_hex, road_network.sim_h3_resolution)
         return children.pop()
@@ -46,10 +54,16 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             fleet_state_target: FleetStateTarget,
             simulation_state: 'SimulationState',
             vehicle_ids_given_instructions: Tuple[VehicleId, ...],
-    ) -> Tuple[Instruction, ...]:
+    ) -> Tuple[Tuple[Instruction, ...], Tuple[dict, ...]]:
 
         fleet_state_instructions = ()
+        fleet_state_reports = ()
         active_target = fleet_state_target['ACTIVE']
+
+        report = self._gen_report(active_target, simulation_state.sim_time)
+
+        fleet_state_reports = fleet_state_reports + (report,)
+
         active_vehicles = [v for v in simulation_state.vehicles.values()
                            if v.vehicle_state in active_target.state_set
                            and v.id not in vehicle_ids_given_instructions]
@@ -93,28 +107,32 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                         vehicle_id=veh.id,
                         destination=nearest_base.geoid,
                     )
+
+                    report = self._gen_report(instruction, simulation_state.sim_time)
+                    fleet_state_reports = fleet_state_reports + (report,)
+
                     fleet_state_instructions = fleet_state_instructions + (instruction,)
                     vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
                 else:
                     # user set the max search radius too low
                     continue
 
-        return fleet_state_instructions
+        return fleet_state_instructions, fleet_state_reports
 
     def generate_instructions(self,
                               simulation_state: 'SimulationState',
-                              reporter: Reporter,
-                              ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...]]:
+                              ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...], Tuple[dict, ...]]:
         # TODO: a lot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
         #  too large. Should probably refactor.
         instructions = ()
+        reports = ()
         vehicle_ids_given_instructions = ()
 
         # 1. find vehicles that require charging
         low_soc_vehicles = [v for v in simulation_state.vehicles.values()
                             if v.energy_source.soc <= self.LOW_SOC_TRESHOLD
                             and v.vehicle_state != VehicleState.DISPATCH_STATION]
-        nearest_station = None
+
         for veh in low_soc_vehicles:
             nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                    entities=simulation_state.stations,
@@ -128,6 +146,9 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     station_id=nearest_station.id,
                     charger=Charger.DCFC,
                 )
+
+                report = self._gen_report(instruction, simulation_state.sim_time)
+                reports = reports + (report,)
 
                 instructions = instructions + (instruction,)
                 vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
@@ -169,21 +190,21 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     request_id=request.id,
                 )
 
+                report = self._gen_report(instruction, simulation_state.sim_time)
+                reports = reports + (report,)
+
                 instructions = instructions + (instruction,)
                 vehicle_ids_given_instructions = vehicle_ids_given_instructions + (nearest_vehicle.id,)
 
         # 3. try to meet active target set by fleet manager in 30 minute intervals
-        if simulation_state.sim_time % (15*60) == 0:
+        if simulation_state.sim_time % (15 * 60) == 0:
             _, fleet_state_target = self.manager.generate_fleet_target(simulation_state)
-            report = fleet_state_target['ACTIVE']._asdict()
-            report['type'] = 'fleet_state_target'
-            report['sim_time'] = simulation_state.sim_time
-            reporter.single_report(json.dumps(report, default=str))
-            fleet_state_instructions = self._handle_fleet_targets(
+            fleet_state_instructions, fleet_state_reports = self._handle_fleet_targets(
                 fleet_state_target,
                 simulation_state,
                 vehicle_ids_given_instructions,
             )
+            reports = reports + fleet_state_reports
             instructions = instructions + fleet_state_instructions
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
@@ -202,6 +223,10 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                     station_id=base.station_id,
                     charger=Charger.LEVEL_2,
                 )
+
+                report = self._gen_report(instruction, simulation_state.sim_time)
+                reports = reports + (report, )
+
                 instructions = instructions + (instruction,)
 
-        return self, instructions
+        return self, instructions, reports

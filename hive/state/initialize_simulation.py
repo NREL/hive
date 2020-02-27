@@ -7,7 +7,7 @@ import os
 from typing import Tuple, Dict
 
 import immutables
-from hive.reporting import DetailedReporter
+from hive.reporting import BasicReporter
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
@@ -25,12 +25,14 @@ from hive.util.helpers import DictOps
 
 
 def initialize_simulation(
-        config: HiveConfig
+        config: HiveConfig,
+        sim_output_dir: str,
 ) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
 
     :param config: the configuration of this run
+    :param sim_output_dir: the directory to write outputs
     :return: a SimulationState, or a SimulationStateError
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
@@ -38,11 +40,6 @@ def initialize_simulation(
     vehicles_file = resource_filename("hive.resources.vehicles", config.io.vehicles_file)
     bases_file = resource_filename("hive.resources.bases", config.io.bases_file)
     stations_file = resource_filename("hive.resources.stations", config.io.stations_file)
-
-    run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    sim_output_dir = os.path.join(config.io.working_directory, run_name)
-    if not os.path.isdir(sim_output_dir):
-        os.makedirs(sim_output_dir)
 
     if config.io.geofence_file:
         geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
@@ -68,8 +65,10 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
-    reporter = DetailedReporter(config.io, sim_output_dir)
-    env_initial = Environment(config=config, reporter=reporter)
+    if config.io.log_period_seconds < config.sim.timestep_duration_seconds:
+        raise RuntimeError("log time step must be greater than simulation time step")
+    reporter = BasicReporter(config.io, sim_output_dir)
+    env_initial = Environment(config=config, reporter=reporter, sim_output_dir=sim_output_dir)
 
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
     sim_with_bases = _build_bases(bases_file, sim_with_vehicles)
@@ -100,8 +99,8 @@ def _build_vehicles(
         veh = Vehicle.from_row(row, sim.road_network)
         updated_sim = sim.add_vehicle(veh)
 
-        if isinstance(updated_sim, Exception):
-            raise updated_sim
+        if not updated_sim:
+            return payload
         else:
             if row['powertrain_id'] not in env.powertrains and row['powercurve_id'] not in env.powercurves:
                 powertrain = build_powertrain(row['powertrain_id'])
@@ -141,8 +140,8 @@ def _build_bases(bases_file: str, simulation_state: SimulationState) -> Simulati
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
         base = Base.from_row(row, simulation_state.road_network)
         updated_sim = sim.add_base(base)
-        if isinstance(updated_sim, Exception):
-            raise updated_sim
+        if not updated_sim:
+            return updated_sim
         else:
             return updated_sim
 
@@ -171,8 +170,8 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
 
     def _add_station_unsafe(sim: SimulationState, station: Station) -> SimulationState:
         sim_with_station = sim.add_station(station)
-        if isinstance(sim_with_station, Exception):
-            raise sim_with_station
+        if not sim_with_station:
+            return sim
         else:
             return sim_with_station
 

@@ -9,7 +9,7 @@ from hive.state import SimulationState
 from hive.config import HiveConfig
 from hive.state import initialize_simulation
 
-log = logging.getLogger(__name__)
+run_log = logging.getLogger(__name__)
 
 
 def load_simulation(scenario_file_path: str) -> Tuple[SimulationState, Environment]:
@@ -22,18 +22,17 @@ def load_simulation(scenario_file_path: str) -> Tuple[SimulationState, Environme
     with open(scenario_file_path, 'r') as f:
         config_builder = yaml.safe_load(f)
 
-    config = HiveConfig.build(config_builder)
-    if isinstance(config, Exception):
-        log.error("attempted to load scenario config file but failed")
-        raise config
+    try:
+        config = HiveConfig.build(config_builder)
+    except Exception as e:
+        run_log.exception("attempted to load scenario config file but failed")
+        raise e
 
     run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     sim_output_dir = os.path.join(config.io.working_directory, run_name)
     if not os.path.isdir(sim_output_dir):
         os.makedirs(sim_output_dir)
 
-    log.info("initializing scenario")
-
-    simulation_state, environment = initialize_simulation(config)
+    simulation_state, environment = initialize_simulation(config, sim_output_dir)
 
     return simulation_state, environment

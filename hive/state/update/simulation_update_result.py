@@ -13,9 +13,9 @@ class SimulationUpdateResult(NamedTuple):
     :type reports: :py:obj:`Tuple[str, ...]`
     """
     simulation_state: 'SimulationState'
-    reports: Tuple[str, ...] = ()
+    reports: Tuple[dict, ...] = ()
 
-    def add_report(self, report: str) -> SimulationUpdateResult:
+    def add_report(self, report: dict) -> SimulationUpdateResult:
         """
         Adds a report to the update result.
 
@@ -24,7 +24,7 @@ class SimulationUpdateResult(NamedTuple):
         """
         return self._replace(reports=(report,) + self.reports)
 
-    def update_sim(self, sim: 'SimulationState', report: Optional[str] = None) -> SimulationUpdateResult:
+    def update_sim(self, sim: 'SimulationState', report: Optional[dict] = None) -> SimulationUpdateResult:
         """
         Update the simulation state within the SimulationUpdateResult with optional additional reports.
 

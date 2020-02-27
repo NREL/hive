@@ -6,7 +6,6 @@ import immutables
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.util.helpers import DictOps
-from hive.reporting.no_reporting import NoReporting
 
 if TYPE_CHECKING:
     from hive.reporting import Reporter
@@ -28,9 +27,11 @@ class Environment(NamedTuple):
     :type powercurves: :py:obj:`immutable.Map[PowercurveId, Powercurve]`
     """
     config: HiveConfig
-    reporter: Reporter = NoReporting()
+    reporter: Reporter
     powertrains: immutables.Map[PowertrainId, Powertrain] = immutables.Map()
     powercurves: immutables.Map[PowercurveId, Powercurve] = immutables.Map()
+
+    sim_output_dir: str = ""
 
     def add_powertrain(self, powertrain: Powertrain) -> Environment:
         """

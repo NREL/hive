@@ -5,6 +5,7 @@ sim:
   end_time: "1970-01-02T00:00:00-07:00" # 24 hours after the beginning of mountain time
 io:
   working_directory: denver_demo_outputs
+
   requests_file: denver_demo_requests.csv
   vehicles_file: denver_demo_vehicles.csv
   bases_file: denver_demo_bases.csv
@@ -14,6 +15,10 @@ io:
   geofence_file: downtown_denver.geojson
   demand_forecast_file: denver_demand.csv
   road_network_file: downtown_denver.xml
-  vehicle_log: vehicle.log
-  run_log: run.log
 
+  log_vehicles: False
+  log_requests: False
+  log_stations: False
+  log_dispatcher: True
+
+  log_period_seconds: 60

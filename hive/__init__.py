@@ -27,3 +27,7 @@ from hive.reporting import *
 from hive.runner import *
 from hive.state import *
 from hive.util import *
+
+from logging.config import dictConfig
+
+dictConfig(LOGGING_CONFIG)

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Tuple, Dict, Optional
 
 from hive.config import ConfigBuilder
+from hive.util.units import Seconds
 
 
 class IO(NamedTuple):
     working_directory: str
+
+    # Input files
     vehicles_file: str
     requests_file: str
     bases_file: str
@@ -17,32 +20,44 @@ class IO(NamedTuple):
     charging_price_file: Optional[str]
     demand_forecast_file: Optional[str]
 
-    run_log: Optional[str]
-    vehicle_log: Optional[str]
-    request_log: Optional[str]
+    log_vehicles: bool
+    log_requests: bool
+    log_stations: bool
+    log_dispatcher: bool
+    log_manager: bool
+
+    log_period_seconds: Seconds
+    progress_period_seconds: Seconds
 
     @classmethod
     def default_config(cls) -> Dict:
         return {
             'working_directory': "",
-            'run_log': None,
-            'vehicle_log': None,
-            'request_log': None,
+
             'road_network_file': None,
             'geofence_file': None,
             'rate_structure_file': None,
             'charging_price_file': None,
             'demand_forecast_file': None,
+
+            'log_vehicles': False,
+            'log_requests': False,
+            'log_stations': False,
+            'log_dispatcher': False,
+            'log_manager': False,
+
+            'log_period_seconds': 60,
+            'progress_period_seconds': 3600,
         }
 
     @classmethod
-    def required_config(cls) -> Dict[str, type]:
-        return {
-            'vehicles_file': str,
-            'requests_file': str,
-            'bases_file': str,
-            'stations_file': str,
-        }
+    def required_config(cls) -> Tuple[str, ...]:
+        return (
+            'vehicles_file',
+            'requests_file',
+            'bases_file',
+            'stations_file',
+        )
 
     @classmethod
     def build(cls, config: Dict = None) -> IO:
@@ -57,6 +72,7 @@ class IO(NamedTuple):
     def from_dict(cls, d: Dict) -> IO:
         return IO(
             working_directory=d['working_directory'],
+
             vehicles_file=d['vehicles_file'],
             requests_file=d['requests_file'],
             rate_structure_file=d['rate_structure_file'],
@@ -66,7 +82,14 @@ class IO(NamedTuple):
             stations_file=d['stations_file'],
             road_network_file=d['road_network_file'],
             geofence_file=d['geofence_file'],
-            run_log=d['run_log'],
-            vehicle_log=d['vehicle_log'],
-            request_log=d['request_log'],
+
+            log_vehicles=d['log_vehicles'],
+            log_requests=d['log_requests'],
+            log_stations=d['log_stations'],
+            log_dispatcher=d['log_dispatcher'],
+            log_manager=d['log_manager'],
+
+            log_period_seconds=d['log_period_seconds'],
+            progress_period_seconds=d['progress_period_seconds'],
+
         )
