@@ -3,19 +3,18 @@ from __future__ import annotations
 import functools as ft
 from csv import DictReader
 from typing import NamedTuple, Dict, Tuple, Optional, Union, Iterator
+from collections.abc import Iterable
 
 import immutables
 
+from hive.model.vehicle.vehicle_type.vehicle_type import VehicleType
+from hive.util.exception import CombinedException
 from hive.util.typealiases import VehicleTypeId
-from hive.model.vehicle import VehicleType
 
 
 class VehicleTypesTableBuilder(NamedTuple):
     errors: Tuple[Exception, ...] = ()
     result: immutables.Map[VehicleTypeId, VehicleType] = immutables.Map()
-
-    def has_errors(self) -> bool:
-        return len(self.errors) > 0
 
     def add_errors(self, errors: Tuple[Exception, ...]) -> VehicleTypesTableBuilder:
         return self._replace(errors=self.errors + errors)
@@ -24,6 +23,12 @@ class VehicleTypesTableBuilder(NamedTuple):
         return self._replace(
             result=self.result.update({vehicle_type_id: vehicle_type})
         )
+
+    def consolidate_errors(self) -> Optional[Exception]:
+        if len(self.errors) == 0:
+            return None
+        else:
+            return CombinedException(self.errors)
 
     @classmethod
     def build(cls, source: Union[str, Iterator[Dict[str, str]]]) -> VehicleTypesTableBuilder:
@@ -44,21 +49,32 @@ class VehicleTypesTableBuilder(NamedTuple):
             cap_err1, cap_str = safe_get('capacity_kwh', row)
             iel_err1, iel_str = safe_get('ideal_energy_limit_kwh', row)
             mca_err1, mca_str = safe_get('max_charge_acceptance_kw', row)
-            oc_err1, oc_str = safe_get('operating_cost', row)
+            oc_err1, oc_str = safe_get('operating_cost_km', row)
 
             # convert strings to floating point values
             cap_err2, cap_val = to_float(cap_str, "capacity_kwh")
             iel_err2, iel_val = to_float(iel_str, "ideal_energy_limit_kwh")
             mca_err2, mca_val = to_float(mca_str, "max_charge_acceptance_kw")
-            oc_err2, oc_val = to_float(oc_str, "operating_cost")
+            oc_err2, oc_val = to_float(oc_str, "operating_cost_km")
+
+            # combine any observed errors into a Tuple
+            # using this function to deal with
+            def _add_error_msg(err_accumulator: Optional[Tuple[Exception, ...]],
+                               err: Optional[Exception]) -> Optional[Tuple[Exception, ...]]:
+                if err_accumulator is not None and err is not None:
+                    return err_accumulator + (err, )
+                elif err_accumulator is None and err is not None:
+                    return (err, )
+                else:
+                    return err_accumulator
 
             errors = ft.reduce(
-                lambda t, err: t + err if err else t,
+                _add_error_msg,
                 (v_err, pt_err, pc_err, cap_err1, iel_err1, mca_err1, oc_err1, cap_err2, iel_err2, mca_err2, oc_err2),
-                ()
+                None
             )
 
-            if len(errors) > 0:
+            if errors is not None:
                 return acc.add_errors(errors)
             else:
                 vehicle_type = VehicleType(
@@ -67,7 +83,7 @@ class VehicleTypesTableBuilder(NamedTuple):
                     capacity_kwh=cap_val,
                     ideal_energy_limit_kwh=iel_val,
                     max_charge_acceptance=mca_val,
-                    operating_cost=oc_val
+                    operating_cost_km=oc_val
                 )
                 return acc.add_row(vehicle_type_id=vehicle_type_id, vehicle_type=vehicle_type)
 
@@ -84,16 +100,16 @@ class VehicleTypesTableBuilder(NamedTuple):
                 try:
                     return None, float(value)
                 except ValueError:
-                    detailed = ValueError(f"could not parse {column_name} value {value} as a number")
+                    detailed = ValueError(f"could not parse {column_name} value '{value}' as a number")
                     return detailed, None
 
         if isinstance(source, str):
             with open(source, 'r') as f:
                 reader = DictReader(f)
                 return ft.reduce(parse_row, reader, VehicleTypesTableBuilder())
-        elif isinstance(source, Dict):
+        elif isinstance(source, Iterable):
             return ft.reduce(parse_row, source, VehicleTypesTableBuilder())
         else:
             return VehicleTypesTableBuilder(
-                errors=(IOError(f"building vehicle types table but source has unexpected type {type(source)}, value {source} where it should be a string or an iterator"), )
+                errors=(IOError(f"building vehicle types table but source has unexpected type {type(source)}, value '{source}' where it should be a string or an iterator"), )
             )
