@@ -8,6 +8,7 @@ PowertrainId = str
 PowercurveId = str
 BaseId = str
 PassengerId = str
+VehicleTypeId = str
 
 # POSITIONAL
 GeoId = str  # h3 geohash
