@@ -105,23 +105,23 @@ def _build_vehicles(
             row: Dict[str, str]) -> Tuple[SimulationState, Environment]:
 
         sim, env = payload
-        veh = Vehicle.from_row(row, sim.road_network)
+        veh = Vehicle.from_row(row, sim.road_network, env)
         updated_sim = sim.add_vehicle(veh)
 
         if not updated_sim:
             return payload
         else:
-            if row['powertrain_id'] not in env.powertrains and row['powercurve_id'] not in env.powercurves:
-                powertrain = build_powertrain(row['powertrain_id'])
-                powercurve = build_powercurve(row['powercurve_id'])
+            if veh.powertrain_id not in env.powertrains and veh.powercurve_id not in env.powercurves:
+                powertrain = build_powertrain(veh.powertrain_id)
+                powercurve = build_powercurve(veh.powercurve_id)
                 updated_env = env.add_powercurve(powercurve).add_powertrain(powertrain)
                 return updated_sim, updated_env
-            elif row['powertrain_id'] not in env.powertrains:
-                powertrain = build_powertrain(row['powertrain_id'])
+            elif veh.powertrain_id not in env.powertrains:
+                powertrain = build_powertrain(veh.powertrain_id)
                 updated_env = env.add_powertrain(powertrain)
                 return updated_sim, updated_env
-            elif row['powercurve_id'] not in env.powercurves:
-                powercurve = build_powercurve(row['powercurve_id'])
+            elif veh.powercurve_id not in env.powercurves:
+                powercurve = build_powercurve(veh.powercurve_id)
                 updated_env = env.add_powercurve(powercurve)
                 return updated_sim, updated_env
             else:

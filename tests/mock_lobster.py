@@ -287,7 +287,8 @@ def mock_vehicle_from_geoid(
         soc: Ratio = 0.25,
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
-        road_network: RoadNetwork = mock_network(h3_res=15)
+        road_network: RoadNetwork = mock_network(h3_res=15),
+        operating_cost_km: Currency = 0.1
 ) -> Vehicle:
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
@@ -304,7 +305,8 @@ def mock_vehicle_from_geoid(
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         energy_source=energy_source,
-        link=link
+        link=link,
+        operating_cost_km=operating_cost_km
     )
 
 

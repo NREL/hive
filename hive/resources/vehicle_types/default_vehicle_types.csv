@@ -1,2 +1,2 @@
 vehicle_type_id,powertrain_id,powercurve_id,capacity_kwh,ideal_energy_limit_kwh,max_charge_acceptance_kw,operating_cost_km
-leaf_50,leaf,leaf,50,40,50,0.1
+leaf_50,leaf,leaf,50,40,50,0.31
