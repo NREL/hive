@@ -190,12 +190,19 @@ class SimulationState(NamedTuple):
         if not isinstance(vehicle_id, VehicleId):
             log.error(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
             return None
-        if vehicle_id not in self.vehicles:
+
+        vehicle = self.vehicles.get(vehicle_id)
+
+        if vehicle is None:
             log.error(f"attempting to update vehicle {vehicle_id} which is not in simulation")
             return None
 
+        if vehicle.vehicle_state == VehicleState.OUT_OF_SERVICE:
+            # until we implement a transition strategy, we will simply
+            # block any stepping of out-of-service vehicles here
+            return None
+
         # Handle terminal state instant effects.
-        vehicle = self.vehicles[vehicle_id]
         effect_args = TerminalStateEffectArgs(self, vehicle_id)
         sim_state_w_effects: SimulationState = TerminalStateEffectOps.switch(vehicle.vehicle_state, effect_args)
 

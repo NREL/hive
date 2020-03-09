@@ -570,3 +570,25 @@ class TestSimulationState(TestCase):
         self.assertEqual(fully_charged_veh.vehicle_state,
                          VehicleState.RESERVE_BASE,
                          "Vehicle should have transitioned to RESERVE_BASE")
+
+    def test_vehicle_runs_out_of_energy(self):
+
+        low_energy_veh = mock_vehicle_from_geoid(soc=0.01)
+        sim = mock_sim().add_vehicle(low_energy_veh)
+
+        # costs a fixed 10 kwh to make any movement
+        env = mock_env(powertrains={DefaultIds.mock_powertrain_id(): mock_powertrain(energy_cost_kwh=10)})
+
+        inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
+        instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), inbox_cafe_in_torvet_julianehab_greenland)
+        sim_instructed = instruction.apply_instruction(sim)
+
+        self.assertIsNotNone(sim_instructed, "test invariant failed - should be able to reposition default vehicle")
+
+        # one movement takes more energy than this agent has
+        sim_out_of_order = step_simulation(sim_instructed, env)
+
+        veh_result = sim_out_of_order.vehicles.get(DefaultIds.mock_vehicle_id())
+        self.assertIsNotNone(veh_result, "stepped vehicle should have advanced the simulation state")
+        self.assertEquals(veh_result.vehicle_state, VehicleState.OUT_OF_SERVICE,
+                          "should have landed in out of service state")
