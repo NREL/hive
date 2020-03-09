@@ -40,6 +40,8 @@ as a road network.
 - [immutables](https://github.com/MagicStack/immutables)
 - [networkx](https://github.com/networkx/networkx)
 
+Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/). See [this link](https://github.com/uber/h3-py#installing-on-windows) for windows installation instructions.
+
 While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being
 used to interpolate tabular data. Osmnx is being used to interact with open street maps.  
 
@@ -146,7 +148,7 @@ FLEET    CURRENCY BALANCE:             $ 11945.64
 
 HIVE intends to implement the following features:
 
-- Routing from OSM networks with time-varying speeds
+- [x] Routing from OSM networks with time-varying speeds
 - Revised trip energy & recharging
 - Fleet control algorithms from literature for more optimal control
 - Gasoline vehicles
