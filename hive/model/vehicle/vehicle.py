@@ -205,32 +205,34 @@ class Vehicle(NamedTuple):
             return no_route_veh
 
         experienced_route = traverse_result.experienced_route
-
         energy_used = power_train.energy_cost(experienced_route)
         step_distance_km = traverse_result.traversal_distance_km
-
-        updated_energy_source = self.energy_source.use_energy(energy_used)
-        less_energy_vehicle = self.battery_swap(updated_energy_source)
-
         remaining_route = traverse_result.remaining_route
 
-        new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
+        # todo: we allow the agent to traverse only bounded by time, not energy;
+        #   so, it is possible for the vehicle to travel farther in a time step than
+        #   they have fuel to travel. this can create an error on the location of
+        #   any agents at the time step where they run out of fuel. feels like an
+        #   acceptable edge case but we could improve. rjf 20200309
 
-        if not remaining_route:
+        updated_energy_source = self.energy_source.use_energy(energy_used)
+        less_energy_vehicle = self._replace(energy_source=updated_energy_source).assign_route(remaining_route)
+        updated_vehicle = less_energy_vehicle.transition(
+            VehicleState.OUT_OF_SERVICE) if updated_energy_source.is_empty() else less_energy_vehicle
+
+        if not updated_vehicle:
+            return None
+        elif not remaining_route:
             geoid = experienced_route[-1].end
-            updated_location_vehicle = new_route_vehicle._replace(
+            return updated_vehicle._replace(
                 link=road_network.link_from_geoid(geoid),
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
-
             )
         else:
-            updated_location_vehicle = new_route_vehicle._replace(
+            return updated_vehicle._replace(
                 link=remaining_route[0],
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
-
             )
-
-        return updated_location_vehicle
 
     def idle(self, time_step_seconds: Seconds) -> Vehicle:
         """
@@ -264,6 +266,8 @@ class Vehicle(NamedTuple):
             raise TypeError("Invalid vehicle state type.")
         elif self.vehicle_state == vehicle_state:
             return False
+        elif self.vehicle_state == VehicleState.OUT_OF_SERVICE:
+            return False
         elif self.has_passengers():
             return False
         else:
@@ -282,7 +286,12 @@ class Vehicle(NamedTuple):
         elif self.can_transition(vehicle_state):
             transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
 
-            if previous_vehicle_state == VehicleState.IDLE:
+            if vehicle_state == VehicleState.OUT_OF_SERVICE:
+                # todo: do something with passengers? for now, they just get stranded
+                return transitioned_vehicle._replace(
+                    route=()
+                )
+            elif previous_vehicle_state == VehicleState.IDLE:
                 # end of idling
                 return transitioned_vehicle._reset_idle_stats()
             elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
@@ -388,4 +397,3 @@ class Vehicle(NamedTuple):
         :return: the updated Vehicle
         """
         return self._replace(balance=self.balance + amount)
-

@@ -21,6 +21,8 @@ class VehicleState(Enum):
     # CHARGING
     DISPATCH_STATION = 7
     CHARGING_STATION = 8
+    # MISC
+    OUT_OF_SERVICE = 9
 
     @classmethod
     def is_valid(cls, state) -> bool:
@@ -42,7 +44,8 @@ _VALID_VEHICLE_STATES = frozenset([
     VehicleState.DISPATCH_STATION,
     VehicleState.CHARGING_STATION,
     VehicleState.REPOSITIONING,
-    VehicleState.SERVICING_TRIP
+    VehicleState.SERVICING_TRIP,
+    VehicleState.OUT_OF_SERVICE
 ])
 
 
@@ -74,5 +77,6 @@ _VEHICLE_STATE_CATEGORY = {
     VehicleState.DISPATCH_TRIP: VehicleStateCategory.MOVE,
     VehicleState.SERVICING_TRIP: VehicleStateCategory.MOVE,
     VehicleState.DISPATCH_STATION: VehicleStateCategory.MOVE,
-    VehicleState.CHARGING_STATION: VehicleStateCategory.CHARGE
+    VehicleState.CHARGING_STATION: VehicleStateCategory.CHARGE,
+    VehicleState.OUT_OF_SERVICE: VehicleStateCategory.DO_NOTHING
 }
