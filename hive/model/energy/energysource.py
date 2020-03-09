@@ -123,9 +123,8 @@ class EnergySource(NamedTuple):
         :param fuel_used: fuel used in kilowatt-hours
         :return: the updated energy source
         """
-        # slip out of units to make computation faster
-        updated_energy = (self.energy_kwh - fuel_used)
-        assert updated_energy >= 0.0, StateOfChargeError("Battery fell below 0% SoC")
+        # prevent falling below zero units of fuel
+        updated_energy = max((self.energy_kwh - fuel_used), 0.0)
         return self._replace(energy_kwh=updated_energy)
 
     def load_energy(self, fuel_gained_kwh: KwH) -> EnergySource:
