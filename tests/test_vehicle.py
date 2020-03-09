@@ -195,23 +195,24 @@ class TestVehicle(TestCase):
         self.assertEqual(dispatch_vehicle.idle_time_seconds, 0, "Should have reset idle time.")
 
     def test_from_row(self):
-        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
-                    v1,39.7539,-104.976,leaf,leaf,50.0,40,50,1.0"""
+        source = """vehicle_id,lat,lon,vehicle_type_id,initial_soc
+                    v1,39.7539,-104.976,vt0,1.0"""
 
         row = next(DictReader(source.split()))
         road_network = mock_network()
+        env = mock_env()
         expected_geoid = h3.geo_to_h3(39.7539, -104.976, road_network.sim_h3_resolution)
 
-        vehicle = Vehicle.from_row(row, road_network)
+        vehicle = Vehicle.from_row(row, road_network, env)
 
         self.assertEqual(vehicle.id, "v1")
         self.assertEqual(vehicle.geoid, expected_geoid)
-        self.assertEqual(vehicle.powercurve_id, 'leaf')
-        self.assertEqual(vehicle.powertrain_id, 'leaf')
-        self.assertEqual(vehicle.energy_source.powercurve_id, 'leaf')
-        self.assertEqual(vehicle.energy_source.ideal_energy_limit_kwh, 40.0)
-        self.assertEqual(vehicle.energy_source.energy_kwh, 50.0)
-        self.assertEqual(vehicle.energy_source.capacity_kwh, 50.0)
+        self.assertEqual(vehicle.powercurve_id, 'pc0')
+        self.assertEqual(vehicle.powertrain_id, 'pt0')
+        self.assertEqual(vehicle.energy_source.powercurve_id, 'pc0')
+        self.assertEqual(vehicle.energy_source.ideal_energy_limit_kwh, 50.0)
+        self.assertEqual(vehicle.energy_source.energy_kwh, 100.0)
+        self.assertEqual(vehicle.energy_source.capacity_kwh, 100.0)
         self.assertEqual(vehicle.energy_source.energy_type, EnergyType.ELECTRIC)
         self.assertEqual(vehicle.energy_source.max_charge_acceptance_kw, 50.0)
         self.assertEqual(len(vehicle.passengers), 0)
@@ -222,22 +223,13 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.route, ())
         self.assertEqual(vehicle.charger_intent, None)
 
-    def test_from_row_bad_powertrain_id(self):
-        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
-                    v1,39.7539,-104.976,beef!@#$,leaf,50.0,40,50,1.0"""
+    def test_from_row_bad_vehicle_type_id(self):
+        source = """vehicle_id,lat,lon,vehicle_type_id,initial_soc
+                    v1,39.7539,-104.976,beef!@#$,1.0"""
 
         row = next(DictReader(source.split()))
         road_network = mock_network()
+        env = mock_env()
 
         with self.assertRaises(IOError):
-            Vehicle.from_row(row, road_network)
-
-    def test_from_row_bad_powercurve_id(self):
-        source = """vehicle_id,lat,lon,powertrain_id,powercurve_id,capacity,ideal_energy_limit,max_charge_acceptance,initial_soc
-                    v1,39.7539,-104.976,leaf,asdjfkl;asdfjkl;,50.0,40,50,1.0"""
-
-        row = next(DictReader(source.split()))
-        road_network = mock_network()
-
-        with self.assertRaises(IOError):
-            Vehicle.from_row(row, road_network)
+            Vehicle.from_row(row, road_network, env)

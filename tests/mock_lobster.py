@@ -25,6 +25,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
+from hive.model.vehicle import VehicleTypesTableBuilder, VehicleType
 from hive.model.vehiclestate import VehicleState
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
@@ -61,6 +62,10 @@ class DefaultIds:
     @classmethod
     def mock_powercurve_id(cls) -> PowercurveId:
         return "pc0"
+
+    @classmethod
+    def mock_vehicle_type_id(cls) -> VehicleTypeId:
+        return "vt0"
 
 
 def mock_geojson() -> Dict:
@@ -220,6 +225,22 @@ def mock_request_from_geoids(
     )
 
 
+def mock_vehicle_type(powertrain_id: str = DefaultIds.mock_powertrain_id(),
+                      powercurve_id: str = DefaultIds.mock_powercurve_id(),
+                      capacity_kwh: KwH = 100,
+                      ideal_energy_limit_kwh=50.0,
+                      max_charge_acceptance_kw: Kw = 50.0,
+                      operating_cost_km: Currency = 0.1, ) -> VehicleType:
+    return VehicleType(
+        powertrain_id=powertrain_id,
+        powercurve_id=powercurve_id,
+        capacity_kwh=capacity_kwh,
+        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
+        max_charge_acceptance=max_charge_acceptance_kw,
+        operating_cost_km=operating_cost_km
+    )
+
+
 def mock_vehicle(
         vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
         lat: float = 39.7539,
@@ -232,6 +253,7 @@ def mock_vehicle(
         soc: Ratio = 0.25,
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
+        operating_cost_km: Currency = 0.1,
 
 ) -> Vehicle:
     road_network = mock_network(h3_res)
@@ -250,7 +272,8 @@ def mock_vehicle(
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         energy_source=energy_source,
-        link=link
+        link=link,
+        operating_cost_km=operating_cost_km
     )
 
 
@@ -264,7 +287,8 @@ def mock_vehicle_from_geoid(
         soc: Ratio = 0.25,
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
-        road_network: RoadNetwork = mock_network(h3_res=15)
+        road_network: RoadNetwork = mock_network(h3_res=15),
+        operating_cost_km: Currency = 0.1
 ) -> Vehicle:
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
@@ -281,7 +305,8 @@ def mock_vehicle_from_geoid(
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         energy_source=energy_source,
-        link=link
+        link=link,
+        operating_cost_km=operating_cost_km
     )
 
 
@@ -379,6 +404,7 @@ def mock_config(
             'rate_structure_file': '',
             'bases_file': '',
             'stations_file': '',
+            'vehicle_types_file': 'default_vehicle_types.csv',
             'geofence_file': 'downtown_denver.geojson',
             'demand_forecast_file': 'nyc_demand.csv'
         }
@@ -388,20 +414,15 @@ def mock_config(
 
 def mock_env(
         config: HiveConfig = mock_config(),
-        powercurves: Optional[Dict[PowercurveId, Powercurve]] = None,
-        powertrains: Optional[Dict[PowertrainId, Powertrain]] = None,
 ) -> Environment:
-    if powercurves is None:
-        powercurves = immutables.Map({mock_powercurve().get_id(): mock_powercurve()})
-    if powertrains is None:
-        powertrains = immutables.Map({mock_powertrain().get_id(): mock_powertrain()})
+    vehicle_types = immutables.Map({DefaultIds.mock_vehicle_type_id(): mock_vehicle_type()})
 
     env = Environment(
         config=config,
         reporter=mock_reporter(),
-        powertrains=powertrains,
-        powercurves=powercurves,
-    )
+        vehicle_types=vehicle_types
+    ).add_powercurve(mock_powercurve()).add_powertrain(mock_powertrain())
+
     return env
 
 
@@ -416,6 +437,7 @@ def mock_reporter() -> Reporter:
 
         def sim_report(self, report: dict):
             pass
+
         def single_report(self, report: str):
             pass
 
@@ -457,7 +479,6 @@ def mock_haversine_zigzag_route(
             end=end,
             distance_km=distance_km,
             speed_kmph=speed_kmph,
-            travel_time_seconds=hours_to_seconds(distance_km / speed_kmph),
         )
         return acc + (link,)
 
@@ -563,7 +584,6 @@ def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
             return self, fleet_state_target
 
     return MockManager(forecaster=forecaster)
-
 
 
 def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:

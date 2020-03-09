@@ -14,6 +14,7 @@ class IO(NamedTuple):
     requests_file: str
     bases_file: str
     stations_file: str
+    vehicle_types_file: str
     road_network_file: Optional[str]
     geofence_file: Optional[str]
     rate_structure_file: Optional[str]
@@ -57,6 +58,7 @@ class IO(NamedTuple):
             'requests_file',
             'bases_file',
             'stations_file',
+            'vehicle_types_file'
         )
 
     @classmethod
@@ -72,14 +74,14 @@ class IO(NamedTuple):
     def from_dict(cls, d: Dict) -> IO:
         return IO(
             working_directory=d['working_directory'],
-
             vehicles_file=d['vehicles_file'],
             requests_file=d['requests_file'],
+            bases_file=d['bases_file'],
+            stations_file=d['stations_file'],
+            vehicle_types_file=d['vehicle_types_file'],
             rate_structure_file=d['rate_structure_file'],
             charging_price_file=d['charging_price_file'],
             demand_forecast_file=d['demand_forecast_file'],
-            bases_file=d['bases_file'],
-            stations_file=d['stations_file'],
             road_network_file=d['road_network_file'],
             geofence_file=d['geofence_file'],
 

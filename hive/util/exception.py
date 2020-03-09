@@ -1,3 +1,6 @@
+from typing import Tuple
+import functools as ft
+
 class StateTransitionError(Exception):
     """
     calls out a breach in the simulation's physics observed when
@@ -96,3 +99,20 @@ class H3Error(Exception):
 
     def __str__(self):
         return repr(self.message)
+
+
+class CombinedException(Exception):
+    """
+    a bundle of errors which can be raised as a single Exception
+    """
+
+    def __init__(self, errors: Tuple[Exception, ...]):
+        self.errors = errors
+
+    def __str__(self):
+        combined = ft.reduce(
+            lambda acc, err: acc + f"{err.message}\n",
+            self.errors,
+            ""
+        )
+        return repr(combined)

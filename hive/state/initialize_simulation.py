@@ -19,6 +19,7 @@ from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle_type import VehicleTypesTableBuilder
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.util.helpers import DictOps
@@ -40,6 +41,7 @@ def initialize_simulation(
     vehicles_file = resource_filename("hive.resources.vehicles", config.io.vehicles_file)
     bases_file = resource_filename("hive.resources.bases", config.io.bases_file)
     stations_file = resource_filename("hive.resources.stations", config.io.stations_file)
+    vehicle_types_file = resource_filename("hive.resources.vehicle_types", config.io.vehicle_types_file)
 
     if config.io.geofence_file:
         geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
@@ -68,7 +70,14 @@ def initialize_simulation(
     if config.io.log_period_seconds < config.sim.timestep_duration_seconds:
         raise RuntimeError("log time step must be greater than simulation time step")
     reporter = BasicReporter(config.io, sim_output_dir)
-    env_initial = Environment(config=config, reporter=reporter, sim_output_dir=sim_output_dir)
+    vehicle_types_table_builder = VehicleTypesTableBuilder.build(vehicle_types_file)
+    vehicle_types_errors = vehicle_types_table_builder.consolidate_errors()
+    if vehicle_types_errors is not None:
+        raise vehicle_types_errors
+    env_initial = Environment(config=config,
+                              reporter=reporter,
+                              vehicle_types=vehicle_types_table_builder.result,
+                              sim_output_dir=sim_output_dir)
 
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
     sim_with_bases = _build_bases(bases_file, sim_with_vehicles)
@@ -96,23 +105,23 @@ def _build_vehicles(
             row: Dict[str, str]) -> Tuple[SimulationState, Environment]:
 
         sim, env = payload
-        veh = Vehicle.from_row(row, sim.road_network)
+        veh = Vehicle.from_row(row, sim.road_network, env)
         updated_sim = sim.add_vehicle(veh)
 
         if not updated_sim:
             return payload
         else:
-            if row['powertrain_id'] not in env.powertrains and row['powercurve_id'] not in env.powercurves:
-                powertrain = build_powertrain(row['powertrain_id'])
-                powercurve = build_powercurve(row['powercurve_id'])
+            if veh.powertrain_id not in env.powertrains and veh.powercurve_id not in env.powercurves:
+                powertrain = build_powertrain(veh.powertrain_id)
+                powercurve = build_powercurve(veh.powercurve_id)
                 updated_env = env.add_powercurve(powercurve).add_powertrain(powertrain)
                 return updated_sim, updated_env
-            elif row['powertrain_id'] not in env.powertrains:
-                powertrain = build_powertrain(row['powertrain_id'])
+            elif veh.powertrain_id not in env.powertrains:
+                powertrain = build_powertrain(veh.powertrain_id)
                 updated_env = env.add_powertrain(powertrain)
                 return updated_sim, updated_env
-            elif row['powercurve_id'] not in env.powercurves:
-                powercurve = build_powercurve(row['powercurve_id'])
+            elif veh.powercurve_id not in env.powercurves:
+                powercurve = build_powercurve(veh.powercurve_id)
                 updated_env = env.add_powercurve(powercurve)
                 return updated_sim, updated_env
             else:

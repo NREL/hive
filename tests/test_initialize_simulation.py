@@ -26,6 +26,7 @@ class TestInitializeSimulation(TestCase):
                     "vehicles_file": "denver_demo_vehicles.csv",
                     "bases_file": "denver_demo_bases.csv",
                     "stations_file": "denver_demo_stations.csv",
+                    "vehicle_types_file": "default_vehicle_types.csv",
                     "geofence_file": "downtown_denver.geojson",
                 }
             }

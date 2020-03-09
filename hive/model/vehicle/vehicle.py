@@ -5,6 +5,9 @@ from typing import NamedTuple, Dict, Optional
 import immutables
 from h3 import h3
 
+from hive.model.vehicle.vehicle_type import VehicleType
+from hive.runner.environment import Environment
+
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.passenger import Passenger
@@ -33,10 +36,10 @@ class Vehicle(NamedTuple):
     :type powercurve_id: :py:obj:`PowercurveId`
     :param energy_source: The energy source for the vehicle
     :type energy_source: :py:obj:`EnergySource`
-    :param geoid: The current location of the vehicle
-    :type geoid: :py:obj:`GeoId`
-    :param property_link: The current location of the vehicle on the road network
-    :type property_link: :py:obj:`PropertyLink`
+    :param link: The current location of the vehicle
+    :type link: :py:obj:`Link`
+    :param operating_cost_km: the operating cost per kilometer of this vehicle
+    :type operating_cost_km: :py:obj:`Currency`
     :param route: The route of the vehicle. Could be empty.
     :type route: :py:obj:`Route`
     :param vehicle_state: The state that the vehicle is in.
@@ -56,6 +59,7 @@ class Vehicle(NamedTuple):
     powercurve_id: PowercurveId
     energy_source: EnergySource
     link: Link
+    operating_cost_km: Currency
 
     # vehicle planning/operational properties
     route: Route = ()
@@ -73,13 +77,14 @@ class Vehicle(NamedTuple):
         return self.link.start
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Vehicle:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork, env: Environment) -> Vehicle:
         """
         reads a csv row from file to generate a Vehicle
 
         :param row: a row of a .csv which matches hive.util.pattern.vehicle_regex.
         this string will be stripped of whitespace characters (no spaces allowed in names!)
         :param road_network: the road network, used to find the vehicle's location in the sim
+        :param env: the scenario environment
         :return: a vehicle, or, an IOError if failure occurred.
         """
 
@@ -89,34 +94,39 @@ class Vehicle(NamedTuple):
             raise IOError("cannot load a vehicle without a 'lat'")
         elif 'lon' not in row:
             raise IOError("cannot load a vehicle without a 'lon'")
-        elif 'powertrain_id' not in row:
-            raise IOError("cannot load a vehicle without a 'powertrain_id'")
-        elif 'powercurve_id' not in row:
-            raise IOError("cannot load a vehicle without a 'powercurve_id'")
-        elif 'capacity' not in row:
-            raise IOError("cannot load a vehicle without a 'capacity'")
-        elif 'ideal_energy_limit' not in row:
-            raise IOError("cannot load a vehicle without a 'ideal_energy_limit'")
-        elif 'max_charge_acceptance' not in row:
-            raise IOError("cannot load a vehicle without a 'max_charge_acceptance'")
-        elif 'initial_soc' not in row:
-            raise IOError("cannot load a vehicle without a 'initial_soc'")
-        elif row['powertrain_id'] not in powertrain_models.keys():
-            raise IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
-        elif row['powercurve_id'] not in powercurve_models.keys():
-            raise IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
+        # elif 'powertrain_id' not in row:
+        #     raise IOError("cannot load a vehicle without a 'powertrain_id'")
+        # elif 'powercurve_id' not in row:
+        #     raise IOError("cannot load a vehicle without a 'powercurve_id'")
+        # elif 'capacity' not in row:
+        #     raise IOError("cannot load a vehicle without a 'capacity'")
+        # elif 'ideal_energy_limit' not in row:
+        #     raise IOError("cannot load a vehicle without a 'ideal_energy_limit'")
+        # elif 'max_charge_acceptance' not in row:
+        #     raise IOError("cannot load a vehicle without a 'max_charge_acceptance'")
+        # elif 'initial_soc' not in row:
+        #     raise IOError("cannot load a vehicle without a 'initial_soc'")
+        # elif row['powertrain_id'] not in powertrain_models.keys():
+        #     raise IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
+        # elif row['powercurve_id'] not in powercurve_models.keys():
+        #     raise IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
         else:
             try:
                 vehicle_id = row['vehicle_id']
                 lat = float(row['lat'])
                 lon = float(row['lon'])
-                powertrain_id = row['powertrain_id']
-                powercurve_id = row['powercurve_id']
-                energy_type = powercurve_energy_types[powercurve_id]
-                capacity = float(row['capacity'])
-                iel_str = row['ideal_energy_limit']
-                ideal_energy_limit = float(iel_str) if len(iel_str) > 0 else None
-                max_charge_acceptance = float(row['max_charge_acceptance'])
+                vehicle_type_id = row['vehicle_type_id']
+                vehicle_type: VehicleType = env.vehicle_types.get(vehicle_type_id)
+                if vehicle_type is None:
+                    file = env.config.io.vehicle_types_file
+                    raise IOError(f"cannot find vehicle_type {vehicle_type_id} in provided vehicle_type_file {file}")
+                powertrain_id = vehicle_type.powertrain_id
+                powercurve_id = vehicle_type.powercurve_id
+                energy_type = env.energy_types.get(powercurve_id)
+                capacity = vehicle_type.capacity_kwh
+                ideal_energy_limit = vehicle_type.ideal_energy_limit_kwh
+                max_charge_acceptance = vehicle_type.max_charge_acceptance
+                operating_cost_km = vehicle_type.operating_cost_km
                 initial_soc = float(row['initial_soc'])
 
                 if not 0.0 <= initial_soc <= 1.0:
@@ -138,6 +148,7 @@ class Vehicle(NamedTuple):
                     powercurve_id=powercurve_id,
                     energy_source=energy_source,
                     link=start_link,
+                    operating_cost_km=operating_cost_km
                 )
 
             except ValueError:
