@@ -414,14 +414,23 @@ def mock_config(
 
 def mock_env(
         config: HiveConfig = mock_config(),
+        powercurves: Optional[Tuple[Powercurve, ...]] = None,
+        powertrains: Optional[Tuple[Powertrain, ...]] = None
 ) -> Environment:
+    if powercurves is None:
+        powercurves = (mock_powercurve(), )
+    if powertrains is None:
+        powertrains = (mock_powertrain(), )
     vehicle_types = immutables.Map({DefaultIds.mock_vehicle_type_id(): mock_vehicle_type()})
 
-    env = Environment(
+    initial_env = Environment(
         config=config,
         reporter=mock_reporter(),
         vehicle_types=vehicle_types
-    ).add_powercurve(mock_powercurve()).add_powertrain(mock_powertrain())
+    )
+
+    env_pc = ft.reduce(lambda e, pc: e.add_powercurve(pc), powercurves, initial_env)
+    env = ft.reduce(lambda e, pt: e.add_powertrain(pt), powertrains, env_pc)
 
     return env
 

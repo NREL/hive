@@ -577,7 +577,7 @@ class TestSimulationState(TestCase):
         sim = mock_sim().add_vehicle(low_energy_veh)
 
         # costs a fixed 10 kwh to make any movement
-        env = mock_env(powertrains={DefaultIds.mock_powertrain_id(): mock_powertrain(energy_cost_kwh=10)})
+        env = mock_env(powertrains=(mock_powertrain(energy_cost_kwh=10), ))
 
         inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
         instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), inbox_cafe_in_torvet_julianehab_greenland)
