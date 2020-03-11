@@ -19,11 +19,15 @@ infrastructure, levels of service, and additional energy outcomes. Developed in
 agent-based model that simulates MaaS operations over real world trip data.
 """
 
-import hive.app
-import hive.config
-import hive.dispatcher
-import hive.model
-import hive.reporting
-import hive.runner
-import hive.state
-import hive.util
+from hive.app import *
+from hive.config import *
+from hive.dispatcher import *
+from hive.model import *
+from hive.reporting import *
+from hive.runner import *
+from hive.state import *
+from hive.util import *
+
+from logging.config import dictConfig
+
+dictConfig(LOGGING_CONFIG)

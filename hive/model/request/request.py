@@ -3,14 +3,15 @@ from h3 import h3
 from typing import NamedTuple, Optional, Dict, Union, TYPE_CHECKING
 
 from hive.model.passenger import Passenger, create_passenger_id
-from hive.runner.environment import Environment
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.link import Link
 from hive.util.typealiases import *
 from hive.util.parsers import time_parser
-from hive.util.units import Currency, KM_TO_MILE
-from hive.util.helpers import H3Ops
+from hive.util.units import Currency, KM_TO_MILE, Kilometers
 
 if TYPE_CHECKING:
     from hive.model.request import RequestRateStructure
+    from hive.runner.environment import Environment
 
 
 class Request(NamedTuple):
@@ -39,8 +40,8 @@ class Request(NamedTuple):
     :type dispatched_vehicle_time: :py:obj:`Optional[SimTime]`
     """
     id: RequestId
-    origin: GeoId
-    destination: GeoId
+    origin_link: Link
+    destination_link: Link
     departure_time: SimTime
     cancel_time: SimTime
     passengers: Tuple[Passenger, ...]
@@ -48,11 +49,20 @@ class Request(NamedTuple):
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
 
+    @property
+    def origin(self):
+        return self.origin_link.start
+
+    @property
+    def destination(self):
+        return self.destination_link.end
+
     @classmethod
     def build(cls,
               request_id: RequestId,
               origin: GeoId,
               destination: GeoId,
+              road_network: RoadNetwork,
               departure_time: SimTime,
               cancel_time: SimTime,
               passengers: int,
@@ -61,13 +71,20 @@ class Request(NamedTuple):
         assert (departure_time >= 0)
         assert (cancel_time >= 0)
         assert (passengers > 0)
+        origin_link = road_network.link_from_geoid(origin)
+        destination_link = road_network.link_from_geoid(destination)
         request_as_passengers = [
-            Passenger(create_passenger_id(request_id, pass_idx), origin, destination, departure_time)
-            for
-            pass_idx in range(0, passengers)]
+            Passenger(
+                create_passenger_id(request_id, pass_idx),
+                origin_link.start,
+                destination_link.end,
+                departure_time
+            )
+            for pass_idx in range(0, passengers)
+        ]
         return Request(request_id,
-                       origin,
-                       destination,
+                       origin_link,
+                       destination_link,
                        departure_time,
                        cancel_time,
                        tuple(request_as_passengers),
@@ -75,7 +92,7 @@ class Request(NamedTuple):
                        )
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], env: Environment) -> Union[Exception, Request]:
+    def from_row(cls, row: Dict[str, str], env: Environment, road_network: RoadNetwork) -> Union[Exception, Request]:
         """
         takes a csv row and turns it into a Request
 
@@ -120,6 +137,7 @@ class Request(NamedTuple):
                     request_id=request_id,
                     origin=o_geoid,
                     destination=d_geoid,
+                    road_network=road_network,
                     departure_time=departure_time,
                     cancel_time=cancel_time,
                     passengers=passengers
@@ -154,13 +172,13 @@ class Request(NamedTuple):
             origin=geoid
         )
 
-    def assign_value(self, rate_structure: RequestRateStructure) -> Request:
+    def assign_value(self, rate_structure: RequestRateStructure, distance_km: Kilometers) -> Request:
         """
         used to assign a value to this request based on it's properties as well as possible surge pricing.
 
         :param rate_structure: the rate structure to apply to the request value
         :return: the updated request
         """
-        distance_miles = H3Ops.great_circle_distance(self.origin, self.destination) * KM_TO_MILE
+        distance_miles = distance_km * KM_TO_MILE
         price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
         return self._replace(value=max(rate_structure.minimum_price, price))

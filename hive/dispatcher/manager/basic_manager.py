@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Tuple, NamedTuple
 
-from hive.state.simulation_state import SimulationState
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.dispatcher.manager.fleet_target import StateTarget, FleetStateTarget
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
@@ -15,7 +14,7 @@ class BasicManager(NamedTuple, ManagerInterface):
     """
     demand_forecaster: ForecasterInterface
 
-    def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[BasicManager, FleetStateTarget]:
+    def generate_fleet_target(self, simulation_state: 'SimulationState') -> Tuple[BasicManager, FleetStateTarget]:
         """
         Generate fleet targets to be consumed by the dispatcher.
 
@@ -31,7 +30,7 @@ class BasicManager(NamedTuple, ManagerInterface):
             VehicleState.REPOSITIONING,
         })
 
-        _, future_demand = self.demand_forecaster.generate_forecast(simulation_state)
+        updated_forecaster, future_demand = self.demand_forecaster.generate_forecast(simulation_state)
 
         active_target = StateTarget(id='ACTIVE',
                                     state_set=active_set,
@@ -39,4 +38,6 @@ class BasicManager(NamedTuple, ManagerInterface):
 
         fleet_state_target = {active_target.id: active_target}
 
-        return self, fleet_state_target
+        next_manager = self._replace(demand_forecaster=updated_forecaster)
+
+        return next_manager, fleet_state_target

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 from csv import DictReader
 import functools as ft
+import logging
 
 from hive.model.request import Request, RequestRateStructure
 from hive.runner.environment import Environment
@@ -13,6 +14,8 @@ from hive.state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.parsers import time_parser
 from hive.util.typealiases import RequestId
+
+log = logging.getLogger(__name__)
 
 
 class UpdateRequests(NamedTuple, SimulationUpdateFunction):
@@ -100,32 +103,24 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :param row: one row as loaded via DictReader
         :return: the updated sim and updated reporting
         """
-        req = Request.from_row(row, env)
-        if isinstance(req, IOError):
-            # request failed to parse from row
-            row_failure = _failure_as_json(str(req), acc.simulation_state)
-            # TODO: Add to error logger
-            print(f"[warning] {req}")
-            return acc.add_report(row_failure)
-        elif req.cancel_time <= acc.simulation_state.sim_time:
+        try:
+            req = Request.from_row(row, env, acc.simulation_state.road_network)
+        except IOError:
+            log.exception("failed to parse request from row")
+            return acc
+
+        if req.cancel_time <= acc.simulation_state.sim_time:
             # cannot add request that should already be cancelled
             current_time = acc.simulation_state.sim_time
             msg = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
-            invalid_cancel_time = _failure_as_json(msg, acc.simulation_state)
-            # TODO: Add to error logger
-            print(invalid_cancel_time)
-            return acc.add_report(invalid_cancel_time)
+            log.warning(msg)
+            return acc
         else:
-            sim_updated = acc.simulation_state.add_request(req.assign_value(rate_structure))
-            if isinstance(sim_updated, Exception):
-                # simulation failed to add this request
-                sim_failure = _failure_as_json(str(sim_updated), acc.simulation_state)
-                # TODO: Add to error logger
-                print(f"[warning] {sim_updated}")
-                return acc.add_report(sim_failure)
-            else:
+            distance_km = acc.simulation_state.road_network.distance_by_geoid_km(req.origin, req.destination)
+            sim_updated = acc.simulation_state.add_request(req.assign_value(rate_structure, distance_km))
+            if sim_updated:
                 # successfully added request
-                sim_success = _success_as_json(req.id, sim_updated)
+                sim_success = _gen_report(req.id, sim_updated)
                 return acc.update_sim(sim_updated, sim_success)
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
@@ -138,7 +133,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     return updated_sim
 
 
-def _success_as_json(r_id: RequestId, sim: SimulationState) -> str:
+def _gen_report(r_id: RequestId, sim: SimulationState) -> dict:
     """
     stringified json report of a cancellation
 
@@ -147,25 +142,11 @@ def _success_as_json(r_id: RequestId, sim: SimulationState) -> str:
     :return: a stringified json report
     """
     dep_t = sim.requests[r_id].departure_time
-    return f"{{\"report\":\"add_request\",\"request_id\":\"{r_id}\",\"departure_time\":\"{dep_t}\"}}"
+    report = {
+        'report_type': 'add_request',
+        'request_id': r_id,
+        'departure_time': dep_t,
+    }
+    return report
 
 
-def _failure_as_json(error_msg: str, sim: SimulationState) -> str:
-    """
-    stringified json report of a cancellation
-
-    :param error_msg: error message
-    :param sim: the state of the sim before cancellation occurs
-    :return: a stringified json report of an error
-    """
-    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.sim_time}\",\"error\":\"{error_msg}\"}}"
-
-
-def _eof_as_json(sim: SimulationState) -> str:
-    """
-    notification of end-of-file
-
-    :param sim: the simulation state
-    :return: a stringified end-of-file report
-    """
-    return f"{{\"report\":\"add_request\",\"sim_time\":\"{sim.sim_time}\",\"message\":\"EOF\"}}"

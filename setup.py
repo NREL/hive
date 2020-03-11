@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 
 # Get the long description from the README file
@@ -8,7 +8,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name="nrel_hive",
-    version="0.4",
+    version="0.5.0",
     description=
     "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.",
     long_description=long_description,
@@ -22,7 +22,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering"
     ],
-    packages=["hive"],
+    packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
         "h3>=3.4.3",
@@ -40,6 +40,6 @@ setup(
     },
     author="National Renewable Energy Laboratory",
     author_email="Reinicke, Nicholas <Nicholas.Reinicke@nrel.gov>",
-    license="Copyright ©2019 Alliance for Sustainable Energy, LLC All Rights Reserved",
+    license="Copyright ©2020 Alliance for Sustainable Energy, LLC All Rights Reserved",
     keywords="transportation simulation ride-hail data-driven agent-based model ABM"
 )

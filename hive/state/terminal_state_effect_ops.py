@@ -56,8 +56,8 @@ class TerminalStateEffectOps(SwitchCase):
                 if request.dispatched_vehicle == vehicle.id and vehicle.can_transition(VehicleState.SERVICING_TRIP):
                     transitioned_vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
 
-                    start = transitioned_vehicle.property_link
-                    end = sim_state.road_network.property_link_from_geoid(request.destination)
+                    start = transitioned_vehicle.geoid
+                    end = request.destination
                     route = sim_state.road_network.route(start, end)
                     routed_vehicle = transitioned_vehicle.assign_route(route)
 

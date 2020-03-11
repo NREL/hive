@@ -4,6 +4,8 @@ from typing import Optional, NamedTuple, Dict
 
 from h3 import h3
 
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.link import Link
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -24,23 +26,33 @@ class Base(NamedTuple):
     :type station_id: Optional[StationId]
     """
     id: BaseId
-    geoid: GeoId
+    link: Link
     total_stalls: int
     available_stalls: int
     station_id: Optional[StationId]
+
+    @property
+    def geoid(self):
+        return self.link.start
 
     @classmethod
     def build(cls,
               id: BaseId,
               geoid: GeoId,
+              road_network: RoadNetwork,
               station_id: Optional[StationId],
               stall_count: int
               ):
-        return Base(id, geoid, stall_count, stall_count, station_id)
+
+        link = road_network.link_from_geoid(geoid)
+        return Base(id, link, stall_count, stall_count, station_id)
 
     @classmethod
-    def from_row(cls, row: Dict[str, str],
-                 sim_h3_resolution: int) -> Base:
+    def from_row(
+            cls,
+            row: Dict[str, str],
+            road_network: RoadNetwork,
+    ) -> Base:
         """
         takes a csv row and turns it into a Base
 
@@ -61,7 +73,7 @@ class Base(NamedTuple):
             base_id = row['base_id']
             try:
                 lat, lon = float(row['lat']), float(row['lon'])
-                geoid = h3.geo_to_h3(lat, lon, sim_h3_resolution)
+                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 stall_count = int(row['stall_count'])
 
                 # allow user to leave station_id blank or use the word "none" to signify no station at base
@@ -71,6 +83,7 @@ class Base(NamedTuple):
                 return Base.build(
                     id=base_id,
                     geoid=geoid,
+                    road_network=road_network,
                     station_id=station_id,
                     stall_count=stall_count
                 )

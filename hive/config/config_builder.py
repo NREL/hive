@@ -9,7 +9,7 @@ class ConfigBuilder:
     @classmethod
     def build(cls,
               default_config: Dict,
-              required_config: Dict[str, type],
+              required_config: Tuple[str, ...],
               config_constructor: Callable[[Dict], Union[Exception, T]],
               config: Dict = None) -> T:
         """
@@ -22,14 +22,9 @@ class ConfigBuilder:
         """
 
         c = default_config if config is None else dict(list(default_config.items()) + list(config.items()))
-        for key, key_type in required_config.items():
+        for key in required_config:
             value = c.get(key)
             if value is None:
-                raise AttributeError(f"expected required config key {key} of type {key_type} not found")
-            elif type(key_type) is tuple:
-                if all(not isinstance(value, kt) for kt in key_type):
-                    raise AttributeError(f"value {value} at config key {key} not correct type {key_type}")
-            elif not isinstance(value, key_type):
-                raise AttributeError(f"value {value} at config key {key} not correct type {key_type}")
+                raise AttributeError(f"expected required config key {key} not found")
 
         return config_constructor(c)

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from typing import Tuple, NamedTuple
+from pathlib import Path
 
-from hive.state.simulation_state import SimulationState
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
+from hive.util.dict_reader_stepper import DictReaderStepper
+from hive.util.parsers import time_parser
 
 
 class BasicForecaster(NamedTuple, ForecasterInterface):
@@ -12,7 +14,18 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
     A forecaster that generates a prediction based on the current demand.
     """
 
-    def generate_forecast(self, simulation_state: SimulationState) -> Tuple[BasicForecaster, Forecast]:
+    reader: DictReaderStepper
+
+    @classmethod
+    def build(cls, demand_forecast_file: str):
+        if not Path(demand_forecast_file).is_file():
+            raise IOError(f"{demand_forecast_file} is not a valid path to a request file")
+
+        reader = DictReaderStepper.from_file(demand_forecast_file, "sim_time", parser=time_parser)
+
+        return BasicForecaster(reader)
+
+    def generate_forecast(self, simulation_state: 'SimulationState') -> Tuple[BasicForecaster, Forecast]:
         """
         Generate fleet targets to be consumed by the dispatcher.
 
@@ -21,6 +34,17 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
         """
         current_demand = len(simulation_state.requests)
 
-        demand_forecast = Forecast(type=ForecastType.DEMAND, value=current_demand + 10)
+        current_sim_time = simulation_state.sim_time
+
+        # grab all requests in the next 30 minutes
+        def stop_condition(value: int) -> bool:
+            return value < current_sim_time + (30*60)
+
+        demand_result = tuple(self.reader.read_until_stop_condition(stop_condition))
+        future_demand = sum([int(n['requests']) for n in demand_result])
+
+        demand_forecast = Forecast(type=ForecastType.DEMAND, value=current_demand + future_demand)
+        # demand_forecast = Forecast(type=ForecastType.DEMAND, value=current_demand + 10)
+
 
         return self, demand_forecast

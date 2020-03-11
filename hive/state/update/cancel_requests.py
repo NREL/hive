@@ -23,8 +23,9 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         :return: state without cancelled requests, along with this update function
         """
 
+        # TODO: think about making this more readable and catching if simulation_state.remove_request fails
         updated, reports = ft.reduce(
-            lambda s, r_id: (s[0].remove_request(r_id), s[1] + (_as_json(r_id, s[0]),)) \
+            lambda s, r_id: (s[0].remove_request(r_id), s[1] + (_gen_report(r_id, s[0]),)) \
                 if s[0].sim_time >= s[0].requests[r_id].cancel_time \
                 else s,
             simulation_state.requests.keys(),
@@ -34,7 +35,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         return SimulationUpdateResult(updated, reports), None
 
 
-def _as_json(r_id: RequestId, sim: SimulationState) -> str:
+def _gen_report(r_id: RequestId, sim: SimulationState) -> dict:
     """
     stringified json report of a cancellation
 
@@ -44,4 +45,10 @@ def _as_json(r_id: RequestId, sim: SimulationState) -> str:
     """
     dep_t = sim.requests[r_id].departure_time
     sim_t = sim.sim_time
-    return f"{{\"report\":\"cancel_request\",\"request_id\":\"{r_id}\",\"departure_time\":\"{dep_t}\",\"cancel_time\":\"{sim_t}\"}}"
+    report = {
+        'report_type': 'cancel_request',
+        'request_id': r_id,
+        'departure_time': dep_t,
+        'cancel_time': sim_t,
+    }
+    return report

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Union
 
 from hive.util.typealiases import LinkId, GeoId
-from hive.model.roadnetwork.link import Link, link_distance_km
+from hive.model.roadnetwork.link import Link
 from hive.util.units import Kilometers, Kmph, Seconds, hours_to_seconds
 
 

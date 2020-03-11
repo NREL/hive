@@ -1,24 +1,28 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional, TYPE_CHECKING
 
 import immutables
 from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
+from hive.model.energy.powercurve import Powercurve
+from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
-from hive.model.roadnetwork.property_link import PropertyLink
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
-from hive.util.typealiases import *
-from hive.util.helpers import DictOps
-from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency
+from hive.model.roadnetwork.routetraversal import traverse
+from hive.model.vehicle.vehicle_type import VehicleType
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.util.exception import EntityError
-from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
-from hive.model.energy.powertrain import Powertrain, powertrain_models
+from hive.util.helpers import DictOps
+from hive.util.typealiases import *
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency
+
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
 
 
 class Vehicle(NamedTuple):
@@ -33,10 +37,10 @@ class Vehicle(NamedTuple):
     :type powercurve_id: :py:obj:`PowercurveId`
     :param energy_source: The energy source for the vehicle
     :type energy_source: :py:obj:`EnergySource`
-    :param geoid: The current location of the vehicle
-    :type geoid: :py:obj:`GeoId`
-    :param property_link: The current location of the vehicle on the road network
-    :type property_link: :py:obj:`PropertyLink`
+    :param link: The current location of the vehicle
+    :type link: :py:obj:`Link`
+    :param operating_cost_km: the operating cost per kilometer of this vehicle
+    :type operating_cost_km: :py:obj:`Currency`
     :param route: The route of the vehicle. Could be empty.
     :type route: :py:obj:`Route`
     :param vehicle_state: The state that the vehicle is in.
@@ -55,7 +59,8 @@ class Vehicle(NamedTuple):
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     energy_source: EnergySource
-    property_link: PropertyLink
+    link: Link
+    operating_cost_km: Currency
 
     # vehicle planning/operational properties
     route: Route = ()
@@ -70,16 +75,17 @@ class Vehicle(NamedTuple):
 
     @property
     def geoid(self):
-        return self.property_link.link.start
+        return self.link.start
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork) -> Vehicle:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork, env: Environment) -> Vehicle:
         """
         reads a csv row from file to generate a Vehicle
 
         :param row: a row of a .csv which matches hive.util.pattern.vehicle_regex.
         this string will be stripped of whitespace characters (no spaces allowed in names!)
         :param road_network: the road network, used to find the vehicle's location in the sim
+        :param env: the scenario environment
         :return: a vehicle, or, an IOError if failure occurred.
         """
 
@@ -89,34 +95,23 @@ class Vehicle(NamedTuple):
             raise IOError("cannot load a vehicle without a 'lat'")
         elif 'lon' not in row:
             raise IOError("cannot load a vehicle without a 'lon'")
-        elif 'powertrain_id' not in row:
-            raise IOError("cannot load a vehicle without a 'powertrain_id'")
-        elif 'powercurve_id' not in row:
-            raise IOError("cannot load a vehicle without a 'powercurve_id'")
-        elif 'capacity' not in row:
-            raise IOError("cannot load a vehicle without a 'capacity'")
-        elif 'ideal_energy_limit' not in row:
-            raise IOError("cannot load a vehicle without a 'ideal_energy_limit'")
-        elif 'max_charge_acceptance' not in row:
-            raise IOError("cannot load a vehicle without a 'max_charge_acceptance'")
-        elif 'initial_soc' not in row:
-            raise IOError("cannot load a vehicle without a 'initial_soc'")
-        elif row['powertrain_id'] not in powertrain_models.keys():
-            raise IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
-        elif row['powercurve_id'] not in powercurve_models.keys():
-            raise IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
         else:
             try:
                 vehicle_id = row['vehicle_id']
                 lat = float(row['lat'])
                 lon = float(row['lon'])
-                powertrain_id = row['powertrain_id']
-                powercurve_id = row['powercurve_id']
-                energy_type = powercurve_energy_types[powercurve_id]
-                capacity = float(row['capacity'])
-                iel_str = row['ideal_energy_limit']
-                ideal_energy_limit = float(iel_str) if len(iel_str) > 0 else None
-                max_charge_acceptance = float(row['max_charge_acceptance'])
+                vehicle_type_id = row['vehicle_type_id']
+                vehicle_type: VehicleType = env.vehicle_types.get(vehicle_type_id)
+                if vehicle_type is None:
+                    file = env.config.io.vehicle_types_file
+                    raise IOError(f"cannot find vehicle_type {vehicle_type_id} in provided vehicle_type_file {file}")
+                powertrain_id = vehicle_type.powertrain_id
+                powercurve_id = vehicle_type.powercurve_id
+                energy_type = env.energy_types.get(powercurve_id)
+                capacity = vehicle_type.capacity_kwh
+                ideal_energy_limit = vehicle_type.ideal_energy_limit_kwh
+                max_charge_acceptance = vehicle_type.max_charge_acceptance
+                operating_cost_km = vehicle_type.operating_cost_km
                 initial_soc = float(row['initial_soc'])
 
                 if not 0.0 <= initial_soc <= 1.0:
@@ -130,14 +125,15 @@ class Vehicle(NamedTuple):
                                                    initial_soc)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                start_link = road_network.property_link_from_geoid(geoid)
+                start_link = road_network.link_from_geoid(geoid)
 
                 return Vehicle(
                     id=vehicle_id,
                     powertrain_id=powertrain_id,
                     powercurve_id=powercurve_id,
                     energy_source=energy_source,
-                    property_link=start_link,
+                    link=start_link,
+                    operating_cost_km=operating_cost_km
                 )
 
             except ValueError:
@@ -185,7 +181,6 @@ class Vehicle(NamedTuple):
 
         traverse_result = traverse(
             route_estimate=self.route,
-            road_network=road_network,
             duration_seconds=duration_seconds,
         )
 
@@ -195,32 +190,34 @@ class Vehicle(NamedTuple):
             return no_route_veh
 
         experienced_route = traverse_result.experienced_route
-
         energy_used = power_train.energy_cost(experienced_route)
         step_distance_km = traverse_result.traversal_distance_km
-
-        updated_energy_source = self.energy_source.use_energy(energy_used)
-        less_energy_vehicle = self.battery_swap(updated_energy_source)
-
         remaining_route = traverse_result.remaining_route
 
-        new_route_vehicle = less_energy_vehicle.assign_route(remaining_route)
+        # todo: we allow the agent to traverse only bounded by time, not energy;
+        #   so, it is possible for the vehicle to travel farther in a time step than
+        #   they have fuel to travel. this can create an error on the location of
+        #   any agents at the time step where they run out of fuel. feels like an
+        #   acceptable edge case but we could improve. rjf 20200309
 
-        if not remaining_route:
-            geoid = experienced_route[-1].link.end
-            updated_location_vehicle = new_route_vehicle._replace(
-                property_link=road_network.property_link_from_geoid(geoid),
+        updated_energy_source = self.energy_source.use_energy(energy_used)
+        less_energy_vehicle = self._replace(energy_source=updated_energy_source).assign_route(remaining_route)
+        updated_vehicle = less_energy_vehicle.transition(
+            VehicleState.OUT_OF_SERVICE) if updated_energy_source.is_empty() else less_energy_vehicle
+
+        if not updated_vehicle:
+            return None
+        elif not remaining_route:
+            geoid = experienced_route[-1].end
+            return updated_vehicle._replace(
+                link=road_network.link_from_geoid(geoid),
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
-
             )
         else:
-            updated_location_vehicle = new_route_vehicle._replace(
-                property_link=remaining_route[0],
+            return updated_vehicle._replace(
+                link=remaining_route[0],
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
-
             )
-
-        return updated_location_vehicle
 
     def idle(self, time_step_seconds: Seconds) -> Vehicle:
         """
@@ -254,6 +251,8 @@ class Vehicle(NamedTuple):
             raise TypeError("Invalid vehicle state type.")
         elif self.vehicle_state == vehicle_state:
             return False
+        elif self.vehicle_state == VehicleState.OUT_OF_SERVICE:
+            return False
         elif self.has_passengers():
             return False
         else:
@@ -272,7 +271,12 @@ class Vehicle(NamedTuple):
         elif self.can_transition(vehicle_state):
             transitioned_vehicle = self._replace(vehicle_state=vehicle_state)
 
-            if previous_vehicle_state == VehicleState.IDLE:
+            if vehicle_state == VehicleState.OUT_OF_SERVICE:
+                # todo: do something with passengers? for now, they just get stranded
+                return transitioned_vehicle._replace(
+                    route=()
+                )
+            elif previous_vehicle_state == VehicleState.IDLE:
                 # end of idling
                 return transitioned_vehicle._reset_idle_stats()
             elif VehicleStateCategory.from_vehicle_state(previous_vehicle_state) == VehicleStateCategory.CHARGE and \
@@ -378,4 +382,3 @@ class Vehicle(NamedTuple):
         :return: the updated Vehicle
         """
         return self._replace(balance=self.balance + amount)
-

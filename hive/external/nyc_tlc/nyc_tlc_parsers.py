@@ -4,6 +4,8 @@ from typing import Dict, Union
 from h3 import h3
 
 from hive.model.request import Request
+from hive.model.roadnetwork.link import Link
+from hive.model.passenger import Passenger, create_passenger_id
 
 
 def parse_yellow_tripdata_row(row: Dict[str, str],
@@ -48,16 +50,30 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
         origin = h3.geo_to_h3(o_lat, o_lon, sim_h3_location_resolution)
         destination = h3.geo_to_h3(d_lat, d_lon, sim_h3_location_resolution)
 
+        origin_link = Link('o', origin, origin, 0, 0)
+        destination_link = Link('d', destination, destination, 0, 0)
+
         # passengers (
         passengers = int(row['passengers']) if 'passengers' in row else default_passengers
 
-        return Request.build(
-            request_id=agent_id,
-            origin=origin,
-            destination=destination,
+        request_as_passengers = [
+            Passenger(
+                create_passenger_id(agent_id, pass_idx),
+                origin_link.start,
+                destination_link.end,
+                departure_time
+            )
+            for pass_idx in range(0, passengers)
+        ]
+
+        return Request(
+            id=agent_id,
+            origin_link=origin_link,
+            destination_link=destination_link,
             departure_time=departure_time,
             cancel_time=cancel_time,
-            passengers=passengers
+            passengers=tuple(request_as_passengers)
         )
+
     except Exception as e:
         return e
