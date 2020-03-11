@@ -24,22 +24,22 @@ When the Mobility, Behavior, and Advanced Powertrains group began looking to ans
 
 HIVE is not a fully-featured Activity-Based Model, does not simulate all vehicles on the network, and therefore does not simulate congestion. It also assumes demand is fixed. If these assumptions are too strong for your research question, then one of the other mesoscopic models capable of ridehail simulation may be a more appropriate fit. The following (opinionated) chart attempts to compare features of HIVE against LBNL's BEAM and ANL's POLARIS models.
 
-| feature                                            | HIVE | BEAM | POLARIS |
-| -------------------------------------------------- | ---- | ---- | ------- |
-| Agent-Based Ridehail Model                         | √    | √    | √       |
-| Designed for large-scale inputs                    | √    | √    | √       |
-| Integrates with NREL energy models                 | √    | √    | √       |
-| Charging infrastructure & charge events            | √    | √    | √       |
-| Service pricing and income model                   | √    | √    | √       |
-| Data-driven ridehail dispatcher                    | √    | x    | x       |
-| Does not require socio-demographic data            | √    | x    | x       |
-| Built-in example scenario                          | √    | √    | x       |
-| Written entirely in Python, installed via pip      | √    | x    | x       |
-| Activity-Based Demand Model                        | x    | √    | √       |
-| Dynamic demand using behavioral models             | x    | √    | √       |
-| Robust assignment of population demographics       | x    | √    | √       |
-| Supports broad set of travel modes                 | x    | √    | √       |
-| Congestion modeling via kinetic wave model         | x    | √    | √       |
+| feature                                            | HIVE       | BEAM      | POLARIS |
+| -------------------------------------------------- | ---------- | --------- | ------- |
+| Agent-Based Ridehail Model                         | :honeybee: | :red_car: | :train: |
+| Designed for large-scale inputs                    | :honeybee: | :red_car: | :train: |
+| Integrates with NREL energy models                 | :honeybee: | :red_car: | :train: |
+| Charging infrastructure & charge events            | :honeybee: | :red_car: | :train: |
+| Service pricing and income model                   | :honeybee: | :red_car: | :train: |
+| Data-driven ridehail dispatcher                    | :honeybee: |           |         |
+| Does not require socio-demographic data            | :honeybee: |           |         |
+| Built-in example scenario                          | :honeybee: | :red_car: |         |
+| Written entirely in Python, installed via pip      | :honeybee: |           |         |
+| Activity-Based Demand Model                        |            | :red_car: | :train: |
+| Dynamic demand using behavioral models             |            | :red_car: | :train: |
+| Robust assignment of population demographics       |            | :red_car: | :train: |
+| Supports broad set of travel modes                 |            | :red_car: | :train: |
+| Congestion modeling via kinetic wave model         |            | :red_car: | :train: |
 
 The project is currently closed-source and in alpha development, with plans to open-source in summer of 2020.
 
