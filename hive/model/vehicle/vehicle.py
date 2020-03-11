@@ -1,27 +1,28 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional, TYPE_CHECKING
 
 import immutables
 from h3 import h3
 
-from hive.model.vehicle.vehicle_type import VehicleType
-from hive.runner.environment import Environment
-
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
+from hive.model.energy.powercurve import Powercurve
+from hive.model.energy.powertrain import Powertrain
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.link import Link
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.roadnetwork.route import Route
-from hive.util.typealiases import *
-from hive.util.helpers import DictOps
-from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency
+from hive.model.roadnetwork.routetraversal import traverse
+from hive.model.vehicle.vehicle_type import VehicleType
+from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.util.exception import EntityError
-from hive.model.energy.powercurve import Powercurve, powercurve_models, powercurve_energy_types
-from hive.model.energy.powertrain import Powertrain, powertrain_models
+from hive.util.helpers import DictOps
+from hive.util.typealiases import *
+from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS, Currency
+
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
 
 
 class Vehicle(NamedTuple):
@@ -94,22 +95,6 @@ class Vehicle(NamedTuple):
             raise IOError("cannot load a vehicle without a 'lat'")
         elif 'lon' not in row:
             raise IOError("cannot load a vehicle without a 'lon'")
-        # elif 'powertrain_id' not in row:
-        #     raise IOError("cannot load a vehicle without a 'powertrain_id'")
-        # elif 'powercurve_id' not in row:
-        #     raise IOError("cannot load a vehicle without a 'powercurve_id'")
-        # elif 'capacity' not in row:
-        #     raise IOError("cannot load a vehicle without a 'capacity'")
-        # elif 'ideal_energy_limit' not in row:
-        #     raise IOError("cannot load a vehicle without a 'ideal_energy_limit'")
-        # elif 'max_charge_acceptance' not in row:
-        #     raise IOError("cannot load a vehicle without a 'max_charge_acceptance'")
-        # elif 'initial_soc' not in row:
-        #     raise IOError("cannot load a vehicle without a 'initial_soc'")
-        # elif row['powertrain_id'] not in powertrain_models.keys():
-        #     raise IOError(f"invalid powertrain model for vehicle: '{row['powertrain_id']}'")
-        # elif row['powercurve_id'] not in powercurve_models.keys():
-        #     raise IOError(f"invalid powercurve model for vehicle: '{row['powercurve_id']}'")
         else:
             try:
                 vehicle_id = row['vehicle_id']
