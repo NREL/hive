@@ -11,7 +11,7 @@ HIVE is a mobility services research platform developed by the Mobility and Adva
 
 HIVE is a complete autonomous ridehail simulator supporting charging infrastructure and fleet composition research, designed for ease-of-use, scalability, and co-simulation. HIVE employs powerful, community-driven deep reinforcement learning algorithms to synthesize an optimal fleet performance and for runs over HPC systems for large-scale problems. HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity playouts over arbitrary road networks and demand scenarios.
 ​
-## Why is HIVE?
+## Why HIVE?
 
 When the Mobility, Behavior, and Advanced Powertrains group began looking to answer questions related to fleet sizing, charging infrastructure, and dynamic energy pricing, we could not find a simulator which was right-sized for our research questions. Most modern models for mobility services have a large barrier-to-entry due to the complex interactions of mode choice, economics, and model tuning required to use the leading micro and mesoscopic transportation models (BEAM, POLARIS, MATSim, SUMO, AMoDeus, etc.). Additionally, they have heavyweight technical infrastructure demands where deployment of these models requires a specialized team. HIVE attempts to fill a gap for researchers seeking to study the economic and energy impacts of autonomous ride hail fleets by providing the following feature set:
 
@@ -41,7 +41,7 @@ HIVE is not a fully-featured Activity-Based Model, does not simulate all vehicle
 | Supports broad set of travel modes                 |            | :red_car: | :train: |
 | Congestion modeling via kinetic wave model         |            | :red_car: | :train: |
 
-The project is currently closed-source and in alpha development, with plans to open-source in summer of 2020.
+The project is currently closed-source, pre-release, with plans to open-source in summer of 2020.
 
 ## Dependencies
 
