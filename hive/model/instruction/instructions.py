@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
 
-CHARGE_STATES = {VehicleState.CHARGING_STATION, VehicleState.CHARGING_BASE}
+CHARGE_STATES = {VehicleState.CHARGING}
 
 
 def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> Optional[SimulationState]:
@@ -168,10 +168,10 @@ class ChargeStationInstruction(NamedTuple, Instruction):
             log.debug(f"vehicle {self.vehicle_id} can't charge at station {self.station_id}. no plugs available")
             return None
 
-        if not vehicle.can_transition(VehicleState.CHARGING_STATION):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING_STATION')
+        if not vehicle.can_transition(VehicleState.CHARGING):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING')
             return None
-        updated_vehicle = vehicle.transition(VehicleState.CHARGING_STATION).set_charge_intent(self.charger)
+        updated_vehicle = vehicle.transition(VehicleState.CHARGING).set_charge_intent(self.charger)
 
         at_location = sim_state.at_geoid(updated_vehicle.geoid)
         if not at_location['stations']:
@@ -202,10 +202,10 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
             log.debug(f"vehicle {self.vehicle_id} can't charge at station {self.station_id}. no plugs available")
             return None
 
-        if not vehicle.can_transition(VehicleState.CHARGING_BASE):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING_BASE')
+        if not vehicle.can_transition(VehicleState.CHARGING):
+            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING')
             return None
-        updated_vehicle = vehicle.set_charge_intent(self.charger).transition(VehicleState.CHARGING_BASE)
+        updated_vehicle = vehicle.set_charge_intent(self.charger).transition(VehicleState.CHARGING)
 
         at_location = sim_state.at_geoid(updated_vehicle.geoid)
         if not at_location['stations']:

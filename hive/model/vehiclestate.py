@@ -10,19 +10,18 @@ class VehicleState(Enum):
 
     # INACTIVE FLEET MANAGEMENT
     DISPATCH_BASE = 0
-    CHARGING_BASE = 1
-    RESERVE_BASE = 2
+    RESERVE_BASE = 1
     # ACTIVE FLEET MANAGEMENT
-    IDLE = 3
-    REPOSITIONING = 4
+    IDLE = 2
+    REPOSITIONING = 3
     # TRIPPING
-    DISPATCH_TRIP = 5
-    SERVICING_TRIP = 6
+    DISPATCH_TRIP = 4
+    SERVICING_TRIP = 5
     # CHARGING
-    DISPATCH_STATION = 7
-    CHARGING_STATION = 8
+    DISPATCH_STATION = 6
+    CHARGING = 7
     # MISC
-    OUT_OF_SERVICE = 9
+    OUT_OF_SERVICE = 8
 
     @classmethod
     def is_valid(cls, state) -> bool:
@@ -37,12 +36,11 @@ class VehicleState(Enum):
 
 _VALID_VEHICLE_STATES = frozenset([
     VehicleState.DISPATCH_BASE,
-    VehicleState.CHARGING_BASE, # TODO: I think we should get rid of CHARGING_BASE and just use a single CHARGING.
     VehicleState.RESERVE_BASE,
     VehicleState.IDLE,
     VehicleState.DISPATCH_TRIP,
     VehicleState.DISPATCH_STATION,
-    VehicleState.CHARGING_STATION,
+    VehicleState.CHARGING,
     VehicleState.REPOSITIONING,
     VehicleState.SERVICING_TRIP,
     VehicleState.OUT_OF_SERVICE
@@ -70,13 +68,13 @@ class VehicleStateCategory(Enum):
 
 _VEHICLE_STATE_CATEGORY = {
     VehicleState.DISPATCH_BASE: VehicleStateCategory.MOVE,
-    VehicleState.CHARGING_BASE: VehicleStateCategory.CHARGE,
+    VehicleState.CHARGING: VehicleStateCategory.CHARGE,
     VehicleState.RESERVE_BASE: VehicleStateCategory.DO_NOTHING,
     VehicleState.IDLE: VehicleStateCategory.DO_NOTHING,
     VehicleState.REPOSITIONING: VehicleStateCategory.MOVE,
     VehicleState.DISPATCH_TRIP: VehicleStateCategory.MOVE,
     VehicleState.SERVICING_TRIP: VehicleStateCategory.MOVE,
     VehicleState.DISPATCH_STATION: VehicleStateCategory.MOVE,
-    VehicleState.CHARGING_STATION: VehicleStateCategory.CHARGE,
+    VehicleState.CHARGING: VehicleStateCategory.CHARGE,
     VehicleState.OUT_OF_SERVICE: VehicleStateCategory.DO_NOTHING
 }

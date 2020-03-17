@@ -26,7 +26,7 @@ class BasicManager(NamedTuple, ManagerInterface):
             VehicleState.SERVICING_TRIP,
             VehicleState.DISPATCH_TRIP,
             VehicleState.DISPATCH_STATION,
-            VehicleState.CHARGING_STATION,
+            VehicleState.CHARGING,
             VehicleState.REPOSITIONING,
         })
 
