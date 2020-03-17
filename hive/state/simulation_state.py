@@ -6,6 +6,8 @@ import immutables
 from h3 import h3
 import logging
 
+from hive.util.exception import SimulationStateError
+
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
@@ -78,7 +80,7 @@ class SimulationState(NamedTuple):
             r_search=DictOps.add_to_location_dict(self.r_search, search_geoid, request.id)
         )
 
-    def remove_request(self, request_id: RequestId) -> Optional[SimulationState]:
+    def remove_request(self, request_id: RequestId) -> (Optional[Exception], Optional[SimulationState]):
         """
         removes a request from this simulation.
         called once a Request has been fully serviced and is no longer
@@ -88,22 +90,25 @@ class SimulationState(NamedTuple):
         :return: the updated simulation state (does not report failure)
         """
         if not isinstance(request_id, RequestId):
-            log.error(f"remove_request() takes a RequestId (str), not a {type(request_id)}")
-            return None
+            error = SimulationStateError(f"remove_request() takes a RequestId (str), not a {type(request_id)}")
+            return error, None
         if request_id not in self.requests:
-            log.error(f"attempting to remove request {request_id} which is not in simulation")
-            return None
-        request = self.requests[request_id]
-        search_geoid = h3.h3_to_parent(request.geoid, self.sim_h3_search_resolution)
-        updated_requests = DictOps.remove_from_dict(self.requests, request.id)
-        updated_r_locations = DictOps.remove_from_location_dict(self.r_locations, request.geoid, request.id)
-        updated_r_search = DictOps.remove_from_location_dict(self.r_search, search_geoid, request.id)
+            error = SimulationStateError(f"attempting to remove request {request_id} which is not in simulation")
+            return error, None
+        else:
+            request = self.requests[request_id]
+            search_geoid = h3.h3_to_parent(request.geoid, self.sim_h3_search_resolution)
+            updated_requests = DictOps.remove_from_dict(self.requests, request.id)
+            updated_r_locations = DictOps.remove_from_location_dict(self.r_locations, request.geoid, request.id)
+            updated_r_search = DictOps.remove_from_location_dict(self.r_search, search_geoid, request.id)
 
-        return self._replace(
-            requests=updated_requests,
-            r_locations=updated_r_locations,
-            r_search=updated_r_search
-        )
+            updated_sim = self._replace(
+                requests=updated_requests,
+                r_locations=updated_r_locations,
+                r_search=updated_r_search
+            )
+
+            return None, updated_sim
 
     def modify_request(self, updated_request: Request) -> Optional[SimulationState]:
         """
@@ -548,9 +553,9 @@ class SimulationState(NamedTuple):
         # updated_vehicles = copy(self.vehicles)
         # updated_vehicles.update([(vehicle_id, updated_vehicle)])
 
-        return self._replace(
-            vehicles=updated_vehicles,
-        ).remove_request(request_id)
+        # todo: do something with the exception
+        _, updated_sim = self._replace(vehicles=updated_vehicles).remove_request(request_id)
+        return updated_sim
 
     @classmethod
     def _same_geoid(cls,

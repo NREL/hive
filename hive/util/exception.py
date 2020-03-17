@@ -1,5 +1,19 @@
-from typing import Tuple
+from typing import Tuple, Dict
 import functools as ft
+
+
+def report_error(error: Exception) -> Dict:
+    """
+    helper to enforce standardization of observed errors reported during simulation run
+    :param error: the error that occurred during simulation
+    :return: packaged as a report
+    """
+    data = {
+        'report_type': 'error',
+        'message': error.args
+    }
+    return data
+
 
 class StateTransitionError(Exception):
     """
@@ -116,3 +130,5 @@ class CombinedException(Exception):
             ""
         )
         return repr(combined)
+
+

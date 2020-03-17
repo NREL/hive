@@ -23,8 +23,9 @@ class TestSimulationState(TestCase):
         req = mock_request()
         sim = mock_sim()
         sim_with_req = sim.add_request(req)
-        sim_after_remove = sim_with_req.remove_request(req.id)
+        error, sim_after_remove = sim_with_req.remove_request(req.id)
 
+        self.assertIsNone(error, "should be no error")
         self.assertEqual(len(sim_with_req.requests), 1, "the sim with req added should not have been mutated")
         self.assertEqual(len(sim_after_remove.requests), 0, "the request should have been removed")
 
@@ -38,8 +39,9 @@ class TestSimulationState(TestCase):
         req2 = mock_request(request_id="2")
         sim = mock_sim()
         sim_with_reqs = sim.add_request(req1).add_request(req2)
-        sim_remove_req1 = sim_with_reqs.remove_request(req1.id)
+        error, sim_remove_req1 = sim_with_reqs.remove_request(req1.id)
 
+        self.assertIsNone(error, "should be no error")
         self.assertIn(req2.origin,
                       sim_remove_req1.r_locations,
                       "geoid related to both reqs should still exist")
