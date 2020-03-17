@@ -21,6 +21,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         cancels requests whose cancel time has been exceeded
 
         :param simulation_state: state to modify
+        :param env: the scenario environment
         :return: state without cancelled requests, along with this update function
         """
 
