@@ -8,7 +8,7 @@ import logging
 
 from hive.util.exception import SimulationStateError
 
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
+from hive.model.vehicle.vehiclestate import VehicleState, VehicleStateCategory
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
 from hive.util.helpers import DictOps

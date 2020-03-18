@@ -1,8 +1,7 @@
 from unittest import TestCase, skip
 
-from pkg_resources import resource_filename
-
 from hive.state.update.charging_price_update import ChargingPriceUpdate
+from hive.state.update.step_simulation import step_simulation
 from tests.mock_lobster import *
 
 

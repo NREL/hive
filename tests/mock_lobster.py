@@ -25,16 +25,16 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.vehicle import VehicleTypesTableBuilder, VehicleType
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehicle import VehicleType
+from hive.model.vehicle.vehiclestate import VehicleState
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.update import Update
 from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers, hours_to_seconds
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
 from hive.util.helpers import H3Ops
-from hive.state.update.step_simulation import StepSimulation, step_simulation
+from hive.state.update.step_simulation import StepSimulation
 
 
 class DefaultIds:

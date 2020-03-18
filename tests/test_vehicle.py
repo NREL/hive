@@ -24,7 +24,7 @@ class TestVehicle(TestCase):
         veh = mock_vehicle()
         new_soc = 0.99
         batt = mock_energy_source(soc=new_soc)
-        updated_vehicle = veh.battery_swap(batt)
+        updated_vehicle = veh.modify_energy_source(batt)
 
         self.assertEqual(updated_vehicle.energy_source.soc, new_soc, "should have the new battery's soc")
 
@@ -72,7 +72,7 @@ class TestVehicle(TestCase):
         self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
-    def test_transition_CHARGING(self):
+    def test_transition_charging(self):
         idle_vehicle = mock_vehicle()
 
         transitioned = idle_vehicle.transition(VehicleState.CHARGING)

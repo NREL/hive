@@ -8,7 +8,7 @@ from h3 import h3
 from hive.model.instruction import *
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.dispatcher.manager.fleet_target import FleetStateTarget
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehicle.vehiclestate import VehicleState
 from hive.model.vehicle import Vehicle
 from hive.model.energy.charger import Charger
 from hive.model.roadnetwork import RoadNetwork

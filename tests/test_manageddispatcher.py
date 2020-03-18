@@ -59,7 +59,7 @@ class TestManagedDispatcher(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         low_battery = mock_energy_source(soc=0.1)
 
-        veh_low_battery = veh.battery_swap(low_battery)
+        veh_low_battery = veh.modify_energy_source(low_battery)
         station = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_low_battery).add_station(station)
 

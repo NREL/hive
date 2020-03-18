@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from hive.model.instruction import *
 from tests.mock_lobster import *
+from hive.state.update.step_simulation import step_simulation
 
 
 class TestInstructions(TestCase):

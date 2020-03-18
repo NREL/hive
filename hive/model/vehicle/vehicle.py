@@ -15,7 +15,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse
 from hive.model.vehicle.vehicle_type import VehicleType
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
+from hive.model.vehicle.vehiclestate import VehicleState, VehicleStateCategory
 from hive.util.exception import EntityError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
@@ -233,7 +233,7 @@ class Vehicle(NamedTuple):
 
         idle_energy_kwh = idle_energy_rate * (time_step_seconds * SECONDS_TO_HOURS)
         updated_energy_source = self.energy_source.use_energy(idle_energy_kwh)
-        less_energy_vehicle = self.battery_swap(updated_energy_source)
+        less_energy_vehicle = self.modify_energy_source(updated_energy_source)
 
         next_idle_time = (less_energy_vehicle.idle_time_seconds + time_step_seconds)
         vehicle_w_stats = less_energy_vehicle._replace(idle_time_seconds=next_idle_time)
@@ -257,6 +257,9 @@ class Vehicle(NamedTuple):
             return False
         else:
             return True
+
+    def update_state(self, vehicle_state: VehicleState) -> Vehicle:
+        return self._replace(vehicle_state=vehicle_state)
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
         """
@@ -333,7 +336,7 @@ class Vehicle(NamedTuple):
         """
         return len(self.route) != 0
 
-    def battery_swap(self, energy_source: EnergySource) -> Vehicle:
+    def modify_energy_source(self, energy_source: EnergySource) -> Vehicle:
         """
         Replaces the vehicle energy source with a new energy source.
 

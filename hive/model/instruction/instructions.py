@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Optional, TYPE_CHECKING
 
 from hive.model.instruction.instruction_interface import Instruction
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehicle.vehiclestate import VehicleState
 from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId
 from hive.model.energy.charger import Charger
 

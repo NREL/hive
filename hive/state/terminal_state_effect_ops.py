@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict, NamedTuple, TYPE_CHECKING, Optional
+from typing import NamedTuple, TYPE_CHECKING, Optional
 
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehicle.vehiclestate import VehicleState
 from hive.util.exception import *
 from hive.util.helpers import SwitchCase
 from hive.util.typealiases import VehicleId, StationId, BaseId

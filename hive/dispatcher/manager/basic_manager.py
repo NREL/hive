@@ -5,7 +5,7 @@ from typing import Tuple, NamedTuple
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.dispatcher.manager.fleet_target import StateTarget, FleetStateTarget
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehicle.vehiclestate import VehicleState
 
 
 class BasicManager(NamedTuple, ManagerInterface):
