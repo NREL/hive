@@ -258,8 +258,11 @@ class Vehicle(NamedTuple):
         else:
             return True
 
-    def update_state(self, vehicle_state: VehicleState) -> Vehicle:
+    def modify_state(self, vehicle_state: VehicleState) -> Vehicle:
         return self._replace(vehicle_state=vehicle_state)
+
+    def modify_link(self, link: Link) -> Vehicle:
+        return self._replace(link=link)
 
     def transition(self, vehicle_state: VehicleState) -> Optional[Vehicle]:
         """

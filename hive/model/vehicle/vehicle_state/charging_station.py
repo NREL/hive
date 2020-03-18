@@ -8,9 +8,10 @@ from hive.model.energy.charger import Charger
 
 from hive import SimulationState, Environment, VehicleId
 from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
+from hive.model.vehicle.vehicle_state import vehicle_state_ops
 
 
-class Charging(NamedTuple, VehicleState):
+class ChargingStation(NamedTuple, VehicleState):
     """
     a vehicle is charging at a station with a specific charger type
     """
@@ -60,7 +61,7 @@ class Charging(NamedTuple, VehicleState):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not station:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle {self.station_id} not found"), None
         else:
             updated_station = station.return_charger(self.charger)
             updated_sim = sim.modify_station(updated_station)
@@ -94,18 +95,8 @@ class Charging(NamedTuple, VehicleState):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-            # are we at a base? are there available stalls?
-            bases = sim.at_geoid(vehicle.geoid).get("bases")
-            base_id = bases[0] if bases else None
-            base = sim.bases.get(base_id) if base_id else None
-            stalls = base.available_stalls if base else 0
-
-            if base_id and stalls != 0:
-                next_state = ReserveBase(self.vehicle_id)
-                return next_state.enter(sim, env)
-            else:
-                next_state = Idle(self.vehicle_id)
-                return next_state.enter(sim, env)
+            next_state = Idle(self.vehicle_id)
+            return next_state.enter(sim, env)
 
     def _perform_update(self,
                         sim: SimulationState,
@@ -118,34 +109,4 @@ class Charging(NamedTuple, VehicleState):
         :return: an exception due to failure or an optional updated simulation
         """
 
-        vehicle = sim.vehicles.get(self.vehicle_id)
-        powercurve = env.powercurves.get(vehicle.powercurve_id) if vehicle else None
-        station = sim.stations.get(self.station_id)
-
-        if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not powercurve:
-            return SimulationStateError(f"invalid powercurve_id {vehicle.powercurve_id}"), None
-        elif not station:
-            return SimulationStateError(f"station {self.station_id} not found"), None
-        elif vehicle.energy_source.is_at_ideal_energy_limit():
-            return SimulationStateError(f"vehicle {self.vehicle_id} is full but still attempting to charge"), None
-        else:
-            # charge energy source
-            updated_energy_source = powercurve.refuel(
-                vehicle.energy_source,
-                self.charger,
-                sim.sim_timestep_duration_seconds
-            )
-
-            # determine price of charge event
-            kwh_transacted = updated_energy_source.energy_kwh - vehicle.energy_source.energy_kwh  # kwh
-            charger_price = station.charger_prices.get(self.charger)  # Currency
-            charging_price = kwh_transacted * charger_price if charger_price else 0.0
-
-            # perform updates
-            updated_vehicle = vehicle.modify_energy_source(updated_energy_source).send_payment(charging_price)
-            updated_station = station.receive_payment(charging_price)
-            updated_sim = sim.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-            return None, updated_sim
+        return vehicle_state_ops.charge(sim, env, self.vehicle_id, self.station_id, self.charger)
