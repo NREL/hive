@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Optional, NamedTuple
+from typing import Tuple, Optional, NamedTuple, Dict
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
 from hive.state.update.simulation_update import SimulationUpdateFunction
 from hive.state.update.simulation_update_result import SimulationUpdateResult
+from hive.util.exception import report_error
 from hive.util.typealiases import RequestId
 
 
@@ -20,14 +21,38 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         cancels requests whose cancel time has been exceeded
 
         :param simulation_state: state to modify
+        :param env: the scenario environment
         :return: state without cancelled requests, along with this update function
         """
 
-        # TODO: think about making this more readable and catching if simulation_state.remove_request fails
+        def _remove_from_sim(payload: Tuple[SimulationState, Tuple[Dict, ...]],
+                             request_id: RequestId) -> Tuple[SimulationState, Tuple[Dict, ...]]:
+            """
+            inner function that removes each canceled request from the sim
+            :param payload: the sim to update, along with errors we are storing
+            :param request_id: this request to remove
+            :return: the sim without the request
+            """
+            sim, these_reports = payload
+            this_request_cancel_time = sim.requests[request_id].cancel_time
+            if sim.sim_time < this_request_cancel_time:
+                return payload
+            else:
+                # remove this request
+                update_error, updated_sim = sim.remove_request(request_id)
+
+                # report either error or successful cancellation
+                if update_error:
+                    report = report_error(update_error)
+                    updated_reports = these_reports + (report,)
+                    return sim, updated_reports
+                else:
+                    report = _gen_report(request_id, sim)  # use the pre-updated sim so we can lookup this request
+                    updated_reports = these_reports + (report,)
+                    return updated_sim, updated_reports
+
         updated, reports = ft.reduce(
-            lambda s, r_id: (s[0].remove_request(r_id), s[1] + (_gen_report(r_id, s[0]),)) \
-                if s[0].sim_time >= s[0].requests[r_id].cancel_time \
-                else s,
+            _remove_from_sim,
             simulation_state.requests.keys(),
             (simulation_state, ())
         )
