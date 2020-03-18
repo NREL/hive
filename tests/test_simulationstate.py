@@ -264,7 +264,7 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(sim_updated)
 
         updated_veh = sim_updated.vehicles[veh.id]
-        self.assertEqual(updated_veh.vehicle_state, VehicleState.CHARGING_STATION)
+        self.assertEqual(updated_veh.vehicle_state, VehicleState.CHARGING)
 
     def test_set_vehicle_intention_charge_no_station(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -449,7 +449,7 @@ class TestSimulationState(TestCase):
         station_w_veh = sim_in_sta.stations[sta.id]
 
         self.assertEqual(charging_veh.vehicle_state,
-                         VehicleState.CHARGING_STATION,
+                         VehicleState.CHARGING,
                          "Vehicle should have transitioned to charging.")
         self.assertEqual(charging_veh.geoid, sta.geoid, "Vehicle should be at station.")
         self.assertLess(station_w_veh.available_chargers[Charger.DCFC],

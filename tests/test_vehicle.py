@@ -72,10 +72,10 @@ class TestVehicle(TestCase):
         self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
 
-    def test_transition_charging_station(self):
+    def test_transition_CHARGING(self):
         idle_vehicle = mock_vehicle()
 
-        transitioned = idle_vehicle.transition(VehicleState.CHARGING_STATION)
+        transitioned = idle_vehicle.transition(VehicleState.CHARGING)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
         self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
@@ -91,7 +91,7 @@ class TestVehicle(TestCase):
     def test_transition_charging_base(self):
         idle_vehicle = mock_vehicle()
 
-        transitioned = idle_vehicle.transition(VehicleState.CHARGING_BASE)
+        transitioned = idle_vehicle.transition(VehicleState.CHARGING)
         self.assertIsInstance(transitioned, Vehicle, "result should be a Vehicle, not an Exception")
         self.assertEqual(transitioned.geoid, idle_vehicle.geoid,
                          "vehicle position should not be changed")
@@ -157,7 +157,7 @@ class TestVehicle(TestCase):
         self.assertGreater(m3.distance_traveled_km, .5, 'Vehicle should have traveled around 8km')
 
     def test_charge(self):
-        vehicle = mock_vehicle().set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
+        vehicle = mock_vehicle().set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING)
         power_curve = mock_powercurve()
         time_step_size_secs = 1
 
@@ -172,7 +172,7 @@ class TestVehicle(TestCase):
         vehicle = mock_vehicle(
             capacity_kwh=100,
             soc=1.0
-        ).set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING_STATION)
+        ).set_charge_intent(Charger.DCFC).transition(VehicleState.CHARGING)
         power_curve = mock_powercurve()
         time_step_size_secs = 1
 

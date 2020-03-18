@@ -5,7 +5,7 @@ from typing import Dict, NamedTuple, TYPE_CHECKING, Optional
 from hive.model.vehiclestate import VehicleState
 from hive.util.exception import *
 from hive.util.helpers import SwitchCase
-from hive.util.typealiases import VehicleId, StationId
+from hive.util.typealiases import VehicleId, StationId, BaseId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state import SimulationState
@@ -78,7 +78,7 @@ class TerminalStateEffectOps(SwitchCase):
 
             if station.has_available_charger(charger):
                 updated_station = station.checkout_charger(charger)
-                updated_vehicle = vehicle.transition(VehicleState.CHARGING_STATION)
+                updated_vehicle = vehicle.transition(VehicleState.CHARGING)
                 return sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
             else:
                 # FUTURE: Add station queuing?
@@ -111,38 +111,34 @@ class TerminalStateEffectOps(SwitchCase):
 
         return sim_state
 
-    def _case_charging_station(self, arguments: TerminalStateEffectArgs) -> SimulationState:
+    def _case_charging(self, arguments: TerminalStateEffectArgs) -> SimulationState:
         sim_state = arguments.simulation_state
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
-        stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-
+        at_location = sim_state.at_geoid(vehicle.geoid)
+        stations_at_location = at_location.get("stations")
         station_id: Optional[StationId] = stations_at_location[0] if stations_at_location else None
 
         if station_id and vehicle.energy_source.is_at_ideal_energy_limit():
+
+            # return the charger
             station = sim_state.stations[station_id]
             updated_station = station.return_charger(vehicle.charger_intent)
 
-            updated_vehicle = vehicle.transition(VehicleState.IDLE)
-            sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-        return sim_state
-
-    def _case_charging_base(self, arguments: TerminalStateEffectArgs) -> SimulationState:
-        sim_state = arguments.simulation_state
-        vehicle_id = arguments.vehicle_id
-        vehicle = sim_state.vehicles[vehicle_id]
-        stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-        station_id: Optional[StationId] = stations_at_location[0] if stations_at_location else None
-
-        if station_id and vehicle.energy_source.is_at_ideal_energy_limit():
-            station = sim_state.stations[station_id]
-            updated_station = station.return_charger(vehicle.charger_intent)
-
-            updated_vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
-            sim_state = sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-        return sim_state
+            # are we at a base?
+            bases_at_location = at_location.get("bases")
+            base_id: Optional[BaseId] = bases_at_location[0] if bases_at_location else None
+            if base_id:
+                base = sim_state.bases[base_id]
+                updated_base = base.checkout_stall()
+                updated_vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
+                return sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station).modify_base(updated_base)
+            else:
+                updated_vehicle = vehicle.transition(VehicleState.IDLE)
+                return sim_state.modify_vehicle(updated_vehicle).modify_station(updated_station)
+        else:
+            # not a terminal state
+            return sim_state
 
     def _default(self, arguments: Arguments) -> SimulationState:
         return arguments.simulation_state
@@ -156,6 +152,5 @@ class TerminalStateEffectOps(SwitchCase):
         VehicleState.DISPATCH_STATION: _case_dispatch_station,
         VehicleState.DISPATCH_BASE: _case_dispatch_base,
         VehicleState.REPOSITIONING: _case_repositioning,
-        VehicleState.CHARGING_STATION: _case_charging_station,
-        VehicleState.CHARGING_BASE: _case_charging_base,
+        VehicleState.CHARGING: _case_charging,
     }

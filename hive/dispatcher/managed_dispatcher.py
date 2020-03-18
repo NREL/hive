@@ -70,7 +70,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         n_active = len(active_vehicles)
         active_diff = n_active - active_target.n_vehicles
         _base_states = (
-            VehicleState.CHARGING_BASE,
+            VehicleState.CHARGING,
             VehicleState.RESERVE_BASE,
         )
         if active_diff < 0:
@@ -89,7 +89,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             # we can remove active_diff vehicles from service
             non_interrupt_states = (
                 VehicleState.DISPATCH_STATION,
-                VehicleState.CHARGING_STATION,
+                VehicleState.CHARGING,
                 VehicleState.SERVICING_TRIP,
             )
             for i, veh in enumerate(active_vehicles):
@@ -164,7 +164,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
             _valid_states = (
                 VehicleState.IDLE,
                 VehicleState.REPOSITIONING,
-                # VehicleState.CHARGING_BASE,
+                # VehicleState.CHARGING,
                 # VehicleState.RESERVE_BASE,
                 # VehicleState.DISPATCH_BASE,
             )
