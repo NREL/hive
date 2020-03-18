@@ -1,21 +1,20 @@
 from __future__ import annotations
 
+import logging
 from typing import NamedTuple, Optional, cast, Tuple, TYPE_CHECKING
 
 import immutables
 from h3 import h3
-import logging
 
-from hive.util.exception import SimulationStateError
-
+from hive.model.base import Base
+from hive.model.request import Request
+from hive.model.station import Station
+from hive.model.vehicle import Vehicle
 from hive.model.vehiclestate import VehicleState, VehicleStateCategory
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
+from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
-from hive.model.station import Station
-from hive.model.request import Request
-from hive.model.vehicle import Vehicle
-from hive.model.base import Base
 from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
 
 if TYPE_CHECKING:
@@ -51,8 +50,8 @@ class SimulationState(NamedTuple):
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
     r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
-    s_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
-    b_locations: immutables.Map[GeoId, Tuple[BaseId, ...]] = immutables.Map()
+    s_locations: immutables.Map[GeoId, StationId] = immutables.Map()
+    b_locations: immutables.Map[GeoId, BaseId] = immutables.Map()
 
     # search collections   - a higher-level spatial representation used for ring search
     v_search: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
@@ -225,8 +224,8 @@ class SimulationState(NamedTuple):
         elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
             # perform a charge event
             powercurve = env.powercurves[vehicle.powercurve_id]
-            stations_at_location = sim_state_w_effects.at_geoid(vehicle.geoid).get('stations')
-            station = sim_state_w_effects.stations[stations_at_location[0]] if stations_at_location else None
+            station_at_location = sim_state_w_effects.at_geoid(vehicle.geoid).get('station')
+            station = sim_state_w_effects.stations[station_at_location] if station_at_location else None
             charged_vehicle = vehicle.charge(powercurve, sim_state_w_effects.sim_timestep_duration_seconds)
 
             # determine price of charge event
@@ -319,11 +318,13 @@ class SimulationState(NamedTuple):
         elif not self.road_network.geoid_within_geofence(station.geoid):
             log.error(f"cannot add station {station.id} to sim: not within road network geofence")
             return None
+        elif station.geoid in self.s_locations:
+            log.error(f"cannot add {station.id} to sim: station already exists at {station.geoid}")
 
         search_geoid = h3.h3_to_parent(station.geoid, self.sim_h3_search_resolution)
         return self._replace(
             stations=DictOps.add_to_dict(self.stations, station.id, station),
-            s_locations=DictOps.add_to_location_dict(self.s_locations, station.geoid, station.id),
+            s_locations=DictOps.add_to_dict(self.s_locations, station.geoid, station.id),
             s_search=DictOps.add_to_location_dict(self.s_search, search_geoid, station.id)
         )
 
@@ -346,7 +347,7 @@ class SimulationState(NamedTuple):
 
         return self._replace(
             stations=DictOps.remove_from_dict(self.stations, station_id),
-            s_locations=DictOps.remove_from_location_dict(self.s_locations, station.geoid, station_id),
+            s_locations=DictOps.remove_from_dict(self.s_locations, station.geoid),
             s_search=DictOps.remove_from_location_dict(self.s_search, search_geoid, station_id)
         )
 
@@ -375,14 +376,16 @@ class SimulationState(NamedTuple):
         if not isinstance(base, Base):
             log.error(f"sim.add_base requires a base but received {type(base)}")
             return None
-        if not self.road_network.geoid_within_geofence(base.geoid):
+        elif not self.road_network.geoid_within_geofence(base.geoid):
             log.error(f"cannot add base {base.id} to sim: not within road network geofence")
             return None
+        elif base.geoid in self.b_locations:
+            log.error(f"cannot add {base.id} to sim: base already exists at {base.geoid}")
 
         search_geoid = h3.h3_to_parent(base.geoid, self.sim_h3_search_resolution)
         return self._replace(
             bases=DictOps.add_to_dict(self.bases, base.id, base),
-            b_locations=DictOps.add_to_location_dict(self.b_locations, base.geoid, base.id),
+            b_locations=DictOps.add_to_dict(self.b_locations, base.geoid, base.id),
             b_search=DictOps.add_to_location_dict(self.b_search, search_geoid, base.id)
         )
 
@@ -405,7 +408,7 @@ class SimulationState(NamedTuple):
 
         return self._replace(
             bases=DictOps.remove_from_dict(self.bases, base_id),
-            b_locations=DictOps.remove_from_location_dict(self.b_locations, base.geoid, base_id),
+            b_locations=DictOps.remove_from_dict(self.b_locations, base.geoid),
             b_search=DictOps.remove_from_location_dict(self.b_search, search_geoid, base_id)
         )
 
@@ -424,17 +427,6 @@ class SimulationState(NamedTuple):
             bases=DictOps.add_to_dict(self.bases, updated_base.id, updated_base)
         )
 
-    def update_road_network(self, sim_time: SimTime) -> SimulationState:
-        """
-        trigger the update of the road network model based on the current sim time
-
-        :param sim_time: the current sim time
-        :return: updated simulation state (and road network)
-        """
-        return self._replace(
-            road_network=self.road_network.update(sim_time)
-        )
-
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """
         returns a dictionary with the list of ids found at this location for all entities
@@ -443,14 +435,14 @@ class SimulationState(NamedTuple):
         """
         vehicles = self.v_locations[geoid] if geoid in self.v_locations else ()
         requests = self.r_locations[geoid] if geoid in self.r_locations else ()
-        stations = self.s_locations[geoid] if geoid in self.s_locations else ()
-        bases = self.b_locations[geoid] if geoid in self.b_locations else ()
+        station = self.s_locations[geoid] if geoid in self.s_locations else None
+        base = self.b_locations[geoid] if geoid in self.b_locations else None
 
         result = cast(AtLocationResponse, {
             'vehicles': vehicles,
             'requests': requests,
-            'stations': stations,
-            'bases': bases
+            'station': station,
+            'base': base
         })
         return result
 

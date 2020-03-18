@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from hive.model.instruction import *
-from hive.state.update.step_simulation import step_simulation
 from tests.mock_lobster import *
 
 
@@ -108,8 +107,7 @@ class TestSimulationState(TestCase):
 
         at_loc = sim_after_station.s_locations[station.geoid]
 
-        self.assertEqual(len(at_loc), 1, "should only have 1 station at this location")
-        self.assertEqual(at_loc[0], station.id, "the station's id should be found at it's geoid")
+        self.assertEqual(at_loc, station.id, "the station's id should be found at it's geoid")
 
     def test_remove_station(self):
         station = mock_station()
@@ -129,8 +127,7 @@ class TestSimulationState(TestCase):
 
         at_loc = sim_after_base.b_locations[base.geoid]
 
-        self.assertEqual(len(at_loc), 1, "should only have 1 base at this location")
-        self.assertEqual(at_loc[0], base.id, "the base's id should be found at it's geoid")
+        self.assertEqual(at_loc, base.id, "the base's id should be found at it's geoid")
 
     def test_remove_base(self):
         base = mock_base()
@@ -152,8 +149,8 @@ class TestSimulationState(TestCase):
         result = sim.at_geoid(veh.geoid)
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
         self.assertIn(req.id, result['requests'], "should have found this request")
-        self.assertIn(sta.id, result['stations'], "should have found this station")
-        self.assertNotIn(b.id, result['bases'], "should not have found this base")
+        self.assertEqual(sta.id, result['station'], "should have found this station")
+        self.assertIsNone(result['base'], "should not have found this base")
 
     def test_vehicle_at_request(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)

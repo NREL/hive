@@ -23,10 +23,10 @@ def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> 
     TODO: Refactor this logic into some kind of exit method on a vehicle state that gets called on a transition.
     """
     vehicle = sim_state.vehicles[vehicle_id]
-    stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
+    station_at_location = sim_state.at_geoid(vehicle.geoid).get("station")
     # TODO: we should think about the implications of not having an explicit paring between the vehicle
     #  and the station. what if we had two stations at the same location?
-    station_id = stations_at_location[0]
+    station_id = station_at_location
     station = sim_state.stations[station_id]
     update_station = station.return_charger(vehicle.charger_intent)
     sim_state = sim_state.modify_station(update_station)
@@ -174,7 +174,7 @@ class ChargeStationInstruction(NamedTuple, Instruction):
         updated_vehicle = vehicle.transition(VehicleState.CHARGING).set_charge_intent(self.charger)
 
         at_location = sim_state.at_geoid(updated_vehicle.geoid)
-        if not at_location['stations']:
+        if not at_location['station']:
             log.debug(f"vehicle {self.vehicle_id} not at station {self.station_id}")
             return None
 
@@ -208,7 +208,7 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
         updated_vehicle = vehicle.set_charge_intent(self.charger).transition(VehicleState.CHARGING)
 
         at_location = sim_state.at_geoid(updated_vehicle.geoid)
-        if not at_location['stations']:
+        if not at_location['station']:
             log.debug(f"vehicle {self.vehicle_id} not at station {self.station_id}")
             return None
 
@@ -292,7 +292,7 @@ class ReserveBaseInstruction(NamedTuple, Instruction):
         vehicle = sim_state.vehicles[self.vehicle_id]
 
         at_location = sim_state.at_geoid(vehicle.geoid)
-        if not at_location['bases']:
+        if not at_location['base']:
             log.debug(f"vehicle {self.vehicle_id} not at base")
             return None
 

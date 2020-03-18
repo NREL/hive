@@ -69,8 +69,8 @@ class TerminalStateEffectOps(SwitchCase):
         sim_state = arguments.simulation_state
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
-        stations_at_location = sim_state.at_geoid(vehicle.geoid).get("stations")
-        station_id_at_location: Optional[StationId] = stations_at_location[0] if stations_at_location else None
+        station_at_location = sim_state.at_geoid(vehicle.geoid).get("station")
+        station_id_at_location: Optional[StationId] = station_at_location
 
         if station_id_at_location and vehicle.charger_intent and not vehicle.has_route():
             station = sim_state.stations[station_id_at_location]
@@ -94,7 +94,7 @@ class TerminalStateEffectOps(SwitchCase):
         at_location = sim_state.at_geoid(vehicle.geoid)
 
         # TODO: Implement base stall checkout.
-        if at_location['bases'] and vehicle.can_transition(VehicleState.RESERVE_BASE) and not vehicle.has_route():
+        if at_location['base'] and vehicle.can_transition(VehicleState.RESERVE_BASE) and not vehicle.has_route():
             vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
             sim_state = sim_state.modify_vehicle(vehicle)
 
@@ -116,8 +116,8 @@ class TerminalStateEffectOps(SwitchCase):
         vehicle_id = arguments.vehicle_id
         vehicle = sim_state.vehicles[vehicle_id]
         at_location = sim_state.at_geoid(vehicle.geoid)
-        stations_at_location = at_location.get("stations")
-        station_id: Optional[StationId] = stations_at_location[0] if stations_at_location else None
+        station_at_location = at_location.get("station")
+        station_id: Optional[StationId] = station_at_location
 
         if station_id and vehicle.energy_source.is_at_ideal_energy_limit():
 
@@ -126,8 +126,8 @@ class TerminalStateEffectOps(SwitchCase):
             updated_station = station.return_charger(vehicle.charger_intent)
 
             # are we at a base?
-            bases_at_location = at_location.get("bases")
-            base_id: Optional[BaseId] = bases_at_location[0] if bases_at_location else None
+            base_at_location = at_location.get("base")
+            base_id: Optional[BaseId] = base_at_location
             if base_id:
                 base = sim_state.bases[base_id]
                 updated_base = base.checkout_stall()

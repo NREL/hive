@@ -215,7 +215,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if
                                 v.id not in vehicle_ids_given_instructions and _should_base_charge(v)]
         for v in base_charge_vehicles:
-            base_id = simulation_state.b_locations[v.geoid][0]
+            base_id = simulation_state.b_locations[v.geoid]
             base = simulation_state.bases[base_id]
             if base.station_id:
                 instruction = ChargeBaseInstruction(
