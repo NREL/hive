@@ -20,10 +20,10 @@ class DispatchBase(NamedTuple, VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        pass
+        return VehicleState.default_enter(sim, self.vehicle_id, self)
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        pass
+        return None, sim
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
@@ -68,7 +68,20 @@ class DispatchBase(NamedTuple, VehicleState):
         :return: the sim state with vehicle moved
         """
 
+        errors, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
+        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if not errors else None
 
-        errors, updated_sim = vehicle_state_ops.move()
-        # updated_vehicle = less_energy_vehicle.transition(
-        #     VehicleState.OUT_OF_SERVICE) if updated_energy_source.is_empty() else less_energy_vehicle
+        if errors:
+            return errors, None
+        if not moved_vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif moved_vehicle.energy_source.is_empty():
+            # move to out of service state
+            next_state = OutOfService(self.vehicle_id)
+            return next_state.enter(move_result.sim, env)
+        else:
+            # update moved vehicle's state (holding the route)
+            updated_state = self._replace(route=move_result.route_traversal.remaining_route)
+            updated_vehicle = moved_vehicle.modify_state(updated_state) if moved_vehicle else None
+            updated_sim = move_result.sim.modify_vehicle(updated_vehicle)
+            return None, updated_sim

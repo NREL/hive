@@ -1,6 +1,6 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, NamedTuple
 
-from hive.model.roadnetwork.routetraversal import traverse
+from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 
 from hive.model.roadnetwork.route import Route
 
@@ -66,57 +66,39 @@ def charge(sim: SimulationState,
         return None, updated_sim
 
 
+class MoveResult(NamedTuple):
+    sim: SimulationState
+    route_traversal: RouteTraversal
+
+
 def move(sim: SimulationState,
          env: Environment,
-         duration_seconds: Seconds,
          vehicle_id: VehicleId,
-         route: Route) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+         route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
     """
     Moves the vehicle and consumes energy.
 
     :param sim: the simulation state
     :param env: the simulation environment
-    :param duration_seconds: the duration_seconds of this move step in seconds
     :param vehicle_id: the vehicle moving
     :param route: the route for the vehicle
     :return: the updated vehicle or None if moving is not possible.
     """
     vehicle = sim.vehicles.get(vehicle_id)
-    powertrain = env.powertrains.get(vehicle.powertrain_id)
     traverse_result = traverse(
         route_estimate=route,
-        duration_seconds=duration_seconds,
+        duration_seconds=sim.sim_timestep_duration_seconds,
     )
     if not vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
-    elif not powertrain:
-        return SimulationStateError(f"powertrain {vehicle.powertrain_id} not found"), None
     elif not traverse_result:
-        return None, None
+        return traverse_result, None
+    elif isinstance(traverse_result, Exception):
+        return traverse_result, None
     else:
+        updated_vehicle = vehicle.apply_route_traversal(
+            traverse_result, sim.road_network, env
+        )
+        updated_sim = sim.modify_vehicle(updated_vehicle)
 
-        experienced_route = traverse_result.experienced_route
-        energy_used = powertrain.energy_cost(experienced_route)
-        step_distance_km = traverse_result.traversal_distance_km
-        remaining_route = traverse_result.remaining_route
-
-        # todo: we allow the agent to traverse only bounded by time, not energy;
-        #   so, it is possible for the vehicle to travel farther in a time step than
-        #   they have fuel to travel. this can create an error on the location of
-        #   any agents at the time step where they run out of fuel. feels like an
-        #   acceptable edge case but we could improve. rjf 20200309
-
-        updated_energy_source = vehicle.energy_source.use_energy(energy_used)
-        less_energy_vehicle = vehicle.modify_energy_source(energy_source=updated_energy_source)  # .assign_route(remaining_route)
-
-        if not remaining_route:
-            geoid = experienced_route[-1].end
-            return updated_vehicle._replace(
-                link=road_network.link_from_geoid(geoid),
-                distance_traveled_km=self.distance_traveled_km + step_distance_km,
-            )
-        else:
-            return updated_vehicle._replace(
-                link=remaining_route[0],
-                distance_traveled_km=self.distance_traveled_km + step_distance_km,
-            )
+        return None, MoveResult(updated_sim, traverse_result)

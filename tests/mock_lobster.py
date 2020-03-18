@@ -494,6 +494,14 @@ def mock_haversine_zigzag_route(
     return ft.reduce(step, range(0, n), ())
 
 
+def mock_route_from_geoids(
+        src: GeoId,
+        dst: GeoId,
+        speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
+    link = Link.build("1", src, dst, speed_kmph=speed_kmph)
+    return link,
+
+
 def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
