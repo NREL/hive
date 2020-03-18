@@ -81,11 +81,11 @@ class Charging(NamedTuple, VehicleState):
         else:
             return vehicle.energy_source.is_at_ideal_energy_limit()
 
-    def _default_transition(self,
-                            sim: SimulationState,
-                            env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _default_terminal_state_transition(self,
+                                           sim: SimulationState,
+                                           env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        apply a transition to a default state after having met a terminal condition
+        we default to idle, or reserve base if there is a base with stalls at the location
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
@@ -94,11 +94,13 @@ class Charging(NamedTuple, VehicleState):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-            # are we at a base?
+            # are we at a base? are there available stalls?
             bases = sim.at_geoid(vehicle.geoid).get("bases")
             base_id = bases[0] if bases else None
+            base = sim.bases.get(base_id) if base_id else None
+            stalls = base.available_stalls if base else 0
 
-            if base_id:
+            if base_id and stalls != 0:
                 next_state = ReserveBase(self.vehicle_id)
                 return next_state.enter(sim, env)
             else:

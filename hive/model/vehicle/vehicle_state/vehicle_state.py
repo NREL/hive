@@ -40,7 +40,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             if error:
                 return error, None
             else:
-                return state._default_transition(exited_sim, env)
+                return state._default_terminal_state_transition(exited_sim, env)
         else:
             return state._perform_update(sim, env)
 
@@ -78,9 +78,9 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         pass
 
     @abstractmethod
-    def _default_transition(self,
-                            sim: SimulationState,
-                            env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _default_terminal_state_transition(self,
+                                           sim: SimulationState,
+                                           env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         apply a transition to a default state after having met a terminal condition
         :param sim: the simulation state
