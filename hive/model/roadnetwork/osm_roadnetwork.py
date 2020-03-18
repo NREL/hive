@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-import osmnx as ox
-import networkx as nx
-from h3 import h3
-
 from typing import Tuple, Optional, Dict
 
+import networkx as nx
+import osmnx as ox
+from h3 import h3
 from networkx.classes.multidigraph import MultiDiGraph
 
-from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.route import Route
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.geofence import GeoFence
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.roadnetwork.route import Route
 from hive.util.typealiases import GeoId, H3Resolution
-from hive.util.units import Kilometers, M_TO_KM, MPH_TO_KMPH
+from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
 
 
 class OSMRoadNetwork(RoadNetwork):
@@ -35,6 +34,22 @@ class OSMRoadNetwork(RoadNetwork):
         self.G = G
         self.geoid_to_node_id = geoid_to_node_id
 
+    @staticmethod
+    def _parse_speed_string(speed_string: str) -> Kmph:
+        if speed_string == 'nan':
+            speed_kmph = 40
+        elif '[' in speed_string:
+            speed_kmph = 40
+        elif isinstance(speed_string, list):
+            speed_kmph = 40
+        elif 'mph' in speed_string:
+            speed_mph = float(speed_string.split(' ')[0])
+            speed_kmph = speed_mph * MPH_TO_KMPH
+        else:
+            speed_kmph = float(speed_string.split(' ')[0])
+
+        return speed_kmph
+
     def _parse_road_network_graph(self, g: MultiDiGraph) -> Tuple[MultiDiGraph, Dict]:
         if not nx.is_strongly_connected(g):
             raise RuntimeError("Only strongly connected graphs are allowed.")
@@ -47,6 +62,10 @@ class OSMRoadNetwork(RoadNetwork):
             geoid_to_node_id[geoid] = nid
 
         nx.set_node_attributes(g, geoid_map)
+
+        osm_speed = nx.get_edge_attributes(g, 'maxspeed')
+        hive_speed = {k: self._parse_speed_string(v) for k, v in osm_speed.items()}
+        nx.set_edge_attributes(g, hive_speed, 'speed_kmph')
 
         return g, geoid_to_node_id
 
@@ -101,26 +120,7 @@ class OSMRoadNetwork(RoadNetwork):
 
             link_id = str(nid_1) + "-" + str(nid_2)
             distance_km = route_attributes[i]['length'] * M_TO_KM
-            speed_string = route_attributes[i]['maxspeed']
-
-            # TODO: implement more robust parsing
-            # maxspeed comes in several variants:
-            #   - 'nan'
-            #   - 'X mph'
-            #   - 'X kmph'
-            #   - '['nan', 'X mph']
-
-            if speed_string == 'nan':
-                speed_kmph = 40
-            elif '[' in speed_string:
-                speed_kmph = 40
-            elif isinstance(speed_string, list):
-                speed_kmph = 40
-            elif 'mph' in speed_string:
-                speed_mph = float(speed_string.split(' ')[0])
-                speed_kmph = speed_mph * MPH_TO_KMPH
-            else:
-                speed_kmph = float(speed_string.split(' ')[0])
+            speed_kmph = route_attributes[i]['speed_kmph']
 
             link = Link(
                 link_id=link_id,
