@@ -52,7 +52,6 @@ class OSMRoadNetwork(RoadNetwork):
 
         return tree
 
-
     def _route_attributes(
             self,
             route: list,

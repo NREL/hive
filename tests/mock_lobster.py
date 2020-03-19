@@ -91,7 +91,7 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
     )
 
 
-def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
+def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
     road_network_file = resource_filename('hive.resources.road_network', 'downtown_denver.xml')
     return OSMRoadNetwork(
         road_network_file=road_network_file,

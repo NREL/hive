@@ -31,3 +31,13 @@ class TestOSMRoadNetwork(TestCase):
 
         self.assertEqual(origin, route[0].start, "route should start at origin")
         self.assertEqual(destination, route[-1].end, "route should end at origin")
+
+    def test_get_nearest_node(self):
+        network = mock_osm_network()
+
+        node_id = list(network.G.nodes())[0]
+        node = network.G.nodes[node_id]
+
+        nearest_node = network.get_nearest_node(node['y'], node['x'])
+
+        self.assertEqual(node_id, nearest_node, "node should be nearest to itself")
