@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, Union
 
 import networkx as nx
 import osmnx as ox
@@ -19,34 +19,82 @@ class OSMRoadNetwork(RoadNetwork):
     """
     Implements an open street maps road network utilizing the osmnx and networkx libraries
     """
+    _unit_conversion = {
+        'mph': MPH_TO_KMPH,
+        'kmph': 1,
+    }
 
     def __init__(
             self,
             road_network_file: str,
             geofence: Optional[GeoFence] = None,
             sim_h3_resolution: H3Resolution = 15,
+            default_speed_kmph: Kmph = 40,
     ):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
+
+        self.default_speed_kmph = default_speed_kmph
 
         G, geoid_to_node_id = self._parse_road_network_graph(ox.graph_from_file(road_network_file))
 
         self.G = G
         self.geoid_to_node_id = geoid_to_node_id
 
-    @staticmethod
-    def _parse_speed_string(speed_string: str) -> Kmph:
-        if speed_string == 'nan':
-            speed_kmph = 40
-        elif '[' in speed_string:
-            speed_kmph = 40
-        elif isinstance(speed_string, list):
-            speed_kmph = 40
-        elif 'mph' in speed_string:
-            speed_mph = float(speed_string.split(' ')[0])
-            speed_kmph = speed_mph * MPH_TO_KMPH
+    def _route_attributes(
+            self,
+            route: list,
+            attribute: str = None,
+            minimize_key: str = 'length',
+    ) -> list:
+        """
+        Taken from osmnx package, geo_utils module.
+
+        :param route: the route to get attributes for
+        :param attribute: the attribute of interest. will return all attributes if None
+        :param minimize_key: the key to minimize over if multiple edges exist between two nodes
+
+        :return: a list of attributes
+        """
+
+        attribute_values = []
+        for u, v in zip(route[:-1], route[1:]):
+            # if there are parallel edges between two nodes, select the one with the
+            # lowest value of minimize_key
+            data = min(self.G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
+            if attribute is None:
+                attribute_value = data
+            else:
+                attribute_value = data[attribute]
+            attribute_values.append(attribute_value)
+        return attribute_values
+
+    def _parse_osm_speed(self, osm_speed: Union[str, list]) -> Kmph:
+        if '[' in osm_speed:
+            osm_speed = eval(osm_speed)
+
+        if isinstance(osm_speed, list):
+            min_speed = 10000
+            units = None
+            for ss in osm_speed:
+                speed = float(ss.split(' ')[0])
+                if speed < min_speed:
+                    min_speed = speed
+                    units = ss.split(' ')[1]
+            if not units:
+                speed_kmph = self.default_speed_kmph
+            else:
+                speed_kmph = min_speed * self._unit_conversion[units]
+        elif isinstance(osm_speed, str):
+            if not any(char.isdigit() for char in osm_speed):
+                # no numbers in string, set as defualt
+                speed_kmph = self.default_speed_kmph
+            else:
+                speed = float(osm_speed.split(' ')[0])
+                units = osm_speed.split(' ')[1]
+                speed_kmph = speed * self._unit_conversion[units]
         else:
-            speed_kmph = float(speed_string.split(' ')[0])
+            speed_kmph = self.default_speed_kmph
 
         return speed_kmph
 
@@ -64,7 +112,7 @@ class OSMRoadNetwork(RoadNetwork):
         nx.set_node_attributes(g, geoid_map)
 
         osm_speed = nx.get_edge_attributes(g, 'maxspeed')
-        hive_speed = {k: self._parse_speed_string(v) for k, v in osm_speed.items()}
+        hive_speed = {k: self._parse_osm_speed(v) for k, v in osm_speed.items()}
         nx.set_edge_attributes(g, hive_speed, 'speed_kmph')
 
         return g, geoid_to_node_id
@@ -96,7 +144,7 @@ class OSMRoadNetwork(RoadNetwork):
             destination_node = ox.get_nearest_node(self.G, (lat, lon))
 
         nx_route = nx.shortest_path(self.G, origin_node, destination_node)
-        route_attributes = ox.get_route_edge_attributes(self.G, nx_route)
+        route_attributes = self._route_attributes(nx_route)
 
         if len(nx_route) == 1:
             # special case in which the origin and destination correspond to the same node on the network
