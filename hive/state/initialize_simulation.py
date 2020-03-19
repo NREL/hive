@@ -57,6 +57,7 @@ def initialize_simulation(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
             road_network_file=road_network_file,
+            default_speed_kmph=config.network.default_speed_kmph,
         )
 
     sim_initial = SimulationState(

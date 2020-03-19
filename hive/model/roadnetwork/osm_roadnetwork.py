@@ -29,7 +29,7 @@ class OSMRoadNetwork(RoadNetwork):
             road_network_file: str,
             geofence: Optional[GeoFence] = None,
             sim_h3_resolution: H3Resolution = 15,
-            default_speed_kmph: Kmph = 40,
+            default_speed_kmph: Kmph = 40.0,
     ):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
