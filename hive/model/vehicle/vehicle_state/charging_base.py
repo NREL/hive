@@ -26,7 +26,7 @@ class ChargingBase(NamedTuple, VehicleState):
         entering a charge event requires attaining a charger from the station situated at the base
         :param sim: the simulation state
         :param env: the simulation environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception due to failure or an optional updated simulation, or (None, None)
         """
         # ok, we want to enter a charging state.
         # we attempt to claim a charger from the base of this self.charger type

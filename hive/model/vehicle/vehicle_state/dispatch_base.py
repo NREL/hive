@@ -1,6 +1,7 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.vehicle.vehicle_state import vehicle_state_ops
+from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
 
 from hive.model.roadnetwork.route import Route
@@ -77,6 +78,8 @@ class DispatchBase(NamedTuple, VehicleState):
             return move_error, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif isinstance(moved_vehicle.vehicle_state, OutOfService):
+            return None, move_result
         else:
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)

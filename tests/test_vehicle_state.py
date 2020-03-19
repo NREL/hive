@@ -7,6 +7,8 @@ from hive.model.vehicle.vehicle_state.dispatch_station import DispatchStation
 from hive.model.vehicle.vehicle_state.dispatch_trip import DispatchTrip
 from hive.model.vehicle.vehicle_state.idle import Idle
 from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
+from hive.model.vehicle.vehicle_state.repositioning import Repositioning
+from hive.model.vehicle.vehicle_state.reserve_base import ReserveBase
 from tests.mock_lobster import *
 
 
@@ -302,7 +304,7 @@ class TestVehicleState(TestCase):
         self.assertEquals(updated_base.available_stalls, 0, "should have taken the only available stall")
 
     ####################################################################################################################
-    ### DispatchBase ###################################################################################################
+    ### DispatchStation ################################################################################################
     ####################################################################################################################
 
     def test_dispatch_station_enter(self):
@@ -597,3 +599,141 @@ class TestVehicleState(TestCase):
         self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
 
     # def test_out_of_service_update_terminal(self):  # there is no terminal state for OutOfService
+
+    ####################################################################################################################
+    ### Repositioning ##################################################################################################
+    ####################################################################################################################
+
+    def test_repositioning_enter(self):
+        vehicle = mock_vehicle()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, vehicle.geoid)
+
+        state = Repositioning(vehicle.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, Repositioning, "should be in a repositioning state")
+        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_repositioning_exit(self):
+        vehicle = mock_vehicle()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, vehicle.geoid)
+
+        state = Repositioning(vehicle.id, route)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+
+    def test_repositioning_update(self):
+        near = h3.geo_to_h3(39.7539, -104.974, 15)
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(near, omf_brewing)
+
+        state = Repositioning(vehicle.id, route)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(entered_sim, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, Repositioning, "should still be in a Repositioning state")
+        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+
+    def test_repositioning_update_terminal(self):
+        vehicle = mock_vehicle()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = Repositioning(vehicle.id, route)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(entered_sim, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state")
+
+    ####################################################################################################################
+    ### ReserveBase ####################################################################################################
+    ####################################################################################################################
+
+    def test_reserve_base_enter(self):
+        vehicle = mock_vehicle()
+        base = mock_base()
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,))
+        env = mock_env()
+
+        state = ReserveBase(vehicle.id, base.id)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        updated_base = updated_sim.bases.get(base.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "should be in an ReserveBase state")
+        self.assertEqual(updated_base.available_stalls, 0, "only stall should now be occupied")
+
+    def test_reserve_base_exit(self):
+        vehicle = mock_vehicle()
+        base = mock_base()
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,))
+        env = mock_env()
+
+        state = ReserveBase(vehicle.id, base.id)
+        enter_error, entered_sim = state.enter(sim, env)
+        entered_base = entered_sim.bases.get(base.id)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+        self.assertEqual(entered_base.available_stalls, 0, "test precondition (stall in use) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        exited_base = exited_sim.bases.get(base.id)
+        self.assertIsNone(error, "should have no errors")
+        self.assertEqual(exited_base.available_stalls, 1, "should have released stall")
+
+    def test_reserve_base_update(self):
+        vehicle = mock_vehicle()
+        base = mock_base()
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,))
+        env = mock_env()
+
+        state = ReserveBase(vehicle.id, base.id)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, updated_sim = state.update(entered_sim, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "should still be in a ReserveBase state")
+        self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
+
+    # def test_reserve_base_update_terminal(self):  # there is no terminal state for OutOfService

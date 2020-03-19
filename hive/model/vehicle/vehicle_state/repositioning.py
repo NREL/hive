@@ -1,6 +1,8 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.vehicle.vehicle_state import vehicle_state_ops
+from hive.model.vehicle.vehicle_state.idle import Idle
+from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
 
 from hive.model.roadnetwork.route import Route
@@ -43,21 +45,12 @@ class Repositioning(NamedTuple, VehicleState):
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
         """
-        vehicle = sim.vehicles.get(self.vehicle_id)
-        base = sim.bases.get(self.base_id)
-        if not base:
-            return SimulationStateError(f"base {self.base_id} not found"), None
-        elif base.geoid != vehicle.geoid:
-            locations = f"{base.geoid} != {vehicle.geoid}"
-            message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
-            return SimulationStateError(message), None
+        next_state = Idle(self.vehicle_id)
+        enter_error, enter_sim = next_state.enter(sim, env)
+        if enter_error:
+            return enter_error, None
         else:
-            next_state = ReserveBase(self.vehicle_id) if base.available_stalls > 0 else Idle(self.vehicle_id)
-            enter_error, enter_sim = next_state.enter(sim, env)
-            if enter_error:
-                return enter_error, None
-            else:
-                return None, (enter_sim, next_state)
+            return None, (enter_sim, next_state)
 
     def _perform_update(self,
                         sim: SimulationState,
@@ -76,6 +69,8 @@ class Repositioning(NamedTuple, VehicleState):
             return move_error, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif isinstance(moved_vehicle.vehicle_state, OutOfService):
+            return None, move_result
         else:
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)
