@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, TYPE_CHECKING, Callable, Optional
-
 import logging
+from typing import NamedTuple, TYPE_CHECKING, Callable, Optional
 
 from hive.runner.runner_payload import RunnerPayload
 

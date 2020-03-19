@@ -51,6 +51,11 @@ class Sim(NamedTuple):
         if isinstance(end_time, IOError):
             return end_time
 
-        d['timestep_duration_seconds'] = int(d['timestep_duration_seconds'])
-
-        return Sim(**d)
+        return Sim(
+            sim_name=d['sim_name'],
+            timestep_duration_seconds=int(d['timestep_duration_seconds']),
+            start_time=start_time,
+            end_time=end_time,
+            sim_h3_resolution=d['sim_h3_resolution'],
+            sim_h3_search_resolution=d['sim_h3_search_resolution'],
+        )

@@ -6,6 +6,7 @@ import networkx as nx
 import osmnx as ox
 from h3 import h3
 from networkx.classes.multidigraph import MultiDiGraph
+from rtree import index
 
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
@@ -40,6 +41,17 @@ class OSMRoadNetwork(RoadNetwork):
 
         self.G = G
         self.geoid_to_node_id = geoid_to_node_id
+        self.rtree = self._build_rtree()
+
+    def _build_rtree(self) -> index.Index:
+        tree = index.Index()
+        for nid in self.G.nodes():
+            lat = self.G.nodes[nid]['y']
+            lon = self.G.nodes[nid]['x']
+            tree.insert(nid, (lat, lon, lat, lon))
+
+        return tree
+
 
     def _route_attributes(
             self,
@@ -135,13 +147,13 @@ class OSMRoadNetwork(RoadNetwork):
         else:
             # find the closest node on the network
             lat, lon = h3.h3_to_geo(origin)
-            origin_node = ox.get_nearest_node(self.G, (lat, lon))
+            origin_node = self.get_nearest_node(lat, lon)
 
         if destination in self.geoid_to_node_id:
             destination_node = self.geoid_to_node_id[destination]
         else:
             lat, lon = h3.h3_to_geo(destination)
-            destination_node = ox.get_nearest_node(self.G, (lat, lon))
+            destination_node = self.get_nearest_node(lat, lon)
 
         nx_route = nx.shortest_path(self.G, origin_node, destination_node)
         route_attributes = self._route_attributes(nx_route)
@@ -208,7 +220,7 @@ class OSMRoadNetwork(RoadNetwork):
             nid = self.geoid_to_node_id[geoid]
         else:
             lat, lon = h3.h3_to_geo(geoid)
-            nid = ox.get_nearest_node(self.G, (lat, lon))
+            nid = self.get_nearest_node(lat, lon)
 
         return Link(
             link_id=str(nid) + "-" + str(nid),
@@ -229,3 +241,8 @@ class OSMRoadNetwork(RoadNetwork):
             raise RuntimeError("Geofence not specified.")
         else:
             return self.geofence.contains(geoid)
+
+    def get_nearest_node(self, lat, lon) -> str:
+        node_id = list(self.rtree.nearest((lat, lon, lat, lon), 1))[0]
+
+        return node_id
