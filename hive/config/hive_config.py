@@ -6,9 +6,9 @@ from hive.config import *
 
 
 class HiveConfig(NamedTuple):
-    io: IO
-    sim: Sim
-    network: Network
+    io: Optional[IO]
+    sim: Optional[Sim]
+    network: Optional[Network]
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
