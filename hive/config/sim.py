@@ -15,6 +15,7 @@ class Sim(NamedTuple):
     end_time: SimTime
     sim_h3_resolution: int
     sim_h3_search_resolution: int
+    idle_energy_rate: float
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -22,7 +23,7 @@ class Sim(NamedTuple):
             'timestep_duration_seconds': 1,  # number of seconds per time step in Hive
             'sim_h3_resolution': 15,
             'sim_h3_search_resolution': 7,
-            'date_format': None,
+            'idle_energy_rate': 0.8  # (unit.kilowatthour / unit.hour)
         }
 
     @classmethod
@@ -52,11 +53,4 @@ class Sim(NamedTuple):
         if isinstance(end_time, IOError):
             return end_time
 
-        return Sim(
-            sim_name=d['sim_name'],
-            timestep_duration_seconds=int(d['timestep_duration_seconds']),
-            start_time=start_time,
-            end_time=end_time,
-            sim_h3_resolution=d['sim_h3_resolution'],
-            sim_h3_search_resolution=d['sim_h3_search_resolution'],
-        )
+        return Sim(**d)

@@ -1,5 +1,6 @@
 from typing import Tuple, Optional, NamedTuple
 
+from hive.model.vehicle.vehicle_state.idle import Idle
 from hive.util.exception import SimulationStateError
 
 from hive.util.typealiases import StationId

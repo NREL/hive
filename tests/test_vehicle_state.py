@@ -1,10 +1,12 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from hive.model.vehicle.vehicle_state.charging_base import ChargingBase
 from hive.model.vehicle.vehicle_state.charging_station import ChargingStation
 from hive.model.vehicle.vehicle_state.dispatch_base import DispatchBase
 from hive.model.vehicle.vehicle_state.dispatch_station import DispatchStation
 from hive.model.vehicle.vehicle_state.dispatch_trip import DispatchTrip
+from hive.model.vehicle.vehicle_state.idle import Idle
+from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
 from tests.mock_lobster import *
 
 
@@ -453,7 +455,6 @@ class TestVehicleState(TestCase):
         self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
 
     def test_dispatch_trip_update_terminal(self):
-        initial_soc = 0.1
         vehicle = mock_vehicle()
         request = mock_request()
         sim = mock_sim(vehicles=(vehicle,)).add_request(request)
@@ -470,6 +471,129 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_request = sim_updated.requests.get(request.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "vehicle should be in ServicingTrip state")
-        self.assertEquals(updated_vehicle.passengers)
+        self.assertIn(request.passengers[0].id, updated_vehicle.vehicle_state.passengers, "passenger not picked up")
         self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
-        self.assertGreater(updated_vehicle.energy_source.soc, initial_soc, "should have charged for one time step")
+
+    ####################################################################################################################
+    ### Idle ###########################################################################################################
+    ####################################################################################################################
+
+    def test_idle_enter(self):
+        # should intially not be in an Idle state
+        vehicle = mock_vehicle().modify_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = Idle(vehicle.id)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should be in an idle to request state")
+
+    def test_idle_exit(self):
+        # should intially not be in an Idle state
+        vehicle = mock_vehicle().modify_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = Idle(vehicle.id)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+
+    def test_idle_update(self):
+        # should intially not be in an Idle state
+        vehicle = mock_vehicle().modify_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = Idle(vehicle.id)
+        enter_error, updated_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(updated_sim, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should still be in an Idle state")
+        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+
+    def test_idle_update_terminal(self):
+        initial_soc = 0.0
+        ititial_state = DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ())
+        vehicle = mock_vehicle(soc=initial_soc).modify_state(ititial_state)
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = Idle(vehicle.id)
+        enter_error, updated_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(updated_sim, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, OutOfService, "vehicle should be OutOfService")
+        self.assertTrue(updated_vehicle.energy_source.is_empty, "vehicle should have no energy")
+
+    ####################################################################################################################
+    ### OutOfService ###################################################################################################
+    ####################################################################################################################
+
+    def test_out_of_service_enter(self):
+        # should intially not be in an Idle state
+        vehicle = mock_vehicle(soc=0.0)
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = OutOfService(vehicle.id)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, OutOfService, "should be in an OutOfService state")
+
+    def test_out_of_service_exit(self):
+        # should intially not be in an Idle state
+        vehicle = mock_vehicle(soc=0.0)
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = OutOfService(vehicle.id)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+
+    def test_out_of_service_update(self):
+        # should intially not be in an Idle state
+        vehicle = mock_vehicle(soc=0.0)
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+
+        state = OutOfService(vehicle.id)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, updated_sim = state.update(entered_sim, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, OutOfService, "should still be in an OutOfService state")
+        self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
+
+    # def test_out_of_service_update_terminal(self):  # there is no terminal state for OutOfService
