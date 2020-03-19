@@ -60,17 +60,13 @@ class DispatchTrip(NamedTuple, VehicleState):
                 return None, (enter_sim, next_state)
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
-            pickup_error, pickup_sim = vehicle_state_ops.pick_up_trip(sim, env, self.vehicle_id, self.request_id) if request else None
-            if pickup_error:
-                return pickup_error, None
+            route = sim.road_network.route(request.origin, request.destination)
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, route, request.passengers)
+            enter_error, enter_sim = next_state.enter(sim, env)
+            if enter_error:
+                return enter_error, None
             else:
-                route = sim.road_network.route(request.origin, request.destination)
-                next_state = ServicingTrip(self.vehicle_id, self.request_id, route)
-                enter_error, enter_sim = next_state.enter(sim, env)
-                if enter_error:
-                    return enter_error, None
-                else:
-                    return None, (enter_sim, next_state)
+                return None, (enter_sim, next_state)
 
     def _perform_update(self,
                         sim: SimulationState,
