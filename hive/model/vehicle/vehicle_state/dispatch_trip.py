@@ -45,20 +45,32 @@ class DispatchTrip(NamedTuple, VehicleState):
         :return:  an exception due to failure or an optional updated simulation
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
-        base = sim.bases.get(self.request_id)
-        if not base:
-            return SimulationStateError(f"base {self.request_id} not found"), None
-        elif base.geoid != vehicle.geoid:
-            locations = f"{base.geoid} != {vehicle.geoid}"
-            message = f"vehicle {self.vehicle_id} ended trip to base {self.request_id} but locations do not match: {locations}"
+        request = sim.requests.get(self.request_id)
+        if request and request.geoid != vehicle.geoid:
+            locations = f"{request.geoid} != {vehicle.geoid}"
+            message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
-        else:
-            next_state = ReserveBase(self.vehicle_id) if base.available_stalls > 0 else Idle(self.vehicle_id)
+        elif not request:
+            # request already got picked up or was cancelled; go an Idle state
+            next_state = Idle(self.vehicle_id)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None
             else:
                 return None, (enter_sim, next_state)
+        else:
+            # request exists: pick up the trip and enter a ServicingTrip state
+            pickup_error, pickup_sim = vehicle_state_ops.pick_up_trip(sim, env, self.vehicle_id, self.request_id) if request else None
+            if pickup_error:
+                return pickup_error, None
+            else:
+                route = sim.road_network.route(request.origin, request.destination)
+                next_state = ServicingTrip(self.vehicle_id, self.request_id, route)
+                enter_error, enter_sim = next_state.enter(sim, env)
+                if enter_error:
+                    return enter_error, None
+                else:
+                    return None, (enter_sim, next_state)
 
     def _perform_update(self,
                         sim: SimulationState,

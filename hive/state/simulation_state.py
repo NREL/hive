@@ -10,7 +10,7 @@ from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
+from hive.model.vehicle.vehiclestate import VehicleState, VehicleStateCategory
 from hive.state.at_location_response import AtLocationResponse
 from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
 from hive.util.exception import SimulationStateError
@@ -79,7 +79,7 @@ class SimulationState(NamedTuple):
             r_search=DictOps.add_to_location_dict(self.r_search, search_geoid, request.id)
         )
 
-    def remove_request(self, request_id: RequestId) -> (Optional[Exception], Optional[SimulationState]):
+    def remove_request(self, request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         removes a request from this simulation.
         called once a Request has been fully serviced and is no longer

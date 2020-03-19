@@ -4,6 +4,7 @@ from hive.model.vehicle.vehicle_state.charging_base import ChargingBase
 from hive.model.vehicle.vehicle_state.charging_station import ChargingStation
 from hive.model.vehicle.vehicle_state.dispatch_base import DispatchBase
 from hive.model.vehicle.vehicle_state.dispatch_station import DispatchStation
+from hive.model.vehicle.vehicle_state.dispatch_trip import DispatchTrip
 from tests.mock_lobster import *
 
 
@@ -391,4 +392,84 @@ class TestVehicleState(TestCase):
         updated_station = sim_updated.stations.get(station.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation, "vehicle should be in ChargingStation state")
         self.assertEquals(updated_station.available_chargers.get(charger), 0, "should have taken the only available charger")
+        self.assertGreater(updated_vehicle.energy_source.soc, initial_soc, "should have charged for one time step")
+
+    ####################################################################################################################
+    ### DispatchTrip ###################################################################################################
+    ####################################################################################################################
+
+    def test_dispatch_trip_enter(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip, "should be in a dispatch to request state")
+        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_dispatch_trip_exit(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+
+    def test_dispatch_trip_update(self):
+        near = h3.geo_to_h3(39.7539, -104.974, 15)
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(near, omf_brewing)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, sim_with_dispatched_vehicle = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(sim_with_dispatched_vehicle, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip, "should still be in a dispatch to request state")
+        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+
+    def test_dispatch_trip_update_terminal(self):
+        initial_soc = 0.1
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)  # vehicle is at the request
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, sim_with_dispatch_vehicle = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(sim_with_dispatch_vehicle, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        updated_request = sim_updated.requests.get(request.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "vehicle should be in ServicingTrip state")
+        self.assertEquals(updated_vehicle.passengers)
+        self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
         self.assertGreater(updated_vehicle.energy_source.soc, initial_soc, "should have charged for one time step")

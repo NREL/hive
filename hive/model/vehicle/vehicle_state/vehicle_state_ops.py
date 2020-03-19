@@ -15,7 +15,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive import SimulationState, Environment, VehicleId
 from hive.model.energy.charger import Charger
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId
+from hive.util.typealiases import StationId, RequestId
 
 
 def charge(sim: SimulationState,
@@ -154,3 +154,34 @@ def move(sim: SimulationState,
             return None, MoveResult(empty_vehicle_sim)
         else:
             return None, move_result
+
+
+def  pick_up_trip(sim: SimulationState,
+                 env: Environment,
+                 vehicle_id: VehicleId,
+                 request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    has a vehicle pick up a trip without modifying the vehicle state.
+    :param sim: the sim state
+    :param env: the sim environment
+    :param vehicle_id: the vehicle picking up the request
+    :param request_id: the request to pick up
+    :return: an error, or, the sim with the request picked up by the vehicle
+    """
+    vehicle = sim.vehicles.get(vehicle_id)
+    request = sim.requests.get(request_id)
+    if not vehicle:
+        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    elif not request:
+        return SimulationStateError(f"request {request_id} not found"), None
+    else:
+        updated_vehicle = vehicle.add_passengers(request.passengers).receive_payment(request.value)
+        maybe_sim_with_vehicle = sim.modify_vehicle(updated_vehicle)
+        if not maybe_sim_with_vehicle:
+            return SimulationStateError(f"failed to add passengers to vehicle {vehicle_id}"), None
+        else:
+            update_error, updated_sim = maybe_sim_with_vehicle.remove_request(request_id)
+            if update_error:
+                return update_error, None
+            else:
+                return None, updated_sim
