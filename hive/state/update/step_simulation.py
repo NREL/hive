@@ -14,10 +14,12 @@ from hive.util.typealiases import VehicleId
 
 def step_simulation(simulation_state: SimulationState, env: Environment) -> SimulationState:
     def _step_vehicle(s: SimulationState, vid: VehicleId) -> SimulationState:
-        updated_sim = s.step_vehicle(vid, env)
-        if updated_sim is None:
+        error, updated_sim = s.step_vehicle(vid, env)
+        if error:
+            env.reporter.sim_report({'error': error})
             return simulation_state
-        return updated_sim
+        else:
+            return updated_sim
 
     next_state = ft.reduce(
         _step_vehicle,
@@ -28,15 +30,19 @@ def step_simulation(simulation_state: SimulationState, env: Environment) -> Simu
     return next_state.tick()
 
 
-def apply_instructions(simulation_state: SimulationState, instructions: Tuple[Instruction, ...]) -> SimulationState:
+def apply_instructions(simulation_state: SimulationState,
+                       env: Environment,
+                       instructions: Tuple[Instruction, ...]) -> SimulationState:
     def _add_instruction(
             s: SimulationState,
             instruction: Instruction,
     ) -> SimulationState:
-        updated_sim = instruction.apply_instruction(s)
-        if updated_sim is None:
-            return simulation_state
-        return updated_sim
+        update_error, updated_sim = instruction.apply_instruction(s, env)
+        if update_error:
+            env.reporter.sim_report({'error': update_error})
+            return s
+        else:
+            return updated_sim
 
     return ft.reduce(
         _add_instruction,
@@ -61,7 +67,7 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         :return: state without cancelled requests, along with this update function
         """
         updated_dispatcher, instructions, reports = self.dispatcher.generate_instructions(simulation_state)
-        sim_with_instructions = apply_instructions(simulation_state, instructions)
+        sim_with_instructions = apply_instructions(simulation_state, env, instructions)
         sim_next_time_step = step_simulation(
             simulation_state=sim_with_instructions,
             env=env,

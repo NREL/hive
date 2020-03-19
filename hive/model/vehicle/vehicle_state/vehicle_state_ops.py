@@ -5,6 +5,8 @@ from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.roadnetwork.route import Route
 
 from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
+from hive.state.entity_state import EntityState
 
 from hive.util.units import Seconds
 

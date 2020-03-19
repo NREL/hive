@@ -183,7 +183,9 @@ class SimulationState(NamedTuple):
             v_search=result.search if result.search else self.v_search
         )
 
-    def step_vehicle(self, vehicle_id: VehicleId, env: Environment) -> Optional[SimulationState]:
+    def step_vehicle(self,
+                     vehicle_id: VehicleId,
+                     env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         Steps a vehicle in time, checking for arrival at a terminal state condition.
 
@@ -191,63 +193,15 @@ class SimulationState(NamedTuple):
         :param env: provides powertrain/powercurve models
         :return: An update simulation state
         """
+        vehicle = self.vehicles.get(vehicle_id)
         if not isinstance(vehicle_id, VehicleId):
             log.error(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
             return None
-
-        vehicle = self.vehicles.get(vehicle_id)
-
-        if vehicle is None:
+        elif vehicle is None:
             log.error(f"attempting to update vehicle {vehicle_id} which is not in simulation")
             return None
-
-        if vehicle.vehicle_state == VehicleState.OUT_OF_SERVICE:
-            # until we implement a transition strategy, we will simply
-            # block any stepping of out-of-service vehicles here
-            return None
-
-        # Handle terminal state instant effects.
-        effect_args = TerminalStateEffectArgs(self, vehicle_id)
-        sim_state_w_effects: SimulationState = TerminalStateEffectOps.switch(vehicle.vehicle_state, effect_args)
-
-        # Apply time based effects.
-        vehicle = sim_state_w_effects.vehicles[vehicle_id]
-        if VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.MOVE:
-            # perform a move event
-            powertrain = env.powertrains[vehicle.powertrain_id]
-            updated_vehicle = vehicle.move(sim_state_w_effects.road_network,
-                                           powertrain,
-                                           sim_state_w_effects.sim_timestep_duration_seconds)
-
-            return sim_state_w_effects.modify_vehicle(updated_vehicle)
-
-        elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
-            # perform a charge event
-            powercurve = env.powercurves[vehicle.powercurve_id]
-            station_at_location = sim_state_w_effects.at_geoid(vehicle.geoid).get('station')
-            station = sim_state_w_effects.stations[station_at_location] if station_at_location else None
-            charged_vehicle = vehicle.charge(powercurve, sim_state_w_effects.sim_timestep_duration_seconds)
-
-            # determine price of charge event
-            kwh_transacted = (charged_vehicle.energy_source.energy_kwh - vehicle.energy_source.energy_kwh)  # kwh
-            charger_price = station.charger_prices.get(charged_vehicle.charger_intent)  # Currency
-            charging_price = kwh_transacted * charger_price if charger_price else 0.0
-
-            # update currency balance for vehicle, station
-            updated_vehicle = charged_vehicle.send_payment(charging_price)
-            updated_station = station.receive_payment(charging_price)
-
-            return sim_state_w_effects.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-        elif vehicle.vehicle_state == VehicleState.IDLE:
-            # perform an idle event
-            updated_vehicle = vehicle.idle(sim_state_w_effects.sim_timestep_duration_seconds)
-
-            return sim_state_w_effects.modify_vehicle(updated_vehicle)
-
         else:
-            # reserve base - noop
-            return sim_state_w_effects
+            return vehicle.vehicle_state.update(self, env)
 
     def tick(self) -> SimulationState:
         """

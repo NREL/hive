@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Tuple
+
+from hive.runner.environment import Environment
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 if TYPE_CHECKING:
@@ -14,5 +16,8 @@ class Instruction(metaclass=ABCNamedTupleMeta):
     """
 
     @abstractmethod
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment
+                          ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         pass
