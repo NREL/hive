@@ -1,4 +1,4 @@
-from typing import TypedDict, Tuple
+from typing import TypedDict, Tuple, Optional
 
 from hive.util.typealiases import RequestId, VehicleId, StationId, BaseId
 
@@ -8,15 +8,15 @@ class AtLocationResponse(TypedDict):
     Wrapper for entities at a specific location.
     
     :param requests: requests at the location
-    :type requests: :py:obj:`Tuple[Request, ...]` 
+    :type requests: :py:obj:`Tuple[RequestId, ...]`
     :param vehicles: vehicles at the location
-    :type vehicles: :py:obj:`Tuple[Request, ...]` 
-    :param stations: stations at the location
-    :type stations: :py:obj:`Tuple[Stations, ...]` 
-    :param bases: bases at the location
-    :type bases: :py:obj:`Tuple[Base, ...]`
+    :type vehicles: :py:obj:`Tuple[VehicleId, ...]`
+    :param station: station at the location
+    :type station: :py:obj:`Optional[StationId]`
+    :param base: base at the location
+    :type base: :py:obj:`Optional[BaseId]`
     """
     requests: Tuple[RequestId, ...]
     vehicles: Tuple[VehicleId, ...]
-    stations: Tuple[StationId, ...]
-    bases: Tuple[BaseId, ...]
+    station: Optional[StationId]
+    base: Optional[BaseId]
