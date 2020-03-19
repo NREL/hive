@@ -2,6 +2,8 @@ from unittest import TestCase
 
 from tests.mock_lobster import *
 
+import random
+
 
 class TestOSMRoadNetwork(TestCase):
     def test_geoid_within_geofence(self):
@@ -35,9 +37,15 @@ class TestOSMRoadNetwork(TestCase):
     def test_get_nearest_node(self):
         network = mock_osm_network()
 
-        node_id = list(network.G.nodes())[0]
-        node = network.G.nodes[node_id]
+        random.seed(123)
 
-        nearest_node = network.get_nearest_node(node['y'], node['x'])
+        node_id_list = list(network.G.nodes())
 
-        self.assertEqual(node_id, nearest_node, "node should be nearest to itself")
+        nudge = 0.0000001
+
+        for node_id in node_id_list:
+            node = network.G.nodes[node_id]
+
+            nearest_node = network.get_nearest_node(node['y']+nudge, node['x']+nudge)
+
+            self.assertEqual(node_id, nearest_node, "node should be nearest to itself")

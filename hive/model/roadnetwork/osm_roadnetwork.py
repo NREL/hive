@@ -45,10 +45,11 @@ class OSMRoadNetwork(RoadNetwork):
 
     def _build_rtree(self) -> index.Index:
         tree = index.Index()
+        nudge = .0000000001
         for nid in self.G.nodes():
             lat = self.G.nodes[nid]['y']
             lon = self.G.nodes[nid]['x']
-            tree.insert(nid, (lat, lon, lat, lon))
+            tree.insert(nid, (lat-nudge, lon-nudge, lat+nudge, lon+nudge))
 
         return tree
 
@@ -57,18 +58,17 @@ class OSMRoadNetwork(RoadNetwork):
             route: list,
             attribute: str = None,
             minimize_key: str = 'length',
-    ) -> list:
+    ) -> Tuple[Dict[str, str], ...]:
         """
         Taken from osmnx package, geo_utils module.
 
         :param route: the route to get attributes for
         :param attribute: the attribute of interest. will return all attributes if None
         :param minimize_key: the key to minimize over if multiple edges exist between two nodes
-
-        :return: a list of attributes
+        :return: a tuple of attributes
         """
 
-        attribute_values = []
+        attribute_values = ()
         for u, v in zip(route[:-1], route[1:]):
             # if there are parallel edges between two nodes, select the one with the
             # lowest value of minimize_key
@@ -77,14 +77,17 @@ class OSMRoadNetwork(RoadNetwork):
                 attribute_value = data
             else:
                 attribute_value = data[attribute]
-            attribute_values.append(attribute_value)
+            attribute_values = attribute_values + (attribute_value, )
         return attribute_values
 
     def _parse_osm_speed(self, osm_speed: Union[str, list]) -> Kmph:
+
+        # capture any strings that should be lists
         if '[' in osm_speed:
             osm_speed = eval(osm_speed)
 
         if isinstance(osm_speed, list):
+            # if the speed is a list, we'll parse each element and take the lowest speed as a conservative measure.
             min_speed = 10000
             units = None
             for ss in osm_speed:
@@ -101,10 +104,12 @@ class OSMRoadNetwork(RoadNetwork):
                 # no numbers in string, set as defualt
                 speed_kmph = self.default_speed_kmph
             else:
+                # parse the string assuming the format '{speed} {units}'
                 speed = float(osm_speed.split(' ')[0])
                 units = osm_speed.split(' ')[1]
                 speed_kmph = speed * self._unit_conversion[units]
         else:
+            # if the speed neither a list nor a string (i.e. None), we set as default
             speed_kmph = self.default_speed_kmph
 
         return speed_kmph
