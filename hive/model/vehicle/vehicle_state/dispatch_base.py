@@ -1,7 +1,9 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.vehicle.vehicle_state import vehicle_state_ops
+from hive.model.vehicle.vehicle_state.idle import Idle
 from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
+from hive.model.vehicle.vehicle_state.reserve_base import ReserveBase
 from hive.util.exception import SimulationStateError
 
 from hive.model.roadnetwork.route import Route
@@ -54,7 +56,7 @@ class DispatchBase(NamedTuple, VehicleState):
             message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
         else:
-            next_state = ReserveBase(self.vehicle_id) if base.available_stalls > 0 else Idle(self.vehicle_id)
+            next_state = ReserveBase(self.vehicle_id, self.base_id) if base.available_stalls > 0 else Idle(self.vehicle_id)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None

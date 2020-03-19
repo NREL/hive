@@ -1,5 +1,6 @@
 from typing import Tuple, Optional, NamedTuple
 
+from hive.model.vehicle.vehicle_state.reserve_base import ReserveBase
 from hive.util.exception import SimulationStateError
 
 from hive.util.typealiases import BaseId
@@ -94,7 +95,7 @@ class ChargingBase(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
-        next_state = ReserveBase(self.vehicle_id)
+        next_state = ReserveBase(self.vehicle_id, self.base_id)
         enter_error, enter_sim = next_state.enter(sim, env)
         if enter_error:
             return enter_error, None

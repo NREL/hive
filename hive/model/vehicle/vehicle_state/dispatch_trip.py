@@ -1,7 +1,9 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.vehicle.vehicle_state import vehicle_state_ops
+from hive.model.vehicle.vehicle_state.idle import Idle
 from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
+from hive.model.vehicle.vehicle_state.servicing_trip import ServicingTrip
 from hive.util.exception import SimulationStateError
 
 from hive.model.roadnetwork.route import Route
@@ -62,12 +64,17 @@ class DispatchTrip(NamedTuple, VehicleState):
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
             route = sim.road_network.route(request.origin, request.destination)
-            next_state = ServicingTrip(self.vehicle_id, self.request_id, route, request.passengers)
-            enter_error, enter_sim = next_state.enter(sim, env)
-            if enter_error:
-                return enter_error, None
+            remove_error, remove_sim = sim.remove_request(self.request_id)
+            if remove_error:
+                return remove_error, None
             else:
-                return None, (enter_sim, next_state)
+                # apply next state
+                next_state = ServicingTrip(self.vehicle_id, self.request_id, route, request.passengers)
+                enter_error, enter_sim = next_state.enter(remove_sim, env)
+                if enter_error:
+                    return enter_error, None
+                else:
+                    return None, (enter_sim, next_state)
 
     def _perform_update(self,
                         sim: SimulationState,

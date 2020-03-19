@@ -9,6 +9,7 @@ from hive.model.vehicle.vehicle_state.idle import Idle
 from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
 from hive.model.vehicle.vehicle_state.repositioning import Repositioning
 from hive.model.vehicle.vehicle_state.reserve_base import ReserveBase
+from hive.model.vehicle.vehicle_state.servicing_trip import ServicingTrip
 from tests.mock_lobster import *
 
 
@@ -191,7 +192,7 @@ class TestVehicleState(TestCase):
             msg="should have charged for 60 seconds")
 
     def test_charging_base_update_terminal(self):
-        vehicle = mock_vehicle()
+        vehicle = mock_vehicle(soc=1.0)
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
         charger = Charger.DCFC
@@ -461,7 +462,7 @@ class TestVehicleState(TestCase):
         request = mock_request()
         sim = mock_sim(vehicles=(vehicle,)).add_request(request)
         env = mock_env()
-        route = mock_route_from_geoids(vehicle.geoid, request.geoid)  # vehicle is at the request
+        route = ()  # vehicle is at the request
 
         state = DispatchTrip(vehicle.id, request.id, route)
         enter_error, sim_with_dispatch_vehicle = state.enter(sim, env)
@@ -473,7 +474,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_request = sim_updated.requests.get(request.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "vehicle should be in ServicingTrip state")
-        self.assertIn(request.passengers[0].id, updated_vehicle.vehicle_state.passengers, "passenger not picked up")
+        self.assertIn(request.passengers[0], updated_vehicle.vehicle_state.passengers, "passenger not picked up")
         self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
 
     ####################################################################################################################
@@ -737,3 +738,80 @@ class TestVehicleState(TestCase):
         self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
 
     # def test_reserve_base_update_terminal(self):  # there is no terminal state for OutOfService
+
+    ####################################################################################################################
+    ### ServicingTrip ##################################################################################################
+    ####################################################################################################################
+
+    def test_servicing_trip_enter(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "should be in a ServicingTrip state")
+        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_servicing_trip_exit(self):
+        vehicle = mock_vehicle()
+        request = mock_request_from_geoids(destination=vehicle.geoid)
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(request.origin, request.destination)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
+
+    def test_servicing_trip_update(self):
+        near = h3.geo_to_h3(39.7539, -104.974, 15)
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle_from_geoid(geoid=near)
+        request = mock_request_from_geoids(origin=near, destination=omf_brewing)
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(near, omf_brewing)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, sim_servicing = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(sim_servicing, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "should still be in a servicing state")
+        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertEqual(updated_vehicle.vehicle_state.passengers, request.passengers, "should have passengers")
+
+    def test_servicing_trip_update_terminal(self):
+        vehicle = mock_vehicle()
+        request = mock_request_from_geoids(origin=vehicle.geoid, destination=vehicle.geoid)
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = ()  # end of route
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, sim_servicing = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(sim_servicing, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        updated_request = sim_updated.requests.get(request.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state")
+
