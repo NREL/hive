@@ -36,16 +36,19 @@ class TestOSMRoadNetwork(TestCase):
 
     def test_get_nearest_node(self):
         network = mock_osm_network()
+        G = network.G
 
-        random.seed(123)
+        # first, we find the northern most node
+        max_lat = 0
+        max_node = None
+        for nid in G.nodes():
+            lat = G.nodes[nid]['y']
+            if lat > max_lat:
+                max_lat = lat
+                max_node = nid
 
-        node_id_list = list(network.G.nodes())
+        node = network.G.nodes[max_node]
 
-        nudge = 0.0000001
+        nearest_node = network.get_nearest_node(node['y']+0.5, node['x'])
 
-        for node_id in node_id_list:
-            node = network.G.nodes[node_id]
-
-            nearest_node = network.get_nearest_node(node['y']+nudge, node['x']+nudge)
-
-            self.assertEqual(node_id, nearest_node, "node should be nearest to itself")
+        self.assertEqual(max_node, nearest_node, "node should be nearest to itself")
