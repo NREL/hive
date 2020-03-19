@@ -8,7 +8,6 @@ from hive.util.typealiases import VehicleId
 from hive.util.exception import SimulationStateError
 
 from hive.state.entity_state import EntityState
-# from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import SimulationState
@@ -28,7 +27,9 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                        env: Environment,
                        state: VehicleState) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
+        apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState.
+        under terminal conditions, exits the current state, enters a default transition state, and steps
+        under the condition of that state.
         :param sim: the simulation state
         :param env: the simulation environment
         :param state: the vehicle state we are updating
@@ -36,11 +37,17 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         """
         terminal_state_condition_met = state._has_reached_terminal_state_condition(sim, env)
         if terminal_state_condition_met:
-            error, exited_sim = state.exit(sim, env)
-            if error:
-                return error, None
+            exit_error, exited_sim = state.exit(sim, env)
+            if exit_error:
+                return exit_error, None
             else:
-                return state._default_terminal_state_transition(exited_sim, env)
+                next_error, (next_sim, next_state) = state._enter_default_terminal_state(exited_sim, env)
+                if next_error:
+                    return next_error, None
+                else:
+                    # apply the update of the next state
+                    return next_state.update(next_sim, env)
+
         else:
             return state._perform_update(sim, env)
 
@@ -78,9 +85,10 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         pass
 
     @abstractmethod
-    def _default_terminal_state_transition(self,
-                                           sim: SimulationState,
-                                           env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _enter_default_terminal_state(self,
+                                      sim: SimulationState,
+                                      env: Environment
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         apply a transition to a default state after having met a terminal condition
         :param sim: the simulation state

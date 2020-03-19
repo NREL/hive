@@ -34,9 +34,10 @@ class DispatchBase(NamedTuple, VehicleState):
         """
         return len(self.route) == 0
 
-    def _default_terminal_state_transition(self,
-                                           sim: SimulationState,
-                                           env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _enter_default_terminal_state(self,
+                                      sim: SimulationState,
+                                      env: Environment
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         by default, transition to ReserveBase if there are stalls, otherwise, Idle
         :param sim: the sim state
@@ -44,19 +45,20 @@ class DispatchBase(NamedTuple, VehicleState):
         :return:  an exception due to failure or an optional updated simulation
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
-        bases = sim.at_geoid(vehicle.geoid).get("bases")
-        base = bases[0] if bases else None
+        base = sim.bases.get(self.base_id)
         if not base:
-            msg = f"terminating a DispatchBase state but not at the location of base {self.base_id}"
-            return SimulationStateError(msg), None
-        elif base.available_stalls > 0:
-            # transition into ReserveBase
-            next_state = ReserveBase(self.vehicle_id)
-            return next_state.enter(sim, env)
+            return SimulationStateError(f"base {self.base_id} not found"), None
+        elif base.geoid != vehicle.geoid:
+            locations = f"{base.geoid} != {vehicle.geoid}"
+            message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
+            return SimulationStateError(message), None
         else:
-            # transition into Idle
-            next_state = Idle(self.vehicle_id)
-            return next_state.enter(sim, env)
+            next_state = ReserveBase(self.vehicle_id) if base.available_stalls > 0 else Idle(self.vehicle_id)
+            enter_error, enter_sim = next_state.enter(sim, env)
+            if enter_error:
+                return enter_error, None
+            else:
+                return None, (enter_sim, next_state)
 
     def _perform_update(self,
                         sim: SimulationState,
@@ -68,20 +70,16 @@ class DispatchBase(NamedTuple, VehicleState):
         :return: the sim state with vehicle moved
         """
 
-        errors, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
-        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if not errors else None
+        move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
+        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
-        if errors:
-            return errors, None
-        if not moved_vehicle:
+        if move_error:
+            return move_error, None
+        elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif moved_vehicle.energy_source.is_empty():
-            # move to out of service state
-            next_state = OutOfService(self.vehicle_id)
-            return next_state.enter(move_result.sim, env)
         else:
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)
-            updated_vehicle = moved_vehicle.modify_state(updated_state) if moved_vehicle else None
+            updated_vehicle = moved_vehicle.modify_state(updated_state)
             updated_sim = move_result.sim.modify_vehicle(updated_vehicle)
             return None, updated_sim

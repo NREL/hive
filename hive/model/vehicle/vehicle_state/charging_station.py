@@ -82,21 +82,22 @@ class ChargingStation(NamedTuple, VehicleState):
         else:
             return vehicle.energy_source.is_at_ideal_energy_limit()
 
-    def _default_terminal_state_transition(self,
-                                           sim: SimulationState,
-                                           env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _enter_default_terminal_state(self,
+                                      sim: SimulationState,
+                                      env: Environment
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         we default to idle, or reserve base if there is a base with stalls at the location
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
-        vehicle = sim.vehicles.get(self.vehicle_id)
-        if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        next_state = Idle(self.vehicle_id)
+        enter_error, enter_sim = next_state.enter(sim, env)
+        if enter_error:
+            return enter_error, None
         else:
-            next_state = Idle(self.vehicle_id)
-            return next_state.enter(sim, env)
+            return None, (enter_sim, next_state)
 
     def _perform_update(self,
                         sim: SimulationState,

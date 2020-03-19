@@ -68,13 +68,13 @@ def charge(sim: SimulationState,
 
 class MoveResult(NamedTuple):
     sim: SimulationState
-    route_traversal: RouteTraversal
+    route_traversal: RouteTraversal = RouteTraversal()
 
 
-def move(sim: SimulationState,
-         env: Environment,
-         vehicle_id: VehicleId,
-         route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
+def _apply_route_traversal(sim: SimulationState,
+                           env: Environment,
+                           vehicle_id: VehicleId,
+                           route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
     """
     Moves the vehicle and consumes energy.
 
@@ -82,7 +82,7 @@ def move(sim: SimulationState,
     :param env: the simulation environment
     :param vehicle_id: the vehicle moving
     :param route: the route for the vehicle
-    :return: the updated vehicle or None if moving is not possible.
+    :return: an error, or a traverse result, or (None, None) if no traversal occurred
     """
     vehicle = sim.vehicles.get(vehicle_id)
     traverse_result = traverse(
@@ -102,3 +102,55 @@ def move(sim: SimulationState,
         updated_sim = sim.modify_vehicle(updated_vehicle)
 
         return None, MoveResult(updated_sim, traverse_result)
+
+
+def _go_out_of_service_on_empty(sim: SimulationState,
+                                env: Environment,
+                                vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    sets a vehicle to OutOfService if it is out of energy after a move event
+    :param sim: the sim after a move event
+    :param env: the sim environment
+    :param vehicle_id: the vehicle that moved
+    :return: an optional error, or an optional sim with the out of service vehicle, or (None, None) if no changes
+    """
+    moved_vehicle = sim.vehicles.get(vehicle_id)
+    if not moved_vehicle:
+        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    elif moved_vehicle.energy_source.is_empty():
+        error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
+        if error:
+            return error, None
+        else:
+            next_state = OutOfService(vehicle_id)
+            return None, next_state.enter(exit_sim, env)
+    else:
+        return None, None
+
+
+def move(sim: SimulationState,
+         env: Environment,
+         vehicle_id: VehicleId,
+         route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
+    """
+    moves the vehicle, and moves to OutOfService if resulting vehicle energy is empty
+    :param sim: the sim state
+    :param env: the sim environment
+    :param vehicle_id: the vehicle to move
+    :param route: the route for the vehicle
+    :return: an optional error,
+             or an optional sim with moved/OutOfService vehicle (or no change if no traversal occurred)
+    """
+    move_error, move_result = _apply_route_traversal(sim, env, vehicle_id, route)
+    if move_error:
+        return move_error, None
+    elif not move_result:
+        return None, MoveResult(sim)
+    else:
+        empty_check_error, empty_vehicle_sim = _go_out_of_service_on_empty(move_result.sim, env, vehicle_id)
+        if empty_check_error:
+            return empty_check_error, None
+        elif empty_vehicle_sim:
+            return None, MoveResult(empty_vehicle_sim)
+        else:
+            return None, move_result
