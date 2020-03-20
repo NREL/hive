@@ -53,10 +53,15 @@ def initialize_simulation(
         road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
     else:
         road_network_file = resource_filename("hive.resources.road_network", config.io.road_network_file)
+        if not config.network:
+            default_speed_kmph = 40.0
+        else:
+            default_speed_kmph = config.network.default_speed_kmph
         road_network = OSMRoadNetwork(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
             road_network_file=road_network_file,
+            default_speed_kmph=default_speed_kmph,
         )
 
     sim_initial = SimulationState(
