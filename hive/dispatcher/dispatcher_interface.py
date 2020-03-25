@@ -24,6 +24,5 @@ class DispatcherInterface(metaclass=ABCNamedTupleMeta):
         Generates instructions for a given simulation state.
 
         :param simulation_state:
-        :param env:
         :return: the updated Dispatcher along with all instructions for this time step and reports
         """

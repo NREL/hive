@@ -2,6 +2,8 @@ from unittest import TestCase
 
 from tests.mock_lobster import *
 
+import random
+
 
 class TestOSMRoadNetwork(TestCase):
     def test_geoid_within_geofence(self):
@@ -31,3 +33,22 @@ class TestOSMRoadNetwork(TestCase):
 
         self.assertEqual(origin, route[0].start, "route should start at origin")
         self.assertEqual(destination, route[-1].end, "route should end at origin")
+
+    def test_get_nearest_node(self):
+        network = mock_osm_network()
+        G = network.G
+
+        # first, we find the northern most node
+        max_lat = 0
+        max_node = None
+        for nid in G.nodes():
+            lat = G.nodes[nid]['y']
+            if lat > max_lat:
+                max_lat = lat
+                max_node = nid
+
+        node = network.G.nodes[max_node]
+
+        nearest_node = network.get_nearest_node(node['y']+0.5, node['x'])
+
+        self.assertEqual(max_node, nearest_node, "node should be nearest to itself")

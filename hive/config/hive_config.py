@@ -14,7 +14,7 @@ class HiveConfig(NamedTuple):
     def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
         return ConfigBuilder.build(
             default_config={},
-            required_config={},
+            required_config=(),
             config_constructor=lambda c: HiveConfig.from_dict(c),
             config=config
         )

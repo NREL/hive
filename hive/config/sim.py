@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union
+from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import ConfigBuilder
 from hive.util.typealiases import SimTime
@@ -27,12 +27,12 @@ class Sim(NamedTuple):
         }
 
     @classmethod
-    def required_config(cls) -> Dict[str, type]:
-        return {
-            'sim_name': str,
-            'start_time': (str, int),
-            'end_time': (str, int),
-        }
+    def required_config(cls) -> Tuple[str, ...]:
+        return (
+            'sim_name',
+            'start_time',
+            'end_time',
+        )
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[IOError, Sim]:
