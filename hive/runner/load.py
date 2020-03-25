@@ -4,8 +4,8 @@ from datetime import datetime
 from typing import Tuple
 
 import yaml
-from hive.runner import Environment
-from hive.state import SimulationState
+from hive.runner.environment import Environment
+from hive.state.simulation_state.simulation_state import SimulationState
 from hive.config import HiveConfig
 from hive.state import initialize_simulation
 

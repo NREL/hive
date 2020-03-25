@@ -2,17 +2,17 @@ from typing import NamedTuple, Tuple, Optional
 
 from hive.model.energy.charger import Charger
 
-from hive.model.vehicle.vehicle_state import vehicle_state_ops
-from hive.model.vehicle.vehicle_state.charging_station import ChargingStation
-from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.vehicle_state_ops import move
+from hive.state.vehicle_state.charging_station import ChargingStation
+from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
 
 from hive.model.roadnetwork.route import Route
 
 from hive.util.typealiases import StationId, VehicleId
 
-from hive import SimulationState, Environment
-from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
+from hive.runner.environment import Environment
+from hive.state.vehicle_state import VehicleState
 
 
 class DispatchStation(NamedTuple, VehicleState):
@@ -21,16 +21,16 @@ class DispatchStation(NamedTuple, VehicleState):
     route: Route
     charger: Charger
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        return VehicleState.default_enter(sim, self.vehicle_id, self)
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
         this terminates when we reach a station
         :param sim: the sim state
@@ -40,9 +40,9 @@ class DispatchStation(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
+                                      sim: 'SimulationState',
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         by default, transition into a ChargingStation event, but if not possible, then Idle
         :param sim: the sim state
@@ -70,8 +70,8 @@ class DispatchStation(NamedTuple, VehicleState):
                 return None, (enter_sim, next_state)
 
     def _perform_update(self,
-                        sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                        sim: 'SimulationState',
+                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         take a step along the route to the station
         :param sim: the simulation state
@@ -79,7 +79,7 @@ class DispatchStation(NamedTuple, VehicleState):
         :return: the sim state with vehicle moved
         """
 
-        move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
+        move_error, move_result = move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
         if move_error:

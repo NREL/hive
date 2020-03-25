@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Tuple, TYPE_CHECKING
+from typing import NamedTuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
-    from hive.state.simulation_state import SimulationState
-    from hive.state.update import Update
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.state.simulation_state.update import Update
 
 
 class RunnerPayload(NamedTuple):

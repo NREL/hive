@@ -1,13 +1,13 @@
 from unittest import TestCase
 
-from hive.model.vehicle.vehicle_state import *
+from hive.state.vehicle_state import *
 from tests.mock_lobster import *
-
+from hive.model.passenger import board_vehicle
 
 class TestVehicleState(TestCase):
 
     ####################################################################################################################
-    ### ChargingStation ################################################################################################
+    # ChargingStation ##################################################################################################
     ####################################################################################################################
 
     def test_charging_station_enter(self):
@@ -103,7 +103,7 @@ class TestVehicleState(TestCase):
         self.assertEquals(updated_station.available_chargers.get(charger), 1, "should have returned the charger")
 
     ####################################################################################################################
-    ### ChargingBase ###################################################################################################
+    # ChargingBase #####################################################################################################
     ####################################################################################################################
 
     def test_charging_base_enter(self):
@@ -207,7 +207,7 @@ class TestVehicleState(TestCase):
         self.assertEquals(updated_base.available_stalls, 0, "should have taken the only available stall")
 
     ####################################################################################################################
-    ### DispatchBase ###################################################################################################
+    # DispatchBase #####################################################################################################
     ####################################################################################################################
 
     def test_dispatch_base_enter(self):
@@ -270,7 +270,8 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
-        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchBase, "should still be in a dispatch to base state")
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchBase,
+                              "should still be in a dispatch to base state")
         self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
 
     def test_dispatch_base_update_terminal(self):
@@ -296,7 +297,7 @@ class TestVehicleState(TestCase):
         self.assertEquals(updated_base.available_stalls, 0, "should have taken the only available stall")
 
     ####################################################################################################################
-    ### DispatchStation ################################################################################################
+    # DispatchStation ##################################################################################################
     ####################################################################################################################
 
     def test_dispatch_station_enter(self):
@@ -316,7 +317,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(error, "should have no errors")
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
-        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation, "should be in a dispatch to station state")
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation,
+                              "should be in a dispatch to station state")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_dispatch_station_exit(self):
@@ -362,7 +364,8 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
-        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation, "should still be in a dispatch to station state")
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation,
+                              "should still be in a dispatch to station state")
         self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
 
     def test_dispatch_station_update_terminal(self):
@@ -386,12 +389,14 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_station = sim_updated.stations.get(station.id)
-        self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation, "vehicle should be in ChargingStation state")
-        self.assertEquals(updated_station.available_chargers.get(charger), 0, "should have taken the only available charger")
+        self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation,
+                              "vehicle should be in ChargingStation state")
+        self.assertEquals(updated_station.available_chargers.get(charger), 0,
+                          "should have taken the only available charger")
         self.assertGreater(updated_vehicle.energy_source.soc, initial_soc, "should have charged for one time step")
 
     ####################################################################################################################
-    ### DispatchTrip ###################################################################################################
+    # DispatchTrip #####################################################################################################
     ####################################################################################################################
 
     def test_dispatch_trip_enter(self):
@@ -445,7 +450,8 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
-        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip, "should still be in a dispatch to request state")
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip,
+                              "should still be in a dispatch to request state")
         self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
 
     def test_dispatch_trip_update_terminal(self):
@@ -464,12 +470,13 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_request = sim_updated.requests.get(request.id)
+        expected_passengers = board_vehicle(request.passengers, vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "vehicle should be in ServicingTrip state")
-        self.assertIn(request.passengers[0], updated_vehicle.vehicle_state.passengers, "passenger not picked up")
+        self.assertIn(expected_passengers[0], updated_vehicle.vehicle_state.passengers, "passenger not picked up")
         self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
 
     ####################################################################################################################
-    ### Idle ###########################################################################################################
+    # Idle #############################################################################################################
     ####################################################################################################################
 
     def test_idle_enter(self):
@@ -519,6 +526,9 @@ class TestVehicleState(TestCase):
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should still be in an Idle state")
         self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertEqual(updated_vehicle.vehicle_state.idle_duration,
+                         sim.sim_timestep_duration_seconds,
+                         "should have recorded the idle time")
 
     def test_idle_update_terminal(self):
         initial_soc = 0.0
@@ -539,7 +549,7 @@ class TestVehicleState(TestCase):
         self.assertTrue(updated_vehicle.energy_source.is_empty, "vehicle should have no energy")
 
     ####################################################################################################################
-    ### OutOfService ###################################################################################################
+    # OutOfService #####################################################################################################
     ####################################################################################################################
 
     def test_out_of_service_enter(self):
@@ -593,7 +603,7 @@ class TestVehicleState(TestCase):
     # def test_out_of_service_update_terminal(self):  # there is no terminal state for OutOfService
 
     ####################################################################################################################
-    ### Repositioning ##################################################################################################
+    # Repositioning ####################################################################################################
     ####################################################################################################################
 
     def test_repositioning_enter(self):
@@ -672,7 +682,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state")
 
     ####################################################################################################################
-    ### ReserveBase ####################################################################################################
+    # ReserveBase ######################################################################################################
     ####################################################################################################################
 
     def test_reserve_base_enter(self):
@@ -731,7 +741,7 @@ class TestVehicleState(TestCase):
     # def test_reserve_base_update_terminal(self):  # there is no terminal state for OutOfService
 
     ####################################################################################################################
-    ### ServicingTrip ##################################################################################################
+    # ServicingTrip ####################################################################################################
     ####################################################################################################################
 
     def test_servicing_trip_enter(self):
@@ -805,4 +815,3 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_request = sim_updated.requests.get(request.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state")
-

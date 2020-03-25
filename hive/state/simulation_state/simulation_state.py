@@ -10,9 +10,7 @@ from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.model.vehicle.vehiclestate import VehicleState, VehicleStateCategory
-from hive.state.at_location_response import AtLocationResponse
-from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
+from hive.state.simulation_state.at_location_response import AtLocationResponse
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
@@ -66,6 +64,7 @@ class SimulationState(NamedTuple):
         :param request: the request to add
         :return: the updated simulation state, or an error
         """
+
         if not isinstance(request, Request):
             log.error(f"sim.add_request requires a request but received a {type(request)}")
             return None

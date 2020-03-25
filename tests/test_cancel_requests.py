@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.state.update.cancel_requests import CancelRequests
+from hive.state.simulation_state.update.cancel_requests import CancelRequests
 from tests.mock_lobster import *
 
 

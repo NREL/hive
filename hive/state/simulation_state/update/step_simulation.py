@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Optional, NamedTuple
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
-from hive.runner.environment import Environment
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.model.instruction.instruction_interface import Instruction
-from hive.state.simulation_state import SimulationState
-from hive.state.update.simulation_update import SimulationUpdateFunction
-from hive.state.update.simulation_update_result import SimulationUpdateResult
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.typealiases import VehicleId
+
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
 
 
 def step_simulation(simulation_state: SimulationState, env: Environment) -> SimulationState:
@@ -40,6 +42,8 @@ def apply_instructions(simulation_state: SimulationState,
         update_error, updated_sim = instruction.apply_instruction(s, env)
         if update_error:
             env.reporter.sim_report({'error': update_error})
+            return s
+        elif updated_sim is None:
             return s
         else:
             return updated_sim

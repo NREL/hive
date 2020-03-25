@@ -7,11 +7,12 @@ import sys
 import time
 from typing import NamedTuple
 
-from hive.runner import LocalSimulationRunner, RunnerPayload
-from hive.model import Vehicle
-from hive.state.simulation_state import SimulationState
-from hive.runner import load_simulation
-from hive.state.update import Update
+from hive.runner.local_simulation_runner import LocalSimulationRunner
+from hive.runner.runner_payload import RunnerPayload
+from hive.model.vehicle import Vehicle
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.runner.load import load_simulation
+from hive.state.simulation_state.update import Update
 from hive.app.logging_config import LOGGING_CONFIG
 
 root_log = logging.getLogger()

@@ -1,20 +1,22 @@
 from __future__ import annotations
-from typing import Tuple, NamedTuple
 
 import random
+from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from h3 import h3
 
-from hive.model.instruction import *
-from hive.dispatcher.manager.manager_interface import ManagerInterface
-from hive.dispatcher.manager.fleet_target import FleetStateTarget
-from hive.model.vehicle.vehiclestate import VehicleState
-from hive.model.vehicle import Vehicle
-from hive.model.energy.charger import Charger
-from hive.model.roadnetwork import RoadNetwork
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
+from hive.dispatcher.manager.fleet_target import FleetStateTarget
+from hive.dispatcher.manager.manager_interface import ManagerInterface
+from hive.model.energy.charger import Charger
+from hive.model.instruction import *
+from hive.model.roadnetwork import RoadNetwork
+from hive.state.vehicle_state import *
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import GeoId, VehicleId, SimTime
+
+if TYPE_CHECKING:
+    from hive.model.vehicle import Vehicle
 
 
 class ManagedDispatcher(NamedTuple, DispatcherInterface):
@@ -105,7 +107,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 if nearest_base:
                     instruction = DispatchBaseInstruction(
                         vehicle_id=veh.id,
-                        destination=nearest_base.geoid,
+                        destination=nearest_base.id,
                     )
 
                     report = self._gen_report(instruction, simulation_state.sim_time)
@@ -161,16 +163,23 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 continue
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            _valid_states = (
-                VehicleState.IDLE,
-                VehicleState.REPOSITIONING,
-                # VehicleState.CHARGING,
-                # VehicleState.RESERVE_BASE,
-                # VehicleState.DISPATCH_BASE,
-            )
+            is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
+                isinstance(vehicle.vehicle_state, Repositioning) or \
+                isinstance(vehicle.vehicle_state, ChargingBase) or \
+                isinstance(vehicle.vehicle_state, ChargingStation) or \
+                isinstance(vehicle.vehicle_state, ReserveBase) or \
+                isinstance(vehicle.vehicle_state, DispatchBase) or \
+                isinstance(vehicle.vehicle_state, DispatchStation)
+            # _valid_states = (
+            #     VehicleState.IDLE,
+            #     VehicleState.REPOSITIONING,
+            #     # VehicleState.CHARGING,
+            #     # VehicleState.RESERVE_BASE,
+            #     # VehicleState.DISPATCH_BASE,
+            # )
             return bool(vehicle.id not in vehicle_ids_given_instructions and
                         vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
-                        vehicle.vehicle_state in _valid_states)
+                        is_valid_state)
 
         # 2. find requests that need a vehicle. Sorted by price high to low
         unassigned_requests = sorted(

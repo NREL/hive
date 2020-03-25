@@ -1,8 +1,8 @@
 from typing import NamedTuple, Tuple, Optional
 
-from hive import SimulationState, Environment
-from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
-from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
+from hive.runner.environment import Environment
+from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
 from hive.util.units import Seconds, SECONDS_TO_HOURS
@@ -12,16 +12,16 @@ class Idle(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     idle_duration: Seconds = 0
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        return VehicleState.default_enter(sim, self.vehicle_id, self)
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
         If energy has run out, we will move to OutOfService
         :param sim: the sim state
@@ -32,9 +32,9 @@ class Idle(NamedTuple, VehicleState):
         return not vehicle or vehicle.energy_source.is_empty()
 
     def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
+                                      sim: 'SimulationState',
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         Idle is the global terminal state - NOOP
         :param sim: the sim state
@@ -49,8 +49,8 @@ class Idle(NamedTuple, VehicleState):
             return None, (updated_sim, next_state)
 
     def _perform_update(self,
-                        sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                        sim: 'SimulationState',
+                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         incur an idling cost
         :param sim: the simulation state

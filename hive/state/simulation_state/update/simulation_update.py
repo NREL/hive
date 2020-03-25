@@ -6,8 +6,8 @@ from typing import Optional, Tuple, TYPE_CHECKING
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
-    from hive.state.simulation_state import SimulationState
-    from hive.state.update.simulation_update_result import SimulationUpdateResult
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
     from hive.runner.environment import Environment
 
 

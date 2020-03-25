@@ -1,30 +1,20 @@
 from typing import Tuple, Optional, NamedTuple
 
-from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
-
-from hive.model.roadnetwork.route import Route
-
-from hive.model.vehicle import Vehicle
-from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
-from hive.state.entity_state import EntityState
-
-from hive.util.units import Seconds
-
-from hive.model.energy.powertrain.powertrain import Powertrain
-
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
-
-from hive import SimulationState, Environment, VehicleId
 from hive.model.energy.charger import Charger
+from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
+from hive.runner.environment import Environment
+from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, RequestId
+from hive.util.typealiases import VehicleId
 
 
-def charge(sim: SimulationState,
+def charge(sim: 'SimulationState',
            env: Environment,
            vehicle_id: VehicleId,
            station_id: StationId,
-           charger: Charger) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+           charger: Charger) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
     :param sim: the simulation state
@@ -69,11 +59,11 @@ def charge(sim: SimulationState,
 
 
 class MoveResult(NamedTuple):
-    sim: SimulationState
+    sim: 'SimulationState'
     route_traversal: RouteTraversal = RouteTraversal()
 
 
-def _apply_route_traversal(sim: SimulationState,
+def _apply_route_traversal(sim: 'SimulationState',
                            env: Environment,
                            vehicle_id: VehicleId,
                            route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
@@ -106,9 +96,9 @@ def _apply_route_traversal(sim: SimulationState,
         return None, MoveResult(updated_sim, traverse_result)
 
 
-def _go_out_of_service_on_empty(sim: SimulationState,
+def _go_out_of_service_on_empty(sim: 'SimulationState',
                                 env: Environment,
-                                vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                                vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     sets a vehicle to OutOfService if it is out of energy after a move event
     :param sim: the sim after a move event
@@ -125,12 +115,12 @@ def _go_out_of_service_on_empty(sim: SimulationState,
             return error, None
         else:
             next_state = OutOfService(vehicle_id)
-            return None, next_state.enter(exit_sim, env)
+            return next_state.enter(exit_sim, env)
     else:
         return None, None
 
 
-def move(sim: SimulationState,
+def move(sim: 'SimulationState',
          env: Environment,
          vehicle_id: VehicleId,
          route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
@@ -158,12 +148,12 @@ def move(sim: SimulationState,
             return None, move_result
 
 
-def  pick_up_trip(sim: SimulationState,
+def pick_up_trip(sim: 'SimulationState',
                  env: Environment,
                  vehicle_id: VehicleId,
-                 request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                 request_id: RequestId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
-    has a vehicle pick up a trip without modifying the vehicle state.
+    has a vehicle pick up a trip and receive payment for it
     :param sim: the sim state
     :param env: the sim environment
     :param vehicle_id: the vehicle picking up the request
@@ -177,7 +167,7 @@ def  pick_up_trip(sim: SimulationState,
     elif not request:
         return SimulationStateError(f"request {request_id} not found"), None
     else:
-        updated_vehicle = vehicle.add_passengers(request.passengers).receive_payment(request.value)
+        updated_vehicle = vehicle.receive_payment(request.value)
         maybe_sim_with_vehicle = sim.modify_vehicle(updated_vehicle)
         if not maybe_sim_with_vehicle:
             return SimulationStateError(f"failed to add passengers to vehicle {vehicle_id}"), None

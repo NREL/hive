@@ -1,23 +1,23 @@
 from typing import NamedTuple, Tuple, Optional
 
-from hive import SimulationState, Environment
-from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state import VehicleState
 from hive.util.typealiases import VehicleId
+from hive.runner.environment import Environment
 
 
 class OutOfService(NamedTuple, VehicleState):
     vehicle_id: VehicleId
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        return VehicleState.default_enter(sim, self.vehicle_id, self)
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
         There is no terminal state for OutOfService
         :param sim: the sim state
@@ -27,9 +27,9 @@ class OutOfService(NamedTuple, VehicleState):
         return False
 
     def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
+                                      sim: 'SimulationState',
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         There is no terminal state for OutOfService
         :param sim: the sim state
@@ -39,8 +39,8 @@ class OutOfService(NamedTuple, VehicleState):
         return None, (sim, self)
 
     def _perform_update(self,
-                        sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                        sim: 'SimulationState',
+                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         as of now, there is no update for being OutOfService
         :param sim: the simulation state

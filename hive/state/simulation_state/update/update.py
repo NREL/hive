@@ -6,11 +6,11 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING
 from hive.config import HiveConfig
 from hive.dispatcher import DispatcherInterface
 from hive.dispatcher import default_dispatcher
-from hive.state.update.simulation_update import SimulationUpdateFunction
-from hive.state.update.step_simulation import StepSimulation
-from hive.state.update.charging_price_update import ChargingPriceUpdate
-from hive.state.update.update_requests import UpdateRequests
-from hive.state.update.cancel_requests import CancelRequests
+from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from hive.state.simulation_state.update.step_simulation import StepSimulation
+from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
+from hive.state.simulation_state.update.update_requests import UpdateRequests
+from hive.state.simulation_state.update.cancel_requests import CancelRequests
 from pkg_resources import resource_filename
 
 if TYPE_CHECKING:

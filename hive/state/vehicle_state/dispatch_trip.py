@@ -1,17 +1,17 @@
 from typing import NamedTuple, Tuple, Optional
 
-from hive.model.vehicle.vehicle_state import vehicle_state_ops
-from hive.model.vehicle.vehicle_state.idle import Idle
-from hive.model.vehicle.vehicle_state.out_of_service import OutOfService
-from hive.model.vehicle.vehicle_state.servicing_trip import ServicingTrip
+from hive.state.vehicle_state import vehicle_state_ops
+from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.util.exception import SimulationStateError
-
+from hive.model.passenger import board_vehicle
 from hive.model.roadnetwork.route import Route
 
 from hive.util.typealiases import RequestId, VehicleId
 
-from hive import SimulationState, Environment
-from hive.model.vehicle.vehicle_state.vehicle_state import VehicleState
+from hive.runner.environment import Environment
+from hive.state.vehicle_state import VehicleState
 
 
 class DispatchTrip(NamedTuple, VehicleState):
@@ -19,16 +19,16 @@ class DispatchTrip(NamedTuple, VehicleState):
     request_id: RequestId
     route: Route
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        return VehicleState.default_enter(sim, self.vehicle_id, self)
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
         this terminates when we reach a base
         :param sim: the sim state
@@ -38,11 +38,11 @@ class DispatchTrip(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
+                                      sim: 'SimulationState',
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
-        by default, transition to ReserveBase if there are stalls, otherwise, Idle
+        by default, transition to ServicingTrip if possible, else Idle
         :param sim: the sim state
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
@@ -64,21 +64,19 @@ class DispatchTrip(NamedTuple, VehicleState):
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
             route = sim.road_network.route(request.origin, request.destination)
-            remove_error, remove_sim = sim.remove_request(self.request_id)
-            if remove_error:
-                return remove_error, None
+            # apply next state
+
+            passengers = board_vehicle(request.passengers, self.vehicle_id)
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, route, passengers)
+            enter_error, enter_sim = next_state.enter(sim, env)
+            if enter_error:
+                return enter_error, None
             else:
-                # apply next state
-                next_state = ServicingTrip(self.vehicle_id, self.request_id, route, request.passengers)
-                enter_error, enter_sim = next_state.enter(remove_sim, env)
-                if enter_error:
-                    return enter_error, None
-                else:
-                    return None, (enter_sim, next_state)
+                return None, (enter_sim, next_state)
 
     def _perform_update(self,
-                        sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                        sim: 'SimulationState',
+                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         take a step along the route to the base
         :param sim: the simulation state

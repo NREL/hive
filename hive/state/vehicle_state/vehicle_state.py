@@ -3,14 +3,13 @@ from __future__ import annotations
 from abc import abstractmethod, ABCMeta
 from typing import Tuple, Optional, NamedTupleMeta
 
+from hive.runner.environment import Environment
+
 from hive.util.typealiases import VehicleId
 
 from hive.util.exception import SimulationStateError
 
-from hive.state.entity_state import EntityState
-
-from hive.runner.environment import Environment
-from hive.state.simulation_state import SimulationState
+from hive.state.entity_state.entity_state import EntityState
 
 
 class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
@@ -26,9 +25,9 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @classmethod
     def default_update(mcs,
-                       sim: SimulationState,
+                       sim: 'SimulationState',
                        env: Environment,
-                       state: VehicleState) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                       state: VehicleState) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState.
         under terminal conditions, exits the current state, enters a default transition state, and steps
@@ -55,13 +54,13 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             return state._perform_update(sim, env)
 
     @classmethod
-    def default_enter(mcs,
-                      sim: SimulationState,
-                      vehicle_id: VehicleId,
-                      new_state: VehicleState
-                      ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def apply_new_vehicle_state(mcs,
+                                sim: 'SimulationState',
+                                vehicle_id: VehicleId,
+                                new_state: VehicleState
+                                ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
-        the default enter operation simply modifies the vehicle's stored state value
+        this default enter operation simply modifies the vehicle's stored state value
         :param sim: the simulation state
         :param vehicle_id: the id of the vehicle to transition
         :param new_state: the state we are applying
@@ -77,7 +76,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def _has_reached_terminal_state_condition(self,
-                                              sim: SimulationState,
+                                              sim: 'SimulationState',
                                               env: Environment) -> bool:
         """
         test if we have reached a terminal state and need to apply the default transition
@@ -89,9 +88,10 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
+                                      sim: 'SimulationState',
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception],
+                                                 Optional[Tuple['SimulationState', VehicleState]]]:
         """
         apply a transition to a default state after having met a terminal condition
         :param sim: the simulation state
@@ -102,8 +102,9 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def _perform_update(self,
-                        sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                        sim: 'SimulationState',
+                        env: Environment) -> Tuple[Optional[Exception],
+                                                               Optional['SimulationState']]:
         """
         perform a simulation state update for a vehicle in this state
         :param sim: the simulation state
