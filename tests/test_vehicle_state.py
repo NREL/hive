@@ -414,8 +414,23 @@ class TestVehicleState(TestCase):
         self.assertIsNone(error, "should have no errors")
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        updated_request = updated_sim.requests.get(request.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip, "should be in a dispatch to request state")
+        self.assertEquals(updated_request.dispatched_vehicle, vehicle.id, "request should be assigned this vehicle")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_dispatch_trip_enter_no_request(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,))  # request not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertIsNone(updated_sim, "no request at location should result in no update to sim")
 
     def test_dispatch_trip_exit(self):
         vehicle = mock_vehicle()

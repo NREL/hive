@@ -86,6 +86,40 @@ def remove_request(sim: SimulationState,
         return None, updated_sim
 
 
+def modify_request(sim: SimulationState,
+                   updated_request: Request) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    given an updated request, update the SimulationState with that request
+
+    :param sim: the simulation state
+    :param updated_request:
+    :return: the updated simulation, or an error
+    """
+    request = sim.requests.get(updated_request.id)
+    if not request:
+        error = SimulationStateError(f"cannot update request {updated_request.id}, it was not already in the sim")
+        return error, None
+    elif not sim.road_network.geoid_within_geofence(updated_request.origin):
+        error = SimulationStateError(f"cannot modify request {updated_request.id}: origin not within road network")
+        return error, None
+    elif not sim.road_network.geoid_within_geofence(updated_request.destination):
+        error = SimulationStateError(f"cannot modify request {updated_request.id}: destination not within road network")
+        return error, None
+    else:
+        result = DictOps.update_entity_dictionaries(updated_request,
+                                                    sim.requests,
+                                                    sim.r_locations,
+                                                    sim.r_search,
+                                                    sim.sim_h3_search_resolution)
+
+        updated_sim = sim._replace(
+            requests=result.entities if result.entities else sim.requests,
+            r_locations=result.locations if result.locations else sim.r_locations,
+            r_search=result.search if result.search else sim.r_search
+        )
+        return None, updated_sim
+
+
 def add_vehicle(sim: SimulationState, vehicle: Vehicle) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     adds a vehicle into the region supported by the RoadNetwork in this SimulationState
@@ -122,21 +156,25 @@ def modify_vehicle(sim: SimulationState,
     # TODO: since the geofence is is made up of hexes, it is possible to exit the geofence mid route when
     #   traveling between two protruding hexes. I think we can allow this since we guarantee that a request
     #   o-d pair will always be within the geofence.
-    # elif not sim.road_network.geoid_within_geofence(updated_vehicle.geoid):
-    #     raise SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
+    vehicle = sim.vehicles.get(updated_vehicle.id)
+    if not vehicle:
+        error = SimulationStateError(f"cannot update vehicle {vehicle.id}, it was not already in the sim")
+        return error, None
+    elif not sim.road_network.geoid_within_geofence(updated_vehicle.geoid):
+        raise SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
+    else:
+        updated_dictionaries = DictOps.update_entity_dictionaries(updated_vehicle,
+                                                                  sim.vehicles,
+                                                                  sim.v_locations,
+                                                                  sim.v_search,
+                                                                  sim.sim_h3_search_resolution)
 
-    updated_dictionaries = DictOps.update_entity_dictionaries(updated_vehicle,
-                                                              sim.vehicles,
-                                                              sim.v_locations,
-                                                              sim.v_search,
-                                                              sim.sim_h3_search_resolution)
-
-    updated_sim = sim._replace(
-        vehicles=updated_dictionaries.entities if updated_dictionaries.entities else sim.vehicles,
-        v_locations=updated_dictionaries.locations if updated_dictionaries.locations else sim.v_locations,
-        v_search=updated_dictionaries.search if updated_dictionaries.search else sim.v_search
-    )
-    return None, updated_sim
+        updated_sim = sim._replace(
+            vehicles=updated_dictionaries.entities if updated_dictionaries.entities else sim.vehicles,
+            v_locations=updated_dictionaries.locations if updated_dictionaries.locations else sim.v_locations,
+            v_search=updated_dictionaries.search if updated_dictionaries.search else sim.v_search
+        )
+        return None, updated_sim
 
 
 def remove_vehicle(sim: SimulationState, vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:

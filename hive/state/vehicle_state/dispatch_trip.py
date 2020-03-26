@@ -24,7 +24,27 @@ class DispatchTrip(NamedTuple, VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+        """
+        checks that the request exists and if so, updates the request to know that this vehicle is on it's way
+        :param sim: the sim state
+        :param env: the sim environment
+        :return: an exception, or a sim state, or (None, None) if the request isn't there anymore
+        """
+        vehicle = sim.vehicles.get(self.vehicle_id)
+        request = sim.requests.get(self.request_id)
+        if not vehicle:
+            error = SimulationStateError(f"vehicle {self.vehicle_id} does not exist")
+            return error, None
+        elif not request:
+            # not an error - may have been picked up. fail silently
+            return None, None
+        else:
+            updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
+            error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
+            if error:
+                return error, None
+            else:
+                return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
