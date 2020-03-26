@@ -2,26 +2,29 @@ from __future__ import annotations
 
 import csv
 import functools as ft
+import logging
 from typing import Tuple, Dict
 
 import immutables
-from hive.reporting import BasicReporter
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
 from hive.model.base import Base
 from hive.model.energy.powercurve import build_powercurve
 from hive.model.energy.powertrain import build_powertrain
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
-from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehicle.vehicle_type import VehicleTypesTableBuilder
+from hive.reporting import BasicReporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util.helpers import DictOps
+
+log = logging.getLogger(__name__)
 
 
 def initialize_simulation(
@@ -116,7 +119,7 @@ def _build_vehicles(
         veh = Vehicle.from_row(row, sim.road_network, env)
         error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
         if error:
-            env.reporter.sim_report({'error': error})
+            log.error(error)
             return sim, env
         else:
             if veh.powertrain_id not in env.powertrains and veh.powercurve_id not in env.powercurves:
@@ -161,7 +164,7 @@ def _build_bases(bases_file: str,
         base = Base.from_row(row, simulation_state.road_network)
         error, updated_sim = simulation_state_ops.add_base(sim, base)
         if error:
-            env.reporter.sim_report({'error': error})
+            log.error(error)
             return sim
         else:
             return updated_sim
@@ -195,7 +198,7 @@ def _build_stations(stations_file: str,
     def _add_station_unsafe(sim: SimulationState, station: Station) -> SimulationState:
         error, sim_with_station = simulation_state_ops.add_station(sim, station)
         if error:
-            env.reporter.sim_report({'error': error})
+            log.error(error)
             return sim
         else:
             return sim_with_station
