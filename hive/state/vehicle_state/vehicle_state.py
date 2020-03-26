@@ -20,8 +20,8 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
     code interacting with a vehicle's state should not explicitly modify the Vehicle.vehicle_state
     and should instead call the methods enter, update, and exit.
 
-    an enter can return an exception, a SimulationState, or (None, None) signifying that the
-    state cannot be entered under this circumstance.
+    an enter or exit can return an exception, a SimulationState, or (None, None) signifying that the
+    state cannot be entered/exited under this circumstance.
     """
 
     @classmethod

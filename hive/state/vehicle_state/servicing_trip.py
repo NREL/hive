@@ -49,16 +49,23 @@ class ServicingTrip(NamedTuple, VehicleState):
         handles the dropping off of passengers
         :param sim: the sim state
         :param env: the sim environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception due to failure or an optional updated simulation, or (None, None) if still serving the trip
         """
 
         # todo: log the completion of a trip
 
         vehicle = sim.vehicles.get(self.vehicle_id)
-        if not vehicle:
+
+        if len(self.route) != 0:
+            # cannot exit when not at passenger's destination
+            return None, None
+        elif len(self.passengers) == 0:
+            # unlikely edge case that there were no passengers?
+            return None, sim
+        elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-
+            # confirm each passenger has reached their destination
             for passenger in self.passengers:
                 if passenger.destination != vehicle.geoid:
                     locations = f"{passenger.destination} != {vehicle.geoid}"
