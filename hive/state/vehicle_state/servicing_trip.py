@@ -48,7 +48,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         handles the dropping off of passengers
         :param sim: the sim state
         :param env: the sim environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception due to failure or an optional updated simulation, or (None, None) if still serving the trip
         """
 
         # todo: log the completion of a trip
