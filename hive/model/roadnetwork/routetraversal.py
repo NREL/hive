@@ -76,46 +76,40 @@ class RouteTraversal(NamedTuple):
 
 
 def traverse(route_estimate: Route,
-             duration_seconds: Seconds) -> Optional[Union[Exception, RouteTraversal]]:
+             duration_seconds: Seconds) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
     :param route_estimate: the current route estimate
     :param duration_seconds: size of the time step for this traversal, in seconds
     :return: a route experience and updated route estimate;
-             or, nothing if the route is consumed.
+             or, nothing (None, None) if the route is consumed.
              an exception is possible if the current step is not found on the link or
              the route is malformed.
     """
     if len(route_estimate) == 0:
-        return None
+        return None, None
     elif TupleOps.head(route_estimate).start == TupleOps.last(route_estimate).end:
-        return None
+        return None, None
     else:
 
         # function that steps through the route
-        def _traverse(acc: Tuple[RouteTraversal, Optional[Exception]],
-                      link: Link) -> Tuple[RouteTraversal, Optional[Exception]]:
-            acc_traversal, acc_failures = acc
+        def _traverse(acc: Tuple[Optional[Exception], Optional[RouteTraversal]],
+                      link: Link) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
+            acc_failures, acc_traversal = acc
             if acc_traversal.no_time_left():
-                return acc_traversal.add_link_not_traversed(link), acc_failures
+                return acc_failures, acc_traversal.add_link_not_traversed(link)
             # traverse this link as far as we can go
-            traverse_result = traverse_up_to(link, acc_traversal.remaining_time_seconds)
-            if isinstance(traverse_result, Exception):
-                return acc_traversal, traverse_result
-            updated_experienced_route = acc_traversal.add_traversal(traverse_result)
-            return updated_experienced_route, acc_failures
+            error, traverse_result = traverse_up_to(link, acc_traversal.remaining_time_seconds)
+            if error:
+                return error, None
+            else:
+                updated_experienced_route = acc_traversal.add_traversal(traverse_result)
+                return acc_failures, updated_experienced_route
 
         # initial search state has a route traversal and an Optional[Exception]
-        initial = (RouteTraversal(remaining_time_seconds=duration_seconds), None)
+        initial = (None, RouteTraversal(remaining_time_seconds=duration_seconds))
 
-        traversal_result, error = ft.reduce(
-            _traverse,
-            route_estimate,
-            initial
-        )
+        result = ft.reduce(_traverse, route_estimate, initial)
 
-        if error is not None:
-            return error
-        else:
-            return traversal_result
+        return result

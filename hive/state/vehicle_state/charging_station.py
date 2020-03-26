@@ -1,6 +1,7 @@
 from typing import Tuple, Optional, NamedTuple
 
 from hive.model.energy.charger import Charger
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state import VehicleState
@@ -42,8 +43,11 @@ class ChargingStation(NamedTuple, VehicleState):
             if not updated_station:
                 return None, None
             else:
-                updated_sim = sim.modify_station(updated_station)
-                return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+                if error:
+                    return error, None
+                else:
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
@@ -66,8 +70,7 @@ class ChargingStation(NamedTuple, VehicleState):
             return SimulationStateError(f"vehicle {self.station_id} not found"), None
         else:
             updated_station = station.return_charger(self.charger)
-            updated_sim = sim.modify_station(updated_station)
-            return None, updated_sim
+            return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,
                                               sim: 'SimulationState',

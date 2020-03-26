@@ -12,6 +12,7 @@ from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
+from hive.util import SimTime
 from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
 
@@ -250,3 +251,7 @@ class OSMRoadNetwork(RoadNetwork):
         node_id = list(self.rtree.nearest((lat, lon, lat, lon), 1))[0]
 
         return node_id
+
+    def update(self, sim_time: SimTime) -> RoadNetwork:
+        raise NotImplementedError("updates are not implemented")
+

@@ -5,6 +5,7 @@ from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.model.instruction.instruction_interface import Instruction
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
@@ -34,7 +35,7 @@ def step_simulation(simulation_state: SimulationState, env: Environment) -> Simu
         simulation_state,
     )
 
-    return next_state.tick()
+    return simulation_state_ops.tick(next_state)
 
 
 def apply_instructions(simulation_state: SimulationState,

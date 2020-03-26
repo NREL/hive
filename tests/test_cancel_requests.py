@@ -7,7 +7,7 @@ from tests.mock_lobster import *
 class TestCancelRequests(TestCase):
     def test_update_cancellable(self):
         req = mock_request(cancel_time=600)
-        sim = mock_sim(sim_time=600).add_request(req)
+        _, sim = simulation_state_ops.add_request(mock_sim(sim_time=600), req)
         env = mock_env()
         cancel_requests = CancelRequests()
         result, _ = cancel_requests.update(sim, env)
@@ -17,7 +17,7 @@ class TestCancelRequests(TestCase):
 
     def test_update_not_cancellable(self):
         req = mock_request(cancel_time=600)
-        sim = mock_sim(sim_time=599).add_request(req)
+        _, sim = simulation_state_ops.add_request(mock_sim(sim_time=599), req)
         env = mock_env()
         cancel_requests = CancelRequests()
         result, _ = cancel_requests.update(sim, env)

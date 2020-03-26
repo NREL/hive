@@ -4,6 +4,7 @@ from hive.model.energy.charger import Charger
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, RequestId
@@ -53,9 +54,12 @@ def charge(sim: 'SimulationState',
         # perform updates
         updated_vehicle = vehicle.modify_energy_source(updated_energy_source).send_payment(charging_price)
         updated_station = station.receive_payment(charging_price)
-        updated_sim = sim.modify_vehicle(updated_vehicle).modify_station(updated_station)
 
-        return None, updated_sim
+        veh_error, sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+        if veh_error:
+            return veh_error, None
+        else:
+            return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
 
 
 class MoveResult(NamedTuple):
@@ -77,12 +81,14 @@ def _apply_route_traversal(sim: 'SimulationState',
     :return: an error, or a traverse result, or (None, None) if no traversal occurred
     """
     vehicle = sim.vehicles.get(vehicle_id)
-    traverse_result = traverse(
+    error, traverse_result = traverse(
         route_estimate=route,
         duration_seconds=sim.sim_timestep_duration_seconds,
     )
     if not vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    elif error:
+        return error, None
     elif not traverse_result:
         return traverse_result, None
     elif isinstance(traverse_result, Exception):
@@ -91,9 +97,11 @@ def _apply_route_traversal(sim: 'SimulationState',
         updated_vehicle = vehicle.apply_route_traversal(
             traverse_result, sim.road_network, env
         )
-        updated_sim = sim.modify_vehicle(updated_vehicle)
-
-        return None, MoveResult(updated_sim, traverse_result)
+        error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+        if error:
+            return error, None
+        else:
+            return None, MoveResult(updated_sim, traverse_result)
 
 
 def _go_out_of_service_on_empty(sim: 'SimulationState',
@@ -168,12 +176,8 @@ def pick_up_trip(sim: 'SimulationState',
         return SimulationStateError(f"request {request_id} not found"), None
     else:
         updated_vehicle = vehicle.receive_payment(request.value)
-        maybe_sim_with_vehicle = sim.modify_vehicle(updated_vehicle)
-        if not maybe_sim_with_vehicle:
-            return SimulationStateError(f"failed to add passengers to vehicle {vehicle_id}"), None
+        mod_error, maybe_sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+        if mod_error:
+            return mod_error, None
         else:
-            update_error, updated_sim = maybe_sim_with_vehicle.remove_request(request_id)
-            if update_error:
-                return update_error, None
-            else:
-                return None, updated_sim
+            return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)

@@ -4,6 +4,7 @@ import functools as ft
 from typing import Tuple, Optional, NamedTuple, Dict
 
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
@@ -39,7 +40,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
                 return payload
             else:
                 # remove this request
-                update_error, updated_sim = sim.remove_request(request_id)
+                update_error, updated_sim = simulation_state_ops.remove_request(sim, request_id)
 
                 # report either error or successful cancellation
                 if update_error:

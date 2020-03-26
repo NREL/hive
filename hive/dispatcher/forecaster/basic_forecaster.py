@@ -17,13 +17,22 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
     reader: DictReaderStepper
 
     @classmethod
-    def build(cls, demand_forecast_file: str):
+    def build(cls, demand_forecast_file: str) -> BasicForecaster:
+        """
+        loads a forecaster from a file
+
+        :param demand_forecast_file: the file source
+        :return: a BasicForecaster
+        :raises: an exception if there were file loading issues
+        """
         if not Path(demand_forecast_file).is_file():
             raise IOError(f"{demand_forecast_file} is not a valid path to a request file")
 
-        reader = DictReaderStepper.from_file(demand_forecast_file, "sim_time", parser=time_parser)
-
-        return BasicForecaster(reader)
+        error, reader = DictReaderStepper.from_file(demand_forecast_file, "sim_time", parser=time_parser)
+        if error:
+            raise error
+        else:
+            return BasicForecaster(reader)
 
     def generate_forecast(self, simulation_state: 'SimulationState') -> Tuple[BasicForecaster, Forecast]:
         """

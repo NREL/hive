@@ -8,6 +8,7 @@ import immutables
 
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
@@ -52,6 +53,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         :param charging_file: optional file path for charger pricing by time of day
         :param fallback_values: if file path not provided, this is the fallback
         :return: a SimulationUpdate function pointing at the first line of a request file
+        :raises: an exception if there were file reading issues
         """
 
         if not charging_file:
@@ -62,8 +64,11 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             if not req_path.is_file():
                 raise IOError(f"{charging_file} is not a valid path to a request file")
             else:
-                stepper = DictReaderStepper.from_file(charging_file, "time", parser=time_parser)
-                return ChargingPriceUpdate(stepper, False)
+                error, stepper = DictReaderStepper.from_file(charging_file, "time", parser=time_parser)
+                if error:
+                    raise error
+                else:
+                    return ChargingPriceUpdate(stepper, False)
 
     def update(self,
                sim_state: SimulationState,
@@ -165,10 +170,9 @@ def _update_station_prices(result: SimulationUpdateResult,
         return result
     else:
         updated_station = station.update_prices(prices_update)
-        updated_sim = result.simulation_state.modify_station(updated_station)
-        if isinstance(updated_sim, Exception):
-            # noop for now?
-            return result.update_sim(result.simulation_state, str(updated_sim))
+        error, updated_sim = simulation_state_ops.modify_station(result.simulation_state, updated_station)
+        if error:
+            return result.update_sim(result.simulation_state, {'error': error})
         else:
             return result.update_sim(updated_sim)
 
