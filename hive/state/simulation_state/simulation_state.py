@@ -106,7 +106,7 @@ class SimulationState(NamedTuple):
         :return: bool
         """
         vehicle = self.vehicles.get(vehicle_id)
-        station = self.requests.get(station_id)
+        station = self.stations.get(station_id)
         if not vehicle or not station:
             return False
         else:
@@ -128,7 +128,7 @@ class SimulationState(NamedTuple):
         :return: bool
         """
         vehicle = self.vehicles.get(vehicle_id)
-        base = self.requests.get(base_id)
+        base = self.bases.get(base_id)
         if not vehicle or not base:
             return False
         else:

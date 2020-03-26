@@ -12,9 +12,9 @@ class TestInstructions(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.2)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        err, sim = simulation_state_ops.add_vehicle(mock_sim(stations=(sta,)), veh)
+        self.assertIsNone(err, "test invariant failed")
         env = mock_env()
-
         instruction = ChargeStationInstruction(
             vehicle_id=veh.id,
             station_id=sta.id,

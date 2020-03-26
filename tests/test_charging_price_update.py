@@ -9,7 +9,12 @@ class TestChargingPriceUpdate(TestCase):
 
     def test_charge_price_update_from_station_id_file(self):
         # prices are set to bump at 28800 (8 am)
-        sim = mock_sim(stations=(mock_station("s1"), mock_station("s2"), mock_station("bs1"), ), sim_time=28801)
+        sim = mock_sim(
+            stations=(
+                mock_station_from_geoid("s1", '8f268cdac268430'),
+                mock_station_from_geoid("s2", '8f268cdac268589'),
+                mock_station_from_geoid("bs1", '8f268cdac268433')),
+            sim_time=28801)
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
         file = resource_filename("hive.resources.charging_prices", "denver_charging_prices_by_station_id.csv")

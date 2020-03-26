@@ -11,7 +11,8 @@ class TestSimulationState(TestCase):
     def test_add_request(self):
         req = mock_request()
         sim = mock_sim()
-        sim_with_req = sim.add_request(req)
+        error, sim_with_req = simulation_state_ops.add_request(sim, req)
+        self.assertIsNone(error, "should be no error")
         self.assertEqual(len(sim.requests), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_req.requests[req.id], req, "request contents should be idempotent")
 
@@ -23,10 +24,12 @@ class TestSimulationState(TestCase):
     def test_remove_request(self):
         req = mock_request()
         sim = mock_sim()
-        sim_with_req = sim.add_request(req)
-        error, sim_after_remove = sim_with_req.remove_request(req.id)
+        e1, sim_with_req = simulation_state_ops.add_request(sim, req)
+        self.assertIsNone(e1, "test invariant did not hold")
 
-        self.assertIsNone(error, "should be no error")
+        e2, sim_after_remove = simulation_state_ops.remove_request(sim_with_req, req.id)
+
+        self.assertIsNone(e2, "should be no error")
         self.assertEqual(len(sim_with_req.requests), 1, "the sim with req added should not have been mutated")
         self.assertEqual(len(sim_after_remove.requests), 0, "the request should have been removed")
 
@@ -39,8 +42,9 @@ class TestSimulationState(TestCase):
         req1 = mock_request(request_id="1")
         req2 = mock_request(request_id="2")
         sim = mock_sim()
-        sim_with_reqs = sim.add_request(req1).add_request(req2)
-        error, sim_remove_req1 = sim_with_reqs.remove_request(req1.id)
+        _, sim_with_req1 = simulation_state_ops.add_request(sim, req1)
+        _, sim_with_reqs = simulation_state_ops.add_request(sim_with_req1, req2)
+        error, sim_remove_req1 = simulation_state_ops.remove_request(sim_with_reqs, req1.id)
 
         self.assertIsNone(error, "should be no error")
         self.assertIn(req2.origin,
@@ -53,8 +57,9 @@ class TestSimulationState(TestCase):
     def test_add_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        sim_with_veh = sim.add_vehicle(veh)
+        error, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
 
+        self.assertIsNone(error, "should be no error")
         self.assertEqual(len(sim.vehicles), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_veh.vehicles[veh.id], veh, "the vehicle should not have been mutated")
 
@@ -66,14 +71,16 @@ class TestSimulationState(TestCase):
     def test_update_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        sim_before_update = sim.add_vehicle(veh)
+        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
+        self.assertIsNone(e1, "test invariant failed")
 
         # modify some value on the vehicle
         updated_powertrain_id = "testing an update"
         updated_vehicle = veh._replace(powertrain_id=updated_powertrain_id)
 
-        sim_after_update = sim_before_update.modify_vehicle(updated_vehicle)
+        e2, sim_after_update = simulation_state_ops.modify_vehicle(sim_with_veh, updated_vehicle)
 
+        self.assertIsNone(e2, "should not have an error")
         # confirm sim reflects changes to vehicle
         self.assertEqual(sim_after_update.vehicles[veh.id].powertrain_id,
                          updated_powertrain_id,
@@ -82,9 +89,12 @@ class TestSimulationState(TestCase):
     def test_remove_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        sim_with_veh = sim.add_vehicle(veh)
-        sim_after_remove = sim_with_veh.remove_vehicle(veh.id)
+        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
+        self.assertIsNone(e1, "test invariant failed")
 
+        error, sim_after_remove = simulation_state_ops.remove_vehicle(sim_with_veh, veh.id)
+
+        self.assertIsNone(error, "should have no error")
         self.assertEqual(len(sim_with_veh.vehicles), 1, "the sim with vehicle added should not have been mutated")
         self.assertEqual(len(sim_after_remove.vehicles), 0, "the vehicle should have been removed")
 
@@ -92,18 +102,22 @@ class TestSimulationState(TestCase):
 
     def test_pop_vehicle(self):
         veh = mock_vehicle()
-        sim = mock_sim().add_vehicle(veh)
-        sim_after_pop, veh_after_pop = sim.pop_vehicle(veh.id)
+        sim = mock_sim()
+        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
+        self.assertIsNone(e1, "test invariant failed")
+        e2, (sim_after_pop, veh_after_pop) = simulation_state_ops.pop_vehicle(sim_with_veh, veh.id)
 
-        self.assertEqual(len(sim.vehicles), 1, "the sim with vehicle added should not have been mutated")
+        self.assertIsNone(e2, "should have no error")
+        self.assertEqual(len(sim_with_veh.vehicles), 1, "the sim with vehicle added should not have been mutated")
         self.assertEqual(len(sim_after_pop.vehicles), 0, "the vehicle should have been removed")
         self.assertEqual(veh, veh_after_pop, "should be the same vehicle that gets popped")
 
     def test_add_station(self):
         station = mock_station()
         sim = mock_sim()
-        sim_after_station = sim.add_station(station)
+        error, sim_after_station = simulation_state_ops.add_station(sim, station)
 
+        self.assertIsNone(error, "should have no error")
         self.assertEqual(len(sim_after_station.stations), 1, "the sim should have one station added")
         self.assertEqual(sim_after_station.stations[station.id], station, "the station should not have been mutated")
 
@@ -113,17 +127,19 @@ class TestSimulationState(TestCase):
 
     def test_remove_station(self):
         station = mock_station()
-        sim = mock_sim()
-        sim_after_remove = sim.add_station(station).remove_station(station.id)
+        sim = mock_sim(stations=(station, ))
+        error, sim_after_remove = simulation_state_ops.remove_station(sim, station.id)
 
+        self.assertIsNone(error, "should have no error")
         self.assertNotIn(station.id, sim_after_remove.stations, "station should be removed")
         self.assertNotIn(station.geoid, sim_after_remove.s_locations, "nothing should be left at geoid")
 
     def test_add_base(self):
         base = mock_base()
         sim = mock_sim()
-        sim_after_base = sim.add_base(base)
+        error, sim_after_base = simulation_state_ops.add_base(sim, base)
 
+        self.assertIsNone(error, "should have no error")
         self.assertEqual(len(sim_after_base.bases), 1, "the sim should have one base added")
         self.assertEqual(sim_after_base.bases[base.id], base, "the base should not have been mutated")
 
@@ -133,9 +149,10 @@ class TestSimulationState(TestCase):
 
     def test_remove_base(self):
         base = mock_base()
-        sim = mock_sim()
-        sim_after_remove = sim.add_base(base).remove_base(base.id)
+        sim = mock_sim(bases=(base,))
+        error, sim_after_remove = simulation_state_ops.remove_base(sim, base.id)
 
+        self.assertIsNone(error, "should have no error")
         self.assertNotIn(base.id, sim_after_remove.bases, "base should be removed")
         self.assertNotIn(base.geoid, sim_after_remove.b_locations, "nothing should be left at geoid")
 
@@ -146,9 +163,15 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere)
         sta = mock_station_from_geoid(geoid=somewhere)
         b = mock_base_from_geoid(geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_request(req).add_station(sta).add_base(b)
+        sim = mock_sim(
+            vehicles=(veh, ),
+            stations=(sta, ),
+            bases=(b, )
+        )
+        error, sim_with_request = simulation_state_ops.add_request(sim, req)
+        self.assertIsNone(error, "test invariant failed")
 
-        result = sim.at_geoid(veh.geoid)
+        result = sim_with_request.at_geoid(veh.geoid)
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
         self.assertIn(req.id, result['requests'], "should have found this request")
         self.assertEqual(sta.id, result['station'], "should have found this station")
@@ -158,8 +181,10 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere)
-        sim = mock_sim().add_vehicle(veh).add_request(req)
-        result = sim.vehicle_at_request(veh.id, req.id)
+        sim = mock_sim(vehicles=(veh,))
+        error, sim_with_veh = simulation_state_ops.add_request(sim, req)
+        self.assertIsNone(error, "test invariant failed")
+        result = sim_with_veh.vehicle_at_request(veh.id, req.id)
         self.assertTrue(result, "the vehicle should be at the request")
 
     def test_vehicle_not_at_request(self):
@@ -167,15 +192,16 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_request(req)
-        result = sim.vehicle_at_request(veh.id, req.id)
+        sim = mock_sim(vehicles=(veh,))
+        error, sim_with_veh = simulation_state_ops.add_request(sim, req)
+        result = sim_with_veh.vehicle_at_request(veh.id, req.id)
         self.assertFalse(result, "the vehicle should not be at the request")
 
     def test_vehicle_at_station(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sta = mock_station_from_geoid(geoid=somewhere)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         result = sim.vehicle_at_station(veh.id, sta.id)
         self.assertTrue(result, "the vehicle should be at the station")
 
@@ -184,7 +210,7 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sta = mock_station_from_geoid(geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         result = sim.vehicle_at_station(veh.id, sta.id)
         self.assertFalse(result, "the vehicle should not be at the station")
 
@@ -192,7 +218,7 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         base = mock_base_from_geoid(geoid=somewhere)
-        sim = mock_sim().add_vehicle(veh).add_base(base)
+        sim = mock_sim(vehicles=(veh,), bases=(base,))
         result = sim.vehicle_at_base(veh.id, base.id)
         self.assertTrue(result, "the vehicle should be at the base")
 
@@ -201,41 +227,21 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         base = mock_base_from_geoid(geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_base(base)
+        sim = mock_sim(vehicles=(veh,), bases=(base,))
         result = sim.vehicle_at_base(veh.id, base.id)
         self.assertFalse(result, "the vehicle should not be at the base")
-
-    # def test_board_vehicle(self):
-    #     somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-    #     veh = mock_vehicle_from_geoid(geoid=somewhere)
-    #     req = mock_request_from_geoids(origin=somewhere, passengers=2)
-    #     sim = mock_sim().add_vehicle(veh).add_request(req)
-    #
-    #     sim_boarded = sim.board_vehicle(req.id, veh.id)
-    #
-    #     # check that both passengers boarded correctly
-    #     for passenger in req.passengers:
-    #         self.assertTrue(passenger.id in sim_boarded.vehicles[veh.id].passengers)
-    #         self.assertEqual(sim_boarded.vehicles[veh.id].passengers[passenger.id].vehicle_id,
-    #                          veh.id,
-    #                          f"the passenger should now reference it's vehicle id")
-    #
-    #     # request should have been removed
-    #     self.assertNotIn(req.id, sim_boarded.requests, "request should be removed from sim")
 
     def test_set_vehicle_instruction_base(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         bas = mock_base_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        sim = mock_sim().add_vehicle(veh).add_base(bas)
+        sim = mock_sim(vehicles=(veh,), bases=(bas,))
         env = mock_env()
 
         instruction = ReserveBaseInstruction(vehicle_id=veh.id, base_id=bas.id)
         error, sim_updated = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
-
-        self.assertIsNotNone(sim_updated)
 
         updated_veh = sim_updated.vehicles[veh.id]
         self.assertIsInstance(updated_veh.vehicle_state, ReserveBase, "should be reserving at base")
@@ -245,7 +251,7 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         bas = mock_base_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_base(bas)
+        sim = mock_sim(vehicles=(veh,), bases=(bas,))
         env = mock_env()
 
         instruction = ReserveBaseInstruction(vehicle_id=veh.id, base_id=bas.id)
@@ -259,7 +265,7 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
         instruction = ChargeStationInstruction(
@@ -281,7 +287,7 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
         instruction = ChargeStationInstruction(
@@ -300,14 +306,15 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere, passengers=2)
-        sim = mock_sim().add_vehicle(veh).add_request(req)
         env = mock_env()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
+        self.assertIsNone(e1, "test invariant failed")
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
 
-        error, sim_updated = instruction.apply_instruction(sim, env)
-        if error:
-            self.fail(error.args)
+        e2, sim_updated = instruction.apply_instruction(sim, env)
+        if e2:
+            self.fail(e2.args)
 
         self.assertIsNotNone(sim_updated)
 
@@ -340,8 +347,9 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere_else, passengers=2)
-        sim = mock_sim().add_vehicle(veh).add_request(req)
         env = mock_env()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
+        self.assertIsNone(e1, "test invariant failed")
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
         error, sim_updated = instruction.apply_instruction(sim, env)
@@ -355,8 +363,9 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere,
                                        destination=somewhere_else,
                                        passengers=2)
-        sim = mock_sim().add_vehicle(veh).add_request(req)
         env = mock_env()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
+        self.assertIsNone(e1, "test invariant failed")
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
         error, sim_updated = instruction.apply_instruction(sim, env)
@@ -376,7 +385,7 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
         instruction = ChargeStationInstruction(
@@ -399,7 +408,7 @@ class TestSimulationState(TestCase):
 
     def test_step_idle_vehicle(self):
         veh = mock_vehicle_from_geoid()
-        sim = mock_sim().add_vehicle(veh)
+        sim = mock_sim(vehicles=(veh,))
         env = mock_env()
 
         sim_idle_veh = step_simulation(sim, env)
@@ -419,9 +428,12 @@ class TestSimulationState(TestCase):
                                        destination=somewhere_else,
                                        passengers=2)
         env = mock_env()
-        sim = mock_sim(sim_timestep_duration_seconds=1000).add_vehicle(veh).add_request(req)
+        sim = mock_sim(sim_timestep_duration_seconds=1000, vehicles=(veh,))
+        e1, sim_with_req = simulation_state_ops.add_request(sim, req)
+        self.assertIsNone(e1, "test invariant failed")
+
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
-        error, sim_with_instruction = instruction.apply_instruction(sim, env)
+        error, sim_with_instruction = instruction.apply_instruction(sim_with_req, env)
         if error:
             self.fail(error.args)
 
@@ -444,12 +456,14 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere_else,
                                        destination=somewhere,
                                        passengers=2)
-        sim = mock_sim().add_vehicle(veh).add_request(req)
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
+        self.assertIsNone(e1, "test invariant failed")
+
         instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
         env = mock_env()
-        error, sim_updated = instruction.apply_instruction(sim, env)
-        if error:
-            self.fail(error.args)
+        e2, sim_updated = instruction.apply_instruction(sim, env)
+        if e2:
+            self.fail(e2.args)
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
@@ -480,7 +494,7 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sta = mock_station_from_geoid(station_id='s1', geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
         instruction = DispatchStationInstruction(vehicle_id=veh.id, station_id=sta.id, charger=Charger.DCFC)
@@ -510,7 +524,7 @@ class TestSimulationState(TestCase):
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         base = mock_base_from_geoid(base_id='b1', geoid=somewhere_else)
-        sim = mock_sim().add_vehicle(veh).add_base(base)
+        sim = mock_sim(vehicles=(veh,), bases=(base,))
         env = mock_env()
 
         instruction = DispatchBaseInstruction(vehicle_id=veh.id, base_id=base.id)
@@ -538,7 +552,7 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        sim = mock_sim().add_vehicle(veh)
+        sim = mock_sim(vehicles=(veh,))
         env = mock_env()
 
         instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else)
@@ -569,7 +583,7 @@ class TestSimulationState(TestCase):
             ideal_energy_limit_kwh=50,
             soc=0.75
         )
-        sim = mock_sim().add_vehicle(veh).add_station(sta)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
 
         instruction = ChargeStationInstruction(
             vehicle_id=veh.id,
@@ -602,7 +616,7 @@ class TestSimulationState(TestCase):
         )
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
-        sim = mock_sim().add_vehicle(veh).add_station(sta).add_base(bas)
+        sim = mock_sim(vehicles=(veh,), stations=(sta,), bases=(bas,))
 
         instruction = ChargeBaseInstruction(
             vehicle_id=veh.id,
@@ -629,7 +643,7 @@ class TestSimulationState(TestCase):
     def test_vehicle_runs_out_of_energy(self):
 
         low_energy_veh = mock_vehicle_from_geoid(soc=0.01)
-        sim = mock_sim().add_vehicle(low_energy_veh)
+        sim = mock_sim(vehicles=(low_energy_veh,))
 
         # costs a fixed 10 kwh to make any movement
         env = mock_env(powertrains=(mock_powertrain(energy_cost_kwh=10),))

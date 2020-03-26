@@ -219,11 +219,11 @@ def remove_station(sim: SimulationState, station_id: StationId) -> Tuple[Optiona
     :param station_id: the id of the station to remove
     :return: the updated simulation state, or an exception
     """
-    if station_id not in sim.stations:
+    station = sim.stations.get(station_id)
+    if not station:
         error = SimulationStateError(f"cannot remove station {station_id}, it does not exist")
         return error, None
     else:
-        station = sim.stations[station_id]
         search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
 
         updated_sim = sim._replace(
@@ -312,7 +312,7 @@ def modify_base(sim: SimulationState, updated_base: Base) -> Tuple[Optional[Exce
     :param updated_base:
     :return: the updated simulation, or an error
     """
-    base = sim.stations.get(updated_base.id)
+    base = sim.bases.get(updated_base.id)
     if not base:
         error = SimulationStateError(f"cannot update base {updated_base.id}, it was not already in the sim")
         return error, None

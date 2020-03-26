@@ -85,5 +85,5 @@ class HaversineRoadNetwork(RoadNetwork):
             return self.geofence.contains(geoid)
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
-        pass
+        raise NotImplementedError("updates are not implemented")
 

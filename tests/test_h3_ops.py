@@ -58,7 +58,11 @@ class TestH3Ops(TestCase):
         req_far = mock_request_from_geoids(origin=somewhere, destination=far_from_somewhere)
 
         sim = mock_sim(h3_location_res=h3_resolution, h3_search_res=h3_search_res)
-        sim_with_reqs = sim.add_request(req_near).add_request(req_far)
+        e1, sim_with_req1 = simulation_state_ops.add_request(sim, req_near)
+        e2, sim_with_reqs = simulation_state_ops.add_request(sim_with_req1, req_far)
+
+        self.assertIsNone(e1, "test invariant failed")
+        self.assertIsNone(e2, "test invariant failed")
 
         nearest = H3Ops.nearest_entity(geoid=somewhere,
                                        entities=sim_with_reqs.requests,
