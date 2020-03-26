@@ -43,11 +43,12 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             if exit_error:
                 return exit_error, None
             else:
-                next_error, (next_sim, next_state) = state._enter_default_terminal_state(exited_sim, env)
+                next_error, result = state._enter_default_terminal_state(exited_sim, env)
                 if next_error:
                     return next_error, None
                 else:
                     # apply the update of the next state
+                    next_sim, next_state = result
                     return next_state.update(next_sim, env)
 
         else:

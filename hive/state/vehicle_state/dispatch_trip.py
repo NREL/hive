@@ -23,7 +23,10 @@ class DispatchTrip(NamedTuple, VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+        request = sim.requests.get(self.request_id)
+        assigned_request = request.assign_dispatched_vehicle(vehicle_id=self.vehicle_id, current_time=sim.sim_time)
+        updated_sim = sim.modify_request(assigned_request)
+        return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim

@@ -17,7 +17,7 @@ io:
   road_network_file: downtown_denver.xml
 
   log_vehicles: True
-  log_requests: False
+  log_requests: True
   log_stations: False
   log_dispatcher: True
 
