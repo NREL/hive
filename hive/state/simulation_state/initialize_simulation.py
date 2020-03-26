@@ -19,6 +19,7 @@ from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehicle.vehicle_type import VehicleTypesTableBuilder
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util.helpers import DictOps
 
@@ -82,9 +83,13 @@ def initialize_simulation(
                               vehicle_types=vehicle_types_table_builder.result,
                               sim_output_dir=sim_output_dir)
 
+    # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
+    #  should instead hold aside any error reports and then do something below after finishing,
+    #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
+    # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
-    sim_with_bases = _build_bases(bases_file, sim_with_vehicles)
-    sim_with_stations = _build_stations(stations_file, sim_with_bases)
+    sim_with_bases = _build_bases(bases_file, sim_with_vehicles, env_updated)
+    sim_with_stations = _build_stations(stations_file, sim_with_bases, env_updated)
 
     return sim_with_stations, env_updated
 
@@ -109,10 +114,10 @@ def _build_vehicles(
 
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
-        updated_sim = sim.add_vehicle(veh)
-
-        if not updated_sim:
-            return payload
+        error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
+        if error:
+            env.reporter.sim_report({'error': error})
+            return sim, env
         else:
             if veh.powertrain_id not in env.powertrains and veh.powercurve_id not in env.powercurves:
                 powertrain = build_powertrain(veh.powertrain_id)
@@ -139,21 +144,25 @@ def _build_vehicles(
     return sim_with_vehicles
 
 
-def _build_bases(bases_file: str, simulation_state: SimulationState) -> SimulationState:
+def _build_bases(bases_file: str,
+                 simulation_state: SimulationState,
+                 env: Environment) -> SimulationState:
     """
     all your base are belong to us
 
     :param bases_file: path to file with bases
     :param simulation_state: the partial simulation state
+    :param env: the partially-constructed environment
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
     """
 
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
         base = Base.from_row(row, simulation_state.road_network)
-        updated_sim = sim.add_base(base)
-        if not updated_sim:
-            return updated_sim
+        error, updated_sim = simulation_state_ops.add_base(sim, base)
+        if error:
+            env.reporter.sim_report({'error': error})
+            return sim
         else:
             return updated_sim
 
@@ -165,12 +174,15 @@ def _build_bases(bases_file: str, simulation_state: SimulationState) -> Simulati
     return sim_with_bases
 
 
-def _build_stations(stations_file: str, simulation_state: SimulationState) -> SimulationState:
+def _build_stations(stations_file: str,
+                    simulation_state: SimulationState,
+                    env: Environment) -> SimulationState:
     """
     all your station are belong to us
 
     :param stations_file: the file with stations in it
     :param simulation_state: the partial simulation state
+    :param env: the partially-constructed environment
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """
@@ -181,8 +193,9 @@ def _build_stations(stations_file: str, simulation_state: SimulationState) -> Si
         return updated_builder
 
     def _add_station_unsafe(sim: SimulationState, station: Station) -> SimulationState:
-        sim_with_station = sim.add_station(station)
-        if not sim_with_station:
+        error, sim_with_station = simulation_state_ops.add_station(sim, station)
+        if error:
+            env.reporter.sim_report({'error': error})
             return sim
         else:
             return sim_with_station

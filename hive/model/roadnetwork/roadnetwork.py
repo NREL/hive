@@ -6,7 +6,7 @@ from typing import Optional
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.util.typealiases import GeoId, H3Resolution
+from hive.util.typealiases import GeoId, H3Resolution, SimTime
 from hive.util.units import Kilometers
 
 
@@ -55,4 +55,12 @@ class RoadNetwork(ABC):
 
         :param geoid: an h3 geoid
         :return: True/False
+        """
+
+    @abstractmethod
+    def update(self, sim_time: SimTime) -> RoadNetwork:
+        """
+        requests an update to the road network state to refect the provided simulation time
+        :param sim_time:
+        :return:
         """

@@ -43,7 +43,7 @@ class MyTestCase(unittest.TestCase):
         row = next(DictReader(source.split()))
         env = mock_env()
         network = mock_network()
-        req = Request.from_row(row, env, network)
+        _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
         self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
@@ -68,11 +68,6 @@ class MyTestCase(unittest.TestCase):
         )
         env = mock_env(config)
         network = mock_network()
-        request = Request.from_row(row, env, network)
-        self.assertIsInstance(request, IOError)
-
-
-
-
-if __name__ == '__main__':
-    unittest.main()
+        error, request = Request.from_row(row, env, network)
+        self.assertIsNone(request)
+        self.assertIsInstance(error, IOError)

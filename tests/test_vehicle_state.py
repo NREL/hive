@@ -4,6 +4,7 @@ from hive.state.vehicle_state import *
 from tests.mock_lobster import *
 from hive.model.passenger import board_vehicle
 
+
 class TestVehicleState(TestCase):
 
     ####################################################################################################################

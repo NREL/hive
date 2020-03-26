@@ -75,5 +75,4 @@ class Repositioning(NamedTuple, VehicleState):
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)
             updated_vehicle = moved_vehicle.modify_state(updated_state)
-            updated_sim = move_result.sim.modify_vehicle(updated_vehicle)
-            return None, updated_sim
+            return move_result.simulation_state_ops.modify_vehicle(sim, updated_vehicle)

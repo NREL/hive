@@ -1,6 +1,7 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.energy.charger import Charger
+from hive.state.simulation_state import simulation_state_ops
 
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.state.vehicle_state.charging_station import ChargingStation
@@ -92,5 +93,4 @@ class DispatchStation(NamedTuple, VehicleState):
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)
             updated_vehicle = moved_vehicle.modify_state(updated_state)
-            updated_sim = move_result.sim.modify_vehicle(updated_vehicle)
-            return None, updated_sim
+            return simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)

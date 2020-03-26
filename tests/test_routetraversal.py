@@ -13,7 +13,7 @@ class TestRouteTraversal(TestCase):
         """
         links = mock_route()
 
-        result = traverse(
+        _, result = traverse(
             route_estimate=links,
             duration_seconds=hours_to_seconds(4)
         )
@@ -27,7 +27,7 @@ class TestRouteTraversal(TestCase):
         up somewhere in the middle
         """
         links = mock_route()
-        result = traverse(
+        _, result = traverse(
             route_estimate=links,
             duration_seconds=hours_to_seconds(1.5)  # 1.5 hours at 1kmph, 1km per link, 3 links
         )
@@ -39,7 +39,7 @@ class TestRouteTraversal(TestCase):
         links = mock_route()
         test_link = links[0]
 
-        result = traverse_up_to(
+        error, result = traverse_up_to(
             link=test_link,
             available_time_seconds=hours_to_seconds(0.5),
         )
@@ -55,7 +55,7 @@ class TestRouteTraversal(TestCase):
         links = mock_route()
         test_link = links[0]
 
-        result = traverse_up_to(
+        error, result = traverse_up_to(
             link=test_link,
             available_time_seconds=hours_to_seconds(4),
         )

@@ -52,6 +52,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         :param charging_file: optional file path for charger pricing by time of day
         :param fallback_values: if file path not provided, this is the fallback
         :return: a SimulationUpdate function pointing at the first line of a request file
+        :raises: an exception if there were file reading issues
         """
 
         if not charging_file:
@@ -62,8 +63,11 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             if not req_path.is_file():
                 raise IOError(f"{charging_file} is not a valid path to a request file")
             else:
-                stepper = DictReaderStepper.from_file(charging_file, "time", parser=time_parser)
-                return ChargingPriceUpdate(stepper, False)
+                error, stepper = DictReaderStepper.from_file(charging_file, "time", parser=time_parser)
+                if error:
+                    raise error
+                else:
+                    return ChargingPriceUpdate(stepper, False)
 
     def update(self,
                sim_state: SimulationState,

@@ -13,11 +13,17 @@ class TestDictReaderStepper(TestCase):
             return value < stop_time
         return stop_condition
 
+    def test_invalid_file(self):
+        test_filename = "invalid#Q(F*E:/file/location"
+        error, stepper = DictReaderStepper.from_file(test_filename, "blargrog", parser=time_parser)
+        self.assertIsNone(stepper)
+        self.assertIsInstance(error, Exception)
+
     def test_reading_up_to_a_time_bounds_should_leave_remaining_file_available(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
         stop_time = 25920
         stop_condition = self._generate_stop_condition(stop_time)
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
+        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         result = tuple(stepper.read_until_stop_condition(stop_condition))
         self.assertEqual(len(result), 20, f"should have found 20 rows with departure time earlier than {stop_time}")
         self.assertEqual(
@@ -35,7 +41,7 @@ class TestDictReaderStepper(TestCase):
 
     def test_reading_two_consecutive_times(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
+        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         stop1 = 25920
         stop2 = 26040
         result1 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
@@ -60,14 +66,14 @@ class TestDictReaderStepper(TestCase):
 
     def test_no_agents_after_end_of_file(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
+        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(9999998)))
         result = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(9999999)))
         self.assertEqual(len(result), 0, "should find no more agents after end of time")
 
     def test_no_second_file_reading_on_repeated_value(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
+        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         stop = 25920
         result1 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop)))
         result2 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop)))
@@ -76,7 +82,7 @@ class TestDictReaderStepper(TestCase):
 
     def test_correct_management_of_stored_value_after_repeated_value(self):
         test_filename = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
+        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=time_parser)
         stop1 = 25920
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
