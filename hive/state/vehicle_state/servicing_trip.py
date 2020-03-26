@@ -54,10 +54,14 @@ class ServicingTrip(NamedTuple, VehicleState):
         # todo: log the completion of a trip
 
         vehicle = sim.vehicles.get(self.vehicle_id)
-        if not vehicle:
+
+        if len(self.route) != 0:
+            # cannot exit when not at passenger's destination
+            return None, None
+        elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-
+            # confirm each passenger has reached their destination
             for passenger in self.passengers:
                 if passenger.destination != vehicle.geoid:
                     locations = f"{passenger.destination} != {vehicle.geoid}"

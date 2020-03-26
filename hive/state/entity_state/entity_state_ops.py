@@ -15,11 +15,13 @@ def transition_previous_to_next(sim: 'SimulationState',
     :param env: the sim environment
     :param prev_state: the previous vehicle state
     :param next_state: the next state
-    :return: error, or updated sim, or (None, None) if enter was invalid
+    :return: error, or updated sim, or (None, None) if either exit or enter was invalid
     """
     exit_error, exit_sim = prev_state.exit(sim, env)
     if exit_error:
         return exit_error, None
+    elif not exit_sim:
+        return None, None
     else:
         enter_error, enter_sim = next_state.enter(exit_sim, env)
         if enter_error:

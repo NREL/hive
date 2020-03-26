@@ -776,6 +776,24 @@ class TestVehicleState(TestCase):
 
         self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
 
+    def test_servicing_trip_exit_when_still_has_passengers(self):
+        vehicle = mock_vehicle()
+        request = mock_request_from_geoids()
+        self.assertNotEqual(request.origin, request.destination, "test invariant failed")
+        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        env = mock_env()
+        route = mock_route_from_geoids(request.origin, request.destination)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
+        self.assertIsNone(exited_sim, "should not have allowed exit of ServicingTrip")
+
     def test_servicing_trip_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
