@@ -182,26 +182,6 @@ class SimulationState(NamedTuple):
             v_search=result.search if result.search else self.v_search
         )
 
-    def step_vehicle(self,
-                     vehicle_id: VehicleId,
-                     env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        """
-        Steps a vehicle in time, checking for arrival at a terminal state condition.
-
-        :param vehicle_id: The id of the vehicle to step
-        :param env: provides powertrain/powercurve models
-        :return: An update simulation state
-        """
-        vehicle = self.vehicles.get(vehicle_id)
-        if not isinstance(vehicle_id, VehicleId):
-            log.error(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
-            return None
-        elif vehicle is None:
-            log.error(f"attempting to update vehicle {vehicle_id} which is not in simulation")
-            return None
-        else:
-            return vehicle.vehicle_state.update(self, env)
-
     def tick(self) -> SimulationState:
         """
         advances the simulation clock
