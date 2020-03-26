@@ -4,6 +4,7 @@ from abc import abstractmethod, ABCMeta
 from typing import Tuple, Optional, NamedTupleMeta
 
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 
 from hive.util.typealiases import VehicleId
 
@@ -72,8 +73,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             return SimulationStateError(f"vehicle {vehicle_id} not found"), None
         else:
             updated_vehicle = vehicle.modify_state(new_state)
-            updated_sim = sim.modify_vehicle(updated_vehicle)
-            return None, updated_sim
+            return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @abstractmethod
     def _has_reached_terminal_state_condition(self,
@@ -104,8 +104,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
     @abstractmethod
     def _perform_update(self,
                         sim: 'SimulationState',
-                        env: Environment) -> Tuple[Optional[Exception],
-                                                               Optional['SimulationState']]:
+                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         perform a simulation state update for a vehicle in this state
         :param sim: the simulation state

@@ -92,30 +92,33 @@ class Request(NamedTuple):
                        )
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], env: Environment, road_network: RoadNetwork) -> Union[Exception, Request]:
+    def from_row(cls, row: Dict[str, str],
+                 env: Environment,
+                 road_network: RoadNetwork) -> Tuple[Optional[Exception], Optional[Request]]:
         """
         takes a csv row and turns it into a Request
 
         :param row: a row as interpreted by csv.DictReader
         :param env: the static environment variables
+        :param road_network: the road network
         :return: a Request, or an error
         """
         if 'request_id' not in row:
-            raise IOError("cannot load a request without a 'request_id'")
+            return IOError("cannot load a request without a 'request_id'"), None
         elif 'o_lat' not in row:
-            raise IOError("cannot load a request without an 'o_lat' value")
+            return IOError("cannot load a request without an 'o_lat' value"), None
         elif 'o_lon' not in row:
-            raise IOError("cannot load a request without an 'o_lon' value")
+            return IOError("cannot load a request without an 'o_lon' value"), None
         elif 'd_lat' not in row:
-            raise IOError("cannot load a request without a 'd_lat' value")
+            return IOError("cannot load a request without a 'd_lat' value"), None
         elif 'd_lon' not in row:
-            raise IOError("cannot load a request without a 'd_lon' value")
+            return IOError("cannot load a request without a 'd_lon' value"), None
         elif 'departure_time' not in row:
-            raise IOError("cannot load a request without a 'departure_time'")
+            return IOError("cannot load a request without a 'departure_time'"), None
         elif 'cancel_time' not in row:
-            raise IOError("cannot load a request without a 'cancel_time'")
+            return IOError("cannot load a request without a 'cancel_time'"), None
         elif 'passengers' not in row:
-            raise IOError("cannot load a request without a number of 'passengers'")
+            return IOError("cannot load a request without a number of 'passengers'"), None
         else:
             request_id = row['request_id']
             try:
@@ -124,26 +127,27 @@ class Request(NamedTuple):
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
-                departure_time = time_parser(row['departure_time'])
-                if isinstance(departure_time, IOError):
-                    return departure_time
+                departure_time_result = time_parser(row['departure_time'])
+                if isinstance(departure_time_result, IOError):
+                    return departure_time_result, None
 
-                cancel_time = time_parser(row['cancel_time'])
-                if isinstance(cancel_time, IOError):
-                    return cancel_time
+                cancel_time_result = time_parser(row['cancel_time'])
+                if isinstance(cancel_time_result, IOError):
+                    return cancel_time_result, None
 
                 passengers = int(row['passengers'])
-                return Request.build(
+                request = Request.build(
                     request_id=request_id,
                     origin=o_geoid,
                     destination=d_geoid,
                     road_network=road_network,
-                    departure_time=departure_time,
-                    cancel_time=cancel_time,
+                    departure_time=departure_time_result,
+                    cancel_time=cancel_time_result,
                     passengers=passengers
                 )
+                return None, request
             except ValueError:
-                return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}")
+                return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}"), None
 
     @property
     def geoid(self):

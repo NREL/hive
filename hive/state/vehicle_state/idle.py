@@ -1,6 +1,7 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
@@ -68,6 +69,5 @@ class Idle(NamedTuple, VehicleState):
             updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
             updated_state = self._replace(idle_duration=updated_idle_duration)
             updated_vehicle = less_energy_vehicle.modify_state(updated_state)
-            updated_sim = sim.modify_vehicle(updated_vehicle)
 
-            return None, updated_sim
+            return simulation_state_ops.modify_vehicle(sim, updated_vehicle)

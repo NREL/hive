@@ -1,6 +1,6 @@
 import functools as ft
 import math
-from typing import Optional, Dict, NamedTuple, Union
+from typing import Optional, Dict, NamedTuple, Union, Callable
 
 import immutables
 from h3 import h3
@@ -31,6 +31,7 @@ from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.update.update import Update
 from hive.state.vehicle_state import VehicleState, Idle
 from hive.util.helpers import H3Ops
@@ -371,20 +372,25 @@ def mock_sim(
         sim_h3_location_resolution=h3_location_res,
         sim_h3_search_resolution=h3_search_res,
     )
-    if isinstance(sim, Exception):
-        raise sim
 
-    sim_v = ft.reduce(lambda s, veh: s.add_vehicle(veh), vehicles, sim) if vehicles else sim
-    if isinstance(sim_v, Exception):
-        raise sim_v
+    def add_or_throw(fn: Callable):
+        """
+        test writers will be told if their added stations, vehicles, or bases are invalid
+        :param fn: the sim add function
+        :return: the updated sim
+        ;raises: Exception when an add fails
+        """
+        def _inner(s: SimulationState, to_add):
+            error, result = fn(s, to_add)
+            if error:
+                raise error
+            else:
+                return result
+        return _inner
 
-    sim_s = ft.reduce(lambda s, sta: s.add_station(sta), stations, sim_v) if stations else sim_v
-    if isinstance(sim_s, Exception):
-        raise sim_s
-
-    sim_b = ft.reduce(lambda s, bas: s.add_base(bas), bases, sim_s) if bases else sim_s
-    if isinstance(sim_b, Exception):
-        raise sim_b
+    sim_v = ft.reduce(add_or_throw(simulation_state_ops.add_vehicle), vehicles, sim) if vehicles else sim
+    sim_s = ft.reduce(add_or_throw(simulation_state_ops.add_station), stations, sim_v) if stations else sim_v
+    sim_b = ft.reduce(add_or_throw(simulation_state_ops.add_base), bases, sim_s) if bases else sim_s
 
     return sim_b
 

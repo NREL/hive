@@ -13,7 +13,8 @@ class TestVehicleStateOps(TestCase):
         route = sim.road_network.route(somewhere, somewhere_else)
         state = Repositioning(DefaultIds.mock_vehicle_id(), route)
         vehicle = mock_vehicle_from_geoid(geoid=somewhere, vehicle_state=state)
-        sim_with_veh = sim.add_vehicle(vehicle)
+        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, vehicle)
+        self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
 
         self.assertIsNotNone(sim_with_veh, "test invariant failed")
@@ -36,7 +37,12 @@ class TestVehicleStateOps(TestCase):
         veh = mock_vehicle_from_geoid(vehicle_state=state)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
-        sim = mock_sim(sim_timestep_duration_seconds=1).add_vehicle(veh).add_station(sta).add_base(bas)
+        sim = mock_sim(
+            vehicles=(veh,),
+            stations=(sta,),
+            bases=(bas,),
+            sim_timestep_duration_seconds=1
+        )
         env = mock_env()
 
         error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, Charger.DCFC)
@@ -57,7 +63,12 @@ class TestVehicleStateOps(TestCase):
         veh = mock_vehicle_from_geoid(vehicle_state=state, capacity_kwh=100, soc=1.0)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
-        sim = mock_sim(sim_timestep_duration_seconds=1).add_vehicle(veh).add_station(sta).add_base(bas)
+        sim = mock_sim(
+            vehicles=(veh,),
+            stations=(sta,),
+            bases=(bas,),
+            sim_timestep_duration_seconds=1
+        )
         env = mock_env()
 
         error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, Charger.DCFC)

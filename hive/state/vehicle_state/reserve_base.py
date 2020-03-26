@@ -1,5 +1,6 @@
 from typing import NamedTuple, Tuple, Optional
 
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.runner.environment import Environment
 from hive.util.exception import SimulationStateError
@@ -33,8 +34,11 @@ class ReserveBase(NamedTuple, VehicleState):
             if not updated_base:
                 return None, None
             else:
-                updated_sim = sim.modify_base(updated_base)
-                return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                error, updated_sim = simulation_state_ops.modify_base(sim, updated_base)
+                if error:
+                    return error, None
+                else:
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
@@ -48,8 +52,7 @@ class ReserveBase(NamedTuple, VehicleState):
             return SimulationStateError(f"base {self.base_id} not found"), None
         else:
             updated_base = base.return_stall()
-            updated_sim = sim.modify_base(updated_base)
-            return None, updated_sim
+            return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
