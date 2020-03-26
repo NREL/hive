@@ -124,7 +124,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
         # charge any remaining vehicles sitting at base.
         # these instructions do not override any of the previous instructions
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            return bool(isinstance(vehicle.vehicle_state, Repositioning)
+            return bool(isinstance(vehicle.vehicle_state, ChargingBase)
                         and not vehicle.energy_source.is_at_ideal_energy_limit())
 
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if

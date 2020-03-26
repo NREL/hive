@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from hive.util.typealiases import VehicleId, GeoId
     from hive.state.simulation_state.simulation_state import SimulationState
 
+random.seed(123)
+
 
 class ActiveFleetTarget(NamedTuple, FleetTarget):
     """

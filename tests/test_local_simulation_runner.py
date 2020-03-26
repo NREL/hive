@@ -30,10 +30,15 @@ class TestLocalSimulationRunner(TestCase):
         result = LocalSimulationRunner.run(runner_payload)
 
         at_destination = result.s.at_geoid(req.destination)
+        vehicle = result.s.vehicles[DefaultIds.mock_vehicle_id()]
+
         self.assertIn(DefaultIds.mock_vehicle_id(), at_destination['vehicles'],
                       "vehicle should have driven request to destination")
 
+        self.assertEqual(vehicle.geoid, req.destination, "Vehicle should be at request destination")
+
         self.assertAlmostEqual(0.56, result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km, places=1)
+
 
     def test_step(self):
         config = mock_config()
