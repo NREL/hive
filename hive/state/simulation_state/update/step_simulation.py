@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
+from typing import Tuple, Dict, Optional, NamedTuple, TYPE_CHECKING
 
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.model.instruction.instruction_interface import Instruction
@@ -39,7 +39,7 @@ def step_simulation(simulation_state: SimulationState, env: Environment) -> Simu
 
 def apply_instructions(simulation_state: SimulationState,
                        env: Environment,
-                       instructions: Tuple[Instruction, ...]) -> SimulationState:
+                       instructions: Dict[VehicleId, Instruction]) -> SimulationState:
     def _add_instruction(
             s: SimulationState,
             instruction: Instruction,
@@ -55,7 +55,7 @@ def apply_instructions(simulation_state: SimulationState,
 
     return ft.reduce(
         _add_instruction,
-        instructions,
+        instructions.values(),
         simulation_state
     )
 

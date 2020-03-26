@@ -23,13 +23,13 @@ class TestManagedDispatcher(TestCase):
         far_veh = mock_vehicle_from_geoid(vehicle_id='far_veh', geoid=far_from_somewhere)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_request(req).add_vehicle(close_veh).add_vehicle(far_veh)
 
-        dispatcher, instructions, _ =  dispatcher.generate_instructions(sim)
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
 
-        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertIsInstance(instructions[0],
+        self.assertGreaterEqual(len(instructions_map), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions_map[close_veh.id],
                               DispatchTripInstruction,
                               "Should have instructed vehicle to dispatch")
-        self.assertEqual(instructions[0].vehicle_id,
+        self.assertEqual(instructions_map[close_veh.id].vehicle_id,
                          close_veh.id,
                          "Should have picked closest vehicle")
 
@@ -44,9 +44,9 @@ class TestManagedDispatcher(TestCase):
         req = mock_request_from_geoids(origin=somewhere)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_request(req)
 
-        dispatcher, instructions, _ =  dispatcher.generate_instructions(sim)
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
 
-        self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
+        self.assertEqual(len(instructions_map), 0, "There are no vehicles to make assignments to.")
 
     def test_charge_vehicle(self):
         manager = mock_manager(forecaster=mock_forecaster())
@@ -64,10 +64,10 @@ class TestManagedDispatcher(TestCase):
         station = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_low_battery).add_station(station)
 
-        dispatcher, instructions, _ =  dispatcher.generate_instructions(sim)
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
 
-        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertIsInstance(instructions[0],
+        self.assertGreaterEqual(len(instructions_map), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions_map[veh.id],
                               DispatchStationInstruction,
                               "Should have instructed vehicle to dispatch to station")
 
@@ -93,10 +93,10 @@ class TestManagedDispatcher(TestCase):
 
         sim = mock_sim().add_vehicle(veh).add_base(base)
 
-        dispatcher, instructions, _ =  dispatcher.generate_instructions(sim)
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
 
-        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertIsInstance(instructions[0],
+        self.assertGreaterEqual(len(instructions_map), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions_map[veh.id],
                               RepositionInstruction,
                               "Should have instructed vehicle to reposition")
 
@@ -118,10 +118,10 @@ class TestManagedDispatcher(TestCase):
 
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh1).add_vehicle(veh2).add_base(base)
 
-        dispatcher, instructions, _ =  dispatcher.generate_instructions(sim)
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
 
-        self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
-        self.assertIsInstance(instructions[0],
+        self.assertEqual(len(instructions_map), 1, "Should have generated only one instruction")
+        self.assertIsInstance(list(instructions_map.values())[0],
                               DispatchBaseInstruction,
                               "Should have instructed vehicle to dispatch to base")
 
@@ -144,12 +144,10 @@ class TestManagedDispatcher(TestCase):
         sim = mock_sim(h3_location_res=9, h3_search_res=9) \
             .add_vehicle(veh1).add_request(expensive_req).add_request(cheap_req)
 
-        dispatcher, instructions, _ =  dispatcher.generate_instructions(sim)
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
 
-        print(instructions)
-
-        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertIsInstance(instructions[0],
+        self.assertGreaterEqual(len(instructions_map), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions_map[veh1.id],
                               DispatchTripInstruction,
                               "Should have instructed vehicle to dispatch")
-        self.assertEqual(instructions[0].request_id, 'expensive', 'Should have picked expensive request')
+        self.assertEqual(instructions_map[veh1.id].request_id, 'expensive', 'Should have picked expensive request')

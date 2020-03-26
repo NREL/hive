@@ -1,22 +1,17 @@
 from __future__ import annotations
 
-import random
-from typing import Tuple, NamedTuple, TYPE_CHECKING
-
-from h3 import h3
+from typing import Tuple, NamedTuple, Dict, TYPE_CHECKING
 
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
-from hive.dispatcher.manager.fleet_target import FleetStateTarget
 from hive.dispatcher.manager.manager_interface import ManagerInterface
 from hive.model.energy.charger import Charger
 from hive.model.instruction import *
-from hive.model.roadnetwork import RoadNetwork
 from hive.state.vehicle_state import *
 from hive.util.helpers import H3Ops
-from hive.util.typealiases import GeoId, VehicleId, SimTime
 
 if TYPE_CHECKING:
     from hive.model.vehicle import Vehicle
+    from hive.util.typealiases import SimTime, VehicleId, Report
 
 
 class ManagedDispatcher(NamedTuple, DispatcherInterface):
@@ -45,95 +40,60 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
 
         return i_dict
 
-    @staticmethod
-    def _sample_random_location(road_network: RoadNetwork) -> GeoId:
-        random_hex = random.choice(tuple(road_network.geofence.geofence_set))
-        children = h3.h3_to_children(random_hex, road_network.sim_h3_resolution)
-        return children.pop()
-
-    def _handle_fleet_targets(
-            self,
-            fleet_state_target: FleetStateTarget,
-            simulation_state: 'SimulationState',
-            vehicle_ids_given_instructions: Tuple[VehicleId, ...],
-    ) -> Tuple[Tuple[Instruction, ...], Tuple[dict, ...]]:
-
-        fleet_state_instructions = ()
-        fleet_state_reports = ()
-        active_target = fleet_state_target['ACTIVE']
-
-        report = self._gen_report(active_target, simulation_state.sim_time)
-
-        fleet_state_reports = fleet_state_reports + (report,)
-
-        active_vehicles = [v for v in simulation_state.vehicles.values()
-                           if v.vehicle_state in active_target.state_set
-                           and v.id not in vehicle_ids_given_instructions]
-        n_active = len(active_vehicles)
-        active_diff = n_active - active_target.n_vehicles
-        _base_states = (
-            VehicleState.CHARGING,
-            VehicleState.RESERVE_BASE,
-        )
-        if active_diff < 0:
-            # we need abs(active_diff) more vehicles in service to meet demand
-            base_vehicles = [v for v in simulation_state.vehicles.values()
-                             if v.vehicle_state in _base_states
-                             and v.id not in vehicle_ids_given_instructions]
-            for i, veh in enumerate(base_vehicles):
-                if i + 1 > abs(active_diff):
-                    break
-                random_location = self._sample_random_location(simulation_state.road_network)
-                instruction = RepositionInstruction(vehicle_id=veh.id, destination=random_location)
-                fleet_state_instructions = fleet_state_instructions + (instruction,)
-                vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
-        elif active_diff > 0:
-            # we can remove active_diff vehicles from service
-            non_interrupt_states = (
-                VehicleState.DISPATCH_STATION,
-                VehicleState.CHARGING,
-                VehicleState.SERVICING_TRIP,
-            )
-            for i, veh in enumerate(active_vehicles):
-                if i + 1 > active_diff:
-                    break
-                elif veh.vehicle_state in non_interrupt_states:
-                    continue
-
-                nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
-                                                    entities=simulation_state.bases,
-                                                    entity_search=simulation_state.b_search,
-                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
-                if nearest_base:
-                    instruction = DispatchBaseInstruction(
-                        vehicle_id=veh.id,
-                        destination=nearest_base.id,
-                    )
-
-                    report = self._gen_report(instruction, simulation_state.sim_time)
-                    fleet_state_reports = fleet_state_reports + (report,)
-
-                    fleet_state_instructions = fleet_state_instructions + (instruction,)
-                    vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
-                else:
-                    # user set the max search radius too low
-                    continue
-
-        return fleet_state_instructions, fleet_state_reports
-
     def generate_instructions(self,
                               simulation_state: 'SimulationState',
-                              ) -> Tuple[DispatcherInterface, Tuple[Instruction, ...], Tuple[dict, ...]]:
-        # TODO: a lot of this code is shared between greedy dispatcher and managed dispatcher. Plus, it's getting
-        #  too large. Should probably refactor.
-        instructions = ()
-        reports = ()
-        vehicle_ids_given_instructions = ()
+                              ) -> Tuple[DispatcherInterface, Dict[VehicleId, Instruction], Tuple[Report, ...]]:
 
-        # 1. find vehicles that require charging
+        instruction_map = {}
+
+        updated_manager, fleet_targets, reports = self.manager.generate_fleet_targets(simulation_state)
+
+        for fleet_target in fleet_targets:
+            fleet_target_instructions = fleet_target.apply_target(simulation_state)
+            for v_id, instruction in fleet_target_instructions.items():
+                instruction_map[v_id] = instruction
+
+        # find requests that need a vehicle. Sorted by price high to low.
+        # these instructions override fleet target instructions
+        already_dispatched = []
+
+        def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
+            is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
+                             isinstance(vehicle.vehicle_state, Repositioning)
+
+            return bool(vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD
+                        and is_valid_state and vehicle.id not in already_dispatched)
+
+        unassigned_requests = sorted(
+            [r for r in simulation_state.requests.values() if not r.dispatched_vehicle],
+            key=lambda r: r.value,
+            reverse=True,
+        )
+        for request in unassigned_requests:
+            nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
+                                                   entities=simulation_state.vehicles,
+                                                   entity_search=simulation_state.v_search,
+                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                                   is_valid=_is_valid_for_dispatch)
+            if nearest_vehicle:
+                instruction = DispatchTripInstruction(
+                    vehicle_id=nearest_vehicle.id,
+                    request_id=request.id,
+                )
+
+                already_dispatched.append(nearest_vehicle.id)
+
+                report = self._gen_report(instruction, simulation_state.sim_time)
+                reports = reports + (report,)
+
+                instruction_map[nearest_vehicle.id] = instruction
+
+        # find vehicles that fall below the minimum threshold and charge them.
+        # these instructions override dispatch instructions
+
         low_soc_vehicles = [v for v in simulation_state.vehicles.values()
                             if v.energy_source.soc <= self.LOW_SOC_TRESHOLD
-                            and v.vehicle_state != VehicleState.DISPATCH_STATION]
+                            and v.vehicle_state.__class__.__name__ != 'DispatchStation']
 
         for veh in low_soc_vehicles:
             nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
@@ -152,8 +112,7 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 report = self._gen_report(instruction, simulation_state.sim_time)
                 reports = reports + (report,)
 
-                instructions = instructions + (instruction,)
-                vehicle_ids_given_instructions = vehicle_ids_given_instructions + (veh.id,)
+                instruction_map[veh.id] = instruction
             else:
                 # user set the max search radius too low (should really be computed by
                 # HIVE based on the RoadNetwork at initialization anyway)
@@ -162,80 +121,28 @@ class ManagedDispatcher(NamedTuple, DispatcherInterface):
                 print("warning, no open stations found")
                 continue
 
-        def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
-                isinstance(vehicle.vehicle_state, Repositioning) or \
-                isinstance(vehicle.vehicle_state, ChargingBase) or \
-                isinstance(vehicle.vehicle_state, ChargingStation) or \
-                isinstance(vehicle.vehicle_state, ReserveBase) or \
-                isinstance(vehicle.vehicle_state, DispatchBase) or \
-                isinstance(vehicle.vehicle_state, DispatchStation)
-            # _valid_states = (
-            #     VehicleState.IDLE,
-            #     VehicleState.REPOSITIONING,
-            #     # VehicleState.CHARGING,
-            #     # VehicleState.RESERVE_BASE,
-            #     # VehicleState.DISPATCH_BASE,
-            # )
-            return bool(vehicle.id not in vehicle_ids_given_instructions and
-                        vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD and
-                        is_valid_state)
-
-        # 2. find requests that need a vehicle. Sorted by price high to low
-        unassigned_requests = sorted(
-            [r for r in simulation_state.requests.values() if not r.dispatched_vehicle],
-            key=lambda r: r.value,
-            reverse=True,
-        )
-        for request in unassigned_requests:
-            nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
-                                                   entities=simulation_state.vehicles,
-                                                   entity_search=simulation_state.v_search,
-                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                   is_valid=_is_valid_for_dispatch)
-            if nearest_vehicle:
-                instruction = DispatchTripInstruction(
-                    vehicle_id=nearest_vehicle.id,
-                    request_id=request.id,
-                )
-
-                report = self._gen_report(instruction, simulation_state.sim_time)
-                reports = reports + (report,)
-
-                instructions = instructions + (instruction,)
-                vehicle_ids_given_instructions = vehicle_ids_given_instructions + (nearest_vehicle.id,)
-
-        # 3. try to meet active target set by fleet manager in 30 minute intervals
-        if simulation_state.sim_time % (15 * 60) == 0:
-            _, fleet_state_target = self.manager.generate_fleet_target(simulation_state)
-            fleet_state_instructions, fleet_state_reports = self._handle_fleet_targets(
-                fleet_state_target,
-                simulation_state,
-                vehicle_ids_given_instructions,
-            )
-            reports = reports + fleet_state_reports
-            instructions = instructions + fleet_state_instructions
-
+        # charge any remaining vehicles sitting at base.
+        # these instructions do not override any of the previous instructions
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            return bool(vehicle.vehicle_state == VehicleState.RESERVE_BASE and not
-            vehicle.energy_source.is_at_ideal_energy_limit())
+            return bool(isinstance(vehicle.vehicle_state, Repositioning)
+                        and not vehicle.energy_source.is_at_ideal_energy_limit())
 
-        # 4. charge vehicles sitting at base
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if
-                                v.id not in vehicle_ids_given_instructions and _should_base_charge(v)]
+                                v.id not in instruction_map and _should_base_charge(v)]
+
         for v in base_charge_vehicles:
             base_id = simulation_state.b_locations[v.geoid]
             base = simulation_state.bases[base_id]
             if base.station_id:
                 instruction = ChargeBaseInstruction(
                     vehicle_id=v.id,
-                    station_id=base.station_id,
+                    base_id=base.id,
                     charger=Charger.LEVEL_2,
                 )
 
                 report = self._gen_report(instruction, simulation_state.sim_time)
-                reports = reports + (report, )
+                reports = reports + (report,)
 
-                instructions = instructions + (instruction,)
+                instruction_map[v.id] = instruction
 
-        return self, instructions, reports
+        return self._replace(manager=updated_manager), instruction_map, reports

@@ -5,8 +5,9 @@ from typing import Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.dispatcher.manager.fleet_targets.fleet_target_interface import FleetTarget
+    from hive.util.typealiases import Report
 
-from hive.dispatcher.manager.fleet_target import FleetStateTarget
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 
@@ -16,11 +17,15 @@ class ManagerInterface(metaclass=ABCNamedTupleMeta):
     """
 
     @abstractmethod
-    def generate_fleet_target(self, simulation_state: SimulationState) -> Tuple[ManagerInterface, FleetStateTarget]:
+    def generate_fleet_targets(
+            self,
+            simulation_state: SimulationState
+    ) -> Tuple[ManagerInterface, Tuple[FleetTarget, ...], Tuple[Report, ...]]:
         """
-        Generate fleet targets to be consumed by the dispatcher.
+        Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
-        :return: the update Manager along with the fleet target
+
+        :return: the updated Manager along with fleet targets and reports
         """
         pass

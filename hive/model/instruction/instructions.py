@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
-import functools as ft
 from hive.state.vehicle_state import *
 from hive.util.exception import SimulationStateError
 

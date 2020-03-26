@@ -2,41 +2,40 @@ import functools as ft
 import math
 from typing import Optional, Dict, NamedTuple, Union
 
-from pkg_resources import resource_filename
-
 import immutables
 from h3 import h3
+from pkg_resources import resource_filename
+
 from hive.config import HiveConfig
 from hive.dispatcher import default_dispatcher
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
-from hive.dispatcher.manager.fleet_target import FleetStateTarget, StateTarget
-from hive.dispatcher.manager.manager_interface import ManagerInterface
-from hive.model.request import Request, RequestRateStructure
-from hive.model.vehicle import Vehicle
+from hive.dispatcher.manager.basic_manager import BasicManager
 from hive.model.base import Base
-from hive.model.station import Station
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
+from hive.model.request import Request, RequestRateStructure
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
-from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
-from hive.model.roadnetwork.geofence import GeoFence
+from hive.model.station import Station
+from hive.model.vehicle import Vehicle
 from hive.model.vehicle import VehicleType
-from hive.state.vehicle_state import VehicleState, Idle
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.step_simulation import StepSimulation
 from hive.state.simulation_state.update.update import Update
+from hive.state.vehicle_state import VehicleState, Idle
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import *
 from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
-from hive.util.helpers import H3Ops
-from hive.state.simulation_state.update.step_simulation import StepSimulation
 
 
 class DefaultIds:
@@ -426,9 +425,9 @@ def mock_env(
         powertrains: Optional[Tuple[Powertrain, ...]] = None
 ) -> Environment:
     if powercurves is None:
-        powercurves = (mock_powercurve(), )
+        powercurves = (mock_powercurve(),)
     if powertrains is None:
-        powertrains = (mock_powertrain(), )
+        powertrains = (mock_powertrain(),)
     vehicle_types = immutables.Map({DefaultIds.mock_vehicle_type_id(): mock_vehicle_type()})
 
     initial_env = Environment(
@@ -581,34 +580,9 @@ def mock_forecaster() -> ForecasterInterface:
     return MockForecaster()
 
 
-def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
-    class MockManager(NamedTuple, ManagerInterface):
-        forecaster: ForecasterInterface
+def mock_manager(forecaster: ForecasterInterface = mock_forecaster()) -> BasicManager:
 
-        def generate_fleet_target(
-                self,
-                simulation_state: SimulationState
-        ) -> Tuple[ManagerInterface, FleetStateTarget]:
-            active_set = frozenset({
-                VehicleState.IDLE,
-                VehicleState.SERVICING_TRIP,
-                VehicleState.DISPATCH_TRIP,
-                VehicleState.DISPATCH_STATION,
-                VehicleState.CHARGING,
-                VehicleState.REPOSITIONING,
-            })
-
-            _, future_demand = self.forecaster.generate_forecast(simulation_state)
-
-            active_target = StateTarget(id='ACTIVE',
-                                        state_set=active_set,
-                                        n_vehicles=future_demand.value)
-
-            fleet_state_target = immutables.Map({active_target.id: active_target})
-
-            return self, fleet_state_target
-
-    return MockManager(forecaster=forecaster)
+    return BasicManager(demand_forecaster=forecaster)
 
 
 def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:
