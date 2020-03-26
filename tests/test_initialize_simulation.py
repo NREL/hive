@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.state.initialize_simulation import initialize_simulation
+from hive.state.simulation_state.initialize_simulation import initialize_simulation
 from tests.mock_lobster import *
 
 import shutil

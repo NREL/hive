@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from hive.model.instruction import *
 from tests.mock_lobster import *
+from hive.state.simulation_state.update.step_simulation import step_simulation
 
 
 class TestInstructions(TestCase):
@@ -19,7 +20,9 @@ class TestInstructions(TestCase):
             station_id=sta.id,
             charger=Charger.DCFC
         )
-        sim_updated = instruction.apply_instruction(sim)
+        sim_update_error, sim_updated = instruction.apply_instruction(sim, env)
+        if sim_update_error:
+            self.fail(sim_update_error)
         sim_stepped = step_simulation(sim_updated, env)
 
         # The station only has 1 DCFC charger
@@ -31,7 +34,10 @@ class TestInstructions(TestCase):
             destination=somewhere_else,
         )
 
-        sim_interrupt_charge = new_instruction.apply_instruction(sim_stepped)
+        sim_interrupt_error, sim_interrupt_charge = new_instruction.apply_instruction(sim_stepped, env)
+        if sim_interrupt_error:
+            self.fail(sim_interrupt_error.args)
+
         sim_stepped_again = step_simulation(sim_interrupt_charge, env)
 
         self.assertIsNotNone(sim_stepped_again)

@@ -1,7 +1,7 @@
-from typing import NamedTuple, Dict, FrozenSet
+from typing import NamedTuple, FrozenSet
 
 import immutables
-from hive.model.vehiclestate import VehicleState
+from hive.state.vehicle_state import VehicleState
 
 VehicleStateSet = FrozenSet[VehicleState]
 

@@ -8,9 +8,9 @@ import logging
 
 from hive.model.request import Request, RequestRateStructure
 from hive.runner.environment import Environment
-from hive.state.simulation_state import SimulationState
-from hive.state.update.simulation_update import SimulationUpdateFunction
-from hive.state.update.simulation_update_result import SimulationUpdateResult
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.parsers import time_parser
 from hive.util.typealiases import RequestId

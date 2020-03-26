@@ -3,14 +3,13 @@ from __future__ import annotations
 from typing import NamedTuple, TYPE_CHECKING
 
 import immutables
-from hive.model.energy.energytype import EnergyType
-
+from hive.util.helpers import DictOps
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
-from hive.model.vehicle.vehicle_type import VehicleType
-from hive.util.helpers import DictOps
 
 if TYPE_CHECKING:
+    from hive.model.energy.energytype import EnergyType
+    from hive.model.vehicle.vehicle_type import VehicleType
     from hive.reporting import Reporter
     from hive.config import HiveConfig
     from hive.util.typealiases import PowercurveId, PowertrainId, VehicleTypeId

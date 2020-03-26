@@ -29,7 +29,8 @@ setup(
         "immutables>=0.11",
         "PyYAML>=5.1",
         "haversine>=2.1",
-        "numpy>=1.17"
+        "numpy>=1.17",
+        "osmnx>=0.11.4"
     ],
     include_package_data=True,
     package_data={

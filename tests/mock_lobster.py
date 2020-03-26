@@ -12,29 +12,31 @@ from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.manager.fleet_target import FleetStateTarget, StateTarget
 from hive.dispatcher.manager.manager_interface import ManagerInterface
-from hive.model import Base, Station, Vehicle
+from hive.model.request import Request, RequestRateStructure
+from hive.model.vehicle import Vehicle
+from hive.model.base import Base
+from hive.model.station import Station
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
-from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.vehicle import VehicleTypesTableBuilder, VehicleType
-from hive.model.vehiclestate import VehicleState
+from hive.model.vehicle import VehicleType
+from hive.state.vehicle_state import VehicleState, Idle
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
-from hive.state.simulation_state import SimulationState
-from hive.state.update.update import Update
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.update import Update
 from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers, hours_to_seconds
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
 from hive.util.helpers import H3Ops
-from hive.state.update.step_simulation import StepSimulation, step_simulation
+from hive.state.simulation_state.update.step_simulation import StepSimulation
 
 
 class DefaultIds:
@@ -254,8 +256,10 @@ def mock_vehicle(
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         operating_cost_km: Currency = 0.1,
+        vehicle_state: Optional[VehicleState] = None,
 
 ) -> Vehicle:
+    state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
@@ -273,7 +277,8 @@ def mock_vehicle(
         powercurve_id=powercurve_id,
         energy_source=energy_source,
         link=link,
-        operating_cost_km=operating_cost_km
+        operating_cost_km=operating_cost_km,
+        vehicle_state=state,
     )
 
 
@@ -288,8 +293,10 @@ def mock_vehicle_from_geoid(
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         road_network: RoadNetwork = mock_network(h3_res=15),
-        operating_cost_km: Currency = 0.1
+        operating_cost_km: Currency = 0.1,
+        vehicle_state: Optional[VehicleState] = None
 ) -> Vehicle:
+    state = vehicle_state if vehicle_state else Idle(vehicle_id)
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
@@ -306,7 +313,8 @@ def mock_vehicle_from_geoid(
         powercurve_id=powercurve_id,
         energy_source=energy_source,
         link=link,
-        operating_cost_km=operating_cost_km
+        operating_cost_km=operating_cost_km,
+        vehicle_state=state
     )
 
 
@@ -492,6 +500,14 @@ def mock_haversine_zigzag_route(
         return acc + (link,)
 
     return ft.reduce(step, range(0, n), ())
+
+
+def mock_route_from_geoids(
+        src: GeoId,
+        dst: GeoId,
+        speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
+    link = Link.build("1", src, dst, speed_kmph=speed_kmph)
+    return link,
 
 
 def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:

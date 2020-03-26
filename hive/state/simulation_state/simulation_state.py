@@ -10,9 +10,7 @@ from hive.model.base import Base
 from hive.model.request import Request
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.model.vehiclestate import VehicleState, VehicleStateCategory
-from hive.state.at_location_response import AtLocationResponse
-from hive.state.terminal_state_effect_ops import TerminalStateEffectOps, TerminalStateEffectArgs
+from hive.state.simulation_state.at_location_response import AtLocationResponse
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
@@ -66,6 +64,7 @@ class SimulationState(NamedTuple):
         :param request: the request to add
         :return: the updated simulation state, or an error
         """
+
         if not isinstance(request, Request):
             log.error(f"sim.add_request requires a request but received a {type(request)}")
             return None
@@ -79,7 +78,7 @@ class SimulationState(NamedTuple):
             r_search=DictOps.add_to_location_dict(self.r_search, search_geoid, request.id)
         )
 
-    def remove_request(self, request_id: RequestId) -> (Optional[Exception], Optional[SimulationState]):
+    def remove_request(self, request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         removes a request from this simulation.
         called once a Request has been fully serviced and is no longer
@@ -182,72 +181,6 @@ class SimulationState(NamedTuple):
             v_locations=result.locations if result.locations else self.v_locations,
             v_search=result.search if result.search else self.v_search
         )
-
-    def step_vehicle(self, vehicle_id: VehicleId, env: Environment) -> Optional[SimulationState]:
-        """
-        Steps a vehicle in time, checking for arrival at a terminal state condition.
-
-        :param vehicle_id: The id of the vehicle to step
-        :param env: provides powertrain/powercurve models
-        :return: An update simulation state
-        """
-        if not isinstance(vehicle_id, VehicleId):
-            log.error(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
-            return None
-
-        vehicle = self.vehicles.get(vehicle_id)
-
-        if vehicle is None:
-            log.error(f"attempting to update vehicle {vehicle_id} which is not in simulation")
-            return None
-
-        if vehicle.vehicle_state == VehicleState.OUT_OF_SERVICE:
-            # until we implement a transition strategy, we will simply
-            # block any stepping of out-of-service vehicles here
-            return None
-
-        # Handle terminal state instant effects.
-        effect_args = TerminalStateEffectArgs(self, vehicle_id)
-        sim_state_w_effects: SimulationState = TerminalStateEffectOps.switch(vehicle.vehicle_state, effect_args)
-
-        # Apply time based effects.
-        vehicle = sim_state_w_effects.vehicles[vehicle_id]
-        if VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.MOVE:
-            # perform a move event
-            powertrain = env.powertrains[vehicle.powertrain_id]
-            updated_vehicle = vehicle.move(sim_state_w_effects.road_network,
-                                           powertrain,
-                                           sim_state_w_effects.sim_timestep_duration_seconds)
-
-            return sim_state_w_effects.modify_vehicle(updated_vehicle)
-
-        elif VehicleStateCategory.from_vehicle_state(vehicle.vehicle_state) == VehicleStateCategory.CHARGE:
-            # perform a charge event
-            powercurve = env.powercurves[vehicle.powercurve_id]
-            station_at_location = sim_state_w_effects.at_geoid(vehicle.geoid).get('station')
-            station = sim_state_w_effects.stations[station_at_location] if station_at_location else None
-            charged_vehicle = vehicle.charge(powercurve, sim_state_w_effects.sim_timestep_duration_seconds)
-
-            # determine price of charge event
-            kwh_transacted = (charged_vehicle.energy_source.energy_kwh - vehicle.energy_source.energy_kwh)  # kwh
-            charger_price = station.charger_prices.get(charged_vehicle.charger_intent)  # Currency
-            charging_price = kwh_transacted * charger_price if charger_price else 0.0
-
-            # update currency balance for vehicle, station
-            updated_vehicle = charged_vehicle.send_payment(charging_price)
-            updated_station = station.receive_payment(charging_price)
-
-            return sim_state_w_effects.modify_vehicle(updated_vehicle).modify_station(updated_station)
-
-        elif vehicle.vehicle_state == VehicleState.IDLE:
-            # perform an idle event
-            updated_vehicle = vehicle.idle(sim_state_w_effects.sim_timestep_duration_seconds)
-
-            return sim_state_w_effects.modify_vehicle(updated_vehicle)
-
-        else:
-            # reserve base - noop
-            return sim_state_w_effects
 
     def tick(self) -> SimulationState:
         """
@@ -425,6 +358,17 @@ class SimulationState(NamedTuple):
 
         return self._replace(
             bases=DictOps.add_to_dict(self.bases, updated_base.id, updated_base)
+        )
+
+    def update_road_network(self, sim_time: SimTime) -> SimulationState:
+        """
+        trigger the update of the road network model based on the current sim time
+
+        :param sim_time: the current sim time
+        :return: updated simulation state (and road network)
+        """
+        return self._replace(
+            road_network=self.road_network.update(sim_time)
         )
 
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:

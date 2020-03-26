@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Tuple
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 if TYPE_CHECKING:
-    from hive.state.simulation_state import SimulationState
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
 
 
 class Instruction(metaclass=ABCNamedTupleMeta):
@@ -14,5 +15,14 @@ class Instruction(metaclass=ABCNamedTupleMeta):
     """
 
     @abstractmethod
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment
+                          ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        """
+        attempts to apply an instruction to a vehicle
+        :param sim_state: the state of the simulation
+        :param env: the simulation environment
+        :return: an exception, the resulting simulation state, or (None, None) if a bad instruction
+        """
         pass

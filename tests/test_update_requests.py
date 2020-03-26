@@ -1,8 +1,6 @@
 from unittest import TestCase
 
-from pkg_resources import resource_filename
-
-from hive.state.update.update_requests import UpdateRequests
+from hive.state.simulation_state.update.update_requests import UpdateRequests
 
 from tests.mock_lobster import *
 

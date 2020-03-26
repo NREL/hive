@@ -36,33 +36,6 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(self.request.cancel_time, self.cancel_time)
         self.assertEqual(len(self.request.passengers), self.passengers)
 
-    def test_request_create_passengers(self):
-        """
-        turning a request into passengers of a vehicle
-        """
-
-        vehicle = mock_vehicle()
-        request_as_passengers = self.request.passengers
-        updated_vehicle = vehicle.add_passengers(request_as_passengers)
-
-        # should now have 2 passengers
-        self.assertEqual(len(updated_vehicle.passengers), 2)
-
-        # the passengers should match our request and have unique names
-        for i in range(0, 2):
-            # the passengers should have the correct ids
-            target_passenger_id = create_passenger_id(self.request_id, i)
-            passenger = updated_vehicle.passengers[target_passenger_id]
-            self.assertEqual(passenger.id, target_passenger_id)
-
-            # passenger details should be consistent with request
-            self.assertEqual(passenger.origin, self.request.origin)
-            self.assertEqual(passenger.destination, self.request.destination)
-            self.assertEqual(passenger.departure_time, self.request.departure_time)
-
-            # the current vehicle should be known to each passenger
-            self.assertEqual(passenger.vehicle_id, vehicle.id)
-
     def test_from_row(self):
         source = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4

@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from hive.dispatcher.managed_dispatcher import ManagedDispatcher
 from hive.model.instruction import *
+from hive.state.vehicle_state import ReserveBase
 from tests.mock_lobster import *
 
 
@@ -59,7 +60,7 @@ class TestManagedDispatcher(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         low_battery = mock_energy_source(soc=0.1)
 
-        veh_low_battery = veh.battery_swap(low_battery)
+        veh_low_battery = veh.modify_energy_source(low_battery)
         station = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9).add_vehicle(veh_low_battery).add_station(station)
 
@@ -81,7 +82,13 @@ class TestManagedDispatcher(TestCase):
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
 
-        veh = mock_vehicle_from_geoid(geoid=somewhere).transition(VehicleState.RESERVE_BASE)
+        veh = mock_vehicle_from_geoid(
+            geoid=somewhere,
+            vehicle_state=ReserveBase(
+                DefaultIds.mock_vehicle_id(),
+                DefaultIds.mock_base_id()
+            )
+        )
         base = mock_base_from_geoid(geoid=somewhere, stall_count=2)
 
         sim = mock_sim().add_vehicle(veh).add_base(base)

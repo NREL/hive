@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import functools as ft
 from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Iterator, Dict, Union
+from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 import immutables
 
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
-from hive.state.simulation_state import SimulationState
-from hive.state.update.simulation_update import SimulationUpdateFunction
-from hive.state.update.simulation_update_result import SimulationUpdateResult
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.helpers import DictOps
 from hive.util.typealiases import StationId

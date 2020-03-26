@@ -1,116 +1,76 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, TYPE_CHECKING
+from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
+import functools as ft
+from hive.state.vehicle_state import *
+from hive.util.exception import SimulationStateError
+
+from hive.runner.environment import Environment
+
+from hive.model.passenger import board_vehicle
 from hive.model.instruction.instruction_interface import Instruction
-from hive.model.vehiclestate import VehicleState
-from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId
+from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId
 from hive.model.energy.charger import Charger
+from hive.state.entity_state import entity_state_ops
 
 import logging
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from hive.state.simulation_state import SimulationState
-
-CHARGE_STATES = {VehicleState.CHARGING}
-
-
-def _return_charger_patch(sim_state: SimulationState, vehicle_id: VehicleId) -> Optional[SimulationState]:
-    """
-    Patch for condition in which a vehicle charge event is interrupted.
-    TODO: Refactor this logic into some kind of exit method on a vehicle state that gets called on a transition.
-    """
-    vehicle = sim_state.vehicles[vehicle_id]
-    station_at_location = sim_state.at_geoid(vehicle.geoid).get("station")
-    # TODO: we should think about the implications of not having an explicit paring between the vehicle
-    #  and the station. what if we had two stations at the same location?
-    station_id = station_at_location
-    station = sim_state.stations[station_id]
-    update_station = station.return_charger(vehicle.charger_intent)
-    sim_state = sim_state.modify_station(update_station)
-    return sim_state
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.state.vehicle_state import VehicleState
 
 
 class DispatchTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
-        if self.request_id not in sim_state.requests:
-            log.warning(f"request {self.request_id} not found in simulation ")
-            return None
-        request = sim_state.requests[self.request_id]
-
-        if not vehicle.can_transition(VehicleState.DISPATCH_TRIP):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_TRIP')
-            return None
-
-        if vehicle.vehicle_state in CHARGE_STATES:
-            sim_state = _return_charger_patch(sim_state, vehicle.id)
-            if not sim_state:
-                return None
-
-        vehicle = vehicle.transition(VehicleState.DISPATCH_TRIP)
-
-        assigned_request = request.assign_dispatched_vehicle(vehicle.id, sim_state.sim_time)
-
-        start = vehicle.geoid
-        end = request.origin
-        route = sim_state.road_network.route(start, end)
-
-        vehicle = vehicle.assign_route(route)
-
-        updated_sim_state = sim_state.modify_request(assigned_request).modify_vehicle(vehicle)
-
-        return updated_sim_state
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        request = sim_state.requests.get(self.request_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        elif not request:
+            return SimulationStateError(f"request {request} not found"), None
+        else:
+            start = vehicle.geoid
+            end = request.origin
+            route = sim_state.road_network.route(start, end)
+            prev_state = vehicle.vehicle_state
+            next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
+            return entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
 
 
 class ServeTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
-        if self.request_id not in sim_state.requests:
-            log.warning(f"request {self.request_id} not found in simulation ")
-            return None
-        request = sim_state.requests[self.request_id]
-        if not sim_state.vehicle_at_request(vehicle.id, request.id):
-            log.debug(f'vehicle {self.vehicle_id} cannot service trip {self.request_id}. not in the same location')
-            return None
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        request = sim_state.requests.get(self.request_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        elif not request:
+            return SimulationStateError(f"request {request} not found"), None
+        else:
+            start = request.origin
+            end = request.destination
+            route = sim_state.road_network.route(start, end)
 
-        if not vehicle.can_transition(VehicleState.SERVICING_TRIP):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to SERVICING_TRIP')
-            return None
+            passengers = board_vehicle(request.passengers, self.vehicle_id)
 
-        if vehicle.vehicle_state in CHARGE_STATES:
-            sim_state = _return_charger_patch(sim_state, vehicle.id)
-            if not sim_state:
-                return None
+            prev_state = vehicle.vehicle_state
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, route, passengers)
 
-        vehicle = vehicle.transition(VehicleState.SERVICING_TRIP)
-
-        start = vehicle.geoid
-        end = request.destination
-        route = sim_state.road_network.route(start, end)
-
-        vehicle = vehicle.assign_route(route)
-        sim_boarded = sim_state.board_vehicle(request.id, vehicle.id)
-        if not sim_boarded:
-            return None
-
-        updated_sim_state = sim_boarded.modify_vehicle(vehicle)
-
-        return updated_sim_state
+            VehicleState.apply_new_vehicle_state(sim_state, self.vehicle_id, next_state)
+            result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+            return result
 
 
 class DispatchStationInstruction(NamedTuple, Instruction):
@@ -118,36 +78,25 @@ class DispatchStationInstruction(NamedTuple, Instruction):
     station_id: StationId
     charger: Charger
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
-        if self.station_id not in sim_state.stations:
-            log.warning(f"station {self.station_id} not found in simulation ")
-            return None
-        station = sim_state.stations[self.station_id]
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        station = sim_state.stations.get(self.station_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        elif not station:
+            return SimulationStateError(f"station {station} not found"), None
+        else:
+            start = vehicle.geoid
+            end = station.geoid
+            route = sim_state.road_network.route(start, end)
 
-        if not vehicle.can_transition(VehicleState.DISPATCH_STATION):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_STATION')
-            return None
+            prev_state = vehicle.vehicle_state
+            next_state = DispatchStation(self.vehicle_id, self.station_id, route, self.charger)
 
-        if vehicle.vehicle_state in CHARGE_STATES:
-            sim_state = _return_charger_patch(sim_state, vehicle.id)
-            if not sim_state:
-                return None
-
-        vehicle = vehicle.transition(VehicleState.DISPATCH_STATION)
-
-        start = vehicle.geoid
-        end = station.geoid
-        route = sim_state.road_network.route(start, end)
-
-        vehicle = vehicle.assign_route(route).set_charge_intent(self.charger)
-
-        updated_sim_state = sim_state.modify_vehicle(vehicle)
-
-        return updated_sim_state
+            result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+            return result
 
 
 class ChargeStationInstruction(NamedTuple, Instruction):
@@ -155,157 +104,98 @@ class ChargeStationInstruction(NamedTuple, Instruction):
     station_id: StationId
     charger: Charger
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
-        if self.station_id not in sim_state.stations:
-            log.warning(f"station {self.station_id} not found in simulation ")
-            return None
-        station = sim_state.stations[self.station_id]
-        if not station.has_available_charger(self.charger):
-            log.debug(f"vehicle {self.vehicle_id} can't charge at station {self.station_id}. no plugs available")
-            return None
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        else:
+            prev_state = vehicle.vehicle_state
+            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger)
 
-        if not vehicle.can_transition(VehicleState.CHARGING):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING')
-            return None
-        updated_vehicle = vehicle.transition(VehicleState.CHARGING).set_charge_intent(self.charger)
-
-        at_location = sim_state.at_geoid(updated_vehicle.geoid)
-        if not at_location['station']:
-            log.debug(f"vehicle {self.vehicle_id} not at station {self.station_id}")
-            return None
-
-        station_less_charger = station.checkout_charger(self.charger)
-        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(updated_vehicle)
-
-        return updated_sim_state
+            result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+            return result
 
 
 class ChargeBaseInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
-    station_id: StationId
+    base_id: BaseId
     charger: Charger
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
-        if self.station_id not in sim_state.stations:
-            log.warning(f"station {self.station_id} not found in simulation ")
-            return None
-        station = sim_state.stations[self.station_id]
-        if not station.has_available_charger(self.charger):
-            log.debug(f"vehicle {self.vehicle_id} can't charge at station {self.station_id}. no plugs available")
-            return None
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        else:
+            prev_state = vehicle.vehicle_state
+            next_state = ChargingBase(self.vehicle_id, self.base_id, self.charger)
 
-        if not vehicle.can_transition(VehicleState.CHARGING):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to CHARGING')
-            return None
-        updated_vehicle = vehicle.set_charge_intent(self.charger).transition(VehicleState.CHARGING)
-
-        at_location = sim_state.at_geoid(updated_vehicle.geoid)
-        if not at_location['station']:
-            log.debug(f"vehicle {self.vehicle_id} not at station {self.station_id}")
-            return None
-
-        station_less_charger = station.checkout_charger(self.charger)
-        updated_sim_state = sim_state.modify_station(station_less_charger).modify_vehicle(updated_vehicle)
-
-        return updated_sim_state
+            result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+            return result
 
 
 class DispatchBaseInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
-    destination: GeoId
+    base_id: BaseId
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        base = sim_state.bases.get(self.base_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        if not base:
+            return SimulationStateError(f"base {self.base_id} not found"), None
+        else:
+            start = vehicle.geoid
+            end = base.geoid
+            route = sim_state.road_network.route(start, end)
 
-        if not vehicle.can_transition(VehicleState.DISPATCH_BASE):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to DISPATCH_BASE')
-            return None
+            prev_state = vehicle.vehicle_state
+            next_state = DispatchBase(self.vehicle_id, self.base_id, route)
 
-        if vehicle.vehicle_state in CHARGE_STATES:
-            sim_state = _return_charger_patch(sim_state, vehicle.id)
-            if not sim_state:
-                return None
-
-        vehicle = vehicle.transition(VehicleState.DISPATCH_BASE)
-
-        start = vehicle.geoid
-        end = self.destination
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route)
-
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
-
-        return updated_sim_state
+            result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+            return result
 
 
 class RepositionInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     destination: GeoId
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        else:
+            start = vehicle.geoid
+            route = sim_state.road_network.route(start, self.destination)
 
-        if not vehicle.can_transition(VehicleState.REPOSITIONING):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to REPOSITIONING')
-            return None
+            prev_state = vehicle.vehicle_state
+            next_state = Repositioning(self.vehicle_id, route)
 
-        if vehicle.vehicle_state in CHARGE_STATES:
-            sim_state = _return_charger_patch(sim_state, vehicle.id)
-            if not sim_state:
-                return None
-
-        vehicle = vehicle.transition(VehicleState.REPOSITIONING)
-
-        start = vehicle.geoid
-        end = self.destination
-        route = sim_state.road_network.route(start, end)
-
-        vehicle_w_route = vehicle.assign_route(route)
-
-        updated_sim_state = sim_state.modify_vehicle(vehicle_w_route)
-
-        return updated_sim_state
+            result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+            return result
 
 
 class ReserveBaseInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
+    base_id: BaseId
 
-    def apply_instruction(self, sim_state: SimulationState) -> Optional[SimulationState]:
-        if self.vehicle_id not in sim_state.vehicles:
-            log.warning(f"vehicle {self.vehicle_id} not found in simulation ")
-            return None
-        vehicle = sim_state.vehicles[self.vehicle_id]
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
 
-        at_location = sim_state.at_geoid(vehicle.geoid)
-        if not at_location['base']:
-            log.debug(f"vehicle {self.vehicle_id} not at base")
-            return None
+        prev_state = vehicle.vehicle_state
+        next_state = ReserveBase(self.vehicle_id, self.base_id)
 
-        if not vehicle.can_transition(VehicleState.RESERVE_BASE):
-            log.debug(f'vehicle {self.vehicle_id} cannot transition to RESERVE_BASE')
-            return None
-
-        if vehicle.vehicle_state in CHARGE_STATES:
-            sim_state = _return_charger_patch(sim_state, vehicle.id)
-            if not sim_state:
-                return None
-
-        vehicle = vehicle.transition(VehicleState.RESERVE_BASE)
-        updated_sim_state = sim_state.modify_vehicle(vehicle)
-
-        return updated_sim_state
+        result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
+        return result
