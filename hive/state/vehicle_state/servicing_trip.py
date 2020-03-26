@@ -58,6 +58,9 @@ class ServicingTrip(NamedTuple, VehicleState):
         if len(self.route) != 0:
             # cannot exit when not at passenger's destination
             return None, None
+        elif len(self.passengers) == 0:
+            # unlikely edge case that there were no passengers?
+            return None, sim
         elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
