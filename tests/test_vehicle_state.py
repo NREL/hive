@@ -802,7 +802,8 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle()
         request = mock_request_from_geoids()
         self.assertNotEqual(request.origin, request.destination, "test invariant failed")
-        sim = mock_sim(vehicles=(vehicle,)).add_request(request)
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
