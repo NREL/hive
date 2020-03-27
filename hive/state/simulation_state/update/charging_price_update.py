@@ -206,7 +206,7 @@ def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger,
                 station_ids = (station_id for search_geoid in search_geoids if sim.s_search.get(search_geoid)
                                for station_id in sim.s_search.get(search_geoid))
 
-                # all of these station ids should get entries matching the provided geoid
+                # all of these station ids should get entries instructors the provided geoid
                 for station_id in station_ids:
                     updated.update({station_id: this_update[k]})
 

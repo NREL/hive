@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Dict, NamedTuple
 from h3 import h3
 
 from hive.dispatcher.manager.fleet_targets.fleet_target_interface import FleetTarget
-from hive.model.instruction.instructions import RepositionInstruction, DispatchBaseInstruction
+from hive.dispatcher.instruction import RepositionInstruction, DispatchBaseInstruction
 from hive.util.helpers import H3Ops
 
 if TYPE_CHECKING:
-    from hive.model.instruction.instructions import Instruction
+    from hive.dispatcher.instruction import Instruction
     from hive.model.roadnetwork.roadnetwork import RoadNetwork
     from hive.util.typealiases import VehicleId, GeoId
     from hive.state.simulation_state.simulation_state import SimulationState

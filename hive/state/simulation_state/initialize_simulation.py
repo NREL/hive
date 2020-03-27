@@ -91,8 +91,8 @@ def initialize_simulation(
     #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
     # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
-    sim_with_bases = _build_bases(bases_file, sim_with_vehicles, env_updated)
-    sim_with_stations = _build_stations(stations_file, sim_with_bases, env_updated)
+    sim_with_bases = _build_bases(bases_file, sim_with_vehicles)
+    sim_with_stations = _build_stations(stations_file, sim_with_bases)
 
     return sim_with_stations, env_updated
 
@@ -149,13 +149,12 @@ def _build_vehicles(
 
 def _build_bases(bases_file: str,
                  simulation_state: SimulationState,
-                 env: Environment) -> SimulationState:
+                 ) -> SimulationState:
     """
     all your base are belong to us
 
     :param bases_file: path to file with bases
     :param simulation_state: the partial simulation state
-    :param env: the partially-constructed environment
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
     """
@@ -179,13 +178,12 @@ def _build_bases(bases_file: str,
 
 def _build_stations(stations_file: str,
                     simulation_state: SimulationState,
-                    env: Environment) -> SimulationState:
+                    ) -> SimulationState:
     """
     all your station are belong to us
 
     :param stations_file: the file with stations in it
     :param simulation_state: the partial simulation state
-    :param env: the partially-constructed environment
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """

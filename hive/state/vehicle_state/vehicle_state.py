@@ -4,13 +4,10 @@ from abc import abstractmethod, ABCMeta
 from typing import Tuple, Optional, NamedTupleMeta
 
 from hive.runner.environment import Environment
-from hive.state.simulation_state import simulation_state_ops
-
-from hive.util.typealiases import VehicleId
-
-from hive.util.exception import SimulationStateError
-
 from hive.state.entity_state.entity_state import EntityState
+from hive.state.simulation_state import simulation_state_ops
+from hive.util.exception import SimulationStateError
+from hive.util.typealiases import VehicleId
 
 
 class VehicleState(ABCMeta, NamedTupleMeta, EntityState):

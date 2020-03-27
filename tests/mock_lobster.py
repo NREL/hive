@@ -1,6 +1,6 @@
 import functools as ft
 import math
-from typing import Optional, Dict, NamedTuple, Union, Callable
+from typing import Dict, Union, Callable
 
 import immutables
 from h3 import h3
@@ -8,8 +8,12 @@ from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
 from hive.dispatcher import default_dispatcher
+from hive.dispatcher.basic_dispatcher import BasicDispatcher
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
+from hive.dispatcher.instruction.instructions import *
+from hive.dispatcher.instructors.basic_charging import BasicCharging
+from hive.dispatcher.instructors.greedy_matching import GreedyMatcher
 from hive.dispatcher.manager.basic_manager import BasicManager
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
@@ -29,9 +33,9 @@ from hive.model.vehicle import Vehicle
 from hive.model.vehicle import VehicleType
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
-from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.update.update import Update
 from hive.state.vehicle_state import VehicleState, Idle
 from hive.util.helpers import H3Ops
@@ -380,12 +384,14 @@ def mock_sim(
         :return: the updated sim
         ;raises: Exception when an add fails
         """
+
         def _inner(s: SimulationState, to_add):
             error, result = fn(s, to_add)
             if error:
                 raise error
             else:
                 return result
+
         return _inner
 
     sim_v = ft.reduce(add_or_throw(simulation_state_ops.add_vehicle), vehicles, sim) if vehicles else sim
@@ -587,8 +593,15 @@ def mock_forecaster() -> ForecasterInterface:
 
 
 def mock_manager(forecaster: ForecasterInterface = mock_forecaster()) -> BasicManager:
-
     return BasicManager(demand_forecaster=forecaster)
+
+
+def mock_instructors() -> Tuple[GreedyMatcher, BasicCharging]:
+    return GreedyMatcher(), BasicCharging()
+
+
+def mock_dispatcher() -> BasicDispatcher:
+    return BasicDispatcher(manager=mock_manager(), instructors=mock_instructors())
 
 
 def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Dict
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
-    from hive.model.instruction.instructions import Instruction
+    from hive.dispatcher.instruction import Instruction
     from hive.util.typealiases import VehicleId
     from hive.state.simulation_state.simulation_state import SimulationState
 

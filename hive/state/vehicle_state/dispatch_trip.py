@@ -72,7 +72,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         request = sim.requests.get(self.request_id)
         if request and request.geoid != vehicle.geoid:
             locations = f"{request.geoid} != {vehicle.geoid}"
-            message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}"
+            message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}. sim_time: {sim.sim_time}"
             return SimulationStateError(message), None
         elif not request:
             # request already got picked up or was cancelled; go an Idle state

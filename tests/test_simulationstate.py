@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from hive.model.instruction import *
 from hive.state.simulation_state.update.step_simulation import step_simulation
 from tests.mock_lobster import *
 from hive.state.vehicle_state import *
