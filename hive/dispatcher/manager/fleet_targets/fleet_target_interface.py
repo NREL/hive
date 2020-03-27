@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
-    from hive.dispatcher.instruction import Instruction
-    from hive.util.typealiases import VehicleId
+    from hive.dispatcher.instruction.instruction_interface import InstructionMap
     from hive.state.simulation_state.simulation_state import SimulationState
 
 
@@ -17,7 +16,7 @@ class FleetTarget(metaclass=ABCNamedTupleMeta):
     """
 
     @abstractmethod
-    def apply_target(self, sim_state: SimulationState,) -> Dict[VehicleId, Instruction]:
+    def apply_target(self, sim_state: SimulationState,) -> InstructionMap:
         """
         generates dispatcher instructions based on a specific simulation state
 
