@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Optional
+from datetime import datetime
+
+import os
 
 from hive.config import *
 
@@ -9,6 +12,8 @@ class HiveConfig(NamedTuple):
     io: Optional[IO]
     sim: Optional[Sim]
     network: Optional[Network]
+
+    init_time: str
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
@@ -35,5 +40,12 @@ class HiveConfig(NamedTuple):
             return HiveConfig(
                 io=io_build,
                 sim=sim_build,
-                network=network_build
+                network=network_build,
+                init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
             )
+
+    @property
+    def output_directory(self) -> str:
+        run_name = self.sim.sim_name + '_' + self.init_time
+        output_directory = os.path.join(self.io.working_directory, run_name)
+        return output_directory

@@ -39,7 +39,7 @@ def run() -> int:
 
         sim, environment = load_simulation(scenario_path)
 
-        log_fh = logging.FileHandler(os.path.join(environment.sim_output_dir, 'run.log'))
+        log_fh = logging.FileHandler(os.path.join(environment.config.output_directory, 'run.log'))
         formatter = logging.Formatter(LOGGING_CONFIG['formatters']['simple']['format'])
         log_fh.setFormatter(formatter)
         root_log.addHandler(log_fh)

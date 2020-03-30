@@ -35,8 +35,6 @@ class Environment(NamedTuple):
     vehicle_types: immutables.Map[VehicleTypeId, VehicleType] = immutables.Map()
     energy_types: immutables.Map[PowercurveId, EnergyType] = immutables.Map()
 
-    sim_output_dir: str = ""  # todo: this should come from HiveConfig.IO
-
     def add_powertrain(self, powertrain: Powertrain) -> Environment:
         """
         Adds a powertrain to the environment
