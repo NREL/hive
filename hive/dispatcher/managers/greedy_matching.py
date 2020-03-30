@@ -1,24 +1,22 @@
 from __future__ import annotations
 
-import immutables
-
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.dispatcher.instruction.instruction_interface import Instruction, InstructionMap
+    from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.model.vehicle.vehicle import Vehicle
     from hive.util.typealiases import Report, SimTime
 
-from hive.dispatcher.instructors.instructor_interface import InstructorInterface
+from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
 from hive.state.vehicle_state import Idle, Repositioning
-from hive.util.helpers import H3Ops, DictOps
+from hive.util.helpers import H3Ops
 
 
-class GreedyMatcher(NamedTuple, InstructorInterface):
+class GreedyMatcher(NamedTuple, ManagerInterface):
     """
-    A instructors algorithm that assigns vehicles greedily to most expensive request.
+    A managers algorithm that assigns vehicles greedily to most expensive request.
     """
     LOW_SOC_TRESHOLD = 0.2
 
@@ -34,20 +32,18 @@ class GreedyMatcher(NamedTuple, InstructorInterface):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-            previous_instructions: InstructionMap,
-    ) -> Tuple[GreedyMatcher, InstructionMap, Tuple[Report, ...]]:
+    ) -> Tuple[GreedyMatcher, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
-        :param previous_instructions: instructions from previous modules
 
         :return: the updated Manager along with fleet targets and reports
         """
         # find requests that need a vehicle. Sorted by price high to low.
         # these instructions override fleet target instructions
         already_dispatched = []
-        new_instructions = immutables.Map()
+        instructions = ()
         reports = ()
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
@@ -79,6 +75,6 @@ class GreedyMatcher(NamedTuple, InstructorInterface):
                 report = self._gen_report(instruction, simulation_state.sim_time)
                 reports = reports + (report,)
 
-                new_instructions = DictOps.add_to_dict(new_instructions, nearest_vehicle.id, instruction)
+                instructions = instructions + (instruction,)
 
-        return self, DictOps.merge_dicts(previous_instructions, new_instructions), reports
+        return self, instructions, reports

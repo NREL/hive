@@ -12,9 +12,11 @@ from hive.dispatcher.basic_dispatcher import BasicDispatcher
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
-from hive.dispatcher.instructors.basic_charging import BasicCharging
-from hive.dispatcher.instructors.greedy_matching import GreedyMatcher
-from hive.dispatcher.manager.basic_manager import BasicManager
+from hive.dispatcher.managers.basic_charging import BasicCharging
+from hive.dispatcher.managers.base_management import BaseManagement
+from hive.dispatcher.managers.fleet_position import FleetPosition
+from hive.dispatcher.managers.greedy_matching import GreedyMatcher
+from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -592,16 +594,18 @@ def mock_forecaster() -> ForecasterInterface:
     return MockForecaster()
 
 
-def mock_manager(forecaster: ForecasterInterface = mock_forecaster()) -> BasicManager:
-    return BasicManager(demand_forecaster=forecaster)
-
-
-def mock_instructors() -> Tuple[GreedyMatcher, BasicCharging]:
-    return GreedyMatcher(), BasicCharging()
+def mock_managers() -> Tuple[ManagerInterface, ...]:
+    managers = (
+        BaseManagement(),
+        FleetPosition(mock_forecaster()),
+        BasicCharging(),
+        GreedyMatcher(),
+    )
+    return managers
 
 
 def mock_dispatcher() -> BasicDispatcher:
-    return BasicDispatcher(manager=mock_manager(), instructors=mock_instructors())
+    return BasicDispatcher(managers=mock_managers())
 
 
 def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:

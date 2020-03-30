@@ -71,3 +71,5 @@ class BasicReporter(Reporter):
         else:
             entry = json.dumps(report, default=str)
             self.sim_log_file.write(entry + '\n')
+
+
