@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
-import functools as ft
 from hive.state.vehicle_state import *
 from hive.util.exception import SimulationStateError
 
 from hive.runner.environment import Environment
 
 from hive.model.passenger import board_vehicle
-from hive.model.instruction.instruction_interface import Instruction
+from hive.dispatcher.instruction.instruction_interface import Instruction
 from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId
 from hive.model.energy.charger import Charger
 from hive.state.entity_state import entity_state_ops

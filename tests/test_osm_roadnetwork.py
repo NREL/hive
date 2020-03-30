@@ -2,8 +2,6 @@ from unittest import TestCase
 
 from tests.mock_lobster import *
 
-import random
-
 
 class TestOSMRoadNetwork(TestCase):
     def test_geoid_within_geofence(self):

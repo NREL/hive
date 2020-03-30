@@ -1,4 +1,4 @@
-from hive.model.instruction.instructions import (
+from hive.dispatcher.instruction.instructions import (
     DispatchBaseInstruction,
     DispatchStationInstruction,
     DispatchTripInstruction,
@@ -8,4 +8,3 @@ from hive.model.instruction.instructions import (
     RepositionInstruction,
     ReserveBaseInstruction,
 )
-from hive.model.instruction.instruction_interface import Instruction

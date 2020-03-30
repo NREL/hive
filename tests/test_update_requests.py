@@ -33,7 +33,7 @@ class TestUpdateRequestsFromFile(TestCase):
         test invariant: the below file resource exists
         """
         sim_time = 25920  # will pull in all requests with departure_time earlier than 720
-        expected_reqs = 7
+        expected_reqs = 18
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
         config = mock_config(
             start_time="2019-01-09T00:00:00-07:00",

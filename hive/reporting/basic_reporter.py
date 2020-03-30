@@ -33,13 +33,20 @@ class BasicReporter(Reporter):
             entry = json.dumps(log_dict, default=str)
             self.sim_log_file.write(entry + '\n')
 
-    def log_sim_state(self, sim_state: 'SimulationState'):
+    def _report_vehicles(self, vehicles, sim_time):
+        for v in vehicles:
+            log_dict = v._asdict()
+            log_dict['sim_time'] = sim_time
+            log_dict['report_type'] = 'vehicle_report'
+            log_dict['vehicle_state'] = v.vehicle_state.__class__.__name__
+            entry = json.dumps(log_dict, default=str)
+            self.sim_log_file.write(entry + '\n')
 
+    def log_sim_state(self, sim_state: 'SimulationState'):
         if self._io.log_vehicles:
-            self._report_entities(
-                entities=sim_state.vehicles.values(),
+            self._report_vehicles(
+                vehicles=sim_state.vehicles.values(),
                 sim_time=sim_state.sim_time,
-                report_type='vehicle_report'
             )
         if self._io.log_requests:
             self._report_entities(
@@ -64,3 +71,5 @@ class BasicReporter(Reporter):
         else:
             entry = json.dumps(report, default=str)
             self.sim_log_file.write(entry + '\n')
+
+

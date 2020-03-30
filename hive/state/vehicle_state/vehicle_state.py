@@ -4,13 +4,10 @@ from abc import abstractmethod, ABCMeta
 from typing import Tuple, Optional, NamedTupleMeta
 
 from hive.runner.environment import Environment
-from hive.state.simulation_state import simulation_state_ops
-
-from hive.util.typealiases import VehicleId
-
-from hive.util.exception import SimulationStateError
-
 from hive.state.entity_state.entity_state import EntityState
+from hive.state.simulation_state import simulation_state_ops
+from hive.util.exception import SimulationStateError
+from hive.util.typealiases import VehicleId
 
 
 class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
@@ -44,11 +41,12 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             if exit_error:
                 return exit_error, None
             else:
-                next_error, (next_sim, next_state) = state._enter_default_terminal_state(exited_sim, env)
+                next_error, result = state._enter_default_terminal_state(exited_sim, env)
                 if next_error:
                     return next_error, None
                 else:
                     # apply the update of the next state
+                    next_sim, next_state = result
                     return next_state.update(next_sim, env)
 
         else:
