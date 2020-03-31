@@ -73,3 +73,4 @@ class IO(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> IO:
         return IO(**d)
+

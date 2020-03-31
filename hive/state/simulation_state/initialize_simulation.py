@@ -29,13 +29,11 @@ log = logging.getLogger(__name__)
 
 def initialize_simulation(
         config: HiveConfig,
-        sim_output_dir: str,
 ) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
 
     :param config: the configuration of this run
-    :param sim_output_dir: the directory to write outputs
     :return: a SimulationState, or a SimulationStateError
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
@@ -76,7 +74,7 @@ def initialize_simulation(
 
     if config.io.log_period_seconds < config.sim.timestep_duration_seconds:
         raise RuntimeError("log time step must be greater than simulation time step")
-    reporter = BasicReporter(config.io, sim_output_dir)
+    reporter = BasicReporter(config.io, config.output_directory)
     vehicle_types_table_builder = VehicleTypesTableBuilder.build(vehicle_types_file)
     vehicle_types_errors = vehicle_types_table_builder.consolidate_errors()
     if vehicle_types_errors is not None:
@@ -84,7 +82,7 @@ def initialize_simulation(
     env_initial = Environment(config=config,
                               reporter=reporter,
                               vehicle_types=vehicle_types_table_builder.result,
-                              sim_output_dir=sim_output_dir)
+                              )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
     #  should instead hold aside any error reports and then do something below after finishing,
