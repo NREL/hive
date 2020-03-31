@@ -7,6 +7,7 @@ import sys
 import time
 from typing import NamedTuple
 
+from hive.dispatcher.basic_dispatcher import BasicDispatcher
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.model.vehicle import Vehicle
@@ -46,7 +47,8 @@ def run() -> int:
 
         log.info(f"successfully loaded config: {scenario_file}")
 
-        update = Update.build(environment.config)
+        dispatcher = BasicDispatcher.build(environment.config)
+        update = Update.build(environment.config, dispatcher)
         initial_payload = RunnerPayload(sim, environment, update)
 
         start = time.time()

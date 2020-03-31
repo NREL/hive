@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
+from hive.util.units import Ratio
+
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
@@ -18,7 +20,7 @@ class GreedyMatcher(NamedTuple, ManagerInterface):
     """
     A managers algorithm that assigns vehicles greedily to most expensive request.
     """
-    LOW_SOC_TRESHOLD = 0.2
+    low_soc_threshold: Ratio
 
     @staticmethod
     def _gen_report(instruction: Instruction, sim_time: SimTime) -> Report:
@@ -50,7 +52,7 @@ class GreedyMatcher(NamedTuple, ManagerInterface):
             is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
                              isinstance(vehicle.vehicle_state, Repositioning)
 
-            return bool(vehicle.energy_source.soc > self.LOW_SOC_TRESHOLD
+            return bool(vehicle.energy_source.soc > self.low_soc_threshold
                         and is_valid_state and vehicle.id not in already_dispatched)
 
         unassigned_requests = sorted(

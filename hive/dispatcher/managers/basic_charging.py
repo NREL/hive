@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
+from hive.util.units import Ratio
+
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
@@ -24,7 +26,7 @@ class BasicCharging(NamedTuple, ManagerInterface):
     """
     A manager that instructs vehicles to charge if they fall below an SOC threshold.
     """
-    LOW_SOC_TRESHOLD = 0.2
+    low_soc_threshold: Ratio
 
     def generate_instructions(
             self,
@@ -43,7 +45,7 @@ class BasicCharging(NamedTuple, ManagerInterface):
 
         # find vehicles that fall below the minimum threshold and charge them.
         low_soc_vehicles = [v for v in simulation_state.vehicles.values()
-                            if v.energy_source.soc <= self.LOW_SOC_TRESHOLD
+                            if v.energy_source.soc <= self.low_soc_threshold
                             and not isinstance(v.vehicle_state, DispatchStation)]
 
         for veh in low_soc_vehicles:

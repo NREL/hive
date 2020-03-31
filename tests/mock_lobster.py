@@ -7,7 +7,7 @@ from h3 import h3
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
-from hive.dispatcher import default_dispatcher
+from hive.config.dispatcher_config import DispatcherConfig
 from hive.dispatcher.basic_dispatcher import BasicDispatcher
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
@@ -428,8 +428,12 @@ def mock_config(
             'vehicle_types_file': 'default_vehicle_types.csv',
             'geofence_file': 'downtown_denver.geojson',
             'demand_forecast_file': 'nyc_demand.csv'
+        },
+        "dispatcher": {
+            'matching_low_soc_threshold': 0.2,
+            'charging_low_soc_threshold': 0.2,
+            'base_vehicles_charging_limit': None,
         }
-
     })
 
 
@@ -582,35 +586,34 @@ def mock_graph_network(links: Optional[Dict[str, Link]] = None, h3_res: int = 15
     return MockGraphNetwork(links, h3_res)
 
 
-def mock_forecaster() -> ForecasterInterface:
+def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     class MockForecaster(NamedTuple, ForecasterInterface):
         def generate_forecast(
                 self,
                 simulation_state: SimulationState
         ) -> Tuple[ForecasterInterface, Forecast]:
-            forecast = Forecast(type=ForecastType.DEMAND, value=1)
-            return self, forecast
+            f = Forecast(type=ForecastType.DEMAND, value=forecast)
+            return self, f
 
     return MockForecaster()
 
 
-def mock_managers() -> Tuple[ManagerInterface, ...]:
-    managers = (
-        BaseManagement(),
-        FleetPosition(mock_forecaster()),
-        BasicCharging(),
-        GreedyMatcher(),
+def mock_dispatcher_with_mock_forecast(
+        config: HiveConfig = mock_config(),
+        forecast: int = 1) -> BasicDispatcher:
+    return BasicDispatcher(
+        managers=(
+            BaseManagement(config.dispatcher.base_vehicles_charging_limit),
+            FleetPosition(mock_forecaster(forecast), config.dispatcher.fleet_sizing_update_interval_seconds),
+            BasicCharging(config.dispatcher.charging_low_soc_threshold),
+            GreedyMatcher(config.dispatcher.matching_low_soc_threshold),
+        )
     )
-    return managers
-
-
-def mock_dispatcher() -> BasicDispatcher:
-    return BasicDispatcher(managers=mock_managers())
 
 
 def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:
     if config:
         return Update.build(config, overriding_dispatcher)
     else:
-        dispatcher = default_dispatcher(mock_config())
+        dispatcher = BasicDispatcher.build(mock_config())
         return Update((), StepSimulation(dispatcher))

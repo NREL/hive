@@ -6,12 +6,14 @@ from datetime import datetime
 import os
 
 from hive.config import *
+from hive.config.dispatcher_config import DispatcherConfig
 
 
 class HiveConfig(NamedTuple):
     io: Optional[IO]
     sim: Optional[Sim]
     network: Optional[Network]
+    dispatcher: Optional[DispatcherConfig]
 
     init_time: str
 
@@ -29,20 +31,15 @@ class HiveConfig(NamedTuple):
         io_build = IO.build(d['io']) if 'io' in d else None
         sim_build = Sim.build(d['sim']) if 'sim' in d else None
         network_build = Network.build(d['network']) if 'network' in d else None
+        dispatcher_build = DispatcherConfig.build(d['dispatcher']) if 'dispatcher' in d else None
 
-        if isinstance(io_build, Exception):
-            return io_build
-        elif isinstance(sim_build, Exception):
-            return sim_build
-        elif isinstance(network_build, Exception):
-            return network_build
-        else:
-            return HiveConfig(
-                io=io_build,
-                sim=sim_build,
-                network=network_build,
-                init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
-            )
+        return HiveConfig(
+            io=io_build,
+            sim=sim_build,
+            network=network_build,
+            dispatcher=dispatcher_build,
+            init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+        )
 
     @property
     def output_directory(self) -> str:

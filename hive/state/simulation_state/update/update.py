@@ -5,7 +5,6 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING
 
 from hive.config import HiveConfig
 from hive.dispatcher import DispatcherInterface
-from hive.dispatcher import default_dispatcher
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.step_simulation import StepSimulation
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
@@ -30,14 +29,13 @@ class Update(NamedTuple):
     @classmethod
     def build(cls,
               config: HiveConfig,
-              overriding_dispatcher: DispatcherInterface = None) -> Update:
+              dispatcher: DispatcherInterface) -> Update:
         """
         constructs the functionality to update the simulation each time step
         :param config: the scenario configuration
-        :param overriding_dispatcher: any overriding dispatcher functionality
+        :param dispatcher: any overriding dispatcher functionality
         :return: the Update that will be applied at each time step
         """
-        dispatcher = overriding_dispatcher if overriding_dispatcher else default_dispatcher(config)
 
         requests_file = resource_filename("hive.resources.requests", config.io.requests_file)
         rate_structure_file = resource_filename("hive.resources.service_prices", config.io.rate_structure_file)

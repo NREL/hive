@@ -3,9 +3,9 @@ from unittest import TestCase
 from tests.mock_lobster import *
 
 
-class TestManagedDispatcher(TestCase):
+class TestDispatcher(TestCase):
     def test_match_vehicle(self):
-        dispatcher = mock_dispatcher()
+        dispatcher = BasicDispatcher(managers=(GreedyMatcher(low_soc_threshold=0.2),))
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
@@ -32,7 +32,7 @@ class TestManagedDispatcher(TestCase):
                          "Should have picked closest vehicle")
 
     def test_no_vehicles(self):
-        dispatcher = mock_dispatcher()
+        dispatcher = BasicDispatcher(managers=(GreedyMatcher(low_soc_threshold=0.2),))
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
 
@@ -45,7 +45,8 @@ class TestManagedDispatcher(TestCase):
         self.assertEqual(len(instructions_map), 0, "There are no vehicles to make assignments to.")
 
     def test_charge_vehicle(self):
-        dispatcher = mock_dispatcher()
+        # dispatcher = mock_dispatcher_with_mock_forecast()
+        dispatcher = BasicDispatcher(managers=(BasicCharging(low_soc_threshold=0.2),))
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)
@@ -65,7 +66,7 @@ class TestManagedDispatcher(TestCase):
                               "Should have instructed vehicle to dispatch to station")
 
     def test_activate_vehicles(self):
-        dispatcher = mock_dispatcher()
+        dispatcher = mock_dispatcher_with_mock_forecast(forecast=1)
 
         # manger will always predict we need 1 activate vehicle. So, we start with one inactive vehicle and see
         # if it is moved to active.
@@ -91,7 +92,7 @@ class TestManagedDispatcher(TestCase):
                               "Should have instructed vehicle to reposition")
 
     def test_deactivate_vehicles(self):
-        dispatcher = mock_dispatcher()
+        dispatcher = mock_dispatcher_with_mock_forecast(forecast=1)
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
@@ -118,7 +119,7 @@ class TestManagedDispatcher(TestCase):
                               "Should have instructed vehicle to dispatch to base")
 
     def test_valuable_requests(self):
-        dispatcher = mock_dispatcher()
+        dispatcher = BasicDispatcher(managers=(GreedyMatcher(low_soc_threshold=0.2),))
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
@@ -145,3 +146,41 @@ class TestManagedDispatcher(TestCase):
                               DispatchTripInstruction,
                               "Should have instructed vehicle to dispatch")
         self.assertEqual(instructions_map[veh1.id].request_id, 'expensive', 'Should have picked expensive request')
+
+    def test_limited_base_charging(self):
+        dispatcher = BasicDispatcher(managers=(BaseManagement(base_vehicles_charging_limit=1),))
+
+        station = mock_station_from_geoid(chargers=immutables.Map({Charger.LEVEL_2: 2}))
+        base = mock_base_from_geoid(stall_count=2, station_id=station.id)
+
+        # both vehicles eligible to charge at base
+        close_veh = mock_vehicle_from_geoid(
+            vehicle_id='v1',
+            geoid=station.geoid,
+            vehicle_state=ReserveBase(
+                vehicle_id='v1',
+                base_id=base.id
+            )
+        )
+        far_veh = mock_vehicle_from_geoid(
+            vehicle_id='v2',
+            geoid=station.geoid,
+            vehicle_state=ReserveBase(
+                vehicle_id='v2',
+                base_id=base.id
+            )
+        )
+        sim = mock_sim(
+            h3_location_res=9,
+            h3_search_res=9,
+            vehicles=(close_veh, far_veh),
+            stations=(station,),
+            bases=(base,)
+        )
+
+        dispatcher, instructions_map, _ = dispatcher.generate_instructions(sim)
+
+        instruction = list(instructions_map.values())[0]
+
+        self.assertGreaterEqual(len(instructions_map), 1, "Should have generated only one instruction")
+        self.assertIsInstance(instruction, ChargeBaseInstruction, "Should have been instructed to charge at base")

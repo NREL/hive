@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Tuple, NamedTuple, TYPE_CHECKING
+from typing import Tuple, NamedTuple, TYPE_CHECKING, Optional
 
 from hive.dispatcher.instruction.instructions import (
-    ChargeBaseInstruction
-)
+    ChargeBaseInstruction,
+    ReserveBase)
 from hive.dispatcher.instruction.instruction_interface import instruction_to_report
 from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.model.energy.charger import Charger
@@ -24,6 +24,7 @@ class BaseManagement(NamedTuple, ManagerInterface):
     """
     A manager that instructs vehicles on how to behave at the base
     """
+    base_vehicles_charging_limit: Optional[int]
 
     def generate_instructions(
             self,
@@ -40,14 +41,19 @@ class BaseManagement(NamedTuple, ManagerInterface):
         instructions = ()
         reports = ()
 
-        # charge any vehicles sitting at base.
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            return bool(isinstance(vehicle.vehicle_state, ChargingBase)
-                        and not vehicle.energy_source.is_at_ideal_energy_limit())
+            return bool(isinstance(vehicle.vehicle_state, ChargingBase) or
+                        isinstance(vehicle.vehicle_state, ReserveBase) and not
+                        vehicle.energy_source.is_at_ideal_energy_limit())
 
+        # find vehicles that should charge and sort them by SoC, descending
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if _should_base_charge(v)]
+        base_charge_vehicles.sort(key=lambda v: -v.energy_source.soc)
 
+        # assign as many of these vehicles to charge as possible
         for veh in base_charge_vehicles:
+            if self.base_vehicles_charging_limit and len(instructions) >= self.base_vehicles_charging_limit:
+                break
             base_id = simulation_state.b_locations[veh.geoid]
             base = simulation_state.bases[base_id]
             if base.station_id:
