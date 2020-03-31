@@ -59,6 +59,19 @@ def charge(sim: 'SimulationState',
         if veh_error:
             return veh_error, None
         else:
+
+            # log charge event
+            report = {
+                'report_type': 'charge_event',
+                'vehicle_id': vehicle_id,
+                'station_id': station_id,
+                'charge_amount': str(kwh_transacted),
+                'charge_price': str(charging_price),
+                'charger_type': str(charger),
+                'charge_duration_seconds': str(sim.sim_timestep_duration_seconds)
+            }
+            env.reporter.sim_report(report)
+
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
 
 
