@@ -14,7 +14,7 @@ from hive.model.roadnetwork.route import Route
 from hive.util import SimTime
 from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
-from hive.resources.road_network.miniosmnx.core import graph_from_file
+from hive.external.miniosmnx.core import graph_from_file
 
 
 class OSMRoadNetwork(RoadNetwork):
