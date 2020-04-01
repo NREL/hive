@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Tuple, Optional, Dict, Union
 
 import networkx as nx
-import osmnx as ox
 from h3 import h3
 from networkx.classes.multidigraph import MultiDiGraph
 from rtree import index
@@ -15,6 +14,7 @@ from hive.model.roadnetwork.route import Route
 from hive.util import SimTime
 from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
+from hive.external.miniosmnx.core import graph_from_file
 
 
 class OSMRoadNetwork(RoadNetwork):
@@ -38,7 +38,7 @@ class OSMRoadNetwork(RoadNetwork):
 
         self.default_speed_kmph = default_speed_kmph
 
-        G, geoid_to_node_id = self._parse_road_network_graph(ox.graph_from_file(road_network_file))
+        G, geoid_to_node_id = self._parse_road_network_graph(graph_from_file(road_network_file))
 
         self.G = G
         self.geoid_to_node_id = geoid_to_node_id

@@ -25,12 +25,6 @@ setup(
     packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
-        "h3>=3.4.3",
-        "immutables>=0.11",
-        "PyYAML>=5.1",
-        "haversine>=2.1",
-        "numpy>=1.17",
-        "osmnx>=0.11.4"
     ],
     include_package_data=True,
     package_data={
