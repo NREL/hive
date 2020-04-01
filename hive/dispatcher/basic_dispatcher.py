@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 import immutables
@@ -19,9 +18,6 @@ if TYPE_CHECKING:
     from hive.dispatcher.instruction.instruction_interface import InstructionMap
     from hive.dispatcher.managers.manager_interface import ManagerInterface
     from hive.util.typealiases import Report
-
-
-log = logging.getLogger(__name__)
 
 
 class BasicDispatcher(NamedTuple, DispatcherInterface):

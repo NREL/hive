@@ -3,7 +3,7 @@ from unittest import TestCase
 from tests.mock_lobster import *
 
 
-class TestDispatcher(TestCase):
+class TestBasicDispatcher(TestCase):
     def test_match_vehicle(self):
         dispatcher = BasicDispatcher(managers=(GreedyMatcher(low_soc_threshold=0.2),))
 
