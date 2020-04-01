@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union, Optional
-from datetime import datetime
-
 import os
+from datetime import datetime
+from typing import NamedTuple, Dict, Union
 
 from hive.config import *
 from hive.config.dispatcher_config import DispatcherConfig
@@ -28,7 +27,6 @@ class HiveConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
-
         return HiveConfig(
             io=IO.build(d.get('io')),
             sim=Sim.build(d.get('sim')),
