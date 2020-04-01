@@ -12,7 +12,7 @@ class DispatcherConfig(NamedTuple):
     matching_low_soc_threshold: Ratio
     charging_low_soc_threshold: Ratio
     charging_max_search_radius_km: Kilometers
-    base_vehicles_charging_limit: int
+    base_vehicles_charging_limit: Optional[int]
 
 
     @classmethod
