@@ -148,27 +148,36 @@ class TestDispatcher(TestCase):
         self.assertEqual(instructions_map[veh1.id].request_id, 'expensive', 'Should have picked expensive request')
 
     def test_limited_base_charging(self):
+        """
+        tests BaseManagement dispatch Manager can limit actively charging vehicles when saturated
+        and that the lower soc vehicles are prioritized
+        """
         dispatcher = BasicDispatcher(managers=(BaseManagement(base_vehicles_charging_limit=1),))
 
         station = mock_station_from_geoid(chargers=immutables.Map({Charger.LEVEL_2: 2}))
         base = mock_base_from_geoid(stall_count=2, station_id=station.id)
 
+        vid_1 = 'lower_soc_vehicle'
+        vid_2 = 'higher_soc_vehicle'
+
         # both vehicles eligible to charge at base
         close_veh = mock_vehicle_from_geoid(
-            vehicle_id='v1',
+            vehicle_id=vid_1,
             geoid=station.geoid,
             vehicle_state=ReserveBase(
-                vehicle_id='v1',
+                vehicle_id=vid_1,
                 base_id=base.id
-            )
+            ),
+            soc=0.1
         )
         far_veh = mock_vehicle_from_geoid(
-            vehicle_id='v2',
+            vehicle_id=vid_2,
             geoid=station.geoid,
             vehicle_state=ReserveBase(
-                vehicle_id='v2',
+                vehicle_id=vid_2,
                 base_id=base.id
-            )
+            ),
+            soc=0.2
         )
         sim = mock_sim(
             h3_location_res=9,
@@ -184,3 +193,4 @@ class TestDispatcher(TestCase):
 
         self.assertGreaterEqual(len(instructions_map), 1, "Should have generated only one instruction")
         self.assertIsInstance(instruction, ChargeBaseInstruction, "Should have been instructed to charge at base")
+        self.assertEquals(instruction.vehicle_id, vid_1, "should be charging the lower soc vehicle")

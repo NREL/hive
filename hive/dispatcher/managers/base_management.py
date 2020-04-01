@@ -45,9 +45,9 @@ class BaseManagement(NamedTuple, ManagerInterface):
             return bool(isinstance(vehicle.vehicle_state, ReserveBase) and not
                         vehicle.energy_source.is_at_ideal_energy_limit())
 
-        # find vehicles that should charge and sort them by SoC, descending
+        # find vehicles that should charge and sort them by SoC, ascending
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if _should_base_charge(v)]
-        base_charge_vehicles.sort(key=lambda v: -v.energy_source.soc)
+        base_charge_vehicles.sort(key=lambda v: v.energy_source.soc)
 
         # assign as many of these vehicles to charge as possible
         for veh in base_charge_vehicles:
