@@ -28,16 +28,12 @@ class HiveConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
-        io_build = IO.build(d.get('io'))
-        sim_build = Sim.build(d.get('sim'))
-        network_build = Network.build(d.get('network'))
-        dispatcher_build = DispatcherConfig.build(d.get('dispatcher'))
 
         return HiveConfig(
-            io=io_build,
-            sim=sim_build,
-            network=network_build,
-            dispatcher=dispatcher_build,
+            io=IO.build(d.get('io')),
+            sim=Sim.build(d.get('sim')),
+            network=Network.build(d.get('network')),
+            dispatcher=DispatcherConfig.build(d.get('dispatcher')),
             init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
         )
 
