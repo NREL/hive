@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABCMeta
-from typing import Tuple, Optional, NamedTupleMeta
+from typing import Tuple, Optional, NamedTupleMeta, TYPE_CHECKING
 
-from hive.runner.environment import Environment
 from hive.state.entity_state.entity_state import EntityState
 from hive.state.simulation_state import simulation_state_ops
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
+
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
 
 
 class VehicleState(ABCMeta, NamedTupleMeta, EntityState):

@@ -4,6 +4,7 @@ from typing import Dict, Union, Callable
 
 import immutables
 from h3 import h3
+from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
@@ -422,18 +423,16 @@ def mock_config(
         "io": {
             'vehicles_file': '',
             'requests_file': '',
-            'rate_structure_file': '',
             'bases_file': '',
             'stations_file': '',
+            'charging_price_file': 'denver_charging_prices_by_geoid.csv',
+            'rate_structure_file': 'rate_structure.csv',
             'vehicle_types_file': 'default_vehicle_types.csv',
             'geofence_file': 'downtown_denver.geojson',
             'demand_forecast_file': 'nyc_demand.csv'
         },
-        "dispatcher": {
-            'matching_low_soc_threshold': 0.2,
-            'charging_low_soc_threshold': 0.2,
-            'base_vehicles_charging_limit': None,
-        }
+        "network": {},
+        "dispatcher": {}
     })
 
 
@@ -604,16 +603,26 @@ def mock_dispatcher_with_mock_forecast(
     return BasicDispatcher(
         managers=(
             BaseManagement(config.dispatcher.base_vehicles_charging_limit),
-            FleetPosition(mock_forecaster(forecast), config.dispatcher.fleet_sizing_update_interval_seconds),
-            BasicCharging(config.dispatcher.charging_low_soc_threshold),
+            FleetPosition(mock_forecaster(forecast),
+                          config.dispatcher.fleet_sizing_update_interval_seconds),
+            BasicCharging(config.dispatcher.charging_low_soc_threshold,
+                          config.dispatcher.charging_max_search_radius_km),
             GreedyMatcher(config.dispatcher.matching_low_soc_threshold),
         )
     )
 
 
-def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:
-    if config:
-        return Update.build(config, overriding_dispatcher)
+def mock_update(config: Optional[HiveConfig] = None,
+                dispatcher: Optional[DispatcherInterface] = None) -> Update:
+    if config and dispatcher:
+        return Update.build(config, dispatcher)
+    elif config:
+        dispatcher = BasicDispatcher.build(config.io, config.dispatcher)
+        return Update.build(config, dispatcher)
+    elif dispatcher:
+        config = mock_config()
+        return Update.build(config, dispatcher)
     else:
-        dispatcher = BasicDispatcher.build(mock_config())
+        conf = mock_config()
+        dispatcher = BasicDispatcher.build(conf.io, conf.dispatcher)
         return Update((), StepSimulation(dispatcher))

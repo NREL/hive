@@ -47,7 +47,7 @@ def run() -> int:
 
         log.info(f"successfully loaded config: {scenario_file}")
 
-        dispatcher = BasicDispatcher.build(environment.config)
+        dispatcher = BasicDispatcher.build(environment.config.io, environment.config.dispatcher)
         update = Update.build(environment.config, dispatcher)
         initial_payload = RunnerPayload(sim, environment, update)
 

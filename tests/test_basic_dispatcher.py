@@ -46,7 +46,7 @@ class TestBasicDispatcher(TestCase):
 
     def test_charge_vehicle(self):
         # dispatcher = mock_dispatcher_with_mock_forecast()
-        dispatcher = BasicDispatcher(managers=(BasicCharging(low_soc_threshold=0.2),))
+        dispatcher = BasicDispatcher(managers=(BasicCharging(low_soc_threshold=0.2, max_search_radius_km=100),))
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)

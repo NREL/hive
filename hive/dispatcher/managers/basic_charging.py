@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
-from hive.util.units import Ratio
+from hive.util.units import Ratio, Kilometers
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -27,6 +27,7 @@ class BasicCharging(NamedTuple, ManagerInterface):
     A manager that instructs vehicles to charge if they fall below an SOC threshold.
     """
     low_soc_threshold: Ratio
+    max_search_radius_km: Kilometers
 
     def generate_instructions(
             self,
@@ -53,7 +54,7 @@ class BasicCharging(NamedTuple, ManagerInterface):
                                                    entities=simulation_state.stations,
                                                    entity_search=simulation_state.s_search,
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                   max_distance_km=100,
+                                                   max_distance_km=self.max_search_radius_km,
                                                    is_valid=lambda s: s.has_available_charger(Charger.DCFC))
             if nearest_station:
                 instruction = DispatchStationInstruction(
@@ -71,7 +72,7 @@ class BasicCharging(NamedTuple, ManagerInterface):
                 # HIVE based on the RoadNetwork at initialization anyway)
                 # also possible: no charging stations available. implement a queueing solution
                 # for agents who could wait to charge
-                log.warning(f"no open stations found at time {simulation_state.sim_time} for vehicle {veh.id}")
+                log.info(f"no open stations found at time {simulation_state.sim_time} for vehicle {veh.id}")
                 continue
 
         return self, instructions, reports

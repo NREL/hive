@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
-from hive.util.units import Ratio, Seconds
+from hive.util.units import Ratio, Seconds, Kilometers
 
 from hive.config import ConfigBuilder
 
 
 class DispatcherConfig(NamedTuple):
     fleet_sizing_update_interval_seconds: Seconds
-    matching_low_soc_threshold: Optional[Ratio]
-    charging_low_soc_threshold: Optional[Ratio]
-    base_vehicles_charging_limit: Optional[int]
+    matching_low_soc_threshold: Ratio
+    charging_low_soc_threshold: Ratio
+    charging_max_search_radius_km: Kilometers
+    base_vehicles_charging_limit: int
 
 
     @classmethod
@@ -20,6 +21,7 @@ class DispatcherConfig(NamedTuple):
             'fleet_sizing_update_interval_seconds': 60 * 15,
             'matching_low_soc_threshold': 0.2,
             'charging_low_soc_threshold': 0.2,
+            'charging_max_search_radius_km': 100,
             'base_vehicles_charging_limit': None,
         }
 

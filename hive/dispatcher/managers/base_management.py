@@ -3,13 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING, Optional
 
+from hive.dispatcher.instruction.instruction_interface import instruction_to_report
 from hive.dispatcher.instruction.instructions import (
     ChargeBaseInstruction,
     ReserveBase)
-from hive.dispatcher.instruction.instruction_interface import instruction_to_report
 from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.model.energy.charger import Charger
-from hive.state.vehicle_state import ChargingBase
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState

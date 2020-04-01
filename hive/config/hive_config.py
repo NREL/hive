@@ -28,10 +28,10 @@ class HiveConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
-        io_build = IO.build(d['io']) if 'io' in d else None
-        sim_build = Sim.build(d['sim']) if 'sim' in d else None
-        network_build = Network.build(d['network']) if 'network' in d else None
-        dispatcher_build = DispatcherConfig.build(d['dispatcher']) if 'dispatcher' in d else None
+        io_build = IO.build(d.get('io'))
+        sim_build = Sim.build(d.get('sim'))
+        network_build = Network.build(d.get('network'))
+        dispatcher_build = DispatcherConfig.build(d.get('dispatcher'))
 
         return HiveConfig(
             io=io_build,

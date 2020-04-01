@@ -5,7 +5,8 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 import immutables
 from pkg_resources import resource_filename
 
-from hive.config.hive_config import HiveConfig
+from hive.config.io import IO
+from hive.config.dispatcher_config import DispatcherConfig
 from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from hive.dispatcher.forecaster import BasicForecaster
 from hive.dispatcher.managers.base_management import BaseManagement
@@ -27,24 +28,26 @@ class BasicDispatcher(NamedTuple, DispatcherInterface):
     managers: Tuple[ManagerInterface, ...]
 
     @classmethod
-    def build(cls, config: HiveConfig) -> BasicDispatcher:
+    def build(cls, io: IO, dispatcher_config: DispatcherConfig) -> BasicDispatcher:
         """
         builds a basic dispatcher from a config
-        :param config: the scenario config
+        :param io: the IO configuration for this scenario
+        :param dispatcher_config: the dispatcher configuration for this scenario
         :return: a BasicDispatcher
         """
-        demand_forecast_file = resource_filename("hive.resources.demand_forecast", config.io.demand_forecast_file)
+        demand_forecast_file = resource_filename("hive.resources.demand_forecast", io.demand_forecast_file)
 
         # this ordering is important as the later managers will override any instructions from the previous managers
         # for a specific vehicle id.
         managers = (
-            BaseManagement(config.dispatcher.base_vehicles_charging_limit),
+            BaseManagement(dispatcher_config.base_vehicles_charging_limit),
             FleetPosition(
                 demand_forecaster=BasicForecaster.build(demand_forecast_file),
-                update_interval_seconds=config.dispatcher.fleet_sizing_update_interval_seconds
+                update_interval_seconds=dispatcher_config.fleet_sizing_update_interval_seconds
             ),
-            BasicCharging(config.dispatcher.charging_low_soc_threshold),
-            GreedyMatcher(config.dispatcher.matching_low_soc_threshold),
+            BasicCharging(dispatcher_config.charging_low_soc_threshold,
+                          dispatcher_config.charging_max_search_radius_km),
+            GreedyMatcher(dispatcher_config.matching_low_soc_threshold),
         )
         dispatcher = BasicDispatcher(
             managers=managers,
