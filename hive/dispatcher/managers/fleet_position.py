@@ -8,6 +8,7 @@ from h3 import h3
 from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.dispatcher.instruction.instructions import RepositionInstruction, DispatchBaseInstruction
 from hive.state.vehicle_state import *
+from hive.util import Seconds
 from hive.util.helpers import H3Ops
 
 if TYPE_CHECKING:
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from hive.model.roadnetwork.roadnetwork import RoadNetwork
     from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
     from hive.dispatcher.instruction.instruction_interface import Instruction
-    from hive.util.typealiases import Report, GeoId
+    from hive.util.typealiases import Report, GeoId, SimTime
 
 random.seed(123)
 
@@ -24,8 +25,8 @@ class FleetPosition(NamedTuple, ManagerInterface):
     """
     A class that determines where vehicles should be positioned.
     """
-
     demand_forecaster: ForecasterInterface
+    update_interval_seconds: Seconds
 
     @staticmethod
     def _sample_random_location(road_network: RoadNetwork) -> GeoId:
@@ -60,7 +61,7 @@ class FleetPosition(NamedTuple, ManagerInterface):
                    or isinstance(vstate, ServicingTrip)
 
         # only generate instructions in 15 minute intervals
-        if simulation_state.sim_time % (15 * 60) != 0:
+        if simulation_state.sim_time % self.update_interval_seconds != 0:
             return self, (), ()
 
         instructions = ()

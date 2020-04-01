@@ -20,7 +20,7 @@ class Sim(NamedTuple):
     @classmethod
     def default_config(cls) -> Dict:
         return {
-            'timestep_duration_seconds': 1,  # number of seconds per time step in Hive
+            'timestep_duration_seconds': 60,  # number of seconds per time step in Hive
             'sim_h3_resolution': 15,
             'sim_h3_search_resolution': 7,
             'idle_energy_rate': 0.8  # (unit.kilowatthour / unit.hour)

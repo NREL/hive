@@ -44,7 +44,7 @@ class TestLocalSimulationRunner(TestCase):
         config = mock_config()
         env = mock_env(config)
         sim = mock_sim()
-        update = Update((CancelRequests()), StepSimulation(default_dispatcher(config)))
+        update = Update((CancelRequests()), StepSimulation(BasicDispatcher.build(config.io, config.dispatcher)))
         runner_payload = RunnerPayload(sim, env, update)
 
         stepped = LocalSimulationRunner.step(runner_payload)
@@ -55,7 +55,7 @@ class TestLocalSimulationRunner(TestCase):
         config = mock_config(end_time=20, start_time=40, timestep_duration_seconds=1)
         env = mock_env(config)
         sim = mock_sim(sim_time=40)
-        update = Update((CancelRequests()), StepSimulation(default_dispatcher(config)))
+        update = Update((CancelRequests()), StepSimulation(BasicDispatcher.build(config.io, config.dispatcher)))
         runner_payload = RunnerPayload(sim, env, update)
 
         stepped = LocalSimulationRunner.step(runner_payload)
