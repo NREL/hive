@@ -10,10 +10,10 @@ from hive.config.dispatcher_config import DispatcherConfig
 
 
 class HiveConfig(NamedTuple):
-    io: Optional[IO]
-    sim: Optional[Sim]
-    network: Optional[Network]
-    dispatcher: Optional[DispatcherConfig]
+    io: IO
+    sim: Sim
+    network: Network
+    dispatcher: DispatcherConfig
 
     init_time: str
 
