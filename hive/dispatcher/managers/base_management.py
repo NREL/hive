@@ -42,8 +42,7 @@ class BaseManagement(NamedTuple, ManagerInterface):
         reports = ()
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
-            return bool(isinstance(vehicle.vehicle_state, ChargingBase) or
-                        isinstance(vehicle.vehicle_state, ReserveBase) and not
+            return bool(isinstance(vehicle.vehicle_state, ReserveBase) and not
                         vehicle.energy_source.is_at_ideal_energy_limit())
 
         # find vehicles that should charge and sort them by SoC, descending
