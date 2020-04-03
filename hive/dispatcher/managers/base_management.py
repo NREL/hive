@@ -10,11 +10,14 @@ from hive.dispatcher.instruction.instructions import (
 from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.model.energy.charger import Charger
 
+from hive.external.demo_base_target.temp_base_target import BaseTarget
+
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.model.vehicle.vehicle import Vehicle
     from hive.util.typealiases import Report
+
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +27,7 @@ class BaseManagement(NamedTuple, ManagerInterface):
     A manager that instructs vehicles on how to behave at the base
     """
     base_vehicles_charging_limit: Optional[int]
+    base_target: BaseTarget = BaseTarget()
 
     def generate_instructions(
             self,
@@ -42,15 +46,17 @@ class BaseManagement(NamedTuple, ManagerInterface):
 
         def _should_base_charge(vehicle: Vehicle) -> bool:
             return bool(isinstance(vehicle.vehicle_state, ReserveBase) and not
-                        vehicle.energy_source.is_at_ideal_energy_limit())
+            vehicle.energy_source.is_at_ideal_energy_limit())
 
         # find vehicles that should charge and sort them by SoC, ascending
         base_charge_vehicles = [v for v in simulation_state.vehicles.values() if _should_base_charge(v)]
         base_charge_vehicles.sort(key=lambda v: v.energy_source.soc)
 
+        target = self.base_target.get_target(simulation_state.sim_time)
+
         # assign as many of these vehicles to charge as possible
         for veh in base_charge_vehicles:
-            if self.base_vehicles_charging_limit and len(instructions) >= self.base_vehicles_charging_limit:
+            if len(instructions) >= target:
                 break
             base_id = simulation_state.b_locations[veh.geoid]
             base = simulation_state.bases[base_id]
