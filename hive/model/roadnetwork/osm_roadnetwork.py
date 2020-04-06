@@ -242,10 +242,14 @@ class OSMRoadNetwork(RoadNetwork):
         :param geoid: the geoid to test
         :return: True/False
         """
-        if not self.geofence:
-            raise RuntimeError("Geofence not specified.")
-        else:
-            return self.geofence.contains(geoid)
+        return True
+        # TODO: the geofence is slated to be modified and so we're bypassing this check in the meantime.
+        #  we'll need to add it back once we update the geofence implementation.
+
+        # if not self.geofence:
+        #     raise RuntimeError("Geofence not specified.")
+        # else:
+        #     return self.geofence.contains(geoid)
 
     def get_nearest_node(self, lat, lon) -> str:
         node_id = list(self.rtree.nearest((lat, lon, lat, lon), 1))[0]
