@@ -344,7 +344,7 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        sta = mock_station_from_geoid(station_id='s1', geoid=somewhere_else)
+        sta = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
