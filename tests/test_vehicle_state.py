@@ -103,6 +103,32 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in idle state")
         self.assertEquals(updated_station.available_chargers.get(charger), 1, "should have returned the charger")
 
+    def test_charging_station_enter_with_no_station(self):
+        vehicle = mock_vehicle(soc=0.99)
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+
+        state = ChargingStation(vehicle.id, DefaultIds.mock_station_id(), charger)
+        enter_error, sim_with_charging_vehicle = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_charging_station_enter_with_no_vehicle(self):
+        station = mock_station()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            stations=(station,),
+        )
+        env = mock_env()
+
+        state = ChargingStation(DefaultIds.mock_vehicle_id(), DefaultIds.mock_station_id(), charger)
+        enter_error, sim_with_charging_vehicle = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
     ####################################################################################################################
     # ChargingBase #####################################################################################################
     ####################################################################################################################
@@ -207,6 +233,66 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "vehicle should be in ReserveBase state")
         self.assertEquals(updated_base.available_stalls, 0, "should have taken the only available stall")
 
+    def test_charging_base_enter_with_no_base(self):
+        vehicle = mock_vehicle(soc=1.0)
+        station = mock_station()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+        )
+        env = mock_env()
+
+        state = ChargingBase(vehicle.id, DefaultIds.mock_base_id(), charger)
+        enter_error, _ = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_charging_base_enter_with_no_station(self):
+        vehicle = mock_vehicle(soc=1.0)
+        base = mock_base(station_id=DefaultIds.mock_station_id())
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            bases=(base,)
+        )
+        env = mock_env()
+
+        state = ChargingBase(vehicle.id, base.id, charger)
+        enter_error, _ = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_charging_base_enter_with_missing_station_id(self):
+        vehicle = mock_vehicle(soc=1.0)
+        base = mock_base()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            bases=(base,)
+        )
+        env = mock_env()
+
+        state = ChargingBase(vehicle.id, base.id, charger)
+        enter_error, _ = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_charging_base_enter_with_no_vehicle(self):
+        station = mock_station()
+        base = mock_base(station_id=DefaultIds.mock_station_id())
+        charger = Charger.DCFC
+        sim = mock_sim(
+            stations=(station,),
+            bases=(base,)
+        )
+        env = mock_env()
+
+        state = ChargingBase(DefaultIds.mock_vehicle_id(), base.id, charger)
+        enter_error, sim_with_charging_vehicle = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
     ####################################################################################################################
     # DispatchBase #####################################################################################################
     ####################################################################################################################
@@ -296,6 +382,62 @@ class TestVehicleState(TestCase):
         updated_base = sim_updated.bases.get(base.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "vehicle should be in ReserveBase state")
         self.assertEquals(updated_base.available_stalls, 0, "should have taken the only available stall")
+
+    def test_dispatch_base_enter_no_base(self):
+        vehicle = mock_vehicle()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = DispatchBase(vehicle.id, DefaultIds.mock_base_id(), route)
+        enter_error, _ = state.enter(sim, env)
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_dispatch_base_enter_no_vehicle(self):
+        base = mock_base()
+        sim = mock_sim(
+            bases=(base,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = DispatchBase(DefaultIds.mock_vehicle_id(), base.id, route)
+        enter_error, _ = state.enter(sim, env)
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_dispatch_base_enter_route_with_bad_source(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        base = mock_base()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            bases=(base,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(omf_brewing, base.geoid)
+
+        state = DispatchBase(vehicle.id, base.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
+    def test_dispatch_base_enter_route_with_bad_destination(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        base = mock_base()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            bases=(base,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
+
+        state = DispatchBase(vehicle.id, base.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     ####################################################################################################################
     # DispatchStation ##################################################################################################
@@ -396,6 +538,66 @@ class TestVehicleState(TestCase):
                           "should have taken the only available charger")
         self.assertGreater(updated_vehicle.energy_source.soc, initial_soc, "should have charged for one time step")
 
+    def test_dispatch_station_enter_no_station(self):
+        vehicle = mock_vehicle()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = DispatchStation(vehicle.id, DefaultIds.mock_station_id(), route, charger)
+        enter_error, _ = state.enter(sim, env)
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_dispatch_station_enter_no_vehicle(self):
+        station = mock_station()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            stations=(station,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = DispatchStation(DefaultIds.mock_vehicle_id(), station.id, route, charger)
+        enter_error, _ = state.enter(sim, env)
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_dispatch_station_enter_route_with_bad_source(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        station = mock_station()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(omf_brewing, station.geoid)
+
+        state = DispatchStation(vehicle.id, station.id, route, charger)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
+    def test_dispatch_station_enter_route_with_bad_destination(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        station = mock_station()
+        charger = Charger.DCFC
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
+
+        state = DispatchStation(vehicle.id, station.id, route, charger)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
     ####################################################################################################################
     # DispatchTrip #####################################################################################################
     ####################################################################################################################
@@ -419,19 +621,6 @@ class TestVehicleState(TestCase):
         self.assertEquals(updated_request.dispatched_vehicle, vehicle.id, "request should be assigned this vehicle")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
-    def test_dispatch_trip_enter_no_request(self):
-        vehicle = mock_vehicle()
-        request = mock_request()
-        sim = mock_sim(vehicles=(vehicle,))  # request not added to sim
-        env = mock_env()
-        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
-
-        state = DispatchTrip(vehicle.id, request.id, route)
-        error, updated_sim = state.enter(sim, env)
-
-        self.assertIsNone(error, "should have no errors")
-        self.assertIsNone(updated_sim, "no request at location should result in no update to sim")
-
     def test_dispatch_trip_exit(self):
         vehicle = mock_vehicle()
         request = mock_request()
@@ -454,7 +643,7 @@ class TestVehicleState(TestCase):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
-        request = mock_request()
+        request = mock_request_from_geoids(origin=omf_brewing)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
@@ -494,6 +683,60 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "vehicle should be in ServicingTrip state")
         self.assertIn(expected_passengers[0], updated_vehicle.vehicle_state.passengers, "passenger not picked up")
         self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
+
+    def test_dispatch_trip_enter_no_request(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,))  # request not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertIsNone(updated_sim, "no request at location should result in no update to sim")
+
+    def test_dispatch_trip_enter_no_vehicle(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim()  # vehicle not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, updated_sim = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_dispatch_trip_enter_route_with_bad_source(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(omf_brewing, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
+    def test_dispatch_trip_enter_route_with_bad_destination(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     ####################################################################################################################
     # Idle #############################################################################################################
@@ -694,6 +937,7 @@ class TestVehicleState(TestCase):
         state = Repositioning(vehicle.id, route)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+        self.assertIsNotNone(entered_sim, "test precondition (enter works correctly) not met")
 
         update_error, sim_updated = state.update(entered_sim, env)
         self.assertIsNone(update_error, "should have no error from update call")
@@ -701,6 +945,30 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state")
 
+    def test_repositioning_enter_no_vehicle(self):
+        vehicle = mock_vehicle()
+        sim = mock_sim()  # vehicle not added to sim
+        env = mock_env()
+        route = ()
+
+        state = Repositioning(vehicle.id, route)
+        enter_error, updated_sim = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_repositioning_enter_route_with_bad_source(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        sim = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+        route = mock_route_from_geoids(omf_brewing, vehicle.geoid)
+
+        state = Repositioning(vehicle.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state") \
+ \
     ####################################################################################################################
     # ReserveBase ######################################################################################################
     ####################################################################################################################
@@ -758,6 +1026,41 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "should still be in a ReserveBase state")
         self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
 
+    def test_reserve_base_enter_no_base(self):
+        vehicle = mock_vehicle()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = ReserveBase(vehicle.id, DefaultIds.mock_base_id())
+        enter_error, _ = state.enter(sim, env)
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_reserve_base_enter_no_vehicle(self):
+        base = mock_base()
+        sim = mock_sim(
+            bases=(base,),
+        )
+        env = mock_env()
+        route = ()
+
+        state = ReserveBase(DefaultIds.mock_vehicle_id(), base.id)
+        enter_error, _ = state.enter(sim, env)
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_reserve_base_no_stalls_available(self):
+        vehicle = mock_vehicle()
+        base = mock_base(stall_count=0)
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,))
+        env = mock_env()
+
+        state = ReserveBase(vehicle.id, base.id)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "no stall failure should not result in an exception (fail silently)")
+        self.assertIsNone(entered_sim, "no stall failure should result in no SimulationState result")
+
     # def test_reserve_base_update_terminal(self):  # there is no terminal state for OutOfService
 
     ####################################################################################################################
@@ -766,11 +1069,11 @@ class TestVehicleState(TestCase):
 
     def test_servicing_trip_enter(self):
         vehicle = mock_vehicle()
-        request = mock_request()
+        request = mock_request_from_geoids(origin=vehicle.geoid)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
-        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        route = mock_route_from_geoids(vehicle.geoid, request.destination)
 
         state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
         error, updated_sim = state.enter(sim, env)
@@ -858,3 +1161,57 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state")
+
+    def test_servicing_trip_enter_no_request(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,))  # request not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertIsNone(updated_sim, "no request at location should result in no update to sim")
+
+    def test_servicing_trip_enter_no_vehicle(self):
+        vehicle = mock_vehicle()
+        request = mock_request_from_geoids(origin=vehicle.geoid)
+        sim = mock_sim()  # vehicle not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(request.geoid, request.destination)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, updated_sim = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_servicing_trip_enter_route_with_bad_source(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(omf_brewing, request.destination)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, enter_sim = state.enter(sim, env)
+
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
+    def test_servicing_trip_enter_route_with_bad_destination(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle_from_geoid()
+        request = mock_request_from_geoids(origin=vehicle.geoid)
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, omf_brewing)  # request.destination should not be omf brewing co
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")

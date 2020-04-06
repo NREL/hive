@@ -9,7 +9,7 @@ from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.idle import Idle
 from hive.util.exception import SimulationStateError
 
-from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.route import Route, valid_route
 
 from hive.util.typealiases import StationId, VehicleId
 
@@ -27,7 +27,18 @@ class DispatchStation(NamedTuple, VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-        return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+        station = sim.stations.get(self.station_id)
+        vehicle = sim.vehicles.get(self.vehicle_id)
+        if not station:
+            return SimulationStateError(f"station {self.station_id} not found"), None
+        elif not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        else:
+            route_is_valid = valid_route(self.route, vehicle.geoid, station.geoid)
+            if not route_is_valid:
+                return None, None
+            else:
+                return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
     def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim

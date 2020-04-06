@@ -1,7 +1,7 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.passenger import Passenger
-from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.route import Route, valid_route
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import VehicleState
@@ -28,18 +28,22 @@ class ServicingTrip(NamedTuple, VehicleState):
               env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         if not request:
             # request was already picked up
             return None, None
-        if request and request.geoid != vehicle.geoid:
+        elif request and request.geoid != vehicle.geoid:
             locations = f"{request.geoid} != {vehicle.geoid}"
             message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
         else:
+            route_is_valid = valid_route(self.route, request.origin, request.destination)
             # request exists: pick up the trip and enter a ServicingTrip state
             pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, self.request_id)
-
-            if pickup_error:
+            if not route_is_valid:
+                return None, None
+            elif pickup_error:
                 return pickup_error, None
             else:
                 return VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, self)

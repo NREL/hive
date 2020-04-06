@@ -221,6 +221,14 @@ class TupleOps:
     T = TypeVar('T')
 
     @classmethod
+    def is_empty(cls, xs: Tuple[T, ...]) -> bool:
+        return len(xs) == 0
+
+    @classmethod
+    def non_empty(cls, xs: Tuple[T, ...]) -> bool:
+        return not TupleOps.is_empty(xs)
+
+    @classmethod
     def remove(cls, xs: Tuple[T, ...], value: T) -> Tuple[T, ...]:
         removed = tuple(filter(lambda x: x != value, xs))
         if len(removed) == len(xs):
