@@ -1,5 +1,7 @@
 from typing import NamedTuple, Tuple, Optional
 
+import logging
+
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
@@ -13,6 +15,8 @@ from hive.util.typealiases import BaseId, VehicleId
 
 from hive.runner.environment import Environment
 from hive.state.vehicle_state import VehicleState
+
+log = logging.getLogger(__name__)
 
 
 class DispatchBase(NamedTuple, VehicleState):
@@ -57,7 +61,11 @@ class DispatchBase(NamedTuple, VehicleState):
             message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
         else:
-            next_state = ReserveBase(self.vehicle_id, self.base_id) if base.available_stalls > 0 else Idle(self.vehicle_id)
+            if base.available_stalls > 0:
+                next_state = ReserveBase(self.vehicle_id, self.base_id)
+            else:
+                log.debug(f"vehicle {self.vehicle_id} arrived at base {base.id} but no stall available. Going to Idle")
+                next_state = Idle(self.vehicle_id)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None
