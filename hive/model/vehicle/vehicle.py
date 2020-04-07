@@ -160,8 +160,9 @@ class Vehicle(NamedTuple):
 
         if not remaining_route:
             geoid = experienced_route[-1].end
+            link = road_network.link_from_geoid(geoid)
             return less_energy_vehicle._replace(
-                link=road_network.link_from_geoid(geoid),
+                link=link,
                 distance_traveled_km=self.distance_traveled_km + step_distance_km,
             )
         else:
