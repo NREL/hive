@@ -13,7 +13,7 @@ from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
-from hive.dispatcher.instruction_generator.fleet_position_manager import FleetPositionManager
+from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.model.base import Base
@@ -600,7 +600,7 @@ def mock_instruction_generators_with_mock_forecast(
         forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
     return (
         BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
-        FleetPositionManager(mock_forecaster(forecast),
+        PositionFleetManager(mock_forecaster(forecast),
                              config.dispatcher.fleet_sizing_update_interval_seconds),
         ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
                                  config.dispatcher.charging_max_search_radius_km),

@@ -13,7 +13,7 @@ from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from hive.dispatcher.instruction_generator.fleet_position_manager import FleetPositionManager
+from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.model.vehicle import Vehicle
@@ -61,7 +61,7 @@ def run() -> int:
         # instruction generator for a specific vehicle id.
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
-            FleetPositionManager(
+            PositionFleetManager(
                 demand_forecaster=BasicForecaster.build(demand_forecast_file),
                 update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
             ),

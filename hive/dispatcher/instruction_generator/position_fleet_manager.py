@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 random.seed(123)
 
 
-class FleetPositionManager(NamedTuple, InstructionGenerator):
+class PositionFleetManager(NamedTuple, InstructionGenerator):
     """
     A class that determines where vehicles should be positioned.
     """

@@ -65,7 +65,7 @@ class TestInstructionGenerators(TestCase):
                               "Should have instructed vehicle to dispatch to station")
 
     def test_fleet_position_manager(self):
-        fleet_position_manager = FleetPositionManager(mock_forecaster(forecast=1), update_interval_seconds=1)
+        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), update_interval_seconds=1)
 
         # manger will always predict we need 1 activate vehicle. So, we start with one inactive vehicle and see
         # if it is moved to active.
@@ -93,7 +93,7 @@ class TestInstructionGenerators(TestCase):
     def test_fleet_position_manager_deactivates_a_vehicle(self):
         # dispatcher = mock_instruction_generators_with_mock_forecast(forecast=1)
 
-        fleet_position_manager = FleetPositionManager(mock_forecaster(forecast=1), update_interval_seconds=1)
+        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), update_interval_seconds=1)
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
