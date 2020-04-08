@@ -30,26 +30,25 @@ class ChargingBase(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if not possible
         """
-        # ok, we want to enter a charging state.
-        # we attempt to claim a charger from the base of this self.charger type
-        # what if we can't? is that an Exception, or, is that simply rejected?
         base = sim.bases.get(self.base_id)
-        station = sim.stations.get(base.station_id) if base.station_id else None
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
-        if not station:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not base.station_id:
+            return SimulationStateError(f"base {self.base_id} is not co-located with a station"), None
         else:
-            updated_station = station.checkout_charger(self.charger)
-            if not updated_station:
-                log.debug(f"vehicle {self.vehicle_id} attempting to enter ChargingBase but {base.station_id} has no chargers")
-                return None, None
+            station = sim.stations.get(base.station_id) if base.station_id else None
+            if not station:
+                return SimulationStateError(f"station {base.station_id} not found"), None
             else:
-                error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
-                if error:
-                    return error, None
+                updated_station = station.checkout_charger(self.charger)
+                if not updated_station:
+                    return None, None
                 else:
-                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                    error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+                    if error:
+                        return error, None
+                    else:
+                        return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
         Optional[Exception], Optional['SimulationState']]:

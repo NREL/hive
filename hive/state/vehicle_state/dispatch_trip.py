@@ -7,7 +7,7 @@ from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.util.exception import SimulationStateError
 from hive.model.passenger import board_vehicle
-from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.route import Route, valid_route
 
 from hive.util.typealiases import RequestId, VehicleId
 
@@ -39,12 +39,16 @@ class DispatchTrip(NamedTuple, VehicleState):
             # not an error - may have been picked up. fail silently
             return None, None
         else:
-            updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
-            error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
-            if error:
-                return error, None
+            route_is_valid = valid_route(self.route, vehicle.geoid, request.geoid)
+            if not route_is_valid:
+                return None, None
             else:
-                return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
+                error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
+                if error:
+                    return error, None
+                else:
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
