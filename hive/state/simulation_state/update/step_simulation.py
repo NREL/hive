@@ -29,6 +29,8 @@ def step_simulation(simulation_state: SimulationState, env: Environment) -> Simu
             if error:
                 log.error(error)
                 return simulation_state
+            elif not updated_sim:
+                return simulation_state
             else:
                 return updated_sim
 
