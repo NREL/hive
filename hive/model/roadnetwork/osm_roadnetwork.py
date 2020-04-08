@@ -7,14 +7,15 @@ from h3 import h3
 from networkx.classes.multidigraph import MultiDiGraph
 from rtree import index
 
+from hive.external.miniosmnx.core import graph_from_file
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.util import SimTime
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
-from hive.external.miniosmnx.core import graph_from_file
 
 
 class OSMRoadNetwork(RoadNetwork):
@@ -50,7 +51,7 @@ class OSMRoadNetwork(RoadNetwork):
         for nid in self.G.nodes():
             lat = self.G.nodes[nid]['y']
             lon = self.G.nodes[nid]['x']
-            tree.insert(nid, (lat-nudge, lon-nudge, lat+nudge, lon+nudge))
+            tree.insert(nid, (lat - nudge, lon - nudge, lat + nudge, lon + nudge))
 
         return tree
 
@@ -78,7 +79,7 @@ class OSMRoadNetwork(RoadNetwork):
                 attribute_value = data
             else:
                 attribute_value = data[attribute]
-            attribute_values = attribute_values + (attribute_value, )
+            attribute_values = attribute_values + (attribute_value,)
         return attribute_values
 
     def _parse_osm_speed(self, osm_speed: Union[str, list]) -> Kmph:
@@ -134,6 +135,32 @@ class OSMRoadNetwork(RoadNetwork):
 
         return g, geoid_to_node_id
 
+    def _generate_route_start(self, origin_node_id, origin_geoid) -> Route:
+        """
+        Generates the starting link for a case when the origin geoid is not at a node
+
+        :param node_id: the origin node id
+        :return: the starting link of a route
+        """
+        node = self.G.nodes[origin_node_id]
+
+        if origin_geoid == node['geoid']:
+            # we're already there
+            return ()
+
+        link_id = "start-" + str(origin_node_id)
+        distance_km = H3Ops.great_circle_distance(origin_geoid, node['geoid'])
+
+        link = Link(
+            link_id=link_id,
+            start=origin_geoid,
+            end=node['geoid'],
+            distance_km=distance_km,
+            speed_kmph=self.default_speed_kmph,
+        )
+
+        return (link,)
+
     def route(self, origin: GeoId, destination: GeoId) -> Route:
         """
         Returns a route containing road network links between the origin and destination geoids.
@@ -163,21 +190,7 @@ class OSMRoadNetwork(RoadNetwork):
         nx_route = nx.shortest_path(self.G, origin_node, destination_node)
         route_attributes = self._route_attributes(nx_route)
 
-        if len(nx_route) == 1:
-            # special case in which the origin and destination correspond to the same node on the network
-            nid_1 = nx_route[0]
-
-            link = Link(
-                link_id=str(nid_1) + "-" + str(nid_1),
-                start=self.G.nodes[nid_1]['geoid'],
-                end=self.G.nodes[nid_1]['geoid'],
-                distance_km=0,
-                speed_kmph=0,
-            )
-
-            return (link,)
-
-        route = ()
+        route = self._generate_route_start(nx_route[0], origin)
 
         for i in range(len(nx_route) - 1):
             nid_1 = nx_route[i]
@@ -254,4 +267,3 @@ class OSMRoadNetwork(RoadNetwork):
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
         raise NotImplementedError("updates are not implemented")
-
