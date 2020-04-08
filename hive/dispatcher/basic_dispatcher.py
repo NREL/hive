@@ -12,7 +12,6 @@ from hive.dispatcher.forecaster import BasicForecaster
 from hive.dispatcher.managers.base_management import BaseManagement
 from hive.dispatcher.managers.basic_charging import BasicCharging
 from hive.dispatcher.managers.fleet_position import FleetPosition
-from hive.dispatcher.managers.deluxe_manager import DeluxeManager
 from hive.dispatcher.managers.greedy_matching import GreedyMatcher
 from hive.util.helpers import DictOps
 
@@ -41,14 +40,13 @@ class BasicDispatcher(NamedTuple, DispatcherInterface):
         # this ordering is important as the later managers will override any instructions from the previous managers
         # for a specific vehicle id.
         managers = (
-            # BaseManagement(dispatcher_config.base_vehicles_charging_limit),
-            # FleetPosition(
-            #     demand_forecaster=BasicForecaster.build(demand_forecast_file),
-            #     update_interval_seconds=dispatcher_config.fleet_sizing_update_interval_seconds
-            # ),
-            # BasicCharging(dispatcher_config.charging_low_soc_threshold,
-            #               dispatcher_config.charging_max_search_radius_km),
-            DeluxeManager(demand_forecaster=BasicForecaster.build(demand_forecast_file)),
+            BaseManagement(dispatcher_config.base_vehicles_charging_limit),
+            FleetPosition(
+                demand_forecaster=BasicForecaster.build(demand_forecast_file),
+                update_interval_seconds=dispatcher_config.fleet_sizing_update_interval_seconds
+            ),
+            BasicCharging(dispatcher_config.charging_low_soc_threshold,
+                          dispatcher_config.charging_max_search_radius_km),
             GreedyMatcher(dispatcher_config.matching_low_soc_threshold),
         )
         dispatcher = BasicDispatcher(
