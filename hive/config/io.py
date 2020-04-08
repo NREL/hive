@@ -72,26 +72,5 @@ class IO(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> IO:
-        return IO(
-            working_directory=d['working_directory'],
-            vehicles_file=d['vehicles_file'],
-            requests_file=d['requests_file'],
-            bases_file=d['bases_file'],
-            stations_file=d['stations_file'],
-            vehicle_types_file=d['vehicle_types_file'],
-            rate_structure_file=d['rate_structure_file'],
-            charging_price_file=d['charging_price_file'],
-            demand_forecast_file=d['demand_forecast_file'],
-            road_network_file=d['road_network_file'],
-            geofence_file=d['geofence_file'],
+        return IO(**d)
 
-            log_vehicles=d['log_vehicles'],
-            log_requests=d['log_requests'],
-            log_stations=d['log_stations'],
-            log_dispatcher=d['log_dispatcher'],
-            log_manager=d['log_manager'],
-
-            log_period_seconds=d['log_period_seconds'],
-            progress_period_seconds=d['progress_period_seconds'],
-
-        )

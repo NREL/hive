@@ -19,6 +19,5 @@ io:
   log_vehicles: False
   log_requests: False
   log_stations: False
-  log_dispatcher: True
+  log_dispatcher: False
 
-  log_period_seconds: 60

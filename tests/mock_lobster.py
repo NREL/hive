@@ -1,40 +1,47 @@
 import functools as ft
 import math
-from typing import Optional, Dict, NamedTuple, Union
-
-from pkg_resources import resource_filename
+from typing import Dict, Union, Callable
 
 import immutables
 from h3 import h3
+from pkg_resources import resource_filename
+
 from hive.config import HiveConfig
-from hive.dispatcher import default_dispatcher
+from hive.config.dispatcher_config import DispatcherConfig
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
-from hive.dispatcher.manager.fleet_target import FleetStateTarget, StateTarget
-from hive.dispatcher.manager.manager_interface import ManagerInterface
-from hive.model import Base, Station, Vehicle
+from hive.dispatcher.instruction.instructions import *
+from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
+from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
+from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
 from hive.model.energy.energytype import EnergyType
 from hive.model.energy.powercurve import Powercurve
 from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request, RequestRateStructure
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
-from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
-from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.vehicle import VehicleTypesTableBuilder, VehicleType
-from hive.model.vehiclestate import VehicleState
+from hive.model.station import Station
+from hive.model.vehicle import Vehicle
+from hive.model.vehicle import VehicleType
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
-from hive.state.simulation_state import SimulationState
-from hive.state.update.update import Update
-from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers, hours_to_seconds
+from hive.state.simulation_state import simulation_state_ops
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.step_simulation import StepSimulation
+from hive.state.simulation_state.update.update import Update
+from hive.state.vehicle_state import VehicleState, Idle
 from hive.util.helpers import H3Ops
-from hive.state.update.step_simulation import StepSimulation, step_simulation
+from hive.util.typealiases import *
+from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
 
 
 class DefaultIds:
@@ -91,7 +98,7 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
     )
 
 
-def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
+def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
     road_network_file = resource_filename('hive.resources.road_network', 'downtown_denver.xml')
     return OSMRoadNetwork(
         road_network_file=road_network_file,
@@ -254,8 +261,10 @@ def mock_vehicle(
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         operating_cost_km: Currency = 0.1,
+        vehicle_state: Optional[VehicleState] = None,
 
 ) -> Vehicle:
+    state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
@@ -273,7 +282,8 @@ def mock_vehicle(
         powercurve_id=powercurve_id,
         energy_source=energy_source,
         link=link,
-        operating_cost_km=operating_cost_km
+        operating_cost_km=operating_cost_km,
+        vehicle_state=state,
     )
 
 
@@ -288,8 +298,10 @@ def mock_vehicle_from_geoid(
         ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         road_network: RoadNetwork = mock_network(h3_res=15),
-        operating_cost_km: Currency = 0.1
+        operating_cost_km: Currency = 0.1,
+        vehicle_state: Optional[VehicleState] = None
 ) -> Vehicle:
+    state = vehicle_state if vehicle_state else Idle(vehicle_id)
     energy_source = mock_energy_source(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
@@ -306,7 +318,8 @@ def mock_vehicle_from_geoid(
         powercurve_id=powercurve_id,
         energy_source=energy_source,
         link=link,
-        operating_cost_km=operating_cost_km
+        operating_cost_km=operating_cost_km,
+        vehicle_state=state
     )
 
 
@@ -364,20 +377,27 @@ def mock_sim(
         sim_h3_location_resolution=h3_location_res,
         sim_h3_search_resolution=h3_search_res,
     )
-    if isinstance(sim, Exception):
-        raise sim
 
-    sim_v = ft.reduce(lambda s, veh: s.add_vehicle(veh), vehicles, sim) if vehicles else sim
-    if isinstance(sim_v, Exception):
-        raise sim_v
+    def add_or_throw(fn: Callable):
+        """
+        test writers will be told if their added stations, vehicles, or bases are invalid
+        :param fn: the sim add function
+        :return: the updated sim
+        ;raises: Exception when an add fails
+        """
 
-    sim_s = ft.reduce(lambda s, sta: s.add_station(sta), stations, sim_v) if stations else sim_v
-    if isinstance(sim_s, Exception):
-        raise sim_s
+        def _inner(s: SimulationState, to_add):
+            error, result = fn(s, to_add)
+            if error:
+                raise error
+            else:
+                return result
 
-    sim_b = ft.reduce(lambda s, bas: s.add_base(bas), bases, sim_s) if bases else sim_s
-    if isinstance(sim_b, Exception):
-        raise sim_b
+        return _inner
+
+    sim_v = ft.reduce(add_or_throw(simulation_state_ops.add_vehicle), vehicles, sim) if vehicles else sim
+    sim_s = ft.reduce(add_or_throw(simulation_state_ops.add_station), stations, sim_v) if stations else sim_v
+    sim_b = ft.reduce(add_or_throw(simulation_state_ops.add_base), bases, sim_s) if bases else sim_s
 
     return sim_b
 
@@ -401,14 +421,16 @@ def mock_config(
         "io": {
             'vehicles_file': '',
             'requests_file': '',
-            'rate_structure_file': '',
             'bases_file': '',
             'stations_file': '',
+            'charging_price_file': 'denver_charging_prices_by_geoid.csv',
+            'rate_structure_file': 'rate_structure.csv',
             'vehicle_types_file': 'default_vehicle_types.csv',
             'geofence_file': 'downtown_denver.geojson',
             'demand_forecast_file': 'nyc_demand.csv'
-        }
-
+        },
+        "network": {},
+        "dispatcher": {}
     })
 
 
@@ -418,9 +440,9 @@ def mock_env(
         powertrains: Optional[Tuple[Powertrain, ...]] = None
 ) -> Environment:
     if powercurves is None:
-        powercurves = (mock_powercurve(), )
+        powercurves = (mock_powercurve(),)
     if powertrains is None:
-        powertrains = (mock_powertrain(), )
+        powertrains = (mock_powertrain(),)
     vehicle_types = immutables.Map({DefaultIds.mock_vehicle_type_id(): mock_vehicle_type()})
 
     initial_env = Environment(
@@ -494,6 +516,14 @@ def mock_haversine_zigzag_route(
     return ft.reduce(step, range(0, n), ())
 
 
+def mock_route_from_geoids(
+        src: GeoId,
+        dst: GeoId,
+        speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
+    link = Link.build("1", src, dst, speed_kmph=speed_kmph)
+    return link,
+
+
 def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
@@ -553,51 +583,42 @@ def mock_graph_network(links: Optional[Dict[str, Link]] = None, h3_res: int = 15
     return MockGraphNetwork(links, h3_res)
 
 
-def mock_forecaster() -> ForecasterInterface:
+def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     class MockForecaster(NamedTuple, ForecasterInterface):
         def generate_forecast(
                 self,
                 simulation_state: SimulationState
         ) -> Tuple[ForecasterInterface, Forecast]:
-            forecast = Forecast(type=ForecastType.DEMAND, value=1)
-            return self, forecast
+            f = Forecast(type=ForecastType.DEMAND, value=forecast)
+            return self, f
 
     return MockForecaster()
 
 
-def mock_manager(forecaster: ForecasterInterface) -> ManagerInterface:
-    class MockManager(NamedTuple, ManagerInterface):
-        forecaster: ForecasterInterface
-
-        def generate_fleet_target(
-                self,
-                simulation_state: SimulationState
-        ) -> Tuple[ManagerInterface, FleetStateTarget]:
-            active_set = frozenset({
-                VehicleState.IDLE,
-                VehicleState.SERVICING_TRIP,
-                VehicleState.DISPATCH_TRIP,
-                VehicleState.DISPATCH_STATION,
-                VehicleState.CHARGING_STATION,
-                VehicleState.REPOSITIONING,
-            })
-
-            _, future_demand = self.forecaster.generate_forecast(simulation_state)
-
-            active_target = StateTarget(id='ACTIVE',
-                                        state_set=active_set,
-                                        n_vehicles=future_demand.value)
-
-            fleet_state_target = immutables.Map({active_target.id: active_target})
-
-            return self, fleet_state_target
-
-    return MockManager(forecaster=forecaster)
+def mock_instruction_generators_with_mock_forecast(
+        config: HiveConfig = mock_config(),
+        forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
+    return (
+        BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
+        PositionFleetManager(mock_forecaster(forecast),
+                             config.dispatcher.fleet_sizing_update_interval_seconds),
+        ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
+                                 config.dispatcher.charging_max_search_radius_km),
+        Dispatcher(config.dispatcher.matching_low_soc_threshold),
+    )
 
 
-def mock_update(config: Optional[HiveConfig] = None, overriding_dispatcher=None) -> Update:
-    if config:
-        return Update.build(config, overriding_dispatcher)
+def mock_update(config: Optional[HiveConfig] = None,
+                instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None) -> Update:
+    if config and instruction_generators:
+        return Update.build(config.io, instruction_generators)
+    elif config:
+        instruction_generators = mock_instruction_generators_with_mock_forecast(config)
+        return Update.build(config.io, instruction_generators)
+    elif instruction_generators:
+        config = mock_config()
+        return Update.build(config.io, instruction_generators)
     else:
-        dispatcher = default_dispatcher(mock_config())
-        return Update((), StepSimulation(dispatcher))
+        conf = mock_config()
+        instruction_generators = mock_instruction_generators_with_mock_forecast(conf)
+        return Update((), StepSimulation(instruction_generators))

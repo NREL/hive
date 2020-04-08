@@ -1,4 +1,4 @@
-from typing import Optional, Union, NamedTuple
+from typing import Optional, Union, NamedTuple, Tuple
 
 from hive.model.roadnetwork.link import Link
 from hive.util.helpers import H3Ops
@@ -22,13 +22,12 @@ class LinkTraversal(NamedTuple):
 
 
 def traverse_up_to(link: Link,
-                   available_time_seconds: Seconds) -> Union[Exception, LinkTraversal]:
+                   available_time_seconds: Seconds) -> Tuple[Optional[Exception], Optional[LinkTraversal]]:
     """
     using the ground truth road network, and some agent Link traversal, attempt to traverse
     the link, based on travel time calculations from the Link's PropertyLink attributes.
 
-    :param road_network: the road network
-    :param property_link: the plan the agent has to traverse a subset of a road network link
+    :param link: the plan the agent has to traverse a subset of a road network link
     :param available_time_seconds: the remaining time the agent has in this time step
     :return: the updated traversal, or, an exception.
              on update, if there is any remaining traversal, return an updated Link.
@@ -37,23 +36,25 @@ def traverse_up_to(link: Link,
              if there was any error, return the exception instead.
     """
     if link is None:
-        return AttributeError(f"attempting to traverse link {link.link_id} which does not exist")
+        return AttributeError(f"attempting to traverse link {link.link_id} which does not exist"), None
     elif link.start == link.end:
         # already done!
-        return LinkTraversal(
+        result = LinkTraversal(
             traversed=None,
             remaining=None,
             remaining_time_seconds=available_time_seconds
         )
+        return None, result
     else:
         # traverse up to available_time_hours across this link
         if link.travel_time_seconds <= available_time_seconds:
             # we can complete this link, so we return (remaining) Link = None
-            return LinkTraversal(
+            result = LinkTraversal(
                 traversed=link,
                 remaining=None,
                 remaining_time_seconds=(available_time_seconds - link.travel_time_seconds)
             )
+            return None, result
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
             # leaving no remaining time.
@@ -65,9 +66,10 @@ def traverse_up_to(link: Link,
             traversed = Link.build(link.link_id, link.start, mid_geoid, speed_kmph=link.speed_kmph)
             remaining = Link.build(link.link_id, mid_geoid, link.end, speed_kmph=link.speed_kmph)
 
-            return LinkTraversal(
+            result = LinkTraversal(
                 traversed=traversed,
                 remaining=remaining,
                 remaining_time_seconds=0,
             )
+            return None, result
 

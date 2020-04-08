@@ -54,10 +54,11 @@ HIVE has four major dependencies. Uber H3 is a geospatial index which HIVE uses 
 
 Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/). See [this link](https://github.com/uber/h3-py#installing-on-windows) for windows installation instructions.
 
-While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Osmnx is being used to interact with open street maps.
+While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Pandas is being used to interact with open street maps. Rtree is used for quick node lookup on the road network
 
 - [numpy](https://www.numpy.org/)
-- [osmnx](https://github.com/gboeing/osmnx)
+- [pandas](https://pandas.pydata.org/)
+- [rtree](https://pypi.org/project/Rtree/)
 
 ## Setup
 
@@ -65,11 +66,15 @@ HIVE is currently available on [github.nrel.gov](github.nrel.gov). You must be c
 
     > git clone https://github.nrel.gov/MBAP/hive
 
-Installing can be completed either using [pip](https://pypi.org/project/pip/) or by running python at the command line:
+Installing can be completed either using [pip](https://pypi.org/project/pip/) and [conda](https://www.anaconda.com/) or by running python at the command line:
 
-#### install and run via pip
+#### install and run via pip/conda
 
-to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
+first, create a new conda environment running:
+
+    > conda env create -f <path/to/hive>/environment.yml
+
+then, to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
 
     > python -m pip install -e <path/to/hive>
 

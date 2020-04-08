@@ -1,13 +1,13 @@
 import logging
 import os
-from datetime import datetime
 from typing import Tuple
 
 import yaml
-from hive.runner import Environment
-from hive.state import SimulationState
+
 from hive.config import HiveConfig
-from hive.state import initialize_simulation
+from hive.runner.environment import Environment
+from hive.state.simulation_state.initialize_simulation import initialize_simulation
+from hive.state.simulation_state.simulation_state import SimulationState
 
 run_log = logging.getLogger(__name__)
 
@@ -28,11 +28,9 @@ def load_simulation(scenario_file_path: str) -> Tuple[SimulationState, Environme
         run_log.exception("attempted to load scenario config file but failed")
         raise e
 
-    run_name = config.sim.sim_name + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    sim_output_dir = os.path.join(config.io.working_directory, run_name)
-    if not os.path.isdir(sim_output_dir):
-        os.makedirs(sim_output_dir)
+    if not os.path.isdir(config.output_directory):
+        os.makedirs(config.output_directory)
 
-    simulation_state, environment = initialize_simulation(config, sim_output_dir)
+    simulation_state, environment = initialize_simulation(config)
 
     return simulation_state, environment

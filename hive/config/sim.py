@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union
+from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import ConfigBuilder
 from hive.util.typealiases import SimTime
@@ -15,23 +15,24 @@ class Sim(NamedTuple):
     end_time: SimTime
     sim_h3_resolution: int
     sim_h3_search_resolution: int
+    idle_energy_rate: float
 
     @classmethod
     def default_config(cls) -> Dict:
         return {
-            'timestep_duration_seconds': 1,  # number of seconds per time step in Hive
+            'timestep_duration_seconds': 60,  # number of seconds per time step in Hive
             'sim_h3_resolution': 15,
             'sim_h3_search_resolution': 7,
-            'date_format': None,
+            'idle_energy_rate': 0.8  # (unit.kilowatthour / unit.hour)
         }
 
     @classmethod
-    def required_config(cls) -> Dict[str, type]:
-        return {
-            'sim_name': str,
-            'start_time': (str, int),
-            'end_time': (str, int),
-        }
+    def required_config(cls) -> Tuple[str, ...]:
+        return (
+            'sim_name',
+            'start_time',
+            'end_time',
+        )
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[IOError, Sim]:
@@ -59,4 +60,6 @@ class Sim(NamedTuple):
             end_time=end_time,
             sim_h3_resolution=d['sim_h3_resolution'],
             sim_h3_search_resolution=d['sim_h3_search_resolution'],
+            idle_energy_rate=d['idle_energy_rate'],
         )
+

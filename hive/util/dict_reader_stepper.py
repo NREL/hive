@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from typing import Iterator, Dict, Union, TextIO, Optional, Callable
+from typing import Iterator, Dict, Union, TextIO, Optional, Callable, Tuple
 
 
 class DictReaderIterator:
@@ -91,7 +91,7 @@ class DictReaderStepper:
                   step_column_name: str,
                   initial_stop_condition: Callable = lambda x: x < 0,
                   parser: Callable = lambda x: x,
-                  ) -> Union[Exception, DictReaderStepper]:
+                  ) -> Tuple[Optional[Exception], Optional[DictReaderStepper]]:
         """
         alternative constructor that takes a file path and returns a DictReaderStepper, or, a failure
         :param file: the file path
@@ -103,9 +103,9 @@ class DictReaderStepper:
         """
         try:
             f = open(file, 'r')
-            return cls(csv.DictReader(f), f, step_column_name, initial_stop_condition, parser)
+            return None, cls(csv.DictReader(f), f, step_column_name, initial_stop_condition, parser)
         except Exception as e:
-            return e
+            return e, None
 
     @classmethod
     def from_iterator(cls,

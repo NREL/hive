@@ -3,9 +3,13 @@ channels:
   - defaults
 dependencies:
   - python=3.8
-  - osnmx=0.11
+  - immutables
+  - numpy
+  - networkx
+  - pandas
+  - pip
+  - PyYAML
+  - rtree
   - pip:
-    - h3==3.4.3
-    - PyYAML==5.1
-    - numpy==1.17
-    - immutables==0.11
+      - cmake
+      - h3

@@ -34,9 +34,10 @@ class GeoFence(NamedTuple):
         )
 
     def contains(self, geoid: GeoId) -> bool:
-        geoid_res = h3.h3_get_resolution(geoid)
-        if geoid_res < self.h3_resolution:
-            raise H3Error('geofence resolution must be less than geoid resolution')
-
-        parent_geoid = h3.h3_to_parent(geoid, self.h3_resolution)
-        return parent_geoid in self.geofence_set
+        raise NotImplementedError("GeoFence is under construction, please don't use this method.")
+        # geoid_res = h3.h3_get_resolution(geoid)
+        # if geoid_res < self.h3_resolution:
+        #     raise H3Error('geofence resolution must be less than geoid resolution')
+        #
+        # parent_geoid = h3.h3_to_parent(geoid, self.h3_resolution)
+        # return parent_geoid in self.geofence_set

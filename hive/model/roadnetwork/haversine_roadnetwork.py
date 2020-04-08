@@ -6,6 +6,7 @@ from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.geofence import GeoFence
+from hive.util import SimTime
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
 from hive.util.helpers import H3Ops
 from hive.util.units import Kilometers, hours_to_seconds
@@ -78,7 +79,15 @@ class HaversineRoadNetwork(RoadNetwork):
         )
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
-        if not self.geofence:
-            raise RuntimeError("Geofence not specified.")
-        else:
-            return self.geofence.contains(geoid)
+        return True
+        # TODO: the geofence is slated to be modified and so we're bypassing this check in the meantime.
+        #  we'll need to add it back once we update the geofence implementation.
+
+        # if not self.geofence:
+        #     raise RuntimeError("Geofence not specified.")
+        # else:
+        #     return self.geofence.contains(geoid)
+
+    def update(self, sim_time: SimTime) -> RoadNetwork:
+        raise NotImplementedError("updates are not implemented")
+
