@@ -11,22 +11,22 @@ if TYPE_CHECKING:
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 
-class ManagerInterface(metaclass=ABCNamedTupleMeta):
+class InstructionGenerator(metaclass=ABCNamedTupleMeta):
     """
-    A class that computes an optimal fleet state.
+    A module that produces a set of vehicle instructions based on the state of the simulation
     """
 
     @abstractmethod
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[ManagerInterface, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
-        Generate fleet targets for the dispatcher to execute based on the simulation state.
+        generates vehicle instructions which can perform vehicle state transitions
+        based on some objective
 
         :param simulation_state: The current simulation state
-        :param previous_instructions: instructions from previous modules
 
-        :return: the updated Manager along with fleet targets and reports
+        :return: the updated InstructionGenerator along with generated instructions and any reports
         """
         pass

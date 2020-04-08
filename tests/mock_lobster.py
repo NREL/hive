@@ -4,20 +4,18 @@ from typing import Dict, Union, Callable
 
 import immutables
 from h3 import h3
-from hive.dispatcher.dispatcher_interface import DispatcherInterface
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
 from hive.config.dispatcher_config import DispatcherConfig
-from hive.dispatcher.basic_dispatcher import BasicDispatcher
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
-from hive.dispatcher.managers.basic_charging import BasicCharging
-from hive.dispatcher.managers.base_management import BaseManagement
-from hive.dispatcher.managers.fleet_position import FleetPosition
-from hive.dispatcher.managers.greedy_matching import GreedyMatcher
-from hive.dispatcher.managers.manager_interface import ManagerInterface
+from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
+from hive.dispatcher.instruction_generator.fleet_position_manager import FleetPositionManager
+from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -597,32 +595,30 @@ def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     return MockForecaster()
 
 
-def mock_dispatcher_with_mock_forecast(
+def mock_instruction_generators_with_mock_forecast(
         config: HiveConfig = mock_config(),
-        forecast: int = 1) -> BasicDispatcher:
-    return BasicDispatcher(
-        managers=(
-            BaseManagement(config.dispatcher.base_vehicles_charging_limit),
-            FleetPosition(mock_forecaster(forecast),
-                          config.dispatcher.fleet_sizing_update_interval_seconds),
-            BasicCharging(config.dispatcher.charging_low_soc_threshold,
-                          config.dispatcher.charging_max_search_radius_km),
-            GreedyMatcher(config.dispatcher.matching_low_soc_threshold),
-        )
+        forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
+    return (
+        BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
+        FleetPositionManager(mock_forecaster(forecast),
+                             config.dispatcher.fleet_sizing_update_interval_seconds),
+        ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
+                                 config.dispatcher.charging_max_search_radius_km),
+        Dispatcher(config.dispatcher.matching_low_soc_threshold),
     )
 
 
 def mock_update(config: Optional[HiveConfig] = None,
-                dispatcher: Optional[DispatcherInterface] = None) -> Update:
-    if config and dispatcher:
-        return Update.build(config, dispatcher)
+                instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None) -> Update:
+    if config and instruction_generators:
+        return Update.build(config.io, instruction_generators)
     elif config:
-        dispatcher = BasicDispatcher.build(config.io, config.dispatcher)
-        return Update.build(config, dispatcher)
-    elif dispatcher:
+        instruction_generators = mock_instruction_generators_with_mock_forecast(config)
+        return Update.build(config.io, instruction_generators)
+    elif instruction_generators:
         config = mock_config()
-        return Update.build(config, dispatcher)
+        return Update.build(config.io, instruction_generators)
     else:
         conf = mock_config()
-        dispatcher = BasicDispatcher.build(conf.io, conf.dispatcher)
-        return Update((), StepSimulation(dispatcher))
+        instruction_generators = mock_instruction_generators_with_mock_forecast(conf)
+        return Update((), StepSimulation(instruction_generators))

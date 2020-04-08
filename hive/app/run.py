@@ -7,7 +7,13 @@ import sys
 import time
 from typing import NamedTuple
 
-from hive.dispatcher.basic_dispatcher import BasicDispatcher
+from pkg_resources import resource_filename
+
+from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
+from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
+from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
+from hive.dispatcher.instruction_generator.fleet_position_manager import FleetPositionManager
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.model.vehicle import Vehicle
@@ -38,18 +44,34 @@ def run() -> int:
         cwd = os.getcwd()
         scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
 
-        sim, environment = load_simulation(scenario_path)
+        sim, env = load_simulation(scenario_path)
 
-        log_fh = logging.FileHandler(os.path.join(environment.config.output_directory, 'run.log'))
+        log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
         formatter = logging.Formatter(LOGGING_CONFIG['formatters']['simple']['format'])
         log_fh.setFormatter(formatter)
         root_log.addHandler(log_fh)
 
         log.info(f"successfully loaded config: {scenario_file}")
 
-        dispatcher = BasicDispatcher.build(environment.config.io, environment.config.dispatcher)
-        update = Update.build(environment.config, dispatcher)
-        initial_payload = RunnerPayload(sim, environment, update)
+        # dispatcher = BasicDispatcher.build(environment.config.io, environment.config.dispatcher)
+
+        demand_forecast_file = resource_filename("hive.resources.demand_forecast", env.config.io.demand_forecast_file)
+
+        # this ordering is important as the later managers will override any instructions from the previous
+        # instruction generator for a specific vehicle id.
+        instruction_generators = (
+            BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
+            FleetPositionManager(
+                demand_forecaster=BasicForecaster.build(demand_forecast_file),
+                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
+            ),
+            ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
+                                 env.config.dispatcher.charging_max_search_radius_km),
+            Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
+        )
+
+        update = Update.build(env.config.io, instruction_generators)
+        initial_payload = RunnerPayload(sim, env, update)
 
         start = time.time()
         sim_result = LocalSimulationRunner.run(initial_payload)
@@ -60,7 +82,7 @@ def run() -> int:
 
         _summary_stats(sim_result.s)
 
-        environment.reporter.sim_log_file.close()
+        env.reporter.sim_log_file.close()
 
         return 0
 
