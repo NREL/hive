@@ -26,7 +26,22 @@ log = logging.getLogger(__name__)
 
 class DeluxeFleetManager(NamedTuple, InstructionGenerator):
     """
-    A manager that instructs vehicles on how to behave at the base
+    The deluxe fleet manager combines the objectives of meeting a base charging target and meeting an
+    active vehicle target.
+
+    At each timestep, the manager attempts to balance the number of active vehicles and base charging vehicles:
+     - If there are too many active vehicles, the vehicles return to base and join the reserves.
+     - If there are not enough active vehicles, the manager randomly repositions the base vehicles choosing those with
+        the highest SOC first.
+     - If there are not enough vehicles charging, the manager pull vehicles from the reserves to charge.
+     - If there are too many vehicles charging, the manager instructs chargings vehicles to join the reserves.
+
+    TODO: this model could benefit from considering the active vehicles and the base vehicles together when making
+      decisions. For example, when trying to charge vehicles, the model could first check the reserves and then, if
+      there are not enough vehicles to meet the target, it could consider active vehicles.
+
+    TODO: we should add a target for vehicles charging at a fast charge station. This will get us close to demoing
+      a smart charging scenario.
     """
     demand_forecaster: ForecasterInterface
     base_target: BaseTarget = BaseTarget()
