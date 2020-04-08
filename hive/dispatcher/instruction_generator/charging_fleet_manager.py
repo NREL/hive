@@ -72,7 +72,7 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
                 # HIVE based on the RoadNetwork at initialization anyway)
                 # also possible: no charging stations available. implement a queueing solution
                 # for agents who could wait to charge
-                log.info(f"no open stations found at time {simulation_state.sim_time} for vehicle {veh.id}")
+                log.debug(f"no open stations found at time {simulation_state.sim_time} for vehicle {veh.id}")
                 continue
 
         return self, instructions, reports

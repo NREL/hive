@@ -3,9 +3,9 @@ from typing import Tuple, Optional, NamedTuple
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
+from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import charge
-from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId
 
@@ -47,7 +47,8 @@ class ChargingBase(NamedTuple, VehicleState):
                     else:
                         return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
     def exit(self,
