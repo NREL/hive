@@ -10,13 +10,13 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.util.typealiases import Report, SimTime
 
-from hive.dispatcher.managers.manager_interface import ManagerInterface
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
 from hive.state.vehicle_state import Idle, Repositioning
 from hive.util.helpers import H3Ops
 
 
-class GreedyMatcher(NamedTuple, ManagerInterface):
+class Dispatcher(NamedTuple, InstructionGenerator):
     """
     A managers algorithm that assigns vehicles greedily to most expensive request.
     """
@@ -34,7 +34,7 @@ class GreedyMatcher(NamedTuple, ManagerInterface):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[GreedyMatcher, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[Dispatcher, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 

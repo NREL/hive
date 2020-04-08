@@ -8,8 +8,8 @@ from hive.dispatcher.instruction.instructions import (
     ChargeBaseInstruction,
     ReserveBaseInstruction,
 )
-from hive.dispatcher.managers.manager_interface import ManagerInterface
 from hive.external.demo_base_target.temp_base_target import BaseTarget
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.model.energy.charger import Charger
 from hive.state.vehicle_state import (
     ReserveBase,
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class BaseManagement(NamedTuple, ManagerInterface):
+class BaseFleetManager(NamedTuple, InstructionGenerator):
     """
     A manager that instructs vehicles on how to behave at the base
     """
@@ -34,7 +34,7 @@ class BaseManagement(NamedTuple, ManagerInterface):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[BaseManagement, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[BaseFleetManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 

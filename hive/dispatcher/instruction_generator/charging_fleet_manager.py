@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.util.typealiases import Report
 
-from hive.dispatcher.managers.manager_interface import ManagerInterface
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instruction_interface import instruction_to_report
 from hive.dispatcher.instruction.instructions import (
     DispatchStationInstruction
@@ -22,7 +22,7 @@ from hive.util.helpers import H3Ops
 log = logging.getLogger(__name__)
 
 
-class BasicCharging(NamedTuple, ManagerInterface):
+class ChargingFleetManager(NamedTuple, InstructionGenerator):
     """
     A manager that instructs vehicles to charge if they fall below an SOC threshold.
     """
@@ -32,7 +32,7 @@ class BasicCharging(NamedTuple, ManagerInterface):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[BasicCharging, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[ChargingFleetManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 

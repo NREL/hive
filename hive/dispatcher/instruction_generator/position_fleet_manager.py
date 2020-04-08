@@ -6,7 +6,7 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 from h3 import h3
 
 from hive.dispatcher.instruction_generator_ops import send_vehicle_to_field, return_to_base
-from hive.dispatcher.managers.manager_interface import ManagerInterface
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.vehicle_state import *
 from hive.util import Seconds
 
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 random.seed(123)
 
 
-class FleetPosition(NamedTuple, ManagerInterface):
+class PositionFleetManager(NamedTuple, InstructionGenerator):
     """
     A class that determines where vehicles should be positioned.
     """
@@ -36,7 +36,7 @@ class FleetPosition(NamedTuple, ManagerInterface):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[ManagerInterface, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
