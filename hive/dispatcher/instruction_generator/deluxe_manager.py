@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
-from hive.dispatcher.managers.manager_interface import ManagerInterface
-from hive.dispatcher.instruction_generator_ops import (
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from hive.dispatcher.instruction_generator.instruction_generator_ops import (
     return_to_base,
     set_to_reserve,
     charge_at_base,
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class DeluxeManager(NamedTuple, ManagerInterface):
+class DeluxeManager(NamedTuple, InstructionGenerator):
     """
     A manager that instructs vehicles on how to behave at the base
     """

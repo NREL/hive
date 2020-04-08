@@ -5,7 +5,7 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from h3 import h3
 
-from hive.dispatcher.instruction_generator_ops import send_vehicle_to_field, return_to_base
+from hive.dispatcher.instruction_generator.instruction_generator_ops import send_vehicle_to_field, return_to_base
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.vehicle_state import *
 from hive.util import Seconds
