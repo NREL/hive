@@ -1,4 +1,3 @@
-import logging
 from typing import Tuple, Optional, NamedTuple
 
 from hive.model.energy.charger import Charger
@@ -9,8 +8,6 @@ from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId
-
-log = logging.getLogger(__name__)
 
 
 class ChargingBase(NamedTuple, VehicleState):

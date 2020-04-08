@@ -1,23 +1,16 @@
 from typing import NamedTuple, Tuple, Optional
 
-import logging
-
+from hive.model.roadnetwork.route import Route, valid_route
+from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
+from hive.state.vehicle_state import VehicleState
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.reserve_base import ReserveBase
-from hive.util import TupleOps
 from hive.util.exception import SimulationStateError
-
-from hive.model.roadnetwork.route import Route, valid_route
-
 from hive.util.typealiases import BaseId, VehicleId
 
-from hive.runner.environment import Environment
-from hive.state.vehicle_state import VehicleState
-
-log = logging.getLogger(__name__)
 
 
 class DispatchBase(NamedTuple, VehicleState):
@@ -25,10 +18,12 @@ class DispatchBase(NamedTuple, VehicleState):
     base_id: BaseId
     route: Route
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not base:
@@ -76,7 +71,6 @@ class DispatchBase(NamedTuple, VehicleState):
             if base.available_stalls > 0:
                 next_state = ReserveBase(self.vehicle_id, self.base_id)
             else:
-                log.debug(f"vehicle {self.vehicle_id} arrived at base {base.id} but no stall available. Going to Idle")
                 next_state = Idle(self.vehicle_id)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
