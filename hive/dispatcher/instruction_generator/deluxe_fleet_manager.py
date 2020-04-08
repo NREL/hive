@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class DeluxeManager(NamedTuple, InstructionGenerator):
+class DeluxeFleetManager(NamedTuple, InstructionGenerator):
     """
     A manager that instructs vehicles on how to behave at the base
     """
@@ -34,7 +34,7 @@ class DeluxeManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[DeluxeManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[DeluxeFleetManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
