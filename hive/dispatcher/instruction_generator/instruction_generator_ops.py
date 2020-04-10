@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 import random
-from typing import List
+from typing import Tuple
 
 import immutables
 from h3 import h3
@@ -70,7 +70,7 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     return result
 
 
-def return_to_base(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def return_to_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles back to the base
 
@@ -81,8 +81,6 @@ def return_to_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     """
 
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -106,7 +104,7 @@ def return_to_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     return instructions
 
 
-def set_to_reserve(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def set_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to reserve at the base
 
@@ -116,8 +114,6 @@ def set_to_reserve(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     :return:
     """
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc, reverse=True)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -134,7 +130,7 @@ def set_to_reserve(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     return instructions
 
 
-def charge_at_base(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def charge_at_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -144,8 +140,6 @@ def charge_at_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     :return:
     """
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -164,7 +158,7 @@ def charge_at_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     return instructions
 
 
-def charge_at_station(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def charge_at_station(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -174,8 +168,6 @@ def charge_at_station(n: int, vehicles: List[Vehicle], simulation_state: Simulat
     :return:
     """
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -199,7 +191,7 @@ def charge_at_station(n: int, vehicles: List[Vehicle], simulation_state: Simulat
     return instructions
 
 
-def sit_idle(n: int, vehicles: List[Vehicle]) -> Tuple[Instruction]:
+def sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to sit idle
 
@@ -208,8 +200,6 @@ def sit_idle(n: int, vehicles: List[Vehicle]) -> Tuple[Instruction]:
     :return:
     """
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc, reverse=True)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -223,7 +213,7 @@ def sit_idle(n: int, vehicles: List[Vehicle]) -> Tuple[Instruction]:
     return instructions
 
 
-def send_vehicle_to_field(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def send_vehicle_to_field(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles into the field at a random location
 
@@ -239,8 +229,6 @@ def send_vehicle_to_field(n: int, vehicles: List[Vehicle], simulation_state: Sim
         return children.pop()
 
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc, reverse=True)
 
     for veh in vehicles:
         if len(instructions) >= n:

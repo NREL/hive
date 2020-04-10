@@ -18,6 +18,7 @@ from hive.state.vehicle_state import (
 )
 
 if TYPE_CHECKING:
+    from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.util.typealiases import Report
@@ -59,30 +60,48 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
         """
         instructions = ()
 
-        if simulation_state.sim_time % (10*60) != 0:
+        if simulation_state.sim_time % (10 * 60) != 0:
             # only try to manage fleet at 10 minute intervals
             return self, instructions, ()
 
-        def is_active(vstate: VehicleState) -> bool:
-            return isinstance(vstate, Idle) or \
-                   isinstance(vstate, Repositioning) or \
-                   isinstance(vstate, DispatchTrip) or \
-                   isinstance(vstate, ServicingTrip)
+        def is_active(v: Vehicle) -> bool:
+            return isinstance(v.vehicle_state, Idle) or \
+                   isinstance(v.vehicle_state, Repositioning) or \
+                   isinstance(v.vehicle_state, DispatchTrip) or \
+                   isinstance(v.vehicle_state, ServicingTrip)
 
-        def is_active_ready(vstate: VehicleState) -> bool:
-            return isinstance(vstate, Idle) or \
-                   isinstance(vstate, Repositioning)
+        def is_active_ready(v: Vehicle) -> bool:
+            return isinstance(v.vehicle_state, Idle) or \
+                   isinstance(v.vehicle_state, Repositioning)
 
-        base_charge_vehicles = [v for v in simulation_state.vehicles.values()
-                                if isinstance(v.vehicle_state, ChargingBase)]
-        station_charge_vehicles = [v for v in simulation_state.vehicles.values()
-                                   if isinstance(v.vehicle_state, ChargingStation)]
-        reserve_vehicles = [v for v in simulation_state.vehicles.values()
-                            if isinstance(v.vehicle_state, ReserveBase)]
-        active_vehicles = [v for v in simulation_state.vehicles.values()
-                           if is_active(v.vehicle_state)]
-        active_ready_vehicles = [v for v in simulation_state.vehicles.values()
-                                 if is_active_ready(v.vehicle_state)]
+        base_charge_vehicles = simulation_state.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            sort_reversed=True,
+            filter_function=lambda v: isinstance(v.vehicle_state, ChargingBase)
+        )
+        station_charge_vehicles = simulation_state.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            sort_reversed=True,
+            filter_function=lambda v: isinstance(v.vehicle_state, ChargingStation)
+        )
+        reserve_vehicles = simulation_state.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase)
+        )
+        active_vehicles = simulation_state.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            sort_reversed=True,
+            filter_function=is_active,
+        )
+        active_ready_vehicles = simulation_state.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            filter_function=is_active_ready,
+        )
 
         n_base_charging = len(base_charge_vehicles)
         n_station_charging = len(station_charge_vehicles)

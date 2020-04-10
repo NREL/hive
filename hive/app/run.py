@@ -61,14 +61,14 @@ def run() -> int:
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
-            # BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
-            # PositionFleetManager(
-            #     demand_forecaster=BasicForecaster.build(demand_forecast_file),
-            #     update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
-            # ),
-            # ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
-            #                      env.config.dispatcher.charging_max_search_radius_km),
-            DeluxeFleetManager(),
+            BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
+            PositionFleetManager(
+                demand_forecaster=BasicForecaster.build(demand_forecast_file),
+                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
+            ),
+            ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
+                                 env.config.dispatcher.charging_max_search_radius_km),
+            # DeluxeFleetManager(),
             Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
         )
 

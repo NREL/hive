@@ -40,10 +40,10 @@ class SimulationState(NamedTuple):
     vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
-    station_iterator: Tuple[Station, ...] = ()
-    base_iterator: Tuple[Base, ...] = ()
-    vehicle_iterator: Tuple[Vehicle, ...] = ()
-    request_iterator: Tuple[Request, ...] = ()
+    station_iterator: Tuple[StationId, ...] = ()
+    base_iterator: Tuple[BaseId, ...] = ()
+    vehicle_iterator: Tuple[VehicleId, ...] = ()
+    request_iterator: Tuple[RequestId, ...] = ()
 
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
@@ -74,15 +74,16 @@ class SimulationState(NamedTuple):
         :param sort_reversed: the order of the resulting sort
         :return: tuple of sorted and filtered stations
         """
+        stations = [self.stations[sid] for sid in self.station_iterator]
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(self.station_iterator, key=sort_key, reverse=sort_reversed)))
+            return tuple(filter(filter_function, sorted(stations, key=sort_key, reverse=sort_reversed)))
         elif filter_function:
-            return tuple(filter(filter_function, self.station_iterator))
+            return tuple(filter(filter_function, stations))
         elif sort:
-            return tuple(sorted(self.station_iterator, key=sort_key, reverse=sort_reversed))
+            return tuple(sorted(stations, key=sort_key, reverse=sort_reversed))
         else:
-            return self.station_iterator
+            return tuple(stations)
 
     def get_bases(
             self,
@@ -101,15 +102,17 @@ class SimulationState(NamedTuple):
         :param sort_reversed: the order of the resulting sort
         :return: tuple of sorted and filtered bases
         """
+        
+        bases = [self.bases[bid] for bid in self.base_iterator]
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(self.base_iterator, key=sort_key, reverse=sort_reversed)))
+            return tuple(filter(filter_function, sorted(bases, key=sort_key, reverse=sort_reversed)))
         elif filter_function:
-            return tuple(filter(filter_function, self.base_iterator))
+            return tuple(filter(filter_function, bases))
         elif sort:
-            return tuple(sorted(self.base_iterator, key=sort_key, reverse=sort_reversed))
+            return tuple(sorted(bases, key=sort_key, reverse=sort_reversed))
         else:
-            return self.base_iterator
+            return tuple(bases)
 
     def get_vehicles(
             self,
@@ -128,15 +131,16 @@ class SimulationState(NamedTuple):
         :param sort_reversed: the order of the resulting sort
         :return: tuple of sorted and filtered vehicles
         """
+        vehicles = [self.vehicles[vid] for vid in self.vehicle_iterator]
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(self.vehicle_iterator, key=sort_key, reverse=sort_reversed)))
+            return tuple(filter(filter_function, sorted(vehicles, key=sort_key, reverse=sort_reversed)))
         elif filter_function:
-            return tuple(filter(filter_function, self.vehicle_iterator))
+            return tuple(filter(filter_function, vehicles))
         elif sort:
-            return tuple(sorted(self.vehicle_iterator, key=sort_key, reverse=sort_reversed))
+            return tuple(sorted(vehicles, key=sort_key, reverse=sort_reversed))
         else:
-            return self.vehicle_iterator
+            return tuple(vehicles) 
 
     def get_requests(
             self,
@@ -155,15 +159,16 @@ class SimulationState(NamedTuple):
         :param sort_reversed: the order of the resulting sort
         :return: tuple of sorted and filtered requests
         """
+        requests = [self.requests[rid] for rid in self.request_iterator]
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(self.request_iterator, key=sort_key, reverse=sort_reversed)))
+            return tuple(filter(filter_function, sorted(requests, key=sort_key, reverse=sort_reversed)))
         elif filter_function:
-            return tuple(filter(filter_function, self.request_iterator))
+            return tuple(filter(filter_function, requests))
         elif sort:
-            return tuple(sorted(self.request_iterator, key=sort_key, reverse=sort_reversed))
+            return tuple(sorted(requests, key=sort_key, reverse=sort_reversed))
         else:
-            return self.request_iterator
+            return tuple(requests) 
 
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """

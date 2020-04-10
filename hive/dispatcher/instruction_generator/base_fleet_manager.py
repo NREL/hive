@@ -35,8 +35,11 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
         :return: the updated Manager along with fleet targets and reports
         """
 
-        reserve_vehicles = [v for v in simulation_state.vehicles.values()
-                            if isinstance(v.vehicle_state, ReserveBase)]
+        reserve_vehicles = simulation_state.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase),
+        )
 
         if self.base_vehicles_charging_limit:
             target = self.base_vehicles_charging_limit
