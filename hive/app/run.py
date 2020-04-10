@@ -14,6 +14,7 @@ from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetMa
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
+from hive.dispatcher.instruction_generator.deluxe_fleet_manager import DeluxeFleetManager
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.model.vehicle import Vehicle
@@ -60,13 +61,14 @@ def run() -> int:
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
-            BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
-            PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(demand_forecast_file),
-                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
-            ),
-            ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
-                                 env.config.dispatcher.charging_max_search_radius_km),
+            # BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
+            # PositionFleetManager(
+            #     demand_forecaster=BasicForecaster.build(demand_forecast_file),
+            #     update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
+            # ),
+            # ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
+            #                      env.config.dispatcher.charging_max_search_radius_km),
+            DeluxeFleetManager(),
             Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
         )
 

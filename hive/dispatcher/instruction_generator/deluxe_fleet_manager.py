@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import (
     return_to_base,
     set_to_reserve,
     charge_at_base,
+    charge_at_station,
     send_vehicle_to_field,
+    sit_idle,
 )
-from hive.external.demo_base_target.temp_base_target import BaseTarget
+from hive.external.demo_base_target.fleet_targets import FleetTarget
 from hive.state.vehicle_state import *
 from hive.state.vehicle_state import (
     ReserveBase,
@@ -43,8 +44,7 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
     TODO: we should add a target for vehicles charging at a fast charge station. This will get us close to demoing
       a smart charging scenario.
     """
-    demand_forecaster: ForecasterInterface
-    base_target: BaseTarget = BaseTarget()
+    fleet_target: FleetTarget = FleetTarget()
 
     def generate_instructions(
             self,
@@ -57,63 +57,70 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
 
         :return: the updated Manager along with fleet targets and reports
         """
-        updated_forecaster, future_demand = self.demand_forecaster.generate_forecast(simulation_state)
+        instructions = ()
+
+        if simulation_state.sim_time % (10*60) != 0:
+            # only try to manage fleet at 10 minute intervals
+            return self, instructions, ()
 
         def is_active(vstate: VehicleState) -> bool:
             return isinstance(vstate, Idle) or \
-                   isinstance(vstate, Repositioning)
+                   isinstance(vstate, Repositioning) or \
+                   isinstance(vstate, DispatchTrip) or \
+                   isinstance(vstate, ServicingTrip)
 
-        instructions = ()
+        def is_active_ready(vstate: VehicleState) -> bool:
+            return isinstance(vstate, Idle) or \
+                   isinstance(vstate, Repositioning)
 
         base_charge_vehicles = [v for v in simulation_state.vehicles.values()
                                 if isinstance(v.vehicle_state, ChargingBase)]
+        station_charge_vehicles = [v for v in simulation_state.vehicles.values()
+                                   if isinstance(v.vehicle_state, ChargingStation)]
         reserve_vehicles = [v for v in simulation_state.vehicles.values()
                             if isinstance(v.vehicle_state, ReserveBase)]
         active_vehicles = [v for v in simulation_state.vehicles.values()
                            if is_active(v.vehicle_state)]
+        active_ready_vehicles = [v for v in simulation_state.vehicles.values()
+                                 if is_active_ready(v.vehicle_state)]
 
-        n_charging = len(base_charge_vehicles)
+        n_base_charging = len(base_charge_vehicles)
+        n_station_charging = len(station_charge_vehicles)
         n_active = len(active_vehicles)
 
-        charge_target = int(self.base_target.get_target(simulation_state.sim_time))
-        active_target = future_demand.value
+        base_charge_target = int(self.fleet_target.get_base_target(simulation_state.sim_time))
+        station_charge_target = int(self.fleet_target.get_station_target(simulation_state.sim_time))
+        active_target = int(self.fleet_target.get_active_target(simulation_state.sim_time))
 
-        charge_diff = charge_target - n_charging
+        base_charge_diff = base_charge_target - n_base_charging
+        station_charge_diff = station_charge_target - n_station_charging
         active_diff = active_target - n_active
+
+        if base_charge_diff < 0:
+            # we have more charging vehicles than we need
+            reserve_instructions = set_to_reserve(abs(base_charge_diff), base_charge_vehicles, simulation_state)
+            instructions = instructions + reserve_instructions
+        elif base_charge_diff > 0:
+            # we don't have enough charging vehicles
+            charge_instructions = charge_at_base(base_charge_diff, reserve_vehicles, simulation_state)
+            instructions = instructions + charge_instructions
+
+        if station_charge_diff < 0:
+            # we have more station charging than we want
+            idle_instructions = sit_idle(abs(station_charge_diff), station_charge_vehicles)
+            instructions = instructions + idle_instructions
+        elif station_charge_diff > 0:
+            # we need more vehicles charging at a station
+            charge_instructions = charge_at_station(station_charge_diff, active_ready_vehicles, simulation_state)
+            instructions = instructions + charge_instructions
 
         if active_diff < 0:
             # we have more active vehicles than we need
-            if charge_diff < 0:
-                # we have more charging vehicles than we need
-                # ACTION: send active vehicles to base, send charging vehicles to reserve
-                active_instructions = return_to_base(abs(active_diff), active_vehicles, simulation_state)
-                reserve_instructions = set_to_reserve(abs(charge_diff), base_charge_vehicles, simulation_state)
-                instructions = instructions + active_instructions + reserve_instructions
-            elif charge_diff > 0:
-                # we don't have enough charging vehicles
-                # ACTION: take reserve and charge them, send active vehicles to base
-                active_instructions = return_to_base(abs(active_diff), active_vehicles, simulation_state)
-                charge_instructions = charge_at_base(abs(charge_diff), reserve_vehicles, simulation_state)
-                instructions = instructions + active_instructions + charge_instructions
-            else:
-                # ACTION: just send active vehicles home
-                active_instructions = return_to_base(abs(active_diff), active_vehicles, simulation_state)
-                instructions = instructions + active_instructions
+            active_instructions = return_to_base(abs(active_diff), active_vehicles, simulation_state)
+            instructions = instructions + active_instructions
         elif active_diff > 0:
-            # we need more vehicles in the field
-            if charge_diff < 0:
-                # we have more charging vehicles than we need
-                # ACTION: send highest soc vehicles out to field
-                repos_instructions = send_vehicle_to_field(active_diff, base_charge_vehicles, simulation_state)
-                instructions = instructions + repos_instructions
-            elif charge_diff > 0:
-                # we don't have enough charging vehicles
-                # ACTION: send vehicles to field first then charge remaining vehicles
-                charge_instructions = charge_at_base(charge_diff, reserve_vehicles, simulation_state)
-                repos_instructions = send_vehicle_to_field(active_diff, reserve_vehicles, simulation_state)
-                instructions = instructions + charge_instructions + repos_instructions
-            else:
-                repos_instructions = send_vehicle_to_field(active_diff, reserve_vehicles, simulation_state)
-                instructions = instructions + repos_instructions
+            # we we need more active vehicles in the field
+            repos_instructions = send_vehicle_to_field(active_diff, reserve_vehicles, simulation_state)
+            instructions = instructions + repos_instructions
 
-        return self._replace(demand_forecaster=updated_forecaster), instructions, ()
+        return self, instructions, ()

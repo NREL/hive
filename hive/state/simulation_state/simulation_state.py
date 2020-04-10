@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, cast, Tuple, TYPE_CHECKING
+from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
 
 import immutables
 from h3 import h3
@@ -40,6 +40,11 @@ class SimulationState(NamedTuple):
     vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
+    station_iterator: Tuple[Station, ...] = ()
+    base_iterator: Tuple[Base, ...] = ()
+    vehicle_iterator: Tuple[Vehicle, ...] = ()
+    request_iterator: Tuple[Request, ...] = ()
+
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
     r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
@@ -51,6 +56,114 @@ class SimulationState(NamedTuple):
     r_search: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
     s_search: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
     b_search: immutables.Map[GeoId, Tuple[BaseId, ...]] = immutables.Map()
+
+    def get_stations(
+            self,
+            filter_function: Optional[Callable[[Station], bool]] = None,
+            sort: bool = False,
+            sort_key: Callable = lambda k: k,
+            sort_reversed: bool = False,
+    ) -> Tuple[Station, ...]:
+        """
+        returns a tuple of stations.
+        users can pass an optional filter and sort function.
+
+        :param filter_function: function to filter results
+        :param sort: whether or not to sort the results
+        :param sort_key: the key to sort the results by
+        :param sort_reversed: the order of the resulting sort
+        :return: tuple of sorted and filtered stations
+        """
+
+        if filter_function and sort:
+            return tuple(filter(filter_function, sorted(self.station_iterator, key=sort_key, reverse=sort_reversed)))
+        elif filter_function:
+            return tuple(filter(filter_function, self.station_iterator))
+        elif sort:
+            return tuple(sorted(self.station_iterator, key=sort_key, reverse=sort_reversed))
+        else:
+            return self.station_iterator
+
+    def get_bases(
+            self,
+            filter_function: Optional[Callable[[Base], bool]] = None,
+            sort: bool = False,
+            sort_key: Callable = lambda k: k,
+            sort_reversed: bool = False,
+    ) -> Tuple[Base, ...]:
+        """
+        returns a tuple of bases.
+        users can pass an optional filter and sort function.
+
+        :param filter_function: function to filter results
+        :param sort: whether or not to sort the results
+        :param sort_key: the key to sort the results by
+        :param sort_reversed: the order of the resulting sort
+        :return: tuple of sorted and filtered bases
+        """
+
+        if filter_function and sort:
+            return tuple(filter(filter_function, sorted(self.base_iterator, key=sort_key, reverse=sort_reversed)))
+        elif filter_function:
+            return tuple(filter(filter_function, self.base_iterator))
+        elif sort:
+            return tuple(sorted(self.base_iterator, key=sort_key, reverse=sort_reversed))
+        else:
+            return self.base_iterator
+
+    def get_vehicles(
+            self,
+            filter_function: Optional[Callable[[Vehicle], bool]] = None,
+            sort: bool = False,
+            sort_key: Callable = lambda k: k,
+            sort_reversed: bool = False,
+    ) -> Tuple[Vehicle, ...]:
+        """
+        returns a tuple of vehicles.
+        users can pass an optional filter and sort function.
+
+        :param filter_function: function to filter results
+        :param sort: whether or not to sort the results
+        :param sort_key: the key to sort the results by
+        :param sort_reversed: the order of the resulting sort
+        :return: tuple of sorted and filtered vehicles
+        """
+
+        if filter_function and sort:
+            return tuple(filter(filter_function, sorted(self.vehicle_iterator, key=sort_key, reverse=sort_reversed)))
+        elif filter_function:
+            return tuple(filter(filter_function, self.vehicle_iterator))
+        elif sort:
+            return tuple(sorted(self.vehicle_iterator, key=sort_key, reverse=sort_reversed))
+        else:
+            return self.vehicle_iterator
+
+    def get_requests(
+            self,
+            filter_function: Optional[Callable[[Request], bool]] = None,
+            sort: bool = False,
+            sort_key: Callable = lambda k: k,
+            sort_reversed: bool = False,
+    ) -> Tuple[Request, ...]:
+        """
+        returns a tuple of requests.
+        users can pass an optional filter and sort function.
+
+        :param filter_function: function to filter results
+        :param sort: whether or not to sort the results
+        :param sort_key: the key to sort the results by
+        :param sort_reversed: the order of the resulting sort
+        :return: tuple of sorted and filtered requests
+        """
+
+        if filter_function and sort:
+            return tuple(filter(filter_function, sorted(self.request_iterator, key=sort_key, reverse=sort_reversed)))
+        elif filter_function:
+            return tuple(filter(filter_function, self.request_iterator))
+        elif sort:
+            return tuple(sorted(self.request_iterator, key=sort_key, reverse=sort_reversed))
+        else:
+            return self.request_iterator
 
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """
