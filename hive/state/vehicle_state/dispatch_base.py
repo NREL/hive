@@ -12,7 +12,6 @@ from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId
 
 
-
 class DispatchBase(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
@@ -96,7 +95,7 @@ class DispatchBase(NamedTuple, VehicleState):
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif isinstance(moved_vehicle.vehicle_state, OutOfService):
-            return None, move_result
+            return None, move_result.sim
         else:
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)

@@ -1,25 +1,37 @@
 from __future__ import annotations
 
+import logging
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
+from hive.dispatcher.instruction.instruction_interface import Instruction
+from hive.model.energy.charger import Charger
+from hive.model.passenger import board_vehicle
+from hive.runner.environment import Environment
+from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state import *
 from hive.util.exception import SimulationStateError
-
-from hive.runner.environment import Environment
-
-from hive.model.passenger import board_vehicle
-from hive.dispatcher.instruction.instruction_interface import Instruction
 from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId
-from hive.model.energy.charger import Charger
-from hive.state.entity_state import entity_state_ops
-
-import logging
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.state.vehicle_state import VehicleState
+
+
+class IdleInstruction(NamedTuple, Instruction):
+    vehicle_id: VehicleId
+
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        else:
+            prev_state = vehicle.vehicle_state
+            next_state = Idle(self.vehicle_id)
+            return entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
 
 
 class DispatchTripInstruction(NamedTuple, Instruction):

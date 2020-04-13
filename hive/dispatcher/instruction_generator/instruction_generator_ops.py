@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 import random
-from typing import List
+from typing import Tuple
 
 import immutables
 from h3 import h3
@@ -70,7 +70,7 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     return result
 
 
-def return_to_base(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def return_to_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles back to the base
 
@@ -81,8 +81,6 @@ def return_to_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     """
 
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -106,7 +104,7 @@ def return_to_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     return instructions
 
 
-def set_to_reserve(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def set_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to reserve at the base
 
@@ -116,8 +114,6 @@ def set_to_reserve(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     :return:
     """
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc, reverse=True)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -134,7 +130,7 @@ def set_to_reserve(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     return instructions
 
 
-def charge_at_base(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def charge_at_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -144,8 +140,6 @@ def charge_at_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     :return:
     """
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc)
 
     for veh in vehicles:
         if len(instructions) >= n:
@@ -164,7 +158,62 @@ def charge_at_base(n: int, vehicles: List[Vehicle], simulation_state: Simulation
     return instructions
 
 
-def send_vehicle_to_field(n: int, vehicles: List[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def charge_at_station(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+    """
+    a helper function to set n vehicles to charge at the base
+
+    :param n: how many vehicles to charge at the base
+    :param vehicles: the list of vehicles to consider
+    :param simulation_state: the simulation state
+    :return:
+    """
+    instructions = ()
+
+    for veh in vehicles:
+        if len(instructions) >= n:
+            break
+
+        nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
+                                               entities=simulation_state.stations,
+                                               entity_search=simulation_state.s_search,
+                                               sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                               max_distance_km=100,
+                                               is_valid=lambda s: s.has_available_charger(Charger.DCFC))
+        if nearest_station:
+            instruction = DispatchStationInstruction(
+                vehicle_id=veh.id,
+                station_id=nearest_station.id,
+                charger=Charger.DCFC,
+            )
+
+        instructions = instructions + (instruction,)
+
+    return instructions
+
+
+def sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
+    """
+    a helper function to set n vehicles to sit idle
+
+    :param n: how many vehicles to change to idle
+    :param vehicles: the list of vehicles to consider
+    :return:
+    """
+    instructions = ()
+
+    for veh in vehicles:
+        if len(instructions) >= n:
+            break
+        instruction = IdleInstruction(
+            vehicle_id=veh.id,
+        )
+
+        instructions = instructions + (instruction,)
+
+    return instructions
+
+
+def send_vehicle_to_field(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles into the field at a random location
 
@@ -180,8 +229,6 @@ def send_vehicle_to_field(n: int, vehicles: List[Vehicle], simulation_state: Sim
         return children.pop()
 
     instructions = ()
-
-    vehicles.sort(key=lambda v: v.energy_source.soc, reverse=True)
 
     for veh in vehicles:
         if len(instructions) >= n:

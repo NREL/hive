@@ -6,18 +6,14 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 from hive.util.units import Ratio, Kilometers
 
 if TYPE_CHECKING:
+    from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.util.typealiases import Report
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction.instruction_interface import instruction_to_report
-from hive.dispatcher.instruction.instructions import (
-    DispatchStationInstruction
-)
-from hive.state.vehicle_state import DispatchStation
-from hive.model.energy.charger import Charger
-from hive.util.helpers import H3Ops
+from hive.dispatcher.instruction_generator.instruction_generator_ops import charge_at_station
+from hive.state.vehicle_state import Idle, Repositioning
 
 log = logging.getLogger(__name__)
 
@@ -41,38 +37,14 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
         :return: the updated Manager along with fleet targets and reports
         """
 
-        instructions = ()
-        reports = ()
-
         # find vehicles that fall below the minimum threshold and charge them.
-        low_soc_vehicles = [v for v in simulation_state.vehicles.values()
-                            if v.energy_source.soc <= self.low_soc_threshold
-                            and not isinstance(v.vehicle_state, DispatchStation)]
 
-        for veh in low_soc_vehicles:
-            nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
-                                                   entities=simulation_state.stations,
-                                                   entity_search=simulation_state.s_search,
-                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                   max_distance_km=self.max_search_radius_km,
-                                                   is_valid=lambda s: s.has_available_charger(Charger.DCFC))
-            if nearest_station:
-                instruction = DispatchStationInstruction(
-                    vehicle_id=veh.id,
-                    station_id=nearest_station.id,
-                    charger=Charger.DCFC,
-                )
+        def charge_candidate(v: Vehicle) -> bool:
+            proper_state = isinstance(v.vehicle_state, Idle) or isinstance(v.vehicle_state, Repositioning)
+            return v.energy_source.soc <= self.low_soc_threshold and proper_state
 
-                report = instruction_to_report(instruction, simulation_state.sim_time)
-                reports = reports + (report,)
+        low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate)
 
-                instructions = instructions + (instruction,)
-            else:
-                # user set the max search radius too low (should really be computed by
-                # HIVE based on the RoadNetwork at initialization anyway)
-                # also possible: no charging stations available. implement a queueing solution
-                # for agents who could wait to charge
-                log.debug(f"no open stations found at time {simulation_state.sim_time} for vehicle {veh.id}")
-                continue
+        charge_instructions = charge_at_station(len(low_soc_vehicles), low_soc_vehicles, simulation_state)
 
-        return self, instructions, reports
+        return self, charge_instructions, ()

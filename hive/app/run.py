@@ -67,6 +67,7 @@ def run() -> int:
             ),
             ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
                                  env.config.dispatcher.charging_max_search_radius_km),
+            # DeluxeFleetManager(),
             Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
         )
 
