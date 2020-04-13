@@ -34,7 +34,7 @@ class Update(NamedTuple):
               io: IO,
               instruction_generators: Tuple[InstructionGenerator, ...],
               instruction_generator_update_fn: Callable[
-                  [InstructionGenerator, SimulationState], Optional[InstructionGenerator]]) -> Update:
+                  [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None) -> Update:
         """
         constructs the functionality to update the simulation each time step
         :param io: the scenario io configuration
