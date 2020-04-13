@@ -76,9 +76,8 @@ def initialize_simulation(
         raise RuntimeError("log time step must be greater than simulation time step")
     reporter = BasicReporter(config.io, config.output_directory)
     vehicle_types_table_builder = VehicleTypesTableBuilder.build(vehicle_types_file)
-    vehicle_types_errors = vehicle_types_table_builder.consolidate_errors()
-    if vehicle_types_errors is not None:
-        raise vehicle_types_errors
+    if vehicle_types_table_builder.errors:
+        raise Exception(vehicle_types_table_builder.errors)
     env_initial = Environment(config=config,
                               reporter=reporter,
                               vehicle_types=vehicle_types_table_builder.result,

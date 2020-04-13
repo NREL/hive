@@ -36,7 +36,7 @@ def charge(sim: 'SimulationState',
         return SimulationStateError(f"invalid powercurve_id {vehicle.powercurve_id}"), None
     elif not station:
         return SimulationStateError(f"station {station_id} not found"), None
-    elif vehicle.energy_source.is_at_ideal_energy_limit():
+    elif vehicle.energy_source.is_full():
         return SimulationStateError(f"vehicle {vehicle_id} is full but still attempting to charge"), None
     else:
         # charge energy source

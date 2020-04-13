@@ -111,14 +111,12 @@ def mock_energy_source(
         energy_type: EnergyType = EnergyType.ELECTRIC,
         capacity_kwh: KwH = 100,
         max_charge_acceptance_kw: Kw = 50.0,
-        ideal_energy_limit_kwh: KwH = 50.0,
         soc: Ratio = 0.25,
 ) -> EnergySource:
     return EnergySource.build(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc)
 
@@ -234,14 +232,12 @@ def mock_request_from_geoids(
 def mock_vehicle_type(powertrain_id: str = DefaultIds.mock_powertrain_id(),
                       powercurve_id: str = DefaultIds.mock_powercurve_id(),
                       capacity_kwh: KwH = 100,
-                      ideal_energy_limit_kwh=50.0,
                       max_charge_acceptance_kw: Kw = 50.0,
                       operating_cost_km: Currency = 0.1, ) -> VehicleType:
     return VehicleType(
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance=max_charge_acceptance_kw,
         operating_cost_km=operating_cost_km
     )
@@ -257,7 +253,6 @@ def mock_vehicle(
         energy_type: EnergyType = EnergyType.ELECTRIC,
         capacity_kwh: KwH = 100,
         soc: Ratio = 0.25,
-        ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         operating_cost_km: Currency = 0.1,
         vehicle_state: Optional[VehicleState] = None,
@@ -269,7 +264,6 @@ def mock_vehicle(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc
     )
@@ -294,7 +288,6 @@ def mock_vehicle_from_geoid(
         energy_type: EnergyType = EnergyType.ELECTRIC,
         capacity_kwh: KwH = 100,
         soc: Ratio = 0.25,
-        ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         road_network: RoadNetwork = mock_network(h3_res=15),
         operating_cost_km: Currency = 0.1,
@@ -305,7 +298,6 @@ def mock_vehicle_from_geoid(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc
     )
