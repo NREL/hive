@@ -10,7 +10,8 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 class FleetTarget:
     def __init__(self):
-        df = pd.read_csv(os.path.join(THIS_DIR, 'fleet_targets.csv'))
+        fleet_target_path = os.path.join(THIS_DIR, '..', '..', 'resources', 'fleet_targets', 'fleet_targets.csv')
+        df = pd.read_csv(fleet_target_path)
         self.base_target = pd.Series(index=df.seconds.values, data=df.base_charging.values)
         self.station_target = pd.Series(index=df.seconds.values, data=df.station_charging.values)
         self.active_target = pd.Series(index=df.seconds.values, data=df.field_vehicles.values)
