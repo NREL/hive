@@ -1215,3 +1215,107 @@ class TestVehicleState(TestCase):
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
+    ####################################################################################################################
+    # ChargeQueueing ###################################################################################################
+    ####################################################################################################################
+
+    def test_charge_queueing_enter(self):
+        vehicle_charging = mock_vehicle_from_geoid()
+        vehicle_queueing = mock_vehicle_from_geoid()
+        station = mock_station_from_geoid()
+        sim1 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,))
+        env = mock_env()
+
+        charging_state = ChargingStation(vehicle_charging.id, station.id, Charger.DCFC)
+        e1, sim2 = charging_state.update(sim1, env)
+        self.assertIsNone(e1, "test invariant failed")
+
+        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC)
+        error, updated_sim = state.enter(sim1, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        # should have inserted self into queue
+
+    def test_charge_queueing_exit(self):
+        vehicle_charging = mock_vehicle_from_geoid()
+        vehicle_queueing = mock_vehicle_from_geoid()
+        station = mock_station_from_geoid()
+        sim1 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,))
+        env = mock_env()
+
+        charging_state = ChargingStation(vehicle_charging.id, station.id, Charger.DCFC)
+        e1, sim2 = charging_state.update(sim1, env)
+        self.assertIsNone(e1, "test invariant failed")
+
+        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC)
+        error, updated_sim = state.enter(sim1, env)
+
+        self.assertIsNone(error, "test invariant failed")
+
+        # should remove self from queue
+
+    def test_charge_queueing_update(self):
+        vehicle_charging = mock_vehicle_from_geoid()
+        vehicle_queueing = mock_vehicle_from_geoid()
+        station = mock_station_from_geoid()
+        sim1 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,))
+        env = mock_env()
+
+        charging_state = ChargingStation(vehicle_charging.id, station.id, Charger.DCFC)
+        e1, sim2 = charging_state.update(sim1, env)
+        self.assertIsNone(e1, "test invariant failed")
+
+        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC)
+        error, updated_sim = state.enter(sim1, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        # update should apply idle cost if stall is still not available
+
+    def test_charge_queueing_update_terminal(self):
+        vehicle_charging = mock_vehicle_from_geoid()
+        vehicle_queueing = mock_vehicle_from_geoid()
+        station = mock_station_from_geoid()
+        sim1 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,))
+        env = mock_env()
+
+        charging_state = ChargingStation(vehicle_charging.id, station.id, Charger.DCFC)
+        e1, sim2 = charging_state.update(sim1, env)
+        self.assertIsNone(e1, "test invariant failed")
+
+        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC)
+        error, updated_sim = state.enter(sim1, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        # should have removed self from queue and moved to ChargingStation if available
+        #  otherwise, never ends
+
+    def test_charge_queueing_enter_no_vehicle(self):
+        station = mock_station_from_geoid()
+        sim0 = mock_sim()
+        env = mock_env()
+
+        charging_state = ChargingStation(DefaultIds.mock_vehicle_id(), station.id, Charger.DCFC)
+        err1, sim1 = charging_state.update(sim0, env)
+        self.assertIsNone(err1, "test invariant failed")
+
+        state = ChargeQueueing(DefaultIds.mock_vehicle_id(), station.id, Charger.DCFC)
+        err2, sim2 = state.enter(sim1, env)
+
+        self.assertIsInstance(err2, Exception, "should have exception")
+
+    def test_charge_queueing_enter_when_station_has_charger_available(self):
+        vehicle_queueing = mock_vehicle_from_geoid()
+        station = mock_station_from_geoid()
+        sim1 = mock_sim(vehicles=(vehicle_queueing,))
+        env = mock_env()
+
+        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC)
+        error, updated_sim = state.enter(sim1, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        # should fail as a bunk instruction but not be an error

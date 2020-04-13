@@ -27,12 +27,16 @@ class Station(NamedTuple):
     :type total_chargers: :py:obj:`Dict[Charger, int]`
     :param available_chargers: Identifies how many plugs for each charger type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
+    :param vehicle_queue: for each charger type, a queue of vehicles waiting in line to use this station
+    :type total_chargers: :py:obj:`Dict[Charger, int]`
+    :param balance: the incomes - expenses of this station
     """
     id: StationId
     link: Link
     total_chargers: immutables.Map[Charger, int]
     available_chargers: immutables.Map[Charger, int]
     charger_prices: immutables.Map[Charger, Currency]
+    vehicle_queue: immutables.Map[Charger, Tuple[VehicleId, ...]]
     balance: Currency = 0.0
 
     @property
@@ -41,18 +45,30 @@ class Station(NamedTuple):
 
     @classmethod
     def build(cls,
-              id: StationId,
+              station_id: StationId,
               geoid: GeoId,
               road_network: RoadNetwork,
-              chargers: immutables.Map[Charger, int]
+              total_chargers: immutables.Map[Charger, int]
               ):
-        prices = ft.reduce(
+        charger_prices = ft.reduce(
             lambda prices_builder, charger: prices_builder.set(charger, 0.0),
-            chargers.keys(),
+            total_chargers.keys(),
+            immutables.Map()
+        )
+        vehicle_queue = ft.reduce(
+            lambda qs, charger: qs.set(charger, ()),
+            total_chargers.keys(),
             immutables.Map()
         )
         link = road_network.link_from_geoid(geoid)
-        return Station(id, link, chargers, chargers, prices)
+
+        return Station(
+            id=station_id,
+            link=link,
+            total_chargers=total_chargers,
+            available_chargers=total_chargers,
+            charger_prices=charger_prices,
+            vehicle_queue=vehicle_queue)
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -65,6 +81,7 @@ class Station(NamedTuple):
         :param row: a row as interpreted by csv.DictReader
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
+        :param road_network: the road network
         :return: a Station, or an error
         """
         if 'station_id' not in row:
@@ -90,20 +107,20 @@ class Station(NamedTuple):
                 elif station_id not in builder:
                     # create this station
                     return Station.build(
-                        id=station_id,
+                        station_id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_type: charger_count})
+                        total_chargers=immutables.Map({charger_type: charger_count})
                     )
                 elif charger_type in builder[station_id].total_chargers:
                     # combine counts from multiple rows which refer to this charger_type
                     charger_already_loaded = builder[station_id].total_chargers[charger_type]
 
                     return Station.build(
-                        id=station_id,
+                        station_id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_type: charger_count + charger_already_loaded})
+                        total_chargers=immutables.Map({charger_type: charger_count + charger_already_loaded})
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
@@ -111,10 +128,10 @@ class Station(NamedTuple):
                     updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
 
                     return Station.build(
-                        id=station_id,
+                        station_id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=updated_chargers
+                        total_chargers=updated_chargers
                     )
 
             except ValueError:
@@ -173,3 +190,16 @@ class Station(NamedTuple):
         :return: the updated Station
         """
         return self._replace(balance=self.balance + currency_received)
+
+    def enqueue_vehicle(self,
+                        vehicle_id: VehicleId,
+                        charger: Charger,
+                        queue_limit: Optional[int]) -> Optional[Station]:
+        """
+        enqueues a vehicle unless the queue_limit for this station has been reached
+
+        :param vehicle_id: the vehicle to enqueue
+        :param charger: the
+        :param queue_limit:
+        :return:
+        """
