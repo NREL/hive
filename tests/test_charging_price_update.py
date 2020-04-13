@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
-from hive.state.simulation_state.update.step_simulation import step_simulation
+from hive.state.simulation_state.update.step_simulation_ops import perform_vehicle_state_updates
 from tests.mock_lobster import *
 
 
@@ -88,7 +88,7 @@ class TestChargingPriceUpdate(TestCase):
         # the second update should pull in the second and third row
         # the fourth row should not have been read
         result1, fn2 = fn1.update(sim, env)
-        sim_ffwd = step_simulation(result1.simulation_state, env)
+        sim_ffwd = perform_vehicle_state_updates(result1.simulation_state, env)
         result2, fn3 = fn2.update(sim_ffwd, env)
 
         self.assertEqual(len(result1.reports), 0, "should have no errors")

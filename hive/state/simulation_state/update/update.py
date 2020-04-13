@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Tuple, TYPE_CHECKING
+from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 
 from hive.config.io import IO
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.step_simulation import StepSimulation
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
@@ -25,15 +26,20 @@ class UpdatePayload(NamedTuple):
 class Update(NamedTuple):
     pre_step_update: Tuple[SimulationUpdateFunction, ...]
     step_update: StepSimulation
+    instruction_generator_update_fn: Callable[
+        [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None
 
     @classmethod
     def build(cls,
               io: IO,
-              instruction_generators: Tuple[InstructionGenerator, ...]) -> Update:
+              instruction_generators: Tuple[InstructionGenerator, ...],
+              instruction_generator_update_fn: Callable[
+                  [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None) -> Update:
         """
         constructs the functionality to update the simulation each time step
         :param io: the scenario io configuration
         :param instruction_generators: any overriding dispatcher functionality
+        :param instruction_generator_update_fn: user API for modifying InstructionGenerator models at each time step
         :return: the Update that will be applied at each time step
         """
 
@@ -49,7 +55,7 @@ class Update(NamedTuple):
         )
 
         # add the dispatcher as a parameter of stepping the simulation state
-        step_update = StepSimulation(instruction_generators)
+        step_update = StepSimulation(instruction_generators, instruction_generator_update_fn)
 
         # maybe in the future we also add a post_step_update set here too
 

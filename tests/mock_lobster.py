@@ -420,7 +420,7 @@ def mock_config(
         },
         "io": {
             'vehicles_file': '',
-            'requests_file': '',
+            'requests_file': 'denver_demo_requests.csv',
             'bases_file': '',
             'stations_file': '',
             'charging_price_file': 'denver_charging_prices_by_geoid.csv',
