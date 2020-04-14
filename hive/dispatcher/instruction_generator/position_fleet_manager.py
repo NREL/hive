@@ -5,7 +5,7 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from h3 import h3
 
-from hive.dispatcher.instruction_generator.instruction_generator_ops import send_vehicle_to_field, instruct_vehicles_return_to_base
+from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_reposition, instruct_vehicles_return_to_base
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.vehicle_state import *
 from hive.util import Seconds, Kilometers
@@ -70,7 +70,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
         if active_diff < 0:
             # we need abs(active_diff) more vehicles in service to meet demand
             base_vehicles = [v for v in simulation_state.vehicles.values() if is_base_state(v.vehicle_state)]
-            repos_instructions = send_vehicle_to_field(abs(active_diff), base_vehicles, simulation_state)
+            repos_instructions = instruct_vehicles_to_reposition(abs(active_diff), base_vehicles, simulation_state)
             instructions = instructions + repos_instructions
         elif active_diff > 0:
             # we can remove active_diff vehicles from service

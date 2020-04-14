@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import functools as ft
 import random
-from typing import Tuple
 
 import immutables
 from h3 import h3
@@ -21,14 +20,14 @@ if TYPE_CHECKING:
     from hive.util.typealiases import Report
 
 
-class InstuctionGenerationResult(NamedTuple):
+class InstructionGenerationResult(NamedTuple):
     instruction_map: immutables.Map = immutables.Map()
     reports: Tuple[Report, ...] = ()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(self,
                                     instruction_generator: InstructionGenerator,
-                                    simulation_state: 'SimulationState') -> InstuctionGenerationResult:
+                                    simulation_state: 'SimulationState') -> InstructionGenerationResult:
         """
         generates instructions from one InstructionGenerator and updates the result accumulator
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
@@ -52,7 +51,7 @@ class InstuctionGenerationResult(NamedTuple):
 
 def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ...],
                           simulation_state: 'SimulationState',
-                          ) -> InstuctionGenerationResult:
+                          ) -> InstructionGenerationResult:
     """
     applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
     and has an overwrite behavior with respect to generated Instructions in the instruction_map
@@ -65,7 +64,7 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     result = ft.reduce(
         lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state),
         instruction_generators,
-        InstuctionGenerationResult()
+        InstructionGenerationResult()
     )
 
     return result
@@ -110,7 +109,7 @@ def instruct_vehicles_return_to_base(n: int,
     return instructions
 
 
-def set_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to reserve at the base
 
@@ -136,7 +135,7 @@ def set_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: Simulatio
     return instructions
 
 
-def charge_at_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -164,10 +163,10 @@ def charge_at_base(n: int, vehicles: Tuple[Vehicle], simulation_state: Simulatio
     return instructions
 
 
-def instruct_vehicles_dispatch_to_station(n: int,
-                                          max_search_radius_km: float,
-                                          vehicles: Tuple[Vehicle],
-                                          simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_to_dispatch_to_station(n: int,
+                                             max_search_radius_km: float,
+                                             vehicles: Tuple[Vehicle],
+                                             simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at a station
 
@@ -202,7 +201,7 @@ def instruct_vehicles_dispatch_to_station(n: int,
     return instructions
 
 
-def sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
+def instruct_vehicles_to_sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to sit idle
 
@@ -224,7 +223,7 @@ def sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
     return instructions
 
 
-def send_vehicle_to_field(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_to_reposition(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles into the field at a random location
 
