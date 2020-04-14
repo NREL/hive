@@ -72,7 +72,7 @@ class TabularPowercurve(Powercurve):
         t = 0
         updated_energy = energy_source.copy()
         scale_factor = energy_source.max_charge_acceptance_kw / self.max_charge_acceptance_kw
-        while t < duration_seconds and updated_energy.not_at_ideal_energy_limit():
+        while t < duration_seconds and not updated_energy.is_full():
             soc = updated_energy.soc * 100  # scaled to [0, 100]
 
             veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw) * scale_factor  # kilowatt

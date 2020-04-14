@@ -45,7 +45,11 @@ class TestInstructionGenerators(TestCase):
         self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
     def test_charging_fleet_manager(self):
-        charging_fleet_manager = ChargingFleetManager(low_soc_threshold=0.2, max_search_radius_km=100)
+        charging_fleet_manager = ChargingFleetManager(
+            low_soc_threshold=0.2,
+            ideal_fastcharge_soc_limit=0.8,
+            max_search_radius_km=100,
+        )
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)

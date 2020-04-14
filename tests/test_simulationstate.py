@@ -429,7 +429,6 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(
             energy_type=EnergyType.ELECTRIC,
             capacity_kwh=50,
-            ideal_energy_limit_kwh=50,
             soc=0.75
         )
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
@@ -460,7 +459,6 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(
             energy_type=EnergyType.ELECTRIC,
             capacity_kwh=50,
-            ideal_energy_limit_kwh=40,
             soc=0.75
         )
         sta = mock_station_from_geoid()

@@ -19,12 +19,11 @@ class TestTabularPowercurve(TestCase):
                                      energy_type=EnergyType.ELECTRIC,
                                      capacity_kwh=50,  # kilowatthour
                                      energy_kwh=0,  # kilowatthour
-                                     ideal_energy_limit_kwh=40,  # kilowatthour
                                      max_charge_acceptance_kw=50,  # kilowatt
                                      )
 
-        result = leaf_model.refuel(energy_source, Charger.DCFC, hours_to_seconds(2))
-        self.assertEqual(result.is_at_ideal_energy_limit(), True, "Should have fully charged")
+        result = leaf_model.refuel(energy_source, Charger.DCFC, hours_to_seconds(10))
+        self.assertTrue(result.is_full(), "Should have fully charged")
 
     def test_leaf_energy_gain_full_soc(self):
         leaf_model = build_powercurve('leaf')
@@ -32,10 +31,9 @@ class TestTabularPowercurve(TestCase):
                                      energy_type=EnergyType.ELECTRIC,
                                      capacity_kwh=50,  # kilowatthour
                                      energy_kwh=50,  # kilowatthour
-                                     ideal_energy_limit_kwh=50,  # kilowatthour
                                      max_charge_acceptance_kw=50,  # kilowatt
                                      )
-        self.assertTrue(energy_source.is_at_ideal_energy_limit(), "test precondition should be at max")
+        self.assertTrue(energy_source.is_full(), "test precondition should be at max")
         result = leaf_model.refuel(energy_source, Charger.DCFC, hours_to_seconds(1))
         self.assertAlmostEqual(result.soc, energy_source.soc)
 
@@ -45,8 +43,7 @@ class TestTabularPowercurve(TestCase):
                                      energy_type=EnergyType.ELECTRIC,
                                      capacity_kwh=50,  # kilowatthour
                                      energy_kwh=0,  # kilowatthour
-                                     ideal_energy_limit_kwh=50,  # kilowatthour
                                      max_charge_acceptance_kw=50,  # kilowatt
                                      )
         result = leaf_model.refuel(energy_source, Charger.LEVEL_2, hours_to_seconds(1))
-        self.assertEqual(result.not_at_ideal_energy_limit(), True, "Should not have had enough time to charge to full")
+        self.assertEqual(result.is_full(), False, "Should not have had enough time to charge to full")

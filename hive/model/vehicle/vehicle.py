@@ -97,7 +97,6 @@ class Vehicle(NamedTuple):
                 powercurve_id = vehicle_type.powercurve_id
                 energy_type = env.energy_types.get(powercurve_id)
                 capacity = vehicle_type.capacity_kwh
-                ideal_energy_limit = vehicle_type.ideal_energy_limit_kwh
                 max_charge_acceptance = vehicle_type.max_charge_acceptance
                 operating_cost_km = vehicle_type.operating_cost_km
                 initial_soc = float(row['initial_soc'])
@@ -108,7 +107,6 @@ class Vehicle(NamedTuple):
                 energy_source = EnergySource.build(powercurve_id,
                                                    energy_type,
                                                    capacity,
-                                                   ideal_energy_limit,
                                                    max_charge_acceptance,
                                                    initial_soc)
 

@@ -10,7 +10,7 @@ class TestVehicleTypesTableBuilder(TestCase):
         file = resource_filename("hive.resources.vehicle_types", "default_vehicle_types.csv")
 
         builder = VehicleTypesTableBuilder.build(file)
-        self.assertIsNone(builder.consolidate_errors(), f"builder should have no errors with known file {file}")
+        self.assertEqual(len(builder.errors), 0, f"builder should have no errors with known file {file}")
         self.assertIn("leaf_50", builder.result, "should have loaded the default vehicle type")
 
     def test_build_bad_key(self):
@@ -20,13 +20,12 @@ class TestVehicleTypesTableBuilder(TestCase):
                 "powertrain_id": "leaf",
                 "powercurve_id": "leaf",
                 "pumpkin_latte_special": "50",
-                "ideal_energy_limit_kwh": "40",
                 "max_charge_acceptance_kw": "50",
                 "operating_cost_km": "0.1"
             }
         ])
         builder = VehicleTypesTableBuilder.build(input_with_bad_value)
-        self.assertIsNotNone(builder.consolidate_errors(), f"builder should have a KeyError from capacity")
+        self.assertIsNotNone(builder.errors, f"builder should have a KeyError from capacity")
         self.assertIsInstance(builder.errors[0], KeyError)
 
     def test_build_bad_value(self):
@@ -36,13 +35,12 @@ class TestVehicleTypesTableBuilder(TestCase):
                 "powertrain_id": "leaf",
                 "powercurve_id": "leaf",
                 "capacity_kwh": "not-a-number",
-                "ideal_energy_limit_kwh": "40",
                 "max_charge_acceptance_kw": "50",
                 "operating_cost_km": "0.1"
             }
         ])
         builder = VehicleTypesTableBuilder.build(input_with_bad_value)
-        self.assertIsNotNone(builder.consolidate_errors(), f"builder should have a ValueError from capacity")
+        self.assertIsNotNone(builder.errors, f"builder should have a ValueError from capacity")
         self.assertIsInstance(builder.errors[0], ValueError)
 
     def test_build_bad_key_and_value(self):
@@ -52,13 +50,12 @@ class TestVehicleTypesTableBuilder(TestCase):
                 "powertrain_id": "leaf",
                 "powercurve_id": "leaf",
                 "pumpkin_latte_special": "50",
-                "ideal_energy_limit_kwh": "maple pancakes with a pastry stout",
-                "max_charge_acceptance_kw": "50",
+                "max_charge_acceptance_kw": "maple pancakes with a pastry stout",
                 "operating_cost_km": "0.1"
             }
         ])
         builder = VehicleTypesTableBuilder.build(input_with_bad_value)
-        self.assertIsNotNone(builder.consolidate_errors(), "builder should have errors")
+        self.assertIsNotNone(builder.errors, "builder should have errors")
         self.assertIs(len(builder.errors), 2, "builder should have exactly two errors")
         self.assertIsInstance(builder.errors[0], KeyError)
         self.assertIsInstance(builder.errors[1], ValueError)
