@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.model.vehicle.vehicle import Vehicle
-    from hive.util.typealiases import Report
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
@@ -25,13 +24,13 @@ class Dispatcher(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[Dispatcher, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
 
-        :return: the updated Manager along with fleet targets and reports
+        :return: the updated Dispatcher along with instructions
         """
         # find requests that need a vehicle. Sorted by price high to low.
         # these instructions override fleet target instructions
@@ -67,4 +66,4 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
                 instructions = instructions + (instruction,)
 
-        return self, instructions, ()
+        return self, instructions

@@ -12,7 +12,6 @@ from hive.state.vehicle_state import (
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
-    from hive.util.typealiases import Report
 
 log = logging.getLogger(__name__)
 
@@ -26,13 +25,13 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[BaseFleetManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[BaseFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
 
-        :return: the updated Manager along with fleet targets and reports
+        :return: the updated BaseFleetManager along with instructions
         """
 
         reserve_vehicles = simulation_state.get_vehicles(
@@ -48,4 +47,4 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
 
         charge_instructions = charge_at_base(target, reserve_vehicles, simulation_state)
 
-        return self, charge_instructions, ()
+        return self, charge_instructions

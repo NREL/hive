@@ -21,7 +21,7 @@ class TestInstructionGenerators(TestCase):
         )
         _, sim = simulation_state_ops.add_request(sim, req)
 
-        dispatcher, instructions, _ = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -40,7 +40,7 @@ class TestInstructionGenerators(TestCase):
         sim = mock_sim(h3_location_res=9, h3_search_res=9)
         _, sim = simulation_state_ops.add_request(sim, req)
 
-        dispatcher, instructions, _ = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
@@ -61,7 +61,7 @@ class TestInstructionGenerators(TestCase):
         station = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(h3_location_res=9, h3_search_res=9, vehicles=(veh_low_battery,), stations=(station,))
 
-        charging_fleet_manager, instructions, _ = charging_fleet_manager.generate_instructions(sim)
+        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -87,7 +87,7 @@ class TestInstructionGenerators(TestCase):
 
         sim = mock_sim(vehicles=(veh,), bases=(base,))
 
-        dispatcher, instructions, _ = fleet_position_manager.generate_instructions(sim)
+        dispatcher, instructions = fleet_position_manager.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -116,7 +116,7 @@ class TestInstructionGenerators(TestCase):
             bases=(base,)
         )
 
-        dispatcher, instructions, _ = fleet_position_manager.generate_instructions(sim)
+        dispatcher, instructions = fleet_position_manager.generate_instructions(sim)
 
         self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0],
@@ -144,7 +144,7 @@ class TestInstructionGenerators(TestCase):
         _, sim = simulation_state_ops.add_request(sim, expensive_req)
         _, sim = simulation_state_ops.add_request(sim, cheap_req)
 
-        dispatcher, instructions, _ = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -192,7 +192,7 @@ class TestInstructionGenerators(TestCase):
             bases=(base,)
         )
 
-        base_fleet_manager, instructions, _ = base_fleet_manager.generate_instructions(sim)
+        base_fleet_manager, instructions = base_fleet_manager.generate_instructions(sim)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0], ChargeBaseInstruction, "Should have been instructed to charge at base")

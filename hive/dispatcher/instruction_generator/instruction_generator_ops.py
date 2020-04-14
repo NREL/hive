@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import functools as ft
 import random
-from typing import Tuple
 
 import immutables
 from h3 import h3
@@ -17,12 +16,10 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-    from hive.util.typealiases import Report
 
 
 class InstuctionGenerationResult(NamedTuple):
     instruction_map: immutables.Map = immutables.Map()
-    reports: Tuple[Report, ...] = ()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(self,
@@ -34,7 +31,7 @@ class InstuctionGenerationResult(NamedTuple):
         :param simulation_state: the current simulation state
         :return: the updated accumulator
         """
-        updated_gen, new_instructions, new_reports = instruction_generator.generate_instructions(simulation_state)
+        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state)
 
         updated_instruction_map = ft.reduce(
             lambda acc, i: DictOps.add_to_dict(acc, i.vehicle_id, i),
@@ -44,7 +41,6 @@ class InstuctionGenerationResult(NamedTuple):
 
         return self._replace(
             instruction_map=updated_instruction_map,
-            reports=self.reports + new_reports,
             updated_instruction_generators=self.updated_instruction_generators + (updated_gen,)
         )
 

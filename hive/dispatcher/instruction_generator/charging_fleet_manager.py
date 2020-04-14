@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
-    from hive.util.typealiases import Report
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import charge_at_station, sit_idle
@@ -29,13 +28,13 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[ChargingFleetManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[ChargingFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
 
-        :return: the updated Manager along with fleet targets and reports
+        :return: the updated ChargingFleetManager along with instructions
         """
 
         # find vehicles that fall below the minimum threshold and charge them.
@@ -56,4 +55,4 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
 
         instructions = charge_instructions + stop_charge_instructions
 
-        return self, instructions, ()
+        return self, instructions
