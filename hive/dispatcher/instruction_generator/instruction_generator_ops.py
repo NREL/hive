@@ -226,7 +226,8 @@ def send_vehicle_to_field(n: int, vehicles: Tuple[Vehicle], simulation_state: Si
     def _sample_random_location(road_network) -> GeoId:
         random_hex = random.choice(tuple(road_network.geofence.geofence_set))
         children = h3.h3_to_children(random_hex, road_network.sim_h3_resolution)
-        return children.pop()
+        choice = random.choice(tuple(children))
+        return choice
 
     instructions = ()
 
