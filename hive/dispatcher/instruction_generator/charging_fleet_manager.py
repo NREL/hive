@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from hive.util.typealiases import Report
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction_generator.instruction_generator_ops import charge_at_station, sit_idle
+from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_dispatch_to_station, instruct_vehicles_to_sit_idle
 from hive.state.vehicle_state import Idle, Repositioning, ChargingStation
 
 log = logging.getLogger(__name__)
@@ -51,8 +51,11 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
         low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate)
         high_soc_vehicles = simulation_state.get_vehicles(filter_function=stop_charge_candidate)
 
-        charge_instructions = charge_at_station(len(low_soc_vehicles), low_soc_vehicles, simulation_state)
-        stop_charge_instructions = sit_idle(len(high_soc_vehicles), high_soc_vehicles)
+        charge_instructions = instruct_vehicles_to_dispatch_to_station(n=len(low_soc_vehicles),
+                                                                       max_search_radius_km=self.max_search_radius_km,
+                                                                       vehicles=low_soc_vehicles,
+                                                                       simulation_state=simulation_state)
+        stop_charge_instructions = instruct_vehicles_to_sit_idle(len(high_soc_vehicles), high_soc_vehicles)
 
         instructions = charge_instructions + stop_charge_instructions
 

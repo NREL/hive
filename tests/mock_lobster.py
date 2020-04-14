@@ -588,10 +588,11 @@ def mock_instruction_generators_with_mock_forecast(
     return (
         BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
         PositionFleetManager(mock_forecaster(forecast),
-                             config.dispatcher.fleet_sizing_update_interval_seconds),
+                             config.dispatcher.fleet_sizing_update_interval_seconds,
+                             config.network.max_search_radius_km),
         ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
                              config.dispatcher.ideal_fastcharge_soc_limit,
-                             config.dispatcher.charging_max_search_radius_km),
+                             config.network.max_search_radius_km),
         Dispatcher(config.dispatcher.matching_low_soc_threshold),
     )
 

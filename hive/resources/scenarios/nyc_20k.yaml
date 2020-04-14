@@ -4,6 +4,8 @@ sim:
   start_time: 0
   end_time: 86400
   sim_h3_search_resolution: 7  # around 12ish hexes covering manhattan
+network:
+  max_search_radius_km: 20
 io:
   working_directory: nyc_20k_out
   requests_file: nyc_20k.csv
@@ -17,8 +19,8 @@ io:
   demand_forecast_file: nyc_demand.csv
   road_network_file: nyc_manhattan.xml
 
-  log_vehicles: True
-  log_requests: True
-  log_stations: True
-  log_dispatcher: True
+  log_vehicles: False
+  log_requests: False
+  log_stations: False
+  log_dispatcher: False
 

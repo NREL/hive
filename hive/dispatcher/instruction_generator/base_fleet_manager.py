@@ -4,7 +4,7 @@ import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING, Optional
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction_generator.instruction_generator_ops import charge_at_base
+from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_at_base_to_charge
 from hive.state.vehicle_state import (
     ReserveBase,
 )
@@ -46,6 +46,6 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
         else:
             target = len(reserve_vehicles)
 
-        charge_instructions = charge_at_base(target, reserve_vehicles, simulation_state)
+        charge_instructions = instruct_vehicles_at_base_to_charge(target, reserve_vehicles, simulation_state)
 
         return self, charge_instructions, ()
