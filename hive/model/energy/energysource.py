@@ -17,8 +17,6 @@ class EnergySource(NamedTuple):
     :type powercurve_id: :py:obj:`PowercurveId`
     :param energy_type: The energy type of this energy source.
     :type energy_type: :py:obj:`EnergySource`
-    :param ideal_energy_limit: Refueling is considered complete when this energy limit is reached.
-    :type ideal_energy_limit_kwh: :py:obj:`kwh`
     :param capacity: The total energy capacity of the energy source.
     :type capacity_kwh: :py:obj:`kwh`
     :param energy: The current energy level of the energy source.
