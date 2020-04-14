@@ -3,10 +3,10 @@ from __future__ import annotations
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import (
-    return_to_base,
+    instruct_vehicles_return_to_base,
     set_to_reserve,
     charge_at_base,
-    charge_at_station,
+    instruct_vehicles_dispatch_to_station,
     send_vehicle_to_field,
     sit_idle,
 )
@@ -46,6 +46,7 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
       a smart charging scenario.
     """
     fleet_target: FleetTarget = FleetTarget()
+    max_search_radius_km: float = 100
 
     def generate_instructions(
             self,
@@ -130,12 +131,15 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
             instructions = instructions + idle_instructions
         elif station_charge_diff > 0:
             # we need more vehicles charging at a station
-            charge_instructions = charge_at_station(station_charge_diff, active_ready_vehicles, simulation_state)
+            charge_instructions = instruct_vehicles_dispatch_to_station(station_charge_diff,
+                                                                        self.max_search_radius_km,
+                                                                        active_ready_vehicles,
+                                                                        simulation_state)
             instructions = instructions + charge_instructions
 
         if active_diff < 0:
             # we have more active vehicles than we need
-            active_instructions = return_to_base(abs(active_diff), active_vehicles, simulation_state)
+            active_instructions = instruct_vehicles_return_to_base(abs(active_diff), self.max_search_radius_km, active_vehicles, simulation_state)
             instructions = instructions + active_instructions
         elif active_diff > 0:
             # we we need more active vehicles in the field

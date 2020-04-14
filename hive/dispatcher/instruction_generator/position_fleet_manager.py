@@ -5,10 +5,10 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from h3 import h3
 
-from hive.dispatcher.instruction_generator.instruction_generator_ops import send_vehicle_to_field, return_to_base
+from hive.dispatcher.instruction_generator.instruction_generator_ops import send_vehicle_to_field, instruct_vehicles_return_to_base
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.vehicle_state import *
-from hive.util import Seconds
+from hive.util import Seconds, Kilometers
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -26,6 +26,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
     """
     demand_forecaster: ForecasterInterface
     update_interval_seconds: Seconds
+    max_search_radius_km: Kilometers
 
     @staticmethod
     def _sample_random_location(road_network: RoadNetwork) -> GeoId:
@@ -73,7 +74,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
             instructions = instructions + repos_instructions
         elif active_diff > 0:
             # we can remove active_diff vehicles from service
-            base_instructions = return_to_base(active_diff, active_vehicles, simulation_state)
+            base_instructions = instruct_vehicles_return_to_base(active_diff, self.max_search_radius_km, active_vehicles, simulation_state)
             instructions = instructions + base_instructions
 
         return self._replace(demand_forecaster=updated_forecaster), instructions, ()

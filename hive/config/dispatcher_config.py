@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
 from hive.config import ConfigBuilder
-from hive.util.units import Ratio, Seconds, Kilometers
+from hive.util.units import Ratio, Seconds
 
 
 class DispatcherConfig(NamedTuple):
@@ -11,7 +11,6 @@ class DispatcherConfig(NamedTuple):
     matching_low_soc_threshold: Ratio
     charging_low_soc_threshold: Ratio
     ideal_fastcharge_soc_limit: Ratio
-    charging_max_search_radius_km: Kilometers
     base_vehicles_charging_limit: Optional[int]
 
     @classmethod
@@ -21,7 +20,6 @@ class DispatcherConfig(NamedTuple):
             'matching_low_soc_threshold': 0.2,
             'charging_low_soc_threshold': 0.2,
             'ideal_fastcharge_soc_limit': 0.8,
-            'charging_max_search_radius_km': 100,
             'base_vehicles_charging_limit': None,
         }
 
