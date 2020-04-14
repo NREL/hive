@@ -7,6 +7,7 @@ import immutables
 from h3 import h3
 
 from hive.dispatcher.instruction.instructions import *
+from hive.util import Kilometers
 from hive.util.helpers import DictOps
 from hive.util.helpers import H3Ops
 
@@ -18,13 +19,13 @@ if TYPE_CHECKING:
     from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 
 
-class InstuctionGenerationResult(NamedTuple):
+class InstructionGenerationResult(NamedTuple):
     instruction_map: immutables.Map = immutables.Map()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(self,
                                     instruction_generator: InstructionGenerator,
-                                    simulation_state: 'SimulationState') -> InstuctionGenerationResult:
+                                    simulation_state: 'SimulationState') -> InstructionGenerationResult:
         """
         generates instructions from one InstructionGenerator and updates the result accumulator
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
@@ -47,7 +48,7 @@ class InstuctionGenerationResult(NamedTuple):
 
 def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ...],
                           simulation_state: 'SimulationState',
-                          ) -> InstuctionGenerationResult:
+                          ) -> InstructionGenerationResult:
     """
     applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
     and has an overwrite behavior with respect to generated Instructions in the instruction_map
@@ -60,17 +61,21 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     result = ft.reduce(
         lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state),
         instruction_generators,
-        InstuctionGenerationResult()
+        InstructionGenerationResult()
     )
 
     return result
 
 
-def return_to_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_return_to_base(n: int,
+                                     max_search_radius_km: Kilometers,
+                                     vehicles: Tuple[Vehicle],
+                                     simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles back to the base
 
     :param n: how many vehicles to send back to base
+    :param max_search_radius_km: the maximum distance vehicles will search to a base
     :param vehicles: the list of vehicles to consider
     :param simulation_state: the simulation state
     :return:
@@ -85,7 +90,8 @@ def return_to_base(n: int, vehicles: Tuple[Vehicle], simulation_state: Simulatio
         nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
                                             entities=simulation_state.bases,
                                             entity_search=simulation_state.b_search,
-                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution)
+                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                            max_distance_km=max_search_radius_km)
         if nearest_base:
             instruction = DispatchBaseInstruction(
                 vehicle_id=veh.id,
@@ -94,13 +100,13 @@ def return_to_base(n: int, vehicles: Tuple[Vehicle], simulation_state: Simulatio
 
             instructions = instructions + (instruction,)
         else:
-            # user set the max search radius too low
+            # no base found or user set the max search radius too low
             continue
 
     return instructions
 
 
-def set_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to reserve at the base
 
@@ -126,7 +132,7 @@ def set_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: Simulatio
     return instructions
 
 
-def charge_at_base(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -154,15 +160,20 @@ def charge_at_base(n: int, vehicles: Tuple[Vehicle], simulation_state: Simulatio
     return instructions
 
 
-def charge_at_station(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_to_dispatch_to_station(n: int,
+                                             max_search_radius_km: float,
+                                             vehicles: Tuple[Vehicle],
+                                             simulation_state: SimulationState) -> Tuple[Instruction]:
     """
-    a helper function to set n vehicles to charge at the base
+    a helper function to set n vehicles to charge at a station
 
     :param n: how many vehicles to charge at the base
+    :param max_search_radius_km: the max kilometers to search for a station
     :param vehicles: the list of vehicles to consider
     :param simulation_state: the simulation state
     :return:
     """
+
     instructions = ()
 
     for veh in vehicles:
@@ -173,7 +184,7 @@ def charge_at_station(n: int, vehicles: Tuple[Vehicle], simulation_state: Simula
                                                entities=simulation_state.stations,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                               max_distance_km=100,
+                                               max_distance_km=max_search_radius_km,
                                                is_valid=lambda s: s.has_available_charger(Charger.DCFC))
         if nearest_station:
             instruction = DispatchStationInstruction(
@@ -182,12 +193,12 @@ def charge_at_station(n: int, vehicles: Tuple[Vehicle], simulation_state: Simula
                 charger=Charger.DCFC,
             )
 
-        instructions = instructions + (instruction,)
+            instructions = instructions + (instruction,)
 
     return instructions
 
 
-def sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
+def instruct_vehicles_to_sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to sit idle
 
@@ -209,7 +220,7 @@ def sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
     return instructions
 
 
-def send_vehicle_to_field(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_to_reposition(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
     """
     a helper function to send n vehicles into the field at a random location
 
@@ -222,7 +233,8 @@ def send_vehicle_to_field(n: int, vehicles: Tuple[Vehicle], simulation_state: Si
     def _sample_random_location(road_network) -> GeoId:
         random_hex = random.choice(tuple(road_network.geofence.geofence_set))
         children = h3.h3_to_children(random_hex, road_network.sim_h3_resolution)
-        return children.pop()
+        choice = random.choice(tuple(children))
+        return choice
 
     instructions = ()
 

@@ -4,6 +4,8 @@ sim:
   request_cancel_time_seconds: 600
   start_time: "1970-01-01T00:00:00-07:00" # beginning of mountain time
   end_time: "1970-01-02T00:00:00-07:00" # 24 hours after the beginning of mountain time
+network:
+  max_search_radius_km: 20
 io:
   working_directory: denver_demo_outputs
   requests_file: denver_demo_requests.csv

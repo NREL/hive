@@ -3,12 +3,12 @@ from __future__ import annotations
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import (
-    return_to_base,
-    set_to_reserve,
-    charge_at_base,
-    charge_at_station,
-    send_vehicle_to_field,
-    sit_idle,
+    instruct_vehicles_return_to_base,
+    instruct_vehicles_at_base_to_reserve,
+    instruct_vehicles_at_base_to_charge,
+    instruct_vehicles_to_dispatch_to_station,
+    instruct_vehicles_to_reposition,
+    instruct_vehicles_to_sit_idle,
 )
 from hive.external.demo_base_target.fleet_targets import FleetTarget
 from hive.state.vehicle_state import *
@@ -45,6 +45,7 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
       a smart charging scenario.
     """
     fleet_target: FleetTarget = FleetTarget()
+    max_search_radius_km: float = 100
 
     def generate_instructions(
             self,
@@ -116,29 +117,32 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
 
         if base_charge_diff < 0:
             # we have more charging vehicles than we need
-            reserve_instructions = set_to_reserve(abs(base_charge_diff), base_charge_vehicles, simulation_state)
+            reserve_instructions = instruct_vehicles_at_base_to_reserve(abs(base_charge_diff), base_charge_vehicles, simulation_state)
             instructions = instructions + reserve_instructions
         elif base_charge_diff > 0:
             # we don't have enough charging vehicles
-            charge_instructions = charge_at_base(base_charge_diff, reserve_vehicles, simulation_state)
+            charge_instructions = instruct_vehicles_at_base_to_charge(base_charge_diff, reserve_vehicles, simulation_state)
             instructions = instructions + charge_instructions
 
         if station_charge_diff < 0:
             # we have more station charging than we want
-            idle_instructions = sit_idle(abs(station_charge_diff), station_charge_vehicles)
+            idle_instructions = instruct_vehicles_to_sit_idle(abs(station_charge_diff), station_charge_vehicles)
             instructions = instructions + idle_instructions
         elif station_charge_diff > 0:
             # we need more vehicles charging at a station
-            charge_instructions = charge_at_station(station_charge_diff, active_ready_vehicles, simulation_state)
+            charge_instructions = instruct_vehicles_to_dispatch_to_station(station_charge_diff,
+                                                                           self.max_search_radius_km,
+                                                                           active_ready_vehicles,
+                                                                           simulation_state)
             instructions = instructions + charge_instructions
 
         if active_diff < 0:
             # we have more active vehicles than we need
-            active_instructions = return_to_base(abs(active_diff), active_vehicles, simulation_state)
+            active_instructions = instruct_vehicles_return_to_base(abs(active_diff), self.max_search_radius_km, active_vehicles, simulation_state)
             instructions = instructions + active_instructions
         elif active_diff > 0:
             # we we need more active vehicles in the field
-            repos_instructions = send_vehicle_to_field(active_diff, reserve_vehicles, simulation_state)
+            repos_instructions = instruct_vehicles_to_reposition(active_diff, reserve_vehicles, simulation_state)
             instructions = instructions + repos_instructions
 
         return self, instructions
