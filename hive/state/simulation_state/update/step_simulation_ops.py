@@ -42,7 +42,7 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
 
     next_state = ft.reduce(
         _step_vehicle,
-        tuple(simulation_state.vehicles.keys()),
+        simulation_state.vehicle_iterator,
         simulation_state,
     )
 
