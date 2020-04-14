@@ -35,7 +35,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
             :return: the sim without the request
             """
             sim, these_reports = payload
-            this_request_cancel_time = sim.requests[request_id].cancel_time
+            this_request_cancel_time = sim.requests[request_id].departure_time + env.config.sim.request_cancel_time_seconds
             if sim.sim_time < this_request_cancel_time:
                 return payload
             else:

@@ -193,7 +193,6 @@ def mock_request(
         h3_res: int = 15,
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
-        cancel_time: SimTime = 5,
         passengers: int = 1
 ) -> Request:
     return Request.build(
@@ -202,7 +201,6 @@ def mock_request(
         destination=h3.geo_to_h3(d_lat, d_lon, h3_res),
         road_network=road_network,
         departure_time=departure_time,
-        cancel_time=cancel_time,
         passengers=passengers
     )
 
@@ -213,7 +211,6 @@ def mock_request_from_geoids(
         destination: GeoId = h3.geo_to_h3(39.7579, -104.978, 15),
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
-        cancel_time: SimTime = 5,
         passengers: int = 1,
         value: Currency = 0
 ) -> Request:
@@ -223,7 +220,6 @@ def mock_request_from_geoids(
         destination=destination,
         road_network=road_network,
         departure_time=departure_time,
-        cancel_time=cancel_time,
         passengers=passengers,
         value=value,
     )
