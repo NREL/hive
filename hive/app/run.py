@@ -66,6 +66,7 @@ def run() -> int:
                 update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
             ),
             ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
+                                 env.config.dispatcher.ideal_fastcharge_soc_limit,
                                  env.config.dispatcher.charging_max_search_radius_km),
             # DeluxeFleetManager(),
             Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
