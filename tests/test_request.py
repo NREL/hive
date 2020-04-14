@@ -10,7 +10,6 @@ class MyTestCase(unittest.TestCase):
     origin = h3.geo_to_h3(0, 0, res=11)
     destination = h3.geo_to_h3(3, 4, res=11)
     departure_time = 28800
-    cancel_time = 29400
     passengers = 2
 
     request = mock_request(
@@ -21,7 +20,6 @@ class MyTestCase(unittest.TestCase):
         d_lon=4,
         h3_res=11,
         departure_time=28800,
-        cancel_time=29400,
         passengers=2
     )
 
@@ -33,7 +31,6 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(self.request.origin, self.origin)
         self.assertEqual(self.request.destination, self.destination)
         self.assertEqual(self.request.departure_time, self.departure_time)
-        self.assertEqual(self.request.cancel_time, self.cancel_time)
         self.assertEqual(len(self.request.passengers), self.passengers)
 
     def test_from_row(self):
@@ -48,7 +45,6 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
-        self.assertEqual(req.cancel_time, 61800)
         self.assertEqual(len(req.passengers), 4)
 
     def test_from_row_datetime_bad(self):
@@ -59,7 +55,6 @@ class MyTestCase(unittest.TestCase):
             'd_lat': '0',
             'd_lon': '0',
             'departure_time': '01-09-2019 11:11:11',
-            'cancel_time': '2019-01-09 16:11:11',
             'passengers': '4'
         }
         config = mock_config(

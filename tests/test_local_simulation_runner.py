@@ -14,7 +14,6 @@ class TestLocalSimulationRunner(TestCase):
         req = mock_request(
             request_id='1',
             departure_time=0,
-            cancel_time=3600,
             passengers=2
         )
         initial_sim = mock_sim(

@@ -111,25 +111,30 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :return: the updated sim and updated reporting
         """
         error, req = Request.from_row(row, env, acc.simulation_state.road_network)
+        this_req_cancel_time = req.departure_time + env.config.sim.request_cancel_time_seconds
         if error:
-            return acc.add_report({'error': error})
-        elif req.cancel_time <= acc.simulation_state.sim_time:
+            log.error(error)
+            return acc
+        elif this_req_cancel_time <= acc.simulation_state.sim_time:
             # cannot add request that should already be cancelled
             current_time = acc.simulation_state.sim_time
-            warning = f"request {req.id} with cancel_time {req.cancel_time} cannot be added at time {current_time}"
-            return acc.add_report({'warning': warning})
+            warning = f"request {req.id} with cancel_time {this_req_cancel_time} cannot be added at time {current_time}"
+            log.warning(warning)
+            return acc
         else:
             distance_km = acc.simulation_state.road_network.distance_by_geoid_km(req.origin, req.destination)
             req_updated = req.assign_value(rate_structure, distance_km)
             error, sim_updated = simulation_state_ops.add_request(acc.simulation_state, req_updated)
             if error:
-                return acc.add_report({'error': error})
+                log.error(error)
+                return acc
             else:
                 # successfully added request
                 req_in_sim = sim_updated.requests.get(req.id)
                 if not req_in_sim:
                     warning = f"adding new request {req.id} to sim succeeded but now request is not found"
-                    return acc.add_report({'warning': warning})
+                    log.warning(warning)
+                    return acc
                 else:
                     dep_t = sim_updated.requests.get(req.id).departure_time
                     report = {
