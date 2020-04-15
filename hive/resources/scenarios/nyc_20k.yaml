@@ -5,6 +5,7 @@ sim:
   end_time: 86400
   sim_h3_search_resolution: 7  # around 12ish hexes covering manhattan
 network:
+  network_type: osm_network
   max_search_radius_km: 20
 io:
   working_directory: nyc_20k_out

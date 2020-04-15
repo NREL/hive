@@ -406,15 +406,17 @@ def mock_config(
             'sim_name': 'test_sim',
         },
         "io": {
-            'vehicles_file': '',
-            'requests_file': 'denver_demo_requests.csv',
-            'bases_file': '',
-            'stations_file': '',
-            'charging_price_file': 'denver_charging_prices_by_geoid.csv',
-            'rate_structure_file': 'rate_structure.csv',
-            'vehicle_types_file': 'default_vehicle_types.csv',
-            'geofence_file': 'downtown_denver.geojson',
-            'demand_forecast_file': 'nyc_demand.csv'
+            'file_paths': {
+                'vehicles_file': '',
+                'requests_file': 'denver_demo_requests.csv',
+                'bases_file': '',
+                'stations_file': '',
+                'charging_price_file': 'denver_charging_prices_by_geoid.csv',
+                'rate_structure_file': 'rate_structure.csv',
+                'vehicle_types_file': 'default_vehicle_types.csv',
+                'geofence_file': 'downtown_denver.geojson',
+                'demand_forecast_file': 'nyc_demand.csv'
+            }
         },
         "network": {},
         "dispatcher": {}

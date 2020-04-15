@@ -6,12 +6,11 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 from hive.config.io import IO
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.update.cancel_requests import CancelRequests
+from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.step_simulation import StepSimulation
-from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
 from hive.state.simulation_state.update.update_requests import UpdateRequests
-from hive.state.simulation_state.update.cancel_requests import CancelRequests
-from pkg_resources import resource_filename
 
 if TYPE_CHECKING:
     from hive.runner import RunnerPayload
@@ -34,7 +33,8 @@ class Update(NamedTuple):
               io: IO,
               instruction_generators: Tuple[InstructionGenerator, ...],
               instruction_generator_update_fn: Callable[
-                  [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None) -> Update:
+                  [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a,
+                                                                                                    b: None) -> Update:
         """
         constructs the functionality to update the simulation each time step
         :param io: the scenario io configuration
@@ -43,14 +43,10 @@ class Update(NamedTuple):
         :return: the Update that will be applied at each time step
         """
 
-        requests_file = resource_filename("hive.resources.requests", io.requests_file)
-        rate_structure_file = resource_filename("hive.resources.service_prices", io.rate_structure_file)
-        charging_price_file = resource_filename("hive.resources.charging_prices", io.charging_price_file)
-
         # the basic, built-in set of updates which advance time of the supply and demand
         pre_step_update = (
-            ChargingPriceUpdate.build(charging_price_file),
-            UpdateRequests.build(requests_file, rate_structure_file),
+            ChargingPriceUpdate.build(io.file_paths.charging_price_file),
+            UpdateRequests.build(io.file_paths.requests_file, io.file_paths.rate_structure_file),
             CancelRequests()
         )
 

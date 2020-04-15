@@ -5,9 +5,7 @@ import logging
 import os
 import sys
 import time
-from typing import NamedTuple
-
-from pkg_resources import resource_filename
+from typing import NamedTuple, TYPE_CHECKING
 
 from hive.app.logging_config import LOGGING_CONFIG
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
@@ -21,6 +19,9 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
+
+if TYPE_CHECKING:
+    from hive.runner.runner_payload import RunnerPayload
 
 root_log = logging.getLogger()
 log = logging.getLogger(__name__)
@@ -54,14 +55,13 @@ def run() -> int:
         log.info(f"successfully loaded config: {scenario_file}")
 
         # build the set of instruction generators which compose the control system for this hive run
-        demand_forecast_file = resource_filename("hive.resources.demand_forecast", env.config.io.demand_forecast_file)
 
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
             PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(demand_forecast_file),
+                demand_forecaster=BasicForecaster.build(env.config.io.demand_forecast_file),
                 update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds,
                 max_search_radius_km=env.config.network.max_search_radius_km
             ),
@@ -85,7 +85,6 @@ def run() -> int:
         _summary_stats(sim_result.s)
 
         env.reporter.sim_log_file.close()
-
         env.config.dump()
 
         return 0

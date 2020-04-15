@@ -91,7 +91,7 @@ class Vehicle(NamedTuple):
                 vehicle_type_id = row['vehicle_type_id']
                 vehicle_type: VehicleType = env.vehicle_types.get(vehicle_type_id)
                 if vehicle_type is None:
-                    file = env.config.io.vehicle_types_file
+                    file = env.config.io.file_paths.vehicle_types_file
                     raise IOError(f"cannot find vehicle_type {vehicle_type_id} in provided vehicle_type_file {file}")
                 powertrain_id = vehicle_type.powertrain_id
                 powercurve_id = vehicle_type.powercurve_id
