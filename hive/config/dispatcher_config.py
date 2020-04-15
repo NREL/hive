@@ -39,3 +39,6 @@ class DispatcherConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
         return DispatcherConfig(**d)
+
+    def asdict(self) -> Dict:
+        return self._asdict()

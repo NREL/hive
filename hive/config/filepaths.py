@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import NamedTuple, Tuple, Dict, Optional
 
 from pkg_resources import resource_filename
@@ -68,3 +69,9 @@ class FilePaths(NamedTuple):
             d['demand_forecast_file'] = resource_filename("hive.resources.demand_forecast", d['demand_forecast_file'])
 
         return FilePaths(**d)
+
+    def asdict(self, absolute_paths=False) -> Dict:
+        if absolute_paths:
+            return {k: v for k, v in self._asdict().items()}
+        else:
+            return {k: os.path.basename(v) for k, v in self._asdict().items()}

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union, Tuple, Optional
-from pkg_resources import resource_filename
+from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import ConfigBuilder
 from hive.util import Kilometers
@@ -35,6 +34,7 @@ class Network(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Network:
-
-
         return Network(**d)
+
+    def asdict(self) -> Dict:
+        return self._asdict()

@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import ConfigBuilder
+from hive.util.parsers import time_parser
 from hive.util.typealiases import SimTime
 from hive.util.units import Seconds
-from hive.util.parsers import time_parser
 
 
 class Sim(NamedTuple):
@@ -66,3 +66,5 @@ class Sim(NamedTuple):
             idle_energy_rate=d['idle_energy_rate'],
         )
 
+    def asdict(self) -> Dict:
+        return self._asdict()

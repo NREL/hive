@@ -57,3 +57,10 @@ class IO(NamedTuple):
         d['file_paths'] = FilePaths.build(d['file_paths'])
 
         return IO(**d)
+
+    def asdict(self) -> Dict:
+        file_paths_dict = self.file_paths.asdict()
+        self_dict = self._asdict()
+        self_dict['file_paths'] = file_paths_dict
+
+        return self_dict

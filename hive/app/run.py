@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import time
+import yaml
 from typing import NamedTuple, TYPE_CHECKING
 
 from hive.app.logging_config import LOGGING_CONFIG
@@ -61,7 +62,7 @@ def run() -> int:
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
             PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.io.demand_forecast_file),
+                demand_forecaster=BasicForecaster.build(env.config.io.file_paths.demand_forecast_file),
                 update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds,
                 max_search_radius_km=env.config.network.max_search_radius_km
             ),
@@ -85,7 +86,12 @@ def run() -> int:
         _summary_stats(sim_result.s)
 
         env.reporter.sim_log_file.close()
-        env.config.dump()
+
+        config_dump = env.config.asdict()
+        dump_name = env.config.sim.sim_name + ".yaml"
+        dump_path = os.path.join(env.config.output_directory, dump_name)
+        with open(dump_path, 'w') as f:
+            yaml.dump(config_dump, f, sort_keys=False)
 
         return 0
 
