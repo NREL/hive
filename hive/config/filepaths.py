@@ -56,9 +56,6 @@ class FilePaths(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict, cache: Optional[Dict]) -> FilePaths:
         d['vehicles_file'] = resource_filename("hive.resources.vehicles", d['vehicles_file'])
-        if cache:
-            cls._check_md5_checksum(d['vehicles_file'], cache['vehicles_file'])
-
         d['bases_file'] = resource_filename("hive.resources.bases", d['bases_file'])
         d['stations_file'] = resource_filename("hive.resources.stations", d['stations_file'])
         d['requests_file'] = resource_filename("hive.resources.requests", d['requests_file'])
@@ -96,4 +93,11 @@ class FilePaths(NamedTuple):
         if absolute_paths:
             return self._asdict()
         else:
-            return {k: os.path.basename(v) for k, v in self._asdict().items()}
+            out_dict = {}
+            for k, v in self._asdict().items():
+                if not v:
+                    out_dict[k] = v
+                else:
+                    out_dict[k] = os.path.basename(v)
+
+            return out_dict
