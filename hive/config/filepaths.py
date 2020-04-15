@@ -79,7 +79,8 @@ class FilePaths(NamedTuple):
 
         if cache:
             for name, path in file_paths_config.asdict(absolute_paths=True).items():
-                cls._check_md5_checksum(path, cache[name])
+                if path:
+                    cls._check_md5_checksum(path, cache[name])
 
         return file_paths_config
 
