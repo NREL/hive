@@ -395,7 +395,20 @@ def mock_config(
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
+        file_paths: Dict = None,
 ) -> HiveConfig:
+    if not file_paths:
+        file_paths = {
+            'vehicles_file': 'denver_demo_vehicles.csv',
+            'requests_file': 'denver_demo_requests.csv',
+            'bases_file': 'denver_demo_bases.csv',
+            'stations_file': 'denver_demo_stations.csv',
+            'charging_price_file': 'denver_charging_prices_by_geoid.csv',
+            'rate_structure_file': 'rate_structure.csv',
+            'vehicle_types_file': 'default_vehicle_types.csv',
+            'geofence_file': 'downtown_denver.geojson',
+            'demand_forecast_file': 'nyc_demand.csv'
+        }
     return HiveConfig.build({
         "sim": {
             'start_time': start_time,
@@ -406,17 +419,7 @@ def mock_config(
             'sim_name': 'test_sim',
         },
         "io": {
-            'file_paths': {
-                'vehicles_file': '',
-                'requests_file': 'denver_demo_requests.csv',
-                'bases_file': '',
-                'stations_file': '',
-                'charging_price_file': 'denver_charging_prices_by_geoid.csv',
-                'rate_structure_file': 'rate_structure.csv',
-                'vehicle_types_file': 'default_vehicle_types.csv',
-                'geofence_file': 'downtown_denver.geojson',
-                'demand_forecast_file': 'nyc_demand.csv'
-            }
+            'file_paths': file_paths,
         },
         "network": {},
         "dispatcher": {}

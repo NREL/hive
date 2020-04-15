@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import hashlib
 import os
+import logging
 from typing import NamedTuple, Tuple, Dict, Optional
 
 from pkg_resources import resource_filename
 
 from hive.config import ConfigBuilder
+
+log = logging.getLogger(__name__)
 
 
 class FilePaths(NamedTuple):
@@ -41,17 +45,20 @@ class FilePaths(NamedTuple):
         )
 
     @classmethod
-    def build(cls, config: Dict = None) -> FilePaths:
+    def build(cls, config: Dict, cache: Optional[Dict]) -> FilePaths:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
-            config_constructor=lambda c: FilePaths.from_dict(c),
+            config_constructor=lambda c: FilePaths.from_dict(c, cache),
             config=config
         )
 
     @classmethod
-    def from_dict(cls, d: Dict) -> FilePaths:
+    def from_dict(cls, d: Dict, cache: Optional[Dict]) -> FilePaths:
         d['vehicles_file'] = resource_filename("hive.resources.vehicles", d['vehicles_file'])
+        if cache:
+            cls._check_md5_checksum(d['vehicles_file'], cache['vehicles_file'])
+
         d['bases_file'] = resource_filename("hive.resources.bases", d['bases_file'])
         d['stations_file'] = resource_filename("hive.resources.stations", d['stations_file'])
         d['requests_file'] = resource_filename("hive.resources.requests", d['requests_file'])
@@ -68,10 +75,24 @@ class FilePaths(NamedTuple):
         if d['demand_forecast_file']:
             d['demand_forecast_file'] = resource_filename("hive.resources.demand_forecast", d['demand_forecast_file'])
 
-        return FilePaths(**d)
+        file_paths_config = FilePaths(**d)
+
+        if cache:
+            for name, path in file_paths_config.asdict(absolute_paths=True).items():
+                cls._check_md5_checksum(path, cache[name])
+
+        return file_paths_config
+
+    @staticmethod
+    def _check_md5_checksum(filepath: str, existing_md5_sum: str):
+        with open(filepath, 'rb') as f:
+            data = f.read()
+            new_md5_sum = hashlib.md5(data).hexdigest()
+            if new_md5_sum != existing_md5_sum:
+                log.warning(f'this is a cached config file but the file {filepath} has changed since the last run')
 
     def asdict(self, absolute_paths=False) -> Dict:
         if absolute_paths:
-            return {k: v for k, v in self._asdict().items()}
+            return self._asdict()
         else:
             return {k: os.path.basename(v) for k, v in self._asdict().items()}

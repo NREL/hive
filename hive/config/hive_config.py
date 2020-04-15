@@ -29,7 +29,7 @@ class HiveConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
         return HiveConfig(
-            io=IO.build(d.get('io')),
+            io=IO.build(d.get('io'), d.get('cache')),
             sim=Sim.build(d.get('sim')),
             network=Network.build(d.get('network')),
             dispatcher=DispatcherConfig.build(d.get('dispatcher')),
@@ -37,16 +37,14 @@ class HiveConfig(NamedTuple):
         )
 
     def asdict(self) -> Dict:
-
         out_dict = {}
-
         cache = {}
+
         for name, value in self.io.file_paths.asdict(absolute_paths=True).items():
             with open(value, 'rb') as f:
                 data = f.read()
                 md5_sum = hashlib.md5(data).hexdigest()
                 cache[name] = md5_sum
-
         out_dict['cache'] = cache
 
         for name, config in self._asdict().items():

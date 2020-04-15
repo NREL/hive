@@ -44,17 +44,17 @@ class IO(NamedTuple):
         )
 
     @classmethod
-    def build(cls, config: Dict = None) -> IO:
+    def build(cls, config: Dict = None, cache: Optional[Dict] = None) -> IO:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
-            config_constructor=lambda c: IO.from_dict(c),
+            config_constructor=lambda c: IO.from_dict(c, cache),
             config=config
         )
 
     @classmethod
-    def from_dict(cls, d: Dict) -> IO:
-        d['file_paths'] = FilePaths.build(d['file_paths'])
+    def from_dict(cls, d: Dict, cache: Optional[Dict]) -> IO:
+        d['file_paths'] = FilePaths.build(d['file_paths'], cache)
 
         return IO(**d)
 
