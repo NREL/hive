@@ -6,7 +6,6 @@ from typing import Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
-    from hive.util.typealiases import Report
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
@@ -20,13 +19,13 @@ class InstructionGenerator(metaclass=ABCNamedTupleMeta):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...]]:
         """
         generates vehicle instructions which can perform vehicle state transitions
         based on some objective
 
         :param simulation_state: The current simulation state
 
-        :return: the updated InstructionGenerator along with generated instructions and any reports
+        :return: the updated InstructionGenerator along with generated instructions
         """
         pass

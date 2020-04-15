@@ -21,7 +21,6 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
-    from hive.util.typealiases import Report
 
 log = logging.getLogger(__name__)
 
@@ -51,19 +50,19 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[DeluxeFleetManager, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[DeluxeFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
 
-        :return: the updated Manager along with fleet targets and reports
+        :return: the updated DeluxeManager along with fleet targets
         """
         instructions = ()
 
         if simulation_state.sim_time % (10 * 60) != 0:
             # only try to manage fleet at 10 minute intervals
-            return self, instructions, ()
+            return self, instructions
 
         def is_active(v: Vehicle) -> bool:
             return isinstance(v.vehicle_state, Idle) or \
@@ -146,4 +145,4 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
             repos_instructions = instruct_vehicles_to_reposition(active_diff, reserve_vehicles, simulation_state)
             instructions = instructions + repos_instructions
 
-        return self, instructions, ()
+        return self, instructions

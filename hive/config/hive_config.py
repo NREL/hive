@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import NamedTuple, Dict, Union
+from typing import NamedTuple, Dict, Union, Optional, Tuple
+
+import yaml
 
 from hive.config import *
 from hive.config.dispatcher_config import DispatcherConfig
@@ -34,6 +36,21 @@ class HiveConfig(NamedTuple):
             dispatcher=DispatcherConfig.build(d.get('dispatcher')),
             init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
         )
+
+    def dump(self, file_path: Optional[str] = None):
+        if not file_path:
+            file_name = self.sim.sim_name + ".yaml"
+            file_path = os.path.join(self.output_directory, file_name)
+
+        out_dict = {}
+        for name, config in self._asdict().items():
+            if issubclass(config.__class__, Tuple):
+                out_dict[name] = config._asdict()
+            else:
+                out_dict[name] = config
+
+        with open(file_path, 'w') as f:
+            yaml.dump(out_dict, f, sort_keys=False)
 
     @property
     def output_directory(self) -> str:

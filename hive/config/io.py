@@ -30,6 +30,8 @@ class IO(NamedTuple):
     log_period_seconds: Seconds
     progress_period_seconds: Seconds
 
+    cache_inputs: bool
+
     @classmethod
     def default_config(cls) -> Dict:
         return {
@@ -49,6 +51,8 @@ class IO(NamedTuple):
 
             'log_period_seconds': 60,
             'progress_period_seconds': 3600,
+
+            'cache_inputs': False,
         }
 
     @classmethod

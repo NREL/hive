@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import immutables
-
 from abc import abstractmethod
 from typing import Optional, TYPE_CHECKING, Tuple
+
+import immutables
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 from hive.util.typealiases import VehicleId
@@ -11,7 +11,6 @@ from hive.util.typealiases import VehicleId
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.runner.environment import Environment
-    from hive.util.typealiases import Report, SimTime
 
 
 class Instruction(metaclass=ABCNamedTupleMeta):
@@ -46,12 +45,3 @@ class Instruction(metaclass=ABCNamedTupleMeta):
 
 
 InstructionMap = immutables.Map[VehicleId, Instruction]
-
-
-def instruction_to_report(instruction: Instruction, sim_time: SimTime) -> Report:
-    i_dict = instruction._asdict()
-    i_dict['sim_time'] = sim_time
-    i_dict['report_type'] = "dispatcher"
-    i_dict['instruction_type'] = instruction.__class__.__name__
-
-    return i_dict

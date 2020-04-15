@@ -86,6 +86,8 @@ def run() -> int:
 
         env.reporter.sim_log_file.close()
 
+        env.config.dump()
+
         return 0
 
     except Exception as e:

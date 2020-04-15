@@ -17,6 +17,8 @@ from hive.state.simulation_state.update.step_simulation_ops import (
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
+    from hive.dispatcher.instruction.instructions import Instruction
+    from hive.util.typealiases import Report, SimTime
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +27,15 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
     instruction_generators: Tuple[InstructionGenerator, ...]
     instruction_generator_update_fn: Callable[
         [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None
+
+    @staticmethod
+    def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
+        i_dict = i._asdict()
+        i_dict['sim_time'] = sim_time
+        i_dict['report_type'] = "dispatcher"
+        i_dict['instruction_type'] = i.__class__.__name__
+
+        return i_dict
 
     def update(
             self,
@@ -57,10 +68,12 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         else:
 
             # generate Instructions, which may also have the side effect of modifying the InstructionGenerators
-            instr_result: InstructionGenerationResult = generate_instructions(user_update_result.updated_fns, simulation_state)
+            instr_result = generate_instructions(user_update_result.updated_fns, simulation_state)
+            reports = tuple(self._instruction_to_report(i, simulation_state.sim_time)
+                            for i in instr_result.instruction_map.values())
             sim_with_instructions = apply_instructions(simulation_state, env, instr_result.instruction_map)
             sim_next_time_step = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
-            update_result = SimulationUpdateResult(simulation_state=sim_next_time_step, reports=instr_result.reports)
+            update_result = SimulationUpdateResult(simulation_state=sim_next_time_step, reports=reports)
             updated_step_simulation = self._replace(instruction_generators=instr_result.updated_instruction_generators)
 
             return update_result, updated_step_simulation
