@@ -6,7 +6,7 @@ import os
 import sys
 import time
 import yaml
-from typing import NamedTuple, TYPE_CHECKING
+from typing import NamedTuple
 
 from hive.app.logging_config import LOGGING_CONFIG
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
@@ -21,8 +21,6 @@ from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
 
-if TYPE_CHECKING:
-    from hive.runner.runner_payload import RunnerPayload
 
 root_log = logging.getLogger()
 log = logging.getLogger(__name__)
