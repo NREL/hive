@@ -41,6 +41,8 @@ class HiveConfig(NamedTuple):
         cache = {}
 
         for name, value in self.io.file_paths.asdict(absolute_paths=True).items():
+            if not value:
+                continue
             with open(value, 'rb') as f:
                 data = f.read()
                 md5_sum = hashlib.md5(data).hexdigest()
