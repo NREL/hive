@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import os
 from datetime import datetime
-from typing import NamedTuple, Dict, Union, Optional, Tuple
-
-import yaml
+from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import *
 from hive.config.dispatcher_config import DispatcherConfig
@@ -30,27 +29,33 @@ class HiveConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
         return HiveConfig(
-            io=IO.build(d.get('io')),
+            io=IO.build(d.get('io'), d.get('cache')),
             sim=Sim.build(d.get('sim')),
             network=Network.build(d.get('network')),
             dispatcher=DispatcherConfig.build(d.get('dispatcher')),
             init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
         )
 
-    def dump(self, file_path: Optional[str] = None):
-        if not file_path:
-            file_name = self.sim.sim_name + ".yaml"
-            file_path = os.path.join(self.output_directory, file_name)
-
+    def asdict(self) -> Dict:
         out_dict = {}
+        cache = {}
+
+        for name, value in self.io.file_paths.asdict(absolute_paths=True).items():
+            if not value:
+                continue
+            with open(value, 'rb') as f:
+                data = f.read()
+                md5_sum = hashlib.md5(data).hexdigest()
+                cache[name] = md5_sum
+        out_dict['cache'] = cache
+
         for name, config in self._asdict().items():
             if issubclass(config.__class__, Tuple):
-                out_dict[name] = config._asdict()
+                out_dict[name] = config.asdict()
             else:
                 out_dict[name] = config
 
-        with open(file_path, 'w') as f:
-            yaml.dump(out_dict, f, sort_keys=False)
+        return out_dict
 
     @property
     def output_directory(self) -> str:

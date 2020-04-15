@@ -19,13 +19,16 @@ class TestInitializeSimulation(TestCase):
                     'sim_name': 'init_simulation_test_case',
                 },
                 "io": {
-                    "requests_file": "denver_demo_requests.csv",
-                    "rate_structure_file": "rate_structure.csv",
-                    "vehicles_file": "denver_demo_vehicles.csv",
-                    "bases_file": "denver_demo_bases.csv",
-                    "stations_file": "denver_demo_stations.csv",
-                    "vehicle_types_file": "default_vehicle_types.csv",
-                    "geofence_file": "downtown_denver.geojson",
+                    "file_paths": {
+                        "requests_file": "denver_demo_requests.csv",
+                        "rate_structure_file": "rate_structure.csv",
+                        "vehicles_file": "denver_demo_vehicles.csv",
+                        "bases_file": "denver_demo_bases.csv",
+                        "stations_file": "denver_demo_stations.csv",
+                        "vehicle_types_file": "default_vehicle_types.csv",
+                        "geofence_file": "downtown_denver.geojson",
+
+                    }
                 }
             }
         )
