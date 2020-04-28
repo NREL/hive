@@ -83,7 +83,7 @@ class Station(NamedTuple):
                 lat, lon = float(row['lat']), float(row['lon'])
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 charger_type = Charger.from_string(row['charger_type'])
-                charger_count = int(row['charger_count'])
+                charger_count = int(float(row['charger_count']))
 
                 if charger_type is None:
                     raise IOError(f"invalid charger type {row['charger']} for station {station_id}")
