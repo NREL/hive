@@ -19,10 +19,19 @@ class Instruction(metaclass=ABCNamedTupleMeta):
     """
 
     @abstractmethod
+    def prepare_instruction(self,
+                            sim_state: SimulationState,
+                            env: Environment) -> Tuple[Optional[Exception], Optional[Instruction]]:
+        """
+        performs any work needed to apply the instruction which does not modify the Sim, such as routing
+        :return: the prepared instruction, or an exception
+        """
+        pass
+
+    @abstractmethod
     def apply_instruction(self,
                           sim_state: SimulationState,
-                          env: Environment
-                          ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         attempts to apply an instruction to a vehicle
 

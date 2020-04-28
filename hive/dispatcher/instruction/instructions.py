@@ -6,6 +6,7 @@ from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 from hive.dispatcher.instruction.instruction_interface import Instruction
 from hive.model.energy.charger import Charger
 from hive.model.passenger import board_vehicle
+from hive.model.roadnetwork import Route
 from hive.runner.environment import Environment
 from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state import *
@@ -151,10 +152,11 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
 class DispatchBaseInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
+    route: Optional[Route] = None
 
-    def apply_instruction(self,
-                          sim_state: SimulationState,
-                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def prepare_instruction(self,
+                            sim_state: SimulationState,
+                            env: Environment) -> Tuple[Optional[Exception], Optional[Instruction]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         base = sim_state.bases.get(self.base_id)
         if not vehicle:
@@ -166,8 +168,17 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
             end = base.geoid
             route = sim_state.road_network.route(start, end)
 
+            return None, self._replace(route=route)
+
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        else:
             prev_state = vehicle.vehicle_state
-            next_state = DispatchBase(self.vehicle_id, self.base_id, route)
+            next_state = DispatchBase(self.vehicle_id, self.base_id, self.route)
 
             result = entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
             return result

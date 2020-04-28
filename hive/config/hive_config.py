@@ -10,6 +10,7 @@ from hive.config.dispatcher_config import DispatcherConfig
 
 
 class HiveConfig(NamedTuple):
+    context: System
     io: IO
     sim: Sim
     network: Network
