@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import functools as ft
 import logging
-from multiprocessing.pool import Pool
+import multiprocessing
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 import immutables
+from cloudpickle import cloudpickle
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
@@ -71,8 +72,11 @@ def apply_instructions(sim: SimulationState,
     run_in_parallel = env.config.system.local_parallelism > 1
     if run_in_parallel:
         # run using a local thread pool
+        ctx = multiprocessing.get_context()
+        # todo: custom reducer for pickling (see notes)
+        # ctx.reducer = cloudpickle (done wrong)
         try:
-            with Pool(processes=env.config.system.local_parallelism) as pool:
+            with multiprocessing.Pool(processes=env.config.system.local_parallelism) as pool:
                 async_result = pool.apply_async(lambda i: print(i), instructions.values())
                 async_result.get(timeout=5000)
             # with Pool(processes=env.config.system.local_parallelism) as pool:

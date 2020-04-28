@@ -13,3 +13,4 @@ dependencies:
   - pip:
       - cmake
       - h3
+      - cloudpickle
