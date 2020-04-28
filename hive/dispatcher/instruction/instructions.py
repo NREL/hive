@@ -23,6 +23,9 @@ if TYPE_CHECKING:
 class IdleInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
 
+    def prepare_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[Instruction]]:
+        return None, self
+
     def apply_instruction(self,
                           sim_state: SimulationState,
                           env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
@@ -38,10 +41,9 @@ class IdleInstruction(NamedTuple, Instruction):
 class DispatchTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
+    route: Optional[Route] = None
 
-    def apply_instruction(self,
-                          sim_state: SimulationState,
-                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def prepare_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[Instruction]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         request = sim_state.requests.get(self.request_id)
         if not vehicle:
@@ -52,14 +54,26 @@ class DispatchTripInstruction(NamedTuple, Instruction):
             start = vehicle.geoid
             end = request.origin
             route = sim_state.road_network.route(start, end)
+            return None, self._replace(route=route)
+
+    def apply_instruction(self,
+                          sim_state: SimulationState,
+                          env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle} not found"), None
+        else:
             prev_state = vehicle.vehicle_state
-            next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
+            next_state = DispatchTrip(self.vehicle_id, self.request_id, self.route)
             return entity_state_ops.transition_previous_to_next(sim_state, env, prev_state, next_state)
 
 
 class ServeTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
+
+    def prepare_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[Instruction]]:
+        pass
 
     def apply_instruction(self,
                           sim_state: SimulationState,
