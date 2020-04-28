@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
     from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.config.dispatcher_config import DispatcherConfig
     from hive.util.typealiases import GeoId
 
 random.seed(123)
@@ -29,8 +30,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
     A class that determines where vehicles should be positioned.
     """
     demand_forecaster: ForecasterInterface
-    update_interval_seconds: Seconds
-    max_search_radius_km: Kilometers
+    config: DispatcherConfig
 
     @staticmethod
     def _sample_random_location(road_network: RoadNetwork) -> GeoId:
@@ -58,7 +58,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
             return isinstance(v.vehicle_state, ChargingBase) or isinstance(v.vehicle_state, ReserveBase)
 
         # only generate instructions in 15 minute intervals
-        if simulation_state.sim_time % self.update_interval_seconds != 0:
+        if simulation_state.sim_time % self.config.default_update_interval_seconds != 0:
             return self, ()
 
         instructions = ()
@@ -88,7 +88,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
             # we can remove active_diff vehicles from service
             base_instructions = instruct_vehicles_return_to_base(
                 active_diff,
-                self.max_search_radius_km,
+                self.config.max_search_radius_km,
                 active_vehicles,
                 simulation_state,
             )
