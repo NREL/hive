@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Tuple, Dict
+from typing import NamedTuple, Tuple, Dict, Optional
 
 from hive.config import ConfigBuilder
 
@@ -21,7 +21,7 @@ class System(NamedTuple):
         )
 
     @classmethod
-    def build(cls, config: Dict = None) -> System:
+    def build(cls, config: Optional[Dict] = None) -> System:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),

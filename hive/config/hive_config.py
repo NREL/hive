@@ -10,7 +10,7 @@ from hive.config.dispatcher_config import DispatcherConfig
 
 
 class HiveConfig(NamedTuple):
-    context: System
+    system: System
     io: IO
     sim: Sim
     network: Network
@@ -30,6 +30,7 @@ class HiveConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
         return HiveConfig(
+            system=System.build(d.get('system')),
             io=IO.build(d.get('io'), d.get('cache')),
             sim=Sim.build(d.get('sim')),
             network=Network.build(d.get('network')),
