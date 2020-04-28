@@ -12,6 +12,7 @@ from hive.state.vehicle_state import (
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.config.dispatcher_config import DispatcherConfig
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
     """
     A manager that instructs vehicles on how to behave at the base
     """
-    base_vehicles_charging_limit: Optional[int]
+    config: DispatcherConfig
 
     def generate_instructions(
             self,
@@ -40,8 +41,8 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
             filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase),
         )
 
-        if self.base_vehicles_charging_limit:
-            target = self.base_vehicles_charging_limit
+        if self.config.base_vehicles_charging_limit:
+            target = self.config.base_vehicles_charging_limit
         else:
             target = len(reserve_vehicles)
 

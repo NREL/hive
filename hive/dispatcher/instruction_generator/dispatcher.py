@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.model.vehicle.vehicle import Vehicle
+    from hive.config.dispatcher_config import DispatcherConfig
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
@@ -19,7 +20,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
     """
     A managers algorithm that assigns vehicles greedily to most expensive request.
     """
-    low_soc_threshold: Ratio
+    config: DispatcherConfig
 
     def generate_instructions(
             self,
@@ -41,7 +42,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
                              isinstance(vehicle.vehicle_state, Repositioning)
 
-            return bool(vehicle.energy_source.soc > self.low_soc_threshold
+            return bool(vehicle.energy_source.soc > self.config.matching_low_soc_threshold
                         and is_valid_state and vehicle.id not in already_dispatched)
 
         unassigned_requests = simulation_state.get_requests(
@@ -55,7 +56,8 @@ class Dispatcher(NamedTuple, InstructionGenerator):
                                                    entities=simulation_state.vehicles,
                                                    entity_search=simulation_state.v_search,
                                                    sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                   is_valid=_is_valid_for_dispatch)
+                                                   is_valid=_is_valid_for_dispatch,
+                                                   )
             if nearest_vehicle:
                 instruction = DispatchTripInstruction(
                     vehicle_id=nearest_vehicle.id,

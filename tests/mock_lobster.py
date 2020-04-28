@@ -396,6 +396,7 @@ def mock_config(
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
         file_paths: Dict = None,
+        base_vehicles_charge_limit: int = None,
 ) -> HiveConfig:
     if not file_paths:
         file_paths = {
@@ -422,7 +423,9 @@ def mock_config(
             'file_paths': file_paths,
         },
         "network": {},
-        "dispatcher": {}
+        "dispatcher": {
+            'base_vehicles_charging_limit': base_vehicles_charge_limit,
+        }
     })
 
 
@@ -591,14 +594,11 @@ def mock_instruction_generators_with_mock_forecast(
         config: HiveConfig = mock_config(),
         forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
     return (
-        BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
+        BaseFleetManager(config.dispatcher),
         PositionFleetManager(mock_forecaster(forecast),
-                             config.dispatcher.fleet_sizing_update_interval_seconds,
-                             config.network.max_search_radius_km),
-        ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
-                             config.dispatcher.ideal_fastcharge_soc_limit,
-                             config.network.max_search_radius_km),
-        Dispatcher(config.dispatcher.matching_low_soc_threshold),
+                             config.dispatcher),
+        ChargingFleetManager(config.dispatcher),
+        Dispatcher(config.dispatcher),
     )
 
 
