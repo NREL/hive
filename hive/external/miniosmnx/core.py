@@ -16,7 +16,7 @@ USEFUL_TAGS_PATH = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
                     'landuse', 'width', 'est_width', 'junction']
 # all one-way mode to maintain original OSM node order
 # when constructing graphs specifically to save to .osm xml file
-ALL_ONEWAY = False
+ALL_ONEWAY = True
 
 # default CRS to set when creating graphs
 DEFAULT_CRS = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
