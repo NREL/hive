@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import ConfigBuilder
+from hive.util.parsers import time_parser
 from hive.util.typealiases import SimTime
 from hive.util.units import Seconds
-from hive.util.parsers import time_parser
 
 
 class Sim(NamedTuple):
@@ -15,6 +15,7 @@ class Sim(NamedTuple):
     end_time: SimTime
     sim_h3_resolution: int
     sim_h3_search_resolution: int
+    request_cancel_time_seconds: int
     idle_energy_rate: float
 
     @classmethod
@@ -23,6 +24,7 @@ class Sim(NamedTuple):
             'timestep_duration_seconds': 60,  # number of seconds per time step in Hive
             'sim_h3_resolution': 15,
             'sim_h3_search_resolution': 7,
+            'request_cancel_time_seconds': 600,
             'idle_energy_rate': 0.8  # (unit.kilowatthour / unit.hour)
         }
 
@@ -60,6 +62,9 @@ class Sim(NamedTuple):
             end_time=end_time,
             sim_h3_resolution=d['sim_h3_resolution'],
             sim_h3_search_resolution=d['sim_h3_search_resolution'],
+            request_cancel_time_seconds=int(d['request_cancel_time_seconds']),
             idle_energy_rate=d['idle_energy_rate'],
         )
 
+    def asdict(self) -> Dict:
+        return self._asdict()

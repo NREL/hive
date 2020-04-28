@@ -91,13 +91,12 @@ class Vehicle(NamedTuple):
                 vehicle_type_id = row['vehicle_type_id']
                 vehicle_type: VehicleType = env.vehicle_types.get(vehicle_type_id)
                 if vehicle_type is None:
-                    file = env.config.io.vehicle_types_file
+                    file = env.config.io.file_paths.vehicle_types_file
                     raise IOError(f"cannot find vehicle_type {vehicle_type_id} in provided vehicle_type_file {file}")
                 powertrain_id = vehicle_type.powertrain_id
                 powercurve_id = vehicle_type.powercurve_id
                 energy_type = env.energy_types.get(powercurve_id)
                 capacity = vehicle_type.capacity_kwh
-                ideal_energy_limit = vehicle_type.ideal_energy_limit_kwh
                 max_charge_acceptance = vehicle_type.max_charge_acceptance
                 operating_cost_km = vehicle_type.operating_cost_km
                 initial_soc = float(row['initial_soc'])
@@ -108,7 +107,6 @@ class Vehicle(NamedTuple):
                 energy_source = EnergySource.build(powercurve_id,
                                                    energy_type,
                                                    capacity,
-                                                   ideal_energy_limit,
                                                    max_charge_acceptance,
                                                    initial_soc)
 

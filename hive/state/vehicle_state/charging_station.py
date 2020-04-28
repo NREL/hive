@@ -85,7 +85,7 @@ class ChargingStation(NamedTuple, VehicleState):
         if not vehicle:
             return False
         else:
-            return vehicle.energy_source.is_at_ideal_energy_limit()
+            return vehicle.energy_source.is_full()
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',

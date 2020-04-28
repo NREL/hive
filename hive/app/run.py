@@ -5,22 +5,22 @@ import logging
 import os
 import sys
 import time
+import yaml
 from typing import NamedTuple
 
-from pkg_resources import resource_filename
-
+from hive.app.logging_config import LOGGING_CONFIG
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
+from hive.model.vehicle import Vehicle
+from hive.runner.load import load_simulation
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
-from hive.model.vehicle import Vehicle
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.runner.load import load_simulation
 from hive.state.simulation_state.update import Update
-from hive.app.logging_config import LOGGING_CONFIG
+
 
 root_log = logging.getLogger()
 log = logging.getLogger(__name__)
@@ -53,20 +53,21 @@ def run() -> int:
 
         log.info(f"successfully loaded config: {scenario_file}")
 
-        # dispatcher = BasicDispatcher.build(environment.config.io, environment.config.dispatcher)
-
-        demand_forecast_file = resource_filename("hive.resources.demand_forecast", env.config.io.demand_forecast_file)
+        # build the set of instruction generators which compose the control system for this hive run
 
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
             PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(demand_forecast_file),
-                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds
+                demand_forecaster=BasicForecaster.build(env.config.io.file_paths.demand_forecast_file),
+                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds,
+                max_search_radius_km=env.config.network.max_search_radius_km
             ),
             ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
-                                 env.config.dispatcher.charging_max_search_radius_km),
+                                 env.config.dispatcher.ideal_fastcharge_soc_limit,
+                                 env.config.network.max_search_radius_km),
+            # DeluxeFleetManager(max_search_radius_km=env.config.network.max_search_radius_km),
             Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
         )
 
@@ -83,6 +84,12 @@ def run() -> int:
         _summary_stats(sim_result.s)
 
         env.reporter.sim_log_file.close()
+
+        config_dump = env.config.asdict()
+        dump_name = env.config.sim.sim_name + ".yaml"
+        dump_path = os.path.join(env.config.output_directory, dump_name)
+        with open(dump_path, 'w') as f:
+            yaml.dump(config_dump, f, sort_keys=False)
 
         return 0
 

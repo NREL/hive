@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.model.vehicle.vehicle import Vehicle
-    from hive.util.typealiases import Report, SimTime
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
@@ -22,31 +21,21 @@ class Dispatcher(NamedTuple, InstructionGenerator):
     """
     low_soc_threshold: Ratio
 
-    @staticmethod
-    def _gen_report(instruction: Instruction, sim_time: SimTime) -> Report:
-        i_dict = instruction._asdict()
-        i_dict['sim_time'] = sim_time
-        i_dict['report_type'] = "dispatcher"
-        i_dict['instruction_type'] = instruction.__class__.__name__
-
-        return i_dict
-
     def generate_instructions(
             self,
             simulation_state: SimulationState,
-    ) -> Tuple[Dispatcher, Tuple[Instruction, ...], Tuple[Report, ...]]:
+    ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
 
-        :return: the updated Manager along with fleet targets and reports
+        :return: the updated Dispatcher along with instructions
         """
         # find requests that need a vehicle. Sorted by price high to low.
         # these instructions override fleet target instructions
         already_dispatched = []
         instructions = ()
-        reports = ()
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
             is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
@@ -55,10 +44,11 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             return bool(vehicle.energy_source.soc > self.low_soc_threshold
                         and is_valid_state and vehicle.id not in already_dispatched)
 
-        unassigned_requests = sorted(
-            [r for r in simulation_state.requests.values() if not r.dispatched_vehicle],
-            key=lambda r: r.value,
-            reverse=True,
+        unassigned_requests = simulation_state.get_requests(
+            sort=True,
+            sort_key=lambda r: r.value,
+            sort_reversed=True,
+            filter_function=lambda r: not r.dispatched_vehicle
         )
         for request in unassigned_requests:
             nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
@@ -74,9 +64,6 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
                 already_dispatched.append(nearest_vehicle.id)
 
-                report = self._gen_report(instruction, simulation_state.sim_time)
-                reports = reports + (report,)
-
                 instructions = instructions + (instruction,)
 
-        return self, instructions, reports
+        return self, instructions

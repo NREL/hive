@@ -3,17 +3,20 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config import ConfigBuilder
+from hive.util import Kilometers
 
 
 class Network(NamedTuple):
     network_type: str
     default_speed_kmph: float
+    max_search_radius_km: Kilometers
 
     @classmethod
     def default_config(cls) -> Dict:
         return {
             'network_type': "euclidean",
             'default_speed_kmph': 40.0,
+            'max_search_radius_km': 100.0,
         }
 
     @classmethod
@@ -32,3 +35,6 @@ class Network(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Network:
         return Network(**d)
+
+    def asdict(self) -> Dict:
+        return self._asdict()

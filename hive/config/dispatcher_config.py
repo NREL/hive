@@ -2,18 +2,16 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
-from hive.util.units import Ratio, Seconds, Kilometers
-
 from hive.config import ConfigBuilder
+from hive.util.units import Ratio, Seconds
 
 
 class DispatcherConfig(NamedTuple):
     fleet_sizing_update_interval_seconds: Seconds
     matching_low_soc_threshold: Ratio
     charging_low_soc_threshold: Ratio
-    charging_max_search_radius_km: Kilometers
+    ideal_fastcharge_soc_limit: Ratio
     base_vehicles_charging_limit: Optional[int]
-
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -21,7 +19,7 @@ class DispatcherConfig(NamedTuple):
             'fleet_sizing_update_interval_seconds': 60 * 15,
             'matching_low_soc_threshold': 0.2,
             'charging_low_soc_threshold': 0.2,
-            'charging_max_search_radius_km': 100,
+            'ideal_fastcharge_soc_limit': 0.8,
             'base_vehicles_charging_limit': None,
         }
 
@@ -41,3 +39,6 @@ class DispatcherConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
         return DispatcherConfig(**d)
+
+    def asdict(self) -> Dict:
+        return self._asdict()

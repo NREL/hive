@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
 from tests.mock_lobster import *
-from hive.state.vehicle_state import *
 
 
 class TestSimulationState(TestCase):
@@ -15,9 +14,9 @@ class TestSimulationState(TestCase):
         sta = mock_station_from_geoid(geoid=somewhere)
         b = mock_base_from_geoid(geoid=somewhere_else)
         sim = mock_sim(
-            vehicles=(veh, ),
-            stations=(sta, ),
-            bases=(b, )
+            vehicles=(veh,),
+            stations=(sta,),
+            bases=(b,)
         )
         error, sim_with_request = simulation_state_ops.add_request(sim, req)
         self.assertIsNone(error, "test invariant failed")
@@ -178,7 +177,6 @@ class TestSimulationState(TestCase):
 
         # check that both passengers boarded correctly
         for passenger in req.passengers:
-
             self.assertIn(passenger.id,
                           passenger_ids_in_vehicle,
                           f"passenger {passenger.id} should be in the vehicle but isn't")
@@ -431,7 +429,6 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(
             energy_type=EnergyType.ELECTRIC,
             capacity_kwh=50,
-            ideal_energy_limit_kwh=50,
             soc=0.75
         )
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
@@ -462,7 +459,6 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(
             energy_type=EnergyType.ELECTRIC,
             capacity_kwh=50,
-            ideal_energy_limit_kwh=40,
             soc=0.75
         )
         sta = mock_station_from_geoid()
@@ -514,3 +510,82 @@ class TestSimulationState(TestCase):
         self.assertIsNotNone(veh_result, "stepped vehicle should have advanced the simulation state")
         self.assertIsInstance(veh_result.vehicle_state, OutOfService,
                               "should have landed in out of service state")
+
+    def test_get_stations(self):
+        sim = mock_sim(stations=(
+            mock_station('s1', lat=0, lon=0, chargers=immutables.Map({Charger.DCFC: 1}, )),
+            mock_station('s2', lat=1, lon=1, chargers=immutables.Map({Charger.LEVEL_2: 1}, )),
+        ))
+
+        stations = sim.get_stations()
+
+        self.assertEqual(stations[0].id, 's1', 'station 1 is first')
+
+        reversed_stations = sim.get_stations(sort=True, sort_reversed=True)
+
+        self.assertEqual(reversed_stations[0].id, 's2', 'station 2 is first in reversed')
+
+        def has_dcfc(station: Station) -> bool:
+            return station.has_available_charger(Charger.DCFC)
+
+        dcfc_stations = sim.get_stations(filter_function=has_dcfc)
+
+        self.assertEqual(len(dcfc_stations), 1, 'only one station with dcfc charger')
+        self.assertEqual(dcfc_stations[0].id, 's1', 's1 has dcfc charger')
+
+    def test_get_bases(self):
+        sim = mock_sim(bases=(
+            mock_base('b1', lat=0, lon=0, stall_count=0),
+            mock_base('b2', lat=1, lon=1, stall_count=2),
+            mock_base('b3', lat=2, lon=2, stall_count=1),
+        ))
+
+        bases = sim.get_bases()
+
+        self.assertEqual(bases[0].id, 'b1', 'base 1 is first')
+
+        sorted_bases = sim.get_bases(sort=True, sort_reversed=True, sort_key=lambda b: b.total_stalls)
+
+        self.assertEqual(sorted_bases[0].id, 'b2', 'base 2 has the most stalls')
+
+    def test_get_vehicles(self):
+        sim = mock_sim(vehicles=(
+            mock_vehicle('v1', soc=1),
+            mock_vehicle('v2', soc=0.5),
+            mock_vehicle('v3', soc=0.2),
+            mock_vehicle('v4', soc=0.1),
+        ))
+
+        vehicles = sim.get_vehicles()
+
+        self.assertEqual(vehicles[-1].id, 'v4', 'v4 is last')
+
+        def low_soc(vehicle: Vehicle) -> bool:
+            return vehicle.energy_source.soc <= 0.2
+
+        sorted_and_filtered_vehicles = sim.get_vehicles(
+            sort=True,
+            sort_key=lambda v: v.energy_source.soc,
+            sort_reversed=True,
+            filter_function=low_soc,
+        )
+
+        self.assertEqual(sorted_and_filtered_vehicles[0].id, 'v3', 'v3 has highest soc below 0.2')
+
+    def test_get_requests(self):
+        sim = mock_sim()
+        r1 = mock_request('r1', departure_time=0)
+        r2 = mock_request('r2', departure_time=10)
+        r3 = mock_request('r3', departure_time=20)
+        _, sim = simulation_state_ops.add_request(sim, r3)
+        _, sim = simulation_state_ops.add_request(sim, r2)
+        _, sim = simulation_state_ops.add_request(sim, r1)
+
+        requests = sim.get_requests()
+
+        self.assertEqual(requests[0].id, 'r3', 'r3 was added first')
+
+        sorted_requests = sim.get_requests(sort=True, sort_key=lambda r: r.departure_time)
+
+        self.assertEqual(sorted_requests[0].id, 'r1', 'r1 has lowest departure time')
+

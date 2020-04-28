@@ -24,12 +24,6 @@ class VehicleTypesTableBuilder(NamedTuple):
             result=self.result.update({vehicle_type_id: vehicle_type})
         )
 
-    def consolidate_errors(self) -> Optional[Exception]:
-        if len(self.errors) == 0:
-            return None
-        else:
-            return CombinedException(self.errors)
-
     @classmethod
     def build(cls, source: Union[str, Iterator[Dict[str, str]]]) -> VehicleTypesTableBuilder:
         """
@@ -47,13 +41,11 @@ class VehicleTypesTableBuilder(NamedTuple):
             pt_err, powertrain_id = safe_get('powertrain_id', row)
             pc_err, powercurve_id = safe_get('powercurve_id', row)
             cap_err1, cap_str = safe_get('capacity_kwh', row)
-            iel_err1, iel_str = safe_get('ideal_energy_limit_kwh', row)
             mca_err1, mca_str = safe_get('max_charge_acceptance_kw', row)
             oc_err1, oc_str = safe_get('operating_cost_km', row)
 
             # convert strings to floating point values
             cap_err2, cap_val = to_float(cap_str, "capacity_kwh")
-            iel_err2, iel_val = to_float(iel_str, "ideal_energy_limit_kwh")
             mca_err2, mca_val = to_float(mca_str, "max_charge_acceptance_kw")
             oc_err2, oc_val = to_float(oc_str, "operating_cost_km")
 
@@ -70,7 +62,7 @@ class VehicleTypesTableBuilder(NamedTuple):
 
             errors = ft.reduce(
                 _add_error_msg,
-                (v_err, pt_err, pc_err, cap_err1, iel_err1, mca_err1, oc_err1, cap_err2, iel_err2, mca_err2, oc_err2),
+                (v_err, pt_err, pc_err, cap_err1, mca_err1, oc_err1, cap_err2, mca_err2, oc_err2),
                 None
             )
 
@@ -81,7 +73,6 @@ class VehicleTypesTableBuilder(NamedTuple):
                     powertrain_id=powertrain_id,
                     powercurve_id=powercurve_id,
                     capacity_kwh=cap_val,
-                    ideal_energy_limit_kwh=iel_val,
                     max_charge_acceptance=mca_val,
                     operating_cost_km=oc_val
                 )

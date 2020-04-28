@@ -82,7 +82,7 @@ class TestVehicleState(TestCase):
             msg="should have charged for 60 seconds")
 
     def test_charging_station_update_terminal(self):
-        vehicle = mock_vehicle(soc=0.99)
+        vehicle = mock_vehicle(soc=1)
         station = mock_station()
         charger = Charger.DCFC
         sim = mock_sim(

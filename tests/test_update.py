@@ -23,7 +23,7 @@ class TestUpdate(TestCase):
             stored_magic_number: int = old_magic_number
 
             def generate_instructions(self, simulation_state: SimulationState):
-                return self, (), ()
+                return self, ()
 
         def user_provided_update_fn(instr_gen, sim):
             if isinstance(instr_gen, MockGenerator):

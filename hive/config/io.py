@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Tuple, Dict, Optional
 
 from hive.config import ConfigBuilder
+from hive.config.filepaths import FilePaths
 from hive.util.units import Seconds
 
 
@@ -10,16 +11,7 @@ class IO(NamedTuple):
     working_directory: str
 
     # Input files
-    vehicles_file: str
-    requests_file: str
-    bases_file: str
-    stations_file: str
-    vehicle_types_file: str
-    road_network_file: Optional[str]
-    geofence_file: Optional[str]
-    rate_structure_file: Optional[str]
-    charging_price_file: Optional[str]
-    demand_forecast_file: Optional[str]
+    file_paths: FilePaths
 
     log_vehicles: bool
     log_requests: bool
@@ -35,12 +27,6 @@ class IO(NamedTuple):
         return {
             'working_directory': "",
 
-            'road_network_file': None,
-            'geofence_file': None,
-            'rate_structure_file': None,
-            'charging_price_file': None,
-            'demand_forecast_file': None,
-
             'log_vehicles': False,
             'log_requests': False,
             'log_stations': False,
@@ -54,23 +40,27 @@ class IO(NamedTuple):
     @classmethod
     def required_config(cls) -> Tuple[str, ...]:
         return (
-            'vehicles_file',
-            'requests_file',
-            'bases_file',
-            'stations_file',
-            'vehicle_types_file'
+            'file_paths',
         )
 
     @classmethod
-    def build(cls, config: Dict = None) -> IO:
+    def build(cls, config: Dict = None, cache: Optional[Dict] = None) -> IO:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
-            config_constructor=lambda c: IO.from_dict(c),
+            config_constructor=lambda c: IO.from_dict(c, cache),
             config=config
         )
 
     @classmethod
-    def from_dict(cls, d: Dict) -> IO:
+    def from_dict(cls, d: Dict, cache: Optional[Dict]) -> IO:
+        d['file_paths'] = FilePaths.build(d['file_paths'], cache)
+
         return IO(**d)
 
+    def asdict(self) -> Dict:
+        file_paths_dict = self.file_paths.asdict()
+        self_dict = self._asdict()
+        self_dict['file_paths'] = file_paths_dict
+
+        return self_dict
