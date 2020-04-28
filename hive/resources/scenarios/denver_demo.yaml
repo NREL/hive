@@ -1,3 +1,5 @@
+system:
+  local_parallelism: 8
 sim:
   sim_name: denver_demo
   timestep_duration_seconds: 60

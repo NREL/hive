@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import functools as ft
-import itertools as it
+import logging
 from multiprocessing.pool import Pool
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
-import logging
+
 import immutables
 
 from hive.dispatcher.instruction.instruction import Instruction
@@ -73,7 +73,11 @@ def apply_instructions(sim: SimulationState,
         # run using a local thread pool
         try:
             with Pool(processes=env.config.system.local_parallelism) as pool:
-                result = pool.apply_async(lambda i: i.apply_instruction(sim, env), instructions.values())
+                async_result = pool.apply_async(lambda i: print(i), instructions.values())
+                async_result.get(timeout=5000)
+            # with Pool(processes=env.config.system.local_parallelism) as pool:
+            #     async_result = pool.apply_async(lambda i: i.apply_instruction(sim, env), instructions.values())
+            #     result = async_result.get(timeout=env.config.system.local_parallelism_timeout_sec)
         except Exception as e:
             result = ((e, None),)
     else:

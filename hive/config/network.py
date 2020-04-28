@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Tuple
 
-from hive.config import ConfigBuilder
+from hive.config.config_builder import ConfigBuilder
 from hive.util import Kilometers
 
 

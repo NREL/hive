@@ -2,16 +2,18 @@ from __future__ import annotations
 
 from typing import NamedTuple, Tuple, Dict, Optional
 
-from hive.config import ConfigBuilder
+from hive.config.config_builder import ConfigBuilder
 
 
 class System(NamedTuple):
     local_parallelism: int
+    local_parallelism_timeout_sec: int
 
     @classmethod
     def default_config(cls) -> Dict:
         return {
-            'local_parallelism': 1
+            'local_parallelism': 1,
+            'local_parallelism_timeout_sec': 60
         }
 
     @classmethod

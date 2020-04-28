@@ -5,8 +5,12 @@ import os
 from datetime import datetime
 from typing import NamedTuple, Dict, Union, Tuple
 
-from hive.config import *
+from hive.config.config_builder import ConfigBuilder
 from hive.config.dispatcher_config import DispatcherConfig
+from hive.config.network import Network
+from hive.config.io import IO
+from hive.config.sim import Sim
+from hive.config.system import System
 
 
 class HiveConfig(NamedTuple):

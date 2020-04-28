@@ -5,7 +5,7 @@ import logging
 import os
 
 from hive.reporting.reporter import Reporter
-from hive.config import IO
+from hive.config.io import IO
 
 log = logging.getLogger(__name__)
 

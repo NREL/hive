@@ -287,7 +287,7 @@ class TupleOps:
         :return:
         """
         t1, t2 = it.tee(t)
-        return filter(predicate, t1), it.filterfalse(predicate, t2)
+        return tuple(filter(predicate, t1)), tuple(it.filterfalse(predicate, t2))
 
 
 class EntityUpdateResult(NamedTuple):
