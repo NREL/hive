@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Tuple, Optional, Dict, Union
 
 import networkx as nx
@@ -16,6 +17,8 @@ from hive.util import SimTime
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
+
+log = logging.getLogger(__name__)
 
 
 class OSMRoadNetwork(RoadNetwork):
@@ -84,32 +87,42 @@ class OSMRoadNetwork(RoadNetwork):
 
     def _parse_osm_speed(self, osm_speed: Union[str, list]) -> Kmph:
 
+        def _parse_speed_string(speed_string: str) -> Kmph:
+            if not any(char.isdigit() for char in speed_string):
+                # no numbers in string, set as defualt
+                return self.default_speed_kmph
+            else:
+                # try to parse the string assuming the format '{speed} {units}'
+                try:
+                    speed = float(speed_string.split(' ')[0])
+                except ValueError:
+                    log.warning(f"attempted to parse speed {speed_string} but was unable to convert to a number. "
+                                f"setting as default speed of {self.default_speed_kmph} kmph")
+                    return self.default_speed_kmph
+
+                try:
+                    units = speed_string.split(' ')[1]
+                    unit_conversion = self._unit_conversion[units]
+                except IndexError:
+                    log.warning(f"attempted to parse speed {speed_string} but was unable to discern units. "
+                                f"setting as default speed of {self.default_speed_kmph} kmph")
+                    return self.default_speed_kmph
+
+                return speed * unit_conversion
+
         # capture any strings that should be lists
         if '[' in osm_speed:
             osm_speed = eval(osm_speed)
 
         if isinstance(osm_speed, list):
-            # if the speed is a list, we'll parse each element and take the lowest speed as a conservative measure.
-            min_speed = 10000
-            units = None
-            for ss in osm_speed:
-                speed = float(ss.split(' ')[0])
-                if speed < min_speed:
-                    min_speed = speed
-                    units = ss.split(' ')[1]
-            if not units:
-                speed_kmph = self.default_speed_kmph
+            # if the speed is a list, we'll take the first speed.
+            if isinstance(osm_speed[0], str):
+                speed_kmph = _parse_speed_string(osm_speed[0])
             else:
-                speed_kmph = min_speed * self._unit_conversion[units]
+                # the first element is not a string, set to default since we don't know how to handle
+                speed_kmph = self.default_speed_kmph
         elif isinstance(osm_speed, str):
-            if not any(char.isdigit() for char in osm_speed):
-                # no numbers in string, set as defualt
-                speed_kmph = self.default_speed_kmph
-            else:
-                # parse the string assuming the format '{speed} {units}'
-                speed = float(osm_speed.split(' ')[0])
-                units = osm_speed.split(' ')[1]
-                speed_kmph = speed * self._unit_conversion[units]
+            speed_kmph = _parse_speed_string(osm_speed)
         else:
             # if the speed neither a list nor a string (i.e. None), we set as default
             speed_kmph = self.default_speed_kmph
