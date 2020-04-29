@@ -66,7 +66,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
         if not station:
             return True
         else:
-            return station.available_chargers.get(self.charger) > 0
+            return station.available_chargers.get(self.charger, 0) > 0
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',
@@ -79,7 +79,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        has_no_charger = station.available_chargers.get(self.charger) == 0 if station else False
+        has_no_charger = station.available_chargers.get(self.charger, 0) == 0 if station else False
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not station:
