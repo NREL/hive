@@ -5,7 +5,7 @@ from tests.mock_lobster import *
 
 class TestInstructionGenerators(TestCase):
     def test_dispatcher_match_vehicle(self):
-        dispatcher = Dispatcher(low_soc_threshold=0.2)
+        dispatcher = Dispatcher(mock_config().dispatcher)
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
@@ -32,7 +32,7 @@ class TestInstructionGenerators(TestCase):
                          "Should have picked closest vehicle")
 
     def test_dispatcher_no_vehicles(self):
-        dispatcher = Dispatcher(low_soc_threshold=0.2)
+        dispatcher = Dispatcher(mock_config().dispatcher)
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
 
@@ -45,11 +45,7 @@ class TestInstructionGenerators(TestCase):
         self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
     def test_charging_fleet_manager(self):
-        charging_fleet_manager = ChargingFleetManager(
-            low_soc_threshold=0.2,
-            ideal_fastcharge_soc_limit=0.8,
-            max_search_radius_km=100,
-        )
+        charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)
@@ -69,7 +65,7 @@ class TestInstructionGenerators(TestCase):
                               "Should have instructed vehicle to dispatch to station")
 
     def test_fleet_position_manager(self):
-        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), max_search_radius_km=100, update_interval_seconds=1)
+        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), mock_config().dispatcher)
 
         # manger will always predict we need 1 activate vehicle. So, we start with one inactive vehicle and see
         # if it is moved to active.
@@ -97,7 +93,7 @@ class TestInstructionGenerators(TestCase):
     def test_fleet_position_manager_deactivates_a_vehicle(self):
         # dispatcher = mock_instruction_generators_with_mock_forecast(forecast=1)
 
-        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), max_search_radius_km=100, update_interval_seconds=1)
+        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), mock_config().dispatcher)
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
@@ -124,7 +120,7 @@ class TestInstructionGenerators(TestCase):
                               "Should have instructed vehicle to dispatch to base")
 
     def test_dispatcher_valuable_requests(self):
-        dispatcher = Dispatcher(low_soc_threshold=0.2)
+        dispatcher = Dispatcher(mock_config().dispatcher)
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
@@ -158,7 +154,7 @@ class TestInstructionGenerators(TestCase):
         and that the lower soc vehicles are prioritized
         """
         # set base vehicles charging limit to 1, but provide a station with 2 chargers at the base
-        base_fleet_manager = BaseFleetManager(base_vehicles_charging_limit=1)
+        base_fleet_manager = BaseFleetManager(mock_config(base_vehicles_charge_limit=1).dispatcher)
         station = mock_station_from_geoid(chargers=immutables.Map({Charger.LEVEL_2: 2}))
         base = mock_base_from_geoid(stall_count=2, station_id=station.id)
 

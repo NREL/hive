@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import argparse
 import functools as ft
 import logging
 import os
-import sys
 import time
-import yaml
 from typing import NamedTuple
+
+import yaml
+from pkg_resources import resource_filename
 
 from hive.app.logging_config import LOGGING_CONFIG
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
@@ -21,9 +23,20 @@ from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
 
-
 root_log = logging.getLogger()
 log = logging.getLogger(__name__)
+
+parser = argparse.ArgumentParser(description="run hive")
+parser.add_argument(
+    'scenario_file',
+    help='which scenario file to run. must live in hive.resources.scenarios',
+)
+parser.add_argument(
+    '--path',
+    dest='scenario_path',
+    action='store_true',
+    help='optional flag to specify a scenario file outside hive.resources.scenarios'
+)
 
 
 def run() -> int:
@@ -33,42 +46,44 @@ def run() -> int:
     """
 
     _welcome_to_hive()
+    args = parser.parse_args()
 
-    if len(sys.argv) == 1:
-        log.info("please specify a scenario file to run.")
+    if not args.scenario_file:
+        log.error("please specify a scenario file to run.")
         return 1
 
     try:
-        scenario_file = sys.argv[1]
+        if args.scenario_path:
+            scenario_path = args.scenario_file
+        else:
+            scenario_path = resource_filename('hive.resources.scenarios', args.scenario_file)
 
-        cwd = os.getcwd()
-        scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
-
-        sim, env = load_simulation(scenario_path)
+        try:
+            sim, env = load_simulation(scenario_path)
+        except FileNotFoundError as fe:
+            log.error(fe)
+            return 1
 
         log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
         formatter = logging.Formatter(LOGGING_CONFIG['formatters']['simple']['format'])
         log_fh.setFormatter(formatter)
         root_log.addHandler(log_fh)
 
-        log.info(f"successfully loaded config: {scenario_file}")
+        log.info(f"successfully loaded config: {args.scenario_file}")
 
         # build the set of instruction generators which compose the control system for this hive run
 
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
-            BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
+            BaseFleetManager(env.config.dispatcher),
             PositionFleetManager(
                 demand_forecaster=BasicForecaster.build(env.config.io.file_paths.demand_forecast_file),
-                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds,
-                max_search_radius_km=env.config.network.max_search_radius_km
+                config=env.config.dispatcher,
             ),
-            ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
-                                 env.config.dispatcher.ideal_fastcharge_soc_limit,
-                                 env.config.network.max_search_radius_km),
+            ChargingFleetManager(env.config.dispatcher),
             # DeluxeFleetManager(max_search_radius_km=env.config.network.max_search_radius_km),
-            Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
+            Dispatcher(env.config.dispatcher),
         )
 
         update = Update.build(env.config.io, instruction_generators)
