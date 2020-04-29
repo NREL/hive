@@ -31,20 +31,15 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
     :return: the sim after all vehicle update functions have been called
     """
 
-    def _step_vehicle(s: SimulationState, vid: VehicleId) -> SimulationState:
-        vehicle = s.vehicles.get(vid)
-        if vehicle is None:
-            env.reporter.sim_report({'error': f"vehicle {vid} not found"})
+    def _step_vehicle(s: SimulationState, vehicle: Vehicle) -> SimulationState:
+        error, updated_sim = vehicle.vehicle_state.update(s, env)
+        if error:
+            log.error(error)
+            return simulation_state
+        elif not updated_sim:
             return simulation_state
         else:
-            error, updated_sim = vehicle.vehicle_state.update(s, env)
-            if error:
-                log.error(error)
-                return simulation_state
-            elif not updated_sim:
-                return simulation_state
-            else:
-                return updated_sim
+            return updated_sim
 
     def _sort_by_vehicle_state(vs: Tuple[Vehicle, ...]) -> Tuple[Vehicle, ...]:
         """

@@ -1,6 +1,8 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
+from hive.util import SECONDS_TO_HOURS
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId, StationId, SimTime
 from hive.state.vehicle_state import VehicleState, ChargingStation
@@ -8,6 +10,11 @@ from hive.model.energy.charger import Charger
 
 
 class ChargeQueueing(NamedTuple, VehicleState):
+    """
+    A vehicle tracks it's own place in a queue (Stations do not know about queues), and what guarantees
+    a respect to vehicle queue positioning is their respective queue_times, which is used to sort all
+    vehicles when applying the step_simulation_ops.perform_vehicle_state_updates.
+    """
     vehicle_id: VehicleId
     station_id: StationId
     charger: Charger
@@ -22,11 +29,15 @@ class ChargeQueueing(NamedTuple, VehicleState):
                 """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
+        has_available_charger = station.available_chargers.get(self.charger, 0) > 0 if station else False
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         elif vehicle.geoid != station.geoid:
+            return None, None
+        elif has_available_charger:
+            # maybe here instead, re-directed to ChargingStation?
             return None, None
         else:
             return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
@@ -85,10 +96,22 @@ class ChargeQueueing(NamedTuple, VehicleState):
 
     def _perform_update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
-        there is no update in a charge queueing state
+        similarly to the idle state, we incur an idling penalty here
         :param sim:
         :param env:
         :return:
         """
-        return None, sim
+        vehicle = sim.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        else:
+            idle_energy_kwh = env.config.sim.idle_energy_rate * (sim.sim_timestep_duration_seconds * SECONDS_TO_HOURS)
+            updated_energy_source = vehicle.energy_source.use_energy(idle_energy_kwh)
+            less_energy_vehicle = vehicle.modify_energy_source(updated_energy_source)
+
+            # updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
+            # updated_state = self._replace(idle_duration=updated_idle_duration)
+            # updated_vehicle = less_energy_vehicle.modify_state(updated_state)
+
+            return simulation_state_ops.modify_vehicle(sim, less_energy_vehicle)
 

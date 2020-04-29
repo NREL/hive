@@ -169,6 +169,8 @@ def mock_station_from_geoid(
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
+    elif isinstance(chargers, dict):
+        chargers = immutables.Map(chargers)
     return Station.build(station_id, geoid, road_network, chargers)
 
 
