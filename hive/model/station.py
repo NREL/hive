@@ -27,6 +27,8 @@ class Station(NamedTuple):
     :type total_chargers: :py:obj:`Dict[Charger, int]`
     :param available_chargers: Identifies how many plugs for each charger type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
+    :param balance: the net income of this station
+    :type balance: :py:obj:`Currency`
     """
     id: StationId
     link: Link
@@ -65,6 +67,7 @@ class Station(NamedTuple):
         :param row: a row as interpreted by csv.DictReader
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
+        :param road_network: the road network
         :return: a Station, or an error
         """
         if 'station_id' not in row:
