@@ -80,14 +80,19 @@ then, to load hive as a command line application via pip, tell pip to install hi
 
 Then you can run hive as a command line application:
 
-    > hive hive/resources/scenarios/denver_demo.yaml
+    > hive denver_demo.yaml
+   
+Note: the program will automatically look for the scenario file in the directory `hive/resources/scenarios`. If you want
+the program to use a file outside of this location, just specify the optional `--path` argument:
+
+    > hive --path some_other_directory/my_scenario.yaml 
 
 #### run as a vanilla python module
 
 To run from the console, run the module (along with a scenario file, such as `denver_demo.yaml`):
        
     > cd hive
-    > python -m hive hive/resources/scenarios/denver_demo.yaml
+    > python -m hive denver_demo.yaml
 
 #### build api documentation (optional)
 
