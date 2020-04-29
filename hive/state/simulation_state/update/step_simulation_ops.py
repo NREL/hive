@@ -13,7 +13,6 @@ from hive.state.entity_state import entity_state_ops
 from hive.model.vehicle import Vehicle
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util import TupleOps
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.util import TupleOps
 from hive.util.typealiases import VehicleId, Report
