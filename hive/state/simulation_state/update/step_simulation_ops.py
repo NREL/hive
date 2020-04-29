@@ -3,6 +3,10 @@ from __future__ import annotations
 import functools as ft
 import logging
 import multiprocessing
+import os
+import pickle
+import tempfile
+from multiprocessing.reduction import ForkingPickler
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 import immutables
@@ -69,21 +73,14 @@ def apply_instructions(sim: SimulationState,
     """
 
     # construct the vehicle state transitions
-    run_in_parallel = env.config.system.local_parallelism > 1
+    run_in_parallel = False  # env.config.system.local_parallelism > 1
+
     if run_in_parallel:
-        # run using a local thread pool
-        ctx = multiprocessing.get_context()
-        # todo: custom reducer for pickling (see notes)
-        # ctx.reducer = cloudpickle (done wrong)
-        try:
-            with multiprocessing.Pool(processes=env.config.system.local_parallelism) as pool:
-                async_result = pool.apply_async(lambda i: print(i), instructions.values())
-                async_result.get(timeout=5000)
-            # with Pool(processes=env.config.system.local_parallelism) as pool:
-            #     async_result = pool.apply_async(lambda i: i.apply_instruction(sim, env), instructions.values())
-            #     result = async_result.get(timeout=env.config.system.local_parallelism_timeout_sec)
-        except Exception as e:
-            result = ((e, None),)
+        # run in parallel
+        # todo: inject some means for parallel execution of the apply instruction operation
+        #   requires shared memory access to SimulationState and Environment,
+        #   and a serialization codec to ship Instructions and Instruction.apply_instruction remotely
+        result = ((NotImplementedError, None),)
     else:
         # run in a synchronous loop
         result = ft.reduce(lambda acc, i: acc + (i.apply_instruction(sim, env),), instructions.values(), ())

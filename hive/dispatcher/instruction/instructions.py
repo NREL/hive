@@ -7,9 +7,7 @@ from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.energy.charger import Charger
 from hive.model.passenger import board_vehicle
-from hive.model.roadnetwork import Route
 from hive.runner.environment import Environment
-from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state import *
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId
