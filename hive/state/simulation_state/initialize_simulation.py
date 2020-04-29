@@ -6,7 +6,6 @@ import logging
 from typing import Tuple, Dict
 
 import immutables
-from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
 from hive.model.base import Base
@@ -38,31 +37,27 @@ def initialize_simulation(
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
 
-    vehicles_file = resource_filename("hive.resources.vehicles", config.io.vehicles_file)
-    bases_file = resource_filename("hive.resources.bases", config.io.bases_file)
-    stations_file = resource_filename("hive.resources.stations", config.io.stations_file)
-    vehicle_types_file = resource_filename("hive.resources.vehicle_types", config.io.vehicle_types_file)
+    vehicles_file = config.io.file_paths.vehicles_file
+    bases_file = config.io.file_paths.bases_file
+    stations_file = config.io.file_paths.stations_file
+    vehicle_types_file = config.io.file_paths.vehicle_types_file
 
-    if config.io.geofence_file:
-        geofence_file = resource_filename("hive.resources.geofence", config.io.geofence_file)
-        geofence = GeoFence.from_geojson_file(geofence_file)
+    if config.io.file_paths.geofence_file:
+        geofence = GeoFence.from_geojson_file(config.io.file_paths.geofence_file)
     else:
         geofence = None
 
-    if not config.io.road_network_file:
+    if config.network.network_type == 'euclidean':
         road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
-    else:
-        road_network_file = resource_filename("hive.resources.road_network", config.io.road_network_file)
-        if not config.network:
-            default_speed_kmph = 40.0
-        else:
-            default_speed_kmph = config.network.default_speed_kmph
+    elif config.network.network_type == 'osm_network':
         road_network = OSMRoadNetwork(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
-            road_network_file=road_network_file,
-            default_speed_kmph=default_speed_kmph,
+            road_network_file=config.io.file_paths.road_network_file,
+            default_speed_kmph=config.network.default_speed_kmph,
         )
+    else:
+        raise IOError(f"road network type {config.network.network_type} not registered as a valid network in hive.")
 
     sim_initial = SimulationState(
         road_network=road_network,
@@ -76,9 +71,8 @@ def initialize_simulation(
         raise RuntimeError("log time step must be greater than simulation time step")
     reporter = BasicReporter(config.io, config.output_directory)
     vehicle_types_table_builder = VehicleTypesTableBuilder.build(vehicle_types_file)
-    vehicle_types_errors = vehicle_types_table_builder.consolidate_errors()
-    if vehicle_types_errors is not None:
-        raise vehicle_types_errors
+    if vehicle_types_table_builder.errors:
+        raise Exception(vehicle_types_table_builder.errors)
     env_initial = Environment(config=config,
                               reporter=reporter,
                               vehicle_types=vehicle_types_table_builder.result,

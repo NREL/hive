@@ -7,15 +7,14 @@ from h3 import h3
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
-from hive.config.dispatcher_config import DispatcherConfig
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
-from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
-from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
+from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energysource import EnergySource
@@ -112,14 +111,12 @@ def mock_energy_source(
         energy_type: EnergyType = EnergyType.ELECTRIC,
         capacity_kwh: KwH = 100,
         max_charge_acceptance_kw: Kw = 50.0,
-        ideal_energy_limit_kwh: KwH = 50.0,
         soc: Ratio = 0.25,
 ) -> EnergySource:
     return EnergySource.build(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc)
 
@@ -196,7 +193,6 @@ def mock_request(
         h3_res: int = 15,
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
-        cancel_time: SimTime = 5,
         passengers: int = 1
 ) -> Request:
     return Request.build(
@@ -205,7 +201,6 @@ def mock_request(
         destination=h3.geo_to_h3(d_lat, d_lon, h3_res),
         road_network=road_network,
         departure_time=departure_time,
-        cancel_time=cancel_time,
         passengers=passengers
     )
 
@@ -216,7 +211,6 @@ def mock_request_from_geoids(
         destination: GeoId = h3.geo_to_h3(39.7579, -104.978, 15),
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
-        cancel_time: SimTime = 5,
         passengers: int = 1,
         value: Currency = 0
 ) -> Request:
@@ -226,7 +220,6 @@ def mock_request_from_geoids(
         destination=destination,
         road_network=road_network,
         departure_time=departure_time,
-        cancel_time=cancel_time,
         passengers=passengers,
         value=value,
     )
@@ -235,14 +228,12 @@ def mock_request_from_geoids(
 def mock_vehicle_type(powertrain_id: str = DefaultIds.mock_powertrain_id(),
                       powercurve_id: str = DefaultIds.mock_powercurve_id(),
                       capacity_kwh: KwH = 100,
-                      ideal_energy_limit_kwh=50.0,
                       max_charge_acceptance_kw: Kw = 50.0,
                       operating_cost_km: Currency = 0.1, ) -> VehicleType:
     return VehicleType(
         powertrain_id=powertrain_id,
         powercurve_id=powercurve_id,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance=max_charge_acceptance_kw,
         operating_cost_km=operating_cost_km
     )
@@ -258,7 +249,6 @@ def mock_vehicle(
         energy_type: EnergyType = EnergyType.ELECTRIC,
         capacity_kwh: KwH = 100,
         soc: Ratio = 0.25,
-        ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         operating_cost_km: Currency = 0.1,
         vehicle_state: Optional[VehicleState] = None,
@@ -270,7 +260,6 @@ def mock_vehicle(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc
     )
@@ -295,7 +284,6 @@ def mock_vehicle_from_geoid(
         energy_type: EnergyType = EnergyType.ELECTRIC,
         capacity_kwh: KwH = 100,
         soc: Ratio = 0.25,
-        ideal_energy_limit_kwh=50.0,
         max_charge_acceptance_kw: Kw = 50.0,
         road_network: RoadNetwork = mock_network(h3_res=15),
         operating_cost_km: Currency = 0.1,
@@ -306,7 +294,6 @@ def mock_vehicle_from_geoid(
         powercurve_id=powercurve_id,
         energy_type=energy_type,
         capacity_kwh=capacity_kwh,
-        ideal_energy_limit_kwh=ideal_energy_limit_kwh,
         max_charge_acceptance_kw=max_charge_acceptance_kw,
         soc=soc
     )
@@ -408,7 +395,21 @@ def mock_config(
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
+        file_paths: Dict = None,
+        base_vehicles_charge_limit: int = None,
 ) -> HiveConfig:
+    if not file_paths:
+        file_paths = {
+            'vehicles_file': 'denver_demo_vehicles.csv',
+            'requests_file': 'denver_demo_requests.csv',
+            'bases_file': 'denver_demo_bases.csv',
+            'stations_file': 'denver_demo_stations.csv',
+            'charging_price_file': 'denver_charging_prices_by_geoid.csv',
+            'rate_structure_file': 'rate_structure.csv',
+            'vehicle_types_file': 'default_vehicle_types.csv',
+            'geofence_file': 'downtown_denver.geojson',
+            'demand_forecast_file': 'nyc_demand.csv'
+        }
     return HiveConfig.build({
         "sim": {
             'start_time': start_time,
@@ -419,18 +420,12 @@ def mock_config(
             'sim_name': 'test_sim',
         },
         "io": {
-            'vehicles_file': '',
-            'requests_file': '',
-            'bases_file': '',
-            'stations_file': '',
-            'charging_price_file': 'denver_charging_prices_by_geoid.csv',
-            'rate_structure_file': 'rate_structure.csv',
-            'vehicle_types_file': 'default_vehicle_types.csv',
-            'geofence_file': 'downtown_denver.geojson',
-            'demand_forecast_file': 'nyc_demand.csv'
+            'file_paths': file_paths,
         },
         "network": {},
-        "dispatcher": {}
+        "dispatcher": {
+            'base_vehicles_charging_limit': base_vehicles_charge_limit,
+        }
     })
 
 
@@ -599,12 +594,11 @@ def mock_instruction_generators_with_mock_forecast(
         config: HiveConfig = mock_config(),
         forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
     return (
-        BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
+        BaseFleetManager(config.dispatcher),
         PositionFleetManager(mock_forecaster(forecast),
-                             config.dispatcher.fleet_sizing_update_interval_seconds),
-        ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
-                                 config.dispatcher.charging_max_search_radius_km),
-        Dispatcher(config.dispatcher.matching_low_soc_threshold),
+                             config.dispatcher),
+        ChargingFleetManager(config.dispatcher),
+        Dispatcher(config.dispatcher),
     )
 
 

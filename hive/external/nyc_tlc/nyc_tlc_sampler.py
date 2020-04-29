@@ -49,7 +49,6 @@ def down_sample_nyc_tlc_data(in_file: str,
                     'd_lat',
                     'd_lon',
                     'departure_time',
-                    'cancel_time',
                     'passengers'
                 ]
 
@@ -80,7 +79,6 @@ def down_sample_nyc_tlc_data(in_file: str,
                             'd_lat': row['dropoff_latitude'],
                             'd_lon': row['dropoff_longitude'],
                             'departure_time': req.departure_time,
-                            'cancel_time': req.cancel_time,
                             'passengers': len(req.passengers)
                         }
                         writer.writerow(out_row)

@@ -8,6 +8,5 @@ class VehicleType(NamedTuple):
     powertrain_id: PowertrainId
     powercurve_id: PowercurveId
     capacity_kwh: KwH
-    ideal_energy_limit_kwh: KwH
     max_charge_acceptance: Kw
     operating_cost_km: Currency

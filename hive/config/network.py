@@ -32,3 +32,6 @@ class Network(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Network:
         return Network(**d)
+
+    def asdict(self) -> Dict:
+        return self._asdict()

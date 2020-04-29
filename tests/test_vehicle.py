@@ -29,7 +29,6 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.powercurve_id, 'pc0')
         self.assertEqual(vehicle.powertrain_id, 'pt0')
         self.assertEqual(vehicle.energy_source.powercurve_id, 'pc0')
-        self.assertEqual(vehicle.energy_source.ideal_energy_limit_kwh, 50.0)
         self.assertEqual(vehicle.energy_source.energy_kwh, 100.0)
         self.assertEqual(vehicle.energy_source.capacity_kwh, 100.0)
         self.assertEqual(vehicle.energy_source.energy_type, EnergyType.ELECTRIC)

@@ -82,7 +82,7 @@ class TestVehicleState(TestCase):
             msg="should have charged for 60 seconds")
 
     def test_charging_station_update_terminal(self):
-        vehicle = mock_vehicle(soc=0.99)
+        vehicle = mock_vehicle(soc=1)
         station = mock_station()
         charger = Charger.DCFC
         sim = mock_sim(
@@ -128,6 +128,32 @@ class TestVehicleState(TestCase):
         enter_error, sim_with_charging_vehicle = state.enter(sim, env)
 
         self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_charging_station_subsequent_charge_instructions(self):
+        vehicle = mock_vehicle()
+        station = mock_station(chargers=immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1}))
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,)
+        )
+        env = mock_env()
+
+        state = ChargingStation(vehicle.id, station.id, Charger.DCFC)
+        err1, sim1 = state.enter(sim, env)
+        self.assertIsNone(err1, "test precondition (enter works correctly) not met")
+
+        next_state = ChargingStation(vehicle.id, station.id, Charger.LEVEL_2)
+        err2, sim2 = entity_state_ops.transition_previous_to_next(sim1, env, state, next_state)
+
+        self.assertIsNone(err2, "two subsequent charge instructions should not produce an error")
+        self.assertIsNotNone(sim2, "two subsequent charge instructions should update the sim state")
+
+        updated_station = sim2.stations.get(station.id)
+        self.assertIsNotNone(updated_station, "station not found in sim")
+        dc_available = updated_station.available_chargers.get(Charger.DCFC)
+        l2_available = updated_station.available_chargers.get(Charger.LEVEL_2)
+        self.assertEqual(dc_available, 1, "should have released DC charger on second transition")
+        self.assertEqual(l2_available, 0, "second instruction should have claimed the only L2 charger")
 
     ####################################################################################################################
     # ChargingBase #####################################################################################################
@@ -292,6 +318,34 @@ class TestVehicleState(TestCase):
         enter_error, sim_with_charging_vehicle = state.enter(sim, env)
 
         self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_charging_base_subsequent_charge_instructions(self):
+        vehicle = mock_vehicle()
+        station = mock_station(chargers=immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1}))
+        base = mock_base(station_id=DefaultIds.mock_station_id())
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+            bases=(base,)
+        )
+        env = mock_env()
+
+        state = ChargingBase(vehicle.id, base.id, Charger.DCFC)
+        err1, sim1 = state.enter(sim, env)
+        self.assertIsNone(err1, "test precondition (enter works correctly) not met")
+
+        next_state = ChargingBase(vehicle.id, base.id, Charger.LEVEL_2)
+        err2, sim2 = entity_state_ops.transition_previous_to_next(sim1, env, state, next_state)
+
+        self.assertIsNone(err2, "two subsequent charge instructions should not produce an error")
+        self.assertIsNotNone(sim2, "two subsequent charge instructions should update the sim state")
+
+        updated_station = sim2.stations.get(station.id)
+        self.assertIsNotNone(updated_station, "station not found in sim")
+        dc_available = updated_station.available_chargers.get(Charger.DCFC)
+        l2_available = updated_station.available_chargers.get(Charger.LEVEL_2)
+        self.assertEqual(dc_available, 1, "should have released DC charger on second transition")
+        self.assertEqual(l2_available, 0, "second instruction should have claimed the only L2 charger")
 
     ####################################################################################################################
     # DispatchBase #####################################################################################################

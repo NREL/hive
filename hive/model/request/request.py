@@ -1,12 +1,14 @@
 from __future__ import annotations
+
+from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
+
 from h3 import h3
-from typing import NamedTuple, Optional, Dict, Union, TYPE_CHECKING
 
 from hive.model.passenger import Passenger, create_passenger_id
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.link import Link
-from hive.util.typealiases import *
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.parsers import time_parser
+from hive.util.typealiases import *
 from hive.util.units import Currency, KM_TO_MILE, Kilometers
 
 if TYPE_CHECKING:
@@ -18,7 +20,7 @@ class Request(NamedTuple):
     """
     A ride hail request which is alive in the simulation but not yet serviced.
     It should only exist if the current sim time >= self.departure_time.
-    It should be removed once the current sim time == self.cancel_time.
+    It should be removed once the current sim time >= self.departure_time + config.sim.request_cancel_time_seconds.
     If a vehicle has been dispatched to service this Request, then it should hold the vehicle id
     and the time that vehicle was dispatched to it.
 
@@ -30,8 +32,6 @@ class Request(NamedTuple):
     :type destination: :py:obj:`GeoId`
     :param departure_time: The time of departure.
     :type departure_time: :py:obj:`SimTime`
-    :param cancel_time: The time when this request will cancel.
-    :type cancel_time: :py:obj:`SimTime`
     :param passengers: A tuple of passengers associated with this request.
     :type passengers: :py:obj:`Tuple[Passenger]`
     :param dispatched_vehicle: The id of the vehicle dispatched to service this request.
@@ -43,7 +43,6 @@ class Request(NamedTuple):
     origin_link: Link
     destination_link: Link
     departure_time: SimTime
-    cancel_time: SimTime
     passengers: Tuple[Passenger, ...]
     value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
@@ -57,6 +56,10 @@ class Request(NamedTuple):
     def destination(self):
         return self.destination_link.end
 
+    @property
+    def geoid(self):
+        return self.origin
+
     @classmethod
     def build(cls,
               request_id: RequestId,
@@ -64,12 +67,10 @@ class Request(NamedTuple):
               destination: GeoId,
               road_network: RoadNetwork,
               departure_time: SimTime,
-              cancel_time: SimTime,
               passengers: int,
               value: Currency = 0,
               ) -> Request:
         assert (departure_time >= 0)
-        assert (cancel_time >= 0)
         assert (passengers > 0)
         origin_link = road_network.link_from_geoid(origin)
         destination_link = road_network.link_from_geoid(destination)
@@ -86,7 +87,6 @@ class Request(NamedTuple):
                        origin_link,
                        destination_link,
                        departure_time,
-                       cancel_time,
                        tuple(request_as_passengers),
                        value,
                        )
@@ -115,8 +115,6 @@ class Request(NamedTuple):
             return IOError("cannot load a request without a 'd_lon' value"), None
         elif 'departure_time' not in row:
             return IOError("cannot load a request without a 'departure_time'"), None
-        elif 'cancel_time' not in row:
-            return IOError("cannot load a request without a 'cancel_time'"), None
         elif 'passengers' not in row:
             return IOError("cannot load a request without a number of 'passengers'"), None
         else:
@@ -131,10 +129,6 @@ class Request(NamedTuple):
                 if isinstance(departure_time_result, IOError):
                     return departure_time_result, None
 
-                cancel_time_result = time_parser(row['cancel_time'])
-                if isinstance(cancel_time_result, IOError):
-                    return cancel_time_result, None
-
                 passengers = int(row['passengers'])
                 request = Request.build(
                     request_id=request_id,
@@ -142,16 +136,11 @@ class Request(NamedTuple):
                     destination=d_geoid,
                     road_network=road_network,
                     departure_time=departure_time_result,
-                    cancel_time=cancel_time_result,
                     passengers=passengers
                 )
                 return None, request
             except ValueError:
                 return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}"), None
-
-    @property
-    def geoid(self):
-        return self.origin
 
     def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """
@@ -163,18 +152,6 @@ class Request(NamedTuple):
         :return: the updated Request
         """
         return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
-
-    def update_origin(self, geoid: GeoId) -> Request:
-        """
-        used to override a request's origin location as the centroid of the spatial grid,
-        to make guarantees about what conditions will make requests overlap with vehicles.
-
-        :param geoid: The new request origin
-        :return: The updated request
-        """
-        return self._replace(
-            origin=geoid
-        )
 
     def assign_value(self, rate_structure: RequestRateStructure, distance_km: Kilometers) -> Request:
         """

@@ -100,7 +100,7 @@ class Station(NamedTuple):
                 lat, lon = float(row['lat']), float(row['lon'])
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 charger_type = Charger.from_string(row['charger_type'])
-                charger_count = int(row['charger_count'])
+                charger_count = int(float(row['charger_count']))
 
                 if charger_type is None:
                     raise IOError(f"invalid charger type {row['charger']} for station {station_id}")
@@ -134,8 +134,8 @@ class Station(NamedTuple):
                         total_chargers=updated_chargers
                     )
 
-            except ValueError:
-                raise IOError(f"unable to parse request {station_id} from row due to invalid value(s): {row}")
+            except ValueError as v:
+                raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
 
     def has_available_charger(self, charger: Charger) -> bool:
         """
