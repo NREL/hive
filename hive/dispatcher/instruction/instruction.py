@@ -5,6 +5,7 @@ from typing import Optional, TYPE_CHECKING, Tuple
 
 import immutables
 
+from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 from hive.util.typealiases import VehicleId
 
@@ -21,8 +22,7 @@ class Instruction(metaclass=ABCNamedTupleMeta):
     @abstractmethod
     def apply_instruction(self,
                           sim_state: SimulationState,
-                          env: Environment
-                          ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+                          env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         """
         attempts to apply an instruction to a vehicle
 

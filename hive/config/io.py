@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import NamedTuple, Tuple, Dict, Optional
 
-from hive.config import ConfigBuilder
+from hive.config.config_builder import ConfigBuilder
 from hive.config.filepaths import FilePaths
 from hive.util.units import Seconds
 
