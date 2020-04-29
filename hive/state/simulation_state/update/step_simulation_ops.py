@@ -2,15 +2,9 @@ from __future__ import annotations
 
 import functools as ft
 import logging
-import multiprocessing
-import os
-import pickle
-import tempfile
-from multiprocessing.reduction import ForkingPickler
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 import immutables
-from cloudpickle import cloudpickle
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
