@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from math import radians, cos, sin, asin, sqrt, ceil
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
+import itertools as it
 
 import immutables
 from h3 import h3
@@ -13,7 +14,6 @@ from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.link import Link
-
 
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
@@ -272,6 +272,22 @@ class TupleOps:
             return tup[0], ()
         else:
             return tup[0], tup[1:]
+
+    @classmethod
+    def partition(cls,
+                  predicate: Callable[[T], bool],
+                  t: Tuple[T, ...]) -> Tuple[Tuple[T, ...], Tuple[T, ...]]:
+        """
+        partitions a tuple into two tuples where members of the first tuple
+        match the case where the provided predicate is True
+
+        taken from https://docs.python.org/3/library/itertools.html (but result tuples reversed for readability)
+        :param predicate: tests membership in result tuples
+        :param t: the source tuple
+        :return:
+        """
+        t1, t2 = it.tee(t)
+        return tuple(filter(predicate, t1)), tuple(it.filterfalse(predicate, t2))
 
 
 class EntityUpdateResult(NamedTuple):

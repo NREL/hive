@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state import *
 from tests.mock_lobster import *
 from hive.model.passenger import board_vehicle

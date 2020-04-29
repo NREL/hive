@@ -7,7 +7,7 @@ from typing import NamedTuple, Tuple, Dict, Optional
 
 from pkg_resources import resource_filename
 
-from hive.config import ConfigBuilder
+from hive.config.config_builder import ConfigBuilder
 
 log = logging.getLogger(__name__)
 

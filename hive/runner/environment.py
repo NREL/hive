@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class Environment(NamedTuple):
     """
-    Context of this Hive Simulation
+    System of this Hive Simulation
 
     :param config: hive config object.
     :type config: :py:obj:`HiveConfig`
