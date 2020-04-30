@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from hive.reporting.reporter import Reporter
 from hive.config.io import IO
+from hive.reporting.reporter import Reporter
 
 log = logging.getLogger(__name__)
 
@@ -27,38 +27,30 @@ class BasicReporter(Reporter):
 
     def _report_entities(self, entities, sim_time, report_type):
         for e in entities:
-            log_dict = e._asdict()
+            log_dict = e.asdict()
             log_dict['sim_time'] = sim_time
             log_dict['report_type'] = report_type
             entry = json.dumps(log_dict, default=str)
             self.sim_log_file.write(entry + '\n')
 
-    def _report_vehicles(self, vehicles, sim_time):
-        for v in vehicles:
-            log_dict = v._asdict()
-            log_dict['sim_time'] = sim_time
-            log_dict['report_type'] = 'vehicle_report'
-            log_dict['vehicle_state'] = v.vehicle_state.__class__.__name__
-            entry = json.dumps(log_dict, default=str)
-            self.sim_log_file.write(entry + '\n')
-
     def log_sim_state(self, sim_state: 'SimulationState'):
         if self._io.log_vehicles:
-            self._report_vehicles(
-                vehicles=sim_state.vehicles.values(),
+            self._report_entities(
+                entities=sim_state.vehicles.values(),
                 sim_time=sim_state.sim_time,
+                report_type='vehicle_report',
             )
         if self._io.log_requests:
             self._report_entities(
                 entities=sim_state.requests.values(),
                 sim_time=sim_state.sim_time,
-                report_type='request_report'
+                report_type='request_report',
             )
         if self._io.log_stations:
             self._report_entities(
                 entities=sim_state.stations.values(),
                 sim_time=sim_state.sim_time,
-                report_type='station_report'
+                report_type='station_report',
             )
 
     def sim_report(self, report: dict):
@@ -71,5 +63,3 @@ class BasicReporter(Reporter):
         else:
             entry = json.dumps(report, default=str)
             self.sim_log_file.write(entry + '\n')
-
-

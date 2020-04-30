@@ -68,7 +68,8 @@ def charge(sim: 'SimulationState',
                 'charge_amount': str(kwh_transacted),
                 'charge_price': str(charging_price),
                 'charger_type': str(charger),
-                'charge_duration_seconds': str(sim.sim_timestep_duration_seconds)
+                'charge_duration_seconds': str(sim.sim_timestep_duration_seconds),
+                'sim_time': sim.sim_time,
             }
             env.reporter.sim_report(report)
 

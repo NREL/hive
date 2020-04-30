@@ -142,6 +142,21 @@ class Request(NamedTuple):
             except ValueError:
                 return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}"), None
 
+    def asdict(self) -> Dict:
+        out_dict = self._asdict()
+
+        # deconstruct origin_link
+        out_dict['origin_link_id'] = self.origin_link.link_id
+        out_dict['origin_geoid'] = self.origin_link.start
+        del(out_dict['origin_link'])
+
+        # deconstruct destination_link
+        out_dict['destination_link_id'] = self.destination_link.link_id
+        out_dict['destination_geoid'] = self.destination_link.start
+        del(out_dict['destination_link'])
+
+        return out_dict
+
     def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """
         allows the dispatcher to update the request that a vehicle has been dispatched to them.
