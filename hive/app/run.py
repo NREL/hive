@@ -10,7 +10,6 @@ from typing import NamedTuple
 import yaml
 from pkg_resources import resource_filename
 
-from hive.app.logging_config import LOGGING_CONFIG
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
@@ -64,8 +63,9 @@ def run() -> int:
             log.error(fe)
             return 1
 
+        # initialize logging file handler
         log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
-        formatter = logging.Formatter(LOGGING_CONFIG['formatters']['simple']['format'])
+        formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
         log_fh.setFormatter(formatter)
         root_log.addHandler(log_fh)
 
@@ -89,11 +89,12 @@ def run() -> int:
         update = Update.build(env.config.io, instruction_generators)
         initial_payload = RunnerPayload(sim, env, update)
 
+        log.info(f"running simulation for time {initial_payload.e.config.sim.start_time} "
+                 f"to {initial_payload.e.config.sim.end_time}:")
         start = time.time()
         sim_result = LocalSimulationRunner.run(initial_payload)
         end = time.time()
 
-        log.info("\n")
         log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
 
         _summary_stats(sim_result.s)
@@ -147,7 +148,6 @@ def _summary_stats(final_sim: SimulationState):
         0.0
     )
 
-    log.info("\n")
     log.info(f"STATION  CURRENCY BALANCE:             $ {station_income:.2f}")
     log.info(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
     log.info(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")

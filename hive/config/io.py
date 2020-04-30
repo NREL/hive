@@ -20,7 +20,6 @@ class IO(NamedTuple):
     log_manager: bool
 
     log_period_seconds: Seconds
-    progress_period_seconds: Seconds
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -34,7 +33,6 @@ class IO(NamedTuple):
             'log_manager': False,
 
             'log_period_seconds': 60,
-            'progress_period_seconds': 3600,
         }
 
     @classmethod

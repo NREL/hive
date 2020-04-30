@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
-
 from hive.config.config_builder import ConfigBuilder
 from hive.util.units import Ratio, Seconds, Kilometers
-
 
 
 class DispatcherConfig(NamedTuple):
