@@ -10,6 +10,7 @@ dependencies:
   - pip
   - PyYAML
   - rtree
+  - tqdm
   - pip:
       - cmake
       - h3
