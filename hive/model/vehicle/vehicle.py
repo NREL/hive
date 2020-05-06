@@ -128,24 +128,6 @@ class Vehicle(NamedTuple):
 
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
-    
-    def asdict(self) -> Dict:
-        out_dict = self._asdict()
-        out_dict['vehicle_state'] = self.vehicle_state.__class__.__name__
-
-        # deconstruct energy source
-        for key, val in self.energy_source._asdict().items():
-            new_key = 'energy_source_' + key
-            out_dict[new_key] = val
-        del (out_dict['energy_source'])
-
-        # deconstruct link
-        for key, val in self.link._asdict().items():
-            new_key = 'link_' + key
-            out_dict[new_key] = val
-        del (out_dict['link'])
-        
-        return out_dict
 
     def modify_state(self, vehicle_state: VehicleState) -> Vehicle:
         return self._replace(vehicle_state=vehicle_state)

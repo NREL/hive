@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Optional
 import functools as ft
+from typing import NamedTuple, Dict, Optional
 
 import immutables
 from h3 import h3
 
 from hive.model.energy.charger import Charger
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
 from hive.util.typealiases import *
@@ -122,34 +122,6 @@ class Station(NamedTuple):
 
             except ValueError as v:
                 raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
-
-    def asdict(self) -> Dict:
-        out_dict = self._asdict()
-
-        # deconstruct origin_link
-        out_dict['link_id'] = self.link.link_id
-        out_dict['geoid'] = self.link.start
-        del(out_dict['link'])
-
-        # deconstruct total_charges
-        for key, val in self.total_chargers.items():
-            new_key = 'total_chargers_' + key.name
-            out_dict[new_key] = val
-        del (out_dict['total_chargers'])
-
-        # deconstruct available_charges
-        for key, val in self.available_chargers.items():
-            new_key = 'available_chargers_' + key.name
-            out_dict[new_key] = val
-        del (out_dict['available_chargers'])
-
-        # deconstruct charger_prices
-        for key, val in self.charger_prices.items():
-            new_key = 'charger_prices_' + key.name
-            out_dict[new_key] = val
-        del (out_dict['charger_prices'])
-
-        return out_dict
 
     def has_available_charger(self, charger: Charger) -> bool:
         """
