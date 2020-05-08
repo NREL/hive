@@ -22,7 +22,7 @@ class TestUpdate(TestCase):
         class MockGenerator(NamedTuple, InstructionGenerator):
             stored_magic_number: int = old_magic_number
 
-            def generate_instructions(self, simulation_state: SimulationState):
+            def generate_instructions(self, simulation_state: SimulationState, envronment: Environment):
                 return self, ()
 
         def user_provided_update_fn(instr_gen, sim):
@@ -49,7 +49,7 @@ class TestUpdate(TestCase):
 
         class MockGenerator(NamedTuple, InstructionGenerator):
 
-            def generate_instructions(self, simulation_state: SimulationState):
+            def generate_instructions(self, simulation_state: SimulationState, environment: Environment):
                 return self, (), ()
 
         def user_provided_update_fn(instr_gen, sim):

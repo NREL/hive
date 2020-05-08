@@ -15,7 +15,7 @@ from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.station import Station
 from hive.model.vehicle.vehicle import Vehicle
-from hive.model.vehicle.vehicle_type import VehicleTypesTableBuilder
+from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.reporting.basic_reporter import BasicReporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
@@ -70,7 +70,7 @@ def initialize_simulation(
     reporter = BasicReporter(config.io, config.output_directory)
     env_initial = Environment(config=config,
                               reporter=reporter,
-                              mechatronics={'bev': BEV()},
+                              mechatronics=build_mechatronics_table(config.io.file_paths.mechatronics_file),
                               )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we

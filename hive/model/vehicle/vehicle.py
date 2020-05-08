@@ -88,6 +88,8 @@ class Vehicle(NamedTuple):
                 mechatronics_id = row['mechatronics_id']
 
                 mechatronics = environment.mechatronics.get(mechatronics_id)
+                if not mechatronics:
+                    raise IOError(f"was not able to find mechatronics {mechatronics_id} in environment")
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)

@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from hive.state.vehicle_state import *
+from hive.model.energy.energytype import EnergyType
 from tests.mock_lobster import *
 
 
@@ -26,15 +27,16 @@ class TestVehicleStateOps(TestCase):
         result_sim = mr1.sim
 
         moved_vehicle = result_sim.vehicles.get(vehicle.id)
+        soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(moved_vehicle)
 
-        self.assertLess(moved_vehicle.energy_source.soc, 1, "should have used 1 unit of mock energy")
+        self.assertLess(soc, 1, "should have used 1 unit of mock energy")
         self.assertNotEqual(somewhere, moved_vehicle.geoid, "should not be at the same location")
         self.assertNotEqual(somewhere, moved_vehicle.link.start, "link start location should not be the same")
 
     def test_charge(self):
 
         state = ChargingBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), Charger.DCFC)
-        veh = mock_vehicle_from_geoid(vehicle_state=state)
+        veh = mock_vehicle_from_geoid(vehicle_state=state, soc=0.5)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
         sim = mock_sim(
@@ -51,16 +53,15 @@ class TestVehicleStateOps(TestCase):
 
         updated_veh = result.vehicles.get(veh.id)
 
-        self.assertAlmostEqual(
-            first=updated_veh.energy_source.energy_kwh,
-            second=veh.energy_source.energy_kwh + 0.01,
-            places=2,
+        self.assertGreater(
+            updated_veh.energy[EnergyType.ELECTRIC],
+            veh.energy[EnergyType.ELECTRIC],
             msg="should have charged")
 
     def test_charge_when_full(self):
 
         state = ChargingBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), Charger.DCFC)
-        veh = mock_vehicle_from_geoid(vehicle_state=state, capacity_kwh=100, soc=1.0)
+        veh = mock_vehicle_from_geoid(vehicle_state=state, soc=1.0)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
         sim = mock_sim(

@@ -1,48 +1,26 @@
-import functools as ft
-from typing import Dict, TypedDict, List
-
 import numpy as np
+import yaml
+from pkg_resources import resource_string
 
-from hive.model.energy.energytype import EnergyType
-from hive.model.energy.powertrain.powertrain import Powertrain
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.routetraversal import Route
-from hive.util.typealiases import PowertrainId
-from hive.util.units import KwH, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH
-
-
-class TabularPowertrainInput(TypedDict):
-    """
-    Input parameters for a TabularPowertrain"
-    """
-    name: str
-    type: str
-    consumption_model: List[Dict[float, float]]
+from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
+from hive.util.units import KwH, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH, WattHourPerMile
 
 
 class TabularPowertrain(Powertrain):
     """
-    builds a tabular, interpolated lookup model from a file for energy consumption
+    builds a tabular, interpolated lookup model for energy consumption
     """
 
-    def __init__(self, data: TabularPowertrainInput, **kwargs):
-        if 'name' not in data and \
-                'consumption_model' not in data:
-            raise IOError("invalid input file for tabular powertrain model")
-
-        self.id = data['name']
+    def __init__(self, nominal_consupmption: WattHourPerMile):
+        data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powertrain', 'normalized.yaml'))
 
         # linear interpolation function approximation via these lookup values
-
         consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
         self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
-        self._consumption_whmi = np.array(list(map(lambda x: x['whmi'], consumption_model)))  # watthour/mile
-
-    def get_id(self) -> PowertrainId:
-        return self.id
-
-    def get_energy_type(self) -> EnergyType:
-        return EnergyType.ELECTRIC
+        self._consumption_whmi = np.array(
+            list(map(lambda x: x['whmi'], consumption_model))) * nominal_consupmption  # watthour/mile
 
     def link_cost(self, link: Link) -> KwH:
         """
@@ -62,8 +40,4 @@ class TabularPowertrain(Powertrain):
         return energy_kwh
 
     def energy_cost(self, route: Route) -> KwH:
-        return ft.reduce(
-            lambda acc, link: acc + self.link_cost(link),
-            route,
-            0.0
-        )
+        return sum([self.link_cost(link) for link in route])

@@ -7,6 +7,7 @@ from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
     from hive.util.units import Seconds, Ratio, Kilometers
+    from hive.util.typealiases import MechatronicsId
     from hive.model.energy.charger import Charger
     from hive.model.vehicle.vehicle import Vehicle
     from hive.model.roadnetwork.route import Route
@@ -16,6 +17,14 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     """
     Interface for creating energy sources
     """
+
+    @property
+    @abstractmethod
+    def mechatronics_id(self) -> MechatronicsId:
+        """
+        what id?
+        :return:
+        """
 
     @classmethod
     @abstractmethod

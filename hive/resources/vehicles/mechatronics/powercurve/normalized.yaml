@@ -1,4 +1,4 @@
-name: "leaf"
+name: "normalized"
 type: "tabular"
 power_type: "electric"
 reported_max_charge_acceptance_kw: 50
