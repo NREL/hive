@@ -1,6 +1,7 @@
 # Energy
 KwH = float  # kilowatt-hours
 J = float  # joules
+KwH_per_H = float
 
 # Power
 Kw = float  # kilowatt
@@ -49,4 +50,7 @@ KM_TO_MILE = 0.621371
 M_TO_KM = 1/1000
 
 #    Energy
+WattHourPerMile = float
 WH_TO_KWH = 0.001
+
+

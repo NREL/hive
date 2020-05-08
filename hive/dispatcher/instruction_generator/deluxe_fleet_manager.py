@@ -16,6 +16,7 @@ from hive.state.vehicle_state import (
     ReserveBase,
     ChargingBase,
 )
+from hive.model.energy.energytype import EnergyType
 
 if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
@@ -50,10 +51,12 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
+            environment: Environment,
     ) -> Tuple[DeluxeFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+        :param environment:
         :param simulation_state: The current simulation state
 
         :return: the updated DeluxeManager along with fleet targets
@@ -76,30 +79,30 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
 
         base_charge_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             sort_reversed=True,
             filter_function=lambda v: isinstance(v.vehicle_state, ChargingBase)
         )
         station_charge_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             sort_reversed=True,
             filter_function=lambda v: isinstance(v.vehicle_state, ChargingStation)
         )
         reserve_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase)
         )
         active_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             sort_reversed=True,
             filter_function=is_active,
         )
         active_ready_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             filter_function=is_active_ready,
         )
 

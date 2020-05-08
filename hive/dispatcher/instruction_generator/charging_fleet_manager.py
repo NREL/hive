@@ -6,6 +6,7 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.config.dispatcher_config import DispatcherConfig
 
@@ -26,11 +27,13 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
+            environment: Environment,
     ) -> Tuple[ChargingFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
         :param simulation_state: The current simulation state
+        :param environment: The simulation environment
 
         :return: the updated ChargingFleetManager along with instructions
         """
@@ -38,12 +41,17 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
         # find vehicles that fall below the minimum threshold and charge them.
 
         def charge_candidate(v: Vehicle) -> bool:
+            # TODO: replace remaining range threshold with config value
             proper_state = isinstance(v.vehicle_state, Idle) or isinstance(v.vehicle_state, Repositioning)
-            return v.energy_source.soc <= self.config.charging_low_soc_threshold and proper_state
+            mechatronics = environment.mechatronics.get(v.mechatronics_id)
+            range_remaining_km = mechatronics.range_remaining_km(v)
+            return range_remaining_km <= 20 and proper_state
 
         def stop_charge_candidate(v: Vehicle) -> bool:
             proper_state = isinstance(v.vehicle_state, ChargingStation)
-            return v.energy_source.soc >= self.config.ideal_fastcharge_soc_limit and proper_state
+            mechatronics = environment.mechatronics.get(v.mechatronics_id)
+            battery_soc = mechatronics.battery_soc(v)
+            return battery_soc >= self.config.ideal_fastcharge_soc_limit and proper_state
 
         low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate)
         high_soc_vehicles = simulation_state.get_vehicles(filter_function=stop_charge_candidate)

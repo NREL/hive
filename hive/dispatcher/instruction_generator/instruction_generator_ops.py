@@ -25,14 +25,17 @@ class InstructionGenerationResult(NamedTuple):
 
     def apply_instruction_generator(self,
                                     instruction_generator: InstructionGenerator,
-                                    simulation_state: 'SimulationState') -> InstructionGenerationResult:
+                                    simulation_state: 'SimulationState',
+                                    environment: Environment,
+                                    ) -> InstructionGenerationResult:
         """
         generates instructions from one InstructionGenerator and updates the result accumulator
+        :param environment:
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
         :param simulation_state: the current simulation state
         :return: the updated accumulator
         """
-        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state)
+        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state, environment)
 
         updated_instruction_map = ft.reduce(
             lambda acc, i: DictOps.add_to_dict(acc, i.vehicle_id, i),
@@ -48,6 +51,7 @@ class InstructionGenerationResult(NamedTuple):
 
 def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ...],
                           simulation_state: 'SimulationState',
+                          environment: Environment,
                           ) -> InstructionGenerationResult:
     """
     applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
@@ -55,11 +59,12 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
 
     :param instruction_generators:
     :param simulation_state:
+    :param environment:
     :return: the instructions generated for this time step, which has 0 or 1 instruction per vehicle
     """
 
     result = ft.reduce(
-        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state),
+        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state, environment),
         instruction_generators,
         InstructionGenerationResult()
     )

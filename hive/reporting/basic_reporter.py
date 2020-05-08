@@ -47,10 +47,10 @@ class BasicReporter(Reporter):
         out_dict['vehicle_state'] = vehicle.vehicle_state.__class__.__name__
 
         # deconstruct energy source
-        for key, val in vehicle.energy_source._asdict().items():
-            new_key = 'energy_source_' + key
+        for key, val in vehicle.energy.items():
+            new_key = 'energy_source_' + key.name
             out_dict[new_key] = val
-        del (out_dict['energy_source'])
+        del (out_dict['energy'])
 
         # deconstruct link
         for key, val in vehicle.link._asdict().items():

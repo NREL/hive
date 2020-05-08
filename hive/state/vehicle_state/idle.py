@@ -30,7 +30,8 @@ class Idle(NamedTuple, VehicleState):
         :return: True if we have run out of energy
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
-        return not vehicle or vehicle.energy_source.is_empty()
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        return not vehicle or mechatronics.is_empty(vehicle)
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',
@@ -62,9 +63,8 @@ class Idle(NamedTuple, VehicleState):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-            idle_energy_kwh = env.config.sim.idle_energy_rate * (sim.sim_timestep_duration_seconds * SECONDS_TO_HOURS)
-            updated_energy_source = vehicle.energy_source.use_energy(idle_energy_kwh)
-            less_energy_vehicle = vehicle.modify_energy_source(updated_energy_source)
+            mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
             updated_state = self._replace(idle_duration=updated_idle_duration)

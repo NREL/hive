@@ -25,7 +25,7 @@ class TabularPowertrain(Powertrain):
     builds a tabular, interpolated lookup model from a file for energy consumption
     """
 
-    def __init__(self, data: TabularPowertrainInput):
+    def __init__(self, data: TabularPowertrainInput, **kwargs):
         if 'name' not in data and \
                 'consumption_model' not in data:
             raise IOError("invalid input file for tabular powertrain model")

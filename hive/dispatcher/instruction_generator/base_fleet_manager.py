@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Tuple, NamedTuple, TYPE_CHECKING, Optional
+from typing import Tuple, NamedTuple, TYPE_CHECKING
 
+from hive.model.energy.energytype import EnergyType
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_at_base_to_charge
 from hive.state.vehicle_state import (
@@ -11,6 +12,7 @@ from hive.state.vehicle_state import (
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
     from hive.dispatcher.instruction.instruction_interface import Instruction
     from hive.config.dispatcher_config import DispatcherConfig
 
@@ -26,10 +28,12 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
+            environment: Environment,
     ) -> Tuple[BaseFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+        :param environment:
         :param simulation_state: The current simulation state
 
         :return: the updated BaseFleetManager along with instructions
@@ -37,7 +41,7 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
 
         reserve_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase),
         )
 

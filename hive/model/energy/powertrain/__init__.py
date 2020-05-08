@@ -9,7 +9,7 @@ __doc__ = """
 """
 
 powertrain_models = {
-    'leaf': resource_string('hive.resources.powertrain', 'leaf.yaml')
+    'normalized': resource_string('hive.resources.powertrain', 'normalized.yaml')
 }
 
 powertrain_constructors = {
@@ -17,7 +17,7 @@ powertrain_constructors = {
 }
 
 
-def build_powertrain(name: str) -> Powertrain:
+def build_powertrain(name: str,) -> Powertrain:
     """
     constructs powertrain objects from file descriptions
 

@@ -1,2 +1,2 @@
-vehicle_type_id,powertrain_id,powercurve_id,capacity_kwh,max_charge_acceptance_kw,operating_cost_km
-leaf_50,leaf,leaf,50,50,0.31
+vehicle_type_id,powertrain_id,powercurve_id,battery_capacity_kwh,max_charge_acceptance_kw,operating_cost_km,nominal_wh_per_mi
+leaf_50,leaf,leaf,50,50,0.31,225

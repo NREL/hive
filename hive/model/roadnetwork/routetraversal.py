@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple
-from typing import Optional, Union
+from typing import Optional, NamedTuple
 
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.linktraversal import traverse_up_to
-from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
 from hive.util.helpers import TupleOps
 from hive.util.typealiases import *
@@ -58,7 +57,7 @@ class RouteTraversal(NamedTuple):
             traversal_distance = self.traversal_distance_km
         return self._replace(
             remaining_time_seconds=t.remaining_time_seconds,
-            traversal_distance_km= traversal_distance,
+            traversal_distance_km=traversal_distance,
             experienced_route=updated_experienced_route,
             remaining_route=updated_remaining_route,
         )

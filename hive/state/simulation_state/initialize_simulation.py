@@ -9,8 +9,7 @@ import immutables
 
 from hive.config import HiveConfig
 from hive.model.base import Base
-from hive.model.energy.powercurve import build_powercurve
-from hive.model.energy.powertrain import build_powertrain
+from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
@@ -40,7 +39,6 @@ def initialize_simulation(
     vehicles_file = config.io.file_paths.vehicles_file
     bases_file = config.io.file_paths.bases_file
     stations_file = config.io.file_paths.stations_file
-    vehicle_types_file = config.io.file_paths.vehicle_types_file
 
     if config.io.file_paths.geofence_file:
         geofence = GeoFence.from_geojson_file(config.io.file_paths.geofence_file)
@@ -70,12 +68,9 @@ def initialize_simulation(
     if config.io.log_period_seconds < config.sim.timestep_duration_seconds:
         raise RuntimeError("log time step must be greater than simulation time step")
     reporter = BasicReporter(config.io, config.output_directory)
-    vehicle_types_table_builder = VehicleTypesTableBuilder.build(vehicle_types_file)
-    if vehicle_types_table_builder.errors:
-        raise Exception(vehicle_types_table_builder.errors)
     env_initial = Environment(config=config,
                               reporter=reporter,
-                              vehicle_types=vehicle_types_table_builder.result,
+                              mechatronics={'bev': BEV()},
                               )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
@@ -114,21 +109,7 @@ def _build_vehicles(
             log.error(error)
             return sim, env
         else:
-            if veh.powertrain_id not in env.powertrains and veh.powercurve_id not in env.powercurves:
-                powertrain = build_powertrain(veh.powertrain_id)
-                powercurve = build_powercurve(veh.powercurve_id)
-                updated_env = env.add_powercurve(powercurve).add_powertrain(powertrain)
-                return updated_sim, updated_env
-            elif veh.powertrain_id not in env.powertrains:
-                powertrain = build_powertrain(veh.powertrain_id)
-                updated_env = env.add_powertrain(powertrain)
-                return updated_sim, updated_env
-            elif veh.powercurve_id not in env.powercurves:
-                powercurve = build_powercurve(veh.powercurve_id)
-                updated_env = env.add_powercurve(powercurve)
-                return updated_sim, updated_env
-            else:
-                return updated_sim, env
+            return updated_sim, env
 
     # open vehicles file and add each row
     with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
