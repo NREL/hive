@@ -64,6 +64,32 @@ class TestInstructionGenerators(TestCase):
                               DispatchStationInstruction,
                               "Should have instructed vehicle to dispatch to station")
 
+    def test_charging_fleet_manager_queues(self):
+        charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
+
+        v_geoid = h3.geo_to_h3(39.0, -104.0, 15)
+        veh = mock_vehicle_from_geoid(geoid=v_geoid)
+        low_battery = mock_energy_source(soc=0.1)
+        veh_low_battery = veh.modify_energy_source(low_battery)
+
+        s1_geoid = h3.geo_to_h3(39.01, -104.0, 15)
+        s2_geoid = h3.geo_to_h3(39.015, -104.0, 15)  # slightly further away
+
+        # invariant: a queue can be created even if plugs are available and
+        # our dispatcher only considers the queue size in the distance metric
+        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(Charger.DCFC)
+        s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
+
+        sim = mock_sim(h3_location_res=15, h3_search_res=5, vehicles=(veh_low_battery,), stations=(s1, s2,))
+
+        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim)
+
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions[0],
+                              DispatchStationInstruction,
+                              "Should have instructed vehicle to dispatch to station")
+        self.assertEqual(instructions[0].station_id, s2.id, "should have instructed vehicle to go to s2")
+
     def test_fleet_position_manager(self):
         fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), mock_config().dispatcher)
 

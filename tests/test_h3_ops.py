@@ -64,10 +64,10 @@ class TestH3Ops(TestCase):
         self.assertIsNone(e1, "test invariant failed")
         self.assertIsNone(e2, "test invariant failed")
 
-        nearest = H3Ops.nearest_entity(geoid=somewhere,
-                                       entities=sim_with_reqs.requests,
-                                       entity_search=sim_with_reqs.r_search,
-                                       sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
+        nearest = H3Ops.nearest_entity_by_great_circle_distance(geoid=somewhere,
+                                                                entities=sim_with_reqs.requests,
+                                                                entity_search=sim_with_reqs.r_search,
+                                                                sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
 
         self.assertEqual(nearest.geoid, req_near.geoid)
 

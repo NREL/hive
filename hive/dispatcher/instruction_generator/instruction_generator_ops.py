@@ -7,6 +7,7 @@ import immutables
 from h3 import h3
 
 from hive.dispatcher.instruction.instructions import *
+from hive.model.station import Station
 from hive.util import Kilometers
 from hive.util.helpers import DictOps
 from hive.util.helpers import H3Ops
@@ -87,11 +88,11 @@ def instruct_vehicles_return_to_base(n: int,
         if len(instructions) >= n:
             break
 
-        nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
-                                            entities=simulation_state.bases,
-                                            entity_search=simulation_state.b_search,
-                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                            max_distance_km=max_search_radius_km)
+        nearest_base = H3Ops.nearest_entity_by_great_circle_distance(geoid=veh.geoid,
+                                                                     entities=simulation_state.bases,
+                                                                     entity_search=simulation_state.b_search,
+                                                                     sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                                                     max_search_distance_km=max_search_radius_km)
         if nearest_base:
             instruction = DispatchBaseInstruction(
                 vehicle_id=veh.id,
@@ -174,6 +175,20 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     :return:
     """
 
+    def _nearest_shortest_queue(station: Station) -> float:
+        """
+        sort ordering that prioritizes short vehicle queues where possible
+        :param station: a station
+        :return: the distance metric for this station, a function of it's queue size and great circle distance
+        """
+        dc_chargers = station.total_chargers.get(Charger.DCFC, 0)
+        if not dc_chargers:
+            return float("inf")
+        else:
+            distance = H3Ops.great_circle_distance(veh.geoid, station.geoid)
+            queue_factor = station.enqueued_vehicle_count_for_charger(Charger.DCFC) / dc_chargers
+            return distance + distance * queue_factor
+
     instructions = ()
 
     for veh in vehicles:
@@ -184,8 +199,9 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
                                                entities=simulation_state.stations,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                               max_distance_km=max_search_radius_km,
-                                               is_valid=lambda s: s.has_available_charger(Charger.DCFC))
+                                               distance_function=_nearest_shortest_queue,
+                                               max_search_distance_km=max_search_radius_km,
+                                               )
         if nearest_station:
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
