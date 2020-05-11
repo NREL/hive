@@ -82,10 +82,11 @@ class ChargingBase(NamedTuple, VehicleState):
         :return: True if the vehicle is fully charged
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         if not vehicle:
             return False
         else:
-            return vehicle.energy_source.is_full()
+            return mechatronics.is_full(vehicle)
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',

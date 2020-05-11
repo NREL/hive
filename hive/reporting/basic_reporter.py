@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import json
 import logging
 import os
@@ -8,6 +10,9 @@ from hive.config.io import IO
 from hive.reporting.reporter import Reporter
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
 
 
 class BasicReporter(Reporter):
@@ -47,10 +52,10 @@ class BasicReporter(Reporter):
         out_dict['vehicle_state'] = vehicle.vehicle_state.__class__.__name__
 
         # deconstruct energy source
-        for key, val in vehicle.energy_source._asdict().items():
-            new_key = 'energy_source_' + key
+        for key, val in vehicle.energy.items():
+            new_key = 'energy_' + key.name
             out_dict[new_key] = val
-        del (out_dict['energy_source'])
+        del (out_dict['energy'])
 
         # deconstruct link
         for key, val in vehicle.link._asdict().items():
@@ -97,7 +102,10 @@ class BasicReporter(Reporter):
             entry = json.dumps(log_dict, default=str)
             self.sim_log_file.write(entry + '\n')
 
-    def log_sim_state(self, sim_state: 'SimulationState'):
+    def log_sim_state(
+            self,
+            sim_state: SimulationState,
+    ):
         if self._io.log_vehicles:
             self._report_entities(
                 entities=sim_state.vehicles.values(),

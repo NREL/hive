@@ -85,7 +85,8 @@ class ChargingStation(NamedTuple, VehicleState):
         if not vehicle:
             return False
         else:
-            return vehicle.energy_source.is_full()
+            mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            return mechatronics.is_full(vehicle)
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',

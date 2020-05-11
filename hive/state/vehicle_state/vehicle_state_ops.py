@@ -1,6 +1,7 @@
 from typing import Tuple, Optional, NamedTuple
 
 from hive.model.energy.charger import Charger
+from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.runner.environment import Environment
@@ -27,32 +28,28 @@ def charge(sim: 'SimulationState',
     """
 
     vehicle = sim.vehicles.get(vehicle_id)
-    powercurve = env.powercurves.get(vehicle.powercurve_id) if vehicle else None
+    mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
     station = sim.stations.get(station_id)
 
     if not vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
-    elif not powercurve:
-        return SimulationStateError(f"invalid powercurve_id {vehicle.powercurve_id}"), None
+    elif not mechatronics:
+        return SimulationStateError(f"invalid mechatronics_id {vehicle.mechatronics_id}"), None
     elif not station:
         return SimulationStateError(f"station {station_id} not found"), None
-    elif vehicle.energy_source.is_full():
+    elif mechatronics.is_full(vehicle):
         return SimulationStateError(f"vehicle {vehicle_id} is full but still attempting to charge"), None
     else:
-        # charge energy source
-        updated_energy_source = powercurve.refuel(
-            vehicle.energy_source,
-            charger,
-            sim.sim_timestep_duration_seconds
-        )
+        charged_vehicle = mechatronics.add_energy(vehicle, charger, sim.sim_timestep_duration_seconds)
 
+        # TODO: make this flexible wrt energy type (i.e. gasoline)
         # determine price of charge event
-        kwh_transacted = updated_energy_source.energy_kwh - vehicle.energy_source.energy_kwh  # kwh
-        charger_price = station.charger_prices_per_kwh.get(charger)  # Currency
+        kwh_transacted = charged_vehicle.energy[EnergyType.ELECTRIC] - vehicle.energy[EnergyType.ELECTRIC]  # kwh
+        charger_price = station.charger_prices_per_kw.get(charger)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
         # perform updates
-        updated_vehicle = vehicle.modify_energy_source(updated_energy_source).send_payment(charging_price)
+        updated_vehicle = charged_vehicle.send_payment(charging_price)
         updated_station = station.receive_payment(charging_price)
 
         veh_error, sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
@@ -95,12 +92,15 @@ def _apply_route_traversal(sim: 'SimulationState',
     :return: an error, or a traverse result, or (None, None) if no traversal occurred
     """
     vehicle = sim.vehicles.get(vehicle_id)
+    mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     error, traverse_result = traverse(
         route_estimate=route,
         duration_seconds=sim.sim_timestep_duration_seconds,
     )
     if not vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    elif not mechatronics:
+        return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
     elif error:
         return error, None
     elif not traverse_result:
@@ -108,10 +108,28 @@ def _apply_route_traversal(sim: 'SimulationState',
     elif isinstance(traverse_result, Exception):
         return traverse_result, None
     else:
-        updated_vehicle = vehicle.apply_route_traversal(
-            traverse_result, sim.road_network, env
+        # todo: we allow the agent to traverse only bounded by time, not energy;
+        #   so, it is possible for the vehicle to travel farther in a time step than
+        #   they have fuel to travel. this can create an error on the location of
+        #   any agents at the time step where they run out of fuel. feels like an
+        #   acceptable edge case but we could improve. rjf 20200309
+
+        experienced_route = traverse_result.experienced_route
+        less_energy_vehicle = mechatronics.move(vehicle, experienced_route)
+        step_distance_km = traverse_result.traversal_distance_km
+        remaining_route = traverse_result.remaining_route
+
+        if not remaining_route:
+            geoid = experienced_route[-1].end
+            link = sim.road_network.link_from_geoid(geoid)
+            updated_vehicle = less_energy_vehicle.modify_link(link=link)
+        else:
+            updated_vehicle = less_energy_vehicle.modify_link(link=remaining_route[0])
+
+        error, updated_sim = simulation_state_ops.modify_vehicle(
+            sim,
+            updated_vehicle.tick_distance_traveled_km(step_distance_km),
         )
-        error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         if error:
             return error, None
         else:
@@ -129,9 +147,12 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
     :return: an optional error, or an optional sim with the out of service vehicle, or (None, None) if no changes
     """
     moved_vehicle = sim.vehicles.get(vehicle_id)
+    mechatronics = env.mechatronics.get(moved_vehicle.mechatronics_id)
     if not moved_vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
-    elif moved_vehicle.energy_source.is_empty():
+    elif not mechatronics:
+        return SimulationStateError(f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
+    elif mechatronics.is_empty(moved_vehicle):
         error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
         if error:
             return error, None

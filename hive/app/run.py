@@ -5,7 +5,7 @@ import functools as ft
 import logging
 import os
 import time
-from typing import NamedTuple
+from typing import NamedTuple, TYPE_CHECKING
 
 import yaml
 from pkg_resources import resource_filename
@@ -21,6 +21,9 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
+
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
 
 root_log = logging.getLogger()
 log = logging.getLogger(__name__)
@@ -97,7 +100,7 @@ def run() -> int:
 
         log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
 
-        _summary_stats(sim_result.s)
+        _summary_stats(sim_result.s, env)
 
         env.reporter.sim_log_file.close()
 
@@ -114,7 +117,7 @@ def run() -> int:
         raise e
 
 
-def _summary_stats(final_sim: SimulationState):
+def _summary_stats(final_sim: SimulationState, env: Environment):
     """
     just some quick-and-dirty summary stats here
     :param sim: the final sim state
@@ -123,15 +126,16 @@ def _summary_stats(final_sim: SimulationState):
     class VehicleResultsAccumulator(NamedTuple):
         balance: float = 0.0
         vkt: float = 0.0
-        avg_soc: float = 0.0
         count: int = 0
+        avg_soc: float = 0.0
 
         def add_vehicle(self, vehicle: Vehicle) -> VehicleResultsAccumulator:
+            soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
             return self._replace(
                 balance=self.balance + vehicle.balance,
                 vkt=self.vkt + vehicle.distance_traveled_km,
-                avg_soc=self.avg_soc + ((vehicle.energy_source.soc - self.avg_soc) / (self.count + 1)),
-                count=self.count + 1
+                count=self.count + 1,
+                avg_soc=self.avg_soc + ((soc - self.avg_soc) / (self.count + 1)),
             )
 
     # collect all vehicle data
@@ -151,7 +155,7 @@ def _summary_stats(final_sim: SimulationState):
     log.info(f"STATION  CURRENCY BALANCE:             $ {station_income:.2f}")
     log.info(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
     log.info(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")
-    log.info(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100.0:.2f}%")
+    log.info(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100:.2f}%")
 
 
 def _welcome_to_hive():

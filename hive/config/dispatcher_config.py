@@ -8,8 +8,8 @@ from hive.util.units import Ratio, Seconds, Kilometers
 
 class DispatcherConfig(NamedTuple):
     default_update_interval_seconds: Seconds
-    matching_low_soc_threshold: Ratio
-    charging_low_soc_threshold: Ratio
+    matching_range_km_threshold: Kilometers
+    charging_range_km_threshold: Kilometers
     ideal_fastcharge_soc_limit: Ratio
     max_search_radius_km: Kilometers
     base_vehicles_charging_limit: Optional[int]
@@ -18,8 +18,8 @@ class DispatcherConfig(NamedTuple):
     def default_config(cls) -> Dict:
         return {
             'default_update_interval_seconds': 60 * 15,
-            'matching_low_soc_threshold': 0.2,
-            'charging_low_soc_threshold': 0.2,
+            'matching_range_km_threshold': 20,
+            'charging_range_km_threshold': 20,
             'ideal_fastcharge_soc_limit': 0.8,
             'base_vehicles_charging_limit': None,
             'max_search_radius_km': 100.0,

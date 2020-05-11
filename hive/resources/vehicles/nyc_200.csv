@@ -1,4 +1,4 @@
-vehicle_id,lat,lon,vehicle_type_id,initial_soc
+vehicle_id,lat,lon,mechatronics_id,initial_soc
 v0,40.7984742735505,-73.94350998147094,leaf_50,0.3
 v1,40.776777000239896,-73.97164703882042,leaf_50,0.3
 v2,40.77121426573277,-73.97922752394811,leaf_50,0.3

@@ -5,6 +5,7 @@ from hive.state.vehicle_state import *
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from tests.mock_lobster import *
 from hive.model.passenger import board_vehicle
+from hive.model.energy.energytype import EnergyType
 
 
 class TestVehicleState(TestCase):
@@ -60,7 +61,7 @@ class TestVehicleState(TestCase):
         self.assertEquals(available_chargers, 1, "should have returned the only DCFC charger")
 
     def test_charging_station_update(self):
-        vehicle = mock_vehicle()
+        vehicle = mock_vehicle(soc=0.5)
         station = mock_station()
         charger = Charger.DCFC
         sim = mock_sim(
@@ -78,8 +79,8 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertAlmostEqual(
-            first=updated_vehicle.energy_source.energy_kwh,
-            second=vehicle.energy_source.energy_kwh + 0.83,
+            first=updated_vehicle.energy[EnergyType.ELECTRIC],
+            second=vehicle.energy[EnergyType.ELECTRIC] + 0.76,
             places=2,
             msg="should have charged for 60 seconds")
 
@@ -212,10 +213,10 @@ class TestVehicleState(TestCase):
         self.assertEquals(available_chargers, 1, "should have returned the only DCFC charger")
 
     def test_charging_base_update(self):
-        vehicle = mock_vehicle()
+        vehicle = mock_vehicle(soc=0.5)
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.DCFC
+        charger = Charger.LEVEL_2
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -232,8 +233,8 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertAlmostEqual(
-            first=updated_vehicle.energy_source.energy_kwh,
-            second=vehicle.energy_source.energy_kwh + 0.83,
+            first=updated_vehicle.energy[EnergyType.ELECTRIC],
+            second=vehicle.energy[EnergyType.ELECTRIC] + 0.12,
             places=2,
             msg="should have charged for 60 seconds")
 
@@ -412,10 +413,12 @@ class TestVehicleState(TestCase):
         self.assertIsNone(update_error, "should have no error from update call")
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        old_soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
+        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).battery_soc(updated_vehicle)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchBase,
                               "should still be in a dispatch to base state")
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertLess(new_soc, old_soc, "should have less energy")
 
     def test_dispatch_base_update_terminal(self):
         vehicle = mock_vehicle()
@@ -562,10 +565,12 @@ class TestVehicleState(TestCase):
         self.assertIsNone(update_error, "should have no error from update call")
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        old_soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
+        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).battery_soc(updated_vehicle)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation,
                               "should still be in a dispatch to station state")
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertLess(new_soc, old_soc, "should have less energy")
 
     def test_dispatch_station_update_terminal(self):
         initial_soc = 0.1
@@ -588,11 +593,12 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_station = sim_updated.stations.get(station.id)
+        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).battery_soc(updated_vehicle)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation,
                               "vehicle should be in ChargingStation state")
         self.assertEquals(updated_station.available_chargers.get(charger), 0,
                           "should have taken the only available charger")
-        self.assertGreater(updated_vehicle.energy_source.soc, initial_soc, "should have charged for one time step")
+        self.assertGreater(new_soc, initial_soc, "should have charged for one time step")
 
     def test_dispatch_station_enter_no_station(self):
         vehicle = mock_vehicle()
@@ -716,7 +722,11 @@ class TestVehicleState(TestCase):
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip,
                               "should still be in a dispatch to request state")
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertLess(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have less energy",
+        )
 
     def test_dispatch_trip_update_terminal(self):
         vehicle = mock_vehicle()
@@ -844,7 +854,11 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should still be in an Idle state")
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertLess(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have less energy",
+        )
         self.assertEqual(updated_vehicle.vehicle_state.idle_duration,
                          sim.sim_timestep_duration_seconds,
                          "should have recorded the idle time")
@@ -864,8 +878,9 @@ class TestVehicleState(TestCase):
         self.assertIsNone(update_error, "should have no error from update call")
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        is_empty = env.mechatronics.get(updated_vehicle.mechatronics_id).is_empty(updated_vehicle)
         self.assertIsInstance(updated_vehicle.vehicle_state, OutOfService, "vehicle should be OutOfService")
-        self.assertTrue(updated_vehicle.energy_source.is_empty, "vehicle should have no energy")
+        self.assertTrue(is_empty, "vehicle should have no energy")
 
     ####################################################################################################################
     # OutOfService #####################################################################################################
@@ -917,7 +932,11 @@ class TestVehicleState(TestCase):
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, OutOfService, "should still be in an OutOfService state")
-        self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
+        self.assertEqual(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have the same energy",
+        )
 
     # def test_out_of_service_update_terminal(self):  # there is no terminal state for OutOfService
 
@@ -980,7 +999,11 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, Repositioning, "should still be in a Repositioning state")
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertLess(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have less energy",
+        )
 
     def test_repositioning_update_terminal(self):
         vehicle = mock_vehicle()
@@ -1080,7 +1103,11 @@ class TestVehicleState(TestCase):
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "should still be in a ReserveBase state")
-        self.assertEqual(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have the same energy")
+        self.assertEqual(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have the same energy",
+        )
 
     def test_reserve_base_enter_no_base(self):
         vehicle = mock_vehicle()
@@ -1197,7 +1224,11 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "should still be in a servicing state")
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle.energy_source.soc, "should have less energy")
+        self.assertLess(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have less energy",
+        )
         self.assertEqual(updated_vehicle.vehicle_state.passengers, request.passengers, "should have passengers")
 
     def test_servicing_trip_update_terminal(self):
@@ -1336,7 +1367,12 @@ class TestVehicleState(TestCase):
         self.assertIsNotNone(sim3, "should have updated the sim")
 
         updated_vehicle = sim3.vehicles.get(vehicle_queueing.id)
-        self.assertLess(updated_vehicle.energy_source.soc, vehicle_queueing.energy_source.soc, "should have incurred an idle penalty")
+        self.assertLess(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle_queueing.energy[EnergyType.ELECTRIC],
+            "should have less energy",
+        )
+
         # update should apply idle cost if stall is still not available
 
     def test_charge_queueing_update_terminal(self):

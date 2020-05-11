@@ -17,7 +17,7 @@ class FilePaths(NamedTuple):
     requests_file: str
     bases_file: str
     stations_file: str
-    vehicle_types_file: str
+    mechatronics_file: str
     road_network_file: Optional[str]
     geofence_file: Optional[str]
     rate_structure_file: Optional[str]
@@ -41,7 +41,7 @@ class FilePaths(NamedTuple):
             'requests_file',
             'bases_file',
             'stations_file',
-            'vehicle_types_file'
+            'mechatronics_file',
         )
 
     @classmethod
@@ -59,7 +59,7 @@ class FilePaths(NamedTuple):
         d['bases_file'] = resource_filename("hive.resources.bases", d['bases_file'])
         d['stations_file'] = resource_filename("hive.resources.stations", d['stations_file'])
         d['requests_file'] = resource_filename("hive.resources.requests", d['requests_file'])
-        d['vehicle_types_file'] = resource_filename("hive.resources.vehicle_types", d['vehicle_types_file'])
+        d['mechatronics_file'] = resource_filename("hive.resources.vehicles.mechatronics", d['mechatronics_file'])
 
         if d['road_network_file']:
             d['road_network_file'] = resource_filename("hive.resources.road_network", d['road_network_file'])
