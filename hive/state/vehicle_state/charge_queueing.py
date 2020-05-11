@@ -40,19 +40,33 @@ class ChargeQueueing(NamedTuple, VehicleState):
             # maybe here instead, re-directed to ChargingStation?
             return None, None
         else:
-            return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            updated_station = station.enqueue_for_charger(self.charger)
+            error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+            if error:
+                return error, None
+            else:
+                return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
     def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
-        the simulation state does not need modification in order to exit a charge queueing state (NOOP)
+        remove agent from queue before exiting this state
         :param sim:
         :param env:
         :return:
         """
-        return None, sim
+        station = sim.stations.get(self.station_id)
+        if not station:
+            return SimulationStateError(f"station {self.station_id} not found"), None
+        else:
+
+            updated_station = station.dequeue_for_charger(self.charger)
+            error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+            if error:
+                return error, None
+            return None, updated_sim
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
@@ -109,10 +123,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
             if not mechatronics:
                 return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
             less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
-
-            # updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
-            # updated_state = self._replace(idle_duration=updated_idle_duration)
-            # updated_vehicle = less_energy_vehicle.modify_state(updated_state)
 
             return simulation_state_ops.modify_vehicle(sim, less_energy_vehicle)
 

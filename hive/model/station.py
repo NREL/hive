@@ -27,6 +27,10 @@ class Station(NamedTuple):
     :type total_chargers: :py:obj:`Dict[Charger, int]`
     :param available_chargers: Identifies how many plugs for each charger type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
+    :param charger_prices_per_kwh: the cost to use chargers at this station
+    :type charger_prices_per_kwh: :py:obj`Dict[Charger, Currency]`
+    :param enqueued_vehicles: the count of vehicles currently enqueued for each charger
+    :type enqueued_vehicles: :py:obj`Dict[Charger, int]`
     :param balance: the net income of this station
     :type balance: :py:obj:`Currency`
     """
@@ -34,7 +38,8 @@ class Station(NamedTuple):
     link: Link
     total_chargers: immutables.Map[Charger, int]
     available_chargers: immutables.Map[Charger, int]
-    charger_prices: immutables.Map[Charger, Currency]
+    charger_prices_per_kwh: immutables.Map[Charger, Currency]
+    enqueued_vehicles: immutables.Map[Charger, int] = immutables.Map()
     balance: Currency = 0.0
 
     @property
@@ -166,7 +171,7 @@ class Station(NamedTuple):
 
     def update_prices(self, new_prices: immutables.Map[Charger, Currency]) -> Station:
         return self._replace(
-            charger_prices=DictOps.merge_dicts(self.charger_prices, new_prices)
+            charger_prices_per_kwh=DictOps.merge_dicts(self.charger_prices_per_kwh, new_prices)
         )
 
     def receive_payment(self, currency_received: Currency) -> Station:
@@ -176,3 +181,39 @@ class Station(NamedTuple):
         :return: the updated Station
         """
         return self._replace(balance=self.balance + currency_received)
+
+    def enqueue_for_charger(self, charger: Charger) -> Station:
+        """
+        increment the count of vehicles enqueued for a specific charger type - no limit
+        :param charger: the charger type
+        :return: the updated Station
+        """
+        updated_enqueued_count = self.enqueued_vehicles.get(charger, 0) + 1
+        updated_enqueued_vehicles = self.enqueued_vehicles.set(charger, updated_enqueued_count)
+        return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
+
+    def dequeue_for_charger(self, charger: Charger) -> Station:
+        """
+        decrement the count of vehicles enqueued for a specific charger type - min zero
+        :param charger: the charger type
+        :return: the updated Station
+        """
+        enqueued_count = self.enqueued_vehicles.get(charger, 0)
+        if not enqueued_count:
+            return self
+        else:
+            updated_enqueued_count = max(0, enqueued_count - 1)
+            if updated_enqueued_count == 0:
+                updated_enqueued_vehicles = self.enqueued_vehicles.delete(charger)
+                return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
+            else:
+                updated_enqueued_vehicles = self.enqueued_vehicles.set(charger, updated_enqueued_count)
+                return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
+
+    def enqueued_vehicle_count_for_charger(self, charger: Charger) -> int:
+        """
+        gets the current count of vehicles enqueued for a specific charger at this station
+        :param charger: the charger type
+        :return: the count of vehicles enqueued
+        """
+        return self.enqueued_vehicles.get(charger, 0)

@@ -58,12 +58,12 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             filter_function=lambda r: not r.dispatched_vehicle
         )
         for request in unassigned_requests:
-            nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
-                                                   entities=simulation_state.vehicles,
-                                                   entity_search=simulation_state.v_search,
-                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                   is_valid=_is_valid_for_dispatch,
-                                                   )
+            nearest_vehicle = H3Ops.nearest_entity_by_great_circle_distance(geoid=request.origin,
+                                                                            entities=simulation_state.vehicles,
+                                                                            entity_search=simulation_state.v_search,
+                                                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                                                            is_valid=_is_valid_for_dispatch,
+                                                                            )
             if nearest_vehicle:
                 instruction = DispatchTripInstruction(
                     vehicle_id=nearest_vehicle.id,

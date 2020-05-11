@@ -20,9 +20,9 @@ class TestChargingPriceUpdate(TestCase):
         file = resource_filename("hive.resources.charging_prices", "denver_charging_prices_by_station_id.csv")
         fn = ChargingPriceUpdate.build(charging_file=file)
         result, _ = fn.update(sim, env)
-        s1_prices = result.simulation_state.stations[s1].charger_prices
-        s2_prices = result.simulation_state.stations[s2].charger_prices
-        bs1_prices = result.simulation_state.stations[bs1].charger_prices
+        s1_prices = result.simulation_state.stations[s1].charger_prices_per_kwh
+        s2_prices = result.simulation_state.stations[s2].charger_prices_per_kwh
+        bs1_prices = result.simulation_state.stations[bs1].charger_prices_per_kwh
         self.assertEqual(s1_prices.get(Charger.DCFC), 0.5, "station s1 has a DCFC price of 0.5 per kwh")
         self.assertEqual(s2_prices.get(Charger.DCFC), 0.5, "station s1 has a DCFC price of 0.5 per kwh")
         self.assertEqual(bs1_prices.get(Charger.LEVEL_2), 0.05, "station s1 has a LEVEL_2 price of 0.05 per kwh")
@@ -41,9 +41,9 @@ class TestChargingPriceUpdate(TestCase):
         file = resource_filename("hive.resources.charging_prices", "denver_charging_prices_by_geoid.csv")
         fn = ChargingPriceUpdate.build(charging_file=file)
         result, _ = fn.update(sim, env)
-        s1_prices = result.simulation_state.stations[s1].charger_prices
-        s2_prices = result.simulation_state.stations[s2].charger_prices
-        bs1_prices = result.simulation_state.stations[bs1].charger_prices
+        s1_prices = result.simulation_state.stations[s1].charger_prices_per_kwh
+        s2_prices = result.simulation_state.stations[s2].charger_prices_per_kwh
+        bs1_prices = result.simulation_state.stations[bs1].charger_prices_per_kwh
         self.assertEqual(s1_prices.get(Charger.DCFC), 0.3, "station s1 has a DCFC price of 0.3 per kwh")
         self.assertEqual(s2_prices.get(Charger.DCFC), 0.3, "station s1 has a DCFC price of 0.3 per kwh")
         self.assertEqual(bs1_prices.get(Charger.LEVEL_2), 0.03, "station s1 has a LEVEL_2 price of 0.03 per kwh")
@@ -63,7 +63,7 @@ class TestChargingPriceUpdate(TestCase):
         env = mock_env()
         fn = ChargingPriceUpdate.build()
         result, _ = fn.update(sim, env)
-        prices = result.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices
+        prices = result.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices_per_kwh
         self.assertEqual(prices.get(Charger.LEVEL_1), 0.0, "LEVEL_1 charging should be free by default")
         self.assertEqual(prices.get(Charger.LEVEL_2), 0.0, "LEVEL_2 charging should be free by default")
         self.assertEqual(prices.get(Charger.DCFC), 0.0, "DCFC charging should be free by default")
@@ -92,8 +92,8 @@ class TestChargingPriceUpdate(TestCase):
         result2, fn3 = fn2.update(sim_ffwd, env)
 
         self.assertEqual(len(result1.reports), 0, "should have no errors")
-        updated_price1 = result1.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices[Charger.DCFC]
-        updated_price2 = result2.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices[Charger.DCFC]
+        updated_price1 = result1.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices_per_kwh[Charger.DCFC]
+        updated_price2 = result2.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices_per_kwh[Charger.DCFC]
         self.assertEqual(price1, updated_price1, "price should have been updated")
         self.assertEqual(price2, updated_price2, "price should have been updated")
 
