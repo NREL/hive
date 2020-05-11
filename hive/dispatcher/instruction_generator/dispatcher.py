@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
-from hive.util.units import Ratio
-
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.runner.environment import Environment
+    from hive.dispatcher.instruction.instruction import Instruction
     from hive.model.vehicle.vehicle import Vehicle
     from hive.config.dispatcher_config import DispatcherConfig
 
@@ -25,10 +24,12 @@ class Dispatcher(NamedTuple, InstructionGenerator):
     def generate_instructions(
             self,
             simulation_state: SimulationState,
+            environment: Environment,
     ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+        :param environment:
         :param simulation_state: The current simulation state
 
         :return: the updated Dispatcher along with instructions
@@ -42,8 +43,13 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
                              isinstance(vehicle.vehicle_state, Repositioning)
 
-            return bool(vehicle.energy_source.soc > self.config.matching_low_soc_threshold
-                        and is_valid_state and vehicle.id not in already_dispatched)
+            if not is_valid_state:
+                return False
+
+            mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
+            range_remaining_km = mechatronics.range_remaining_km(vehicle)
+            return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold
+                        and vehicle.id not in already_dispatched)
 
         unassigned_requests = simulation_state.get_requests(
             sort=True,

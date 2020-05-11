@@ -200,7 +200,7 @@ class H3Ops:
         :return: a GeoId along the Link
         """
 
-        threshold = 0.001
+        threshold = 0.000001
         experienced_distance_km = (available_time_seconds * SECONDS_TO_HOURS) * link.speed_kmph
         ratio_trip_experienced = experienced_distance_km / link.distance_km
         if ratio_trip_experienced < (0 + threshold):

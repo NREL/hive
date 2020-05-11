@@ -99,16 +99,15 @@ class TestSimulationStateOps(TestCase):
         self.assertIsNone(e1, "test invariant failed")
 
         # modify some value on the vehicle
-        updated_powertrain_id = "testing an update"
-        updated_vehicle = veh._replace(powertrain_id=updated_powertrain_id)
+        updated_vehicle = veh._replace(mechatronics_id="test_update")
 
         e2, sim_after_update = simulation_state_ops.modify_vehicle(sim_with_veh, updated_vehicle)
 
         self.assertIsNone(e2, "should not have an error")
         # confirm sim reflects changes to vehicle
-        self.assertEqual(sim_after_update.vehicles[veh.id].powertrain_id,
-                         updated_powertrain_id,
-                         "new vehicle powertrain_id was not updated correctly")
+        self.assertEqual(sim_after_update.vehicles[veh.id].mechatronics_id,
+                         "test_update",
+                         "new vehicle was not updated correctly")
 
     def test_remove_vehicle(self):
         veh = mock_vehicle()

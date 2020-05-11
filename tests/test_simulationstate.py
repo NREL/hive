@@ -3,6 +3,7 @@ from unittest import TestCase
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
 from tests.mock_lobster import *
+from hive.model.energy.energytype import EnergyType
 
 
 class TestSimulationState(TestCase):
@@ -233,14 +234,14 @@ class TestSimulationState(TestCase):
         moved_veh = sim_moving_veh.vehicles[veh.id]
 
         self.assertNotEqual(veh.geoid, moved_veh.geoid, 'Vehicle should have moved')
-        self.assertGreater(veh.energy_source.soc,
-                           moved_veh.energy_source.soc,
+        self.assertGreater(veh.energy[EnergyType.ELECTRIC],
+                           moved_veh.energy[EnergyType.ELECTRIC],
                            'Vehicle should consume energy while moving.')
 
     def test_step_charging_vehicle(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
@@ -258,8 +259,8 @@ class TestSimulationState(TestCase):
 
         charged_veh = sim_charging_veh.vehicles[veh.id]
 
-        self.assertGreater(charged_veh.energy_source.soc,
-                           veh.energy_source.soc,
+        self.assertGreater(charged_veh.energy[EnergyType.ELECTRIC],
+                           veh.energy[EnergyType.ELECTRIC],
                            "Vehicle should have gained energy")
 
     def test_step_idle_vehicle(self):
@@ -271,8 +272,8 @@ class TestSimulationState(TestCase):
 
         idle_veh = sim_idle_veh.vehicles[veh.id]
 
-        self.assertLess(idle_veh.energy_source.soc,
-                        veh.energy_source.soc,
+        self.assertLess(idle_veh.energy[EnergyType.ELECTRIC],
+                        veh.energy[EnergyType.ELECTRIC],
                         "Idle vehicle should have consumed energy")
 
     def test_terminal_state_ending_trip(self):
@@ -348,7 +349,7 @@ class TestSimulationState(TestCase):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
         sta = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
@@ -433,11 +434,7 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_charging(self):
         sta = mock_station_from_geoid()
-        veh = mock_vehicle_from_geoid(
-            energy_type=EnergyType.ELECTRIC,
-            capacity_kwh=50,
-            soc=0.75
-        )
+        veh = mock_vehicle_from_geoid(soc=0.75)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
 
         instruction = ChargeStationInstruction(
@@ -452,8 +449,8 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
+        # 10 hours should get us charged , and 1 more sim step of any size to transition vehicle state
+        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=36000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_charged._replace(sim_timestep_duration_seconds=1), env)
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
@@ -463,11 +460,7 @@ class TestSimulationState(TestCase):
                               "Vehicle should have transitioned to IDLE")
 
     def test_terminal_state_charging_base(self):
-        veh = mock_vehicle_from_geoid(
-            energy_type=EnergyType.ELECTRIC,
-            capacity_kwh=50,
-            soc=0.75
-        )
+        veh = mock_vehicle_from_geoid(soc=0.75)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
         sim = mock_sim(vehicles=(veh,), stations=(sta,), bases=(bas,))
@@ -484,8 +477,8 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
+        # 10 hours should get us charged, and 1 more sim step of any size to transition vehicle state
+        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=36000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_charged._replace(sim_timestep_duration_seconds=1), env)
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
@@ -497,10 +490,9 @@ class TestSimulationState(TestCase):
     def test_vehicle_runs_out_of_energy(self):
 
         low_energy_veh = mock_vehicle_from_geoid(soc=0.01)
-        sim = mock_sim(vehicles=(low_energy_veh,))
+        sim = mock_sim(vehicles=(low_energy_veh,), sim_timestep_duration_seconds=3600)
 
-        # costs a fixed 10 kwh to make any movement
-        env = mock_env(powertrains=(mock_powertrain(energy_cost_kwh=10),))
+        env = mock_env()
 
         inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
         instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), inbox_cafe_in_torvet_julianehab_greenland)
@@ -567,17 +559,13 @@ class TestSimulationState(TestCase):
 
         self.assertEqual(vehicles[-1].id, 'v4', 'v4 is last')
 
-        def low_soc(vehicle: Vehicle) -> bool:
-            return vehicle.energy_source.soc <= 0.2
-
         sorted_and_filtered_vehicles = sim.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             sort_reversed=True,
-            filter_function=low_soc,
         )
 
-        self.assertEqual(sorted_and_filtered_vehicles[0].id, 'v3', 'v3 has highest soc below 0.2')
+        self.assertEqual(sorted_and_filtered_vehicles[0].id, 'v1', 'v1 has highest soc')
 
     def test_get_requests(self):
         sim = mock_sim()

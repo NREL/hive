@@ -68,7 +68,7 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         else:
 
             # generate Instructions, which may also have the side effect of modifying the InstructionGenerators
-            instr_result = generate_instructions(user_update_result.updated_fns, simulation_state)
+            instr_result = generate_instructions(user_update_result.updated_fns, simulation_state, env)
             reports = tuple(self._instruction_to_report(i, simulation_state.sim_time)
                             for i in instr_result.instruction_map.values())
             sim_with_instructions = apply_instructions(simulation_state, env, instr_result.instruction_map)

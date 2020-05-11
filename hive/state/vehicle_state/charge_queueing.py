@@ -105,9 +105,10 @@ class ChargeQueueing(NamedTuple, VehicleState):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-            idle_energy_kwh = env.config.sim.idle_energy_rate * (sim.sim_timestep_duration_seconds * SECONDS_TO_HOURS)
-            updated_energy_source = vehicle.energy_source.use_energy(idle_energy_kwh)
-            less_energy_vehicle = vehicle.modify_energy_source(updated_energy_source)
+            mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            if not mechatronics:
+                return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
+            less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             # updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
             # updated_state = self._replace(idle_duration=updated_idle_duration)
