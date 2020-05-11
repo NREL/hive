@@ -207,22 +207,31 @@ def mock_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
     return TabularPowertrain(nominal_consupmption=nominal_watt_hour_per_mile)
 
 
-def mock_powercurve() -> TabularPowercurve:
-    return TabularPowercurve(nominal_max_charge_kw=50)
+def mock_powercurve(
+        nominal_max_charge_kw=50,
+        battery_capacity_kwh=50,
+) -> TabularPowercurve:
+    return TabularPowercurve(
+        nominal_max_charge_kw=nominal_max_charge_kw,
+        battery_capacity_kwh=battery_capacity_kwh,
+    )
 
 
 def mock_bev(
         battery_capacity_kwh=50,
         idle_kwh_per_hour=0.8,
         nominal_watt_hour_per_mile=225,
+        nominal_max_charge_kw=50,
+        charge_taper_cutoff_kw=10,
 ) -> BEV:
     return BEV(
         mechatronics_id='bev',
         battery_capacity_kwh=battery_capacity_kwh,
         idle_kwh_per_hour=idle_kwh_per_hour,
         powertrain=mock_powertrain(nominal_watt_hour_per_mile),
-        powercurve=mock_powercurve(),
+        powercurve=mock_powercurve(nominal_max_charge_kw,battery_capacity_kwh),
         nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
+        charge_taper_cutoff_kw=charge_taper_cutoff_kw,
     )
 
 

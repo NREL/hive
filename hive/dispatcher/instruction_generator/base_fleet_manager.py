@@ -13,7 +13,7 @@ from hive.state.vehicle_state import (
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.runner.environment import Environment
-    from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.dispatcher.instruction.instruction import Instruction
     from hive.config.dispatcher_config import DispatcherConfig
 
 log = logging.getLogger(__name__)

@@ -449,8 +449,8 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
+        # 10 hours should get us charged , and 1 more sim step of any size to transition vehicle state
+        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=36000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_charged._replace(sim_timestep_duration_seconds=1), env)
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
@@ -477,8 +477,8 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
+        # 10 hours should get us charged, and 1 more sim step of any size to transition vehicle state
+        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=36000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_charged._replace(sim_timestep_duration_seconds=1), env)
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]

@@ -6,7 +6,7 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
-from hive.util.units import Kilometers, Seconds, KwH, KwH_per_H, Ratio, WH_TO_KWH, SECONDS_TO_HOURS, WattHourPerMile
+from hive.util.units import *
 from hive.util.typealiases import MechatronicsId
 
 if TYPE_CHECKING:
@@ -26,6 +26,9 @@ class BEV(NamedTuple, MechatronicsInterface):
     powertrain: TabularPowertrain
     powercurve:  TabularPowercurve
     nominal_watt_hour_per_mile: WattHourPerMile
+    charge_taper_cutoff_kw: Kw
+
+    battery_full_threshold_kwh: KwH = 0.1
 
     @classmethod
     def from_dict(cls, d: Dict[str, str]) -> BEV:
@@ -35,17 +38,22 @@ class BEV(NamedTuple, MechatronicsInterface):
         :return: the built Mechatronics object
         """
         nominal_watt_hour_per_mile = float(d['nominal_watt_hour_per_mile'])
-        powertrain = TabularPowertrain(nominal_watt_hour_per_mile)
-        powercurve = TabularPowercurve(float(d['nominal_max_charge_kw']))
         battery_capacity_kwh = float(d['battery_capacity_kwh'])
+        powertrain = TabularPowertrain(nominal_watt_hour_per_mile)
+        powercurve = TabularPowercurve(
+            nominal_max_charge_kw=float(d['nominal_max_charge_kw']),
+            battery_capacity_kwh=battery_capacity_kwh,
+        )
         idle_kwh_per_hour = float(d['idle_kwh_per_hour'])
+        charge_taper_cutoff_kw = float(d['charge_taper_cutoff_kw'])
         return BEV(
             mechatronics_id=d['mechatronics_id'],
             battery_capacity_kwh=battery_capacity_kwh,
             idle_kwh_per_hour=idle_kwh_per_hour,
             powertrain=powertrain,
             powercurve=powercurve,
-            nominal_watt_hour_per_mile=nominal_watt_hour_per_mile
+            nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
+            charge_taper_cutoff_kw=charge_taper_cutoff_kw
         )
 
     def initial_energy(self, battery_soc: Ratio) -> Dict[EnergyType, float]:
@@ -86,7 +94,8 @@ class BEV(NamedTuple, MechatronicsInterface):
         :param vehicle:
         :return:
         """
-        return vehicle.energy[EnergyType.ELECTRIC] >= self.battery_capacity_kwh * 0.8
+        full_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
+        return vehicle.energy[EnergyType.ELECTRIC] >= full_kwh
 
     def move(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
@@ -98,7 +107,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         energy_used_kwh = self.powertrain.energy_cost(route)
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
-        new_energy_kwh = max(0, vehicle_energy_kwh - energy_used_kwh)
+        new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
 
         return updated_vehicle
@@ -113,7 +122,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         idle_energy_kwh = self.idle_kwh_per_hour * time_seconds * SECONDS_TO_HOURS
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
-        new_energy_kwh = max(0, vehicle_energy_kwh - idle_energy_kwh)
+        new_energy_kwh = max(0.0, vehicle_energy_kwh - idle_energy_kwh)
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
 
         return updated_vehicle
@@ -127,16 +136,22 @@ class BEV(NamedTuple, MechatronicsInterface):
         :param time_seconds:
         :return:
         """
-        start_soc = self.battery_soc(vehicle)
-        energy_limit = 0.8 * self.battery_capacity_kwh
-        charger_energy_kwh = self.powercurve.charge(
-            start_soc=start_soc,
-            energy_limit=energy_limit,
-            power_kw=charger.power_kw,
-            duration_seconds=time_seconds,
-        )
-        vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
-        new_energy_kwh = min(self.battery_capacity_kwh, vehicle_energy_kwh + charger_energy_kwh)
+        start_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
+
+        if charger.power_kw < self.charge_taper_cutoff_kw:
+            charger_energy_kwh = start_energy_kwh + charger.power_kw * time_seconds * SECONDS_TO_HOURS
+            new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
+        else:
+            # if we're above the charge taper cutoff, we'll use the powercurve
+            energy_limit_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
+            charger_energy_kwh = self.powercurve.charge(
+                start_energy_kwh=start_energy_kwh,
+                energy_limit_kwh=energy_limit_kwh,
+                power_kw=charger.power_kw,
+                duration_seconds=time_seconds,
+            )
+            new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
+
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
 
         return updated_vehicle

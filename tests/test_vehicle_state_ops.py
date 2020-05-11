@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from hive.state.vehicle_state import *
 from hive.model.energy.energytype import EnergyType
 from tests.mock_lobster import *
 

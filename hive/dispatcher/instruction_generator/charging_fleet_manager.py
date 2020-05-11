@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.runner.environment import Environment
-    from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.dispatcher.instruction.instruction import Instruction
     from hive.config.dispatcher_config import DispatcherConfig
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
@@ -41,11 +41,10 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
         # find vehicles that fall below the minimum threshold and charge them.
 
         def charge_candidate(v: Vehicle) -> bool:
-            # TODO: replace remaining range threshold with config value
             proper_state = isinstance(v.vehicle_state, Idle) or isinstance(v.vehicle_state, Repositioning)
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
             range_remaining_km = mechatronics.range_remaining_km(v)
-            return range_remaining_km <= 20 and proper_state
+            return range_remaining_km <= environment.config.dispatcher.charging_range_km_threshold and proper_state
 
         def stop_charge_candidate(v: Vehicle) -> bool:
             proper_state = isinstance(v.vehicle_state, ChargingStation)

@@ -29,6 +29,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+        :param environment:
         :param simulation_state: The current simulation state
 
         :return: the updated Dispatcher along with instructions
@@ -42,10 +43,9 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
                              isinstance(vehicle.vehicle_state, Repositioning)
 
-            # TODO add remaining range to config
             mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
             range_remaining_km = mechatronics.range_remaining_km(vehicle)
-            return bool(range_remaining_km > 20
+            return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold
                         and is_valid_state and vehicle.id not in already_dispatched)
 
         unassigned_requests = simulation_state.get_requests(

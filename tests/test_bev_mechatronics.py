@@ -14,7 +14,7 @@ class TestBEV(TestCase):
         charged_vehicle = bev.add_energy(vehicle, Charger.DCFC, hours_to_seconds(10))
         self.assertAlmostEqual(
             charged_vehicle.energy[EnergyType.ELECTRIC]/bev.battery_capacity_kwh,
-            0.8,
+            1,
             places=2
         )
 

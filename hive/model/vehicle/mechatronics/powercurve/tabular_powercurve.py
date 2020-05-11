@@ -11,7 +11,7 @@ from hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
 from hive.util.units import Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
-    from hive.util.units import Ratio, KwH, Kw
+    from hive.util.units import KwH, Kw
 
 
 class TabularPowercurve(Powercurve):
@@ -19,11 +19,15 @@ class TabularPowercurve(Powercurve):
     builds a tabular, interpolated lookup model from a file
     """
 
-    def __init__(self, nominal_max_charge_kw: Kw):
+    def __init__(
+            self,
+            nominal_max_charge_kw: Kw,
+            battery_capacity_kwh: KwH,
+    ):
         data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powercurve', 'normalized.yaml'))
 
         if 'name' not in data or 'power_type' not in data or 'step_size_seconds' not in data \
-                or 'power_curve' not in data or 'reported_max_charge_acceptance_kw' not in data:
+                or 'power_curve' not in data:
             raise IOError("invalid input file for tabular energy curve model")
 
         self.id = data['name']
@@ -33,22 +37,21 @@ class TabularPowercurve(Powercurve):
         if self.energy_type is None:
             raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
 
-        charging_model = sorted(data['power_curve'], key=lambda x: x['soc'])
-        scale_factor = nominal_max_charge_kw / data['reported_max_charge_acceptance_kw']  # kilowatt
-        self._charging_soc = np.array(list(map(lambda x: x['soc'], charging_model)))  # state of charge
-        self._charging_rate_kw = np.array(list(map(lambda x: x['kw'], charging_model))) * scale_factor  # kilowatt
+        charging_model = sorted(data['power_curve'], key=lambda x: x['energy_kwh'])
+        self._charging_energy_kwh = np.array(list(map(lambda x: x['energy_kwh'], charging_model))) * battery_capacity_kwh
+        self._charging_rate_kw = np.array(list(map(lambda x: x['power_kw'], charging_model))) * nominal_max_charge_kw
 
     def charge(self,
-               start_soc: Ratio,
-               energy_limit: KwH,
+               start_energy_kwh: KwH,
+               energy_limit_kwh: KwH,
                power_kw: Kw,
                duration_seconds: Seconds = 1  # seconds
                ) -> KwH:
 
         """
          (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
-         :param start_soc: the starting soc
-         :param energy_limit: the cutoff energy limit
+         :param start_energy_kwh:
+         :param energy_limit_kwh: the cutoff energy limit
          :param power_kw: how fast to charge
          :param duration_seconds: the amount of time to charge for
          :return: the energy source charged for this duration using this charger
@@ -56,10 +59,9 @@ class TabularPowercurve(Powercurve):
 
         # iterate for as many seconds in a time step, by step_size_seconds
         t = 0
-        soc = start_soc * 100  # [scaled to 0, 100]
-        energy_kwh = 0
-        while t < duration_seconds and not energy_kwh > energy_limit:
-            veh_kw_rate = np.interp(soc, self._charging_soc, self._charging_rate_kw)  # kilowatt
+        energy_kwh = start_energy_kwh
+        while t < duration_seconds and energy_kwh < energy_limit_kwh:
+            veh_kw_rate = np.interp(energy_kwh, self._charging_energy_kwh, self._charging_rate_kw)  # kilowatt
             charge_power_kw = min(veh_kw_rate, power_kw)  # kilowatt
             kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours
 
