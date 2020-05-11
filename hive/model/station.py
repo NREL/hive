@@ -35,6 +35,7 @@ class Station(NamedTuple):
     total_chargers: immutables.Map[Charger, int]
     available_chargers: immutables.Map[Charger, int]
     charger_prices: immutables.Map[Charger, Currency]
+    enqueued_vehicles: immutables.Map[Charger, int] = immutables.Map()
     balance: Currency = 0.0
 
     @property
@@ -176,3 +177,39 @@ class Station(NamedTuple):
         :return: the updated Station
         """
         return self._replace(balance=self.balance + currency_received)
+
+    def enqueue_for_charger(self, charger: Charger) -> Station:
+        """
+        increment the count of vehicles enqueued for a specific charger type - no limit
+        :param charger: the charger type
+        :return: the updated Station
+        """
+        updated_enqueued_count = self.enqueued_vehicles.get(charger, 0) + 1
+        updated_enqueued_vehicles = self.enqueued_vehicles.set(charger, updated_enqueued_count)
+        return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
+
+    def dequeue_for_charger(self, charger: Charger) -> Station:
+        """
+        decrement the count of vehicles enqueued for a specific charger type - min zero
+        :param charger: the charger type
+        :return: the updated Station
+        """
+        enqueued_count = self.enqueued_vehicles.get(charger, 0)
+        if not enqueued_count:
+            return self
+        else:
+            updated_enqueued_count = max(0, enqueued_count - 1)
+            if updated_enqueued_count == 0:
+                updated_enqueued_vehicles = self.enqueued_vehicles.delete(charger)
+                return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
+            else:
+                updated_enqueued_vehicles = self.enqueued_vehicles.set(charger, updated_enqueued_count)
+                return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
+
+    def enqueued_vehicle_count_for_charger(self, charger: Charger) -> int:
+        """
+        gets the current count of vehicles enqueued for a specific charger at this station
+        :param charger: the charger type
+        :return: the count of vehicles enqueued
+        """
+        return self.enqueued_vehicles.get(charger, 0)

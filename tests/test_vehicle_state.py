@@ -1285,8 +1285,12 @@ class TestVehicleState(TestCase):
         state = ChargeQueueing(vehicle.id, station.id, Charger.DCFC, 0)
         error, updated_sim = state.enter(sim, env)
 
+        updated_station = updated_sim.stations.get(station.id)
+        enqueued_count = updated_station.enqueued_vehicle_count_for_charger(Charger.DCFC)
+
         self.assertIsNone(error, "should have no errors")
         self.assertIsNotNone(updated_sim, "the sim should have been updated")
+        self.assertEqual(enqueued_count, 1, "the station should also know 1 new vehicle is enqueued")
 
     def test_charge_queueing_exit(self):
         vehicle = mock_vehicle_from_geoid()
@@ -1302,8 +1306,12 @@ class TestVehicleState(TestCase):
 
         err2, sim2 = state.exit(sim1, env)
 
+        updated_station = sim2.stations.get(station.id)
+        enqueued_count = updated_station.enqueued_vehicle_count_for_charger(Charger.DCFC)
+
         self.assertIsNone(err2, "there should be no error")
         self.assertIsNotNone(sim2, "exit should have succeeded")
+        self.assertEqual(enqueued_count, 0, "the station should also know the vehicle was dequeued")
 
     def test_charge_queueing_update(self):
         vehicle_charging = mock_vehicle_from_geoid(vehicle_id="charging")

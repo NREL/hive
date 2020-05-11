@@ -94,3 +94,27 @@ class TestStation(TestCase):
         station = mock_station()
 
         self.assertEqual(station.has_available_charger(Charger.DCFC), True, 'station should have 1 DCFC charger')
+
+    def test_enqueue_for_charger(self):
+        station = mock_station()
+
+        has_queues = station.enqueue_for_charger(Charger.DCFC).enqueue_for_charger(Charger.DCFC).enqueue_for_charger(Charger.LEVEL_1)
+        dc_count = has_queues.enqueued_vehicle_count_for_charger(Charger.DCFC)
+        l1_count = has_queues.enqueued_vehicle_count_for_charger(Charger.LEVEL_1)
+        l2_count = has_queues.enqueued_vehicle_count_for_charger(Charger.LEVEL_2)
+
+        self.assertEqual(dc_count, 2, "should have enqueued 2 vehicles for DC charging")
+        self.assertEqual(l1_count, 1, "should have enqueued 1 vehicles for Level 1 charging")
+        self.assertEqual(l2_count, 0,  "should have enqueued 0 vehicles for Level 2 charging")
+
+    def test_dequeue_for_charger(self):
+        station = mock_station().enqueue_for_charger(Charger.DCFC)
+
+        dequeue_1 = station.dequeue_for_charger(Charger.DCFC)
+        dequeue_1_count = dequeue_1.enqueued_vehicle_count_for_charger(Charger.DCFC)
+        dequeue_2 = dequeue_1.dequeue_for_charger(Charger.DCFC)
+        dequeue_2_count = dequeue_2.enqueued_vehicle_count_for_charger(Charger.DCFC)
+
+        self.assertEqual(dequeue_1_count, 0, "should have dequeued the single vehicle")
+        self.assertEqual(dequeue_2_count, 0, "cannot dequeue to a count below zero")
+
