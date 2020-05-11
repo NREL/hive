@@ -4,7 +4,7 @@ from csv import DictReader
 from typing import Dict
 
 from hive.model.vehicle.mechatronics.bev import BEV
-from hive.model.vehicle.mechatronics.interface import MechatronicsInterface
+from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.util.typealiases import MechatronicsId
 
 mechatronic_models = {

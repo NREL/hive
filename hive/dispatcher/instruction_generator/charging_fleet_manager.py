@@ -42,15 +42,21 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
 
         def charge_candidate(v: Vehicle) -> bool:
             proper_state = isinstance(v.vehicle_state, Idle) or isinstance(v.vehicle_state, Repositioning)
+            if not proper_state:
+                return False
+
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
             range_remaining_km = mechatronics.range_remaining_km(v)
-            return range_remaining_km <= environment.config.dispatcher.charging_range_km_threshold and proper_state
+            return range_remaining_km <= environment.config.dispatcher.charging_range_km_threshold
 
         def stop_charge_candidate(v: Vehicle) -> bool:
             proper_state = isinstance(v.vehicle_state, ChargingStation)
+            if not proper_state:
+                return False
+
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
             battery_soc = mechatronics.battery_soc(v)
-            return battery_soc >= self.config.ideal_fastcharge_soc_limit and proper_state
+            return battery_soc >= self.config.ideal_fastcharge_soc_limit
 
         low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate)
         high_soc_vehicles = simulation_state.get_vehicles(filter_function=stop_charge_candidate)

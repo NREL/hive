@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Dict
 
 import numpy as np
 import yaml
@@ -21,9 +21,21 @@ class TabularPowercurve(Powercurve):
 
     def __init__(
             self,
-            nominal_max_charge_kw: Kw,
-            battery_capacity_kwh: KwH,
+            nominal_max_charge_kw: Optional[Kw] = None,
+            battery_capacity_kwh: Optional[KwH] = None,
+            config: Optional[Dict[str, str]] = None,
     ):
+        if not nominal_max_charge_kw:
+            try:
+                nominal_max_charge_kw = float(config['nominal_max_charge_kw'])
+            except KeyError:
+                raise AttributeError("Must initialize TabularPowercurve with attribute nominal_max_charge_kw")
+        if not battery_capacity_kwh:
+            try:
+                battery_capacity_kwh = float(config['battery_capacity_kwh'])
+            except KeyError:
+                raise AttributeError("Must initialize TabularPowercurve with attribute battery_capacity_kwh")
+
         data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powercurve', 'normalized.yaml'))
 
         if 'name' not in data or 'power_type' not in data or 'step_size_seconds' not in data \
@@ -38,7 +50,8 @@ class TabularPowercurve(Powercurve):
             raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
 
         charging_model = sorted(data['power_curve'], key=lambda x: x['energy_kwh'])
-        self._charging_energy_kwh = np.array(list(map(lambda x: x['energy_kwh'], charging_model))) * battery_capacity_kwh
+        self._charging_energy_kwh = np.array(
+            list(map(lambda x: x['energy_kwh'], charging_model))) * battery_capacity_kwh
         self._charging_rate_kw = np.array(list(map(lambda x: x['power_kw'], charging_model))) * nominal_max_charge_kw
 
     def charge(self,

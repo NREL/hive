@@ -1,6 +1,7 @@
 import numpy as np
 import yaml
 from pkg_resources import resource_string
+from typing import Optional, Dict
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.routetraversal import Route
@@ -13,14 +14,24 @@ class TabularPowertrain(Powertrain):
     builds a tabular, interpolated lookup model for energy consumption
     """
 
-    def __init__(self, nominal_consupmption: WattHourPerMile):
+    def __init__(
+            self,
+            nominal_watt_hour_per_mile: Optional[WattHourPerMile] = None,
+            config: Optional[Dict[str, str]] = None,
+    ):
+        if not nominal_watt_hour_per_mile:
+            try:
+                nominal_watt_hour_per_mile = float(config['nominal_watt_hour_per_mile'])
+            except KeyError:
+                raise AttributeError("Must initialize TabularPowercurve with attribute nominal_max_charge_kw")
+
         data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powertrain', 'normalized.yaml'))
 
         # linear interpolation function approximation via these lookup values
         consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
         self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
         self._consumption_whmi = np.array(
-            list(map(lambda x: x['whmi'], consumption_model))) * nominal_consupmption  # watthour/mile
+            list(map(lambda x: x['whmi'], consumption_model))) * nominal_watt_hour_per_mile  # watthour/mile
 
     def link_cost(self, link: Link) -> KwH:
         """

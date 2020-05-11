@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Dict, NamedTuple, TYPE_CHECKING
 
 from hive.model.energy.energytype import EnergyType
-from hive.model.vehicle.mechatronics.interface import MechatronicsInterface
-from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
-from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
+from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from hive.model.vehicle.mechatronics.powercurve import build_powercurve
+from hive.model.vehicle.mechatronics.powertrain import build_powertrain
 from hive.util.units import *
 from hive.util.typealiases import MechatronicsId
 
@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from hive.model.energy.charger import Charger
     from hive.model.vehicle.vehicle import Vehicle
     from hive.model.roadnetwork.route import Route
+    from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
+    from hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
 
 
 class BEV(NamedTuple, MechatronicsInterface):
@@ -23,8 +25,8 @@ class BEV(NamedTuple, MechatronicsInterface):
     mechatronics_id: MechatronicsId
     battery_capacity_kwh: KwH
     idle_kwh_per_hour: KwH_per_H
-    powertrain: TabularPowertrain
-    powercurve:  TabularPowercurve
+    powertrain: Powertrain
+    powercurve:  Powercurve
     nominal_watt_hour_per_mile: WattHourPerMile
     charge_taper_cutoff_kw: Kw
 
@@ -39,11 +41,8 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         nominal_watt_hour_per_mile = float(d['nominal_watt_hour_per_mile'])
         battery_capacity_kwh = float(d['battery_capacity_kwh'])
-        powertrain = TabularPowertrain(nominal_watt_hour_per_mile)
-        powercurve = TabularPowercurve(
-            nominal_max_charge_kw=float(d['nominal_max_charge_kw']),
-            battery_capacity_kwh=battery_capacity_kwh,
-        )
+        powertrain = build_powertrain(d)
+        powercurve = build_powercurve(d)
         idle_kwh_per_hour = float(d['idle_kwh_per_hour'])
         charge_taper_cutoff_kw = float(d['charge_taper_cutoff_kw'])
         return BEV(

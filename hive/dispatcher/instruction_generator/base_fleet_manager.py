@@ -41,7 +41,7 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
 
         reserve_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase),
         )
 

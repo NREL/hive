@@ -21,7 +21,7 @@ from hive.model.energy.energytype import EnergyType
 if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.dispatcher.instruction.instruction import Instruction
 
 log = logging.getLogger(__name__)
 
@@ -79,30 +79,30 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
 
         base_charge_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             sort_reversed=True,
             filter_function=lambda v: isinstance(v.vehicle_state, ChargingBase)
         )
         station_charge_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             sort_reversed=True,
             filter_function=lambda v: isinstance(v.vehicle_state, ChargingStation)
         )
         reserve_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase)
         )
         active_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             sort_reversed=True,
             filter_function=is_active,
         )
         active_ready_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             filter_function=is_active_ready,
         )
 

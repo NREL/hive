@@ -27,7 +27,7 @@ from hive.model.roadnetwork.route import Route
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehicle.mechatronics.bev import BEV
-from hive.model.vehicle.mechatronics.interface import MechatronicsInterface
+from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.reporting.reporter import Reporter
@@ -204,7 +204,7 @@ def mock_request_from_geoids(
 
 
 def mock_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
-    return TabularPowertrain(nominal_consupmption=nominal_watt_hour_per_mile)
+    return TabularPowertrain(nominal_watt_hour_per_mile=nominal_watt_hour_per_mile)
 
 
 def mock_powercurve(

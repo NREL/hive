@@ -106,6 +106,8 @@ class ChargeQueueing(NamedTuple, VehicleState):
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
             mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            if not mechatronics:
+                return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
             less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             # updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)

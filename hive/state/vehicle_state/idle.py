@@ -60,10 +60,12 @@ class Idle(NamedTuple, VehicleState):
         :return: the sim state with vehicle moved
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not mechatronics:
+            return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
         else:
-            mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
             less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)

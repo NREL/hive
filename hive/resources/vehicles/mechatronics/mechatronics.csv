@@ -1,2 +1,2 @@
-mechatronics_id,mechatronics_type,battery_capacity_kwh,nominal_max_charge_kw,charge_taper_cutoff_kw,nominal_watt_hour_per_mile,idle_kwh_per_hour
-leaf_50,bev,50,50,10,225,0.8
+mechatronics_id,mechatronics_type,powercurve_type,powertrain_type,battery_capacity_kwh,nominal_max_charge_kw,charge_taper_cutoff_kw,nominal_watt_hour_per_mile,idle_kwh_per_hour
+leaf_50,bev,tabular,tabular,50,50,10,225,0.8

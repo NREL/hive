@@ -70,7 +70,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
 
         active_vehicles = simulation_state.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
             filter_function=is_active,
         )
 
@@ -81,7 +81,7 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
             # we need abs(active_diff) more vehicles in service to meet demand
             base_vehicles = simulation_state.get_vehicles(
                 sort=True,
-                sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+                sort_key=lambda v: v.energy.get(EnergyType.ELECTRIC) if v.energy.get(EnergyType.ELECTRIC) else 0,
                 sort_reversed=True,
                 filter_function=is_base_state,
             )

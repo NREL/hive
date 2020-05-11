@@ -92,12 +92,15 @@ def _apply_route_traversal(sim: 'SimulationState',
     :return: an error, or a traverse result, or (None, None) if no traversal occurred
     """
     vehicle = sim.vehicles.get(vehicle_id)
+    mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     error, traverse_result = traverse(
         route_estimate=route,
         duration_seconds=sim.sim_timestep_duration_seconds,
     )
     if not vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    elif not mechatronics:
+        return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
     elif error:
         return error, None
     elif not traverse_result:
@@ -111,7 +114,6 @@ def _apply_route_traversal(sim: 'SimulationState',
         #   any agents at the time step where they run out of fuel. feels like an
         #   acceptable edge case but we could improve. rjf 20200309
 
-        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         experienced_route = traverse_result.experienced_route
         less_energy_vehicle = mechatronics.move(vehicle, experienced_route)
         step_distance_km = traverse_result.traversal_distance_km
@@ -148,6 +150,8 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
     mechatronics = env.mechatronics.get(moved_vehicle.mechatronics_id)
     if not moved_vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    elif not mechatronics:
+        return SimulationStateError(f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
     elif mechatronics.is_empty(moved_vehicle):
         error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
         if error:
