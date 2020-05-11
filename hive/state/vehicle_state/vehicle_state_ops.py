@@ -45,7 +45,7 @@ def charge(sim: 'SimulationState',
         # TODO: make this flexible wrt energy type (i.e. gasoline)
         # determine price of charge event
         kwh_transacted = charged_vehicle.energy[EnergyType.ELECTRIC] - vehicle.energy[EnergyType.ELECTRIC]  # kwh
-        charger_price = station.charger_prices_per_kw.get(charger)  # Currency
+        charger_price = station.charger_prices_per_kwh.get(charger)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
         # perform updates

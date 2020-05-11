@@ -66,9 +66,7 @@ class TestInstructionGenerators(TestCase):
         charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
 
         v_geoid = h3.geo_to_h3(39.0, -104.0, 15)
-        veh = mock_vehicle_from_geoid(geoid=v_geoid)
-        low_battery = mock_energy_source(soc=0.1)
-        veh_low_battery = veh.modify_energy_source(low_battery)
+        veh_low_battery = mock_vehicle_from_geoid(geoid=v_geoid, soc=0.01)
 
         s1_geoid = h3.geo_to_h3(39.01, -104.0, 15)
         s2_geoid = h3.geo_to_h3(39.015, -104.0, 15)  # slightly further away
@@ -79,8 +77,9 @@ class TestInstructionGenerators(TestCase):
         s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
 
         sim = mock_sim(h3_location_res=15, h3_search_res=5, vehicles=(veh_low_battery,), stations=(s1, s2,))
+        env = mock_env()
 
-        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim)
+        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim, env)
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
