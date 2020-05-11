@@ -66,11 +66,11 @@ class BEV(NamedTuple, MechatronicsInterface):
 
     def range_remaining_km(self, vehicle: Vehicle) -> Kilometers:
         """
-        how much range remains, in miles
+        how much range remains, in kilometers
         :return:
         """
         energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
-        return energy_kwh / (self.nominal_watt_hour_per_mile * WH_TO_KWH)
+        return energy_kwh / (self.nominal_watt_hour_per_mile * WH_TO_KWH) * MILE_TO_KM
 
     def battery_soc(self, vehicle: Vehicle) -> Ratio:
         """

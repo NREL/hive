@@ -39,7 +39,7 @@ from hive.state.simulation_state.update.update import Update
 from hive.state.vehicle_state import VehicleState, Idle
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import *
-from hive.util.units import Ratio, Kmph, Seconds, Currency, Kilometers
+from hive.util.units import Ratio, Kmph, Seconds, Currency
 
 
 class DefaultIds:
@@ -229,7 +229,7 @@ def mock_bev(
         battery_capacity_kwh=battery_capacity_kwh,
         idle_kwh_per_hour=idle_kwh_per_hour,
         powertrain=mock_powertrain(nominal_watt_hour_per_mile),
-        powercurve=mock_powercurve(nominal_max_charge_kw,battery_capacity_kwh),
+        powercurve=mock_powercurve(nominal_max_charge_kw, battery_capacity_kwh),
         nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
         charge_taper_cutoff_kw=charge_taper_cutoff_kw,
     )
@@ -449,6 +449,7 @@ def mock_route_from_geoids(
 def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
+    each link is approximately 1 kilometer
     """
 
     links = {
@@ -472,37 +473,6 @@ def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
 
 def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
     return tuple(mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values())
-
-
-def mock_graph_network(links: Optional[Dict[str, Link]] = None, h3_res: int = 15) -> RoadNetwork:
-    links = mock_graph_links(h3_res=h3_res) if links is None else links
-
-    class MockGraphNetwork(RoadNetwork):
-        """
-        a road network that has a fixed set of network links and only implements "get_link"
-        """
-
-        def __init__(self, links: Dict[str, Link], h3_res: int):
-            self.sim_h3_resolution = h3_res
-
-            self.links = links
-
-        def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
-            pass
-
-        def distance_km(self, origin: Link, destination: Link) -> Kilometers:
-            pass
-
-        def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
-            pass
-
-        def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
-            pass
-
-        def geoid_within_geofence(self, geoid: GeoId) -> bool:
-            return True
-
-    return MockGraphNetwork(links, h3_res)
 
 
 def mock_forecaster(forecast: int = 1) -> ForecasterInterface:

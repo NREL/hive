@@ -19,27 +19,12 @@ class Vehicle(NamedTuple):
     Tuple that represents a vehicle in the simulation.
 
     :param id: A unique vehicle id.
-    :type id: :py:obj:`VehicleId`
-    :param powertrain_id: Id for the vehicle's respective powertrain
-    :type powertrain_id: :py:obj:`PowertrainId`
-    :param powercurve_id: Id for the vehicle's respective powercurve
-    :type powercurve_id: :py:obj:`PowercurveId`
-    :param energy_source: The energy source for the vehicle
-    :type energy_source: :py:obj:`EnergySource`
+    :param mechatronics_id: A id of the mechatronics component of the vehicle.
+    :param energy: The energy of the vehicle
     :param link: The current location of the vehicle
-    :type link: :py:obj:`Link`
-    :param route: The route of the vehicle. Could be empty.
-    :type route: :py:obj:`Route`
     :param vehicle_state: The state that the vehicle is in.
-    :type vehicle_state: :py:obj:`VehicleState`
-    :param passengers: A map of passengers that are in the vehicle. Could be empty
-    :type passengers: :py:obj:`Dict[PasengerId, Passengers]`
-    :param charger_intent: The charger type a vehicle intends to plug into.
-    :type charger_intent: :py:obj:`Optional[Charger]`
-    :param idle_time_s: A counter to track how long the vehicle has been idle.
-    :type idle_time_s: :py:obj:`seconds`
-    :param distance_traveled: A accumulator to track how far a vehicle has traveled.
-    :type distance_traveled_km: :py:obj:`kilometers`
+    :param balance: How much revenue the vehicle has accumulated.
+    :param distance_traveled_km: A accumulator to track how far a vehicle has traveled.
     """
     # core vehicle properties
     id: VehicleId
@@ -107,15 +92,30 @@ class Vehicle(NamedTuple):
                 raise IOError(f"a numeric value could not be parsed from {row}")
 
     def __repr__(self) -> str:
-        return f"Vehicle({self.id},{self.vehicle_state},{self.energy_source})"
+        return f"Vehicle({self.id},{self.vehicle_state})"
 
     def modify_energy(self, energy: Dict[EnergyType, float]) -> Vehicle:
+        """
+        modify the energy level of the vehicle. should only be used by the mechatronics ops
+        :param energy:
+        :return:
+        """
         return self._replace(energy=energy)
 
     def modify_state(self, vehicle_state: VehicleState) -> Vehicle:
+        """
+        modify the state of the vehicle. should only be use by the vehicle state ops
+        :param vehicle_state:
+        :return:
+        """
         return self._replace(vehicle_state=vehicle_state)
 
     def modify_link(self, link: Link) -> Vehicle:
+        """
+        modify the link of the vehicle. should only be used by the road network ops
+        :param link:
+        :return:
+        """
         return self._replace(link=link)
 
     def send_payment(self, amount: Currency) -> Vehicle:
@@ -137,7 +137,6 @@ class Vehicle(NamedTuple):
     def tick_distance_traveled_km(self, delta_d_km: Kilometers) -> Vehicle:
         """
         adds distance to vehicle
-
         :param delta_d_km:
         :return:
         """

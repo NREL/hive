@@ -47,6 +47,7 @@ MPH_TO_KMPH = 1/KMPH_TO_MPH
 
 #    Distance
 KM_TO_MILE = 0.621371
+MILE_TO_KM = 1.609344
 M_TO_KM = 1/1000
 
 #    Energy
