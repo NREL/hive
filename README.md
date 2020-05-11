@@ -52,7 +52,7 @@ HIVE has four major dependencies. Uber H3 is a geospatial index which HIVE uses 
 - [immutables](https://github.com/MagicStack/immutables)
 - [networkx](https://github.com/networkx/networkx)
 
-Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/). See [this link](https://github.com/uber/h3-py#installing-on-windows) for windows installation instructions.
+_note: Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/) which can cause issues on Windows. If you encounter errors when attempting the standard Hive installation instructions below, then consider first running `conda install -c conda-forge h3-py`._
 
 While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Pandas is being used to interact with open street maps. Rtree is used for quick node lookup on the road network
 
