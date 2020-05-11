@@ -48,7 +48,7 @@ def charge(sim: 'SimulationState',
 
         # determine price of charge event
         kwh_transacted = updated_energy_source.energy_kwh - vehicle.energy_source.energy_kwh  # kwh
-        charger_price = station.charger_prices.get(charger)  # Currency
+        charger_price = station.charger_prices_per_kwh.get(charger)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
         # perform updates

@@ -185,9 +185,10 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         if not dc_chargers:
             return float("inf")
         else:
-            distance = H3Ops.great_circle_distance(veh.geoid, station.geoid)
+            actual_distance = H3Ops.great_circle_distance(veh.geoid, station.geoid)
             queue_factor = station.enqueued_vehicle_count_for_charger(Charger.DCFC) / dc_chargers
-            return distance + distance * queue_factor
+            distance_metric = actual_distance + actual_distance * queue_factor
+            return distance_metric
 
     instructions = ()
 

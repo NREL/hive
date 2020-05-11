@@ -27,6 +27,10 @@ class Station(NamedTuple):
     :type total_chargers: :py:obj:`Dict[Charger, int]`
     :param available_chargers: Identifies how many plugs for each charger type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
+    :param charger_prices_per_kwh: the cost to use chargers at this station
+    :type charger_prices_per_kwh: :py:obj`Dict[Charger, Currency]`
+    :param enqueued_vehicles: the count of vehicles currently enqueued for each charger
+    :type enqueued_vehicles: :py:obj`Dict[Charger, int]`
     :param balance: the net income of this station
     :type balance: :py:obj:`Currency`
     """
@@ -34,7 +38,7 @@ class Station(NamedTuple):
     link: Link
     total_chargers: immutables.Map[Charger, int]
     available_chargers: immutables.Map[Charger, int]
-    charger_prices: immutables.Map[Charger, Currency]
+    charger_prices_per_kwh: immutables.Map[Charger, Currency]
     enqueued_vehicles: immutables.Map[Charger, int] = immutables.Map()
     balance: Currency = 0.0
 
@@ -167,7 +171,7 @@ class Station(NamedTuple):
 
     def update_prices(self, new_prices: immutables.Map[Charger, Currency]) -> Station:
         return self._replace(
-            charger_prices=DictOps.merge_dicts(self.charger_prices, new_prices)
+            charger_prices_per_kwh=DictOps.merge_dicts(self.charger_prices_per_kwh, new_prices)
         )
 
     def receive_payment(self, currency_received: Currency) -> Station:

@@ -82,10 +82,10 @@ class BasicReporter(Reporter):
         del (out_dict['available_chargers'])
 
         # deconstruct charger_prices
-        for key, val in station.charger_prices.items():
+        for key, val in station.charger_prices_per_kwh.items():
             new_key = 'charger_prices_' + key.name
             out_dict[new_key] = val
-        del (out_dict['charger_prices'])
+        del (out_dict['charger_prices_per_kwh'])
 
         return out_dict
 
