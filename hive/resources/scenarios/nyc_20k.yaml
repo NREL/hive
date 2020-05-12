@@ -14,7 +14,7 @@ io:
     vehicles_file: nyc_1400.csv
     bases_file: nyc_bases.csv
     stations_file: nyc_stations.csv
-    vehicle_types_file: default_vehicle_types.csv
+    mechatronics_file: mechatronics.csv
     rate_structure_file: rate_structure.csv
     charging_price_file: nyc_fixed.csv
     geofence_file: nyc_single_polygon.geojson
