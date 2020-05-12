@@ -394,6 +394,9 @@ def mock_reporter() -> Reporter:
         def single_report(self, report: str):
             pass
 
+        def close(self):
+            pass
+
     return MockReporter()
 
 

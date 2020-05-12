@@ -30,3 +30,11 @@ class Reporter(ABC):
         :param report:
         :return:
         """
+
+    @abstractmethod
+    def close(self):
+        """
+        wrap up anything here. called at the end of the simulation
+
+        :return:
+        """

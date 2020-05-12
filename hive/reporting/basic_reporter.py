@@ -25,8 +25,9 @@ class BasicReporter(Reporter):
 
     def __init__(self, io: IO, sim_output_dir: str):
 
-        sim_log_path = os.path.join(sim_output_dir, 'sim.log')
-        self.sim_log_file = open(sim_log_path, 'a')
+        if io.log_vehicles or io.log_requests or io.log_stations or io.log_dispatcher or io.log_manager:
+            sim_log_path = os.path.join(sim_output_dir, 'sim.log')
+            self.sim_log_file = open(sim_log_path, 'a')
 
         self._io = io
         
@@ -129,8 +130,11 @@ class BasicReporter(Reporter):
             )
 
     def sim_report(self, report: dict):
-        if 'report_type' not in report:
+        if not self.sim_log_file:
+            return
+        elif 'report_type' not in report:
             log.warning(f'must specify report_type in report, not recording report {report}')
+            return
         elif not self._io.log_dispatcher and report['report_type'] == 'dispatcher':
             return
         elif not self._io.log_requests and 'request' in report['report_type']:
@@ -138,3 +142,7 @@ class BasicReporter(Reporter):
         else:
             entry = json.dumps(report, default=str)
             self.sim_log_file.write(entry + '\n')
+
+    def close(self):
+        if self.sim_log_file:
+            self.sim_log_file.close()

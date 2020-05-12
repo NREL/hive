@@ -102,7 +102,7 @@ def run() -> int:
 
         _summary_stats(sim_result.s, env)
 
-        env.reporter.sim_log_file.close()
+        env.reporter.close()
 
         config_dump = env.config.asdict()
         dump_name = env.config.sim.sim_name + ".yaml"
