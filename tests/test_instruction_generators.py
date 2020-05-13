@@ -177,7 +177,7 @@ class TestInstructionGenerators(TestCase):
         and that the lower soc vehicles are prioritized
         """
         # set base vehicles charging limit to 1, but provide a station with 2 chargers at the base
-        base_fleet_manager = BaseFleetManager(mock_config(base_vehicles_charge_limit=1).dispatcher)
+        base_fleet_manager = BaseFleetManager(mock_config().dispatcher)
         station = mock_station_from_geoid(chargers=immutables.Map({Charger.LEVEL_2: 2}))
         base = mock_base_from_geoid(stall_count=2, station_id=station.id)
 
