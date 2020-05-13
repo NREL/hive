@@ -10,9 +10,9 @@ class DispatcherConfig(NamedTuple):
     default_update_interval_seconds: Seconds
     matching_range_km_threshold: Kilometers
     charging_range_km_threshold: Kilometers
+    base_charging_range_km_threshold: Kilometers
     ideal_fastcharge_soc_limit: Ratio
     max_search_radius_km: Kilometers
-    base_vehicles_charging_limit: Optional[int]
 
     valid_dispatch_states: Tuple[str, ...]
     active_states: Tuple[str, ...]
@@ -23,8 +23,8 @@ class DispatcherConfig(NamedTuple):
             'default_update_interval_seconds': 60 * 15,
             'matching_range_km_threshold': 20,
             'charging_range_km_threshold': 20,
+            'base_charging_range_km_threshold': 100,
             'ideal_fastcharge_soc_limit': 0.8,
-            'base_vehicles_charging_limit': None,
             'max_search_radius_km': 100.0,
             'valid_dispatch_states': ('idle', 'repositioning'),
             'active_states': (
