@@ -355,9 +355,7 @@ def mock_config(
             'file_paths': file_paths,
         },
         "network": {},
-        "dispatcher": {
-            'base_vehicles_charging_limit': base_vehicles_charge_limit,
-        }
+        "dispatcher": {}
     })
 
 
