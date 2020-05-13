@@ -45,10 +45,7 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
             filter_function=lambda v: isinstance(v.vehicle_state, ReserveBase),
         )
 
-        if self.config.base_vehicles_charging_limit:
-            target = self.config.base_vehicles_charging_limit
-        else:
-            target = len(reserve_vehicles)
+        target = len(reserve_vehicles)
 
         charge_instructions = instruct_vehicles_at_base_to_charge(target, reserve_vehicles, simulation_state)
 

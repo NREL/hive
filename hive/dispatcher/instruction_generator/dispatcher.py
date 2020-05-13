@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
-from hive.state.vehicle_state import Idle, Repositioning
 from hive.util.helpers import H3Ops
 
 
@@ -40,14 +39,18 @@ class Dispatcher(NamedTuple, InstructionGenerator):
         instructions = ()
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
-                             isinstance(vehicle.vehicle_state, Repositioning)
+            name = vehicle.vehicle_state.__class__.__name__.lower()
+            is_valid_state = name in environment.config.dispatcher.valid_dispatch_states
 
             if not is_valid_state:
                 return False
 
             mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
             range_remaining_km = mechatronics.range_remaining_km(vehicle)
+
+            if name == 'chargingbase' and range_remaining_km < environment.config.dispatcher.base_charging_range_km_threshold:
+                return False
+
             return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold
                         and vehicle.id not in already_dispatched)
 

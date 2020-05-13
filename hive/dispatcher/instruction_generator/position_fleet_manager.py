@@ -54,8 +54,8 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
         """
 
         def is_active(v: Vehicle) -> bool:
-            return isinstance(v.vehicle_state, Idle) or \
-                   isinstance(v.vehicle_state, Repositioning)
+            name = v.vehicle_state.__class__.__name__.lower()
+            return name in environment.config.dispatcher.active_states
 
         def is_base_state(v: Vehicle) -> bool:
             return isinstance(v.vehicle_state, ChargingBase) or isinstance(v.vehicle_state, ReserveBase)
