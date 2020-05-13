@@ -156,6 +156,9 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
         error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
         if error:
             return error, None
+        elif not exit_sim:
+            # the previous state does not allow exit to OutOfService
+            return SimulationStateError(f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
         else:
             next_state = OutOfService(vehicle_id)
             return next_state.enter(exit_sim, env)
