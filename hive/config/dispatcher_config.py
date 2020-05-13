@@ -14,6 +14,9 @@ class DispatcherConfig(NamedTuple):
     max_search_radius_km: Kilometers
     base_vehicles_charging_limit: Optional[int]
 
+    valid_dispatch_states: Tuple[str, ...]
+    active_states: Tuple[str, ...]
+
     @classmethod
     def default_config(cls) -> Dict:
         return {
@@ -23,6 +26,15 @@ class DispatcherConfig(NamedTuple):
             'ideal_fastcharge_soc_limit': 0.8,
             'base_vehicles_charging_limit': None,
             'max_search_radius_km': 100.0,
+            'valid_dispatch_states': ('idle', 'repositioning'),
+            'active_states': (
+                'idle',
+                'repositioning',
+                'dispatchtrip',
+                'servicingtrip',
+                'dispatchstation',
+                'chargingstation',
+            )
         }
 
     @classmethod
@@ -40,6 +52,12 @@ class DispatcherConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
+        try:
+            d['valid_dispatch_states'] = tuple(d['valid_dispatch_states'])
+            d['active_states'] = tuple(d['active_states'])
+        except ValueError:
+            return IOError("valid_dispatch_states and active_states must be in a list format")
+
         return DispatcherConfig(**d)
 
     def asdict(self) -> Dict:

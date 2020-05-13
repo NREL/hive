@@ -25,3 +25,14 @@ io:
   log_stations: False
   log_dispatcher: False
 
+dispatcher:
+  valid_dispatch_states:
+    - idle
+    - repositioning
+    - dispatchbase
+    - chargingbase
+    - reservebase
+    - dispatchstation
+    - chargingstation
+
+
