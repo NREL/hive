@@ -27,12 +27,7 @@ io:
 
 dispatcher:
   valid_dispatch_states:
-    - idle
-    - repositioning
-    - dispatchbase
-    - chargingbase
-    - reservebase
-    - dispatchstation
-    - chargingstation
+    - Idle
+    - Repositioning
 
 

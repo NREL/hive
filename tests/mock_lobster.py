@@ -328,7 +328,6 @@ def mock_config(
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
         file_paths: Dict = None,
-        base_vehicles_charge_limit: int = None,
 ) -> HiveConfig:
     if not file_paths:
         file_paths = {

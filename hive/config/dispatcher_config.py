@@ -53,7 +53,7 @@ class DispatcherConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
         try:
-            d['valid_dispatch_states'] = tuple(d['valid_dispatch_states'])
+            d['valid_dispatch_states'] = tuple(s.lower() for s in d['valid_dispatch_states'])
             d['active_states'] = tuple(d['active_states'])
         except ValueError:
             return IOError("valid_dispatch_states and active_states must be in a list format")
