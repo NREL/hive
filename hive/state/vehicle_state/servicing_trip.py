@@ -59,15 +59,19 @@ class ServicingTrip(NamedTuple, VehicleState):
         # todo: log the completion of a trip
 
         vehicle = sim.vehicles.get(self.vehicle_id)
-
-        if len(self.route) != 0:
+        soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle) if vehicle else 0
+        if not vehicle:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif soc == 0:
+            # vehicle is out of fuel, can transition to support ServicingTrip -> OutOfService
+            # todo: allow penalty due to stranded passengers
+            return None, sim
+        elif len(self.route) != 0:
             # cannot exit when not at passenger's destination
             return None, None
         elif len(self.passengers) == 0:
             # unlikely edge case that there were no passengers?
             return None, sim
-        elif not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
             # confirm each passenger has reached their destination
             for passenger in self.passengers:

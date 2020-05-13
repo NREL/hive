@@ -1204,6 +1204,26 @@ class TestVehicleState(TestCase):
         self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
         self.assertIsNone(exited_sim, "should not have allowed exit of ServicingTrip")
 
+    def test_servicing_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
+        vehicle = mock_vehicle(soc=0)
+        request = mock_request_from_geoids()
+        self.assertNotEqual(request.origin, request.destination, "test invariant failed")
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(request.origin, request.destination)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
+        self.assertIsNotNone(exited_sim, "should have allowed exit of ServicingTrip because out of fuel allows transition to OutOfService")
+
     def test_servicing_trip_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
