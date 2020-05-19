@@ -1,6 +1,7 @@
 name: hive
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python=3.7
   - immutables
@@ -11,6 +12,5 @@ dependencies:
   - PyYAML
   - rtree
   - tqdm
-  - pip:
-      - cmake
-      - h3
+  - h3-py
+  - nose
