@@ -67,10 +67,11 @@ def run() -> int:
             return 1
 
         # initialize logging file handler
-        log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
-        formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
-        log_fh.setFormatter(formatter)
-        root_log.addHandler(log_fh)
+        if env.config.io.log_to_file:
+            log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
+            formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
+            log_fh.setFormatter(formatter)
+            root_log.addHandler(log_fh)
 
         log.info(f"successfully loaded config: {args.scenario_file}")
 
@@ -104,11 +105,12 @@ def run() -> int:
 
         env.reporter.close()
 
-        config_dump = env.config.asdict()
-        dump_name = env.config.sim.sim_name + ".yaml"
-        dump_path = os.path.join(env.config.output_directory, dump_name)
-        with open(dump_path, 'w') as f:
-            yaml.dump(config_dump, f, sort_keys=False)
+        if env.config.io.log_to_file:
+            config_dump = env.config.asdict()
+            dump_name = env.config.sim.sim_name + ".yaml"
+            dump_path = os.path.join(env.config.output_directory, dump_name)
+            with open(dump_path, 'w') as f:
+                yaml.dump(config_dump, f, sort_keys=False)
 
         return 0
 

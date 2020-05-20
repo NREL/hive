@@ -25,7 +25,8 @@ class BasicReporter(Reporter):
 
     def __init__(self, io: IO, sim_output_dir: str):
 
-        if io.log_vehicles or io.log_requests or io.log_stations or io.log_dispatcher or io.log_manager:
+        non_empty_sim_log = io.log_vehicles or io.log_requests or io.log_stations or io.log_dispatcher or io.log_manager
+        if io.log_to_file and non_empty_sim_log:
             sim_log_path = os.path.join(sim_output_dir, 'sim.log')
             self.sim_log_file = open(sim_log_path, 'a')
 

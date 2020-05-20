@@ -88,6 +88,3 @@ class HiveConfig(NamedTuple):
         output_directory = os.path.join(self.io.working_directory, run_name)
         return output_directory
 
-    def refresh_output_directory(self) -> HiveConfig:
-        new_outdir_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        return self._replace(out_dir_time=new_outdir_time)

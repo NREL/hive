@@ -28,19 +28,8 @@ def load_simulation(scenario_file_path: str) -> Tuple[SimulationState, Environme
         run_log.exception("attempted to load scenario config file but failed")
         raise e
 
-    attempts = 0
-    while attempts < 20:
-        try:
-            os.makedirs(config.output_directory)
-            break
-        except FileExistsError:
-            config = config.refresh_output_directory()
-            attempts += 1
-
-    if attempts >= 20:
-        e = IOError(f"Attempted to write log directory {config.output_directory} but failed after 20 attempts")
-        run_log.exception(e)
-        raise e
+    if config.io.log_to_file:
+        os.makedirs(config.output_directory)
 
     simulation_state, environment = initialize_simulation(config)
 

@@ -13,6 +13,7 @@ class IO(NamedTuple):
     # Input files
     file_paths: FilePaths
 
+    log_to_file: bool
     log_vehicles: bool
     log_requests: bool
     log_stations: bool
@@ -26,6 +27,7 @@ class IO(NamedTuple):
         return {
             'working_directory': "",
 
+            'log_to_file': True,
             'log_vehicles': False,
             'log_requests': False,
             'log_stations': False,

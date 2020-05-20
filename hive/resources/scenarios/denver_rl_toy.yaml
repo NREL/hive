@@ -20,10 +20,7 @@ io:
     demand_forecast_file: denver_rl_toy_demand.csv
     geofence_file: downtown_denver.geojson
 
-  log_vehicles: True
-  log_requests: True
-  log_stations: True
-  log_dispatcher: True
+  log_to_file: False
 
 dispatcher:
   matching_range_km_threshold: 0
