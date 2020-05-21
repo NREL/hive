@@ -139,9 +139,7 @@ class BasicReporter(Reporter):
         elif 'report_type' not in report:
             log.warning(f'must specify report_type in report, not recording report {report}')
             return
-        elif 'dispatcher' not in self._io.log_sim_config and report['report_type'] == 'dispatcher':
-            return
-        elif 'requests' not in self._io.log_sim_config and 'request' in report['report_type']:
+        elif report['report_type'] not in self._io.log_sim_config:
             return
         else:
             entry = json.dumps(report, default=str)

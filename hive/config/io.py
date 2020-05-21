@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Tuple, Dict, Optional, List
+from typing import NamedTuple, Tuple, Dict, Optional, Set
 
 from hive.config.config_builder import ConfigBuilder
 from hive.config.filepaths import FilePaths
@@ -15,7 +15,7 @@ class IO(NamedTuple):
 
     log_run: bool
     log_sim: bool
-    log_sim_config: Optional[List[str]]
+    log_sim_config: Set[Optional[str]]
 
     log_period_seconds: Seconds
 
@@ -26,13 +26,15 @@ class IO(NamedTuple):
 
             'log_run': True,
             'log_sim': True,
-            'log_sim_config': [
-                'vehicles',
-                'requests',
-                'stations',
+            'log_sim_config': {
+                'vehicle_report',
+                'request_report',
+                'add_request',
+                'cancel_request',
+                'station_report',
+                'charge_event',
                 'dispatcher',
-                'manager',
-            ],
+            },
 
             'log_period_seconds': 60,
         }
@@ -55,6 +57,7 @@ class IO(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict, cache: Optional[Dict]) -> IO:
         d['file_paths'] = FilePaths.build(d['file_paths'], cache)
+        d['log_sim_config'] = set(d['log_sim_config'])
 
         return IO(**d)
 
