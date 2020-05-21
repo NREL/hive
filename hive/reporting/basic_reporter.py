@@ -111,21 +111,21 @@ class BasicReporter(Reporter):
         if not self._io.log_sim:
             return
 
-        if 'vehicles' in self._io.log_sim_config:
+        if 'vehicle_report' in self._io.log_sim_config:
             self._report_entities(
                 entities=sim_state.vehicles.values(),
                 asdict=self.vehicle_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='vehicle_report',
             )
-        if 'requests' in self._io.log_sim_config:
+        if 'request_report' in self._io.log_sim_config:
             self._report_entities(
                 entities=sim_state.requests.values(),
                 asdict=self.request_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='request_report',
             )
-        if 'stations' in self._io.log_sim_config:
+        if 'station_report' in self._io.log_sim_config:
             self._report_entities(
                 entities=sim_state.stations.values(),
                 asdict=self.station_asdict,
