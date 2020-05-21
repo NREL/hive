@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 
-from hive.config.io import IO
+from hive.config.input import Input
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.cancel_requests import CancelRequests
@@ -30,7 +30,7 @@ class Update(NamedTuple):
 
     @classmethod
     def build(cls,
-              io: IO,
+              io: Input,
               instruction_generators: Tuple[InstructionGenerator, ...],
               instruction_generator_update_fn: Callable[
                   [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a,

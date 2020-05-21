@@ -1,1 +1,12 @@
 output_base_directory: ""
+log_run: True
+log_sim: True
+log_sim_config:
+- 'vehicle_report'
+- 'station_report'
+- 'charge_event'
+- 'request_report'
+- 'add_request'
+- 'cancel_request'
+- 'dispatcher'
+log_period_seconds: 60

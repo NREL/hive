@@ -6,7 +6,7 @@ import json
 import logging
 import os
 
-from hive.config.io import IO
+from hive.config.input import Input
 from hive.reporting.reporter import Reporter
 
 log = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class BasicReporter(Reporter):
     :param io: io config
     """
 
-    def __init__(self, io: IO, sim_output_dir: str):
+    def __init__(self, io: Input, sim_output_dir: str):
 
         if io.log_sim:
             sim_log_path = os.path.join(sim_output_dir, 'sim.log')

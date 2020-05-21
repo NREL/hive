@@ -1,0 +1,51 @@
+cache:
+  vehicles_file: b22da584a132af2066906591d53a31ae
+  requests_file: 7650ff1a2c80aacb21cdfe11d5b06b3d
+  bases_file: e9ed4f7ca737805fc265e49217d89617
+  stations_file: 7ae1d69af245e7a7c77a6f5ee2886f96
+  vehicle_types_file: 3d98a7bd4bc5b7ca43506c4973d5e2b1
+  road_network_file: d32cc0f9c344faf22177211f0bcd836c
+  geofence_file: 3faec09934271450dec5a418b6407128
+  rate_structure_file: 230a428bc166cd3c6c225071d0367dec
+  charging_price_file: 089030a7b423b4ed121c6a641c5c527a
+  demand_forecast_file: f361f015d76a4b4d241c8725f3003a5d
+io:
+  output_directory: denver_demo_outputs
+  file_paths:
+    vehicles_file: denver_demo_vehicles.csv
+    requests_file: denver_demo_requests.csv
+    bases_file: denver_demo_bases.csv
+    stations_file: denver_demo_stations.csv
+    vehicle_types_file: default_vehicle_types.csv
+    road_network_file: downtown_denver.xml
+    geofence_file: downtown_denver.geojson
+    rate_structure_file: rate_structure.csv
+    charging_price_file: denver_charging_prices_by_geoid.csv
+    demand_forecast_file: denver_demand.csv
+  log_vehicles: true
+  log_requests: true
+  log_stations: true
+  log_dispatcher: true
+  log_manager: false
+  log_period_seconds: 60
+  progress_period_seconds: 3600
+sim:
+  sim_name: denver_demo
+  timestep_duration_seconds: 60
+  start_time: 25200
+  end_time: 111600
+  sim_h3_resolution: 15
+  sim_h3_search_resolution: 7
+  request_cancel_time_seconds: 600
+  idle_energy_rate: 0.8
+network:
+  network_type: osm_network
+  default_speed_kmph: 40.0
+  max_search_radius_km: 20
+dispatcher:
+  fleet_sizing_update_interval_seconds: 900
+  matching_low_soc_threshold: 0.2
+  charging_low_soc_threshold: 0.2
+  ideal_fastcharge_soc_limit: 0.8
+  base_vehicles_charging_limit: null
+init_time: 2020-04-15_15-03-10

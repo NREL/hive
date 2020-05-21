@@ -8,7 +8,7 @@ from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config.config_builder import ConfigBuilder
 from hive.config.dispatcher_config import DispatcherConfig
-from hive.config.io import IO
+from hive.config.input import Input
 from hive.config.network import Network
 from hive.config.sim import Sim
 from hive.config.system import System
@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 class HiveConfig(NamedTuple):
     system: System
-    io: IO
+    io: Input
     sim: Sim
     network: Network
     dispatcher: DispatcherConfig
@@ -38,7 +38,7 @@ class HiveConfig(NamedTuple):
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
         hive_config = HiveConfig(
             system=System.build(d.get('system')),
-            io=IO.build(d.get('io'), d.get('cache')),
+            io=Input.build(d.get('io'), d.get('cache')),
             sim=Sim.build(d.get('sim')),
             network=Network.build(d.get('network')),
             dispatcher=DispatcherConfig.build(d.get('dispatcher')),

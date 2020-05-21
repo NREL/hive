@@ -1,12 +1,12 @@
 import os
 from typing import Optional
 from pathlib import Path
-
+from hive.config import GlobalConfig
 import pkg_resources
 import yaml
 
 
-def global_hive_config_search() -> dict:
+def global_hive_config_search() -> GlobalConfig:
     """
     searches for the global hive config, and if found, loads it. if not, loads the default from hive.resources
     :return: global hive config
@@ -21,21 +21,23 @@ def global_hive_config_search() -> dict:
             if updated_search_path == search_path:
                 return None
             else:
-                _backprop_search(updated_search_path)
+                return _backprop_search(updated_search_path)
 
     # load the default file to be merged with any found files
-    with Path(pkg_resources.resource_filename("resources.defaults", ".hive.yaml")).open() as df:
+    with Path(pkg_resources.resource_filename("hive.resources.defaults", ".hive.yaml")).open() as df:
         default = yaml.safe_load(df)
 
     file_found_in_backprop = _backprop_search(Path.cwd())
     file_at_home_directory = Path.home().joinpath(".hive.yaml")
-    file_found = file_found_in_backprop if file_found_in_backprop else file_at_home_directory
+    file_found_at_home_directory = file_at_home_directory.is_file()
+    file_found = file_found_in_backprop if file_found_in_backprop else file_at_home_directory if file_found_at_home_directory else None
     if file_found:
-        with file_found_in_backprop.open() as f:
+        with file_found.open() as f:
             global_hive_config = yaml.safe_load(f)
-            return default.update(global_hive_config)
+            default.update(global_hive_config)
+            return GlobalConfig.from_dict(default)
     else:
-        return default
+        return GlobalConfig.from_dict(default)
 
 
 def search_for_file(file: str, scenario_directory: str, data_directory: Optional[str] = None) -> Optional[str]:
