@@ -21,13 +21,14 @@ class BasicReporter(Reporter):
 
     :param io: io config
     """
-    sim_log_file = None
 
     def __init__(self, io: IO, sim_output_dir: str):
 
-        if io.log_vehicles or io.log_requests or io.log_stations or io.log_dispatcher or io.log_manager:
+        if io.log_sim:
             sim_log_path = os.path.join(sim_output_dir, 'sim.log')
             self.sim_log_file = open(sim_log_path, 'a')
+        else:
+            self.sim_log_file = None
 
         self._io = io
         
@@ -107,21 +108,24 @@ class BasicReporter(Reporter):
             self,
             sim_state: SimulationState,
     ):
-        if self._io.log_vehicles:
+        if not self._io.log_sim:
+            return
+
+        if 'vehicle_report' in self._io.log_sim_config:
             self._report_entities(
                 entities=sim_state.vehicles.values(),
                 asdict=self.vehicle_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='vehicle_report',
             )
-        if self._io.log_requests:
+        if 'request_report' in self._io.log_sim_config:
             self._report_entities(
                 entities=sim_state.requests.values(),
                 asdict=self.request_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='request_report',
             )
-        if self._io.log_stations:
+        if 'station_report' in self._io.log_sim_config:
             self._report_entities(
                 entities=sim_state.stations.values(),
                 asdict=self.station_asdict,
@@ -130,14 +134,12 @@ class BasicReporter(Reporter):
             )
 
     def sim_report(self, report: dict):
-        if not self.sim_log_file:
+        if not self._io.log_sim:
             return
         elif 'report_type' not in report:
             log.warning(f'must specify report_type in report, not recording report {report}')
             return
-        elif not self._io.log_dispatcher and report['report_type'] == 'dispatcher':
-            return
-        elif not self._io.log_requests and 'request' in report['report_type']:
+        elif report['report_type'] not in self._io.log_sim_config:
             return
         else:
             entry = json.dumps(report, default=str)

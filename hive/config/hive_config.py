@@ -8,8 +8,8 @@ from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config.config_builder import ConfigBuilder
 from hive.config.dispatcher_config import DispatcherConfig
-from hive.config.network import Network
 from hive.config.io import IO
+from hive.config.network import Network
 from hive.config.sim import Sim
 from hive.config.system import System
 
@@ -23,7 +23,7 @@ class HiveConfig(NamedTuple):
     network: Network
     dispatcher: DispatcherConfig
 
-    init_time: str
+    out_dir_time: str
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, HiveConfig]:
@@ -36,13 +36,13 @@ class HiveConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[Exception, HiveConfig]:
-        return HiveConfig(
+        hive_config = HiveConfig(
             system=System.build(d.get('system')),
             io=IO.build(d.get('io'), d.get('cache')),
             sim=Sim.build(d.get('sim')),
             network=Network.build(d.get('network')),
             dispatcher=DispatcherConfig.build(d.get('dispatcher')),
-            init_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+            out_dir_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
         )
 
         # check to see if the dispatcher update interval is in line with the time step interval
@@ -52,14 +52,11 @@ class HiveConfig(NamedTuple):
             hive_config.sim.timestep_duration_seconds,
         )
         d_interval = hive_config.dispatcher.default_update_interval_seconds
-        l_interval = hive_config.io.progress_period_seconds
         p_interval = hive_config.io.log_period_seconds
         if not any(s % d_interval == 0 for s in time_steps):
             # TODO: Add documentation to explain why this would be an issue.
             log.warning(f"the default_update_interval of {d_interval} seconds is not in line with the time steps")
-        if not any(s % d_interval == 0 for s in time_steps):
-            log.warning(f"the log_period of {l_interval} seconds is not in line with the time steps")
-        if not any(s % d_interval == 0 for s in time_steps):
+        if not any(s % p_interval == 0 for s in time_steps):
             log.warning(f"the progress_period of {p_interval} is not in line with the time steps")
 
         return hive_config
@@ -87,6 +84,7 @@ class HiveConfig(NamedTuple):
 
     @property
     def output_directory(self) -> str:
-        run_name = self.sim.sim_name + '_' + self.init_time
-        output_directory = os.path.join(self.io.output_directory, run_name)
+        run_name = self.sim.sim_name + '_' + self.out_dir_time
+        output_directory = os.path.join(self.io.working_directory, run_name)
         return output_directory
+

@@ -9,13 +9,12 @@ import immutables
 
 from hive.config import HiveConfig
 from hive.model.base import Base
-from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.station import Station
-from hive.model.vehicle.vehicle import Vehicle
 from hive.model.vehicle.mechatronics import build_mechatronics_table
+from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.basic_reporter import BasicReporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
