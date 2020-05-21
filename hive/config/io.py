@@ -8,7 +8,8 @@ from hive.util.units import Seconds
 
 
 class IO(NamedTuple):
-    working_directory: str
+    input_directory: str
+    output_directory: str
 
     # Input files
     file_paths: FilePaths
@@ -24,7 +25,7 @@ class IO(NamedTuple):
     @classmethod
     def default_config(cls) -> Dict:
         return {
-            'working_directory': "",
+            'output_directory': "",
 
             'log_vehicles': False,
             'log_requests': False,

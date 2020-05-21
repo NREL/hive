@@ -7,7 +7,7 @@ sim:
 network:
   network_type: osm_network
 io:
-  working_directory: denver_demo_outputs
+  output_directory: denver_demo_outputs
   file_paths:
     requests_file: denver_demo_requests.csv
     vehicles_file: denver_demo_vehicles.csv

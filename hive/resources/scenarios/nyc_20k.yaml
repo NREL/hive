@@ -8,7 +8,7 @@ sim:
 network:
   network_type: osm_network
 io:
-  working_directory: nyc_20k_out
+  output_directory: nyc_20k_out
   file_paths:
     requests_file: nyc_20k.csv
     vehicles_file: nyc_200.csv

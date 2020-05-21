@@ -88,5 +88,5 @@ class HiveConfig(NamedTuple):
     @property
     def output_directory(self) -> str:
         run_name = self.sim.sim_name + '_' + self.init_time
-        output_directory = os.path.join(self.io.working_directory, run_name)
+        output_directory = os.path.join(self.io.output_directory, run_name)
         return output_directory

@@ -8,7 +8,7 @@ network:
   network_type: euclidean
   default_speed_kmph: 30
 io:
-  working_directory: denver_rl_toy
+  output_directory: denver_rl_toy
   file_paths:
     requests_file: denver_rl_toy_requests.csv
     vehicles_file: denver_rl_toy_vehicles.csv
