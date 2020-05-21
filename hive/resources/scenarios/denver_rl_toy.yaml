@@ -15,15 +15,13 @@ io:
     bases_file: denver_rl_toy_bases.csv
     stations_file: denver_rl_toy_stations.csv
     mechatronics_file: denver_rl_toy_mechatronics.csv
-    charging_price_file: denver_charging_prices_by_geoid.csv
+    charging_price_file: denver_rl_toy_charging_prices.csv
     rate_structure_file: denver_rl_toy_rate_structure.csv
     demand_forecast_file: denver_rl_toy_demand.csv
     geofence_file: downtown_denver.geojson
 
-  log_vehicles: True
-  log_requests: True
-  log_stations: True
-  log_dispatcher: True
+  log_run: False
+  log_sim: False
 
 dispatcher:
   matching_range_km_threshold: 0

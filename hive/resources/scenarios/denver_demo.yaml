@@ -20,11 +20,6 @@ io:
     demand_forecast_file: denver_demand.csv
     road_network_file: downtown_denver.xml
 
-  log_vehicles: False
-  log_requests: False
-  log_stations: False
-  log_dispatcher: False
-
 dispatcher:
   valid_dispatch_states:
     - Idle
