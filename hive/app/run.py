@@ -67,7 +67,7 @@ def run() -> int:
             return 1
 
         # initialize logging file handler
-        if env.config.io.log_to_file:
+        if env.config.io.log_run:
             log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
             formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
             log_fh.setFormatter(formatter)
@@ -105,7 +105,7 @@ def run() -> int:
 
         env.reporter.close()
 
-        if env.config.io.log_to_file:
+        if env.config.io.write_outputs:
             config_dump = env.config.asdict()
             dump_name = env.config.sim.sim_name + ".yaml"
             dump_path = os.path.join(env.config.output_directory, dump_name)
