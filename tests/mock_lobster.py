@@ -502,13 +502,13 @@ def mock_instruction_generators_with_mock_forecast(
 def mock_update(config: Optional[HiveConfig] = None,
                 instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None) -> Update:
     if config and instruction_generators:
-        return Update.build(config.io, instruction_generators)
+        return Update.build(config.input, instruction_generators)
     elif config:
         instruction_generators = mock_instruction_generators_with_mock_forecast(config)
-        return Update.build(config.io, instruction_generators)
+        return Update.build(config.input, instruction_generators)
     elif instruction_generators:
         config = mock_config()
-        return Update.build(config.io, instruction_generators)
+        return Update.build(config.input, instruction_generators)
     else:
         conf = mock_config()
         instruction_generators = mock_instruction_generators_with_mock_forecast(conf)

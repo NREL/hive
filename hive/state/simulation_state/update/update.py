@@ -30,14 +30,14 @@ class Update(NamedTuple):
 
     @classmethod
     def build(cls,
-              io: Input,
+              input: Input,
               instruction_generators: Tuple[InstructionGenerator, ...],
               instruction_generator_update_fn: Callable[
                   [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a,
                                                                                                     b: None) -> Update:
         """
         constructs the functionality to update the simulation each time step
-        :param io: the scenario io configuration
+        :param input: the scenario io configuration
         :param instruction_generators: any overriding dispatcher functionality
         :param instruction_generator_update_fn: user API for modifying InstructionGenerator models at each time step
         :return: the Update that will be applied at each time step
@@ -45,8 +45,8 @@ class Update(NamedTuple):
 
         # the basic, built-in set of updates which advance time of the supply and demand
         pre_step_update = (
-            ChargingPriceUpdate.build(io.file_paths.charging_price_file),
-            UpdateRequests.build(io.file_paths.requests_file, io.file_paths.rate_structure_file),
+            ChargingPriceUpdate.build(input.charging_price_file),
+            UpdateRequests.build(input.requests_file, input.rate_structure_file),
             CancelRequests()
         )
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import yaml
 from pkg_resources import resource_string
@@ -25,13 +27,14 @@ class TabularPowertrain(Powertrain):
             except KeyError:
                 raise AttributeError("Must initialize TabularPowercurve with attribute nominal_max_charge_kw")
 
-        data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powertrain', 'normalized.yaml'))
+        with Path(config['powertrain_file']).open() as f:
+            data = yaml.safe_load(f)
 
-        # linear interpolation function approximation via these lookup values
-        consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
-        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
-        self._consumption_whmi = np.array(
-            list(map(lambda x: x['whmi'], consumption_model))) * nominal_watt_hour_per_mile  # watthour/mile
+            # linear interpolation function approximation via these lookup values
+            consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
+            self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
+            self._consumption_whmi = np.array(
+                list(map(lambda x: x['whmi'], consumption_model))) * nominal_watt_hour_per_mile  # watthour/mile
 
     def link_cost(self, link: Link) -> KwH:
         """

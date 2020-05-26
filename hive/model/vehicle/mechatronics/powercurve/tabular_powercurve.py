@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Dict
 
 import numpy as np
@@ -36,23 +37,24 @@ class TabularPowercurve(Powercurve):
             except KeyError:
                 raise AttributeError("Must initialize TabularPowercurve with attribute battery_capacity_kwh")
 
-        data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powercurve', 'normalized.yaml'))
+        with Path(config['powercurve_file']).open() as f:
+            data = yaml.safe_load(f)
 
-        if 'name' not in data or 'power_type' not in data or 'step_size_seconds' not in data \
-                or 'power_curve' not in data:
-            raise IOError("invalid input file for tabular energy curve model")
+            if 'name' not in data or 'power_type' not in data or 'step_size_seconds' not in data \
+                    or 'power_curve' not in data:
+                raise IOError("invalid input file for tabular energy curve model")
 
-        self.id = data['name']
-        self.energy_type = EnergyType.from_string(data['power_type'])
-        self.step_size_seconds = data['step_size_seconds']  # seconds
+            self.id = data['name']
+            self.energy_type = EnergyType.from_string(data['power_type'])
+            self.step_size_seconds = data['step_size_seconds']  # seconds
 
-        if self.energy_type is None:
-            raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
+            if self.energy_type is None:
+                raise AttributeError(f"TabularPowercurve initialized with invalid energy type {self.energy_type}")
 
-        charging_model = sorted(data['power_curve'], key=lambda x: x['energy_kwh'])
-        self._charging_energy_kwh = np.array(
-            list(map(lambda x: x['energy_kwh'], charging_model))) * battery_capacity_kwh
-        self._charging_rate_kw = np.array(list(map(lambda x: x['power_kw'], charging_model))) * nominal_max_charge_kw
+            charging_model = sorted(data['power_curve'], key=lambda x: x['energy_kwh'])
+            self._charging_energy_kwh = np.array(
+                list(map(lambda x: x['energy_kwh'], charging_model))) * battery_capacity_kwh
+            self._charging_rate_kw = np.array(list(map(lambda x: x['power_kw'], charging_model))) * nominal_max_charge_kw
 
     def charge(self,
                start_energy_kwh: KwH,

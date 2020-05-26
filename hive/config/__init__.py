@@ -3,5 +3,5 @@
 # from hive.config.io import IO
 # from hive.config.network import Network
 from hive.config.hive_config import HiveConfig
-from hive.config.global_config import GlobalConfig
+# from hive.config.global_config import GlobalConfig
 # from hive.config.system import System

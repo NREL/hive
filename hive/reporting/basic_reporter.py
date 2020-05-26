@@ -6,6 +6,7 @@ import json
 import logging
 import os
 
+from hive.config.global_config import GlobalConfig
 from hive.config.input import Input
 from hive.reporting.reporter import Reporter
 
@@ -22,15 +23,15 @@ class BasicReporter(Reporter):
     :param io: io config
     """
 
-    def __init__(self, io: Input, sim_output_dir: str):
+    def __init__(self, global_config: GlobalConfig, sim_output_dir: str):
 
-        if io.log_sim:
+        if global_config.log_sim:
             sim_log_path = os.path.join(sim_output_dir, 'sim.log')
             self.sim_log_file = open(sim_log_path, 'a')
         else:
             self.sim_log_file = None
 
-        self._io = io
+        self.global_config = global_config
         
     @staticmethod
     def request_asdict(request) -> dict:
@@ -108,24 +109,24 @@ class BasicReporter(Reporter):
             self,
             sim_state: SimulationState,
     ):
-        if not self._io.log_sim:
+        if not self.global_config.log_sim:
             return
 
-        if 'vehicle_report' in self._io.log_sim_config:
+        if 'vehicle_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.vehicles.values(),
                 asdict=self.vehicle_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='vehicle_report',
             )
-        if 'request_report' in self._io.log_sim_config:
+        if 'request_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.requests.values(),
                 asdict=self.request_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='request_report',
             )
-        if 'station_report' in self._io.log_sim_config:
+        if 'station_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.stations.values(),
                 asdict=self.station_asdict,
@@ -134,12 +135,12 @@ class BasicReporter(Reporter):
             )
 
     def sim_report(self, report: dict):
-        if not self._io.log_sim:
+        if not self.global_config.log_sim:
             return
         elif 'report_type' not in report:
             log.warning(f'must specify report_type in report, not recording report {report}')
             return
-        elif report['report_type'] not in self._io.log_sim_config:
+        elif report['report_type'] not in self.global_config.log_sim_config:
             return
         else:
             entry = json.dumps(report, default=str)

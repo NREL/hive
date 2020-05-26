@@ -32,8 +32,8 @@ class TestInitializeSimulation(TestCase):
                 }
             }
         )
-        if not os.path.isdir(conf.output_directory):
-            os.makedirs(conf.output_directory)
+        if not os.path.isdir(conf.scenario_output_directory):
+            os.makedirs(conf.scenario_output_directory)
 
         sim, env = initialize_simulation(conf)
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")

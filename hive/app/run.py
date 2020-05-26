@@ -21,6 +21,7 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
+from hive.util import fs
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
@@ -31,13 +32,7 @@ log = logging.getLogger(__name__)
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
     'scenario_file',
-    help='which scenario file to run. must live in hive.resources.scenarios',
-)
-parser.add_argument(
-    '--path',
-    dest='scenario_path',
-    action='store_true',
-    help='optional flag to specify a scenario file outside hive.resources.scenarios'
+    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")'
 )
 
 
@@ -48,27 +43,26 @@ def run() -> int:
     """
 
     _welcome_to_hive()
-    args = parser.parse_args()
 
-    if not args.scenario_file:
-        log.error("please specify a scenario file to run.")
+    # parse arguments
+    try:
+        args = parser.parse_args()
+    except:
+        parser.print_help()
         return 1
 
+    # main application
     try:
-        if args.scenario_path:
-            scenario_path = args.scenario_file
-        else:
-            scenario_path = resource_filename('hive.resources.scenarios', args.scenario_file)
-
         try:
-            sim, env = load_simulation(scenario_path)
+            scenario_file = fs.check_built_in_scenarios(args.scenario_file)
+            sim, env = load_simulation(scenario_file)
         except FileNotFoundError as fe:
             log.error(fe)
             return 1
 
         # initialize logging file handler
-        if env.config.io.log_run:
-            log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
+        if env.config.global_config.log_run:
+            log_fh = logging.FileHandler(os.path.join(env.config.scenario_output_directory, 'run.log'))
             formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
             log_fh.setFormatter(formatter)
             root_log.addHandler(log_fh)
@@ -82,7 +76,7 @@ def run() -> int:
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher),
             PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.io.file_paths.demand_forecast_file),
+                demand_forecaster=BasicForecaster.build(env.config.input.demand_forecast_file),
                 config=env.config.dispatcher,
             ),
             ChargingFleetManager(env.config.dispatcher),
@@ -90,7 +84,7 @@ def run() -> int:
             Dispatcher(env.config.dispatcher),
         )
 
-        update = Update.build(env.config.io, instruction_generators)
+        update = Update.build(env.config.input, instruction_generators)
         initial_payload = RunnerPayload(sim, env, update)
 
         log.info(f"running simulation for time {initial_payload.e.config.sim.start_time} "
@@ -105,10 +99,10 @@ def run() -> int:
 
         env.reporter.close()
 
-        if env.config.io.write_outputs:
+        if env.config.global_config.write_outputs:
             config_dump = env.config.asdict()
             dump_name = env.config.sim.sim_name + ".yaml"
-            dump_path = os.path.join(env.config.output_directory, dump_name)
+            dump_path = os.path.join(env.config.scenario_output_directory, dump_name)
             with open(dump_path, 'w') as f:
                 yaml.dump(config_dump, f, sort_keys=False)
 

@@ -64,7 +64,7 @@ def _run_step_in_context(env: Environment) -> Callable:
         updated_payload, reports = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
 
-        if updated_sim.sim_time % env.config.io.log_period_seconds == 0:
+        if updated_sim.sim_time % env.config.global_config.log_period_seconds == 0:
             env.reporter.log_sim_state(updated_sim)
 
             for report in reports:
