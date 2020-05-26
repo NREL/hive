@@ -119,33 +119,3 @@ def check_built_in_scenarios(user_provided_scenario: str) -> Path:
         return nyc_path
     else:
         raise FileNotFoundError(user_provided_scenario)
-
-
-def search_for_file(file: str, scenario_directory: str, data_directory: Optional[str] = None) -> Optional[str]:
-    """
-    returns a URI to a file, attempting to find the file at
-    1. the scenario directory, where the path is relative to the user-defined data directory
-    2. the scenario directory, where the path is absolute
-    3. the scenario directory, where the path is relative to the current working directory
-    4. the hive.resources package as a fallback
-    :param file: the filename we are looking for
-    :param scenario_directory: the input directory set in the scenario config
-    :param data_directory: the user's global data directory location, or None if not defined
-    :return: the complete URI to the file if it was found, otherwise None
-    """
-
-    file_at_data_dir_plus_input_dir = os.path.normpath(os.path.join(data_directory, scenario_directory, file)) if data_directory else None
-    file_at_input_dir = os.path.normpath(os.path.join(scenario_directory, file))
-    file_at_cwd_plus_input_dir = os.path.normpath(os.path.join(os.getcwd(), scenario_directory, file))
-    file_at_resources_dir = pkg_resources.resource_filename("hive.resources", file)
-
-    if file_at_data_dir_plus_input_dir and os.path.isfile(file_at_data_dir_plus_input_dir):
-        return file_at_data_dir_plus_input_dir
-    elif os.path.isfile(file_at_input_dir):
-        return file_at_input_dir
-    elif os.path.isfile(file_at_cwd_plus_input_dir):
-        return file_at_cwd_plus_input_dir
-    elif os.path.isfile(file_at_resources_dir):
-        return file_at_resources_dir
-    else:
-        return None
