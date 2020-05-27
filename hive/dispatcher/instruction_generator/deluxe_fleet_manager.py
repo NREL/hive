@@ -12,11 +12,6 @@ from hive.dispatcher.instruction_generator.instruction_generator_ops import (
 )
 from hive.external.demo_base_target.fleet_targets import FleetTarget
 from hive.model.energy.energytype import EnergyType
-from hive.state.vehicle_state import *
-from hive.state.vehicle_state import (
-    ReserveBase,
-    ChargingBase,
-)
 
 if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle

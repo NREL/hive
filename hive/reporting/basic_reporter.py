@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from typing import TYPE_CHECKING
 
@@ -10,18 +11,21 @@ from hive.reporting.reporter import Reporter
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
 
+log = logging.getLogger(__name__)
+
 
 class BasicReporter(Reporter):
     """
     A basic reporter that also tracks aggregate statistics
 
-    :param io: io config
+    :param global_config: global project configuration
+    :param scenario_output_directory: the output directory for this scenario
     """
 
-    def __init__(self, global_config: GlobalConfig, sim_output_dir: str):
+    def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
 
         if global_config.log_sim:
-            sim_log_path = os.path.join(sim_output_dir, 'sim.log')
+            sim_log_path = os.path.join(scenario_output_directory, 'sim.log')
             self.sim_log_file = open(sim_log_path, 'a')
         else:
             self.sim_log_file = None
@@ -133,7 +137,7 @@ class BasicReporter(Reporter):
         if not self.global_config.log_sim:
             return
         elif 'report_type' not in report:
-            run_log.warning(f'must specify report_type in report, not recording report {report}')
+            log.warning(f'must specify report_type in report, not recording report {report}')
             return
         elif report['report_type'] not in self.global_config.log_sim_config:
             return

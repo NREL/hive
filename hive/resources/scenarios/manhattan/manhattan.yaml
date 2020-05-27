@@ -1,5 +1,5 @@
 sim:
-  sim_name: nyc_20k
+  sim_name: manhattan_20k
   timestep_duration_seconds: 60
   request_cancel_time_seconds: 600
   start_time: 0
@@ -8,16 +8,15 @@ sim:
 network:
   network_type: osm_network
 input:
-  requests_file: nyc_20k.csv
   vehicles_file: nyc_200.csv
+  requests_file: nyc_20k.csv
   bases_file: nyc_bases.csv
   stations_file: nyc_stations.csv
-  mechatronics_file: mechatronics.csv
-  charging_price_file: nyc_fixed.csv
-  geofence_file: nyc_single_polygon.geojson
-  demand_forecast_file: nyc_demand.csv
   road_network_file: nyc_manhattan.xml
-
+  geofence_file: nyc_single_polygon.geojson
+  rate_structure_file: rate_structure.csv
+  charging_price_file: nyc_fixed.csv
+  demand_forecast_file: nyc_demand.csv
 dispatcher:
   valid_dispatch_states:
     - idle
