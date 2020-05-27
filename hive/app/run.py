@@ -71,7 +71,7 @@ def run() -> int:
             log.info(f"creating run log at {run_log_path}")
 
         log.info(f"successfully loaded config at {args.scenario_file}")
-        log.info(f"global hive configuration loaded from {env.config.global_config.global_settings_file_path} and combined with defaults:")
+        log.info(f"global hive configuration loaded from {env.config.global_config.global_settings_file_path}:")
         for k, v in env.config.global_config.asdict().items():
             log.info(f"  {k}: {v}")
         log.info(f"output directory set to {env.config.scenario_output_directory}")
