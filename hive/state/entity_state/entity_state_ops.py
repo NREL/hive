@@ -1,7 +1,7 @@
 from typing import Tuple, Optional
 
-from hive.state.entity_state.entity_state import EntityState
 from hive.runner.environment import Environment
+from hive.state.entity_state.entity_state import EntityState
 
 
 def transition_previous_to_next(sim: 'SimulationState',

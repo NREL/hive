@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Tuple
 
-
 from hive.config.config_builder import ConfigBuilder
 
 

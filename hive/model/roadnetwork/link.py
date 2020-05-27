@@ -4,9 +4,9 @@ from typing import NamedTuple, Optional
 
 from h3 import h3
 
+from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId
 from hive.util.units import Kilometers, Kmph, Seconds, Ratio, hours_to_seconds
-from hive.util.helpers import H3Ops
 
 
 class Link(NamedTuple):

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 import immutables
+from h3 import h3
 
 from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
@@ -14,11 +15,9 @@ from hive.state.simulation_state.update.simulation_update import SimulationUpdat
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.helpers import DictOps
+from hive.util.parsers import time_parser
 from hive.util.typealiases import StationId
 from hive.util.units import Currency
-from hive.util.parsers import time_parser
-
-from h3 import h3
 
 
 def _default_charging_prices() -> Iterator[Dict[str, str]]:

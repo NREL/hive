@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Union
 from datetime import datetime
+from typing import Union
 
 from hive.util.typealiases import SimTime
 

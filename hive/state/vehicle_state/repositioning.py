@@ -1,17 +1,14 @@
 from typing import NamedTuple, Tuple, Optional
 
+from hive.model.roadnetwork.route import Route, valid_route
+from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
-
-from hive.model.roadnetwork.route import Route, valid_route
-
 from hive.util.typealiases import VehicleId
-
-from hive.runner.environment import Environment
-from hive.state.vehicle_state import VehicleState
 
 
 class Repositioning(NamedTuple, VehicleState):

@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from hive.state.entity_state import entity_state_ops
-from hive.state.vehicle_state import *
-from hive.state.vehicle_state.charge_queueing import ChargeQueueing
-from tests.mock_lobster import *
-from hive.model.passenger import board_vehicle
 from hive.model.energy.energytype import EnergyType
+from hive.model.passenger import board_vehicle
+from hive.state.entity_state import entity_state_ops
+from hive.state.vehicle_state.charge_queueing import ChargeQueueing
+from hive.state.vehicle_state.out_of_service import OutOfService
+from tests.mock_lobster import *
 
 
 class TestVehicleState(TestCase):

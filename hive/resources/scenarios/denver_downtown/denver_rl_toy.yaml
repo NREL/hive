@@ -1,0 +1,30 @@
+sim:
+  sim_name: denver_rl_toy
+  timestep_duration_seconds: 60
+  request_cancel_time_seconds: 3600
+  start_time: 0
+  end_time: 1800
+network:
+  network_type: euclidean
+  default_speed_kmph: 30
+input:
+  requests_file: denver_rl_toy_requests.csv
+  vehicles_file: denver_rl_toy_vehicles.csv
+  bases_file: denver_rl_toy_bases.csv
+  stations_file: denver_rl_toy_stations.csv
+  mechatronics_file: denver_rl_toy_mechatronics.csv
+  charging_price_file: denver_charging_prices_by_geoid.csv
+  rate_structure_file: denver_rl_toy_rate_structure.csv
+  demand_forecast_file: denver_rl_toy_demand.csv
+  geofence_file: downtown_denver.geojson
+
+dispatcher:
+  matching_range_km_threshold: 0
+  charging_range_km_threshold: 5
+  default_update_interval_seconds: 1800
+  valid_dispatch_states:
+    - Idle
+    - ChargingStation
+    - DispatchStation
+
+

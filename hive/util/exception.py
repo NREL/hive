@@ -1,5 +1,5 @@
-from typing import Tuple, Dict
 import functools as ft
+from typing import Tuple, Dict
 
 
 def report_error(error: Exception) -> Dict:

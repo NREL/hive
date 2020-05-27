@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from hive.state.simulation_state.update.update_requests import UpdateRequests
-
 from tests.mock_lobster import *
 
 
@@ -18,8 +17,8 @@ class TestUpdateRequestsFromFile(TestCase):
             end_time="2019-01-10T00:00:00-07:00",
         )
         env = mock_env(config)
-        req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
+        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.reports), 2, "should have reported the add")
@@ -40,8 +39,8 @@ class TestUpdateRequestsFromFile(TestCase):
             end_time="2019-01-10T00:00:00-07:00",
         )
         env = mock_env(config)
-        req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
+        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(expected_reqs, len(result.simulation_state.requests), "should have added the reqs")
@@ -60,8 +59,8 @@ class TestUpdateRequestsFromFile(TestCase):
             end_time="2019-01-10T00:00:00-07:00",
         )
         env = mock_env(config)
-        req_file = resource_filename("hive.resources.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.service_prices", "rate_structure.csv")
+        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         for req in result.simulation_state.requests.values():

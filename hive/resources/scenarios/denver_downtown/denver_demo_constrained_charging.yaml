@@ -1,0 +1,20 @@
+sim:
+  sim_name: denver_demo_constrained
+  timestep_duration_seconds: 60
+  request_cancel_time_seconds: 600
+  start_time: "1970-01-01T00:00:00-07:00" # beginning of mountain time
+  end_time: "1970-01-02T00:00:00-07:00" # 24 hours after the beginning of mountain time
+  sim_h3_search_resolution: 5
+network:
+  network_type: osm_network
+input:
+  requests_file: denver_demo_requests.csv
+  vehicles_file: denver_demo_vehicles.csv
+  bases_file: denver_demo_bases.csv
+  stations_file: denver_demo_stations_constrained.csv
+  mechatronics_file: mechatronics.csv
+  charging_price_file: denver_charging_prices_by_geoid.csv
+  rate_structure_file: rate_structure.csv
+  geofence_file: downtown_denver.geojson
+  demand_forecast_file: denver_demand.csv
+  road_network_file: downtown_denver.xml

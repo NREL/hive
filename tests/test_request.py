@@ -1,7 +1,6 @@
 import unittest
 from csv import DictReader
 
-from hive.model.passenger import create_passenger_id
 from tests.mock_lobster import *
 
 

@@ -8,7 +8,7 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.runner.environment import Environment
-from hive.state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.idle import Idle
 from hive.util.typealiases import *
 from hive.util.units import Kilometers, Currency
@@ -74,7 +74,8 @@ class Vehicle(NamedTuple):
 
                 mechatronics = environment.mechatronics.get(mechatronics_id)
                 if not mechatronics:
-                    raise IOError(f"was not able to find mechatronics {mechatronics_id} in environment")
+                    found = set(environment.mechatronics.keys())
+                    raise IOError(f"was not able to find mechatronics '{mechatronics_id}' in environment, only found {found}")
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)

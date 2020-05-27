@@ -20,7 +20,7 @@ When the Mobility, Behavior, and Advanced Powertrains group began looking to ans
 - easy integration/co-simulation (can be called alongside other software tools)
 - dynamic dispatch, trip energy, routing, and economics
 - simple to define/share scenarios via configuration files and simulation snapshots
-- 100% Python (v 3.8) code with a small(ish) set of dependencies
+- 100% Python (v 3.7) code with a small(ish) set of dependencies
 
 HIVE is not a fully-featured Activity-Based Model, does not simulate all vehicles on the network, and therefore does not simulate congestion. It also assumes demand is fixed. If these assumptions are too strong for your research question, then one of the other mesoscopic models capable of ridehail simulation may be a more appropriate fit. The following (opinionated) chart attempts to compare features of HIVE against LBNL's BEAM and ANL's POLARIS models.
 
@@ -82,10 +82,10 @@ Then you can run hive as a command line application:
 
     > hive denver_demo.yaml
    
-Note: the program will automatically look for the scenario file in the directory `hive/resources/scenarios`. If you want
+Note: the program will automatically look for the two scenarios in the directory `hive/resources/scenarios`. If you want
 the program to use a file outside of this location, just specify the optional `--path` argument:
 
-    > hive --path some_other_directory/my_scenario.yaml 
+    > hive some_other_directory/my_scenario.yaml
 
 #### run as a vanilla python module
 
@@ -93,6 +93,18 @@ To run from the console, run the module (along with a scenario file, such as `de
        
     > cd hive
     > python -m hive denver_demo.yaml
+
+
+#### available scenarios
+
+The following built-in scenario files are defined:
+
+scenario | description
+---------|------------
+denver_demo.yaml | default demo scenario with 20 vehicles and 2.5k requests synthesized with uniform time/location sampling
+denver_rl_toy.yaml | extremely simple scenario for testing RL
+denver_demo_constrained_charging.yaml | default scenario with limited charging supply
+manhattan.yaml | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset
 
 #### build api documentation (optional)
 
@@ -109,7 +121,7 @@ the Denver demo scenario is configured to log output to a folder named `denver_d
 Running this scenario should produce an output similar to the following:
 
 ```
-[INFO] - hive.app.run -
+[INFO] - hive -
 ##     ##  ####  ##     ##  #######
 ##     ##   ##   ##     ##  ##
 #########   ##   ##     ##  ######
@@ -121,40 +133,29 @@ Running this scenario should produce an output similar to the following:
         .         .         . -{{_(|8)
           ' .  . ' ' .  . '     (__/
 
-[INFO] - hive.app.run - successfully loaded config: resources/scenarios/denver_demo.yaml
-[INFO] - hive.runner.local_simulation_runner - simulating 28800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 32400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 36000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 39600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 43200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 46800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 50400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 54000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 57600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 61200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 64800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 68400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 72000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 75600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 79200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 82800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 86400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 90000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 93600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 97200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 100800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 104400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 108000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 111600 of 111600 seconds
-[INFO] - hive.app.run -
+[INFO] - hive - creating run log at /Users/rfitzger/data/hive/outputs/denver_demo_2020-05-27_11-18-24/run.log
+[INFO] - hive - successfully loaded config at hive/resources/scenarios/denver_downtown/denver_demo.yaml
+[INFO] - hive - global hive configuration loaded from /Users/rfitzger/dev/nrel/hive/hive/.hive.yaml and combined with defaults:
+[INFO] - hive -   global_settings_file_path: /Users/rfitzger/dev/nrel/hive/hive/.hive.yaml
+[INFO] - hive -   output_base_directory: /Users/rfitzger/data/hive/outputs
+[INFO] - hive -   local_parallelism: 1
+[INFO] - hive -   local_parallelism_timeout_sec: 60
+[INFO] - hive -   log_run: True
+[INFO] - hive -   log_sim: True
+[INFO] - hive -   log_vehicles: True
+[INFO] - hive -   log_requests: True
+[INFO] - hive -   log_stations: True
+[INFO] - hive -   log_dispatcher: True
+[INFO] - hive -   log_sim_config: {'charge_event', 'cancel_request', 'add_request', 'vehicle_report', 'station_report', 'dispatcher', 'request_report'}
+[INFO] - hive -   log_period_seconds: 60
+[INFO] - hive - output directory set to /Users/rfitzger/data/hive/outputs/denver_demo_2020-05-27_11-18-24
+[INFO] - hive - running simulation for time 25200 to 111600:
+ 99%|█████████▉| 1430/1440 [00:07<00:00, 94.57it/s][INFO] - hive - done! time elapsed: 7.69 seconds
+[INFO] - hive - STATION  CURRENCY BALANCE:             $ 300.50
+[INFO] - hive - FLEET    CURRENCY BALANCE:             $ 11548.10
+[INFO] - hive -          VEHICLE KILOMETERS TRAVELED:    6511.74
+[INFO] - hive -          AVERAGE FINAL SOC:              75.66%
 
-[INFO] - hive.app.run - done! time elapsed: 28.43 seconds
-[INFO] - hive.app.run -
-
-[INFO] - hive.app.run - STATION  CURRENCY BALANCE:             $ 249.26
-[INFO] - hive.app.run - FLEET    CURRENCY BALANCE:             $ 11509.16
-[INFO] - hive.app.run -          VEHICLE KILOMETERS TRAVELED:    5089.59
-[INFO] - hive.app.run -          AVERAGE FINAL SOC:              72.92%
 ```
 
 ## Data-Driven Control
@@ -171,7 +172,7 @@ HIVE intends to implement the following features:
 - [ ] Time-varying network speeds
 - [ ] Integration into vehicle powertrain, grid energy, smart charging models
 - [ ] Support for Monte Carlo RL algorithms
-- [ ] Charge Queueing
+- [x] Charge Queueing
 - [ ] Ridehail Pooling
 - [ ] Gasoline vehicles
 - [ ] Distributed HPC cluster implementation for large problem inputs

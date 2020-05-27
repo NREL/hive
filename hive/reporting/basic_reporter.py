@@ -1,37 +1,37 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import json
 import logging
 import os
+from typing import TYPE_CHECKING
 
-from hive.config.io import IO
+from hive.config.global_config import GlobalConfig
 from hive.reporting.reporter import Reporter
-
-log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
+
+log = logging.getLogger(__name__)
 
 
 class BasicReporter(Reporter):
     """
     A basic reporter that also tracks aggregate statistics
 
-    :param io: io config
+    :param global_config: global project configuration
+    :param scenario_output_directory: the output directory for this scenario
     """
 
-    def __init__(self, io: IO, sim_output_dir: str):
+    def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
 
-        if io.log_sim:
-            sim_log_path = os.path.join(sim_output_dir, 'sim.log')
+        if global_config.log_sim:
+            sim_log_path = os.path.join(scenario_output_directory, 'sim.log')
             self.sim_log_file = open(sim_log_path, 'a')
         else:
             self.sim_log_file = None
 
-        self._io = io
-        
+        self.global_config = global_config
+
     @staticmethod
     def request_asdict(request) -> dict:
         out_dict = request._asdict()
@@ -39,12 +39,12 @@ class BasicReporter(Reporter):
         # deconstruct origin_link
         out_dict['origin_link_id'] = request.origin_link.link_id
         out_dict['origin_geoid'] = request.origin_link.start
-        del(out_dict['origin_link'])
+        del (out_dict['origin_link'])
 
         # deconstruct destination_link
         out_dict['destination_link_id'] = request.destination_link.link_id
         out_dict['destination_geoid'] = request.destination_link.start
-        del(out_dict['destination_link'])
+        del (out_dict['destination_link'])
 
         return out_dict
 
@@ -108,24 +108,24 @@ class BasicReporter(Reporter):
             self,
             sim_state: SimulationState,
     ):
-        if not self._io.log_sim:
+        if not self.global_config.log_sim:
             return
 
-        if 'vehicle_report' in self._io.log_sim_config:
+        if 'vehicle_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.vehicles.values(),
                 asdict=self.vehicle_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='vehicle_report',
             )
-        if 'request_report' in self._io.log_sim_config:
+        if 'request_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.requests.values(),
                 asdict=self.request_asdict,
                 sim_time=sim_state.sim_time,
                 report_type='request_report',
             )
-        if 'station_report' in self._io.log_sim_config:
+        if 'station_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.stations.values(),
                 asdict=self.station_asdict,
@@ -134,12 +134,12 @@ class BasicReporter(Reporter):
             )
 
     def sim_report(self, report: dict):
-        if not self._io.log_sim:
+        if not self.global_config.log_sim:
             return
         elif 'report_type' not in report:
             log.warning(f'must specify report_type in report, not recording report {report}')
             return
-        elif report['report_type'] not in self._io.log_sim_config:
+        elif report['report_type'] not in self.global_config.log_sim_config:
             return
         else:
             entry = json.dumps(report, default=str)

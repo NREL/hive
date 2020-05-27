@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import logging
+import os
 from typing import NamedTuple, Tuple, Dict, Optional
 
 from pkg_resources import resource_filename

@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Dict
 
 import numpy as np
-import yaml
-from pkg_resources import resource_string
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
@@ -21,26 +19,25 @@ class TabularPowercurve(Powercurve):
 
     def __init__(
             self,
+            data: Dict[str, str],
             nominal_max_charge_kw: Optional[Kw] = None,
             battery_capacity_kwh: Optional[KwH] = None,
-            config: Optional[Dict[str, str]] = None,
     ):
         if not nominal_max_charge_kw:
             try:
-                nominal_max_charge_kw = float(config['nominal_max_charge_kw'])
+                nominal_max_charge_kw = float(data['nominal_max_charge_kw'])
             except KeyError:
                 raise AttributeError("Must initialize TabularPowercurve with attribute nominal_max_charge_kw")
         if not battery_capacity_kwh:
             try:
-                battery_capacity_kwh = float(config['battery_capacity_kwh'])
+                battery_capacity_kwh = float(data['battery_capacity_kwh'])
             except KeyError:
                 raise AttributeError("Must initialize TabularPowercurve with attribute battery_capacity_kwh")
 
-        data = yaml.safe_load(resource_string('hive.resources.vehicles.mechatronics.powercurve', 'normalized.yaml'))
-
-        if 'name' not in data or 'power_type' not in data or 'step_size_seconds' not in data \
-                or 'power_curve' not in data:
-            raise IOError("invalid input file for tabular energy curve model")
+        expected_keys = ['name', 'power_type', 'step_size_seconds', 'power_curve']
+        for key in expected_keys:
+            if key not in data:
+                raise IOError(f"invalid input file for tabular energy curve model missing key {key}")
 
         self.id = data['name']
         self.energy_type = EnergyType.from_string(data['power_type'])

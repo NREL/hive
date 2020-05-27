@@ -1,5 +1,5 @@
-from typing import NamedTuple, Dict, FrozenSet
 from enum import Enum
+from typing import NamedTuple
 
 
 class ForecastType(Enum):

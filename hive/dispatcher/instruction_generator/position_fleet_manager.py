@@ -10,8 +10,9 @@ from hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_reposition,
     instruct_vehicles_return_to_base,
 )
-from hive.state.vehicle_state import *
 from hive.model.energy.energytype import EnergyType
+from hive.state.vehicle_state.charging_base import ChargingBase
+from hive.state.vehicle_state.reserve_base import ReserveBase
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState

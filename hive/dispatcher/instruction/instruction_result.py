@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from hive.state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState
 
 
 class InstructionResult(NamedTuple):
