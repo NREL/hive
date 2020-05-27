@@ -4,7 +4,7 @@ import tempfile
 import yaml
 import os
 from hive.util.fs import global_hive_config_search
-from hive.config import GlobalConfig
+from hive.config.global_config import GlobalConfig
 
 
 class TestDictReaderStepper(TestCase):

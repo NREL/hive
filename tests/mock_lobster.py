@@ -1,8 +1,10 @@
 import functools as ft
 import math
+from pathlib import Path
 from typing import Dict, Union, Callable
 
 import immutables
+import yaml
 from h3 import h3
 from pkg_resources import resource_filename
 
@@ -89,7 +91,7 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
 
 
 def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
-    road_network_file = resource_filename('hive.resources.road_network', 'downtown_denver.xml')
+    road_network_file = resource_filename('hive.resources.scenarios.denver_downtown.road_network', 'downtown_denver.xml')
     return OSMRoadNetwork(
         road_network_file=road_network_file,
         geofence=mock_geofence(resolution=geofence_res),
@@ -204,17 +206,24 @@ def mock_request_from_geoids(
 
 
 def mock_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
-    return TabularPowertrain(nominal_watt_hour_per_mile=nominal_watt_hour_per_mile)
+    powertrain_file = resource_filename("hive.resources.powertrain", "normalized.yaml")
+    with Path(powertrain_file).open() as f:
+        data = yaml.safe_load(f)
+        return TabularPowertrain(data=data, nominal_watt_hour_per_mile=nominal_watt_hour_per_mile)
 
 
 def mock_powercurve(
         nominal_max_charge_kw=50,
         battery_capacity_kwh=50,
 ) -> TabularPowercurve:
-    return TabularPowercurve(
-        nominal_max_charge_kw=nominal_max_charge_kw,
-        battery_capacity_kwh=battery_capacity_kwh,
-    )
+    powercurve_file = resource_filename("hive.resources.powercurve", "normalized.yaml")
+    with Path(powercurve_file).open() as f:
+        data = yaml.safe_load(f)
+        return TabularPowercurve(
+            data=data,
+            nominal_max_charge_kw=nominal_max_charge_kw,
+            battery_capacity_kwh=battery_capacity_kwh,
+        )
 
 
 def mock_bev(
@@ -327,10 +336,10 @@ def mock_config(
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
-        file_paths: Dict = None,
+        input: Dict = None,
 ) -> HiveConfig:
-    if not file_paths:
-        file_paths = {
+    if not input:
+        input = {
             'vehicles_file': 'denver_demo_vehicles.csv',
             'requests_file': 'denver_demo_requests.csv',
             'bases_file': 'denver_demo_bases.csv',
@@ -339,9 +348,9 @@ def mock_config(
             'rate_structure_file': 'rate_structure.csv',
             'mechatronics_file': 'mechatronics.csv',
             'geofence_file': 'downtown_denver.geojson',
-            'demand_forecast_file': 'nyc_demand.csv'
+            'demand_forecast_file': 'denver_demand.csv'
         }
-    return HiveConfig.build({
+    return HiveConfig.build(Path(resource_filename("hive.resources.scenarios.denver_downtown", "denver_demo.yaml")), {
         "sim": {
             'start_time': start_time,
             'end_time': end_time,
@@ -350,9 +359,7 @@ def mock_config(
             'sim_h3_search_resolution': sim_h3_search_resolution,
             'sim_name': 'test_sim',
         },
-        "io": {
-            'file_paths': file_paths,
-        },
+        "input": input,
         "network": {},
         "dispatcher": {}
     })

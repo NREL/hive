@@ -10,28 +10,8 @@ from tests.mock_lobster import *
 class TestInitializeSimulation(TestCase):
 
     def test_initialize_simulation(self):
-        conf = HiveConfig.build(
-            {
-                "sim": {
-                    'start_time': 0,
-                    'end_time': 10,
-                    'timestep_duration_seconds': 1,
-                    'sim_name': 'init_simulation_test_case',
-                },
-                "io": {
-                    "file_paths": {
-                        "requests_file": "denver_demo_requests.csv",
-                        "rate_structure_file": "rate_structure.csv",
-                        "vehicles_file": "denver_demo_vehicles.csv",
-                        "bases_file": "denver_demo_bases.csv",
-                        "stations_file": "denver_demo_stations.csv",
-                        "mechatronics_file": "mechatronics.csv",
-                        "geofence_file": "downtown_denver.geojson",
+        conf = mock_config()
 
-                    }
-                }
-            }
-        )
         if not os.path.isdir(conf.scenario_output_directory):
             os.makedirs(conf.scenario_output_directory)
 

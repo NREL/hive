@@ -13,7 +13,6 @@ from hive.config.dispatcher_config import DispatcherConfig
 from hive.config.input import Input
 from hive.config.network import Network
 from hive.config.sim import Sim
-from hive.config.system import System
 from hive.util import fs
 
 log = logging.getLogger(__name__)
