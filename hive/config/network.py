@@ -11,10 +11,7 @@ class Network(NamedTuple):
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {
-            'network_type': "euclidean",
-            'default_speed_kmph': 40.0,
-        }
+        return {}
 
     @classmethod
     def required_config(cls) -> Tuple[str, ...]:

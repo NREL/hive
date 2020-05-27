@@ -19,23 +19,7 @@ class DispatcherConfig(NamedTuple):
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {
-            'default_update_interval_seconds': 60 * 15,
-            'matching_range_km_threshold': 20,
-            'charging_range_km_threshold': 20,
-            'base_charging_range_km_threshold': 100,
-            'ideal_fastcharge_soc_limit': 0.8,
-            'max_search_radius_km': 100.0,
-            'valid_dispatch_states': ('idle', 'repositioning'),
-            'active_states': (
-                'idle',
-                'repositioning',
-                'dispatchtrip',
-                'servicingtrip',
-                'dispatchstation',
-                'chargingstation',
-            )
-        }
+        return {}
 
     @classmethod
     def required_config(cls) -> Tuple[str, ...]:

@@ -19,12 +19,7 @@ class Sim(NamedTuple):
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {
-            'timestep_duration_seconds': 60,  # number of seconds per time step in Hive
-            'sim_h3_resolution': 15,
-            'sim_h3_search_resolution': 7,
-            'request_cancel_time_seconds': 600,
-        }
+        return {}
 
     @classmethod
     def required_config(cls) -> Tuple[str, ...]:

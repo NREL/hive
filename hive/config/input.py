@@ -27,16 +27,7 @@ class Input(NamedTuple):
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {
-            'scenario_directory': str,
-            'scenario_file': str,
-            'mechatronics_file': 'mechatronics.csv',
-            'road_network_file': None,
-            'geofence_file': None,
-            'rate_structure_file': None,
-            'charging_price_file': None,
-            'demand_forecast_file': None
-        }
+        return {}
 
     @classmethod
     def required_config(cls) -> Tuple[str, ...]:

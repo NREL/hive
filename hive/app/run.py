@@ -5,8 +5,10 @@ import functools as ft
 import logging
 import os
 import time
+from pathlib import Path
 from typing import NamedTuple, TYPE_CHECKING
 
+import pkg_resources
 import yaml
 
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
@@ -25,14 +27,19 @@ from hive.util import fs
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
 
-log = logging.getLogger("hive")
-# log = logging.getLogger(__name__)
-
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
     'scenario_file',
     help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")'
 )
+parser.add_argument(
+    '--defaults',
+    dest='defaults',
+    action='store_true',
+    help='prints the default hive configuration values'
+)
+
+log = logging.getLogger("hive")
 
 
 def run() -> int:
@@ -48,10 +55,13 @@ def run() -> int:
         args = parser.parse_args()
     except:
         parser.print_help()
+        print_defaults()
         return 1
 
     # main application
     try:
+        if args.defaults:
+            print_defaults()
 
         # create the configuration and load the simulation
         try:
@@ -61,20 +71,16 @@ def run() -> int:
             log.error(fe)
             return 1
 
-        # initialize logging file handler
+        # initialize logging
+        logging.basicConfig(level=env.config.global_config.log_level, format='%(message)s')
         if env.config.global_config.log_run:
             run_log_path = os.path.join(env.config.scenario_output_directory, 'run.log')
             log_fh = logging.FileHandler(run_log_path)
             formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
+            # log_fh.setLevel(env.config.global_config.log_level)
             log_fh.setFormatter(formatter)
             log.addHandler(log_fh)
-            log.info(f"creating run log at {run_log_path}")
-
-        log.info(f"successfully loaded config at {args.scenario_file}")
-        log.info(f"global hive configuration loaded from {env.config.global_config.global_settings_file_path}:")
-        for k, v in env.config.global_config.asdict().items():
-            log.info(f"  {k}: {v}")
-        log.info(f"output directory set to {env.config.scenario_output_directory}")
+            log.info(f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
 
         # build the set of instruction generators which compose the control system for this hive run
         # this ordering is important as the later managers will override any instructions from the previous
@@ -175,6 +181,19 @@ def _welcome_to_hive():
     """
 
     log.info(welcome)
+
+
+def print_defaults():
+    print()
+    defaults_file_str = pkg_resources.resource_filename("hive.resources.defaults", "hive_config.yaml")
+    log.info(f"printing the default scenario configuration stored at {defaults_file_str}:\n")
+    # start build using the Hive config defaults file
+    defaults_file = Path(defaults_file_str)
+
+    with defaults_file.open('r') as f:
+        conf = yaml.safe_load(f)
+        print(yaml.dump(conf))
+    log.info("finished printing default scenario configuration")
 
 
 if __name__ == "__main__":
