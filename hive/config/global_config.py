@@ -14,10 +14,6 @@ class GlobalConfig(NamedTuple):
     local_parallelism_timeout_sec: int
     log_run: bool
     log_sim: bool
-    log_vehicles: bool
-    log_requests: bool
-    log_stations: bool
-    log_dispatcher: bool
     log_sim_config: Set[Optional[str]]
     log_period_seconds: Seconds
 
@@ -33,10 +29,6 @@ class GlobalConfig(NamedTuple):
             'local_parallelism_timeout_sec',
             'log_run',
             'log_sim',
-            'log_vehicles',
-            'log_requests',
-            'log_stations',
-            'log_dispatcher',
             'log_sim_config',
             'log_period_seconds'
         )
