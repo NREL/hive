@@ -1,10 +1,12 @@
-from unittest import TestCase
-from pathlib import Path
-import tempfile
-import yaml
 import os
-from hive.util.fs import global_hive_config_search
+import tempfile
+from pathlib import Path
+from unittest import TestCase
+
+import yaml
+
 from hive.config.global_config import GlobalConfig
+from hive.util.fs import global_hive_config_search
 
 
 class TestDictReaderStepper(TestCase):

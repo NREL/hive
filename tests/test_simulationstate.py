@@ -1,9 +1,9 @@
 from unittest import TestCase
 
+from hive.model.energy.energytype import EnergyType
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
 from tests.mock_lobster import *
-from hive.model.energy.energytype import EnergyType
 
 
 class TestSimulationState(TestCase):

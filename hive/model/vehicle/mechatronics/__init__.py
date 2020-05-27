@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from csv import DictReader
 from typing import Dict
-from pkg_resources import resource_filename
 
 from hive.config.input import Input
 from hive.model.vehicle.mechatronics.bev import BEV

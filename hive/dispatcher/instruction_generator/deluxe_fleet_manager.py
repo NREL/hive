@@ -11,12 +11,12 @@ from hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_sit_idle,
 )
 from hive.external.demo_base_target.fleet_targets import FleetTarget
+from hive.model.energy.energytype import EnergyType
 from hive.state.vehicle_state import *
 from hive.state.vehicle_state import (
     ReserveBase,
     ChargingBase,
 )
-from hive.model.energy.energytype import EnergyType
 
 if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle

@@ -3,6 +3,10 @@ from __future__ import annotations
 import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
+from hive.state.vehicle_state.charging_station import ChargingStation
+from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.repositioning import Repositioning
+
 if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -13,7 +17,6 @@ if TYPE_CHECKING:
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_dispatch_to_station, \
     instruct_vehicles_to_sit_idle
-from hive.state.vehicle_state import Idle, Repositioning, ChargingStation
 
 log = logging.getLogger(__name__)
 

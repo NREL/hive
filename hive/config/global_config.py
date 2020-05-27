@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import NamedTuple, Tuple, Dict, Optional, Set
 
 from hive.config.config_builder import ConfigBuilder
@@ -51,7 +52,15 @@ class GlobalConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict, global_settings_file_path) -> GlobalConfig:
+        # allow Posix-style home directory paths ('~')
+        output_base_directory_absolute = Path(d['output_base_directory']).expanduser() if d['output_base_directory'].startswith("~") else Path(
+            d['output_base_directory'])
+        d['output_base_directory'] = str(output_base_directory_absolute)
+
+        # convert list of logged report types to a Set
         d['log_sim_config'] = set(d['log_sim_config'])
+
+        # store the .hive.yaml file path used
         d['global_settings_file_path'] = global_settings_file_path
         return GlobalConfig(**d)
 

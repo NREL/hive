@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 import logging
 from typing import NamedTuple, TYPE_CHECKING, Callable, Optional
+
 from tqdm import tqdm
 
 from hive.runner.runner_payload import RunnerPayload

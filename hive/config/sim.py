@@ -16,7 +16,6 @@ class Sim(NamedTuple):
     sim_h3_resolution: int
     sim_h3_search_resolution: int
     request_cancel_time_seconds: int
-    idle_energy_rate: float
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -25,7 +24,6 @@ class Sim(NamedTuple):
             'sim_h3_resolution': 15,
             'sim_h3_search_resolution': 7,
             'request_cancel_time_seconds': 600,
-            'idle_energy_rate': 0.8  # (unit.kilowatthour / unit.hour)
         }
 
     @classmethod
@@ -63,7 +61,6 @@ class Sim(NamedTuple):
             sim_h3_resolution=d['sim_h3_resolution'],
             sim_h3_search_resolution=d['sim_h3_search_resolution'],
             request_cancel_time_seconds=int(d['request_cancel_time_seconds']),
-            idle_energy_rate=d['idle_energy_rate'],
         )
 
     def asdict(self) -> Dict:

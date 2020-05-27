@@ -1,4 +1,4 @@
-from typing import Optional, Union, NamedTuple, Tuple
+from typing import Optional, NamedTuple, Tuple
 
 from hive.model.roadnetwork.link import Link
 from hive.util.helpers import H3Ops

@@ -7,9 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple, Dict, Union, Tuple
 
-from hive.config.global_config import GlobalConfig
 from hive.config.config_builder import ConfigBuilder
 from hive.config.dispatcher_config import DispatcherConfig
+from hive.config.global_config import GlobalConfig
 from hive.config.input import Input
 from hive.config.network import Network
 from hive.config.sim import Sim

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
+import json
 from typing import NamedTuple, Dict
 
 from h3 import h3
 
-import json
-
 from hive.util.typealiases import GeoFenceSet, H3Resolution, GeoId
-from hive.util.exception import H3Error
 
 
 class GeoFence(NamedTuple):

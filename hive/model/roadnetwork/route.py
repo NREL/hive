@@ -2,8 +2,8 @@ from typing import Tuple, Optional
 
 from hive.model.roadnetwork.link import Link
 from hive.util import TupleOps
-from hive.util.units import Kilometers
 from hive.util.typealiases import GeoId
+from hive.util.units import Kilometers
 
 Route = Tuple[Link, ...]
 """

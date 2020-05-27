@@ -9,8 +9,8 @@ import immutables
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.state.entity_state import entity_state_ops
 from hive.model.vehicle import Vehicle
+from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing

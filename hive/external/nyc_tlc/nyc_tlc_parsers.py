@@ -3,9 +3,9 @@ from typing import Dict, Union
 
 from h3 import h3
 
+from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.request import Request
 from hive.model.roadnetwork.link import Link
-from hive.model.passenger import Passenger, create_passenger_id
 
 
 def parse_yellow_tripdata_row(row: Dict[str, str],

@@ -5,7 +5,7 @@ import logging
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction_generator.instruction_generator_ops import generate_instructions, InstructionGenerationResult
+from hive.dispatcher.instruction_generator.instruction_generator_ops import generate_instructions
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult

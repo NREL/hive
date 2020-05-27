@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from hive.runner import RunnerPayload
-from tests.mock_lobster import *
 from hive.state.simulation_state.update import Update
+from tests.mock_lobster import *
 
 
 class TestUpdate(TestCase):
