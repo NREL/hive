@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from hive.model.energy.energytype import EnergyType
 from hive.util.exception import StateOfChargeError

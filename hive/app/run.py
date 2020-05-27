@@ -8,7 +8,6 @@ import time
 from typing import NamedTuple, TYPE_CHECKING
 
 import yaml
-from pkg_resources import resource_filename
 
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
@@ -26,8 +25,8 @@ from hive.util import fs
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
 
-root_log = logging.getLogger()
-log = logging.getLogger(__name__)
+log = logging.getLogger("hive")
+# log = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
@@ -53,8 +52,10 @@ def run() -> int:
 
     # main application
     try:
+
+        # create the configuration and load the simulation
         try:
-            scenario_file = fs.check_built_in_scenarios(args.scenario_file)
+            scenario_file = fs.find_scenario(args.scenario_file)
             sim, env = load_simulation(scenario_file)
         except FileNotFoundError as fe:
             log.error(fe)
@@ -62,15 +63,20 @@ def run() -> int:
 
         # initialize logging file handler
         if env.config.global_config.log_run:
-            log_fh = logging.FileHandler(os.path.join(env.config.scenario_output_directory, 'run.log'))
+            run_log_path = os.path.join(env.config.scenario_output_directory, 'run.log')
+            log_fh = logging.FileHandler(run_log_path)
             formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
             log_fh.setFormatter(formatter)
-            root_log.addHandler(log_fh)
+            log.addHandler(log_fh)
+            log.info(f"creating run log at {run_log_path}")
 
-        log.info(f"successfully loaded config: {args.scenario_file}")
+        log.info(f"successfully loaded config at {args.scenario_file}")
+        log.info(f"global hive configuration loaded from {env.config.global_config.global_settings_file_path} and combined with defaults:")
+        for k, v in env.config.global_config.asdict().items():
+            log.info(f"  {k}: {v}")
+        log.info(f"output directory set to {env.config.scenario_output_directory}")
 
         # build the set of instruction generators which compose the control system for this hive run
-
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (

@@ -1,9 +1,10 @@
-import os
-from typing import Optional
 from pathlib import Path
-from hive.config.global_config import GlobalConfig
+from typing import Optional
+
 import pkg_resources
 import yaml
+
+from hive.config.global_config import GlobalConfig
 
 
 def global_hive_config_search() -> GlobalConfig:
@@ -28,9 +29,19 @@ def global_hive_config_search() -> GlobalConfig:
     with Path(default_global_config_file_path).open() as df:
         default = yaml.safe_load(df)
 
-    file_found_in_backprop = _backprop_search(Path.cwd())
+    # search up the directory tree for a config file
+    try:
+        file_found_in_backprop = _backprop_search(Path.cwd())
+    except FileNotFoundError as f:
+        # when running tests on hive, it seems that cwd can be deleted
+        # here we simply drop the cwd backprop search in this case
+        file_found_in_backprop = None
+
+    # check user home directory for a config file
     file_at_home_directory = Path.home().joinpath(".hive.yaml")
     file_found_at_home_directory = file_at_home_directory.is_file()
+
+    # if we found a file (preferring the ones in the directory tree over the user home directory), we use that
     file_found = file_found_in_backprop if file_found_in_backprop else file_at_home_directory if file_found_at_home_directory else None
     if file_found:
         with file_found.open() as f:
@@ -95,7 +106,7 @@ def construct_scenario_asset_path(file: str, scenario_directory: str, default_di
         raise FileNotFoundError(f"cannot find file {file} in directory {scenario_directory}")
 
 
-def check_built_in_scenarios(user_provided_scenario: str) -> Path:
+def find_scenario(user_provided_scenario: str) -> Path:
     """
     allows users to declare built-in scenario filenames without absolute/relative paths or
     expects the user has provided a valid relative/absolute to another file

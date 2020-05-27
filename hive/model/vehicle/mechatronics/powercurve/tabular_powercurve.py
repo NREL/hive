@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Dict
 
 import numpy as np
-import yaml
-from pkg_resources import resource_string
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve

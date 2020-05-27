@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from typing import Iterator, Dict, Union, TextIO, Optional, Callable, Tuple
+from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple
 
 
 class DictReaderIterator:

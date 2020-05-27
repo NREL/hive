@@ -4,8 +4,8 @@ from typing import Optional, NamedTuple, Dict
 
 from h3 import h3
 
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import yaml
 
 from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain

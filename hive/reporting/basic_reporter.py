@@ -1,16 +1,11 @@
 from __future__ import annotations
 
+import json
+import os
 from typing import TYPE_CHECKING
 
-import json
-import logging
-import os
-
 from hive.config.global_config import GlobalConfig
-from hive.config.input import Input
 from hive.reporting.reporter import Reporter
-
-log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -32,7 +27,7 @@ class BasicReporter(Reporter):
             self.sim_log_file = None
 
         self.global_config = global_config
-        
+
     @staticmethod
     def request_asdict(request) -> dict:
         out_dict = request._asdict()
@@ -40,12 +35,12 @@ class BasicReporter(Reporter):
         # deconstruct origin_link
         out_dict['origin_link_id'] = request.origin_link.link_id
         out_dict['origin_geoid'] = request.origin_link.start
-        del(out_dict['origin_link'])
+        del (out_dict['origin_link'])
 
         # deconstruct destination_link
         out_dict['destination_link_id'] = request.destination_link.link_id
         out_dict['destination_geoid'] = request.destination_link.start
-        del(out_dict['destination_link'])
+        del (out_dict['destination_link'])
 
         return out_dict
 
@@ -138,7 +133,7 @@ class BasicReporter(Reporter):
         if not self.global_config.log_sim:
             return
         elif 'report_type' not in report:
-            log.warning(f'must specify report_type in report, not recording report {report}')
+            run_log.warning(f'must specify report_type in report, not recording report {report}')
             return
         elif report['report_type'] not in self.global_config.log_sim_config:
             return

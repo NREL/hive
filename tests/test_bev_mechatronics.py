@@ -1,8 +1,8 @@
 from unittest import TestCase
 
+from hive.model.energy.energytype import EnergyType
 from hive.util.units import hours_to_seconds, KM_TO_MILE, MILE_TO_KM
 from tests.mock_lobster import *
-from hive.model.energy.energytype import EnergyType
 
 
 class TestBEV(TestCase):

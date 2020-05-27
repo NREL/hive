@@ -1,9 +1,6 @@
-from pathlib import Path
+from typing import Optional, Dict
 
 import numpy as np
-import yaml
-from pkg_resources import resource_string
-from typing import Optional, Dict
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.routetraversal import Route

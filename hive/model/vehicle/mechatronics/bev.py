@@ -6,8 +6,8 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powercurve import build_powercurve
 from hive.model.vehicle.mechatronics.powertrain import build_powertrain
-from hive.util.units import *
 from hive.util.typealiases import MechatronicsId
+from hive.util.units import *
 
 if TYPE_CHECKING:
     from hive.model.energy.charger import Charger

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
 import hashlib
 import logging
-import os
+from pathlib import Path
 from typing import NamedTuple, Tuple, Dict, Optional
 
 from hive.config.config_builder import ConfigBuilder

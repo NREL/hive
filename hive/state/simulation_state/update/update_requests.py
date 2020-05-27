@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Iterator, Dict
-from csv import DictReader
 import functools as ft
 import logging
+from csv import DictReader
+from pathlib import Path
+from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 from hive.model.request import Request, RequestRateStructure
 from hive.runner.environment import Environment
@@ -14,7 +14,6 @@ from hive.state.simulation_state.update.simulation_update import SimulationUpdat
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.parsers import time_parser
-from hive.util.typealiases import RequestId
 
 log = logging.getLogger(__name__)
 

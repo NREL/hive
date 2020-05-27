@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import itertools as it
 from abc import abstractmethod, ABC
 from math import radians, cos, sin, asin, sqrt, ceil
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
-import itertools as it
 
 import immutables
 from h3 import h3
