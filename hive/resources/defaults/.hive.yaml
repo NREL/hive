@@ -1,10 +1,6 @@
 output_base_directory: ""
 log_run: True
 log_sim: True
-log_vehicles: True
-log_requests: True
-log_stations: True
-log_dispatcher: True
 log_sim_config:
 - 'vehicle_report'
 - 'station_report'
