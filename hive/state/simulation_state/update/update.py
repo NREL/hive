@@ -10,7 +10,7 @@ from hive.state.simulation_state.update.cancel_requests import CancelRequests
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.step_simulation import StepSimulation
-from hive.state.simulation_state.update.update_requests_in_memory import UpdateRequestsMemory
+from hive.state.simulation_state.update.update_requests import UpdateRequests
 
 if TYPE_CHECKING:
     from hive.runner import RunnerPayload
@@ -45,8 +45,12 @@ class Update(NamedTuple):
 
         # the basic, built-in set of updates which advance time of the supply and demand
         pre_step_update = (
-            ChargingPriceUpdate.build(input.charging_price_file),
-            UpdateRequestsMemory.build(input.requests_file, input.rate_structure_file),
+            ChargingPriceUpdate.build(input.charging_price_file, lazy_file_reading=input.lazy_file_reading),
+            UpdateRequests.build(
+                input.requests_file,
+                input.rate_structure_file,
+                lazy_file_reading=input.lazy_file_reading,
+            ),
             CancelRequests()
         )
 

@@ -25,6 +25,8 @@ class Input(NamedTuple):
     charging_price_file: Optional[str]
     demand_forecast_file: Optional[str]
 
+    lazy_file_reading: bool
+
     @classmethod
     def default_config(cls) -> Dict:
         return {
@@ -35,7 +37,8 @@ class Input(NamedTuple):
             'geofence_file': None,
             'rate_structure_file': None,
             'charging_price_file': None,
-            'demand_forecast_file': None
+            'demand_forecast_file': None,
+            'lazy_file_reading': False,
         }
 
     @classmethod
@@ -86,7 +89,8 @@ class Input(NamedTuple):
             'geofence_file': geofence_file,
             'rate_structure_file': rate_structure_file,
             'charging_price_file': charging_price_file,
-            'demand_forecast_file': demand_forecast_file
+            'demand_forecast_file': demand_forecast_file,
+            'lazy_file_reading': d['lazy_file_reading'],
         }
 
         # if cache provided, check the file has a correct md5 hash value
