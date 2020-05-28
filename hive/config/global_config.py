@@ -16,6 +16,7 @@ class GlobalConfig(NamedTuple):
     log_sim: bool
     log_sim_config: Set[Optional[str]]
     log_period_seconds: Seconds
+    lazy_file_reading: bool
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -30,7 +31,8 @@ class GlobalConfig(NamedTuple):
             'log_run',
             'log_sim',
             'log_sim_config',
-            'log_period_seconds'
+            'log_period_seconds',
+            'lazy_file_reading',
         )
 
     @classmethod

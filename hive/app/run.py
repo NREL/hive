@@ -90,7 +90,7 @@ def run() -> int:
             Dispatcher(env.config.dispatcher),
         )
 
-        update = Update.build(env.config.input, instruction_generators)
+        update = Update.build(env.config, instruction_generators)
         initial_payload = RunnerPayload(sim, env, update)
 
         log.info(f"running simulation for time {initial_payload.e.config.sim.start_time} "
