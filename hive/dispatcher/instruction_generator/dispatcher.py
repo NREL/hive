@@ -60,6 +60,10 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             sort_reversed=True,
             filter_function=lambda r: not r.dispatched_vehicle
         )
+
+        available_vehicles = simulation_state.get_vehicles(filter_function=_is_valid_for_dispatch)
+
+
         for request in unassigned_requests:
             nearest_vehicle = H3Ops.nearest_entity_by_great_circle_distance(geoid=request.origin,
                                                                             entities=simulation_state.vehicles,
