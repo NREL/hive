@@ -10,16 +10,25 @@ from scipy.optimize import linear_sum_assignment
 from hive.model.energy import Charger
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.util import H3Ops
+from hive.util import H3Ops, GeoId
 
 EntityId = str
 
 
 class Entity:
+    """
+    this class is used as a type hint (duck-typing style) for the following functions
+    but is not intended to be implemented.
+    """
     id: EntityId
+    geoid: GeoId
 
 
 class AssignmentSolution(NamedTuple):
+    """
+    each call of find_assignment produces an AssignmentSolution which has any
+    assignments (a pair of two ids), along with the total cost of this assignment.
+    """
     solution: Tuple[Tuple[EntityId, EntityId], ...] = ()
     solution_cost: float = 0.0
 
