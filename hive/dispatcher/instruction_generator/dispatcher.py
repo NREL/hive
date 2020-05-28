@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 from typing import Tuple, NamedTuple, TYPE_CHECKING
+import functools as ft
+from h3 import h3
+
+from hive.dispatcher.instruction_generator import assignment_ops
+from hive.model.request import Request
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -54,6 +59,8 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold
                         and vehicle.id not in already_dispatched)
 
+        # collect the vehicles and requests for the assignment algorithm
+        available_vehicles = simulation_state.get_vehicles(filter_function=_is_valid_for_dispatch)
         unassigned_requests = simulation_state.get_requests(
             sort=True,
             sort_key=lambda r: r.value,
@@ -61,24 +68,8 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             filter_function=lambda r: not r.dispatched_vehicle
         )
 
-        available_vehicles = simulation_state.get_vehicles(filter_function=_is_valid_for_dispatch)
-
-
-        for request in unassigned_requests:
-            nearest_vehicle = H3Ops.nearest_entity_by_great_circle_distance(geoid=request.origin,
-                                                                            entities=simulation_state.vehicles,
-                                                                            entity_search=simulation_state.v_search,
-                                                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                                            is_valid=_is_valid_for_dispatch,
-                                                                            )
-            if nearest_vehicle:
-                instruction = DispatchTripInstruction(
-                    vehicle_id=nearest_vehicle.id,
-                    request_id=request.id,
-                )
-
-                already_dispatched.append(nearest_vehicle.id)
-
-                instructions = instructions + (instruction,)
+        # select assignment of vehicles to requests
+        solution = assignment_ops.find_assignment(available_vehicles, unassigned_requests, assignment_ops.distance_cost)
+        instructions = ft.reduce(lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1])), solution.solution, ())
 
         return self, instructions

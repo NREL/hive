@@ -7,10 +7,9 @@ import immutables
 from h3 import h3
 
 from hive.dispatcher.instruction.instructions import *
-from hive.model.station import Station
+from hive.dispatcher.instruction_generator import assignment_ops
 from hive.util import Kilometers
 from hive.util.helpers import DictOps
-from hive.util.helpers import H3Ops
 
 random.seed(123)
 
@@ -87,27 +86,10 @@ def instruct_vehicles_return_to_base(n: int,
     :return:
     """
 
-    instructions = ()
+    bases = tuple(simulation_state.bases.values())
 
-    for veh in vehicles:
-        if len(instructions) >= n:
-            break
-
-        nearest_base = H3Ops.nearest_entity_by_great_circle_distance(geoid=veh.geoid,
-                                                                     entities=simulation_state.bases,
-                                                                     entity_search=simulation_state.b_search,
-                                                                     sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                                     max_search_distance_km=max_search_radius_km)
-        if nearest_base:
-            instruction = DispatchBaseInstruction(
-                vehicle_id=veh.id,
-                base_id=nearest_base.id,
-            )
-
-            instructions = instructions + (instruction,)
-        else:
-            # no base found or user set the max search radius too low
-            continue
+    solution = assignment_ops.find_assignment(vehicles, bases, assignment_ops.distance_cost)
+    instructions = ft.reduce(lambda acc, pair: (*acc, DispatchBaseInstruction(pair[0], pair[1])), solution.solution, ())
 
     return instructions
 
@@ -180,44 +162,13 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     :return:
     """
 
-    def _nearest_shortest_queue(station: Station) -> float:
-        """
-        sort ordering that prioritizes short vehicle queues where possible
-        :param station: a station
-        :return: the distance metric for this station, a function of it's queue size and great circle distance
-        """
-        dc_chargers = station.total_chargers.get(Charger.DCFC, 0)
-        if not dc_chargers:
-            return float("inf")
-        else:
-            actual_distance = H3Ops.great_circle_distance(veh.geoid, station.geoid)
-            queue_factor = station.enqueued_vehicle_count_for_charger(Charger.DCFC) / dc_chargers
-            distance_metric = actual_distance + actual_distance * queue_factor
-            return distance_metric
-
-    instructions = ()
-
-    for veh in vehicles:
-        if len(instructions) >= n:
-            break
-
-        nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
-                                               entities=simulation_state.stations,
-                                               entity_search=simulation_state.s_search,
-                                               sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                               distance_function=_nearest_shortest_queue,
-                                               max_search_distance_km=max_search_radius_km,
-                                               )
-        if nearest_station:
-            instruction = DispatchStationInstruction(
-                vehicle_id=veh.id,
-                station_id=nearest_station.id,
-                charger=Charger.DCFC,
-            )
-
-            instructions = instructions + (instruction,)
-
-    return instructions
+    if len(vehicles) == 0:
+        return ()
+    else:
+        stations = tuple(simulation_state.stations.values())
+        solution = assignment_ops.find_assignment(vehicles, stations, assignment_ops.nearest_shortest_queue)
+        instructions = ft.reduce(lambda acc, pair: (*acc, DispatchStationInstruction(pair[0], pair[1], Charger.DCFC)), solution.solution, ())
+        return instructions
 
 
 def instruct_vehicles_to_sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:
