@@ -64,18 +64,10 @@ def find_assignment(assignees: Tuple[Entity],
                 upper_bound = cost if cost > upper_bound and cost != float("inf") else upper_bound
                 table[i][j] = cost
 
-        # linear_sum_assignment borks with infinite values; this 2nd loop replaces
-        # float("inf") values with the upper-bound value.
-        #
-        # detail:
-        # while the below loop adds another O(n^2) operation, the time complexity is relatively small
-        # and allows the upper-bound to be computed dynamically. if this creates issues, it can be
-        # replaced by some hard-coded upper-bound value such as `upper_bound = 99999999` if it can be
-        # reasonably expected to exceed all possible values.
+        # linear_sum_assignment borks with infinite values; this 2nd step replaces
+        # float("inf") values with an upper-bound value which is 1 beyond our highest-observed value
         upper_bound += 1
-        for i in range(len(assignees)):
-            for j in range(len(targets)):
-                table[i][j] = upper_bound if table[i][j] == float("inf") else table[i][j]
+        table[table == float("inf")] = upper_bound
 
         # apply the Kuhn-Munkres algorithm
         rows, cols = linear_sum_assignment(table)
