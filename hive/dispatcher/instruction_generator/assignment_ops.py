@@ -56,6 +56,7 @@ def find_assignment(assignees: Tuple[Entity],
         initial_cost = float("inf")
         table = np.full((len(assignees), len(targets)), initial_cost)
 
+        # evaluate the cost of all possible assignments between each assignee/target pair
         upper_bound = float("-inf")
         for i in range(len(assignees)):
             for j in range(len(targets)):
@@ -85,11 +86,7 @@ def find_assignment(assignees: Tuple[Entity],
             this_cost = table[rows[i]][cols[i]]
             return assignment_solution.add(this_pair, this_cost)
 
-        solution = ft.reduce(
-            _add_to_solution,
-            range(len(rows)),
-            AssignmentSolution()
-        )
+        solution = ft.reduce(_add_to_solution, range(len(rows)), AssignmentSolution())
 
         return solution
 
