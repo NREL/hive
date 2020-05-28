@@ -10,6 +10,7 @@ from scipy.optimize import linear_sum_assignment
 from hive.model.energy import Charger
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
+from hive.util import H3Ops
 
 EntityId = str
 
@@ -53,8 +54,14 @@ def find_assignment(assignees: Tuple[Entity],
                 upper_bound = cost if cost > upper_bound and cost != float("inf") else upper_bound
                 table[i][j] = cost
 
-        # linear_sum_assignment borks with infinite values; replace
-        # float("inf") with the upper-bound value
+        # linear_sum_assignment borks with infinite values; this 2nd loop replaces
+        # float("inf") values with the upper-bound value.
+        #
+        # detail:
+        # while the below loop adds another O(n^2) operation, the time complexity is relatively small
+        # and allows the upper-bound to be computed dynamically. if this creates issues, it can be
+        # replaced by some hard-coded upper-bound value such as `upper_bound = 99999999` if it can be
+        # reasonably expected to exceed all possible values.
         upper_bound += 1
         for i in range(len(assignees)):
             for j in range(len(targets)):
@@ -78,13 +85,35 @@ def find_assignment(assignees: Tuple[Entity],
         return solution
 
 
-def distance_cost(a: Entity, b: Entity) -> float:
-    return h3.h3_distance(a.geoid, b.geoid)
+def h3_distance_cost(a: Entity, b: Entity) -> float:
+    """
+    cost function based on the h3_distance between two entities
+    :param a: one entity, expected to have a geoid
+    :param b: another entity, expected to have a geoid
+    :return: the h3_distance (number of cells between)
+    """
+    distance = h3.h3_distance(a.geoid, b.geoid)
+    return distance
+
+
+def great_circle_distance_cost(a: Entity, b: Entity) -> float:
+    """
+    cost function based on the great circle distance between two entities.
+    reverts h3 geoid to a lat/lon pair and calculates the haversine distance.
+
+    :param a: one entity, expected to have a geoid
+    :param b: another entity, expected to have a geoid
+    :return: the haversine (great circle) distance in lat/lon
+    """
+    distance = H3Ops.great_circle_distance(a.geoid, b.geoid)
+    return distance
 
 
 def nearest_shortest_queue(vehicle: Vehicle, station: Station) -> float:
     """
-    sort ordering that prioritizes short vehicle queues where possible
+    sort ordering that prioritizes short vehicle queues where possible, using h3_distance
+    as the base distance metric and extending that value by the proportion of available chargers
+
     :param vehicle: a vehicle
     :param station: a station
     :return: the distance metric for this station, a function of it's queue size and distance
@@ -93,7 +122,6 @@ def nearest_shortest_queue(vehicle: Vehicle, station: Station) -> float:
     if not dc_chargers:
         return float("inf")
     else:
-        # actual_distance = H3Ops.great_circle_distance(veh.geoid, station.geoid)
         distance = h3.h3_distance(vehicle.geoid, station.geoid)
         queue_factor = station.enqueued_vehicle_count_for_charger(Charger.DCFC) / dc_chargers
         distance_metric = distance + distance * queue_factor

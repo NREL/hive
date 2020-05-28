@@ -88,7 +88,7 @@ def instruct_vehicles_return_to_base(n: int,
 
     bases = tuple(simulation_state.bases.values())
 
-    solution = assignment_ops.find_assignment(vehicles, bases, assignment_ops.distance_cost)
+    solution = assignment_ops.find_assignment(vehicles, bases, assignment_ops.h3_distance_cost)
     instructions = ft.reduce(lambda acc, pair: (*acc, DispatchBaseInstruction(pair[0], pair[1])), solution.solution, ())
 
     return instructions
