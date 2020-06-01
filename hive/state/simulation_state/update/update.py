@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 
-from hive.config.input import Input
+from hive.config import HiveConfig
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.cancel_requests import CancelRequests
@@ -30,14 +30,14 @@ class Update(NamedTuple):
 
     @classmethod
     def build(cls,
-              input: Input,
+              config: HiveConfig,
               instruction_generators: Tuple[InstructionGenerator, ...],
               instruction_generator_update_fn: Callable[
                   [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a,
                                                                                                     b: None) -> Update:
         """
         constructs the functionality to update the simulation each time step
-        :param input: the scenario io configuration
+        :param config:
         :param instruction_generators: any overriding dispatcher functionality
         :param instruction_generator_update_fn: user API for modifying InstructionGenerator models at each time step
         :return: the Update that will be applied at each time step
@@ -45,8 +45,15 @@ class Update(NamedTuple):
 
         # the basic, built-in set of updates which advance time of the supply and demand
         pre_step_update = (
-            ChargingPriceUpdate.build(input.charging_price_file),
-            UpdateRequests.build(input.requests_file, input.rate_structure_file),
+            ChargingPriceUpdate.build(
+                config.input.charging_price_file,
+                lazy_file_reading=config.global_config.lazy_file_reading,
+            ),
+            UpdateRequests.build(
+                config.input.requests_file,
+                config.input.rate_structure_file,
+                lazy_file_reading=config.global_config.lazy_file_reading,
+            ),
             CancelRequests()
         )
 

@@ -139,4 +139,5 @@ class DictReaderStepper:
         return self._iterator
 
     def close(self):
-        self._file.close()
+        if self._file:
+            self._file.close()

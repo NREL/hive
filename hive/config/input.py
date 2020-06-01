@@ -77,7 +77,7 @@ class Input(NamedTuple):
             'geofence_file': geofence_file,
             'rate_structure_file': rate_structure_file,
             'charging_price_file': charging_price_file,
-            'demand_forecast_file': demand_forecast_file
+            'demand_forecast_file': demand_forecast_file,
         }
 
         # if cache provided, check the file has a correct md5 hash value

@@ -26,12 +26,18 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
     rate_structure: RequestRateStructure
 
     @classmethod
-    def build(cls, request_file: str, rate_structure_file: Optional[str] = None):
+    def build(
+            cls,
+            request_file: str,
+            rate_structure_file: Optional[str] = None,
+            lazy_file_reading: bool = False,
+    ):
         """
         reads a requests file and builds a UpdateRequestsFromFile SimulationUpdateFunction
 
         :param request_file: file path for requests
         :param rate_structure_file:
+        :param lazy_file_reading: a flag to enable lazy file loading. if false, the update function loads all reqs in memory
         :return: a SimulationUpdate function pointing at the first line of a request file
         :raises: an exception if there were issues loading the file
         """
@@ -48,11 +54,18 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
 
-        error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
-        if error:
-            raise error
+        if lazy_file_reading:
+            error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
+            if error:
+                raise error
         else:
-            return UpdateRequests(stepper, rate_structure)
+            with req_path.open() as f:
+                # converting to tuple then back to iterator should bring the whole file into memory
+                reader = iter(tuple(DictReader(f)))
+
+            stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=time_parser)
+
+        return UpdateRequests(stepper, rate_structure)
 
     def update(self,
                sim_state: SimulationState,
@@ -151,5 +164,3 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     )
 
     return updated_sim
-
-
