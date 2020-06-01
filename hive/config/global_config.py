@@ -14,6 +14,7 @@ class GlobalConfig(NamedTuple):
     local_parallelism_timeout_sec: int
     log_run: bool
     log_sim: bool
+    log_level: str
     log_sim_config: Set[Optional[str]]
     log_period_seconds: Seconds
     lazy_file_reading: bool
@@ -30,6 +31,7 @@ class GlobalConfig(NamedTuple):
             'local_parallelism_timeout_sec',
             'log_run',
             'log_sim',
+            'log_level',
             'log_sim_config',
             'log_period_seconds',
             'lazy_file_reading',

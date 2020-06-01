@@ -54,7 +54,7 @@ def initialize_simulation(
             default_speed_kmph=config.network.default_speed_kmph,
         )
     else:
-        raise IOError(f"road network type {config.network.network_type} not registered as a valid network in hive.")
+        raise IOError(f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
 
     sim_initial = SimulationState(
         road_network=road_network,
