@@ -219,7 +219,7 @@ HIVE intends to implement the following features:
 - [x] Integration into OpenAI Gym for RL-based control
 - [ ] Time-varying network speeds
 - [ ] Integration into vehicle powertrain, grid energy, smart charging models
-- [ ] Support for state-of-the-art RL control algorithms
+- [x] Support for state-of-the-art RL control algorithms
 - [x] Charge Queueing
 - [ ] Ridehail Pooling
 - [ ] Gasoline vehicles
