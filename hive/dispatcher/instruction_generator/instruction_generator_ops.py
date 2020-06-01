@@ -9,7 +9,7 @@ from h3 import h3
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.util import Kilometers
-from hive.util.helpers import DictOps
+from hive.util.helpers import DictOps, H3Ops
 
 random.seed(123)
 
@@ -162,13 +162,29 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     :return:
     """
 
-    if len(vehicles) == 0:
-        return ()
-    else:
-        stations = tuple(simulation_state.stations.values())
-        solution = assignment_ops.find_assignment(vehicles, stations, assignment_ops.nearest_shortest_queue)
-        instructions = ft.reduce(lambda acc, pair: (*acc, DispatchStationInstruction(pair[0], pair[1], Charger.DCFC)), solution.solution, ())
-        return instructions
+    instructions = ()
+
+    for veh in vehicles:
+        if len(instructions) >= n:
+            break
+
+        nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
+                                               entities=simulation_state.stations,
+                                               entity_search=simulation_state.s_search,
+                                               sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                               max_search_distance_km=max_search_radius_km,
+                                               is_valid=lambda s: s.has_available_charger(Charger.DCFC),
+                                               distance_function=lambda s: assignment_ops.nearest_shortest_queue(veh, s))
+        if nearest_station:
+            instruction = DispatchStationInstruction(
+                vehicle_id=veh.id,
+                station_id=nearest_station.id,
+                charger=Charger.DCFC,
+            )
+
+            instructions = instructions + (instruction,)
+
+    return instructions
 
 
 def instruct_vehicles_to_sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Instruction]:

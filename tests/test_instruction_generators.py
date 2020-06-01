@@ -73,8 +73,10 @@ class TestInstructionGenerators(TestCase):
 
         # invariant: a queue can be created even if plugs are available and
         # our dispatcher only considers the queue size in the distance metric
-        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(Charger.DCFC)
+        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(Charger.DCFC).checkout_charger(Charger.DCFC)
         s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
+
+        self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger)")
 
         sim = mock_sim(h3_location_res=15, h3_search_res=5, vehicles=(veh_low_battery,), stations=(s1, s2,))
         env = mock_env()
