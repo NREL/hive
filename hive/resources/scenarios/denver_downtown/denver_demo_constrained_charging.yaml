@@ -18,3 +18,7 @@ input:
   geofence_file: downtown_denver.geojson
   demand_forecast_file: denver_demand.csv
   road_network_file: downtown_denver.xml
+dispatcher:
+  valid_dispatch_states:
+    - Idle
+    - Repositioning

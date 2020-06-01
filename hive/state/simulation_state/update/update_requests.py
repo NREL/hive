@@ -123,9 +123,12 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :return: the updated sim and updated reporting
         """
         error, req = Request.from_row(row, env, acc.simulation_state.road_network)
-        this_req_cancel_time = req.departure_time + env.config.sim.request_cancel_time_seconds
+        this_req_cancel_time = req.departure_time + env.config.sim.request_cancel_time_seconds if req else None
         if error:
             log.error(error)
+            return acc
+        elif not req:
+            log.error(f"an unexpected error occurred with request row: {row}")
             return acc
         elif this_req_cancel_time <= acc.simulation_state.sim_time:
             # cannot add request that should already be cancelled
