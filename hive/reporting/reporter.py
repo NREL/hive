@@ -8,11 +8,6 @@ class Reporter(ABC):
     A class that generates reports for the simulation.
     """
 
-    @property
-    @abstractmethod
-    def sim_log_file(self):
-        pass
-
     @abstractmethod
     def log_sim_state(self, sim_state: 'SimulationState'):
         """
@@ -28,5 +23,13 @@ class Reporter(ABC):
         Writes a single report to the simulation log.
 
         :param report:
+        :return:
+        """
+
+    @abstractmethod
+    def close(self):
+        """
+        wrap up anything here. called at the end of the simulation
+
         :return:
         """

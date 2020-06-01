@@ -1,8 +1,8 @@
 from typing import NamedTuple, Tuple, Optional
 
-from hive.state.vehicle_state import VehicleState
-from hive.util.typealiases import VehicleId
 from hive.runner.environment import Environment
+from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.util.typealiases import VehicleId
 
 
 class OutOfService(NamedTuple, VehicleState):

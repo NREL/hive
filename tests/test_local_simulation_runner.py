@@ -17,7 +17,7 @@ class TestLocalSimulationRunner(TestCase):
             passengers=2
         )
         initial_sim = mock_sim(
-            vehicles=(mock_vehicle(capacity_kwh=100), ),
+            vehicles=(mock_vehicle(), ),
             stations=(mock_station(),),
             bases=(mock_base(stall_count=5),),
         )

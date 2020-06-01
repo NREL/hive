@@ -1,7 +1,7 @@
 from typing import NamedTuple, Dict
 from unittest import TestCase
 
-from hive.config import ConfigBuilder
+from hive.config.config_builder import ConfigBuilder
 
 
 class TestConfigBuilder(TestCase):
@@ -13,7 +13,7 @@ class TestConfigBuilder(TestCase):
 
         test_class = ConfigBuilder.build(
             default_config=defaults,
-            required_config={},
+            required_config=(),
             config_constructor=TestConfigBuilderAssets.constructor,
             config=None
         )
@@ -74,7 +74,7 @@ class TestConfigBuilder(TestCase):
 
         test_class = ConfigBuilder.build(
             default_config={},
-            required_config={},
+            required_config=(),
             config_constructor=TestConfigBuilderAssets.constructor,
             config=config
         )

@@ -4,6 +4,8 @@ import functools as ft
 import logging
 from typing import NamedTuple, TYPE_CHECKING, Callable, Optional
 
+from tqdm import tqdm
+
 from hive.runner.runner_payload import RunnerPayload
 
 log = logging.getLogger(__name__)
@@ -28,11 +30,11 @@ class LocalSimulationRunner(NamedTuple):
         :return: the final simulation state and dispatcher state
         """
 
-        time_steps = range(
+        time_steps = tqdm(range(
             runner_payload.e.config.sim.start_time,
             runner_payload.e.config.sim.end_time,
             runner_payload.e.config.sim.timestep_duration_seconds,
-        )
+        ))
 
         final_payload = ft.reduce(
             _run_step_in_context(runner_payload.e),
@@ -63,15 +65,11 @@ def _run_step_in_context(env: Environment) -> Callable:
         updated_payload, reports = payload.u.apply_update(payload)
         updated_sim = updated_payload.s
 
-        if updated_sim.sim_time % env.config.io.log_period_seconds == 0:
+        if updated_sim.sim_time % env.config.global_config.log_period_seconds == 0:
             env.reporter.log_sim_state(updated_sim)
 
             for report in reports:
                 env.reporter.sim_report(report)
-
-        if updated_sim.sim_time % env.config.io.progress_period_seconds == 0:
-            msg = f"simulating {updated_sim.sim_time} of {env.config.sim.end_time} seconds"
-            log.info(msg)
 
         return updated_payload
 

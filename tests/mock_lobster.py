@@ -1,8 +1,10 @@
 import functools as ft
 import math
+from pathlib import Path
 from typing import Dict, Union, Callable
 
 import immutables
+import yaml
 from h3 import h3
 from pkg_resources import resource_filename
 
@@ -17,10 +19,6 @@ from hive.dispatcher.instruction_generator.instruction_generator import Instruct
 from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
-from hive.model.energy.energysource import EnergySource
-from hive.model.energy.energytype import EnergyType
-from hive.model.energy.powercurve import Powercurve
-from hive.model.energy.powertrain import Powertrain
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
@@ -30,17 +28,20 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
-from hive.model.vehicle import VehicleType
+from hive.model.vehicle.mechatronics.bev import BEV
+from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
+from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
 from hive.state.simulation_state.update.update import Update
-from hive.state.vehicle_state import VehicleState, Idle
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import *
-from hive.util.units import KwH, Kw, Ratio, Kmph, Seconds, SECONDS_TO_HOURS, Currency, Kilometers
+from hive.util.units import Ratio, Kmph, Seconds, Currency
+from hive.state.vehicle_state.vehicle_state import VehicleState
 
 
 class DefaultIds:
@@ -62,16 +63,8 @@ class DefaultIds:
         return "b0"
 
     @classmethod
-    def mock_powertrain_id(cls) -> PowertrainId:
-        return "pt0"
-
-    @classmethod
-    def mock_powercurve_id(cls) -> PowercurveId:
-        return "pc0"
-
-    @classmethod
-    def mock_vehicle_type_id(cls) -> VehicleTypeId:
-        return "vt0"
+    def mock_mechatronics_id(cls) -> MechatronicsId:
+        return "bev"
 
 
 def mock_geojson() -> Dict:
@@ -98,27 +91,12 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
 
 
 def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
-    road_network_file = resource_filename('hive.resources.road_network', 'downtown_denver.xml')
+    road_network_file = resource_filename('hive.resources.scenarios.denver_downtown.road_network', 'downtown_denver.xml')
     return OSMRoadNetwork(
         road_network_file=road_network_file,
         geofence=mock_geofence(resolution=geofence_res),
         sim_h3_resolution=h3_res,
     )
-
-
-def mock_energy_source(
-        powercurve_id: PowercurveId = DefaultIds.mock_powercurve_id(),
-        energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity_kwh: KwH = 100,
-        max_charge_acceptance_kw: Kw = 50.0,
-        soc: Ratio = 0.25,
-) -> EnergySource:
-    return EnergySource.build(
-        powercurve_id=powercurve_id,
-        energy_type=energy_type,
-        capacity_kwh=capacity_kwh,
-        max_charge_acceptance_kw=max_charge_acceptance_kw,
-        soc=soc)
 
 
 def mock_base(
@@ -169,6 +147,8 @@ def mock_station_from_geoid(
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
+    elif isinstance(chargers, dict):
+        chargers = immutables.Map(chargers)
     return Station.build(station_id, geoid, road_network, chargers)
 
 
@@ -225,17 +205,42 @@ def mock_request_from_geoids(
     )
 
 
-def mock_vehicle_type(powertrain_id: str = DefaultIds.mock_powertrain_id(),
-                      powercurve_id: str = DefaultIds.mock_powercurve_id(),
-                      capacity_kwh: KwH = 100,
-                      max_charge_acceptance_kw: Kw = 50.0,
-                      operating_cost_km: Currency = 0.1, ) -> VehicleType:
-    return VehicleType(
-        powertrain_id=powertrain_id,
-        powercurve_id=powercurve_id,
-        capacity_kwh=capacity_kwh,
-        max_charge_acceptance=max_charge_acceptance_kw,
-        operating_cost_km=operating_cost_km
+def mock_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
+    powertrain_file = resource_filename("hive.resources.powertrain", "normalized.yaml")
+    with Path(powertrain_file).open() as f:
+        data = yaml.safe_load(f)
+        return TabularPowertrain(data=data, nominal_watt_hour_per_mile=nominal_watt_hour_per_mile)
+
+
+def mock_powercurve(
+        nominal_max_charge_kw=50,
+        battery_capacity_kwh=50,
+) -> TabularPowercurve:
+    powercurve_file = resource_filename("hive.resources.powercurve", "normalized.yaml")
+    with Path(powercurve_file).open() as f:
+        data = yaml.safe_load(f)
+        return TabularPowercurve(
+            data=data,
+            nominal_max_charge_kw=nominal_max_charge_kw,
+            battery_capacity_kwh=battery_capacity_kwh,
+        )
+
+
+def mock_bev(
+        battery_capacity_kwh=50,
+        idle_kwh_per_hour=0.8,
+        nominal_watt_hour_per_mile=225,
+        nominal_max_charge_kw=50,
+        charge_taper_cutoff_kw=10,
+) -> BEV:
+    return BEV(
+        mechatronics_id='bev',
+        battery_capacity_kwh=battery_capacity_kwh,
+        idle_kwh_per_hour=idle_kwh_per_hour,
+        powertrain=mock_powertrain(nominal_watt_hour_per_mile),
+        powercurve=mock_powercurve(nominal_max_charge_kw, battery_capacity_kwh),
+        nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
+        charge_taper_cutoff_kw=charge_taper_cutoff_kw,
     )
 
 
@@ -244,34 +249,22 @@ def mock_vehicle(
         lat: float = 39.7539,
         lon: float = -104.974,
         h3_res: int = 15,
-        powertrain_id: str = DefaultIds.mock_powertrain_id(),
-        powercurve_id: str = DefaultIds.mock_powercurve_id(),
-        energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity_kwh: KwH = 100,
-        soc: Ratio = 0.25,
-        max_charge_acceptance_kw: Kw = 50.0,
-        operating_cost_km: Currency = 0.1,
+        mechatronics_id: MechatronicsId = DefaultIds.mock_mechatronics_id(),
         vehicle_state: Optional[VehicleState] = None,
+        soc: Ratio = 1,
 
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
-    energy_source = mock_energy_source(
-        powercurve_id=powercurve_id,
-        energy_type=energy_type,
-        capacity_kwh=capacity_kwh,
-        max_charge_acceptance_kw=max_charge_acceptance_kw,
-        soc=soc
-    )
+    mechatronics = mock_env().mechatronics.get(mechatronics_id)
+    initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
     link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
-        powertrain_id=powertrain_id,
-        powercurve_id=powercurve_id,
-        energy_source=energy_source,
+        mechatronics_id=mechatronics_id,
+        energy=initial_energy,
         link=link,
-        operating_cost_km=operating_cost_km,
         vehicle_state=state,
     )
 
@@ -279,73 +272,21 @@ def mock_vehicle(
 def mock_vehicle_from_geoid(
         vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
-        powertrain_id: str = DefaultIds.mock_powertrain_id(),
-        powercurve_id: str = DefaultIds.mock_powercurve_id(),
-        energy_type: EnergyType = EnergyType.ELECTRIC,
-        capacity_kwh: KwH = 100,
-        soc: Ratio = 0.25,
-        max_charge_acceptance_kw: Kw = 50.0,
-        road_network: RoadNetwork = mock_network(h3_res=15),
-        operating_cost_km: Currency = 0.1,
-        vehicle_state: Optional[VehicleState] = None
+        mechatronics_id: MechatronicsId = DefaultIds.mock_mechatronics_id(),
+        vehicle_state: Optional[VehicleState] = None,
+        soc: Ratio = 1,
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
-    energy_source = mock_energy_source(
-        powercurve_id=powercurve_id,
-        energy_type=energy_type,
-        capacity_kwh=capacity_kwh,
-        max_charge_acceptance_kw=max_charge_acceptance_kw,
-        soc=soc
-    )
-
-    link = road_network.link_from_geoid(geoid)
+    mechatronics = mock_env().mechatronics.get(mechatronics_id)
+    initial_energy = mechatronics.initial_energy(soc)
+    link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
-        powertrain_id=powertrain_id,
-        powercurve_id=powercurve_id,
-        energy_source=energy_source,
+        mechatronics_id=mechatronics_id,
+        energy=initial_energy,
         link=link,
-        operating_cost_km=operating_cost_km,
         vehicle_state=state
     )
-
-
-def mock_powertrain(
-        powertrain_id: PowertrainId = DefaultIds.mock_powertrain_id(),
-        energy_type: EnergyType = EnergyType.ELECTRIC,
-        energy_cost_kwh: KwH = 0.01
-) -> Powertrain:
-    class MockPowertrain(Powertrain):
-        def get_id(self) -> PowertrainId:
-            return powertrain_id
-
-        def get_energy_type(self) -> EnergyType:
-            return energy_type
-
-        def energy_cost(self, route: Route) -> KwH:
-            return energy_cost_kwh
-
-    return MockPowertrain()
-
-
-def mock_powercurve(
-        powercurve_id: PowercurveId = DefaultIds.mock_powercurve_id(),
-        energy_type: EnergyType = EnergyType.ELECTRIC
-) -> Powercurve:
-    class MockPowercurve(Powercurve):
-        def get_id(self) -> PowercurveId:
-            return powercurve_id
-
-        def get_energy_type(self) -> EnergyType:
-            return energy_type
-
-        def refuel(self, energy_source: EnergySource, charger: Charger,
-                   duration_seconds: Seconds = 1) -> EnergySource:
-            added_kwh = charger.power_kw * (duration_seconds * SECONDS_TO_HOURS)
-            updated_energy_source = energy_source.load_energy(added_kwh)
-            return updated_energy_source
-
-    return MockPowercurve()
 
 
 def mock_sim(
@@ -395,21 +336,21 @@ def mock_config(
         timestep_duration_seconds: Seconds = 1,
         sim_h3_location_resolution: int = 15,
         sim_h3_search_resolution: int = 9,
-        file_paths: Dict = None,
+        input: Dict = None,
 ) -> HiveConfig:
-    if not file_paths:
-        file_paths = {
+    if not input:
+        input = {
             'vehicles_file': 'denver_demo_vehicles.csv',
             'requests_file': 'denver_demo_requests.csv',
             'bases_file': 'denver_demo_bases.csv',
             'stations_file': 'denver_demo_stations.csv',
             'charging_price_file': 'denver_charging_prices_by_geoid.csv',
             'rate_structure_file': 'rate_structure.csv',
-            'vehicle_types_file': 'default_vehicle_types.csv',
+            'mechatronics_file': 'mechatronics.csv',
             'geofence_file': 'downtown_denver.geojson',
-            'demand_forecast_file': 'nyc_demand.csv'
+            'demand_forecast_file': 'denver_demand.csv'
         }
-    return HiveConfig.build({
+    return HiveConfig.build(Path(resource_filename("hive.resources.scenarios.denver_downtown", "denver_demo.yaml")), {
         "sim": {
             'start_time': start_time,
             'end_time': end_time,
@@ -418,9 +359,7 @@ def mock_config(
             'sim_h3_search_resolution': sim_h3_search_resolution,
             'sim_name': 'test_sim',
         },
-        "io": {
-            'file_paths': file_paths,
-        },
+        "input": input,
         "network": {},
         "dispatcher": {}
     })
@@ -428,25 +367,20 @@ def mock_config(
 
 def mock_env(
         config: HiveConfig = mock_config(),
-        powercurves: Optional[Tuple[Powercurve, ...]] = None,
-        powertrains: Optional[Tuple[Powertrain, ...]] = None
+        mechatronics: Dict[MechatronicsId, MechatronicsInterface] = None,
 ) -> Environment:
-    if powercurves is None:
-        powercurves = (mock_powercurve(),)
-    if powertrains is None:
-        powertrains = (mock_powertrain(),)
-    vehicle_types = immutables.Map({DefaultIds.mock_vehicle_type_id(): mock_vehicle_type()})
+    if mechatronics is None:
+        mechatronics = {
+            DefaultIds.mock_mechatronics_id(): mock_bev(),
+        }
 
     initial_env = Environment(
         config=config,
         reporter=mock_reporter(),
-        vehicle_types=vehicle_types
+        mechatronics=mechatronics,
     )
 
-    env_pc = ft.reduce(lambda e, pc: e.add_powercurve(pc), powercurves, initial_env)
-    env = ft.reduce(lambda e, pt: e.add_powertrain(pt), powertrains, env_pc)
-
-    return env
+    return initial_env
 
 
 def mock_reporter() -> Reporter:
@@ -462,6 +396,9 @@ def mock_reporter() -> Reporter:
             pass
 
         def single_report(self, report: str):
+            pass
+
+        def close(self):
             pass
 
     return MockReporter()
@@ -519,6 +456,7 @@ def mock_route_from_geoids(
 def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
+    each link is approximately 1 kilometer
     """
 
     links = {
@@ -544,37 +482,6 @@ def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
     return tuple(mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values())
 
 
-def mock_graph_network(links: Optional[Dict[str, Link]] = None, h3_res: int = 15) -> RoadNetwork:
-    links = mock_graph_links(h3_res=h3_res) if links is None else links
-
-    class MockGraphNetwork(RoadNetwork):
-        """
-        a road network that has a fixed set of network links and only implements "get_link"
-        """
-
-        def __init__(self, links: Dict[str, Link], h3_res: int):
-            self.sim_h3_resolution = h3_res
-
-            self.links = links
-
-        def route(self, origin: GeoId, destination: GeoId) -> Tuple[Link, ...]:
-            pass
-
-        def distance_km(self, origin: Link, destination: Link) -> Kilometers:
-            pass
-
-        def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
-            pass
-
-        def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
-            pass
-
-        def geoid_within_geofence(self, geoid: GeoId) -> bool:
-            return True
-
-    return MockGraphNetwork(links, h3_res)
-
-
 def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     class MockForecaster(NamedTuple, ForecasterInterface):
         def generate_forecast(
@@ -591,27 +498,24 @@ def mock_instruction_generators_with_mock_forecast(
         config: HiveConfig = mock_config(),
         forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
     return (
-        BaseFleetManager(config.dispatcher.base_vehicles_charging_limit),
+        BaseFleetManager(config.dispatcher),
         PositionFleetManager(mock_forecaster(forecast),
-                             config.dispatcher.fleet_sizing_update_interval_seconds,
-                             config.network.max_search_radius_km),
-        ChargingFleetManager(config.dispatcher.charging_low_soc_threshold,
-                             config.dispatcher.ideal_fastcharge_soc_limit,
-                             config.network.max_search_radius_km),
-        Dispatcher(config.dispatcher.matching_low_soc_threshold),
+                             config.dispatcher),
+        ChargingFleetManager(config.dispatcher),
+        Dispatcher(config.dispatcher),
     )
 
 
 def mock_update(config: Optional[HiveConfig] = None,
                 instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None) -> Update:
     if config and instruction_generators:
-        return Update.build(config.io, instruction_generators)
+        return Update.build(config, instruction_generators)
     elif config:
         instruction_generators = mock_instruction_generators_with_mock_forecast(config)
-        return Update.build(config.io, instruction_generators)
+        return Update.build(config, instruction_generators)
     elif instruction_generators:
         config = mock_config()
-        return Update.build(config.io, instruction_generators)
+        return Update.build(config, instruction_generators)
     else:
         conf = mock_config()
         instruction_generators = mock_instruction_generators_with_mock_forecast(conf)

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional
 import functools as ft
+from typing import NamedTuple, Optional
+
 from hive.util.typealiases import *
 
 

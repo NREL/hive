@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Iterator, Dict
-from csv import DictReader
 import functools as ft
 import logging
+from csv import DictReader
+from pathlib import Path
+from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 from hive.model.request import Request, RequestRateStructure
 from hive.runner.environment import Environment
@@ -14,7 +14,6 @@ from hive.state.simulation_state.update.simulation_update import SimulationUpdat
 from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.parsers import time_parser
-from hive.util.typealiases import RequestId
 
 log = logging.getLogger(__name__)
 
@@ -27,12 +26,18 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
     rate_structure: RequestRateStructure
 
     @classmethod
-    def build(cls, request_file: str, rate_structure_file: Optional[str] = None):
+    def build(
+            cls,
+            request_file: str,
+            rate_structure_file: Optional[str] = None,
+            lazy_file_reading: bool = False,
+    ):
         """
         reads a requests file and builds a UpdateRequestsFromFile SimulationUpdateFunction
 
         :param request_file: file path for requests
         :param rate_structure_file:
+        :param lazy_file_reading: a flag to enable lazy file loading. if false, the update function loads all reqs in memory
         :return: a SimulationUpdate function pointing at the first line of a request file
         :raises: an exception if there were issues loading the file
         """
@@ -49,11 +54,18 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
         if not req_path.is_file():
             raise IOError(f"{request_file} is not a valid path to a request file")
 
-        error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
-        if error:
-            raise error
+        if lazy_file_reading:
+            error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
+            if error:
+                raise error
         else:
-            return UpdateRequests(stepper, rate_structure)
+            with req_path.open() as f:
+                # converting to tuple then back to iterator should bring the whole file into memory
+                reader = iter(tuple(DictReader(f)))
+
+            stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=time_parser)
+
+        return UpdateRequests(stepper, rate_structure)
 
     def update(self,
                sim_state: SimulationState,
@@ -111,9 +123,12 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
         :return: the updated sim and updated reporting
         """
         error, req = Request.from_row(row, env, acc.simulation_state.road_network)
-        this_req_cancel_time = req.departure_time + env.config.sim.request_cancel_time_seconds
+        this_req_cancel_time = req.departure_time + env.config.sim.request_cancel_time_seconds if req else None
         if error:
             log.error(error)
+            return acc
+        elif not req:
+            log.error(f"an unexpected error occurred with request row: {row}")
             return acc
         elif this_req_cancel_time <= acc.simulation_state.sim_time:
             # cannot add request that should already be cancelled
@@ -152,5 +167,3 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     )
 
     return updated_sim
-
-

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import argparse
 import functools as ft
 import logging
 import os
-import sys
 import time
-import yaml
-from typing import NamedTuple
+from pathlib import Path
+from typing import NamedTuple, TYPE_CHECKING
 
-from hive.app.logging_config import LOGGING_CONFIG
+import pkg_resources
+import yaml
+
 from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
@@ -20,10 +22,24 @@ from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
+from hive.util import fs
 
+if TYPE_CHECKING:
+    from hive.runner.environment import Environment
 
-root_log = logging.getLogger()
-log = logging.getLogger(__name__)
+parser = argparse.ArgumentParser(description="run hive")
+parser.add_argument(
+    'scenario_file',
+    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")'
+)
+parser.add_argument(
+    '--defaults',
+    dest='defaults',
+    action='store_true',
+    help='prints the default hive configuration values'
+)
+
+log = logging.getLogger("hive")
 
 
 def run() -> int:
@@ -34,62 +50,73 @@ def run() -> int:
 
     _welcome_to_hive()
 
-    if len(sys.argv) == 1:
-        log.info("please specify a scenario file to run.")
+    # parse arguments
+    try:
+        args = parser.parse_args()
+    except:
+        parser.print_help()
+        print_defaults()
         return 1
 
+    # main application
     try:
-        scenario_file = sys.argv[1]
+        if args.defaults:
+            print_defaults()
 
-        cwd = os.getcwd()
-        scenario_path = scenario_file if os.path.isfile(scenario_file) else f"{cwd}/{scenario_file}"
+        # create the configuration and load the simulation
+        try:
+            scenario_file = fs.find_scenario(args.scenario_file)
+            sim, env = load_simulation(scenario_file)
+        except FileNotFoundError as fe:
+            log.error(fe)
+            return 1
 
-        sim, env = load_simulation(scenario_path)
-
-        log_fh = logging.FileHandler(os.path.join(env.config.output_directory, 'run.log'))
-        formatter = logging.Formatter(LOGGING_CONFIG['formatters']['simple']['format'])
-        log_fh.setFormatter(formatter)
-        root_log.addHandler(log_fh)
-
-        log.info(f"successfully loaded config: {scenario_file}")
+        # initialize logging
+        logging.basicConfig(level=env.config.global_config.log_level, format='%(message)s')
+        if env.config.global_config.log_run:
+            run_log_path = os.path.join(env.config.scenario_output_directory, 'run.log')
+            log_fh = logging.FileHandler(run_log_path)
+            formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
+            # log_fh.setLevel(env.config.global_config.log_level)
+            log_fh.setFormatter(formatter)
+            log.addHandler(log_fh)
+            log.info(f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
 
         # build the set of instruction generators which compose the control system for this hive run
-
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
-            BaseFleetManager(env.config.dispatcher.base_vehicles_charging_limit),
+            BaseFleetManager(env.config.dispatcher),
             PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.io.file_paths.demand_forecast_file),
-                update_interval_seconds=env.config.dispatcher.fleet_sizing_update_interval_seconds,
-                max_search_radius_km=env.config.network.max_search_radius_km
+                demand_forecaster=BasicForecaster.build(env.config.input.demand_forecast_file),
+                config=env.config.dispatcher,
             ),
-            ChargingFleetManager(env.config.dispatcher.charging_low_soc_threshold,
-                                 env.config.dispatcher.ideal_fastcharge_soc_limit,
-                                 env.config.network.max_search_radius_km),
+            ChargingFleetManager(env.config.dispatcher),
             # DeluxeFleetManager(max_search_radius_km=env.config.network.max_search_radius_km),
-            Dispatcher(env.config.dispatcher.matching_low_soc_threshold),
+            Dispatcher(env.config.dispatcher),
         )
 
-        update = Update.build(env.config.io, instruction_generators)
+        update = Update.build(env.config, instruction_generators)
         initial_payload = RunnerPayload(sim, env, update)
 
+        log.info(f"running simulation for time {initial_payload.e.config.sim.start_time} "
+                 f"to {initial_payload.e.config.sim.end_time}:")
         start = time.time()
         sim_result = LocalSimulationRunner.run(initial_payload)
         end = time.time()
 
-        log.info("\n")
         log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
 
-        _summary_stats(sim_result.s)
+        _summary_stats(sim_result.s, env)
 
-        env.reporter.sim_log_file.close()
+        env.reporter.close()
 
-        config_dump = env.config.asdict()
-        dump_name = env.config.sim.sim_name + ".yaml"
-        dump_path = os.path.join(env.config.output_directory, dump_name)
-        with open(dump_path, 'w') as f:
-            yaml.dump(config_dump, f, sort_keys=False)
+        if env.config.global_config.write_outputs:
+            config_dump = env.config.asdict()
+            dump_name = env.config.sim.sim_name + ".yaml"
+            dump_path = os.path.join(env.config.scenario_output_directory, dump_name)
+            with open(dump_path, 'w') as f:
+                yaml.dump(config_dump, f, sort_keys=False)
 
         return 0
 
@@ -98,7 +125,7 @@ def run() -> int:
         raise e
 
 
-def _summary_stats(final_sim: SimulationState):
+def _summary_stats(final_sim: SimulationState, env: Environment):
     """
     just some quick-and-dirty summary stats here
     :param sim: the final sim state
@@ -107,15 +134,16 @@ def _summary_stats(final_sim: SimulationState):
     class VehicleResultsAccumulator(NamedTuple):
         balance: float = 0.0
         vkt: float = 0.0
-        avg_soc: float = 0.0
         count: int = 0
+        avg_soc: float = 0.0
 
         def add_vehicle(self, vehicle: Vehicle) -> VehicleResultsAccumulator:
+            soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
             return self._replace(
                 balance=self.balance + vehicle.balance,
                 vkt=self.vkt + vehicle.distance_traveled_km,
-                avg_soc=self.avg_soc + ((vehicle.energy_source.soc - self.avg_soc) / (self.count + 1)),
-                count=self.count + 1
+                count=self.count + 1,
+                avg_soc=self.avg_soc + ((soc - self.avg_soc) / (self.count + 1)),
             )
 
     # collect all vehicle data
@@ -132,11 +160,10 @@ def _summary_stats(final_sim: SimulationState):
         0.0
     )
 
-    log.info("\n")
     log.info(f"STATION  CURRENCY BALANCE:             $ {station_income:.2f}")
     log.info(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
     log.info(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")
-    log.info(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100.0:.2f}%")
+    log.info(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100:.2f}%")
 
 
 def _welcome_to_hive():
@@ -154,6 +181,19 @@ def _welcome_to_hive():
     """
 
     log.info(welcome)
+
+
+def print_defaults():
+    print()
+    defaults_file_str = pkg_resources.resource_filename("hive.resources.defaults", "hive_config.yaml")
+    log.info(f"printing the default scenario configuration stored at {defaults_file_str}:\n")
+    # start build using the Hive config defaults file
+    defaults_file = Path(defaults_file_str)
+
+    with defaults_file.open('r') as f:
+        conf = yaml.safe_load(f)
+        print(yaml.dump(conf))
+    log.info("finished printing default scenario configuration")
 
 
 if __name__ == "__main__":

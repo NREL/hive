@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 from typing import Tuple, NamedTuple, TYPE_CHECKING
+import functools as ft
+from h3 import h3
 
-from hive.util.units import Ratio
+from hive.dispatcher.instruction_generator import assignment_ops
+from hive.model.request import Request
+from hive.state.vehicle_state.charging_base import ChargingBase
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.runner.environment import Environment
+    from hive.dispatcher.instruction.instruction import Instruction
     from hive.model.vehicle.vehicle import Vehicle
+    from hive.config.dispatcher_config import DispatcherConfig
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
-from hive.state.vehicle_state import Idle, Repositioning
 from hive.util.helpers import H3Ops
 
 
@@ -19,51 +24,48 @@ class Dispatcher(NamedTuple, InstructionGenerator):
     """
     A managers algorithm that assigns vehicles greedily to most expensive request.
     """
-    low_soc_threshold: Ratio
+    config: DispatcherConfig
 
     def generate_instructions(
             self,
             simulation_state: SimulationState,
+            environment: Environment,
     ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+        :param environment:
         :param simulation_state: The current simulation state
 
         :return: the updated Dispatcher along with instructions
         """
-        # find requests that need a vehicle. Sorted by price high to low.
-        # these instructions override fleet target instructions
-        already_dispatched = []
-        instructions = ()
+        base_charging_range_km_threshold = environment.config.dispatcher.base_charging_range_km_threshold
 
         def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            is_valid_state = isinstance(vehicle.vehicle_state, Idle) or \
-                             isinstance(vehicle.vehicle_state, Repositioning)
+            vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
+            if vehicle_state_str not in environment.config.dispatcher.valid_dispatch_states:
+                return False
 
-            return bool(vehicle.energy_source.soc > self.low_soc_threshold
-                        and is_valid_state and vehicle.id not in already_dispatched)
+            mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
+            range_remaining_km = mechatronics.range_remaining_km(vehicle)
 
+            # if we are at a base, do we have enough remaining range to leave the base?
+            if isinstance(vehicle.vehicle_state, ChargingBase) and range_remaining_km < base_charging_range_km_threshold:
+                return False
+            # do we have enough remaining range to allow us to match?
+            return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold)
+
+        # collect the vehicles and requests for the assignment algorithm
+        available_vehicles = simulation_state.get_vehicles(filter_function=_is_valid_for_dispatch)
         unassigned_requests = simulation_state.get_requests(
             sort=True,
             sort_key=lambda r: r.value,
             sort_reversed=True,
             filter_function=lambda r: not r.dispatched_vehicle
         )
-        for request in unassigned_requests:
-            nearest_vehicle = H3Ops.nearest_entity(geoid=request.origin,
-                                                   entities=simulation_state.vehicles,
-                                                   entity_search=simulation_state.v_search,
-                                                   sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                                   is_valid=_is_valid_for_dispatch)
-            if nearest_vehicle:
-                instruction = DispatchTripInstruction(
-                    vehicle_id=nearest_vehicle.id,
-                    request_id=request.id,
-                )
 
-                already_dispatched.append(nearest_vehicle.id)
-
-                instructions = instructions + (instruction,)
+        # select assignment of vehicles to requests
+        solution = assignment_ops.find_assignment(available_vehicles, unassigned_requests, assignment_ops.h3_distance_cost)
+        instructions = ft.reduce(lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1])), solution.solution, ())
 
         return self, instructions

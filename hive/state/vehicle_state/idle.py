@@ -2,11 +2,11 @@ from typing import NamedTuple, Tuple, Optional
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
-from hive.util.units import Seconds, SECONDS_TO_HOURS
+from hive.util.units import Seconds
 
 
 class Idle(NamedTuple, VehicleState):
@@ -30,7 +30,8 @@ class Idle(NamedTuple, VehicleState):
         :return: True if we have run out of energy
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
-        return not vehicle or vehicle.energy_source.is_empty()
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        return not vehicle or mechatronics.is_empty(vehicle)
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',
@@ -59,12 +60,13 @@ class Idle(NamedTuple, VehicleState):
         :return: the sim state with vehicle moved
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not mechatronics:
+            return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
         else:
-            idle_energy_kwh = env.config.sim.idle_energy_rate * (sim.sim_timestep_duration_seconds * SECONDS_TO_HOURS)
-            updated_energy_source = vehicle.energy_source.use_energy(idle_energy_kwh)
-            less_energy_vehicle = vehicle.modify_energy_source(updated_energy_source)
+            less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
             updated_state = self._replace(idle_duration=updated_idle_duration)

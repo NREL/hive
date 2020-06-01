@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional
+
 
 # if TYPE_CHECKING:
 #     from hive.state.simulation_state import SimulationState

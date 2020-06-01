@@ -1,8 +1,8 @@
 from typing import NamedTuple, Tuple, Optional
 
+from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state import VehicleState
-from hive.runner.environment import Environment
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId, BaseId
 

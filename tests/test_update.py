@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from hive.runner import RunnerPayload
-from tests.mock_lobster import *
 from hive.state.simulation_state.update import Update
+from tests.mock_lobster import *
 
 
 class TestUpdate(TestCase):
@@ -22,7 +22,7 @@ class TestUpdate(TestCase):
         class MockGenerator(NamedTuple, InstructionGenerator):
             stored_magic_number: int = old_magic_number
 
-            def generate_instructions(self, simulation_state: SimulationState):
+            def generate_instructions(self, simulation_state: SimulationState, envronment: Environment):
                 return self, ()
 
         def user_provided_update_fn(instr_gen, sim):
@@ -33,7 +33,7 @@ class TestUpdate(TestCase):
 
         sim = mock_sim()
         env = mock_env()
-        u = Update.build(mock_config().io, (MockGenerator(),), user_provided_update_fn)
+        u = Update.build(mock_config(), (MockGenerator(),), user_provided_update_fn)
         runner = RunnerPayload(sim, env, u)
         result, reports = u.apply_update(runner)
         updated_mock_gen = result.u.step_update.instruction_generators[0]
@@ -49,7 +49,7 @@ class TestUpdate(TestCase):
 
         class MockGenerator(NamedTuple, InstructionGenerator):
 
-            def generate_instructions(self, simulation_state: SimulationState):
+            def generate_instructions(self, simulation_state: SimulationState, environment: Environment):
                 return self, (), ()
 
         def user_provided_update_fn(instr_gen, sim):
@@ -57,7 +57,7 @@ class TestUpdate(TestCase):
 
         sim = mock_sim()
         env = mock_env()
-        u = Update.build(mock_config().io, (MockGenerator(),), user_provided_update_fn)
+        u = Update.build(mock_config(), (MockGenerator(),), user_provided_update_fn)
         runner = RunnerPayload(sim, env, u)
         result, reports = u.apply_update(runner)
 

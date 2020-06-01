@@ -1,9 +1,9 @@
-from typing import TypedDict, Tuple, Optional
+from typing import Dict, Tuple, Optional
 
 from hive.util.typealiases import RequestId, VehicleId, StationId, BaseId
 
 
-class AtLocationResponse(TypedDict):
+class AtLocationResponse(Dict):
     """
     Wrapper for entities at a specific location.
     

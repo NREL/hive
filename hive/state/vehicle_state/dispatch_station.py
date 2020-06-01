@@ -1,20 +1,16 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.energy.charger import Charger
+from hive.model.roadnetwork.route import Route, valid_route
+from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-
-from hive.state.vehicle_state.vehicle_state_ops import move
+from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.util.exception import SimulationStateError
-
-from hive.model.roadnetwork.route import Route, valid_route
-
 from hive.util.typealiases import StationId, VehicleId
-
-from hive.runner.environment import Environment
-from hive.state.vehicle_state import VehicleState
 
 
 class DispatchStation(NamedTuple, VehicleState):
@@ -75,7 +71,12 @@ class DispatchStation(NamedTuple, VehicleState):
             return SimulationStateError(message), None
         else:
             has_chargers = available_chargers > 0
-            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger) if has_chargers else Idle(self.vehicle_id)
+            next_state = ChargingStation(self.vehicle_id,
+                                         self.station_id,
+                                         self.charger) if has_chargers else ChargeQueueing(self.vehicle_id,
+                                                                                           self.station_id,
+                                                                                           self.charger,
+                                                                                           sim.sim_time)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None

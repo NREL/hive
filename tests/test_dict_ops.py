@@ -4,6 +4,7 @@ import immutables
 
 from hive.util.helpers import DictOps
 
+
 class TestDictOps(TestCase):
     def test_add_to_dict(self):
         m = immutables.Map()

@@ -3,9 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.route import Route
-from hive.model.roadnetwork.geofence import GeoFence
 from hive.util.typealiases import GeoId, H3Resolution, SimTime
 from hive.util.units import Kilometers
 

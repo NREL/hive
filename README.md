@@ -20,7 +20,7 @@ When the Mobility, Behavior, and Advanced Powertrains group began looking to ans
 - easy integration/co-simulation (can be called alongside other software tools)
 - dynamic dispatch, trip energy, routing, and economics
 - simple to define/share scenarios via configuration files and simulation snapshots
-- 100% Python (v 3.8) code with a small(ish) set of dependencies
+- 100% Python (v 3.7) code with a small(ish) set of dependencies
 
 HIVE is not a fully-featured Activity-Based Model, does not simulate all vehicles on the network, and therefore does not simulate congestion. It also assumes demand is fixed. If these assumptions are too strong for your research question, then one of the other mesoscopic models capable of ridehail simulation may be a more appropriate fit. The following (opinionated) chart attempts to compare features of HIVE against LBNL's BEAM and ANL's POLARIS models.
 
@@ -45,16 +45,17 @@ The project is currently closed-source, pre-release, with plans to open-source i
 
 ## Dependencies
 
-HIVE has four major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network.
+HIVE has four major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
 
 - [H3](https://github.com/uber/h3)
 - [PyYAML](https://github.com/yaml/pyyaml)
 - [immutables](https://github.com/MagicStack/immutables)
 - [networkx](https://github.com/networkx/networkx)
+- [SciPy](https://www.scipy.org/)
 
-Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/). See [this link](https://github.com/uber/h3-py#installing-on-windows) for windows installation instructions.
+_note: Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/) which can cause issues on Windows. If you encounter errors when attempting the standard Hive installation instructions below, then consider first running `conda install -c conda-forge h3-py`._
 
-While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Pandas is being used to interact with open street maps. Rtree is used for quick node lookup on the road network
+While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Pandas is being used to interact with open street maps. Rtree is used for quick node lookup on the road network.
 
 - [numpy](https://www.numpy.org/)
 - [pandas](https://pandas.pydata.org/)
@@ -78,16 +79,39 @@ then, to load hive as a command line application via pip, tell pip to install hi
 
     > python -m pip install -e <path/to/hive>
 
-Then you can run hive as a command line application:
+Then you can run hive as a command line application. For example, to run the built-in Denver scenario, type:
 
-    > hive hive/resources/scenarios/denver_demo.yaml
+    > hive denver_demo.yaml
+   
+Note: the program will automatically look for the default scenarios, listed below. If you want
+the program to use a file outside of this location, just specify the optional `--path` argument:
+
+    > hive some_other_directory/my_scenario.yaml
 
 #### run as a vanilla python module
 
 To run from the console, run the module (along with a scenario file, such as `denver_demo.yaml`):
        
     > cd hive
-    > python -m hive hive/resources/scenarios/denver_demo.yaml
+    > python -m hive denver_demo.yaml
+
+
+#### available scenarios
+
+The following built-in scenario files come out-of-the-box, and available directly by name:
+
+scenario | description
+---------|------------
+denver_demo.yaml | default demo scenario with 20 vehicles and 2.5k requests synthesized with uniform time/location sampling
+denver_rl_toy.yaml | extremely simple scenario for testing RL
+denver_demo_constrained_charging.yaml | default scenario with limited charging supply
+manhattan.yaml | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset
+
+#### global configuration
+
+Some values are set by a global configuration file. The defaults are set at hive/resources/defaults/.hive.yaml. If you want
+to override any entries in this file, you can create a new one by the same name `.hive.yaml` and place it in your working
+directory or a parent directory. Hive will also check your base user directory for this file (aka `~/.hive.yaml`).
 
 #### build api documentation (optional)
 
@@ -97,14 +121,14 @@ The developer API is a [Sphinx](http://www.sphinx-doc.org/en/master/) project wh
 
 ![Map of Denver Downtown](docs/images/denver_demo.jpg?raw=true)
 
-Running HIVE takes one argument, which is a configuration file. Hive comes packaged with a demo scenario  for Downtown Denver, located at `hive/resources/scenarios/denver_demo.yaml`. This file names the inputs and the configuration Parameters for running HIVE.
+Running HIVE takes one argument, which is a configuration file. Hive comes packaged with a demo scenario for Downtown Denver, located at `hive/resources/scenarios/denver_demo.yaml`. This file names the inputs and the configuration Parameters for running HIVE.
 
 the Denver demo scenario is configured to log output to a folder named `denver_demo_outputs` which is also tagged with a timestamp. These output files can be parsed by Pandas using `pd.read_json(output_file.json, lines=True)` (for Pandas > 0.19.0). Additionally, some high-level stats are shown at the console.
 
 Running this scenario should produce an output similar to the following:
 
 ```
-[INFO] - hive.app.run -
+[INFO] - hive -
 ##     ##  ####  ##     ##  #######
 ##     ##   ##   ##     ##  ##
 #########   ##   ##     ##  ######
@@ -116,40 +140,70 @@ Running this scenario should produce an output similar to the following:
         .         .         . -{{_(|8)
           ' .  . ' ' .  . '     (__/
 
-[INFO] - hive.app.run - successfully loaded config: resources/scenarios/denver_demo.yaml
-[INFO] - hive.runner.local_simulation_runner - simulating 28800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 32400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 36000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 39600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 43200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 46800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 50400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 54000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 57600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 61200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 64800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 68400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 72000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 75600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 79200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 82800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 86400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 90000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 93600 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 97200 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 100800 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 104400 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 108000 of 111600 seconds
-[INFO] - hive.runner.local_simulation_runner - simulating 111600 of 111600 seconds
-[INFO] - hive.app.run -
+[INFO] - hive.config.hive_config - global hive configuration loaded from /Users/rfitzger/dev/nrel/hive/hive/.hive.yaml
+[INFO] - hive.config.hive_config -   global_settings_file_path: /Users/rfitzger/dev/nrel/hive/hive/.hive.yaml
+[INFO] - hive.config.hive_config -   output_base_directory: /Users/rfitzger/data/hive/outputs
+[INFO] - hive.config.hive_config -   local_parallelism: 1
+[INFO] - hive.config.hive_config -   local_parallelism_timeout_sec: 60
+[INFO] - hive.config.hive_config -   log_run: True
+[INFO] - hive.config.hive_config -   log_sim: True
+[INFO] - hive.config.hive_config -   log_level: INFO
+[INFO] - hive.config.hive_config -   log_sim_config: {'vehicle_report', 'dispatcher', 'cancel_request', 'add_request', 'charge_event', 'station_report', 'request_report'}
+[INFO] - hive.config.hive_config -   log_period_seconds: 60
+[INFO] - hive.config.hive_config -   lazy_file_reading: False
+[INFO] - hive.config.hive_config - output directory set to /Users/rfitzger/dev/nrel/hive/hive/hive/resources/scenarios/denver_downtown
+[INFO] - hive.config.hive_config - hive config loaded from /Users/rfitzger/dev/nrel/hive/hive/hive/resources/scenarios/denver_downtown/denver_demo.yaml
+[INFO] - hive.config.hive_config -
+dispatcher:
+  active_states:
+  - idle
+  - repositioning
+  - dispatchtrip
+  - servicingtrip
+  - dispatchstation
+  - chargingstation
+  base_charging_range_km_threshold: 100
+  charging_range_km_threshold: 20
+  default_update_interval_seconds: 600
+  ideal_fastcharge_soc_limit: 0.8
+  matching_range_km_threshold: 20
+  max_search_radius_km: 100.0
+  valid_dispatch_states:
+  - Idle
+  - Repositioning
+input:
+  bases_file: denver_demo_bases.csv
+  charging_price_file: denver_charging_prices_by_geoid.csv
+  demand_forecast_file: denver_demand.csv
+  geofence_file: downtown_denver.geojson
+  mechatronics_file: mechatronics.csv
+  rate_structure_file: rate_structure.csv
+  requests_file: denver_demo_requests.csv
+  road_network_file: downtown_denver.xml
+  stations_file: denver_demo_stations.csv
+  vehicles_file: denver_demo_vehicles.csv
+network:
+  default_speed_kmph: 40.0
+  network_type: osm_network
+sim:
+  end_time: '1970-01-02T00:00:00-07:00'
+  request_cancel_time_seconds: 600
+  sim_h3_resolution: 15
+  sim_h3_search_resolution: 7
+  sim_name: denver_demo
+  start_time: '1970-01-01T00:00:00-07:00'
+  timestep_duration_seconds: 60
 
-[INFO] - hive.app.run - done! time elapsed: 28.43 seconds
-[INFO] - hive.app.run -
+[INFO] - hive - creating run log at /Users/rfitzger/data/hive/outputs/denver_demo_2020-06-01_17-13-58/run.log with log level INFO
+[INFO] - hive - running simulation for time 25200 to 111600:
+100%|██████████| 1440/1440 [00:05<00:00, 242.69it/s]
+[INFO] - hive - done! time elapsed: 5.94 seconds
+[INFO] - hive - STATION  CURRENCY BALANCE:             $ 277.21
+[INFO] - hive - FLEET    CURRENCY BALANCE:             $ 12032.24
+[INFO] - hive -          VEHICLE KILOMETERS TRAVELED:    6428.65
+[INFO] - hive -          AVERAGE FINAL SOC:              53.29%
 
-[INFO] - hive.app.run - STATION  CURRENCY BALANCE:             $ 249.26
-[INFO] - hive.app.run - FLEET    CURRENCY BALANCE:             $ 11509.16
-[INFO] - hive.app.run -          VEHICLE KILOMETERS TRAVELED:    5089.59
-[INFO] - hive.app.run -          AVERAGE FINAL SOC:              72.92%
+Process finished with exit code 0
 ```
 
 ## Data-Driven Control
@@ -157,7 +211,7 @@ Running this scenario should produce an output similar to the following:
 HIVE is designed to answer questions about data-driven optimal fleet control. An interface for OpenAI Gym is provided in a separate repo, [gym-hive](https://github.nrel.gov/MBAP/gym-hive). For more information on OpenAI Gym, please visit the [OpenAI Gym website](https://gym.openai.com/).
 
 ## Roadmap
-_Updated March 11, 2020_
+_Updated June 1st, 2020_
 
 HIVE intends to implement the following features:
 
@@ -165,8 +219,8 @@ HIVE intends to implement the following features:
 - [x] Integration into OpenAI Gym for RL-based control
 - [ ] Time-varying network speeds
 - [ ] Integration into vehicle powertrain, grid energy, smart charging models
-- [ ] Support for Monte Carlo RL algorithms
-- [ ] Charge Queueing
+- [x] Support for state-of-the-art RL control algorithms
+- [x] Charge Queueing
 - [ ] Ridehail Pooling
 - [ ] Gasoline vehicles
 - [ ] Distributed HPC cluster implementation for large problem inputs

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools as it
 from abc import abstractmethod, ABC
 from math import radians, cos, sin, asin, sqrt, ceil
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
@@ -13,7 +14,6 @@ from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.link import Link
-
 
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
@@ -54,14 +54,14 @@ class SwitchCase(ABC):
 
 class H3Ops:
     @classmethod
-    def nearest_entity(cls,
-                       geoid: GeoId,
-                       entities: immutables.Map[EntityId, Entity],
-                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                       sim_h3_search_resolution: int,
-                       is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_distance_km: Kilometers = 10  # kilometers
-                       ) -> Optional[Entity]:
+    def nearest_entity_by_great_circle_distance(cls,
+                                                geoid: GeoId,
+                                                entities: immutables.Map[EntityId, Entity],
+                                                entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+                                                sim_h3_search_resolution: int,
+                                                is_valid: Callable[[Entity], bool] = lambda x: True,
+                                                max_search_distance_km: Kilometers = 10  # kilometers
+                                                ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -71,7 +71,41 @@ class H3Ops:
         :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
         :param is_valid: a function used to filter valid search results, such as checking stations for charger availability
         :param k: the number of concentric rings to check in the high-level search
-        :param max_distance_km: the maximum distance a result can be from the search origin
+        :param max_search_distance_km: the maximum distance a result can be from the search origin
+
+        :return: the nearest entity, or, None if not found within the constraints
+        """
+        return cls.nearest_entity(
+            geoid=geoid,
+            entities=entities,
+            entity_search=entity_search,
+            sim_h3_search_resolution=sim_h3_search_resolution,
+            is_valid=is_valid,
+            distance_function=lambda e: cls.great_circle_distance(geoid, e.geoid),
+            max_search_distance_km=max_search_distance_km
+        )
+
+    @classmethod
+    def nearest_entity(cls,
+                       geoid: GeoId,
+                       entities: immutables.Map[EntityId, Entity],
+                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+                       sim_h3_search_resolution: int,
+                       distance_function: Callable[[Entity], float],
+                       is_valid: Callable[[Entity], bool] = lambda x: True,
+                       max_search_distance_km: Kilometers = 10  # kilometers
+                       ) -> Optional[Entity]:
+        """
+        returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
+        invariant: the Entity has a geoid field (Entity.geoid)
+        :param geoid: the search origin
+        :param entities: a collection of a certain type of entity, by Id type
+        :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
+        :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
+        :param is_valid: a function used to filter valid search results, such as checking stations for charger availability
+        :param distance_function: a function used to evaluate the distance metric for selection
+        :param k: the number of concentric rings to check in the high-level search
+        :param max_search_distance_km: the maximum distance a result can be from the search origin
 
         :return: the nearest entity, or, None if not found within the constraints
         """
@@ -80,7 +114,7 @@ class H3Ops:
             raise H3Error('search resolution must be less than geoid resolution')
 
         k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2  # kilometers
-        max_k = ceil(max_distance_km / k_dist_km)
+        max_k = ceil(max_search_distance_km / k_dist_km)
         search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
 
         def _search(current_k: int = 0) -> Optional[Entity]:
@@ -100,7 +134,7 @@ class H3Ops:
 
                 count = 0
                 for entity in found:
-                    dist_km = cls.great_circle_distance(geoid, entity.geoid)
+                    dist_km = distance_function(entity)
                     if is_valid(entity) and dist_km < best_dist_km:
                         best_dist_km = dist_km
                         best_entity = entity
@@ -200,7 +234,7 @@ class H3Ops:
         :return: a GeoId along the Link
         """
 
-        threshold = 0.001
+        threshold = 0.000001
         experienced_distance_km = (available_time_seconds * SECONDS_TO_HOURS) * link.speed_kmph
         ratio_trip_experienced = experienced_distance_km / link.distance_km
         if ratio_trip_experienced < (0 + threshold):
@@ -272,6 +306,22 @@ class TupleOps:
             return tup[0], ()
         else:
             return tup[0], tup[1:]
+
+    @classmethod
+    def partition(cls,
+                  predicate: Callable[[T], bool],
+                  t: Tuple[T, ...]) -> Tuple[Tuple[T, ...], Tuple[T, ...]]:
+        """
+        partitions a tuple into two tuples where members of the first tuple
+        match the case where the provided predicate is True
+
+        taken from https://docs.python.org/3/library/itertools.html (but result tuples reversed for readability)
+        :param predicate: tests membership in result tuples
+        :param t: the source tuple
+        :return:
+        """
+        t1, t2 = it.tee(t)
+        return tuple(filter(predicate, t1)), tuple(it.filterfalse(predicate, t2))
 
 
 class EntityUpdateResult(NamedTuple):

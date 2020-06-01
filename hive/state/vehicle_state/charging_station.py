@@ -1,11 +1,11 @@
 from typing import Tuple, Optional, NamedTuple
 
 from hive.model.energy.charger import Charger
-from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state_ops import charge
-from hive.state.vehicle_state.idle import Idle
-from hive.state.vehicle_state import VehicleState
 from hive.runner.environment import Environment
+from hive.state.simulation_state import simulation_state_ops
+from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, VehicleId
 
@@ -85,7 +85,8 @@ class ChargingStation(NamedTuple, VehicleState):
         if not vehicle:
             return False
         else:
-            return vehicle.energy_source.is_full()
+            mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            return mechatronics.is_full(vehicle)
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',

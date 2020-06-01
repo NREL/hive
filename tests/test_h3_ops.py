@@ -1,11 +1,5 @@
 from unittest import TestCase
 
-import immutables
-from h3 import h3
-
-from hive.model.request import Request
-from hive.model.roadnetwork.link import Link
-from hive.util.helpers import H3Ops
 from hive.util.units import hours_to_seconds
 from tests.mock_lobster import *
 
@@ -64,10 +58,10 @@ class TestH3Ops(TestCase):
         self.assertIsNone(e1, "test invariant failed")
         self.assertIsNone(e2, "test invariant failed")
 
-        nearest = H3Ops.nearest_entity(geoid=somewhere,
-                                       entities=sim_with_reqs.requests,
-                                       entity_search=sim_with_reqs.r_search,
-                                       sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
+        nearest = H3Ops.nearest_entity_by_great_circle_distance(geoid=somewhere,
+                                                                entities=sim_with_reqs.requests,
+                                                                entity_search=sim_with_reqs.r_search,
+                                                                sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
 
         self.assertEqual(nearest.geoid, req_near.geoid)
 

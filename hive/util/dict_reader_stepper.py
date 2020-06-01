@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from typing import Iterator, Dict, Union, TextIO, Optional, Callable, Tuple
+from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple
 
 
 class DictReaderIterator:
@@ -139,4 +139,5 @@ class DictReaderStepper:
         return self._iterator
 
     def close(self):
-        self._file.close()
+        if self._file:
+            self._file.close()

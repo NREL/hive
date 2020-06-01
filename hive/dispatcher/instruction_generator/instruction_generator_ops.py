@@ -7,9 +7,9 @@ import immutables
 from h3 import h3
 
 from hive.dispatcher.instruction.instructions import *
+from hive.dispatcher.instruction_generator import assignment_ops
 from hive.util import Kilometers
-from hive.util.helpers import DictOps
-from hive.util.helpers import H3Ops
+from hive.util.helpers import DictOps, H3Ops
 
 random.seed(123)
 
@@ -25,14 +25,17 @@ class InstructionGenerationResult(NamedTuple):
 
     def apply_instruction_generator(self,
                                     instruction_generator: InstructionGenerator,
-                                    simulation_state: 'SimulationState') -> InstructionGenerationResult:
+                                    simulation_state: 'SimulationState',
+                                    environment: Environment,
+                                    ) -> InstructionGenerationResult:
         """
         generates instructions from one InstructionGenerator and updates the result accumulator
+        :param environment:
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
         :param simulation_state: the current simulation state
         :return: the updated accumulator
         """
-        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state)
+        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state, environment)
 
         updated_instruction_map = ft.reduce(
             lambda acc, i: DictOps.add_to_dict(acc, i.vehicle_id, i),
@@ -48,6 +51,7 @@ class InstructionGenerationResult(NamedTuple):
 
 def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ...],
                           simulation_state: 'SimulationState',
+                          environment: Environment,
                           ) -> InstructionGenerationResult:
     """
     applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
@@ -55,11 +59,12 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
 
     :param instruction_generators:
     :param simulation_state:
+    :param environment:
     :return: the instructions generated for this time step, which has 0 or 1 instruction per vehicle
     """
 
     result = ft.reduce(
-        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state),
+        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state, environment),
         instruction_generators,
         InstructionGenerationResult()
     )
@@ -81,27 +86,10 @@ def instruct_vehicles_return_to_base(n: int,
     :return:
     """
 
-    instructions = ()
+    bases = tuple(simulation_state.bases.values())
 
-    for veh in vehicles:
-        if len(instructions) >= n:
-            break
-
-        nearest_base = H3Ops.nearest_entity(geoid=veh.geoid,
-                                            entities=simulation_state.bases,
-                                            entity_search=simulation_state.b_search,
-                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                            max_distance_km=max_search_radius_km)
-        if nearest_base:
-            instruction = DispatchBaseInstruction(
-                vehicle_id=veh.id,
-                base_id=nearest_base.id,
-            )
-
-            instructions = instructions + (instruction,)
-        else:
-            # no base found or user set the max search radius too low
-            continue
+    solution = assignment_ops.find_assignment(vehicles, bases, assignment_ops.h3_distance_cost)
+    instructions = ft.reduce(lambda acc, pair: (*acc, DispatchBaseInstruction(pair[0], pair[1])), solution.solution, ())
 
     return instructions
 
@@ -184,8 +172,9 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
                                                entities=simulation_state.stations,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
-                                               max_distance_km=max_search_radius_km,
-                                               is_valid=lambda s: s.has_available_charger(Charger.DCFC))
+                                               max_search_distance_km=max_search_radius_km,
+                                               is_valid=lambda s: s.has_available_charger(Charger.DCFC),
+                                               distance_function=lambda s: assignment_ops.nearest_shortest_queue(veh, s))
         if nearest_station:
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,

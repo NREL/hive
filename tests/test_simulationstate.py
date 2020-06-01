@@ -1,6 +1,9 @@
 from unittest import TestCase
 
+from hive.model.energy.energytype import EnergyType
+from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
+from hive.state.vehicle_state.out_of_service import OutOfService
 from tests.mock_lobster import *
 
 
@@ -89,9 +92,10 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = ReserveBaseInstruction(vehicle_id=veh.id, base_id=bas.id)
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
 
         updated_veh = sim_updated.vehicles[veh.id]
         self.assertIsInstance(updated_veh.vehicle_state, ReserveBase, "should be reserving at base")
@@ -105,9 +109,10 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = ReserveBaseInstruction(vehicle_id=veh.id, base_id=bas.id)
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
 
         self.assertIsNone(sim_updated)
 
@@ -123,9 +128,10 @@ class TestSimulationState(TestCase):
             station_id=sta.id,
             charger=Charger.DCFC
         )
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
 
         self.assertIsNotNone(sim_updated)
 
@@ -146,9 +152,10 @@ class TestSimulationState(TestCase):
             charger=Charger.DCFC
         )
 
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
 
         self.assertIsNone(sim_updated)
 
@@ -162,9 +169,10 @@ class TestSimulationState(TestCase):
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
 
-        e2, sim_updated = instruction.apply_instruction(sim, env)
+        e2, instruction_result = instruction.apply_instruction(sim, env)
         if e2:
             self.fail(e2.args)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
 
         self.assertIsNotNone(sim_updated)
 
@@ -201,8 +209,9 @@ class TestSimulationState(TestCase):
         self.assertIsNone(e1, "test invariant failed")
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
-        error, sim_updated = instruction.apply_instruction(sim, env)
-        self.assertIsNotNone(error, "no request at vehicle location should produce an error message")
+        error, instruction_result = instruction.apply_instruction(sim, env)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
+        self.assertIsNotNone(sim_error, "no request at vehicle location should produce an error message")
         self.assertIsNone(sim_updated, "sim update should not have happened")
 
     def test_step_moving_vehicle(self):
@@ -217,23 +226,23 @@ class TestSimulationState(TestCase):
         self.assertIsNone(e1, "test invariant failed")
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
-
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         sim_moving_veh = perform_vehicle_state_updates(sim_updated, env)
 
         moved_veh = sim_moving_veh.vehicles[veh.id]
 
         self.assertNotEqual(veh.geoid, moved_veh.geoid, 'Vehicle should have moved')
-        self.assertGreater(veh.energy_source.soc,
-                           moved_veh.energy_source.soc,
+        self.assertGreater(veh.energy[EnergyType.ELECTRIC],
+                           moved_veh.energy[EnergyType.ELECTRIC],
                            'Vehicle should consume energy while moving.')
 
     def test_step_charging_vehicle(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         sta = mock_station_from_geoid(geoid=somewhere)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
@@ -243,16 +252,16 @@ class TestSimulationState(TestCase):
             charger=Charger.DCFC
         )
 
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
-
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         sim_charging_veh = perform_vehicle_state_updates(sim_updated, env)
 
         charged_veh = sim_charging_veh.vehicles[veh.id]
 
-        self.assertGreater(charged_veh.energy_source.soc,
-                           veh.energy_source.soc,
+        self.assertGreater(charged_veh.energy[EnergyType.ELECTRIC],
+                           veh.energy[EnergyType.ELECTRIC],
                            "Vehicle should have gained energy")
 
     def test_step_idle_vehicle(self):
@@ -264,8 +273,8 @@ class TestSimulationState(TestCase):
 
         idle_veh = sim_idle_veh.vehicles[veh.id]
 
-        self.assertLess(idle_veh.energy_source.soc,
-                        veh.energy_source.soc,
+        self.assertLess(idle_veh.energy[EnergyType.ELECTRIC],
+                        veh.energy[EnergyType.ELECTRIC],
                         "Idle vehicle should have consumed energy")
 
     def test_terminal_state_ending_trip(self):
@@ -282,13 +291,13 @@ class TestSimulationState(TestCase):
         self.assertIsNone(e1, "test invariant failed")
 
         instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
-        error, sim_with_instruction = instruction.apply_instruction(sim_with_req, env)
+        error, instruction_result = instruction.apply_instruction(sim_with_req, env)
         if error:
             self.fail(error.args)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim_with_req, env, instruction_result.prev_state, instruction_result.next_state)
+        self.assertIsNotNone(sim_updated, "Vehicle should have transitioned to servicing trip")
 
-        self.assertIsNotNone(sim_with_instruction, "Vehicle should have transitioned to servicing trip")
-
-        sim_veh_at_dest_servicing = perform_vehicle_state_updates(sim_with_instruction, env)  # gets to end of trip
+        sim_veh_at_dest_servicing = perform_vehicle_state_updates(sim_updated, env)  # gets to end of trip
         sim_idle = perform_vehicle_state_updates(sim_veh_at_dest_servicing, env)  # actually transitions to IDLE
 
         idle_veh = sim_idle.vehicles[veh.id]
@@ -310,10 +319,10 @@ class TestSimulationState(TestCase):
 
         instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
         env = mock_env()
-        e2, sim_updated = instruction.apply_instruction(sim, env)
+        e2, instruction_result = instruction.apply_instruction(sim, env)
         if e2:
             self.fail(e2.args)
-
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
         # should take about 800 seconds to arrive at trip origin, and
@@ -341,16 +350,16 @@ class TestSimulationState(TestCase):
         # approx 8.5 km distance.
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
+        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
         sta = mock_station_from_geoid(geoid=somewhere_else)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
         instruction = DispatchStationInstruction(vehicle_id=veh.id, station_id=sta.id, charger=Charger.DCFC)
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
-
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
         sim_at_sta = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
@@ -377,10 +386,10 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = DispatchBaseInstruction(vehicle_id=veh.id, base_id=base.id)
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
-
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
         # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
@@ -405,12 +414,12 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else)
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
-
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
         sim_at_new_pos = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_at_new_pos._replace(sim_timestep_duration_seconds=1), env)
@@ -426,11 +435,7 @@ class TestSimulationState(TestCase):
 
     def test_terminal_state_charging(self):
         sta = mock_station_from_geoid()
-        veh = mock_vehicle_from_geoid(
-            energy_type=EnergyType.ELECTRIC,
-            capacity_kwh=50,
-            soc=0.75
-        )
+        veh = mock_vehicle_from_geoid(soc=0.75)
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
 
         instruction = ChargeStationInstruction(
@@ -439,14 +444,14 @@ class TestSimulationState(TestCase):
             charger=Charger.DCFC
         )
         env = mock_env()
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
-
-        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
+        # 10 hours should get us charged , and 1 more sim step of any size to transition vehicle state
+        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=36000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_charged._replace(sim_timestep_duration_seconds=1), env)
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
@@ -456,11 +461,7 @@ class TestSimulationState(TestCase):
                               "Vehicle should have transitioned to IDLE")
 
     def test_terminal_state_charging_base(self):
-        veh = mock_vehicle_from_geoid(
-            energy_type=EnergyType.ELECTRIC,
-            capacity_kwh=50,
-            soc=0.75
-        )
+        veh = mock_vehicle_from_geoid(soc=0.75)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
         sim = mock_sim(vehicles=(veh,), stations=(sta,), bases=(bas,))
@@ -471,14 +472,14 @@ class TestSimulationState(TestCase):
             charger=Charger.DCFC
         )
         env = mock_env()
-        error, sim_updated = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
-
-        # 1000 seconds should get us charged, and 1 more sim step of any size to transition vehicle state
-        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=1000), env)
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
+        # 10 hours should get us charged, and 1 more sim step of any size to transition vehicle state
+        sim_charged = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=36000), env)
         sim_in_new_state = perform_vehicle_state_updates(sim_charged._replace(sim_timestep_duration_seconds=1), env)
 
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
@@ -490,21 +491,20 @@ class TestSimulationState(TestCase):
     def test_vehicle_runs_out_of_energy(self):
 
         low_energy_veh = mock_vehicle_from_geoid(soc=0.01)
-        sim = mock_sim(vehicles=(low_energy_veh,))
+        sim = mock_sim(vehicles=(low_energy_veh,), sim_timestep_duration_seconds=3600)
 
-        # costs a fixed 10 kwh to make any movement
-        env = mock_env(powertrains=(mock_powertrain(energy_cost_kwh=10),))
+        env = mock_env()
 
         inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
         instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), inbox_cafe_in_torvet_julianehab_greenland)
-        error, sim_instructed = instruction.apply_instruction(sim, env)
+        error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
-
-        self.assertIsNotNone(sim_instructed, "test invariant failed - should be able to reposition default vehicle")
+        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
+        self.assertIsNotNone(sim_updated, "test invariant failed - should be able to reposition default vehicle")
 
         # one movement takes more energy than this agent has
-        sim_out_of_order = perform_vehicle_state_updates(sim_instructed, env)
+        sim_out_of_order = perform_vehicle_state_updates(sim_updated, env)
 
         veh_result = sim_out_of_order.vehicles.get(DefaultIds.mock_vehicle_id())
         self.assertIsNotNone(veh_result, "stepped vehicle should have advanced the simulation state")
@@ -560,17 +560,13 @@ class TestSimulationState(TestCase):
 
         self.assertEqual(vehicles[-1].id, 'v4', 'v4 is last')
 
-        def low_soc(vehicle: Vehicle) -> bool:
-            return vehicle.energy_source.soc <= 0.2
-
         sorted_and_filtered_vehicles = sim.get_vehicles(
             sort=True,
-            sort_key=lambda v: v.energy_source.soc,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
             sort_reversed=True,
-            filter_function=low_soc,
         )
 
-        self.assertEqual(sorted_and_filtered_vehicles[0].id, 'v3', 'v3 has highest soc below 0.2')
+        self.assertEqual(sorted_and_filtered_vehicles[0].id, 'v1', 'v1 has highest soc')
 
     def test_get_requests(self):
         sim = mock_sim()

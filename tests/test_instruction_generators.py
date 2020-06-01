@@ -5,7 +5,7 @@ from tests.mock_lobster import *
 
 class TestInstructionGenerators(TestCase):
     def test_dispatcher_match_vehicle(self):
-        dispatcher = Dispatcher(low_soc_threshold=0.2)
+        dispatcher = Dispatcher(mock_config().dispatcher)
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
@@ -21,7 +21,7 @@ class TestInstructionGenerators(TestCase):
         )
         _, sim = simulation_state_ops.add_request(sim, req)
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -32,7 +32,7 @@ class TestInstructionGenerators(TestCase):
                          "Should have picked closest vehicle")
 
     def test_dispatcher_no_vehicles(self):
-        dispatcher = Dispatcher(low_soc_threshold=0.2)
+        dispatcher = Dispatcher(mock_config().dispatcher)
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
 
@@ -40,36 +40,57 @@ class TestInstructionGenerators(TestCase):
         sim = mock_sim(h3_location_res=9, h3_search_res=9)
         _, sim = simulation_state_ops.add_request(sim, req)
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
         self.assertEqual(len(instructions), 0, "There are no vehicles to make assignments to.")
 
     def test_charging_fleet_manager(self):
-        charging_fleet_manager = ChargingFleetManager(
-            low_soc_threshold=0.2,
-            ideal_fastcharge_soc_limit=0.8,
-            max_search_radius_km=100,
-        )
+        charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
 
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)
 
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
-        low_battery = mock_energy_source(soc=0.1)
+        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.01)
 
-        veh_low_battery = veh.modify_energy_source(low_battery)
         station = mock_station_from_geoid(geoid=somewhere_else)
-        sim = mock_sim(h3_location_res=9, h3_search_res=9, vehicles=(veh_low_battery,), stations=(station,))
+        sim = mock_sim(h3_location_res=9, h3_search_res=9, vehicles=(veh,), stations=(station,))
 
-        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim)
+        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim, mock_env())
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
                               DispatchStationInstruction,
                               "Should have instructed vehicle to dispatch to station")
 
+    def test_charging_fleet_manager_queues(self):
+        charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
+
+        v_geoid = h3.geo_to_h3(39.0, -104.0, 15)
+        veh_low_battery = mock_vehicle_from_geoid(geoid=v_geoid, soc=0.01)
+
+        s1_geoid = h3.geo_to_h3(39.01, -104.0, 15)
+        s2_geoid = h3.geo_to_h3(39.015, -104.0, 15)  # slightly further away
+
+        # invariant: a queue can be created even if plugs are available and
+        # our dispatcher only considers the queue size in the distance metric
+        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(Charger.DCFC).checkout_charger(Charger.DCFC)
+        s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
+
+        self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger)")
+
+        sim = mock_sim(h3_location_res=15, h3_search_res=5, vehicles=(veh_low_battery,), stations=(s1, s2,))
+        env = mock_env()
+
+        charging_fleet_manager, instructions = charging_fleet_manager.generate_instructions(sim, env)
+
+        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
+        self.assertIsInstance(instructions[0],
+                              DispatchStationInstruction,
+                              "Should have instructed vehicle to dispatch to station")
+        self.assertEqual(instructions[0].station_id, s2.id, "should have instructed vehicle to go to s2")
+
     def test_fleet_position_manager(self):
-        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), max_search_radius_km=100, update_interval_seconds=1)
+        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), mock_config().dispatcher)
 
         # manger will always predict we need 1 activate vehicle. So, we start with one inactive vehicle and see
         # if it is moved to active.
@@ -87,7 +108,7 @@ class TestInstructionGenerators(TestCase):
 
         sim = mock_sim(vehicles=(veh,), bases=(base,))
 
-        dispatcher, instructions = fleet_position_manager.generate_instructions(sim)
+        dispatcher, instructions = fleet_position_manager.generate_instructions(sim, mock_env())
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -97,7 +118,7 @@ class TestInstructionGenerators(TestCase):
     def test_fleet_position_manager_deactivates_a_vehicle(self):
         # dispatcher = mock_instruction_generators_with_mock_forecast(forecast=1)
 
-        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), max_search_radius_km=100, update_interval_seconds=1)
+        fleet_position_manager = PositionFleetManager(mock_forecaster(forecast=1), mock_config().dispatcher)
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
@@ -116,7 +137,7 @@ class TestInstructionGenerators(TestCase):
             bases=(base,)
         )
 
-        dispatcher, instructions = fleet_position_manager.generate_instructions(sim)
+        dispatcher, instructions = fleet_position_manager.generate_instructions(sim, mock_env())
 
         self.assertEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0],
@@ -124,7 +145,7 @@ class TestInstructionGenerators(TestCase):
                               "Should have instructed vehicle to dispatch to base")
 
     def test_dispatcher_valuable_requests(self):
-        dispatcher = Dispatcher(low_soc_threshold=0.2)
+        dispatcher = Dispatcher(mock_config().dispatcher)
 
         # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
         # if it is moved to base.
@@ -144,7 +165,7 @@ class TestInstructionGenerators(TestCase):
         _, sim = simulation_state_ops.add_request(sim, expensive_req)
         _, sim = simulation_state_ops.add_request(sim, cheap_req)
 
-        dispatcher, instructions = dispatcher.generate_instructions(sim)
+        dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
         self.assertIsInstance(instructions[0],
@@ -158,7 +179,7 @@ class TestInstructionGenerators(TestCase):
         and that the lower soc vehicles are prioritized
         """
         # set base vehicles charging limit to 1, but provide a station with 2 chargers at the base
-        base_fleet_manager = BaseFleetManager(base_vehicles_charging_limit=1)
+        base_fleet_manager = BaseFleetManager(mock_config().dispatcher)
         station = mock_station_from_geoid(chargers=immutables.Map({Charger.LEVEL_2: 2}))
         base = mock_base_from_geoid(stall_count=2, station_id=station.id)
 
@@ -192,7 +213,7 @@ class TestInstructionGenerators(TestCase):
             bases=(base,)
         )
 
-        base_fleet_manager, instructions = base_fleet_manager.generate_instructions(sim)
+        base_fleet_manager, instructions = base_fleet_manager.generate_instructions(sim, mock_env())
 
         self.assertGreaterEqual(len(instructions), 1, "Should have generated only one instruction")
         self.assertIsInstance(instructions[0], ChargeBaseInstruction, "Should have been instructed to charge at base")

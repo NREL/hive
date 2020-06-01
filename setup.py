@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 from os import path
+
+from setuptools import setup, find_packages
 
 # Get the long description from the README file
 here = path.abspath(path.dirname(__file__))
@@ -8,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name="nrel_hive",
-    version="0.6.4",
+    version="0.7.0",
     description=
     "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.",
     long_description=long_description,
@@ -23,7 +24,7 @@ setup(
         "Topic :: Scientific/Engineering"
     ],
     packages=find_packages(),
-    python_requires=">=3.8",
+    python_requires=">=3.7",
     install_requires=[
     ],
     include_package_data=True,

@@ -2,26 +2,24 @@ from __future__ import annotations
 
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
-from hive.config import ConfigBuilder
-from hive.util.units import Ratio, Seconds
+from hive.config.config_builder import ConfigBuilder
+from hive.util.units import Ratio, Seconds, Kilometers
 
 
 class DispatcherConfig(NamedTuple):
-    fleet_sizing_update_interval_seconds: Seconds
-    matching_low_soc_threshold: Ratio
-    charging_low_soc_threshold: Ratio
+    default_update_interval_seconds: Seconds
+    matching_range_km_threshold: Kilometers
+    charging_range_km_threshold: Kilometers
+    base_charging_range_km_threshold: Kilometers
     ideal_fastcharge_soc_limit: Ratio
-    base_vehicles_charging_limit: Optional[int]
+    max_search_radius_km: Kilometers
+
+    valid_dispatch_states: Tuple[str, ...]
+    active_states: Tuple[str, ...]
 
     @classmethod
     def default_config(cls) -> Dict:
-        return {
-            'fleet_sizing_update_interval_seconds': 60 * 15,
-            'matching_low_soc_threshold': 0.2,
-            'charging_low_soc_threshold': 0.2,
-            'ideal_fastcharge_soc_limit': 0.8,
-            'base_vehicles_charging_limit': None,
-        }
+        return {}
 
     @classmethod
     def required_config(cls) -> Tuple[str, ...]:
@@ -38,6 +36,12 @@ class DispatcherConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
+        try:
+            d['valid_dispatch_states'] = tuple(s.lower() for s in d['valid_dispatch_states'])
+            d['active_states'] = tuple(d['active_states'])
+        except ValueError:
+            return IOError("valid_dispatch_states and active_states must be in a list format")
+
         return DispatcherConfig(**d)
 
     def asdict(self) -> Dict:
