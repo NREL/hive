@@ -211,7 +211,7 @@ Process finished with exit code 0
 HIVE is designed to answer questions about data-driven optimal fleet control. An interface for OpenAI Gym is provided in a separate repo, [gym-hive](https://github.nrel.gov/MBAP/gym-hive). For more information on OpenAI Gym, please visit the [OpenAI Gym website](https://gym.openai.com/).
 
 ## Roadmap
-_Updated March 11, 2020_
+_Updated June 1st, 2020_
 
 HIVE intends to implement the following features:
 
