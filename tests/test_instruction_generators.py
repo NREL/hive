@@ -73,7 +73,8 @@ class TestInstructionGenerators(TestCase):
 
         # invariant: a queue can be created even if plugs are available and
         # our dispatcher only considers the queue size in the distance metric
-        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(Charger.DCFC).checkout_charger(Charger.DCFC)
+        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(
+            Charger.DCFC).checkout_charger(Charger.DCFC)
         s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
 
         self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger)")
@@ -143,35 +144,6 @@ class TestInstructionGenerators(TestCase):
         self.assertIsInstance(instructions[0],
                               DispatchBaseInstruction,
                               "Should have instructed vehicle to dispatch to base")
-
-    def test_dispatcher_valuable_requests(self):
-        dispatcher = Dispatcher(mock_config().dispatcher)
-
-        # manger will always predict we need 1 activate vehicle. So, we start with two active vehicle and see
-        # if it is moved to base.
-
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)
-
-        veh1 = mock_vehicle_from_geoid(vehicle_id='v1', geoid=somewhere)
-        expensive_req = mock_request_from_geoids(request_id='expensive', origin=somewhere_else, value=100)
-        cheap_req = mock_request_from_geoids(request_id='cheap', origin=somewhere_else, value=10)
-
-        sim = mock_sim(
-            h3_location_res=9,
-            h3_search_res=9,
-            vehicles=(veh1,)
-        )
-        _, sim = simulation_state_ops.add_request(sim, expensive_req)
-        _, sim = simulation_state_ops.add_request(sim, cheap_req)
-
-        dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
-
-        self.assertGreaterEqual(len(instructions), 1, "Should have generated at least one instruction")
-        self.assertIsInstance(instructions[0],
-                              DispatchTripInstruction,
-                              "Should have instructed vehicle to dispatch")
-        self.assertEqual(instructions[0].request_id, 'expensive', 'Should have picked expensive request')
 
     def test_base_fleet_manager_limited_charging_spaces(self):
         """

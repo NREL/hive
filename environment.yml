@@ -12,6 +12,5 @@ dependencies:
   - PyYAML
   - rtree
   - tqdm
-  - h3-py
-  - nose
+  - h3-py=3.4
   - scipy
