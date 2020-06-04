@@ -31,7 +31,7 @@ def vehicle_move_report(move_result: 'MoveResult') -> Dict:
     sim_time = move_result.sim.sim_time
     duration = move_result.sim.sim_timestep_duration_seconds
     vehicle_id = move_result.next_vehicle.id
-    vehicle_state = type(move_result.next_vehicle.vehicle_state).__name__
+    vehicle_state = move_result.next_vehicle.vehicle_state.__class__.__name__
     delta_distance: float = move_result.next_vehicle.distance_traveled_km - move_result.prev_vehicle.distance_traveled_km
     delta_energy = ft.reduce(
         lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.prev_vehicle.energy.get(e_type),
@@ -51,7 +51,7 @@ def vehicle_move_report(move_result: 'MoveResult') -> Dict:
         'geoid': geoid,
         'lat': lat,
         'lon': lon,
-        'wkt': geom
+        'route_wkt': geom
     }
     report = make_report("vehicle_move_event", report_data)
     return report
@@ -76,7 +76,7 @@ def vehicle_charge_report(prev_vehicle: Vehicle,
     duration = next_sim.sim_timestep_duration_seconds
     vehicle_id = next_vehicle.id
     station_id = station.id
-    vehicle_state = type(next_vehicle.vehicle_state).__name__
+    vehicle_state = next_vehicle.vehicle_state.__class__.__name__
     kwh_transacted = next_vehicle.energy[EnergyType.ELECTRIC] - prev_vehicle.energy[EnergyType.ELECTRIC]  # kwh
     charger_price = station.charger_prices_per_kwh.get(charger)  # Currency
     charging_price = kwh_transacted * charger_price if charger_price else 0.0
