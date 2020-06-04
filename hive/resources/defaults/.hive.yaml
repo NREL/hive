@@ -3,13 +3,13 @@ log_run: True
 log_sim: True
 log_level: INFO
 log_sim_config:
-- 'vehicle_report'
 - 'station_report'
-- 'charge_event'
 - 'request_report'
 - 'add_request'
 - 'cancel_request'
 - 'dispatcher'
+- 'vehicle_charge_event'
+- 'vehicle_move_event'
 log_period_seconds: 60
 local_parallelism: 1
 local_parallelism_timeout_sec: 60
