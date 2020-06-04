@@ -4,6 +4,8 @@ from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
+from hive.model.vehicle import Vehicle
+from hive.reporting.report_ops import vehicle_move_report, vehicle_charge_report
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -57,24 +59,17 @@ def charge(sim: 'SimulationState',
             return veh_error, None
         else:
 
-            # log charge event
-            report = {
-                'report_type': 'charge_event',
-                'vehicle_id': vehicle_id,
-                'station_id': station_id,
-                'charge_amount': str(kwh_transacted),
-                'charge_price': str(charging_price),
-                'charger_type': str(charger),
-                'charge_duration_seconds': str(sim.sim_timestep_duration_seconds),
-                'sim_time': sim.sim_time,
-            }
-            env.reporter.sim_report(report)
+            if 'vehicle_charge_event' in env.config.global_config.log_sim_config:
+                report = vehicle_charge_report(vehicle, updated_vehicle, sim_with_vehicle, station, charger)
+                env.reporter.sim_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
 
 
 class MoveResult(NamedTuple):
     sim: 'SimulationState'
+    prev_vehicle: Optional[Vehicle] = None
+    next_vehicle: Optional[Vehicle] = None
     route_traversal: RouteTraversal = RouteTraversal()
 
 
@@ -122,18 +117,18 @@ def _apply_route_traversal(sim: 'SimulationState',
         if not remaining_route:
             geoid = experienced_route[-1].end
             link = sim.road_network.link_from_geoid(geoid)
-            updated_vehicle = less_energy_vehicle.modify_link(link=link)
+            updated_vehicle = less_energy_vehicle.modify_link(link=link).tick_distance_traveled_km(step_distance_km)
         else:
-            updated_vehicle = less_energy_vehicle.modify_link(link=remaining_route[0])
+            updated_vehicle = less_energy_vehicle.modify_link(link=remaining_route[0]).tick_distance_traveled_km(step_distance_km)
 
         error, updated_sim = simulation_state_ops.modify_vehicle(
             sim,
-            updated_vehicle.tick_distance_traveled_km(step_distance_km),
+            updated_vehicle,
         )
         if error:
             return error, None
         else:
-            return None, MoveResult(updated_sim, traverse_result)
+            return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
 
 
 def _go_out_of_service_on_empty(sim: 'SimulationState',
@@ -191,6 +186,9 @@ def move(sim: 'SimulationState',
         elif empty_vehicle_sim:
             return None, MoveResult(empty_vehicle_sim)
         else:
+            if 'vehicle_move_event' in env.config.global_config.log_sim_config:
+                report = vehicle_move_report(move_result)
+                env.reporter.sim_report(report)
             return None, move_result
 
 

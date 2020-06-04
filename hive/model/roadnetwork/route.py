@@ -1,7 +1,11 @@
 from typing import Tuple, Optional
 
+import functools as ft
+
+from h3 import h3
+
 from hive.model.roadnetwork.link import Link
-from hive.util import TupleOps
+from hive.util import TupleOps, wkt
 from hive.util.typealiases import GeoId
 from hive.util.units import Kilometers
 
@@ -48,3 +52,24 @@ def valid_route(route: Route,
         return src == TupleOps.head(route).start
     else:
         return src == TupleOps.head(route).start and dst == TupleOps.last(route).end
+
+
+def to_linestring(route: Route) -> str:
+    """
+    converts the traversal to a WKT linestring or an empty polygon if the traversal was empty
+    see https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+    :param route: a route
+    :return: a linestring or an empty WKT
+    """
+    if len(route) == 0:
+        return wkt.polygon_empty()
+    elif len(route) == 1:
+        link = route[0]
+        src = h3.h3_to_geo(link.start)
+        dst = h3.h3_to_geo(link.end)
+        linestring = wkt.linestring_2d((src, dst))
+        return linestring
+    else:
+        points = ft.reduce(lambda acc, l: acc + (h3.h3_to_geo(l.start), h3.h3_to_geo(l.end)), route, ())
+        linestring = wkt.linestring_2d(points)
+        return linestring
