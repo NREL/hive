@@ -49,7 +49,9 @@ class HiveConfig(NamedTuple):
         # https://stackoverflow.com/questions/43109355/logging-setlevel-is-being-ignored
         # https://stackoverflow.com/questions/44312978/python-logger-is-not-printing-debug-messages-although-it-is-set-correctly
 
-        logging.basicConfig(level=global_config.log_level)
+        # logging.basicConfig(level=global_config.log_level)
+        root_logger = logging.getLogger("")
+        root_logger.setLevel(global_config.log_level)
 
         log.info(f"global hive configuration loaded from {global_config.global_settings_file_path}")
         for k, v in global_config.asdict().items():

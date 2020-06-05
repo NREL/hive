@@ -6,6 +6,7 @@ import os
 from typing import TYPE_CHECKING
 
 from hive.config.global_config import GlobalConfig
+from hive.model.vehicle import Vehicle
 from hive.reporting.reporter import Reporter
 
 if TYPE_CHECKING:
@@ -49,23 +50,27 @@ class BasicReporter(Reporter):
         return out_dict
 
     @staticmethod
-    def vehicle_asdict(vehicle) -> dict:
-        out_dict = vehicle._asdict()
-        out_dict['vehicle_state'] = vehicle.vehicle_state.__class__.__name__
+    def vehicle_asdict(vehicle: Vehicle) -> dict:
+        output = {
+            'id': vehicle.id,
+            'vehicle_state': vehicle.vehicle_state.__class__.__name__,
+            'balance': vehicle.balance,
+            'distance_traveled_km': vehicle.distance_traveled_km,
+        }
 
         # deconstruct energy source
         for key, val in vehicle.energy.items():
             new_key = 'energy_' + key.name
-            out_dict[new_key] = val
-        del (out_dict['energy'])
+            output[new_key] = val
+        # del (output['energy'])
 
         # deconstruct link
         for key, val in vehicle.link._asdict().items():
             new_key = 'link_' + key
-            out_dict[new_key] = val
-        del (out_dict['link'])
+            output[new_key] = val
+        # del (output['link'])
 
-        return out_dict
+        return output
 
     @staticmethod
     def station_asdict(station) -> dict:
@@ -118,6 +123,7 @@ class BasicReporter(Reporter):
                 sim_time=sim_state.sim_time,
                 report_type='vehicle_report',
             )
+
         if 'request_report' in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.requests.values(),
