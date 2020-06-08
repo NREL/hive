@@ -88,7 +88,7 @@ def run() -> int:
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher),
             PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.input.demand_forecast_file),
+                demand_forecaster=BasicForecaster.build(env.config.input_config.demand_forecast_file),
                 config=env.config.dispatcher,
             ),
             ChargingFleetManager(env.config.dispatcher),

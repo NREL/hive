@@ -19,6 +19,7 @@ class Input(NamedTuple):
     bases_file: str
     stations_file: str
     mechatronics_file: str
+    chargers_file: Optional[str]
     road_network_file: Optional[str]
     geofence_file: Optional[str]
     rate_structure_file: Optional[str]
@@ -59,6 +60,8 @@ class Input(NamedTuple):
         mechatronics_file = fs.construct_asset_path(d['mechatronics_file'], scenario_directory, 'mechatronics', 'mechatronics')
 
         # optional files
+        chargers_filename = d['chargers_file'] if d.get('chargers_file') else 'default_chargers.csv'
+        chargers_file = fs.construct_asset_path(chargers_filename, scenario_directory, 'chargers', 'chargers')
         road_network_file = fs.construct_scenario_asset_path(d['road_network_file'], scenario_directory, 'road_network') if d.get('road_network_file') else None
         geofence_file = fs.construct_scenario_asset_path(d['geofence_file'], scenario_directory, 'geofence') if d.get('geofence_file') else None
         rate_structure_file = fs.construct_scenario_asset_path(d['rate_structure_file'], scenario_directory, 'service_prices') if d.get('rate_structure_file') else None
@@ -72,6 +75,7 @@ class Input(NamedTuple):
             'requests_file': requests_file,
             'bases_file': bases_file,
             'stations_file': stations_file,
+            'chargers_file': chargers_file,
             'mechatronics_file': mechatronics_file,
             'road_network_file': road_network_file,
             'geofence_file': geofence_file,
@@ -82,7 +86,7 @@ class Input(NamedTuple):
 
         # if cache provided, check the file has a correct md5 hash value
         if cache:
-            for name, path in input.items():  # input.asdict(absolute_paths=True).items():
+            for name, path in input.items():  # input_config.asdict(absolute_paths=True).items():
                 if path:
                     cls._check_md5_checksum(path, cache[name])
 

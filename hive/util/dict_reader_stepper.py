@@ -80,7 +80,7 @@ class DictReaderStepper:
         :param dict_reader: the dict reader, reading rows from a csv file
         :param step_column_name: the column we are comparing new bounds against
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
-        :param parser: an optional parameter for parsing the input value
+        :param parser: an optional parameter for parsing the input_config value
         """
         self._iterator = DictReaderIterator(dict_reader, step_column_name, initial_stop_condition, parser)
         self._file = file_reference
@@ -98,7 +98,7 @@ class DictReaderStepper:
         :param step_column_name: the column we are comparing new bounds against
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
                note: descending not yet implemented
-        :param parser: an optional parameter for parsing the input value
+        :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
         try:
@@ -123,7 +123,7 @@ class DictReaderStepper:
         :param step_column_name: the key we are expecting in each Dict that we are comparing new bounds against
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
                note: descending not yet implemented
-        :param parser: an optional parameter for parsing the input value
+        :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
         return cls(data, None, step_column_name, initial_stop_condition, parser)

@@ -69,7 +69,7 @@ class H3Ops:
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
         :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
-        :param is_valid: a function used to filter valid search results, such as checking stations for charger availability
+        :param is_valid: a function used to filter valid search results, such as checking stations for charger_id availability
         :param k: the number of concentric rings to check in the high-level search
         :param max_search_distance_km: the maximum distance a result can be from the search origin
 
@@ -102,7 +102,7 @@ class H3Ops:
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
         :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
-        :param is_valid: a function used to filter valid search results, such as checking stations for charger availability
+        :param is_valid: a function used to filter valid search results, such as checking stations for charger_id availability
         :param distance_function: a function used to evaluate the distance metric for selection
         :param k: the number of concentric rings to check in the high-level search
         :param max_search_distance_km: the maximum distance a result can be from the search origin

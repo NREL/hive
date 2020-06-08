@@ -116,11 +116,11 @@ def nearest_shortest_queue(vehicle: Vehicle, station: Station) -> float:
     :param station: a station
     :return: the distance metric for this station, a function of it's queue size and distance
     """
-    dc_chargers = station.total_chargers.get(Charger.DCFC, 0)
+    dc_chargers = station.total_chargers.get("DCFC", 0)
     if not dc_chargers:
         return float("inf")
     else:
         distance = h3.h3_distance(vehicle.geoid, station.geoid)
-        queue_factor = station.enqueued_vehicle_count_for_charger(Charger.DCFC) / dc_chargers
+        queue_factor = station.enqueued_vehicle_count_for_charger("DCFC") / dc_chargers
         distance_metric = distance + distance * queue_factor
         return distance_metric

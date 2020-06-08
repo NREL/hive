@@ -1,4 +1,4 @@
-station_id,lon,lat,charger_count,charger_type
+station_id,lon,lat,charger_count,charger_id
 bs1,-73.98357,40.75551,2000,LEVEL_2
 s20,-73.92271,40.86694,2000,DCFC
 s26,-73.97378,40.7957,2000,DCFC

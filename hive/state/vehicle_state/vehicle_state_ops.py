@@ -10,7 +10,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId, RequestId
+from hive.util.typealiases import StationId, RequestId, ChargerId
 from hive.util.typealiases import VehicleId
 
 
@@ -18,25 +18,28 @@ def charge(sim: 'SimulationState',
            env: Environment,
            vehicle_id: VehicleId,
            station_id: StationId,
-           charger: Charger) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+           charger_id: ChargerId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
     :param sim: the simulation state
     :param env: the simulation environment
     :param vehicle_id: the vehicle transitioning
     :param station_id: the station where we are charging
-    :param charger: the charger we are using
+    :param charger_id: the charger_id we are using
     :return: an exception due to failure or an optional updated simulation
     """
 
     vehicle = sim.vehicles.get(vehicle_id)
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
+    charger = env.chargers.get(charger_id)
     station = sim.stations.get(station_id)
 
     if not vehicle:
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
     elif not mechatronics:
         return SimulationStateError(f"invalid mechatronics_id {vehicle.mechatronics_id}"), None
+    elif not charger:
+        return SimulationStateError(f"invalid charger_id {charger_id}"), None
     elif not station:
         return SimulationStateError(f"station {station_id} not found"), None
     elif mechatronics.is_full(vehicle):
@@ -47,7 +50,7 @@ def charge(sim: 'SimulationState',
         # TODO: make this flexible wrt energy type (i.e. gasoline)
         # determine price of charge event
         kwh_transacted = charged_vehicle.energy[EnergyType.ELECTRIC] - vehicle.energy[EnergyType.ELECTRIC]  # kwh
-        charger_price = station.charger_prices_per_kwh.get(charger)  # Currency
+        charger_price = station.charger_prices_per_kwh.get(charger_id)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
         # perform updates
@@ -60,7 +63,7 @@ def charge(sim: 'SimulationState',
         else:
 
             if 'vehicle_charge_event' in env.config.global_config.log_sim_config:
-                report = vehicle_charge_report(vehicle, updated_vehicle, sim_with_vehicle, station, charger)
+                report = vehicle_charge_report(vehicle, updated_vehicle, sim_with_vehicle, station, charger_id)
                 env.reporter.sim_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)

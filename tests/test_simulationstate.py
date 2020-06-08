@@ -126,7 +126,7 @@ class TestSimulationState(TestCase):
         instruction = ChargeStationInstruction(
             vehicle_id=veh.id,
             station_id=sta.id,
-            charger=Charger.DCFC
+            charger_id=mock_dcfc_charger_id()
         )
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
@@ -149,7 +149,7 @@ class TestSimulationState(TestCase):
         instruction = ChargeStationInstruction(
             vehicle_id=veh.id,
             station_id=sta.id,
-            charger=Charger.DCFC
+            charger_id=mock_dcfc_charger_id()
         )
 
         error, instruction_result = instruction.apply_instruction(sim, env)
@@ -249,7 +249,7 @@ class TestSimulationState(TestCase):
         instruction = ChargeStationInstruction(
             vehicle_id=veh.id,
             station_id=sta.id,
-            charger=Charger.DCFC
+            charger_id=mock_dcfc_charger_id()
         )
 
         error, instruction_result = instruction.apply_instruction(sim, env)
@@ -355,7 +355,7 @@ class TestSimulationState(TestCase):
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
 
-        instruction = DispatchStationInstruction(vehicle_id=veh.id, station_id=sta.id, charger=Charger.DCFC)
+        instruction = DispatchStationInstruction(vehicle_id=veh.id, station_id=sta.id, charger_id=mock_dcfc_charger_id())
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
@@ -372,9 +372,9 @@ class TestSimulationState(TestCase):
                               ChargingStation,
                               "Vehicle should have transitioned to charging.")
         self.assertEqual(charging_veh.geoid, sta.geoid, "Vehicle should be at station.")
-        self.assertLess(station_w_veh.available_chargers[Charger.DCFC],
-                        station_w_veh.total_chargers[Charger.DCFC],
-                        "Station should have charger in use.")
+        self.assertLess(station_w_veh.available_chargers[mock_dcfc_charger_id()],
+                        station_w_veh.total_chargers[mock_dcfc_charger_id()],
+                        "Station should have charger_id in use.")
 
     def test_terminal_state_dispatch_base(self):
         # approx 8.5 km distance.
@@ -441,7 +441,7 @@ class TestSimulationState(TestCase):
         instruction = ChargeStationInstruction(
             vehicle_id=veh.id,
             station_id=sta.id,
-            charger=Charger.DCFC
+            charger_id=mock_dcfc_charger_id()
         )
         env = mock_env()
         error, instruction_result = instruction.apply_instruction(sim, env)
@@ -469,7 +469,7 @@ class TestSimulationState(TestCase):
         instruction = ChargeBaseInstruction(
             vehicle_id=veh.id,
             base_id=bas.id,
-            charger=Charger.DCFC
+            charger_id=mock_dcfc_charger_id()
         )
         env = mock_env()
         error, instruction_result = instruction.apply_instruction(sim, env)
@@ -513,8 +513,8 @@ class TestSimulationState(TestCase):
 
     def test_get_stations(self):
         sim = mock_sim(stations=(
-            mock_station('s1', lat=0, lon=0, chargers=immutables.Map({Charger.DCFC: 1}, )),
-            mock_station('s2', lat=1, lon=1, chargers=immutables.Map({Charger.LEVEL_2: 1}, )),
+            mock_station('s1', lat=0, lon=0, chargers=immutables.Map({mock_dcfc_charger_id(): 1}, )),
+            mock_station('s2', lat=1, lon=1, chargers=immutables.Map({mock_l2_charger_id(): 1}, )),
         ))
 
         stations = sim.get_stations()
@@ -526,12 +526,12 @@ class TestSimulationState(TestCase):
         self.assertEqual(reversed_stations[0].id, 's2', 'station 2 is first in reversed')
 
         def has_dcfc(station: Station) -> bool:
-            return station.has_available_charger(Charger.DCFC)
+            return station.has_available_charger(mock_dcfc_charger_id())
 
         dcfc_stations = sim.get_stations(filter_function=has_dcfc)
 
-        self.assertEqual(len(dcfc_stations), 1, 'only one station with dcfc charger')
-        self.assertEqual(dcfc_stations[0].id, 's1', 's1 has dcfc charger')
+        self.assertEqual(len(dcfc_stations), 1, 'only one station with dcfc charger_id')
+        self.assertEqual(dcfc_stations[0].id, 's1', 's1 has dcfc charger_id')
 
     def test_get_bases(self):
         sim = mock_sim(bases=(

@@ -16,7 +16,7 @@ def down_sample_nyc_tlc_data(in_file: str,
                              sim_h3_location_resolution: int = 15,
                              boundary_h3_resolution: int = 10):
     """
-    down-samples in input TLC data file for Yellow cab data
+    down-samples in input_config TLC data file for Yellow cab data
 
     :param in_file: the source TLC data file
     :param out_file: a file in HIVE Request data format
@@ -87,7 +87,7 @@ def down_sample_nyc_tlc_data(in_file: str,
                         print(f"row for id {recorded_count} failed: {row}")
 
     if attempted_count == absolute_cutoff:
-        raise IOError(f"too many errors, input file {in_file} (and corresponding file {out_file}) may be corrupt")
+        raise IOError(f"too many errors, input_config file {in_file} (and corresponding file {out_file}) may be corrupt")
 
 
 def sample_vehicles_in_geofence(num: int,

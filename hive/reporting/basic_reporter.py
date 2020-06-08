@@ -83,19 +83,19 @@ class BasicReporter(Reporter):
 
         # deconstruct total_charges
         for key, val in station.total_chargers.items():
-            new_key = 'total_chargers_' + key.name
+            new_key = 'total_chargers_' + key
             out_dict[new_key] = val
         del (out_dict['total_chargers'])
 
         # deconstruct available_charges
         for key, val in station.available_chargers.items():
-            new_key = 'available_chargers_' + key.name
+            new_key = 'available_chargers_' + key
             out_dict[new_key] = val
         del (out_dict['available_chargers'])
 
         # deconstruct charger_prices
         for key, val in station.charger_prices_per_kwh.items():
-            new_key = 'charger_prices_' + key.name
+            new_key = 'charger_prices_' + key
             out_dict[new_key] = val
         del (out_dict['charger_prices_per_kwh'])
 

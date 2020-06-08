@@ -11,7 +11,7 @@ class TestBEV(TestCase):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=0)
 
-        charged_vehicle = bev.add_energy(vehicle, Charger.DCFC, hours_to_seconds(10))
+        charged_vehicle = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertAlmostEqual(
             charged_vehicle.energy[EnergyType.ELECTRIC]/bev.battery_capacity_kwh,
             1,
@@ -22,14 +22,14 @@ class TestBEV(TestCase):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=1)
 
-        charged_vehicle = bev.add_energy(vehicle, Charger.DCFC, hours_to_seconds(10))
+        charged_vehicle = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertEqual(charged_vehicle.energy[EnergyType.ELECTRIC], 50, "Should be fully charged")
 
     def test_leaf_energy_gain_low_power(self):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=0)
 
-        charged_vehicle = bev.add_energy(vehicle, Charger.LEVEL_2, hours_to_seconds(0.1))
+        charged_vehicle = bev.add_energy(vehicle, mock_l2_charger(), hours_to_seconds(0.1))
         self.assertLess(charged_vehicle.energy[EnergyType.ELECTRIC], 50, "Should not be fully charged")
 
     def test_leaf_energy_cost_empty_route(self):

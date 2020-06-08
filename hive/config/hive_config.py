@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 class HiveConfig(NamedTuple):
     global_config: GlobalConfig
-    input: Input
+    input_config: Input
     sim: Sim
     network: Network
     dispatcher: DispatcherConfig
@@ -64,7 +64,7 @@ class HiveConfig(NamedTuple):
         with defaults_file.open('r') as f:
             conf = yaml.safe_load(f)
 
-            # append input file to default configuration with overwrite
+            # append input_config file to default configuration with overwrite
             conf['input'].update(d['input'])
             conf['sim'].update(d['sim'])
             conf['network'].update(d['network'])
@@ -78,14 +78,14 @@ class HiveConfig(NamedTuple):
 
             hive_config = HiveConfig(
                 global_config=global_config,
-                input=Input.build(conf.get('input'), scenario_file_path, conf.get('cache')),
+                input_config=Input.build(conf.get('input'), scenario_file_path, conf.get('cache')),
                 sim=Sim.build(conf.get('sim')),
                 network=Network.build(conf.get('network')),
                 dispatcher=DispatcherConfig.build(conf.get('dispatcher')),
                 out_dir_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
             )
 
-            log.info(f"output directory set to {hive_config.input.scenario_directory}")
+            log.info(f"output directory set to {hive_config.input_config.scenario_directory}")
             log.info(f"hive config loaded from {str(scenario_file_path)}")
             log.info(f"\n{yaml.dump(conf)}")
 
@@ -107,7 +107,7 @@ class HiveConfig(NamedTuple):
     def asdict(self) -> Dict:
         out_dict = {}
         cache = {}
-        input_configuration = self.input.asdict()
+        input_configuration = self.input_config.asdict()
 
         for name, value in input_configuration.items():
             if not value:

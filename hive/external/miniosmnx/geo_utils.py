@@ -164,7 +164,7 @@ def get_largest_component(G, strongly=False):
 
 def overpass_json_from_file(filename):
     """
-    Read OSM XML from input filename and return Overpass-like JSON.
+    Read OSM XML from input_config filename and return Overpass-like JSON.
 
     Parameters
     ----------

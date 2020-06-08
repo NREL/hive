@@ -46,12 +46,13 @@ class Update(NamedTuple):
         # the basic, built-in set of updates which advance time of the supply and demand
         pre_step_update = (
             ChargingPriceUpdate.build(
-                config.input.charging_price_file,
+                config.input_config.charging_price_file,
+                config.input_config.chargers_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,
             ),
             UpdateRequests.build(
-                config.input.requests_file,
-                config.input.rate_structure_file,
+                config.input_config.requests_file,
+                config.input_config.rate_structure_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,
             ),
             CancelRequests()

@@ -23,23 +23,23 @@ class Station(NamedTuple):
     :type id: :py:obj:`StationId`
     :param geoid: The location of the station.
     :type geoid: :py:obj:`Geoid`
-    :param total_chargers: A map of the charger types and quanitites for this station.
+    :param total_chargers: A map of the charger_id types and quanitites for this station.
     :type total_chargers: :py:obj:`Dict[Charger, int]`
-    :param available_chargers: Identifies how many plugs for each charger type are unoccupied.
+    :param available_chargers: Identifies how many plugs for each charger_id type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
     :param charger_prices_per_kwh: the cost to use chargers at this station
     :type charger_prices_per_kwh: :py:obj`Dict[Charger, Currency]`
-    :param enqueued_vehicles: the count of vehicles currently enqueued for each charger
+    :param enqueued_vehicles: the count of vehicles currently enqueued for each charger_id
     :type enqueued_vehicles: :py:obj`Dict[Charger, int]`
     :param balance: the net income of this station
     :type balance: :py:obj:`Currency`
     """
     id: StationId
     link: Link
-    total_chargers: immutables.Map[Charger, int]
-    available_chargers: immutables.Map[Charger, int]
-    charger_prices_per_kwh: immutables.Map[Charger, Currency]
-    enqueued_vehicles: immutables.Map[Charger, int] = immutables.Map()
+    total_chargers: immutables.Map[ChargerId, int]
+    available_chargers: immutables.Map[ChargerId, int]
+    charger_prices_per_kwh: immutables.Map[ChargerId, Currency]
+    enqueued_vehicles: immutables.Map[ChargerId, int] = immutables.Map()
     balance: Currency = 0.0
 
     @property
@@ -81,8 +81,8 @@ class Station(NamedTuple):
             raise IOError("cannot load a station without an 'lat' value")
         elif 'lon' not in row:
             raise IOError("cannot load a station without an 'lon' value")
-        elif 'charger_type' not in row:
-            raise IOError("cannot load a station without a 'charger_type' value")
+        elif 'charger_id' not in row:
+            raise IOError("cannot load a station without a 'charger_id' value")
         elif 'charger_count' not in row:
             raise IOError("cannot load a station without a 'charger_count' value")
         else:
@@ -90,33 +90,33 @@ class Station(NamedTuple):
             try:
                 lat, lon = float(row['lat']), float(row['lon'])
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                charger_type = Charger.from_string(row['charger_type'])
+                charger_id: ChargerId = row['charger_id']
                 charger_count = int(float(row['charger_count']))
 
-                if charger_type is None:
-                    raise IOError(f"invalid charger type {row['charger']} for station {station_id}")
+                if charger_id is None:
+                    raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
                 elif station_id not in builder:
                     # create this station
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_type: charger_count})
+                        chargers=immutables.Map({charger_id: charger_count})
                     )
-                elif charger_type in builder[station_id].total_chargers:
-                    # combine counts from multiple rows which refer to this charger_type
-                    charger_already_loaded = builder[station_id].total_chargers[charger_type]
+                elif charger_id in builder[station_id].total_chargers:
+                    # combine counts from multiple rows which refer to this charger_id
+                    charger_already_loaded = builder[station_id].total_chargers[charger_id]
 
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_type: charger_count + charger_already_loaded})
+                        chargers=immutables.Map({charger_id: charger_count + charger_already_loaded})
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
                     charger_already_loaded = builder[station_id].total_chargers
-                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
+                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_id, charger_count)
 
                     return Station.build(
                         id=station_id,
@@ -128,48 +128,48 @@ class Station(NamedTuple):
             except ValueError as v:
                 raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
 
-    def has_available_charger(self, charger: Charger) -> bool:
+    def has_available_charger(self, charger_id: ChargerId) -> bool:
         """
-        Indicates if a station has an available charge of type `charger`
+        Indicates if a station has an available charge of type `charger_id`
 
-        :param charger: charger type to be queried.
+        :param charger_id: charger_id type to be queried.
         :return: Boolean
         """
-        return charger in self.total_chargers and self.available_chargers[charger] > 0
+        return charger_id in self.total_chargers and self.available_chargers[charger_id] > 0
 
-    def checkout_charger(self, charger: Charger) -> Optional[Station]:
+    def checkout_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
-        Checks out a charger of type `charger` and returns an updated station if there are any available
+        Checks out a charger_id of type `charger_id` and returns an updated station if there are any available
 
-        :param charger: the charger type to be checked out
+        :param charger_id: the charger_id type to be checked out
         :return: Updated station or None if no chargers available
         """
 
-        if self.has_available_charger(charger):
-            previous_charger_count = self.available_chargers.get(charger)
-            updated_avail_chargers = self.available_chargers.set(charger, previous_charger_count - 1)
+        if self.has_available_charger(charger_id):
+            previous_charger_count = self.available_chargers.get(charger_id)
+            updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count - 1)
             return self._replace(available_chargers=updated_avail_chargers)
         else:
             return None
 
-    def return_charger(self, charger: Charger) -> Station:
+    def return_charger(self, charger_id: ChargerId) -> Station:
         """
-        Returns a charger of type `charger` to the station.
+        Returns a charger_id of type `charger_id` to the station.
         Raises exception if available chargers exceeds total chargers
 
-        :param charger: Charger to be returned
-        :return: The updated station with returned charger
+        :param charger_id: Charger to be returned
+        :return: The updated station with returned charger_id
         """
-        if charger in self.available_chargers:
-            previous_charger_count = self.available_chargers.get(charger)
-            if previous_charger_count > self.total_chargers.get(charger):
+        if charger_id in self.available_chargers:
+            previous_charger_count = self.available_chargers.get(charger_id)
+            if previous_charger_count > self.total_chargers.get(charger_id):
                 raise SimulationStateError("Station already has max chargers of this type")
-            updated_avail_chargers = self.available_chargers.set(charger, previous_charger_count + 1)
+            updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count + 1)
             return self._replace(available_chargers=updated_avail_chargers)
         else:
             return self
 
-    def update_prices(self, new_prices: immutables.Map[Charger, Currency]) -> Station:
+    def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> Station:
         return self._replace(
             charger_prices_per_kwh=DictOps.merge_dicts(self.charger_prices_per_kwh, new_prices)
         )
@@ -182,38 +182,38 @@ class Station(NamedTuple):
         """
         return self._replace(balance=self.balance + currency_received)
 
-    def enqueue_for_charger(self, charger: Charger) -> Station:
+    def enqueue_for_charger(self, charger_id: ChargerId) -> Station:
         """
-        increment the count of vehicles enqueued for a specific charger type - no limit
-        :param charger: the charger type
+        increment the count of vehicles enqueued for a specific charger_id type - no limit
+        :param charger_id: the charger_id type
         :return: the updated Station
         """
-        updated_enqueued_count = self.enqueued_vehicles.get(charger, 0) + 1
-        updated_enqueued_vehicles = self.enqueued_vehicles.set(charger, updated_enqueued_count)
+        updated_enqueued_count = self.enqueued_vehicles.get(charger_id, 0) + 1
+        updated_enqueued_vehicles = self.enqueued_vehicles.set(charger_id, updated_enqueued_count)
         return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
 
-    def dequeue_for_charger(self, charger: Charger) -> Station:
+    def dequeue_for_charger(self, charger_id: ChargerId) -> Station:
         """
-        decrement the count of vehicles enqueued for a specific charger type - min zero
-        :param charger: the charger type
+        decrement the count of vehicles enqueued for a specific charger_id type - min zero
+        :param charger_id: the charger_id type
         :return: the updated Station
         """
-        enqueued_count = self.enqueued_vehicles.get(charger, 0)
+        enqueued_count = self.enqueued_vehicles.get(charger_id, 0)
         if not enqueued_count:
             return self
         else:
             updated_enqueued_count = max(0, enqueued_count - 1)
             if updated_enqueued_count == 0:
-                updated_enqueued_vehicles = self.enqueued_vehicles.delete(charger)
+                updated_enqueued_vehicles = self.enqueued_vehicles.delete(charger_id)
                 return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
             else:
-                updated_enqueued_vehicles = self.enqueued_vehicles.set(charger, updated_enqueued_count)
+                updated_enqueued_vehicles = self.enqueued_vehicles.set(charger_id, updated_enqueued_count)
                 return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
 
-    def enqueued_vehicle_count_for_charger(self, charger: Charger) -> int:
+    def enqueued_vehicle_count_for_charger(self, charger_id: ChargerId) -> int:
         """
-        gets the current count of vehicles enqueued for a specific charger at this station
-        :param charger: the charger type
+        gets the current count of vehicles enqueued for a specific charger_id at this station
+        :param charger_id: the charger_id type
         :return: the count of vehicles enqueued
         """
-        return self.enqueued_vehicles.get(charger, 0)
+        return self.enqueued_vehicles.get(charger_id, 0)

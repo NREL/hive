@@ -9,6 +9,7 @@ import immutables
 
 from hive.config import HiveConfig
 from hive.model.base import Base
+from hive.model.energy.charger import build_chargers_table
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
@@ -35,12 +36,12 @@ def initialize_simulation(
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
 
-    vehicles_file = config.input.vehicles_file
-    bases_file = config.input.bases_file
-    stations_file = config.input.stations_file
+    vehicles_file = config.input_config.vehicles_file
+    bases_file = config.input_config.bases_file
+    stations_file = config.input_config.stations_file
 
-    if config.input.geofence_file:
-        geofence = GeoFence.from_geojson_file(config.input.geofence_file)
+    if config.input_config.geofence_file:
+        geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
     else:
         geofence = None
 
@@ -50,7 +51,7 @@ def initialize_simulation(
         road_network = OSMRoadNetwork(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
-            road_network_file=config.input.road_network_file,
+            road_network_file=config.input_config.road_network_file,
             default_speed_kmph=config.network.default_speed_kmph,
         )
     else:
@@ -69,7 +70,8 @@ def initialize_simulation(
     reporter = BasicReporter(config.global_config, config.scenario_output_directory)
     env_initial = Environment(config=config,
                               reporter=reporter,
-                              mechatronics=build_mechatronics_table(config.input),
+                              mechatronics=build_mechatronics_table(config.input_config),
+                              chargers=build_chargers_table(config.input_config.chargers_file)
                               )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
