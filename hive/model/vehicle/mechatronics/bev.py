@@ -144,8 +144,8 @@ class BEV(NamedTuple, MechatronicsInterface):
             # if we're above the charge taper cutoff, we'll use the powercurve
             energy_limit_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
             charger_energy_kwh = self.powercurve.charge(
-                start_energy_kwh=start_energy_kwh,
-                energy_limit_kwh=energy_limit_kwh,
+                start_soc=start_energy_kwh,
+                full_soc=energy_limit_kwh,
                 power_kw=charger.power_kw,
                 duration_seconds=time_seconds,
             )

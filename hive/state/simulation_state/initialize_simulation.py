@@ -9,6 +9,7 @@ import immutables
 
 from hive.config import HiveConfig
 from hive.model.base import Base
+from hive.model.energy.charger import build_chargers_table
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
@@ -70,6 +71,7 @@ def initialize_simulation(
     env_initial = Environment(config=config,
                               reporter=reporter,
                               mechatronics=build_mechatronics_table(config.input),
+                              chargers=build_chargers_table(config.input.chargers_file)
                               )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we

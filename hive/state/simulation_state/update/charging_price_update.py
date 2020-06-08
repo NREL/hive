@@ -8,7 +8,8 @@ from csv import DictReader
 import immutables
 from h3 import h3
 
-from hive.model.energy.charger import Charger
+from hive.config.input import Input
+from hive.model.energy.charger import Charger, build_chargers_table
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
@@ -17,20 +18,8 @@ from hive.state.simulation_state.update.simulation_update_result import Simulati
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.helpers import DictOps
 from hive.util.parsers import time_parser
-from hive.util.typealiases import StationId
+from hive.util.typealiases import StationId, ChargerId
 from hive.util.units import Currency
-
-
-def _default_charging_prices() -> Iterator[Dict[str, str]]:
-    """
-    used to build the default set of prices
-    :return: a price update function which will set all chargers to a Currency of zero
-    """
-    return iter([{"time": "0",
-                  "station_id": "default",
-                  "charger_type": charger.name,
-                  "price_kwh": "0.0"
-                  } for charger in Charger.to_tuple()])
 
 
 class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
@@ -42,29 +31,42 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
     @classmethod
     def build(cls,
-              charging_file: Optional[str] = None,
-              fallback_values: Iterator[Dict[str, str]] = _default_charging_prices(),
+              charging_price_file: Optional[str],
+              chargers_file: str,
               lazy_file_reading: bool = False,
               ) -> ChargingPriceUpdate:
         """
         reads a requests file and builds a ChargingPriceUpdate SimulationUpdateFunction
         if no charging_file is specified, builds a price update which sets all
-        charger types to a kw price of zero Currency units per kw
+        charger_id types to a kw price of zero Currency units per kw
 
-        :param charging_file: optional file path for charger pricing by time of day
-        :param fallback_values: if file path not provided, this is the fallback
-        :param lazy_file_reading:
+        :param charging_price_file: the optional charging price file provided by the user
+        :param chargers_file: the file listing all chargers for this scenario
+        :param lazy_file_reading: if true, we load all file data into memory
         :return: a SimulationUpdate function pointing at the first line of a request file
         :raises: an exception if there were file reading issues
         """
 
-        if not charging_file:
-            stepper = DictReaderStepper.from_iterator(fallback_values, "time", parser=time_parser)
+        if not charging_price_file:
+            # assign default price of $0.00 for any charger types
+            table = build_chargers_table(chargers_file)
+
+            def create_default_price(acc: Tuple[Dict, ...], charger_id: ChargerId) -> Tuple[Dict, ...]:
+                default_price = {
+                    "time": "0",
+                    "station_id": "default",
+                    "charger_id": charger_id,
+                    "price_kwh": "0.0"
+                }
+                return acc + (default_price,)
+
+            fallback_values = ft.reduce(create_default_price, table.keys(), ())
+            stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=time_parser)
             return ChargingPriceUpdate(stepper, True)
         else:
-            charging_path = Path(charging_file)
+            charging_path = Path(charging_price_file)
             if not charging_path.is_file():
-                raise IOError(f"{charging_file} is not a valid path to a request file")
+                raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
                     error, stepper = DictReaderStepper.from_file(charging_path, "time", parser=time_parser)
@@ -93,7 +95,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
         def stop_condition(value: int) -> bool:
             return value < current_sim_time
 
-        # parse the most recently available charger price data up to the current sim time
+        # parse the most recently available charger_id price data up to the current sim time
         charger_update, failures = ft.reduce(
             _add_row_to_this_update,
             self.reader.read_until_stop_condition(stop_condition),
@@ -135,7 +137,7 @@ def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charge
                            ) -> Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]]:
     """
     adds a single row to an accumulator that is storing only the most recently
-    observed {StationId|GeoId}/charger/currency combinations
+    observed {StationId|GeoId}/charger_id/currency combinations
 
     :param acc: the accumulator
     :param row: the row to add
@@ -145,16 +147,16 @@ def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charge
 
     try:
         price = float(row['price_kwh'])
-        charger = Charger.from_string(row["charger_type"])
+        charger_id = row["charger_type"]
         if "station_id" in row:
             station_id = row["station_id"]
             this_entry = rows[station_id] if rows.get(station_id) else immutables.Map()
-            updated = DictOps.add_to_dict(rows, station_id, this_entry.set(charger, price))
+            updated = DictOps.add_to_dict(rows, station_id, this_entry.set(charger_id, price))
             return updated, failures
         elif "geoid" in row:
             geoid = row["geoid"]
             this_entry = rows[geoid] if rows.get(geoid) else immutables.Map()
-            updated = DictOps.add_to_dict(rows, geoid, this_entry.set(charger, price))
+            updated = DictOps.add_to_dict(rows, geoid, this_entry.set(charger_id, price))
             return updated, failures
         else:
             return rows, (f"missing geoid|station_id for row: {row}",) + failures

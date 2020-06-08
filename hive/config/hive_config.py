@@ -62,7 +62,7 @@ class HiveConfig(NamedTuple):
         with defaults_file.open('r') as f:
             conf = yaml.safe_load(f)
 
-            # append input file to default configuration with overwrite
+            # append input_config file to default configuration with overwrite
             conf['input'].update(d['input'])
             conf['sim'].update(d['sim'])
             conf['network'].update(d['network'])

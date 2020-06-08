@@ -35,7 +35,7 @@ class TestVehicleStateOps(TestCase):
 
     def test_charge(self):
 
-        state = ChargingBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), Charger.DCFC)
+        state = ChargingBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), mock_dcfc_charger_id())
         veh = mock_vehicle_from_geoid(vehicle_state=state, soc=0.5)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
@@ -47,7 +47,7 @@ class TestVehicleStateOps(TestCase):
         )
         env = mock_env()
 
-        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, Charger.DCFC)
+        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, mock_dcfc_charger_id())
         if error:
             self.fail(error)
 
@@ -60,7 +60,7 @@ class TestVehicleStateOps(TestCase):
 
     def test_charge_when_full(self):
 
-        state = ChargingBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), Charger.DCFC)
+        state = ChargingBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), mock_dcfc_charger_id())
         veh = mock_vehicle_from_geoid(vehicle_state=state, soc=1.0)
         sta = mock_station_from_geoid()
         bas = mock_base_from_geoid(station_id=sta.id)
@@ -72,7 +72,7 @@ class TestVehicleStateOps(TestCase):
         )
         env = mock_env()
 
-        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, Charger.DCFC)
+        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, mock_dcfc_charger_id())
 
         self.assertIsNotNone(error)
         self.assertIsNone(result)

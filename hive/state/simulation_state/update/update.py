@@ -47,6 +47,7 @@ class Update(NamedTuple):
         pre_step_update = (
             ChargingPriceUpdate.build(
                 config.input.charging_price_file,
+                config.input.chargers_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,
             ),
             UpdateRequests.build(

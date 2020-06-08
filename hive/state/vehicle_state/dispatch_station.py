@@ -10,14 +10,14 @@ from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId, VehicleId
+from hive.util.typealiases import StationId, VehicleId, ChargerId
 
 
 class DispatchStation(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     station_id: StationId
     route: Route
-    charger: Charger
+    charger_id: ChargerId
 
     def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
@@ -60,7 +60,7 @@ class DispatchStation(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        available_chargers = station.available_chargers.get(self.charger, 0) if station else 0
+        available_chargers = station.available_chargers.get(self.charger_id, 0) if station else 0
         if not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         elif not vehicle:
@@ -73,10 +73,10 @@ class DispatchStation(NamedTuple, VehicleState):
             has_chargers = available_chargers > 0
             next_state = ChargingStation(self.vehicle_id,
                                          self.station_id,
-                                         self.charger) if has_chargers else ChargeQueueing(self.vehicle_id,
-                                                                                           self.station_id,
-                                                                                           self.charger,
-                                                                                           sim.sim_time)
+                                         self.charger_id) if has_chargers else ChargeQueueing(self.vehicle_id,
+                                                                                              self.station_id,
+                                                                                              self.charger_id,
+                                                                                              sim.sim_time)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None

@@ -140,7 +140,7 @@ def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simula
             instruction = ChargeBaseInstruction(
                 vehicle_id=veh.id,
                 base_id=base.id,
-                charger=Charger.LEVEL_2,
+                charger_id="LEVEL_2",
             )
 
             instructions = instructions + (instruction,)
@@ -173,13 +173,13 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,
-                                               is_valid=lambda s: s.has_available_charger(Charger.DCFC),
+                                               is_valid=lambda s: s.has_available_charger("DCFC"),
                                                distance_function=lambda s: assignment_ops.nearest_shortest_queue(veh, s))
         if nearest_station:
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
                 station_id=nearest_station.id,
-                charger=Charger.DCFC,
+                charger_id="DCFC",
             )
 
             instructions = instructions + (instruction,)

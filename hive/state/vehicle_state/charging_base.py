@@ -7,22 +7,22 @@ from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import BaseId, VehicleId
+from hive.util.typealiases import BaseId, VehicleId, ChargerId
 
 
 class ChargingBase(NamedTuple, VehicleState):
     """
-    a vehicle is charging at a base with a specific charger type
+    a vehicle is charging at a base with a specific charger_id type
     """
     vehicle_id: VehicleId
     base_id: BaseId
-    charger: Charger
+    charger_id: ChargerId
 
     def enter(self,
               sim: 'SimulationState',
               env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
-        entering a charge event requires attaining a charger from the station situated at the base
+        entering a charge event requires attaining a charger_id from the station situated at the base
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if not possible
@@ -37,7 +37,7 @@ class ChargingBase(NamedTuple, VehicleState):
             if not station:
                 return SimulationStateError(f"station {base.station_id} not found"), None
             else:
-                updated_station = station.checkout_charger(self.charger)
+                updated_station = station.checkout_charger(self.charger_id)
                 if not updated_station:
                     return None, None
                 else:
@@ -47,15 +47,14 @@ class ChargingBase(NamedTuple, VehicleState):
                     else:
                         return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
     def exit(self,
              sim: 'SimulationState',
              env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
-        exiting a charge event requires returning the charger to the station at the base
+        exiting a charge event requires returning the charger_id to the station at the base
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
@@ -69,7 +68,7 @@ class ChargingBase(NamedTuple, VehicleState):
         elif not station:
             return SimulationStateError(f"station for base {self.base_id} not found"), None
         else:
-            updated_station = station.return_charger(self.charger)
+            updated_station = station.return_charger(self.charger_id)
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,
@@ -120,4 +119,4 @@ class ChargingBase(NamedTuple, VehicleState):
         if not station_id:
             return SimulationStateError(f"attempting to charge at base {base.id} which has no assoc. station_id"), None
         else:
-            return charge(sim, env, self.vehicle_id, station_id, self.charger)
+            return charge(sim, env, self.vehicle_id, station_id, self.charger_id)

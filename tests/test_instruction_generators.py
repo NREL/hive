@@ -73,10 +73,11 @@ class TestInstructionGenerators(TestCase):
 
         # invariant: a queue can be created even if plugs are available and
         # our dispatcher only considers the queue size in the distance metric
-        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid).enqueue_for_charger(Charger.DCFC).checkout_charger(Charger.DCFC)
+        s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid)
+        s1 = s1.enqueue_for_charger(mock_dcfc_charger_id()).checkout_charger(mock_dcfc_charger_id())
         s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
 
-        self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger)")
+        self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger_id)")
 
         sim = mock_sim(h3_location_res=15, h3_search_res=5, vehicles=(veh_low_battery,), stations=(s1, s2,))
         env = mock_env()
@@ -180,7 +181,7 @@ class TestInstructionGenerators(TestCase):
         """
         # set base vehicles charging limit to 1, but provide a station with 2 chargers at the base
         base_fleet_manager = BaseFleetManager(mock_config().dispatcher)
-        station = mock_station_from_geoid(chargers=immutables.Map({Charger.LEVEL_2: 2}))
+        station = mock_station_from_geoid(chargers=immutables.Map({mock_l2_charger_id(): 2}))
         base = mock_base_from_geoid(stall_count=2, station_id=station.id)
 
         vid_1 = 'lower_soc_vehicle'

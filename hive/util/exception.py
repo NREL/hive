@@ -24,7 +24,7 @@ class StateTransitionError(Exception):
     def __init__(self, state_type, this_state_name, next_state_name):
         """
 
-        :param state_type: the kind of state object that failed (i.e, "vehicle", "charger", "request")
+        :param state_type: the kind of state object that failed (i.e, "vehicle", "charger_id", "request")
         :param this_state_name: state at beginning of transition
         :param next_state_name: attempted new state
         """

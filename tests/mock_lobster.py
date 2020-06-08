@@ -135,7 +135,7 @@ def mock_station(
         road_network: RoadNetwork = mock_network(),
 ) -> Station:
     if chargers is None:
-        chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
+        chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers)
 
 
@@ -146,7 +146,7 @@ def mock_station_from_geoid(
         road_network: RoadNetwork = mock_network()
 ) -> Station:
     if chargers is None:
-        chargers = immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1})
+        chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     elif isinstance(chargers, dict):
         chargers = immutables.Map(chargers)
     return Station.build(station_id, geoid, road_network, chargers)
@@ -344,6 +344,7 @@ def mock_config(
             'requests_file': 'denver_demo_requests.csv',
             'bases_file': 'denver_demo_bases.csv',
             'stations_file': 'denver_demo_stations.csv',
+            'chargers_file': 'default_chargers.csv',
             'charging_price_file': 'denver_charging_prices_by_geoid.csv',
             'rate_structure_file': 'rate_structure.csv',
             'mechatronics_file': 'mechatronics.csv',
@@ -368,16 +369,25 @@ def mock_config(
 def mock_env(
         config: HiveConfig = mock_config(),
         mechatronics: Dict[MechatronicsId, MechatronicsInterface] = None,
+        chargers: Optional[Dict[ChargerId, Charger]] = None
 ) -> Environment:
     if mechatronics is None:
         mechatronics = {
             DefaultIds.mock_mechatronics_id(): mock_bev(),
         }
 
+    if chargers is None:
+        chargers = {
+            mock_l1_charger_id(): mock_l1_charger(),
+            mock_l2_charger_id(): mock_l2_charger(),
+            mock_dcfc_charger_id(): mock_dcfc_charger()
+        }
+
     initial_env = Environment(
         config=config,
         reporter=mock_reporter(),
-        mechatronics=mechatronics,
+        mechatronics=immutables.Map(mechatronics),
+        chargers=immutables.Map(chargers)
     )
 
     return initial_env
@@ -520,3 +530,27 @@ def mock_update(config: Optional[HiveConfig] = None,
         conf = mock_config()
         instruction_generators = mock_instruction_generators_with_mock_forecast(conf)
         return Update((), StepSimulation(instruction_generators))
+
+
+def mock_l1_charger_id():
+    return "LEVEL_1"
+
+
+def mock_l2_charger_id():
+    return "LEVEL_2"
+
+
+def mock_dcfc_charger_id():
+    return "DCFC"
+
+
+def mock_l1_charger():
+    return Charger(mock_l1_charger_id(), 3.3)
+
+
+def mock_l2_charger():
+    return Charger(mock_l2_charger_id(), 7.2)
+
+
+def mock_dcfc_charger():
+    return Charger(mock_dcfc_charger_id(), 50.0)

@@ -18,7 +18,7 @@ from hive.state.vehicle_state.repositioning import Repositioning
 from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId
+from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId, ChargerId
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class ServeTripInstruction(NamedTuple, Instruction):
 class DispatchStationInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     station_id: StationId
-    charger: Charger
+    charger_id: ChargerId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -110,7 +110,7 @@ class DispatchStationInstruction(NamedTuple, Instruction):
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
-            next_state = DispatchStation(self.vehicle_id, self.station_id, route, self.charger)
+            next_state = DispatchStation(self.vehicle_id, self.station_id, route, self.charger_id)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -118,7 +118,7 @@ class DispatchStationInstruction(NamedTuple, Instruction):
 class ChargeStationInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     station_id: StationId
-    charger: Charger
+    charger_id: ChargerId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -128,7 +128,7 @@ class ChargeStationInstruction(NamedTuple, Instruction):
             return SimulationStateError(f"vehicle {vehicle} not found"), None
         else:
             prev_state = vehicle.vehicle_state
-            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger)
+            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -136,7 +136,7 @@ class ChargeStationInstruction(NamedTuple, Instruction):
 class ChargeBaseInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
-    charger: Charger
+    charger_id: ChargerId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -146,7 +146,7 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
             return SimulationStateError(f"vehicle {vehicle} not found"), None
         else:
             prev_state = vehicle.vehicle_state
-            next_state = ChargingBase(self.vehicle_id, self.base_id, self.charger)
+            next_state = ChargingBase(self.vehicle_id, self.base_id, self.charger_id)
 
             return None, InstructionResult(prev_state, next_state)
 

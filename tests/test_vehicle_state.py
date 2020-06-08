@@ -17,7 +17,7 @@ class TestVehicleState(TestCase):
     def test_charging_station_enter(self):
         vehicle = mock_vehicle()
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -33,12 +33,12 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.available_chargers.get(charger)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation, "should be in a charging state")
-        self.assertEquals(available_chargers, 0, "should have claimed the only DCFC charger")
+        self.assertEquals(available_chargers, 0, "should have claimed the only DCFC charger_id")
 
     def test_charging_station_exit(self):
         vehicle = mock_vehicle()
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -58,12 +58,12 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.available_chargers.get(charger)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation, "should still be in a charging state")
-        self.assertEquals(available_chargers, 1, "should have returned the only DCFC charger")
+        self.assertEquals(available_chargers, 1, "should have returned the only DCFC charger_id")
 
     def test_charging_station_update(self):
         vehicle = mock_vehicle(soc=0.5)
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -87,7 +87,7 @@ class TestVehicleState(TestCase):
     def test_charging_station_update_terminal(self):
         vehicle = mock_vehicle(soc=1)
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -104,11 +104,11 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_station = sim_updated.stations.get(station.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "vehicle should be in idle state")
-        self.assertEquals(updated_station.available_chargers.get(charger), 1, "should have returned the charger")
+        self.assertEquals(updated_station.available_chargers.get(charger), 1, "should have returned the charger_id")
 
     def test_charging_station_enter_with_no_station(self):
         vehicle = mock_vehicle(soc=0.99)
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
         )
@@ -121,7 +121,7 @@ class TestVehicleState(TestCase):
 
     def test_charging_station_enter_with_no_vehicle(self):
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             stations=(station,),
         )
@@ -134,18 +134,18 @@ class TestVehicleState(TestCase):
 
     def test_charging_station_subsequent_charge_instructions(self):
         vehicle = mock_vehicle()
-        station = mock_station(chargers=immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1}))
+        station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1}))
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
         )
         env = mock_env()
 
-        state = ChargingStation(vehicle.id, station.id, Charger.DCFC)
+        state = ChargingStation(vehicle.id, station.id, mock_dcfc_charger_id())
         err1, sim1 = state.enter(sim, env)
         self.assertIsNone(err1, "test precondition (enter works correctly) not met")
 
-        next_state = ChargingStation(vehicle.id, station.id, Charger.LEVEL_2)
+        next_state = ChargingStation(vehicle.id, station.id, mock_l2_charger_id())
         err2, sim2 = entity_state_ops.transition_previous_to_next(sim1, env, state, next_state)
 
         self.assertIsNone(err2, "two subsequent charge instructions should not produce an error")
@@ -153,10 +153,10 @@ class TestVehicleState(TestCase):
 
         updated_station = sim2.stations.get(station.id)
         self.assertIsNotNone(updated_station, "station not found in sim")
-        dc_available = updated_station.available_chargers.get(Charger.DCFC)
-        l2_available = updated_station.available_chargers.get(Charger.LEVEL_2)
-        self.assertEqual(dc_available, 1, "should have released DC charger on second transition")
-        self.assertEqual(l2_available, 0, "second instruction should have claimed the only L2 charger")
+        dc_available = updated_station.available_chargers.get(mock_dcfc_charger_id())
+        l2_available = updated_station.available_chargers.get(mock_l2_charger_id())
+        self.assertEqual(dc_available, 1, "should have released DC charger_id on second transition")
+        self.assertEqual(l2_available, 0, "second instruction should have claimed the only L2 charger_id")
 
     ####################################################################################################################
     # ChargingBase #####################################################################################################
@@ -166,7 +166,7 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle()
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -183,13 +183,13 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.available_chargers.get(charger)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingBase, "should be in a charging state")
-        self.assertEquals(available_chargers, 0, "should have claimed the only DCFC charger")
+        self.assertEquals(available_chargers, 0, "should have claimed the only DCFC charger_id")
 
     def test_charging_base_exit(self):
         vehicle = mock_vehicle()
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -210,13 +210,13 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.available_chargers.get(charger)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingBase, "should still be in a charging state")
-        self.assertEquals(available_chargers, 1, "should have returned the only DCFC charger")
+        self.assertEquals(available_chargers, 1, "should have returned the only DCFC charger_id")
 
     def test_charging_base_update(self):
         vehicle = mock_vehicle(soc=0.5)
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.LEVEL_2
+        charger = mock_l2_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -242,7 +242,7 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle(soc=1.0)
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -265,7 +265,7 @@ class TestVehicleState(TestCase):
     def test_charging_base_enter_with_no_base(self):
         vehicle = mock_vehicle(soc=1.0)
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -280,7 +280,7 @@ class TestVehicleState(TestCase):
     def test_charging_base_enter_with_no_station(self):
         vehicle = mock_vehicle(soc=1.0)
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             bases=(base,)
@@ -295,7 +295,7 @@ class TestVehicleState(TestCase):
     def test_charging_base_enter_with_missing_station_id(self):
         vehicle = mock_vehicle(soc=1.0)
         base = mock_base()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             bases=(base,)
@@ -310,7 +310,7 @@ class TestVehicleState(TestCase):
     def test_charging_base_enter_with_no_vehicle(self):
         station = mock_station()
         base = mock_base(station_id=DefaultIds.mock_station_id())
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             stations=(station,),
             bases=(base,)
@@ -324,7 +324,7 @@ class TestVehicleState(TestCase):
 
     def test_charging_base_subsequent_charge_instructions(self):
         vehicle = mock_vehicle()
-        station = mock_station(chargers=immutables.Map({Charger.LEVEL_2: 1, Charger.DCFC: 1}))
+        station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1}))
         base = mock_base(station_id=DefaultIds.mock_station_id())
         sim = mock_sim(
             vehicles=(vehicle,),
@@ -333,11 +333,11 @@ class TestVehicleState(TestCase):
         )
         env = mock_env()
 
-        state = ChargingBase(vehicle.id, base.id, Charger.DCFC)
+        state = ChargingBase(vehicle.id, base.id, mock_dcfc_charger_id())
         err1, sim1 = state.enter(sim, env)
         self.assertIsNone(err1, "test precondition (enter works correctly) not met")
 
-        next_state = ChargingBase(vehicle.id, base.id, Charger.LEVEL_2)
+        next_state = ChargingBase(vehicle.id, base.id, mock_l2_charger_id())
         err2, sim2 = entity_state_ops.transition_previous_to_next(sim1, env, state, next_state)
 
         self.assertIsNone(err2, "two subsequent charge instructions should not produce an error")
@@ -345,10 +345,10 @@ class TestVehicleState(TestCase):
 
         updated_station = sim2.stations.get(station.id)
         self.assertIsNotNone(updated_station, "station not found in sim")
-        dc_available = updated_station.available_chargers.get(Charger.DCFC)
-        l2_available = updated_station.available_chargers.get(Charger.LEVEL_2)
-        self.assertEqual(dc_available, 1, "should have released DC charger on second transition")
-        self.assertEqual(l2_available, 0, "second instruction should have claimed the only L2 charger")
+        dc_available = updated_station.available_chargers.get(mock_dcfc_charger_id())
+        l2_available = updated_station.available_chargers.get(mock_l2_charger_id())
+        self.assertEqual(dc_available, 1, "should have released DC charger_id on second transition")
+        self.assertEqual(l2_available, 0, "second instruction should have claimed the only L2 charger_id")
 
     ####################################################################################################################
     # DispatchBase #####################################################################################################
@@ -505,7 +505,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_station_enter(self):
         vehicle = mock_vehicle()
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -526,7 +526,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_station_exit(self):
         vehicle = mock_vehicle()
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -549,7 +549,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle_from_geoid(geoid=near)
         station = mock_station_from_geoid(geoid=omf_brewing)
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -576,7 +576,7 @@ class TestVehicleState(TestCase):
         initial_soc = 0.1
         vehicle = mock_vehicle(soc=initial_soc)
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
@@ -597,12 +597,12 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation,
                               "vehicle should be in ChargingStation state")
         self.assertEquals(updated_station.available_chargers.get(charger), 0,
-                          "should have taken the only available charger")
+                          "should have taken the only available charger_id")
         self.assertGreater(new_soc, initial_soc, "should have charged for one time step")
 
     def test_dispatch_station_enter_no_station(self):
         vehicle = mock_vehicle()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
         )
@@ -615,7 +615,7 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_station_enter_no_vehicle(self):
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             stations=(station,),
         )
@@ -630,7 +630,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -647,7 +647,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         station = mock_station()
-        charger = Charger.DCFC
+        charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
@@ -1333,11 +1333,11 @@ class TestVehicleState(TestCase):
         sim = mock_sim(vehicles=(vehicle,), stations=(station,))
         env = mock_env()
 
-        state = ChargeQueueing(vehicle.id, station.id, Charger.DCFC, 0)
+        state = ChargeQueueing(vehicle.id, station.id, mock_dcfc_charger_id(), 0)
         error, updated_sim = state.enter(sim, env)
 
         updated_station = updated_sim.stations.get(station.id)
-        enqueued_count = updated_station.enqueued_vehicle_count_for_charger(Charger.DCFC)
+        enqueued_count = updated_station.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNotNone(updated_sim, "the sim should have been updated")
@@ -1349,7 +1349,7 @@ class TestVehicleState(TestCase):
         sim0 = mock_sim(vehicles=(vehicle,), stations=(station,))
         env = mock_env()
 
-        state = ChargeQueueing(vehicle.id, station.id, Charger.DCFC, 0)
+        state = ChargeQueueing(vehicle.id, station.id, mock_dcfc_charger_id(), 0)
         err1, sim1 = state.enter(sim0, env)
 
         self.assertIsNone(err1, "test invariant failed")
@@ -1358,7 +1358,7 @@ class TestVehicleState(TestCase):
         err2, sim2 = state.exit(sim1, env)
 
         updated_station = sim2.stations.get(station.id)
-        enqueued_count = updated_station.enqueued_vehicle_count_for_charger(Charger.DCFC)
+        enqueued_count = updated_station.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
 
         self.assertIsNone(err2, "there should be no error")
         self.assertIsNotNone(sim2, "exit should have succeeded")
@@ -1371,11 +1371,11 @@ class TestVehicleState(TestCase):
         sim0 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,), stations=(station,))
         env = mock_env()
 
-        charging_state = ChargingStation(vehicle_charging.id, station.id, Charger.DCFC)
+        charging_state = ChargingStation(vehicle_charging.id, station.id, mock_dcfc_charger_id())
         e1, sim1 = charging_state.enter(sim0, env)
         self.assertIsNone(e1, "test invariant failed")
 
-        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC, 0)
+        state = ChargeQueueing(vehicle_queueing.id, station.id, mock_dcfc_charger_id(), 0)
         e2, sim2 = state.enter(sim1, env)
 
         self.assertIsNone(e2, "test invariant failed")
@@ -1402,11 +1402,11 @@ class TestVehicleState(TestCase):
         sim1 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,), stations=(station,))
         env = mock_env()
 
-        charging_state = ChargingStation(vehicle_charging.id, station.id, Charger.DCFC)
+        charging_state = ChargingStation(vehicle_charging.id, station.id, mock_dcfc_charger_id())
         e1, sim2 = charging_state.update(sim1, env)
         self.assertIsNone(e1, "test invariant failed")
 
-        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC, 0)
+        state = ChargeQueueing(vehicle_queueing.id, station.id, mock_dcfc_charger_id(), 0)
         error, updated_sim = state.enter(sim1, env)
 
         self.assertIsNone(error, "should have no errors")
@@ -1419,7 +1419,7 @@ class TestVehicleState(TestCase):
         sim = mock_sim(stations=(station,))
         env = mock_env()
 
-        state = ChargeQueueing(DefaultIds.mock_vehicle_id(), station.id, Charger.DCFC, 0)
+        state = ChargeQueueing(DefaultIds.mock_vehicle_id(), station.id, mock_dcfc_charger_id(), 0)
         err, _ = state.enter(sim, env)
 
         self.assertIsInstance(err, Exception, "should have exception")
@@ -1430,7 +1430,7 @@ class TestVehicleState(TestCase):
         sim1 = mock_sim(vehicles=(vehicle_queueing,), stations=(station,))
         env = mock_env()
 
-        state = ChargeQueueing(vehicle_queueing.id, station.id, Charger.DCFC, 0)
+        state = ChargeQueueing(vehicle_queueing.id, station.id, mock_dcfc_charger_id(), 0)
         error, updated_sim = state.enter(sim1, env)
 
         self.assertIsNone(error, "should have no errors")
