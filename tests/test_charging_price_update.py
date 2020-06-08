@@ -18,7 +18,7 @@ class TestChargingPriceUpdate(TestCase):
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
         file = resource_filename("hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_station_id.csv")
-        fn = ChargingPriceUpdate.build(file, env.config.input.chargers_file)
+        fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
         s1_prices = result.simulation_state.stations[s1].charger_prices_per_kwh
         s2_prices = result.simulation_state.stations[s2].charger_prices_per_kwh
@@ -39,7 +39,7 @@ class TestChargingPriceUpdate(TestCase):
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
         file = resource_filename("hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_geoid.csv")
-        fn = ChargingPriceUpdate.build(file, env.config.input.chargers_file)
+        fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
         s1_prices = result.simulation_state.stations[s1].charger_prices_per_kwh
         s2_prices = result.simulation_state.stations[s2].charger_prices_per_kwh
@@ -61,7 +61,7 @@ class TestChargingPriceUpdate(TestCase):
             sim_timestep_duration_seconds=1,
         )
         env = mock_env()
-        fn = ChargingPriceUpdate.build(None, env.config.input.chargers_file)
+        fn = ChargingPriceUpdate.build(None, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
         prices = result.simulation_state.stations[DefaultIds.mock_station_id()].charger_prices_per_kwh
         self.assertEqual(prices.get(mock_l1_charger_id()), 0.0, "LEVEL_1 charging should be free by default")
