@@ -14,7 +14,6 @@ class TestDictReaderStepper(TestCase):
     def test_global_hive_config_search_finds_default(self):
         result = global_hive_config_search()
         self.assertIsInstance(result, GlobalConfig, "should be a GlobalConfig class instance")
-        self.assertTrue(result.log_run, "should have picked up the default config where this value is set")
 
     def test_global_hive_config_search_finds_parent(self):
         with tempfile.TemporaryDirectory() as parent:
