@@ -18,8 +18,8 @@ class Input(NamedTuple):
     requests_file: str
     bases_file: str
     stations_file: str
-    chargers_file: str
     mechatronics_file: str
+    chargers_file: Optional[str]
     road_network_file: Optional[str]
     geofence_file: Optional[str]
     rate_structure_file: Optional[str]
@@ -58,9 +58,10 @@ class Input(NamedTuple):
 
         # may be found in hive.resources
         mechatronics_file = fs.construct_asset_path(d['mechatronics_file'], scenario_directory, 'mechatronics', 'mechatronics')
-        chargers_file = fs.construct_asset_path(d['chargers_file'], scenario_directory, 'chargers', 'chargers')
 
         # optional files
+        chargers_filename = d['chargers_file'] if d.get('chargers_file') else 'default_chargers.csv'
+        chargers_file = fs.construct_asset_path(chargers_filename, scenario_directory, 'chargers', 'chargers')
         road_network_file = fs.construct_scenario_asset_path(d['road_network_file'], scenario_directory, 'road_network') if d.get('road_network_file') else None
         geofence_file = fs.construct_scenario_asset_path(d['geofence_file'], scenario_directory, 'geofence') if d.get('geofence_file') else None
         rate_structure_file = fs.construct_scenario_asset_path(d['rate_structure_file'], scenario_directory, 'service_prices') if d.get('rate_structure_file') else None
