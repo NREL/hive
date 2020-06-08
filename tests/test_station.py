@@ -7,7 +7,7 @@ from tests.mock_lobster import *
 class TestStation(TestCase):
 
     def test_from_row(self):
-        source = """station_id,lat,lon,charger_type,charger_count
+        source = """station_id,lat,lon,charger_id,charger_count
                  s1,37,122,DCFC,10
                  """
         network = mock_network()
@@ -24,7 +24,7 @@ class TestStation(TestCase):
         self.assertEqual(station.total_chargers[mock_dcfc_charger_id()], 10)
 
     def test_from_multiple_rows(self):
-        source = """station_id,lat,lon,charger_type,charger_count
+        source = """station_id,lat,lon,charger_id,charger_count
                   s1,37,122,DCFC,10
                   s1,37,122,LEVEL_2,5
                   """
@@ -48,8 +48,8 @@ class TestStation(TestCase):
         self.assertIn(mock_l2_charger_id(), station2.total_chargers)
         self.assertEqual(station2.total_chargers[mock_l2_charger_id()], 5)
 
-    def test_repeated_charger_type_entry(self):
-        source = """station_id,lat,lon,charger_type,charger_count
+    def test_repeated_charger_id_entry(self):
+        source = """station_id,lat,lon,charger_id,charger_count
                   s1,37,122,DCFC,10
                   s1,37,122,DCFC,5
                   """

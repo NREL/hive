@@ -81,8 +81,8 @@ class Station(NamedTuple):
             raise IOError("cannot load a station without an 'lat' value")
         elif 'lon' not in row:
             raise IOError("cannot load a station without an 'lon' value")
-        elif 'charger_type' not in row:
-            raise IOError("cannot load a station without a 'charger_type' value")
+        elif 'charger_id' not in row:
+            raise IOError("cannot load a station without a 'charger_id' value")
         elif 'charger_count' not in row:
             raise IOError("cannot load a station without a 'charger_count' value")
         else:
@@ -90,10 +90,10 @@ class Station(NamedTuple):
             try:
                 lat, lon = float(row['lat']), float(row['lon'])
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                charger_type: ChargerId = row['charger_type']
+                charger_id: ChargerId = row['charger_id']
                 charger_count = int(float(row['charger_count']))
 
-                if charger_type is None:
+                if charger_id is None:
                     raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
                 elif station_id not in builder:
                     # create this station
@@ -101,22 +101,22 @@ class Station(NamedTuple):
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_type: charger_count})
+                        chargers=immutables.Map({charger_id: charger_count})
                     )
-                elif charger_type in builder[station_id].total_chargers:
-                    # combine counts from multiple rows which refer to this charger_type
-                    charger_already_loaded = builder[station_id].total_chargers[charger_type]
+                elif charger_id in builder[station_id].total_chargers:
+                    # combine counts from multiple rows which refer to this charger_id
+                    charger_already_loaded = builder[station_id].total_chargers[charger_id]
 
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_type: charger_count + charger_already_loaded})
+                        chargers=immutables.Map({charger_id: charger_count + charger_already_loaded})
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
                     charger_already_loaded = builder[station_id].total_chargers
-                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_type, charger_count)
+                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_id, charger_count)
 
                     return Station.build(
                         id=station_id,

@@ -1,4 +1,4 @@
-time,geoid,charger_type,price_kwh
+time,geoid,charger_id,price_kwh
 0,86268cdafffffff,DCFC,0.2
 0,86268cdafffffff,LEVEL_2,0.02
 28800,86268cdafffffff,DCFC,0.5

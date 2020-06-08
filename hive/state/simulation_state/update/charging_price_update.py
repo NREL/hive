@@ -147,7 +147,7 @@ def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charge
 
     try:
         price = float(row['price_kwh'])
-        charger_id = row["charger_type"]
+        charger_id = row["charger_id"]
         if "station_id" in row:
             station_id = row["station_id"]
             this_entry = rows[station_id] if rows.get(station_id) else immutables.Map()
