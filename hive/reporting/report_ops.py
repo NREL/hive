@@ -23,16 +23,16 @@ def make_report(report_type: str, report_data: Dict) -> Dict:
     return report
 
 
-def vehicle_move_report(move_result: 'MoveResult') -> Dict:
+def vehicle_move_event(move_result: 'MoveResult') -> Dict:
     """
     creates a vehicle move report based on the effect of one time step of moving
     :param move_result: the result of a move
     :return: the vehicle move report
     """
-    sim_time = move_result.sim.sim_time
-    duration = move_result.sim.sim_timestep_duration_seconds
+    sim_time_start = move_result.sim.sim_time - move_result.sim.sim_timestep_duration_seconds
+    sim_time_end = move_result.sim.sim_time
     vehicle_id = move_result.next_vehicle.id
-    vehicle_state = move_result.next_vehicle.vehicle_state.__class__.__name__
+    vehicle_state = move_result.prev_vehicle.vehicle_state.__class__.__name__
     delta_distance: float = move_result.next_vehicle.distance_traveled_km - move_result.prev_vehicle.distance_traveled_km
     delta_energy = ft.reduce(
         lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.prev_vehicle.energy.get(e_type),
@@ -43,8 +43,8 @@ def vehicle_move_report(move_result: 'MoveResult') -> Dict:
     lat, lon = h3.h3_to_geo(geoid)
     geom = route.to_linestring(move_result.route_traversal.experienced_route)
     report_data = {
-        'sim_time': sim_time,
-        'duration_sec': duration,
+        'sim_time_start': sim_time_start,
+        'sim_time_end': sim_time_end,
         'vehicle_id': vehicle_id,
         'vehicle_state': vehicle_state,
         'distance_km': delta_distance,
@@ -58,11 +58,11 @@ def vehicle_move_report(move_result: 'MoveResult') -> Dict:
     return report
 
 
-def vehicle_charge_report(prev_vehicle: Vehicle,
-                          next_vehicle: Vehicle,
-                          next_sim: SimulationState,
-                          station: Station,
-                          charger_id: ChargerId) -> Dict:
+def vehicle_charge_event(prev_vehicle: Vehicle,
+                         next_vehicle: Vehicle,
+                         next_sim: SimulationState,
+                         station: Station,
+                         charger_id: ChargerId) -> Dict:
     """
     reports information about the marginal effect of a charge event
     :param prev_vehicle: the previous vehicle state
@@ -73,11 +73,11 @@ def vehicle_charge_report(prev_vehicle: Vehicle,
     :return: a charge event report
     """
 
-    sim_time = next_sim.sim_time
-    duration = next_sim.sim_timestep_duration_seconds
+    sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
+    sim_time_end = next_sim.sim_time
     vehicle_id = next_vehicle.id
     station_id = station.id
-    vehicle_state = next_vehicle.vehicle_state.__class__.__name__
+    vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
     kwh_transacted = next_vehicle.energy[EnergyType.ELECTRIC] - prev_vehicle.energy[EnergyType.ELECTRIC]  # kwh
     charger_price = station.charger_prices_per_kwh.get(charger_id)  # Currency
     charging_price = kwh_transacted * charger_price if charger_price else 0.0
@@ -86,8 +86,8 @@ def vehicle_charge_report(prev_vehicle: Vehicle,
     lat, lon = h3.h3_to_geo(geoid)
 
     report_data = {
-        'sim_time': sim_time,
-        'duration_sec': duration,
+        'sim_time_start': sim_time_start,
+        'sim_time_end': sim_time_end,
         'vehicle_id': vehicle_id,
         'station_id': station_id,
         'vehicle_state': vehicle_state,
