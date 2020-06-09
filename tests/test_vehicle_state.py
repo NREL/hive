@@ -503,8 +503,9 @@ class TestVehicleState(TestCase):
     ####################################################################################################################
 
     def test_dispatch_station_enter(self):
+        outer_range_brewing = h3.geo_to_h3(39.5892193, -106.1011423, 15)
         vehicle = mock_vehicle()
-        station = mock_station()
+        station = mock_station_from_geoid(geoid=outer_range_brewing)
         charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
@@ -522,6 +523,27 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation,
                               "should be in a dispatch to station state")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_dispatch_station_enter_but_already_at_destination(self):
+        # vehicle and station have the same geoid
+        vehicle = mock_vehicle()
+        station = mock_station()
+        charger = mock_dcfc_charger_id()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,)
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, station.geoid)
+
+        state = DispatchStation(vehicle.id, station.id, route, charger)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation,
+                              "should actually end up charging with no delay since we are already at the destination")
 
     def test_dispatch_station_exit(self):
         vehicle = mock_vehicle()
@@ -574,21 +596,26 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_station_update_terminal(self):
         initial_soc = 0.1
-        vehicle = mock_vehicle(soc=initial_soc)
-        station = mock_station()
         charger = mock_dcfc_charger_id()
+        route = ()  # empty route should trigger a default transition
+        state = DispatchStation(
+                DefaultIds.mock_vehicle_id(),
+                DefaultIds.mock_station_id(),
+                route,
+                charger
+            )
+        vehicle = mock_vehicle(soc=initial_soc, vehicle_state=state)
+        station = mock_station()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,)
         )
         env = mock_env()
-        route = ()  # empty route should trigger a default transition
 
-        state = DispatchStation(vehicle.id, station.id, route, charger)
-        enter_error, sim_with_dispatch_vehicle = state.enter(sim, env)
-        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+        # enter_error, sim_with_dispatch_vehicle = state.enter(sim, env)
+        # self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
-        update_error, sim_updated = state.update(sim_with_dispatch_vehicle, env)
+        update_error, sim_updated = state.update(sim, env)
         self.assertIsNone(update_error, "should have no error from update call")
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
@@ -629,7 +656,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_station_enter_route_with_bad_source(self):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
-        station = mock_station()
+        station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
@@ -644,21 +671,22 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     def test_dispatch_station_enter_route_with_bad_destination(self):
+        outer_range_brewing = h3.geo_to_h3(39.5892193, -106.1011423, 15)
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
-        station = mock_station()
+        station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
         sim = mock_sim(
             vehicles=(vehicle,),
             stations=(station,),
         )
         env = mock_env()
-        route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
+        route = mock_route_from_geoids(vehicle.geoid, outer_range_brewing)
 
         state = DispatchStation(vehicle.id, station.id, route, charger)
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
-        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state - station and route destination do not match")
 
     ####################################################################################################################
     # DispatchTrip #####################################################################################################

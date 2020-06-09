@@ -29,6 +29,10 @@ class DispatchStation(NamedTuple, VehicleState):
             return SimulationStateError(f"station {self.station_id} not found"), None
         elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif station.geoid == vehicle.geoid:
+            # already there!
+            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
+            return next_state.enter(sim, env)
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, station.geoid)
             if not route_is_valid:
