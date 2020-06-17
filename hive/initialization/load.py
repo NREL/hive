@@ -7,7 +7,7 @@ import yaml
 
 from hive.config import HiveConfig
 from hive.runner.environment import Environment
-from hive.state.simulation_state.initialize_simulation import initialize_simulation
+from hive.initialization.initialize_simulation import initialize_simulation
 from hive.state.simulation_state.simulation_state import SimulationState
 
 run_log = logging.getLogger(__name__)
