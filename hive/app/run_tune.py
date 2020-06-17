@@ -43,10 +43,9 @@ class DummyReporter(Reporter):
         pass
 
 
-class DummyOptimizationWrapper(tune.Trainable):
+class OptimizationWrapper(tune.Trainable):
     """
-    dummy wrapper for a tune optimization.
-    to be replaced with a hive runner.
+    wrapper for a tune optimization.
     """
 
     @staticmethod
@@ -64,6 +63,7 @@ class DummyOptimizationWrapper(tune.Trainable):
         scenario_file = scenarios[config['scenario']]
         log.info(f'setting up experiment with scenario {scenario_file}')
 
+        # TODO: update this load method with a the new sampling loader.
         sim, env = load_simulation(fs.find_scenario(scenario_file))
 
         instruction_generators = (
@@ -98,7 +98,7 @@ def run() -> int:
     log.info('running tune experiments')
 
     result = tune.run(
-        DummyOptimizationWrapper,
+        OptimizationWrapper,
         stop={"training_iteration": 1},
         config={'scenario': tune.grid_search([1, 2])}
     )
