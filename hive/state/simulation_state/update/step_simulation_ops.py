@@ -152,6 +152,7 @@ def instruction_generator_update_fn(
             else:
                 return acc.apply_updated_instruction_generator(result)
         except Exception as e:
+            raise e
             return acc.apply_report({'report_type': 'error', 'message': repr(e)})
 
     return _inner
