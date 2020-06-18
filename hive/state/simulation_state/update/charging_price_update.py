@@ -225,6 +225,6 @@ def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger,
 
             except ValueError as e:
                 # todo: handle failure here
-                log.error(e)
+                log.debug(f"tried to update charging price for key {k} but failed.")
 
     return immutables.Map(updated)
