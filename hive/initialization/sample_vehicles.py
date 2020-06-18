@@ -71,7 +71,7 @@ def sample_vehicles(
         return result
 
 
-def build_default_location_sampling_fn(bases: Tuple[Base], seed: int = 0) -> Callable[[], Link]:
+def build_default_location_sampling_fn(bases: Tuple[Base, ...], seed: int = 0) -> Callable[[], Link]:
     """
     constructs a link sampling function that uniformly samples from the provided base locations
 
