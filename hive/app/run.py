@@ -107,8 +107,6 @@ def run() -> int:
 
         log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
 
-        _summary_stats(sim_result.s, env)
-
         env.reporter.close(sim_result)
 
         if env.config.global_config.write_outputs:
@@ -123,47 +121,6 @@ def run() -> int:
     except Exception as e:
         # perhaps in the future, a more robust handling here
         raise e
-
-
-def _summary_stats(final_sim: SimulationState, env: Environment):
-    """
-    just some quick-and-dirty summary stats here
-    :param sim: the final sim state
-    """
-
-    class VehicleResultsAccumulator(NamedTuple):
-        balance: float = 0.0
-        vkt: float = 0.0
-        count: int = 0
-        avg_soc: float = 0.0
-
-        def add_vehicle(self, vehicle: Vehicle) -> VehicleResultsAccumulator:
-            soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
-            return self._replace(
-                balance=self.balance + vehicle.balance,
-                vkt=self.vkt + vehicle.distance_traveled_km,
-                count=self.count + 1,
-                avg_soc=self.avg_soc + ((soc - self.avg_soc) / (self.count + 1)),
-            )
-
-    # collect all vehicle data
-    v_acc = ft.reduce(
-        lambda acc, veh: acc.add_vehicle(veh),
-        final_sim.vehicles.values(),
-        VehicleResultsAccumulator()
-    )
-
-    # collect all station data
-    station_income = ft.reduce(
-        lambda income, station: income + station.balance,
-        final_sim.stations.values(),
-        0.0
-    )
-
-    log.info(f"STATION  CURRENCY BALANCE:             $ {station_income:.2f}")
-    log.info(f"FLEET    CURRENCY BALANCE:             $ {v_acc.balance:.2f}")
-    log.info(f"         VEHICLE KILOMETERS TRAVELED:    {v_acc.vkt:.2f}")
-    log.info(f"         AVERAGE FINAL SOC:              {v_acc.avg_soc * 100:.2f}%")
 
 
 def _welcome_to_hive():

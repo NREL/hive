@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
-
-from dataclasses import dataclass
 from collections import Counter
+from dataclasses import dataclass, field
+from functools import reduce
 from typing import TYPE_CHECKING, List
 
 import numpy as np
@@ -19,12 +19,35 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Stats:
-    total_vkt: float = 0
-    total_deadhead_vkt: float = 0
+    state_count: Counter = field(default_factory=lambda: Counter())
+    vkt: Counter = field(default_factory=lambda: Counter())
 
     requests: int = 0
     cancelled_reqeusts: int = 0
 
+    mean_final_soc: float = 0
+
+    station_revenue: float = 0
+    fleet_revenue: float = 0
+
+    def log(self):
+        log.info(f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(15))
+        log.info(
+            f"{(1 - (self.cancelled_reqeusts / self.requests)) * 100:.2f} % \t Requests Served"
+                .expandtabs(15)
+        )
+
+        total_state_count = sum(self.state_count.values())
+        for s, v in self.state_count.items():
+            log.info(f"{round(v / total_state_count * 100, 2)} % \t Time in State {s}".expandtabs(15))
+
+        total_vkt = sum(self.vkt.values())
+        log.info(f"{total_vkt:.2f} km \t Total Kilometers Traveled".expandtabs(15))
+        for s, v in self.vkt.items():
+            log.info(f"{v:.2f} km \t Kilometers Traveled in State {s}".expandtabs(15))
+
+        log.info(f"$ {self.station_revenue:.2f} \t Station Revenue".expandtabs(15))
+        log.info(f"$ {self.fleet_revenue:.2f} \t Fleet Revenue".expandtabs(15))
 
 class StatsHandler(Handler):
     """
@@ -42,19 +65,28 @@ class StatsHandler(Handler):
         :param runner_payload
         :return:
         """
-        move_events = list(filter(lambda r: r['report_type'] == 'vehicle_move_event', reports))
 
-        step_vkt = sum(map(lambda me: me['distance_km'], move_events))
-        self.stats.total_vkt += step_vkt
-
-        trip_vkt = sum(map(
-            lambda me: me['distance_km'],
-            filter(
-                lambda me: me['vehicle_state'] == 'ServicingTrip',
-                move_events
+        state_counts = Counter(
+            map(
+                lambda r: r['vehicle_state'],
+                filter(
+                    lambda r: r['report_type'] == 'vehicle_move_event',
+                    reports
+                )
             )
-        ))
-        self.stats.total_deadhead_vkt += (step_vkt - trip_vkt)
+        )
+
+        self.stats.state_count += state_counts
+
+        move_events = list(
+            filter(
+                lambda r: r['report_type'] == 'vehicle_move_event',
+                reports
+            )
+        )
+
+        for me in move_events:
+            self.stats.vkt[me['vehicle_state']] += me['distance_km']
 
         c = Counter(map(lambda r: r['report_type'], reports))
         self.stats.requests += c['add_request']
@@ -69,11 +101,20 @@ class StatsHandler(Handler):
         sim_state = runner_payload.s
         env = runner_payload.e
 
-        mean_final_soc = np.mean([
+        self.stats.mean_final_soc = np.mean([
             env.mechatronics.get(v.mechatronics_id).battery_soc(v) for v in sim_state.vehicles.values()
         ])
 
-        log.info(f"total_vkt: {round(self.stats.total_vkt, 2)} kilometers")
-        log.info(f"total_deadhead_vkt: {round(self.stats.total_deadhead_vkt, 2)} kilometers")
-        log.info(f"mean final soc: {round(float(mean_final_soc * 100), 2)} %")
-        log.info(f"requests served: {round(1 - (self.stats.cancelled_reqeusts / self.stats.requests) * 100, 2)} %")
+        self.stats.station_revenue = reduce(
+            lambda income, station: income + station.balance,
+            sim_state.stations.values(),
+            0.0
+        )
+
+        self.stats.fleet_revenue = reduce(
+            lambda income, vehicle: income + vehicle.balance,
+            sim_state.vehicles.values(),
+            0.0
+        )
+
+        self.stats.log()

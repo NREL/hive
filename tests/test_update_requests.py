@@ -21,9 +21,8 @@ class TestUpdateRequests(TestCase):
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
-        self.assertEqual(len(result.reports), 2, "should have reported the add")
-        self.assertEqual(len(result.simulation_state.requests), 2, "should have added the reqs")
-        for req in result.simulation_state.requests.values():
+        self.assertEqual(len(result.requests), 2, "should have added the reqs")
+        for req in result.requests.values():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
 
     def test_update_some_aready_cancelled(self):
@@ -43,8 +42,8 @@ class TestUpdateRequests(TestCase):
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
-        self.assertEqual(expected_reqs, len(result.simulation_state.requests), "should have added the reqs")
-        for req in result.simulation_state.requests.values():
+        self.assertEqual(expected_reqs, len(result.requests), "should have added the reqs")
+        for req in result.requests.values():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
 
     def test_update_rate_structure(self):
@@ -63,7 +62,7 @@ class TestUpdateRequests(TestCase):
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
-        for req in result.simulation_state.requests.values():
+        for req in result.requests.values():
             print(req)
             self.assertGreaterEqual(req.value, 5, f"should be greater/equal than minimum price of 5")
 
@@ -82,7 +81,6 @@ class TestUpdateRequests(TestCase):
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv")
         fn = UpdateRequests.build(req_file, rate_structure_file, lazy_file_reading=True)
         result, _ = fn.update(sim, env)
-        self.assertEqual(len(result.reports), 2, "should have reported the add")
-        self.assertEqual(len(result.simulation_state.requests), 2, "should have added the reqs")
-        for req in result.simulation_state.requests.values():
+        self.assertEqual(len(result.requests), 2, "should have added the reqs")
+        for req in result.requests.values():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
