@@ -1,25 +1,26 @@
 from __future__ import annotations
 
 import functools as ft
-from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Iterator, Dict
+import logging
 from csv import DictReader
+from pathlib import Path
+from typing import NamedTuple, Tuple, Optional, Dict
 
 import immutables
 from h3 import h3
 
-from hive.config.input import Input
 from hive.model.energy.charger import Charger, build_chargers_table
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
-from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.helpers import DictOps
 from hive.util.parsers import time_parser
 from hive.util.typealiases import StationId, ChargerId
 from hive.util.units import Currency
+
+log = logging.getLogger(__name__)
 
 
 class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
@@ -76,12 +77,12 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
                     with charging_path.open() as f:
                         reader = iter(tuple(DictReader(f)))
                     stepper = DictReaderStepper.from_iterator(reader, "time", parser=time_parser)
-                    
+
                 return ChargingPriceUpdate(stepper, False)
 
     def update(self,
                sim_state: SimulationState,
-               env: Environment) -> Tuple[SimulationUpdateResult, Optional[ChargingPriceUpdate]]:
+               env: Environment) -> Tuple[SimulationState, Optional[ChargingPriceUpdate]]:
         """
         update charging price when the simulation reaches the update's time
 
@@ -96,15 +97,15 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             return value < current_sim_time
 
         # parse the most recently available charger_id price data up to the current sim time
-        charger_update, failures = ft.reduce(
+        charger_update = ft.reduce(
             _add_row_to_this_update,
             self.reader.read_until_stop_condition(stop_condition),
-            (immutables.Map(), ())
+            immutables.Map()
         )
 
         if len(charger_update) == 0:
             # no update
-            return SimulationUpdateResult(sim_state, failures), self
+            return sim_state, self
 
         elif self.use_defaults:
             # we are applying the same values across all Stations
@@ -113,7 +114,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             result = ft.reduce(
                 lambda sim, s_id: _update_station_prices(sim, s_id, charger_update['default']),
                 sim_state.stations.keys(),
-                SimulationUpdateResult(sim_state)
+                sim_state
             )
             return result, self
 
@@ -127,14 +128,14 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             result = ft.reduce(
                 lambda sim, s_id: _update_station_prices(sim, s_id, as_station_updates[s_id]),
                 station_ids_to_update,
-                SimulationUpdateResult(sim_state)
+                sim_state
             )
             return result, self
 
 
-def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]],
-                           row: Dict[str, str]
-                           ) -> Tuple[immutables.Map[str, immutables.Map[Charger, Currency]], Tuple[str, ...]]:
+def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[Charger, Currency]],
+                            row: Dict[str, str]
+                            ) -> immutables.Map[str, immutables.Map[Charger, Currency]]:
     """
     adds a single row to an accumulator that is storing only the most recently
     observed {StationId|GeoId}/charger_id/currency combinations
@@ -143,7 +144,7 @@ def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charge
     :param row: the row to add
     :return: the updated accumulator
     """
-    rows, failures = acc
+    rows = acc
 
     try:
         price = float(row['price_kwh'])
@@ -152,21 +153,23 @@ def _add_row_to_this_update(acc: Tuple[immutables.Map[str, immutables.Map[Charge
             station_id = row["station_id"]
             this_entry = rows[station_id] if rows.get(station_id) else immutables.Map()
             updated = DictOps.add_to_dict(rows, station_id, this_entry.set(charger_id, price))
-            return updated, failures
+            return updated
         elif "geoid" in row:
             geoid = row["geoid"]
             this_entry = rows[geoid] if rows.get(geoid) else immutables.Map()
             updated = DictOps.add_to_dict(rows, geoid, this_entry.set(charger_id, price))
-            return updated, failures
+            return updated
         else:
-            return rows, (f"missing geoid|station_id for row: {row}",) + failures
+            log.error(f"missing geoid|station_id for row: {row}")
+            return rows
     except Exception as e:
-        return rows, (f"error: {e.args} for row {row}",)
+        log.error(f"error: {e.args} for row {row}")
+        return rows
 
 
-def _update_station_prices(result: SimulationUpdateResult,
-                          station_id: StationId,
-                          prices_update: immutables.Map[Charger, Currency]) -> SimulationUpdateResult:
+def _update_station_prices(simulation_state: SimulationState,
+                           station_id: StationId,
+                           prices_update: immutables.Map[Charger, Currency]) -> SimulationState:
     """
     updates a simulation state with prices for a station by station id
     :param result: the simulation state in a partial update state
@@ -174,20 +177,21 @@ def _update_station_prices(result: SimulationUpdateResult,
     :param prices_update: the prices in Currency that we are updating for each Charger
     :return: the updated SimulationState with station prices modified
     """
-    station = result.simulation_state.stations.get(station_id)
+    station = simulation_state.stations.get(station_id)
     if not station:
-        return result
+        return simulation_state
     else:
         updated_station = station.update_prices(prices_update)
-        error, updated_sim = simulation_state_ops.modify_station(result.simulation_state, updated_station)
+        error, updated_sim = simulation_state_ops.modify_station(simulation_state, updated_station)
         if error:
-            return result.update_sim(result.simulation_state, {'error': error})
+            log.error(error)
+            return simulation_state
         else:
-            return result.update_sim(updated_sim)
+            return updated_sim
 
 
 def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
-                       sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
+                        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds
     :param this_update: the update, which may be by StationId or GeoId
@@ -221,6 +225,6 @@ def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger,
 
             except ValueError as e:
                 # todo: handle failure here
-                pass
+                log.error(e)
 
     return immutables.Map(updated)

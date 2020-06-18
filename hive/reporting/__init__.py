@@ -1,2 +1,2 @@
-from hive.reporting.basic_reporter import BasicReporter
+from hive.reporting.file_handler import FileHandler
 from hive.reporting.reporter import Reporter

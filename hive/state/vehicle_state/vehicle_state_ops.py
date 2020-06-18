@@ -64,7 +64,7 @@ def charge(sim: 'SimulationState',
 
             if 'vehicle_charge_event' in env.config.global_config.log_sim_config:
                 report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, station, charger_id)
-                env.reporter.sim_report(report)
+                env.reporter.file_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
 
@@ -191,7 +191,7 @@ def move(sim: 'SimulationState',
         else:
             if 'vehicle_move_event' in env.config.global_config.log_sim_config:
                 report = vehicle_move_event(move_result)
-                env.reporter.sim_report(report)
+                env.reporter.file_report(report)
             return None, move_result
 
 

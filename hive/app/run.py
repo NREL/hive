@@ -109,7 +109,7 @@ def run() -> int:
 
         _summary_stats(sim_result.s, env)
 
-        env.reporter.close()
+        env.reporter.close(sim_result)
 
         if env.config.global_config.write_outputs:
             config_dump = env.config.asdict()
