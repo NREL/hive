@@ -62,7 +62,7 @@ def sample_vehicles(
                     return Failure(e)
             return _inner
 
-        result: Result[Tuple[SimulationState, Environment], Exception] = ft.reduce(
+        result: Result[SimulationState, Exception] = ft.reduce(
             lambda acc, i: acc.bind(_add_sample(i)),
             range(count),
             Success(sim)
