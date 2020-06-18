@@ -1,7 +1,7 @@
 import random
 from typing import Callable, Tuple
 
-from returns.result import Result, Failure, Success
+from returns.result import Result, Failure, Success, safe
 
 import functools as ft
 
@@ -10,7 +10,7 @@ from hive.model.roadnetwork import Link
 from hive.model.vehicle import Vehicle
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.simulation_state.simulation_state_ops import add_vehicle
+from hive.state.simulation_state.simulation_state_ops import add_vehicle, add_vehicle_returns
 from hive.state.vehicle_state.idle import Idle
 from hive.util import Ratio
 from hive.util.typealiases import MechatronicsId
@@ -25,6 +25,7 @@ def sample_vehicles(
   soc_sampling_function: Callable[[], Ratio]
 ) -> Result[Tuple[SimulationState, Environment], Exception]:
     """
+    creates {count} vehicles using the provided sampling functions
 
     :param mechatronics_id:
     :param count:
@@ -42,23 +43,23 @@ def sample_vehicles(
 
         def _add_sample(i: int):
             def _inner(s: SimulationState) -> Result[SimulationState, Exception]:
-                vehicle_id = f"v{i}"
-                initial_soc = soc_sampling_function()
-                energy = mechatronics.initial_energy(initial_soc)
-                link = location_sampling_function()
-                vehicle_state = Idle(vehicle_id)
-                vehicle = Vehicle(
-                    id=vehicle_id,
-                    mechatronics_id=mechatronics_id,
-                    energy=energy,
-                    link=link,
-                    vehicle_state=vehicle_state
-                )
-                error, updated_sim = add_vehicle(s, vehicle)  # could return this line without error handling
-                if error:
-                    return Failure(error)
-                else:
-                    return Success(updated_sim)
+                try:
+                    vehicle_id = f"v{i}"
+                    initial_soc = soc_sampling_function()
+                    energy = mechatronics.initial_energy(initial_soc)
+                    link = location_sampling_function()
+                    vehicle_state = Idle(vehicle_id)
+                    vehicle = Vehicle(
+                        id=vehicle_id,
+                        mechatronics_id=mechatronics_id,
+                        energy=energy,
+                        link=link,
+                        vehicle_state=vehicle_state
+                    )
+                    add_result = add_vehicle_returns(s, vehicle)
+                    return add_result
+                except Exception as e:
+                    return Failure(e)
             return _inner
 
         result: Result[Tuple[SimulationState, Environment], Exception] = ft.reduce(
@@ -99,7 +100,7 @@ def build_default_soc_sampling_fn(lower_bound: Ratio = 1.0, upper_bound: Ratio =
     :param seed: random seed value
     :return: an SoC value
     """
-    assert lower_bound < upper_bound, ArithmeticError(f"lower bound {lower_bound} must be less than or equal to upper bound {upper_bound}")
+    assert lower_bound <= upper_bound, ArithmeticError(f"lower bound {lower_bound} must be less than or equal to upper bound {upper_bound}")
     assert lower_bound >= 0, ArithmeticError(f"lower bound {lower_bound} must be in the range [0, 1]")
     assert lower_bound <= 1, ArithmeticError(f"lower bound {lower_bound} must be in the range [0, 1]")
     assert upper_bound >= 0, ArithmeticError(f"upper bound {upper_bound} must be in the range [0, 1]")
