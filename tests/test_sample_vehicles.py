@@ -32,8 +32,6 @@ class TestSampleVehicles(TestCase):
             soc_sampling_function=soc_fn
         )
 
-        result.unwrap()
-
         def check_vehicle(v: Vehicle):
             self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_id())
             self.assertEquals(v.energy.get(EnergyType.ELECTRIC),

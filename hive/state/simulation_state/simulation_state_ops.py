@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
-from returns.result import ResultE, Success, Failure
+from returns.result import Result, Success, Failure
 
 from h3 import h3
 
@@ -146,7 +146,7 @@ def add_vehicle(sim: SimulationState, vehicle: Vehicle) -> Tuple[Optional[Except
         return None, updated_sim
 
 
-def add_vehicle_returns(sim: SimulationState, vehicle: Vehicle) -> ResultE[SimulationState, Exception]:
+def add_vehicle_returns(sim: SimulationState, vehicle: Vehicle) -> Result[SimulationState, Exception]:
     """
     adds a vehicle into the region supported by the RoadNetwork in this SimulationState
 
