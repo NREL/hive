@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import functools as ft
-from typing import Dict
+from typing import TYPE_CHECKING
 
 from h3 import h3
 
@@ -7,23 +9,16 @@ from hive.model.energy import EnergyType
 from hive.model.roadnetwork import route
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
+from hive.reporting.reporter import Report, ReportType
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util.typealiases import ChargerId
 
-
-def make_report(report_type: str, report_data: Dict) -> Dict:
-    """
-    a helper for those who forget the key of the "report_type" field
-    :param report_type: the report type
-    :param report_data: the data to report
-    :return: a report of this report_type
-    """
-    report = {'report_type': report_type}
-    report.update(report_data)
-    return report
+if TYPE_CHECKING:
+    from hive.model.request.request import Request
+    from hive.state.vehicle_state.vehicle_state_ops import MoveResult
 
 
-def vehicle_move_event(move_result: 'MoveResult') -> Dict:
+def vehicle_move_event(move_result: MoveResult) -> Report:
     """
     creates a vehicle move report based on the effect of one time step of moving
     :param move_result: the result of a move
@@ -55,7 +50,7 @@ def vehicle_move_event(move_result: 'MoveResult') -> Dict:
         'lon': lon,
         'route_wkt': geom
     }
-    report = make_report("vehicle_move_event", report_data)
+    report = Report(ReportType.VEHICLE_MOVE_EVENT, report_data)
     return report
 
 
@@ -63,7 +58,7 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
                          next_vehicle: Vehicle,
                          next_sim: SimulationState,
                          station: Station,
-                         charger_id: ChargerId) -> Dict:
+                         charger_id: ChargerId) -> Report:
     """
     reports information about the marginal effect of a charge event
     :param prev_vehicle: the previous vehicle state
@@ -100,5 +95,38 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
         'lon': lon
     }
 
-    report = make_report("vehicle_charge_event", report_data)
+    report = Report(ReportType.VEHICLE_CHARGE_EVENT, report_data)
+    return report
+
+
+def report_pickup_request(vehicle: Vehicle,
+                          request: Request,
+                          next_sim: SimulationState,
+                          ) -> Report:
+    """
+    reports information about the marginal effect of a request pickup
+    :param vehicle: the vehicle that picked up the request
+    :param request: the request that was picked up
+    :param next_sim: the next simulation state after the request pickup
+    :return: a pickup request report
+    """
+
+    sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
+
+    geoid = vehicle.geoid
+    lat, lon = h3.h3_to_geo(geoid)
+
+    report_data = {
+        'pickup_time': sim_time_start,
+        'request_time': request.departure_time,
+        'wait_time_minutes': (sim_time_start - request.departure_time) / 60,
+        'vehicle_id': vehicle.id,
+        'request_id': request.id,
+        'price': request.value,
+        'geoid': geoid,
+        'lat': lat,
+        'lon': lon
+    }
+
+    report = Report(ReportType.PICKUP_REQUEST, report_data)
     return report

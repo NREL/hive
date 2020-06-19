@@ -8,6 +8,7 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.util.typealiases import RequestId
+from hive.reporting.reporter import Report, ReportType
 
 import logging
 
@@ -61,20 +62,19 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         return updated, None
 
 
-def _gen_report(r_id: RequestId, sim: SimulationState) -> dict:
+def _gen_report(r_id: RequestId, sim: SimulationState) -> Report:
     """
-    stringified json report of a cancellation
+    Report of a cancellation
 
     :param r_id: request cancelled
     :param sim: the state of the sim before cancellation occurs
-    :return: a stringified json report
+    :return: a report
     """
     dep_t = sim.requests[r_id].departure_time
     sim_t = sim.sim_time
-    report = {
-        'report_type': 'cancel_request',
+    report_data = {
         'request_id': r_id,
         'departure_time': dep_t,
         'cancel_time': sim_t,
     }
-    return report
+    return Report(ReportType.CANCEL_REQUEST, report_data)

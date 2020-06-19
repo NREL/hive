@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, List
 import numpy as np
 
 from hive.reporting.handler import Handler
+from hive.reporting.reporter import ReportType
 
 if TYPE_CHECKING:
     from hive.reporting.reporter import Report
@@ -49,6 +50,7 @@ class Stats:
         log.info(f"$ {self.station_revenue:.2f} \t Station Revenue".expandtabs(15))
         log.info(f"$ {self.fleet_revenue:.2f} \t Fleet Revenue".expandtabs(15))
 
+
 class StatsHandler(Handler):
     """
     The StatsHandler compiles various simulation statistics and stores them.
@@ -68,9 +70,9 @@ class StatsHandler(Handler):
 
         state_counts = Counter(
             map(
-                lambda r: r['vehicle_state'],
+                lambda r: r.report['vehicle_state'],
                 filter(
-                    lambda r: r['report_type'] == 'vehicle_move_event',
+                    lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
                     reports
                 )
             )
@@ -80,17 +82,17 @@ class StatsHandler(Handler):
 
         move_events = list(
             filter(
-                lambda r: r['report_type'] == 'vehicle_move_event',
+                lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
                 reports
             )
         )
 
         for me in move_events:
-            self.stats.vkt[me['vehicle_state']] += me['distance_km']
+            self.stats.vkt[me.report['vehicle_state']] += me.report['distance_km']
 
-        c = Counter(map(lambda r: r['report_type'], reports))
-        self.stats.requests += c['add_request']
-        self.stats.cancelled_reqeusts += c['cancel_request']
+        c = Counter(map(lambda r: r.report_type, reports))
+        self.stats.requests += c[ReportType.ADD_REQUEST]
+        self.stats.cancelled_reqeusts += c[ReportType.CANCEL_REQUEST]
 
     def close(self, runner_payload: RunnerPayload):
         """

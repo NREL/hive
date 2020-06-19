@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import NamedTuple, Tuple, Dict, Optional, Set
+from typing import NamedTuple, Tuple, Dict, Set
 
 from hive.config.config_builder import ConfigBuilder
+from hive.reporting.reporter import ReportType
 from hive.util.units import Seconds
 
 
@@ -15,7 +16,7 @@ class GlobalConfig(NamedTuple):
     log_run: bool
     log_sim: bool
     log_level: str
-    log_sim_config: Set[Optional[str]]
+    log_sim_config: Set[ReportType]
     log_period_seconds: Seconds
     lazy_file_reading: bool
     track_stats: bool
@@ -51,12 +52,13 @@ class GlobalConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict, global_settings_file_path) -> GlobalConfig:
         # allow Posix-style home directory paths ('~')
-        output_base_directory_absolute = Path(d['output_base_directory']).expanduser() if d['output_base_directory'].startswith("~") else Path(
+        output_base_directory_absolute = Path(d['output_base_directory']).expanduser() if d[
+            'output_base_directory'].startswith("~") else Path(
             d['output_base_directory'])
         d['output_base_directory'] = str(output_base_directory_absolute)
 
         # convert list of logged report types to a Set
-        d['log_sim_config'] = set(d['log_sim_config'])
+        d['log_sim_config'] = set(ReportType.from_string(rt) for rt in d['log_sim_config'])
 
         # store the .hive.yaml file path used
         d['global_settings_file_path'] = global_settings_file_path

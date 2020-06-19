@@ -15,7 +15,7 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.util import TupleOps
-from hive.util.typealiases import VehicleId, Report
+from hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
@@ -119,16 +119,9 @@ def apply_instructions(sim: SimulationState,
 
 class UserProvidedUpdateAccumulator(NamedTuple):
     updated_fns: Tuple[InstructionGenerator, ...] = ()
-    reports: Tuple[Report, ...] = ()
 
     def apply_updated_instruction_generator(self, i: InstructionGenerator):
         return self._replace(updated_fns=self.updated_fns + (i,))
-
-    def apply_report(self, r: Report):
-        return self._replace(reports=self.reports + (r,))
-
-    def has_errors(self) -> bool:
-        return len(self.reports) > 0
 
 
 def instruction_generator_update_fn(
@@ -153,6 +146,5 @@ def instruction_generator_update_fn(
                 return acc.apply_updated_instruction_generator(result)
         except Exception as e:
             raise e
-            return acc.apply_report({'report_type': 'error', 'message': repr(e)})
 
     return _inner
