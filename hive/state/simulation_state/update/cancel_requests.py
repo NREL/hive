@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Optional, NamedTuple, Dict
+from typing import Tuple, Optional, NamedTuple
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
-from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
-from hive.util.exception import report_error
 from hive.util.typealiases import RequestId
+
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class CancelRequests(NamedTuple, SimulationUpdateFunction):
@@ -17,7 +19,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
     def update(
             self,
             simulation_state: SimulationState,
-            env: Environment) -> Tuple[SimulationUpdateResult, Optional[CancelRequests]]:
+            env: Environment) -> Tuple[SimulationState, Optional[CancelRequests]]:
         """
         cancels requests whose cancel time has been exceeded
 
@@ -26,39 +28,37 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         :return: state without cancelled requests, along with this update function
         """
 
-        def _remove_from_sim(payload: Tuple[SimulationState, Tuple[Dict, ...]],
-                             request_id: RequestId) -> Tuple[SimulationState, Tuple[Dict, ...]]:
+        def _remove_from_sim(sim: SimulationState,
+                             request_id: RequestId) -> SimulationState:
             """
             inner function that removes each canceled request from the sim
             :param payload: the sim to update, along with errors we are storing
             :param request_id: this request to remove
             :return: the sim without the request
             """
-            sim, these_reports = payload
-            this_request_cancel_time = sim.requests[request_id].departure_time + env.config.sim.request_cancel_time_seconds
+            this_request_cancel_time = sim.requests[
+                                           request_id].departure_time + env.config.sim.request_cancel_time_seconds
             if sim.sim_time < this_request_cancel_time:
-                return payload
+                return sim
             else:
                 # remove this request
                 update_error, updated_sim = simulation_state_ops.remove_request(sim, request_id)
 
                 # report either error or successful cancellation
                 if update_error:
-                    report = report_error(update_error)
-                    updated_reports = these_reports + (report,)
-                    return sim, updated_reports
+                    log.error(update_error)
+                    return sim
                 else:
-                    report = _gen_report(request_id, sim)  # use the pre-updated sim so we can lookup this request
-                    updated_reports = these_reports + (report,)
-                    return updated_sim, updated_reports
+                    env.reporter.file_report(_gen_report(request_id, sim))
+                    return updated_sim
 
-        updated, reports = ft.reduce(
+        updated = ft.reduce(
             _remove_from_sim,
             simulation_state.requests.keys(),
-            (simulation_state, ())
+            simulation_state
         )
 
-        return SimulationUpdateResult(updated, reports), None
+        return updated, None
 
 
 def _gen_report(r_id: RequestId, sim: SimulationState) -> dict:

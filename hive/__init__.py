@@ -25,7 +25,6 @@ import logging
 from tqdm import tqdm
 
 from hive.app import run
-from hive.app.run import _welcome_to_hive, _summary_stats
 from hive.config import HiveConfig
 from hive.dispatcher import *
 from hive.state.simulation_state.update import StepSimulation, Update

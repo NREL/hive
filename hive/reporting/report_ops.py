@@ -3,7 +3,7 @@ from typing import Dict
 
 from h3 import h3
 
-from hive.model.energy import EnergyType, Charger
+from hive.model.energy import EnergyType
 from hive.model.roadnetwork import route
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
@@ -35,7 +35,8 @@ def vehicle_move_event(move_result: 'MoveResult') -> Dict:
     vehicle_state = move_result.prev_vehicle.vehicle_state.__class__.__name__
     delta_distance: float = move_result.next_vehicle.distance_traveled_km - move_result.prev_vehicle.distance_traveled_km
     delta_energy = ft.reduce(
-        lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.prev_vehicle.energy.get(e_type),
+        lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.prev_vehicle.energy.get(
+            e_type),
         move_result.next_vehicle.energy.keys(),
         0
     )

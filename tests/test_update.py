@@ -35,32 +35,9 @@ class TestUpdate(TestCase):
         env = mock_env()
         u = Update.build(mock_config(), (MockGenerator(),), user_provided_update_fn)
         runner = RunnerPayload(sim, env, u)
-        result, reports = u.apply_update(runner)
+        result = u.apply_update(runner)
         updated_mock_gen = result.u.step_update.instruction_generators[0]
         self.assertEqual(updated_mock_gen.stored_magic_number, 42,
                          "the user provided update function should have been called")
 
-    def test_apply_update_with_bogus_user_provided_generator_update_function(self):
-        """
-        a update function the user provides which produces an error should be reported
-        """
 
-        expected_error = RuntimeError("the owls are not what they seem")
-
-        class MockGenerator(NamedTuple, InstructionGenerator):
-
-            def generate_instructions(self, simulation_state: SimulationState, environment: Environment):
-                return self, (), ()
-
-        def user_provided_update_fn(instr_gen, sim):
-            raise expected_error
-
-        sim = mock_sim()
-        env = mock_env()
-        u = Update.build(mock_config(), (MockGenerator(),), user_provided_update_fn)
-        runner = RunnerPayload(sim, env, u)
-        result, reports = u.apply_update(runner)
-
-        self.assertEqual(len(reports), 1, "should have one report")
-        self.assertEquals(reports[0]['report_type'], 'error', "should be an error")
-        self.assertEquals(reports[0]['message'], repr(expected_error))

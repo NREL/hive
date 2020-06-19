@@ -62,14 +62,9 @@ def _run_step_in_context(env: Environment) -> Callable:
     def _run_step(payload: RunnerPayload, t: int = -1) -> RunnerPayload:
 
         # applies the most recent version of each update function
-        updated_payload, reports = payload.u.apply_update(payload)
-        updated_sim = updated_payload.s
+        updated_payload = payload.u.apply_update(payload)
 
-        if updated_sim.sim_time % env.config.global_config.log_period_seconds == 0:
-            env.reporter.log_sim_state(updated_sim)
-
-            for report in reports:
-                env.reporter.sim_report(report)
+        env.reporter.flush(updated_payload)
 
         return updated_payload
 

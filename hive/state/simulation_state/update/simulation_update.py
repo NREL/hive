@@ -7,7 +7,6 @@ from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
     from hive.runner.environment import Environment
 
 
@@ -16,7 +15,7 @@ class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
     @abstractmethod
     def update(self,
                simulation_state: SimulationState,
-               env: Environment) -> Tuple[SimulationUpdateResult, Optional[SimulationUpdateFunction]]:
+               env: Environment) -> Tuple[SimulationState, Optional[SimulationUpdateFunction]]:
         """
         takes a simulation state and modifies it, returning the updated simulation state
 
