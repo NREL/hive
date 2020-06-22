@@ -156,7 +156,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                         'request_id': req.id,
                         'departure_time': dep_t,
                     }
-                    env.reporter.file_report(Report(ReportType.ADD_REQUEST, report_data))
+                    env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
                     return sim_updated
 
     # stream in all Requests that occur before the sim time of the provided SimulationState

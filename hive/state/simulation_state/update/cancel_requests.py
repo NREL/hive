@@ -77,4 +77,4 @@ def _gen_report(r_id: RequestId, sim: SimulationState) -> Report:
         'departure_time': dep_t,
         'cancel_time': sim_t,
     }
-    return Report(ReportType.CANCEL_REQUEST, report_data)
+    return Report(ReportType.CANCEL_REQUEST_EVENT, report_data)

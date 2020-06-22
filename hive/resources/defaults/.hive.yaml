@@ -3,10 +3,10 @@ log_run: True
 log_sim: True
 log_level: INFO
 log_sim_config:
-- 'add_request'
-- 'cancel_request'
-- 'pickup_request'
 - 'instruction'
+- 'add_request_event'
+- 'cancel_request_event'
+- 'pickup_request_event'
 - 'vehicle_charge_event'
 - 'vehicle_move_event'
 log_period_seconds: 60

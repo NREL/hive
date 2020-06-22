@@ -119,7 +119,7 @@ def report_pickup_request(vehicle: Vehicle,
     report_data = {
         'pickup_time': sim_time_start,
         'request_time': request.departure_time,
-        'wait_time_minutes': (sim_time_start - request.departure_time) / 60,
+        'wait_time_seconds': sim_time_start - request.departure_time,
         'vehicle_id': vehicle.id,
         'request_id': request.id,
         'price': request.value,
@@ -128,5 +128,5 @@ def report_pickup_request(vehicle: Vehicle,
         'lon': lon
     }
 
-    report = Report(ReportType.PICKUP_REQUEST, report_data)
+    report = Report(ReportType.PICKUP_REQUEST_EVENT, report_data)
     return report

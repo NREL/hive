@@ -91,8 +91,8 @@ class StatsHandler(Handler):
             self.stats.vkt[me.report['vehicle_state']] += me.report['distance_km']
 
         c = Counter(map(lambda r: r.report_type, reports))
-        self.stats.requests += c[ReportType.ADD_REQUEST]
-        self.stats.cancelled_reqeusts += c[ReportType.CANCEL_REQUEST]
+        self.stats.requests += c[ReportType.ADD_REQUEST_EVENT]
+        self.stats.cancelled_reqeusts += c[ReportType.CANCEL_REQUEST_EVENT]
 
     def close(self, runner_payload: RunnerPayload):
         """
