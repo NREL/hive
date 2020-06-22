@@ -13,6 +13,7 @@ from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.parsers import time_parser
+from hive.reporting.reporter import Report, ReportType
 
 log = logging.getLogger(__name__)
 
@@ -151,12 +152,11 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                     return sim
                 else:
                     dep_t = sim_updated.requests.get(req.id).departure_time
-                    report = {
-                        'report_type': 'add_request',
+                    report_data = {
                         'request_id': req.id,
                         'departure_time': dep_t,
                     }
-                    env.reporter.file_report(report)
+                    env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
                     return sim_updated
 
     # stream in all Requests that occur before the sim time of the provided SimulationState

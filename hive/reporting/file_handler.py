@@ -5,13 +5,15 @@ import logging
 import os
 from typing import TYPE_CHECKING, List
 
-from hive.config.global_config import GlobalConfig
 from hive.model.vehicle import Vehicle
 from hive.reporting.handler import Handler
+from hive.reporting.reporter import ReportType
 
 if TYPE_CHECKING:
+    from hive.config.global_config import GlobalConfig
     from hive.runner.runner_payload import RunnerPayload
     from hive.reporting.reporter import Report
+    from hive.model.station import Station
 
 log = logging.getLogger(__name__)
 
@@ -32,25 +34,9 @@ class FileHandler(Handler):
         self.global_config = global_config
 
     @staticmethod
-    def request_asdict(request) -> dict:
-        out_dict = request._asdict()
-
-        # deconstruct origin_link
-        out_dict['origin_link_id'] = request.origin_link.link_id
-        out_dict['origin_geoid'] = request.origin_link.start
-        del (out_dict['origin_link'])
-
-        # deconstruct destination_link
-        out_dict['destination_link_id'] = request.destination_link.link_id
-        out_dict['destination_geoid'] = request.destination_link.start
-        del (out_dict['destination_link'])
-
-        return out_dict
-
-    @staticmethod
     def vehicle_asdict(vehicle: Vehicle) -> dict:
         output = {
-            'id': vehicle.id,
+            'vehicle_id': vehicle.id,
             'vehicle_state': vehicle.vehicle_state.__class__.__name__,
             'balance': vehicle.balance,
             'distance_traveled_km': vehicle.distance_traveled_km,
@@ -71,8 +57,11 @@ class FileHandler(Handler):
         return output
 
     @staticmethod
-    def station_asdict(station) -> dict:
+    def station_asdict(station: Station) -> dict:
         out_dict = station._asdict()
+        del(out_dict["id"])
+
+        out_dict["station_id"] = station.id
 
         # deconstruct origin_link
         out_dict['link_id'] = station.link.link_id
@@ -103,7 +92,7 @@ class FileHandler(Handler):
         for e in entities:
             log_dict = asdict(e)
             log_dict['sim_time'] = sim_time
-            log_dict['report_type'] = report_type
+            log_dict['report_type'] = report_type.name
             entry = json.dumps(log_dict, default=str)
             self.sim_log_file.write(entry + '\n')
 
@@ -113,38 +102,25 @@ class FileHandler(Handler):
             runner_payload: RunnerPayload,
     ):
         sim_state = runner_payload.s
-        if 'vehicle_report' in self.global_config.log_sim_config:
+        if ReportType.VEHICLE_STATE in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.vehicles.values(),
                 asdict=self.vehicle_asdict,
                 sim_time=sim_state.sim_time,
-                report_type='vehicle_report',
+                report_type=ReportType.VEHICLE_STATE,
             )
 
-        if 'request_report' in self.global_config.log_sim_config:
-            self._report_entities(
-                entities=sim_state.requests.values(),
-                asdict=self.request_asdict,
-                sim_time=sim_state.sim_time,
-                report_type='request_report',
-            )
-        if 'station_report' in self.global_config.log_sim_config:
+        if ReportType.STATION_STATE in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.stations.values(),
                 asdict=self.station_asdict,
                 sim_time=sim_state.sim_time,
-                report_type='station_report',
+                report_type=ReportType.STATION_STATE,
             )
 
         for report in reports:
-            if 'report_type' not in report:
-                log.warning(f'must specify report_type in report, not recording report {report}')
-                return
-            elif report['report_type'] not in self.global_config.log_sim_config:
-                return
-            else:
-                entry = json.dumps(report, default=str)
-                self.sim_log_file.write(entry + '\n')
+            entry = json.dumps(report.as_json(), default=str)
+            self.sim_log_file.write(entry + '\n')
 
     def close(self, runner_payload: RunnerPayload):
         self.sim_log_file.close()
