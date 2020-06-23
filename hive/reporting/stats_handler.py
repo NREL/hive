@@ -45,7 +45,7 @@ class Stats:
         vehicle_states_observed = set(self.state_count.keys()).union(self.vkt.keys())
         for v in vehicle_states_observed:
             observed_pct = self.state_count.get(v) / total_state_count if self.state_count.get(v) else 0
-            vkt = self.vkt.get(v) / total_vkt if self.vkt.get(v) else 0
+            vkt = self.vkt.get(v, 0)
             data = {
                 "observed_percent": observed_pct,
                 "vkt": vkt
