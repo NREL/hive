@@ -3,6 +3,7 @@ log_run: True
 log_sim: True
 log_level: INFO
 log_sim_config:
+- 'vehicle_report'
 - 'station_report'
 - 'request_report'
 - 'add_request'

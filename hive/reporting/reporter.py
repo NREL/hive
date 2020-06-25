@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Optional
+
+from hive.reporting.stats_handler import StatsHandler
 
 if TYPE_CHECKING:
     from hive.runner.runner_payload import RunnerPayload
@@ -48,6 +50,17 @@ class Reporter:
         :return:
         """
         self.reports.append(report)
+
+    def get_summary_stats(self) -> Optional[Dict]:
+        """
+        if a summary StatsHandler exists, return the final report from the collection of statistics
+        :return: the stats Dictionary, or, None
+        """
+        final_report = None
+        for handler in self.handlers:
+            if isinstance(handler, StatsHandler):
+                final_report = handler.get_stats()
+        return final_report
 
     def close(self, runner_payload: RunnerPayload):
         """

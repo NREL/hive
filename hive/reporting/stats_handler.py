@@ -126,6 +126,9 @@ class StatsHandler(Handler):
         self.stats.requests += c['add_request']
         self.stats.cancelled_requests += c['cancel_request']
 
+    def get_stats(self) -> Dict:
+        return self.stats.compile_stats()
+
     def close(self, runner_payload: RunnerPayload):
         """
         wrap up anything here. called at the end of the simulation
