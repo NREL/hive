@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, List, Dict
 import numpy as np
 
 from hive.reporting.handler import Handler
+from hive.reporting.reporter import ReportType
 
 if TYPE_CHECKING:
     from hive.reporting.reporter import Report
@@ -102,9 +103,9 @@ class StatsHandler(Handler):
 
         state_counts = Counter(
             map(
-                lambda r: r['vehicle_state'],
+                lambda r: r.report['vehicle_state'],
                 filter(
-                    lambda r: r['report_type'] == 'vehicle_move_event',
+                    lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
                     reports
                 )
             )
@@ -114,17 +115,17 @@ class StatsHandler(Handler):
 
         move_events = list(
             filter(
-                lambda r: r['report_type'] == 'vehicle_move_event',
+                lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
                 reports
             )
         )
 
         for me in move_events:
-            self.stats.vkt[me['vehicle_state']] += me['distance_km']
+            self.stats.vkt[me.report['vehicle_state']] += me.report['distance_km']
 
-        c = Counter(map(lambda r: r['report_type'], reports))
-        self.stats.requests += c['add_request']
-        self.stats.cancelled_requests += c['cancel_request']
+        c = Counter(map(lambda r: r.report_type, reports))
+        self.stats.requests += c[ReportType.ADD_REQUEST_EVENT]
+        self.stats.cancelled_requests += c[ReportType.CANCEL_REQUEST_EVENT]
 
     def get_stats(self) -> Dict:
         return self.stats.compile_stats()

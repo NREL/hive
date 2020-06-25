@@ -6,6 +6,7 @@ from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import generate_instructions
+from hive.reporting.reporter import Report, ReportType
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.step_simulation_ops import (
@@ -17,7 +18,7 @@ from hive.state.simulation_state.update.step_simulation_ops import (
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.dispatcher.instruction.instructions import Instruction
-    from hive.util.typealiases import Report, SimTime
+    from hive.util.typealiases import SimTime
 
 log = logging.getLogger(__name__)
 
@@ -31,10 +32,9 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
     def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
         i_dict = i._asdict()
         i_dict['sim_time'] = sim_time
-        i_dict['report_type'] = "dispatcher"
         i_dict['instruction_type'] = i.__class__.__name__
 
-        return i_dict
+        return Report(ReportType.INSTRUCTION, i_dict)
 
     def update(
             self,
@@ -60,18 +60,15 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
             UserProvidedUpdateAccumulator()
         )
 
-        if user_update_result.has_errors():
-            # stop here, passing back the error(s) and the result of the user update
-            updated_step_simulation = self._replace(instruction_generators=user_update_result.updated_fns)
-            return simulation_state, updated_step_simulation
-        else:
+        # TODO: I refactored the UserProvidedUpdateAccumulator to raise any errors due to a problem I had where it
+        #  was failing silently. Once we decide on our error handling strategy we should revisit this. -NR
 
-            # generate Instructions, which may also have the side effect of modifying the InstructionGenerators
-            instr_result = generate_instructions(user_update_result.updated_fns, simulation_state, env)
-            for i in instr_result.instruction_map.values():
-                env.reporter.file_report(self._instruction_to_report(i, simulation_state.sim_time))
-            sim_with_instructions = apply_instructions(simulation_state, env, instr_result.instruction_map)
-            sim_next_time_step = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
-            updated_step_simulation = self._replace(instruction_generators=instr_result.updated_instruction_generators)
+        # generate Instructions, which may also have the side effect of modifying the InstructionGenerators
+        instr_result = generate_instructions(user_update_result.updated_fns, simulation_state, env)
+        for i in instr_result.instruction_map.values():
+            env.reporter.file_report(self._instruction_to_report(i, simulation_state.sim_time))
+        sim_with_instructions = apply_instructions(simulation_state, env, instr_result.instruction_map)
+        sim_next_time_step = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
+        updated_step_simulation = self._replace(instruction_generators=instr_result.updated_instruction_generators)
 
-            return sim_next_time_step, updated_step_simulation
+        return sim_next_time_step, updated_step_simulation

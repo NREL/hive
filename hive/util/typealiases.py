@@ -23,4 +23,3 @@ GeoFenceSet = FrozenSet[GeoId]
 SimTime = int  # time in seconds consistent across inputs (epoch time preferred)
 SimStep = int  # the iteration of the simulation
 
-Report = dict

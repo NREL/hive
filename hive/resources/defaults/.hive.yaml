@@ -3,12 +3,12 @@ log_run: True
 log_sim: True
 log_level: INFO
 log_sim_config:
-- 'vehicle_report'
-- 'station_report'
-- 'request_report'
-- 'add_request'
-- 'cancel_request'
-- 'dispatcher'
+- 'instruction'
+- 'station_state'
+- 'vehicle_state'
+- 'add_request_event'
+- 'cancel_request_event'
+- 'pickup_request_event'
 - 'vehicle_charge_event'
 - 'vehicle_move_event'
 log_period_seconds: 60
