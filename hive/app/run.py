@@ -17,7 +17,7 @@ from hive.dispatcher.instruction_generator.charging_fleet_manager import Chargin
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.model.vehicle import Vehicle
-from hive.runner.load import load_simulation
+from hive.initialization.load import load_simulation
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state import SimulationState
