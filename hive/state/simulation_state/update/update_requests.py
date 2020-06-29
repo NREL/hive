@@ -11,9 +11,9 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
-from hive.state.simulation_state.update.simulation_update_result import SimulationUpdateResult
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.parsers import time_parser
+from hive.reporting.reporter import Report, ReportType
 
 log = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
 
     def update(self,
                sim_state: SimulationState,
-               env: Environment) -> Tuple[SimulationUpdateResult, Optional[UpdateRequests]]:
+               env: Environment) -> Tuple[SimulationState, Optional[UpdateRequests]]:
         """
         add requests from file when the simulation reaches the request's time
 
@@ -97,7 +97,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                                   initial_sim_state: SimulationState,
                                   env: Environment,
                                   rate_structure: RequestRateStructure,
-                                  ) -> SimulationUpdateResult:
+                                  ) -> SimulationState:
     """
     add requests from file when the simulation reaches the request's time
 
@@ -108,62 +108,62 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     :return: sim state plus new requests
     """
 
-    def _update(acc: SimulationUpdateResult,
+    def _update(sim: SimulationState,
                 row: Dict[str, str],
                 env: Environment,
                 rate_structure: RequestRateStructure,
-                ) -> SimulationUpdateResult:
+                ) -> SimulationState:
         """
         takes one row, attempts to parse it as a Request, and attempts to add it to the simulation
 
-        :param acc: latest SimulationState and any update reports
+        :param sim: latest SimulationState
         :param row: one row as loaded via DictReader
         :param env: the simulation environment
         :param rate_structure: the rate structure for requests in the simulation
         :return: the updated sim and updated reporting
         """
-        error, req = Request.from_row(row, env, acc.simulation_state.road_network)
+        error, req = Request.from_row(row, env, sim.road_network)
         this_req_cancel_time = req.departure_time + env.config.sim.request_cancel_time_seconds if req else None
         if error:
             log.error(error)
-            return acc
+            return sim
         elif not req:
             log.error(f"an unexpected error occurred with request row: {row}")
-            return acc
-        elif this_req_cancel_time <= acc.simulation_state.sim_time:
+            return sim
+        elif this_req_cancel_time <= sim.sim_time:
             # cannot add request that should already be cancelled
-            current_time = acc.simulation_state.sim_time
+            current_time = sim.sim_time
             warning = f"request {req.id} with cancel_time {this_req_cancel_time} cannot be added at time {current_time}"
             log.warning(warning)
-            return acc
+            return sim
         else:
-            distance_km = acc.simulation_state.road_network.distance_by_geoid_km(req.origin, req.destination)
+            distance_km = sim.road_network.distance_by_geoid_km(req.origin, req.destination)
             req_updated = req.assign_value(rate_structure, distance_km)
-            error, sim_updated = simulation_state_ops.add_request(acc.simulation_state, req_updated)
+            error, sim_updated = simulation_state_ops.add_request(sim, req_updated)
             if error:
                 log.error(error)
-                return acc
+                return sim
             else:
                 # successfully added request
                 req_in_sim = sim_updated.requests.get(req.id)
                 if not req_in_sim:
                     warning = f"adding new request {req.id} to sim succeeded but now request is not found"
                     log.warning(warning)
-                    return acc
+                    return sim
                 else:
                     dep_t = sim_updated.requests.get(req.id).departure_time
-                    report = {
-                        'report_type': 'add_request',
+                    report_data = {
                         'request_id': req.id,
                         'departure_time': dep_t,
                     }
-                    return acc.update_sim(sim_updated, report)
+                    env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
+                    return sim_updated
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(
         ft.partial(_update, env=env, rate_structure=rate_structure),
         it,
-        SimulationUpdateResult(initial_sim_state)
+        initial_sim_state
     )
 
     return updated_sim

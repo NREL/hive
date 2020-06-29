@@ -38,10 +38,10 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
 from hive.state.simulation_state.update.update import Update
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import *
 from hive.util.units import Ratio, Kmph, Seconds, Currency
-from hive.state.vehicle_state.vehicle_state import VehicleState
 
 
 class DefaultIds:
@@ -91,7 +91,8 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
 
 
 def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
-    road_network_file = resource_filename('hive.resources.scenarios.denver_downtown.road_network', 'downtown_denver.xml')
+    road_network_file = resource_filename('hive.resources.scenarios.denver_downtown.road_network',
+                                          'downtown_denver.xml')
     return OSMRoadNetwork(
         road_network_file=road_network_file,
         geofence=mock_geofence(resolution=geofence_res),
@@ -395,17 +396,13 @@ def mock_env(
 
 def mock_reporter() -> Reporter:
     class MockReporter(Reporter):
-        sim_log_file = None
-
-        def log_sim_state(self,
-                          sim_state: SimulationState,
-                          ):
+        def __init__(self):
             pass
 
-        def sim_report(self, report: dict):
+        def flush(self, sim_state: SimulationState):
             pass
 
-        def single_report(self, report: str):
+        def file_report(self, report: dict):
             pass
 
         def close(self):

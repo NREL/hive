@@ -1,11 +1,10 @@
 from typing import Tuple, Optional, NamedTuple
 
-from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle import Vehicle
-from hive.reporting.report_ops import vehicle_move_event, vehicle_charge_event
+from hive.reporting.report_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -61,10 +60,8 @@ def charge(sim: 'SimulationState',
         if veh_error:
             return veh_error, None
         else:
-
-            if 'vehicle_charge_event' in env.config.global_config.log_sim_config:
-                report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, station, charger_id)
-                env.reporter.sim_report(report)
+            report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, station, charger_id)
+            env.reporter.file_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
 
@@ -122,7 +119,8 @@ def _apply_route_traversal(sim: 'SimulationState',
             link = sim.road_network.link_from_geoid(geoid)
             updated_vehicle = less_energy_vehicle.modify_link(link=link).tick_distance_traveled_km(step_distance_km)
         else:
-            updated_vehicle = less_energy_vehicle.modify_link(link=remaining_route[0]).tick_distance_traveled_km(step_distance_km)
+            updated_vehicle = less_energy_vehicle.modify_link(link=remaining_route[0]).tick_distance_traveled_km(
+                step_distance_km)
 
         error, updated_sim = simulation_state_ops.modify_vehicle(
             sim,
@@ -156,7 +154,8 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
             return error, None
         elif not exit_sim:
             # the previous state does not allow exit to OutOfService
-            return SimulationStateError(f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
+            return SimulationStateError(
+                f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
         else:
             next_state = OutOfService(vehicle_id)
             return next_state.enter(exit_sim, env)
@@ -189,9 +188,8 @@ def move(sim: 'SimulationState',
         elif empty_vehicle_sim:
             return None, MoveResult(empty_vehicle_sim)
         else:
-            if 'vehicle_move_event' in env.config.global_config.log_sim_config:
-                report = vehicle_move_event(move_result)
-                env.reporter.sim_report(report)
+            report = vehicle_move_event(move_result)
+            env.reporter.file_report(report)
             return None, move_result
 
 
@@ -219,4 +217,5 @@ def pick_up_trip(sim: 'SimulationState',
         if mod_error:
             return mod_error, None
         else:
+            env.reporter.file_report(report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle))
             return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)

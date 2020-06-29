@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 class UpdatePayload(NamedTuple):
     runner_payload: RunnerPayload
     updated_step_fns: Tuple[SimulationUpdateFunction, ...] = ()
-    reports: Tuple[dict, ...] = ()
 
 
 class Update(NamedTuple):
@@ -65,7 +64,7 @@ class Update(NamedTuple):
 
         return Update(pre_step_update, step_update)
 
-    def apply_update(self, runner_payload: RunnerPayload) -> [RunnerPayload, Tuple[dict, ...]]:
+    def apply_update(self, runner_payload: RunnerPayload) -> RunnerPayload:
         """
         applies the update at a time step, calling each SimulationUpdateFunction in order
         :param runner_payload: the current SimulationState and assets at the current simtime
@@ -79,20 +78,18 @@ class Update(NamedTuple):
         )
 
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
-        update_result, updated_step_fn = self.step_update.update(pre_step_result.runner_payload.s,
-                                                                 pre_step_result.runner_payload.e)
+        updated_sim, updated_step_fn = self.step_update.update(pre_step_result.runner_payload.s,
+                                                               pre_step_result.runner_payload.e)
 
         # resolve changes to Update
         next_update = Update(pre_step_result.updated_step_fns, updated_step_fn)
 
         updated_payload = runner_payload._replace(
-            s=update_result.simulation_state,
+            s=updated_sim,
             u=next_update
         )
 
-        reports = pre_step_result.reports + update_result.reports
-
-        return updated_payload, reports
+        return updated_payload
 
 
 def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
@@ -111,10 +108,9 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
 
     # if we received an updated version of this SimulationUpdateFunction, store it
     next_update_fns = p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)
-    updated_payload = p.runner_payload._replace(s=result.simulation_state)
+    updated_payload = p.runner_payload._replace(s=result)
 
     return p._replace(
         runner_payload=updated_payload,
         updated_step_fns=next_update_fns,
-        reports=p.reports + result.reports
     )
