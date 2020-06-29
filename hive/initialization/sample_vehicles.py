@@ -1,19 +1,21 @@
+import functools as ft
+import logging
 import random
 from typing import Callable, Tuple
 
-from returns.result import Result, Failure, Success, safe
-
-import functools as ft
+from returns.result import Result, Failure, Success
 
 from hive.model.base import Base
 from hive.model.roadnetwork import Link
 from hive.model.vehicle import Vehicle
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.simulation_state.simulation_state_ops import add_vehicle, add_vehicle_returns
+from hive.state.simulation_state.simulation_state_ops import add_vehicle_returns
 from hive.state.vehicle_state.idle import Idle
 from hive.util import Ratio
 from hive.util.typealiases import MechatronicsId
+
+log = logging.getLogger(__name__)
 
 
 def sample_vehicles(
@@ -22,17 +24,19 @@ def sample_vehicles(
   sim: SimulationState,
   env: Environment,
   location_sampling_function: Callable[[], Link],
-  soc_sampling_function: Callable[[], Ratio]
+  soc_sampling_function: Callable[[], Ratio],
+  offset: int = 0,
 ) -> Result[Tuple[SimulationState, Environment], Exception]:
     """
     creates {count} vehicles using the provided sampling functions
 
-    :param mechatronics_id:
+    :param mechatronics_id: the id of the mechatronics used by these vehicles
     :param count:
     :param sim:
     :param env:
     :param location_sampling_function: samples the initial location for a vehicle
     :param soc_sampling_function: samples the initial state of charge for a vehicle
+    :param offset: number to begin counting vehicle ids from (by default, begin counting from zero)
     :return: the updated setup, or, a failure
     """
 
@@ -42,7 +46,17 @@ def sample_vehicles(
     else:
 
         def _add_sample(i: int):
+            """
+            returns a function which creates the i'th vehicle
+            :param i: the number to associate with this sampled vehicle
+            :return: a function that adds vehicle i to the SimulationState
+            """
             def _inner(s: SimulationState) -> Result[SimulationState, Exception]:
+                """
+                attempts to add the i'th vehicle to this simulation state
+                :param s: the SimulationState to update
+                :return: the updated simulation state, or, an exception
+                """
                 try:
                     vehicle_id = f"v{i}"
                     initial_soc = soc_sampling_function()
@@ -62,9 +76,13 @@ def sample_vehicles(
                     return Failure(e)
             return _inner
 
+        log.info(f"sampling vehicles {offset} through {offset + count - 1} ({count} vehicles) with mechatronics id {mechatronics_id}")
+
+        # sample i vehicles, adding each to the sim
+        # fail fast if an exception is encountered
         result: Result[SimulationState, Exception] = ft.reduce(
             lambda acc, i: acc.bind(_add_sample(i)),
-            range(count),
+            range(offset, offset + count),
             Success(sim)
         )
 
