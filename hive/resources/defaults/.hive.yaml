@@ -11,6 +11,7 @@ log_sim_config:
 - 'pickup_request_event'
 - 'vehicle_charge_event'
 - 'vehicle_move_event'
+log_station_capacities: True
 log_period_seconds: 60
 local_parallelism: 1
 local_parallelism_timeout_sec: 60
