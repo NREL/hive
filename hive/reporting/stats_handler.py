@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import json
+
 import logging
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import TYPE_CHECKING, List
+from pathlib import Path
+from typing import TYPE_CHECKING, List, Dict
 
 import numpy as np
 
 from hive.reporting.handler import Handler
-from hive.reporting.reporter import ReportType
+from hive.reporting.report_type import ReportType
 
 if TYPE_CHECKING:
     from hive.reporting.reporter import Report
@@ -24,17 +27,47 @@ class Stats:
     vkt: Counter = field(default_factory=lambda: Counter())
 
     requests: int = 0
-    cancelled_reqeusts: int = 0
+    cancelled_requests: int = 0
 
     mean_final_soc: float = 0
 
     station_revenue: float = 0
     fleet_revenue: float = 0
 
+    def compile_stats(self) -> Dict[str, float]:
+        """
+        computes all stats based on values accumulated throughout this run
+        :return: a dictionary with stat values by key
+        """
+        requests_served_percent = 1 - (self.cancelled_requests / self.requests)
+        total_state_count = sum(self.state_count.values())
+        total_vkt = sum(self.vkt.values())
+        vehicle_state_output = {}
+        vehicle_states_observed = set(self.state_count.keys()).union(self.vkt.keys())
+        for v in vehicle_states_observed:
+            observed_pct = self.state_count.get(v) / total_state_count if self.state_count.get(v) else 0
+            vkt = self.vkt.get(v, 0)
+            data = {
+                "observed_percent": observed_pct,
+                "vkt": vkt
+            }
+            vehicle_state_output.update({v: data})
+
+        output = {
+            "mean_final_soc": self.mean_final_soc,
+            "requests_served_percent": requests_served_percent,
+            "vehicle_state": vehicle_state_output,
+            "total_vkt": total_vkt,
+            "station_revenue_dollars": self.station_revenue,
+            "fleet_revenue_dollars": self.fleet_revenue
+        }
+
+        return output
+
     def log(self):
         log.info(f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(15))
         log.info(
-            f"{(1 - (self.cancelled_reqeusts / self.requests)) * 100:.2f} % \t Requests Served"
+            f"{(1 - (self.cancelled_requests / self.requests)) * 100:.2f} % \t Requests Served"
                 .expandtabs(15)
         )
 
@@ -92,7 +125,10 @@ class StatsHandler(Handler):
 
         c = Counter(map(lambda r: r.report_type, reports))
         self.stats.requests += c[ReportType.ADD_REQUEST_EVENT]
-        self.stats.cancelled_reqeusts += c[ReportType.CANCEL_REQUEST_EVENT]
+        self.stats.cancelled_requests += c[ReportType.CANCEL_REQUEST_EVENT]
+
+    def get_stats(self) -> Dict:
+        return self.stats.compile_stats()
 
     def close(self, runner_payload: RunnerPayload):
         """
@@ -120,3 +156,9 @@ class StatsHandler(Handler):
         )
 
         self.stats.log()
+        output = self.stats.compile_stats()
+        output_path = Path(runner_payload.e.config.scenario_output_directory).joinpath("summary_stats.json")
+        with output_path.open(mode="w") as f:
+            json.dump(output, f, indent=4)
+            log.info(f"summary stats written to {output_path}")
+
