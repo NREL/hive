@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING, Tuple
 
 from hive.model.energy import EnergyType
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
@@ -93,12 +93,12 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Vehicle:
+    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
         :param vehicle:
         :param charger:
         :param time_seconds:
-        :return:
+        :return: the updated vehicle, along with the time spent charging
         """

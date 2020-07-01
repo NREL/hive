@@ -7,7 +7,7 @@ from h3 import h3
 from hive.model.roadnetwork.link import Link
 from hive.util import TupleOps, wkt
 from hive.util.typealiases import GeoId
-from hive.util.units import Kilometers
+from hive.util.units import Kilometers, Seconds
 
 Route = Tuple[Link, ...]
 """
@@ -28,6 +28,16 @@ def route_distance_km(route: Route) -> Kilometers:
         distance_km += l.distance_km
 
     return distance_km
+
+
+def route_travel_time_seconds(route: Route) -> Seconds:
+    """
+    returns the travel time, in seconds, for a route
+    :param route: route to calculate time from
+    :return: the travel time, in seconds
+    """
+    tt = ft.reduce(lambda acc, l: acc + l.travel_time_seconds, route, 0.0)
+    return int(tt)
 
 
 def valid_route(route: Route,

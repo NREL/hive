@@ -8,7 +8,8 @@ from h3 import h3
 
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
-from hive.util import Kilometers
+from hive.model.station import Station
+from hive.util import Kilometers, Ratio
 from hive.util.helpers import DictOps, H3Ops
 
 random.seed(123)
@@ -151,7 +152,9 @@ def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simula
 def instruct_vehicles_to_dispatch_to_station(n: int,
                                              max_search_radius_km: float,
                                              vehicles: Tuple[Vehicle],
-                                             simulation_state: SimulationState) -> Tuple[Instruction]:
+                                             simulation_state: SimulationState,
+                                             environment: Environment,
+                                             target_soc: Ratio) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at a station
 
@@ -159,7 +162,9 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     :param max_search_radius_km: the max kilometers to search for a station
     :param vehicles: the list of vehicles to consider
     :param simulation_state: the simulation state
-    :return:
+    :param environment: the simulation environment
+    :param target_soc: when ranking alternatives, use this target SoC value
+    :return: instructions for vehicles to charge at stations
     """
 
     instructions = ()
@@ -168,14 +173,19 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         if len(instructions) >= n:
             break
 
+        distance_fn = assignment_ops.shortest_time_to_charge_ranking(
+            vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
+        )
+
         nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                entities=simulation_state.stations,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,
-                                               is_valid=lambda s: s.has_available_charger("DCFC"),
-                                               distance_function=lambda s: assignment_ops.nearest_shortest_queue(veh, s))
+                                               distance_function=distance_fn)
         if nearest_station:
+
+            # todo: we need to capture the correct charger_id from the end of the distance function!
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
                 station_id=nearest_station.id,
