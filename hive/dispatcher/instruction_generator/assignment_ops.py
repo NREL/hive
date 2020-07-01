@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Callable, NamedTuple, Iterator
+from typing import Tuple, Callable, NamedTuple, Iterator, Dict, Optional
 
 import numpy as np
 from h3 import h3
@@ -137,7 +137,7 @@ def shortest_time_to_charge_ranking(
         vehicle: Vehicle,
         sim: SimulationState,
         env: Environment,
-        target_soc: Ratio) -> Callable[[Station], Seconds]:
+        target_soc: Ratio) -> Tuple[Callable[[Station], Seconds], Dict]:
     """
     ranks this station by an estimate of the time which would pass until this agent reaches a target charge level
 
@@ -151,6 +151,7 @@ def shortest_time_to_charge_ranking(
     """
     vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     remaining_range = vehicle_mechatronics.range_remaining_km(vehicle) if vehicle_mechatronics else 0.0
+    cache = {}
 
     def _inner(station: Station) -> Seconds:
 
@@ -164,10 +165,10 @@ def shortest_time_to_charge_ranking(
         else:
 
             def _veh_at_station(v: Vehicle) -> bool:
-                return isinstance(v.vehicle_state, ChargingStation) & v.vehicle_state.station_id == station.id
+                return isinstance(v.vehicle_state, ChargingStation) and v.vehicle_state.station_id == station.id
 
             def _veh_enqueued(v: Vehicle) -> bool:
-                return isinstance(v.vehicle_state, ChargeQueueing) & v.vehicle_state.station_id == station.id
+                return isinstance(v.vehicle_state, ChargeQueueing) and v.vehicle_state.station_id == station.id
 
             def _time_to_full_by_charger_id(c: ChargerId):
                 def _time_to_full(v: Vehicle) -> Seconds:
@@ -266,8 +267,13 @@ def shortest_time_to_charge_ranking(
                 overall_time_est = this_vehicle_charge_time + wait_estimate_for_charger
                 estimates.update({charger_id: overall_time_est})
 
-            best_overall_time = min(estimates.values())
-            dispatch_time_seconds = route_travel_time_seconds(route)
+            best_charger_id = min(estimates, key=estimates.get)
 
+            # writes to value stored in outer scope
+            cache.update({"best_charger_id": best_charger_id})
+
+            # return the best "distance" aka shortest estimated time to finish charging
+            best_overall_time = estimates.get(best_charger_id)
+            dispatch_time_seconds = route_travel_time_seconds(route)
             return dispatch_time_seconds + best_overall_time
-    return _inner
+    return _inner, cache

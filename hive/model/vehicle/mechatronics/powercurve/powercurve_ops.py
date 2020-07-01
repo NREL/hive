@@ -28,7 +28,7 @@ def time_to_full(
                                                               charger,
                                                               sim_timestep_duration_seconds)
             updated_time_charged_acc = time_charged_accumulator + time_delta
-            _fill(updated_veh, updated_time_charged_acc)
+            return _fill(updated_veh, updated_time_charged_acc)
 
     time_charged = _fill(vehicle)
 

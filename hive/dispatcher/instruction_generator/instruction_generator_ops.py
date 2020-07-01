@@ -173,7 +173,11 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         if len(instructions) >= n:
             break
 
-        distance_fn = assignment_ops.shortest_time_to_charge_ranking(
+        # construct a distance function rooted on finding the shortest time to
+        # recharge for this vehicle
+        # use this "cache" to cache the best charger type to pick for use
+        # at the chosen station, as a side effect
+        distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
             vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
         )
 
@@ -185,11 +189,12 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
                                                distance_function=distance_fn)
         if nearest_station:
 
-            # todo: we need to capture the correct charger_id from the end of the distance function!
+            best_charger_id = cache.get("best_charger_id")
+
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
                 station_id=nearest_station.id,
-                charger_id="DCFC",
+                charger_id=best_charger_id,
             )
 
             instructions = instructions + (instruction,)
