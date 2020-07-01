@@ -175,14 +175,14 @@ def shortest_time_to_charge_ranking(
                     _mech = env.mechatronics.get(v.mechatronics_id)
                     _charger = env.chargers.get(c)
                     if not _mech or not _charger:
-                        return sim.sim_time + 0
+                        return 0
                     else:
                         time_est = powercurve_ops.time_to_full(v,
                                                                _mech,
                                                                _charger,
                                                                target_soc,
                                                                sim.sim_timestep_duration_seconds)
-                        return sim.sim_time + time_est
+                        return time_est
 
                 return _time_to_full
 
@@ -209,15 +209,17 @@ def shortest_time_to_charge_ranking(
                     return time_passed
                 else:
                     # advance time
-                    next_released_charger_time, _ = _charging
+                    next_released_charger_time = TupleOps.head(_charging)
+
                     updated_time_passed = time_passed + next_released_charger_time
 
                     # remove charging agents who are done
                     _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
-                    _charging_vacated = tuple(filter(lambda t: t <= 0, _charging_time_advanced))
+                    _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
 
                     vacancies = station.total_chargers.get(_charger_id) - len(_charging_vacated)
                     if vacancies <= 0:
+                        # no space for any changes from enqueued -> charging
                         return _greedy_assignment(
                             _charging=_charging_vacated,
                             _enqueued=_enqueued,

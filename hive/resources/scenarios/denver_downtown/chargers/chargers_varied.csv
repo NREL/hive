@@ -1,0 +1,6 @@
+charger_id,power_kw
+LEVEL_1,3.3
+LEVEL_2,7.2
+DC50,50
+DC150,150
+DC350,350
