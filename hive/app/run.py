@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import functools as ft
 import logging
 import os
 import time
 from pathlib import Path
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import pkg_resources
 import yaml
@@ -15,17 +14,15 @@ from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
 from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
-from hive.model.vehicle import Vehicle
+from hive.dispatcher.instruction_generator.idle_time_out import IdleTimeOut
 from hive.runner.load import load_simulation
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
-from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
 from hive.util import fs
 
 if TYPE_CHECKING:
-    from hive.runner.environment import Environment
+    pass
 
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
@@ -80,21 +77,21 @@ def run() -> int:
             # log_fh.setLevel(env.config.global_config.log_level)
             log_fh.setFormatter(formatter)
             log.addHandler(log_fh)
-            log.info(f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
+            log.info(
+                f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
 
         # build the set of instruction generators which compose the control system for this hive run
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
             BaseFleetManager(env.config.dispatcher),
-            PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.input_config.demand_forecast_file),
-                config=env.config.dispatcher,
-            ),
+            IdleTimeOut(env.config.dispatcher),
             ChargingFleetManager(env.config.dispatcher),
-            # DeluxeFleetManager(max_search_radius_km=env.config.network.max_search_radius_km),
             Dispatcher(env.config.dispatcher),
         )
+
+        for i in instruction_generators:
+            log.info(f'using {i.__class__.__name__} instruction generator')
 
         update = Update.build(env.config, instruction_generators)
         initial_payload = RunnerPayload(sim, env, update)
