@@ -84,8 +84,8 @@ def run() -> int:
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
-            BaseFleetManager(env.config.dispatcher),
-            IdleTimeOut(env.config.dispatcher),
+            # BaseFleetManager(env.config.dispatcher),
+            # IdleTimeOut(env.config.dispatcher),
             ChargingFleetManager(env.config.dispatcher),
             Dispatcher(env.config.dispatcher),
         )
