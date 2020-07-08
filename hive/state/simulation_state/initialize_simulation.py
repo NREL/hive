@@ -16,15 +16,26 @@ from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.station import Station
 from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.model.vehicle.vehicle import Vehicle
-from hive.reporting.reporter import Reporter
-from hive.reporting.file_handler import FileHandler
-from hive.reporting.stats_handler import StatsHandler
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util.helpers import DictOps
 
 log = logging.getLogger(__name__)
+
+
+class DummyReporter:
+    def add_handler(self, handler):
+        pass
+
+    def flush(self, runner_payload):
+        pass
+
+    def file_report(self, report):
+        pass
+
+    def close(self, runner_payload):
+        pass
 
 
 def initialize_simulation(
@@ -57,7 +68,8 @@ def initialize_simulation(
             default_speed_kmph=config.network.default_speed_kmph,
         )
     else:
-        raise IOError(f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
+        raise IOError(
+            f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
 
     sim_initial = SimulationState(
         road_network=road_network,
@@ -70,12 +82,14 @@ def initialize_simulation(
     if config.global_config.log_period_seconds < config.sim.timestep_duration_seconds:
         raise RuntimeError("log time step must be greater than simulation time step")
 
-    reporter = Reporter(config.global_config)
+    reporter = DummyReporter()
 
-    if config.global_config.log_sim:
-        reporter.add_handler(FileHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.track_stats:
-        reporter.add_handler(StatsHandler())
+    # reporter = Reporter(config.global_config)
+    #
+    # if config.global_config.log_sim:
+    #     reporter.add_handler(FileHandler(config.global_config, config.scenario_output_directory))
+    # if config.global_config.track_stats:
+    #     reporter.add_handler(StatsHandler())
 
     env_initial = Environment(config=config,
                               reporter=reporter,
