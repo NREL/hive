@@ -29,8 +29,8 @@ def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environm
         run_log.exception("attempted to load scenario config file but failed")
         raise e
 
-    # if config.global_config.write_outputs:
-    #     os.makedirs(config.scenario_output_directory)
+    if config.global_config.write_outputs:
+        os.makedirs(config.scenario_output_directory)
 
     simulation_state, environment = initialize_simulation(config)
 

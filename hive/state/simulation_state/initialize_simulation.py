@@ -19,6 +19,9 @@ from hive.model.vehicle.vehicle import Vehicle
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
+from hive.reporting.reporter import Reporter
+from hive.reporting.file_handler import FileHandler
+from hive.reporting.stats_handler import StatsHandler
 from hive.util.helpers import DictOps
 
 log = logging.getLogger(__name__)
@@ -82,14 +85,14 @@ def initialize_simulation(
     if config.global_config.log_period_seconds < config.sim.timestep_duration_seconds:
         raise RuntimeError("log time step must be greater than simulation time step")
 
-    reporter = DummyReporter()
+    # reporter = DummyReporter()
 
-    # reporter = Reporter(config.global_config)
-    #
-    # if config.global_config.log_sim:
-    #     reporter.add_handler(FileHandler(config.global_config, config.scenario_output_directory))
-    # if config.global_config.track_stats:
-    #     reporter.add_handler(StatsHandler())
+    reporter = Reporter(config.global_config)
+
+    if config.global_config.log_sim:
+        reporter.add_handler(FileHandler(config.global_config, config.scenario_output_directory))
+    if config.global_config.track_stats:
+        reporter.add_handler(StatsHandler())
 
     env_initial = Environment(config=config,
                               reporter=reporter,
