@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, Tuple, TYPE_CHECKING
 from returns.result import Result, Success, Failure
 
-from h3 import h3
+import h3
 
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps

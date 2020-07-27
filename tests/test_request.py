@@ -1,13 +1,13 @@
-import unittest
+from unittest import TestCase
 from csv import DictReader
 
 from tests.mock_lobster import *
 
 
-class MyTestCase(unittest.TestCase):
+class TestRequest(TestCase):
     request_id = "test"
-    origin = h3.geo_to_h3(0, 0, res=11)
-    destination = h3.geo_to_h3(3, 4, res=11)
+    origin = h3.geo_to_h3(0, 0, resolution=11)
+    destination = h3.geo_to_h3(3, 4, resolution=11)
     departure_time = 28800
     passengers = 2
 

@@ -12,7 +12,7 @@ dependencies:
   - PyYAML
   - rtree
   - tqdm
-  - h3-py=3.4
+  - h3-py=3.6.4
   - scipy
   - pip:
       returns

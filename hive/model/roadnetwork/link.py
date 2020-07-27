@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import NamedTuple, Optional
 
-from h3 import h3
+import h3
 
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import LinkId, GeoId

@@ -92,6 +92,14 @@ class StatsHandler(Handler):
     def __init__(self):
         self.stats = Stats()
 
+    def get_stats(self) -> Dict:
+        """
+        special output specifically for the StatsHandler which produces the
+        summary file output
+        :return: the compiled stats for this simulation run
+        """
+        return self.stats.compile_stats()
+
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
         """
         called at each log step.
@@ -126,9 +134,6 @@ class StatsHandler(Handler):
         c = Counter(map(lambda r: r.report_type, reports))
         self.stats.requests += c[ReportType.ADD_REQUEST_EVENT]
         self.stats.cancelled_requests += c[ReportType.CANCEL_REQUEST_EVENT]
-
-    def get_stats(self) -> Dict:
-        return self.stats.compile_stats()
 
     def close(self, runner_payload: RunnerPayload):
         """

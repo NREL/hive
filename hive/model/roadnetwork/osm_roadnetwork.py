@@ -4,7 +4,7 @@ import logging
 from typing import Tuple, Optional, Dict, Union
 
 import networkx as nx
-from h3 import h3
+import h3
 from networkx.classes.multidigraph import MultiDiGraph
 from rtree import index
 
@@ -136,7 +136,7 @@ class OSMRoadNetwork(RoadNetwork):
         geoid_to_node_id = {}
         for nid in g.nodes():
             node = g.nodes[nid]
-            geoid = h3.geo_to_h3(node['y'], node['x'], res=self.sim_h3_resolution)
+            geoid = h3.geo_to_h3(node['y'], node['x'], resolution=self.sim_h3_resolution)
             geoid_map[nid] = {'geoid': geoid}
             geoid_to_node_id[geoid] = nid
 

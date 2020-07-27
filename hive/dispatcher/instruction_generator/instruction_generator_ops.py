@@ -4,7 +4,7 @@ import functools as ft
 import random
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops

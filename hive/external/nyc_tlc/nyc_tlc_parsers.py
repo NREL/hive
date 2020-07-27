@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict, Union
 
-from h3 import h3
+import h3
 
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.request import Request

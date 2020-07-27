@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import NamedTuple, Dict
 
-from h3 import h3
+import h3
 
 from hive.util.typealiases import GeoFenceSet, H3Resolution, GeoId
 
@@ -22,7 +22,7 @@ class GeoFence(NamedTuple):
     @classmethod
     def from_geojson(cls, geojson: Dict, h3_resolution: H3Resolution = 10) -> GeoFence:
         geofence_set = frozenset(h3.polyfill(
-            geo_json=geojson['features'][0]['geometry'] if 'features' in geojson else geojson['geometry'],
+            geojson=geojson['features'][0]['geometry'] if 'features' in geojson else geojson['geometry'],
             res=h3_resolution,
             geo_json_conformant=True))
 

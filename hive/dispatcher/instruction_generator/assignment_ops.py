@@ -4,7 +4,7 @@ import functools as ft
 from typing import Tuple, Callable, NamedTuple, Iterator, Dict, Optional
 
 import numpy as np
-from h3 import h3
+import h3
 from returns.result import ResultE, Failure, Success
 from scipy.optimize import linear_sum_assignment
 

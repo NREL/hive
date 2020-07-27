@@ -2,7 +2,7 @@ from typing import Tuple, Optional
 
 import functools as ft
 
-from h3 import h3
+import h3
 
 from hive.model.roadnetwork.link import Link
 from hive.util import TupleOps, wkt
