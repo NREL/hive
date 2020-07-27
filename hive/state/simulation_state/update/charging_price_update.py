@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Dict
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.model.energy.charger import Charger, build_chargers_table
 from hive.runner.environment import Environment

@@ -4,7 +4,7 @@ import functools as ft
 from typing import Tuple, Callable, NamedTuple
 
 import numpy as np
-from h3 import h3
+import h3
 from scipy.optimize import linear_sum_assignment
 
 from hive.model.energy import Charger

@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
-from h3 import h3
+import h3
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import (

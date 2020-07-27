@@ -4,13 +4,12 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Union, Callable
 
+import h3
 import immutables
 import yaml
-from h3 import h3
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
-from hive.config.global_config import GlobalConfig
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
