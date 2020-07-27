@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import functools as ft
 import logging
 import os
 import time
 from pathlib import Path
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import pkg_resources
 import yaml
@@ -16,16 +15,16 @@ from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetMa
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
-from hive.model.vehicle import Vehicle
 from hive.initialization.load import load_simulation
+from hive.reporting import reporter_ops
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
-from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update import Update
 from hive.util import fs
+from hive.util.fp import throw_on_failure
 
 if TYPE_CHECKING:
-    from hive.runner.environment import Environment
+    pass
 
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
@@ -81,6 +80,10 @@ def run() -> int:
             log_fh.setFormatter(formatter)
             log.addHandler(log_fh)
             log.info(f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
+
+        if env.config.global_config.log_station_capacities:
+            result = reporter_ops.log_station_capacities(sim, env)
+            throw_on_failure(result)
 
         # build the set of instruction generators which compose the control system for this hive run
         # this ordering is important as the later managers will override any instructions from the previous
