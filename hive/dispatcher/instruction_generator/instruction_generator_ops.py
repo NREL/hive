@@ -177,6 +177,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             break
 
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
+            # use the simple weighted euclidean distance ranking
 
             top_charger = sorted(environment.chargers, key=lambda charger_id: -environment.chargers[charger_id].power_kw)[0]
             cache = ft.reduce(
@@ -194,6 +195,8 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             distance_fn = d_fn
 
         else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
+            # use the search-based metric which considers travel, queueing, and charging time
+
             def v_fn(s: Station):
                 return True
             d_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
