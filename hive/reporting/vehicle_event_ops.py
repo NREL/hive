@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple, Set, NamedTuple
 
+import immutables
 from h3 import h3
 
 from hive.model.energy import EnergyType
@@ -11,7 +12,8 @@ from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util.typealiases import ChargerId
+from hive.util.typealiases import ChargerId, StationId, SimTime
+from hive.util.units import KwH
 
 if TYPE_CHECKING:
     from hive.model.request.request import Request
@@ -64,7 +66,7 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
     :param prev_vehicle: the previous vehicle state
     :param next_vehicle: the next vehicle state
     :param next_sim: the next simulation state after the charge event
-    :param station: the station involved with the charge event
+    :param station: the station involved with the charge event (either before or after update)
     :param charger_id: the charger_id type used
     :return: a charge event report
     """
@@ -130,3 +132,71 @@ def report_pickup_request(vehicle: Vehicle,
 
     report = Report(ReportType.PICKUP_REQUEST_EVENT, report_data)
     return report
+
+
+def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) -> Tuple[Report, ...]:
+    """
+    a station load report takes any vehicle charge events and attributes them to a
+    station, so that, for each time step, we report the load of energy use at the station
+    :param reports: the reports in this time step
+    :param sim: the simulation state
+    :return: a collection with one STATION_LOAD_EVENT per StationId
+    """
+    sim_time_start = sim.sim_time - sim.sim_timestep_duration_seconds
+    sim_time_end = sim.sim_time
+
+    def _add(acc: immutables.Map, report: Report) -> immutables.Map:
+        """
+        if the report has charging information, then add it to the accumulator.
+        /
+        expects that all reports fall between the same range of [sim_time_start, sim_time_end]
+        :param acc: a mapping from station to current load
+        :param report: a report of any type
+        :return: the updated accumulator
+        """
+        if report.report_type != ReportType.VEHICLE_CHARGE_EVENT:
+            return acc
+        else:
+            station_id = report.report['station_id']
+            energy_kwh = float(report.report['energy_kwh'])
+            station_energy_kwh = acc.get(station_id, 0.0)
+            updated_energy_kwh = station_energy_kwh + energy_kwh
+            updated_acc = acc.update({station_id: updated_energy_kwh})
+
+            return updated_acc
+
+    def _to_reports(acc: immutables.Map[StationId, KwH]) -> Tuple[Report, ...]:
+        """
+        transforms the accumulated values into Reports
+        :return: a collection of STATION_LOAD_EVENT reports
+        """
+        def _cast_as_report(station_id: StationId):
+            energy_kwh: KwH = acc.get(station_id)
+            report = Report(
+                report_type=ReportType.STATION_LOAD_EVENT,
+                report={
+                    "station_id": station_id,
+                    "sim_time_start": sim_time_start,
+                    "sim_time_end": sim_time_end,
+                    "energy_kwh": energy_kwh,
+                }
+            )
+            return report
+        these_reports: Tuple[Report, ...] = tuple(map(_cast_as_report, acc.keys()))
+        return these_reports
+
+    # collect vehicle charge events
+    reported_charge_events_accumulator = ft.reduce(_add, reports, immutables.Map())
+
+    # create entries for stations with no charge events reported
+    reported_stations: Set[StationId] = set(reported_charge_events_accumulator.keys())
+    unreported_station_ids: Set[StationId] = set(sim.stations.keys()).difference(reported_stations)
+    all_stations_accumulator = ft.reduce(
+        lambda acc, id: acc.update({id: 0.0}),
+        unreported_station_ids,
+        reported_charge_events_accumulator
+    )
+
+    result = _to_reports(all_stations_accumulator)
+
+    return result
