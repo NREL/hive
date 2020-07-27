@@ -4,7 +4,7 @@ import functools as ft
 from typing import TYPE_CHECKING, Tuple, Set, NamedTuple
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.model.energy import EnergyType
 from hive.model.roadnetwork import route

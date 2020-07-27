@@ -2,7 +2,7 @@ import json
 import random
 from csv import DictReader, DictWriter
 
-from h3 import h3
+import h3
 from pkg_resources import resource_filename
 
 from hive.external.nyc_tlc.nyc_tlc_parsers import parse_yellow_tripdata_row
@@ -34,7 +34,7 @@ def down_sample_nyc_tlc_data(in_file: str,
         # used for ETL to confirm that requests sampled are in fact within the study area (some are not)
         geojson = json.load(f)
         hexes = h3.polyfill(
-            geo_json=geojson['geometry'],
+            geojson=geojson['geometry'],
             res=boundary_h3_resolution,
             geo_json_conformant=True
         )
@@ -116,7 +116,7 @@ def sample_vehicles_in_geofence(num: int,
         # needs to be a Polygon, not a MultiPolygon feature
         geojson = json.load(f)
         hexes = list(h3.polyfill(
-            geo_json=geojson['geometry'],
+            geojson=geojson['geometry'],
             res=10,
             geo_json_conformant=True)
         )

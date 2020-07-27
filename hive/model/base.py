@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, NamedTuple, Dict
 
-from h3 import h3
+import h3
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork

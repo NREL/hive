@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.state.simulation_state.at_location_response import AtLocationResponse
 from hive.util.exception import SimulationStateError

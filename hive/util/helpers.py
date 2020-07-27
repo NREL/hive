@@ -6,7 +6,7 @@ from math import radians, cos, sin, asin, sqrt, ceil
 from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.util.exception import H3Error
 from hive.util.typealiases import *

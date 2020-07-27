@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 import functools as ft
-from h3 import h3
+import h3
 
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.model.request import Request
