@@ -114,23 +114,34 @@ def great_circle_distance_cost(a: Entity, b: Entity) -> float:
     return distance
 
 
-def nearest_shortest_queue(vehicle: Vehicle, station: Station) -> float:
+def nearest_shortest_queue_ranking(vehicle: Vehicle, charger_id: ChargerId):
     """
-    sort ordering that prioritizes short vehicle queues where possible, using h3_distance
-    as the base distance metric and extending that value by the proportion of available chargers
+    set up a shortest queue ranking function which will rank distances from this vehicle
+    and look for chargers of this type
+    :param vehicle: the vehicle
+    :param charger_id: the target charger type
+    :return: a station ranking function
+    """
+    def _inner(station: Station) -> float:
+        """
+        sort ordering that prioritizes short vehicle queues where possible, using h3_distance
+        as the base distance metric and extending that value by the proportion of available chargers
 
-    :param vehicle: a vehicle
-    :param station: a station
-    :return: the distance metric for this station, a function of it's queue size and distance
-    """
-    dc_chargers = station.total_chargers.get("DCFC", 0)
-    if not dc_chargers:
-        return float("inf")
-    else:
-        distance = h3.h3_distance(vehicle.geoid, station.geoid)
-        queue_factor = station.enqueued_vehicle_count_for_charger("DCFC") / dc_chargers
-        distance_metric = distance + distance * queue_factor
-        return distance_metric
+        :param vehicle: a vehicle
+        :param station: a station
+        :param charger_id: the type of charger we are using
+        :return: the distance metric for this station, a function of it's queue size and distance
+        """
+        dc_chargers = station.total_chargers.get(charger_id, 0)
+        if not dc_chargers:
+            return float("inf")
+        else:
+            distance = h3.h3_distance(vehicle.geoid, station.geoid)
+            queue_factor = station.enqueued_vehicle_count_for_charger(charger_id) / dc_chargers
+            distance_metric = distance + distance * queue_factor
+            return distance_metric
+
+    return _inner
 
 
 def shortest_time_to_charge_ranking(
@@ -154,7 +165,12 @@ def shortest_time_to_charge_ranking(
     cache = {}
 
     def _inner(station: Station) -> Seconds:
-
+        """
+        given a station charging alternative, determine the time it would take to charge
+        using the best charger type available
+        :param station: the station to rank
+        :return: a ranking (estimated travel + queue + charge time)
+        """
         route = sim.road_network.route(vehicle.geoid, station.geoid)
         distance_km = route_distance_km(route)
 
@@ -272,7 +288,7 @@ def shortest_time_to_charge_ranking(
             best_charger_id = min(estimates, key=estimates.get)
 
             # writes to value stored in outer scope
-            cache.update({"best_charger_id": best_charger_id})
+            cache.update({station.id: best_charger_id})
 
             # return the best "distance" aka shortest estimated time to finish charging
             best_overall_time = estimates.get(best_charger_id)

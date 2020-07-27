@@ -113,7 +113,7 @@ class StatsHandler(Handler):
             map(
                 lambda r: r.report['vehicle_state'],
                 filter(
-                    lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
+                    lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT or r.report_type == ReportType.VEHICLE_CHARGE_EVENT,
                     reports
                 )
             )

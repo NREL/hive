@@ -14,7 +14,7 @@ input:
   stations_file: denver_demo_stations_constrained.csv
   chargers_file: chargers_varied.csv
   mechatronics_file: mechatronics.csv
-  charging_price_file: denver_charging_prices_by_geoid.csv
+  charging_price_file: denver_constrained_prices.csv
   rate_structure_file: rate_structure.csv
   geofence_file: downtown_denver.geojson
   demand_forecast_file: denver_demand.csv
@@ -23,3 +23,4 @@ dispatcher:
   valid_dispatch_states:
     - Idle
     - Repositioning
+  charging_search_type: nearest_shortest_queue  # "nearest_shortest_queue", or, "shortest_time_to_charge"
