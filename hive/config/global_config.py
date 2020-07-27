@@ -17,6 +17,7 @@ class GlobalConfig(NamedTuple):
     log_sim: bool
     log_level: str
     log_sim_config: Set[ReportType]
+    log_station_capacities: bool
     log_period_seconds: Seconds
     lazy_file_reading: bool
     track_stats: bool

@@ -4,7 +4,7 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle import Vehicle
-from hive.reporting.report_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
+from hive.reporting.event_report_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
