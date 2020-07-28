@@ -134,7 +134,7 @@ class SimulationState(NamedTuple):
         vehicles = [self.vehicles[vid] for vid in self.vehicle_iterator]
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(vehicles, key=sort_key, reverse=sort_reversed)))
+            return tuple(sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))
         elif filter_function:
             return tuple(filter(filter_function, vehicles))
         elif sort:

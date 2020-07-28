@@ -131,7 +131,11 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
             charge_instructions = instruct_vehicles_to_dispatch_to_station(station_charge_diff,
                                                                            self.max_search_radius_km,
                                                                            active_ready_vehicles,
-                                                                           simulation_state)
+                                                                           simulation_state,
+                                                                           environment,
+                                                                           target_soc=environment.config.dispatcher.ideal_fastcharge_soc_limit,
+                                                                           charging_search_type=environment.config.dispatcher.charging_search_type
+                                                                           )
             instructions = instructions + charge_instructions
 
         if active_diff < 0:

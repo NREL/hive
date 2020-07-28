@@ -3,12 +3,14 @@ from __future__ import annotations
 import functools as ft
 import random
 
-import immutables
 import h3
+import immutables
 
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
-from hive.util import Kilometers
+from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
+from hive.model.station import Station
+from hive.util import Kilometers, Ratio
 from hive.util.helpers import DictOps, H3Ops
 
 random.seed(123)
@@ -151,7 +153,10 @@ def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simula
 def instruct_vehicles_to_dispatch_to_station(n: int,
                                              max_search_radius_km: float,
                                              vehicles: Tuple[Vehicle],
-                                             simulation_state: SimulationState) -> Tuple[Instruction]:
+                                             simulation_state: SimulationState,
+                                             environment: Environment,
+                                             target_soc: Ratio,
+                                             charging_search_type: ChargingSearchType) -> Tuple[Instruction]:
     """
     a helper function to set n vehicles to charge at a station
 
@@ -159,7 +164,10 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     :param max_search_radius_km: the max kilometers to search for a station
     :param vehicles: the list of vehicles to consider
     :param simulation_state: the simulation state
-    :return:
+    :param environment: the simulation environment
+    :param target_soc: when ranking alternatives, use this target SoC value
+    :param charging_search_type: the type of search to conduct
+    :return: instructions for vehicles to charge at stations
     """
 
     instructions = ()
@@ -168,18 +176,50 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         if len(instructions) >= n:
             break
 
+        if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
+            # use the simple weighted euclidean distance ranking
+
+            top_charger = sorted(environment.chargers, key=lambda charger_id: -environment.chargers[charger_id].power_kw)[0]
+            cache = ft.reduce(
+                lambda acc, station_id: acc.update({station_id: top_charger}),
+                simulation_state.stations.keys(),
+                immutables.Map()
+            )
+
+            def v_fn(s: Station):
+                station_has_top_charger = bool(s.available_chargers.get(top_charger))
+                return station_has_top_charger
+            d_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger)
+
+            is_valid_fn = v_fn
+            distance_fn = d_fn
+
+        else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
+            # use the search-based metric which considers travel, queueing, and charging time
+
+            def v_fn(s: Station):
+                return True
+            d_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
+                vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
+            )
+            is_valid_fn = v_fn
+            distance_fn = d_fn
+
         nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                entities=simulation_state.stations,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,
-                                               is_valid=lambda s: s.has_available_charger("DCFC"),
-                                               distance_function=lambda s: assignment_ops.nearest_shortest_queue(veh, s))
+                                               is_valid=is_valid_fn,
+                                               distance_function=distance_fn)
         if nearest_station:
+
+            best_charger_id = cache.get(nearest_station.id)
+
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
                 station_id=nearest_station.id,
-                charger_id="DCFC",
+                charger_id=best_charger_id,
             )
 
             instructions = instructions + (instruction,)

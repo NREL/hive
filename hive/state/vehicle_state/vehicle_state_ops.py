@@ -44,7 +44,7 @@ def charge(sim: 'SimulationState',
     elif mechatronics.is_full(vehicle):
         return SimulationStateError(f"vehicle {vehicle_id} is full but still attempting to charge"), None
     else:
-        charged_vehicle = mechatronics.add_energy(vehicle, charger, sim.sim_timestep_duration_seconds)
+        charged_vehicle, _ = mechatronics.add_energy(vehicle, charger, sim.sim_timestep_duration_seconds)
 
         # TODO: make this flexible wrt energy type (i.e. gasoline)
         # determine price of charge event

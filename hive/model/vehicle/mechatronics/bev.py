@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, NamedTuple, TYPE_CHECKING
+from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -126,24 +126,25 @@ class BEV(NamedTuple, MechatronicsInterface):
 
         return updated_vehicle
 
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Vehicle:
+    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
         :param vehicle:
         :param charger:
         :param time_seconds:
-        :return:
+        :return: the updated vehicle, along with the time spent charging
         """
         start_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
 
         if charger.power_kw < self.charge_taper_cutoff_kw:
             charger_energy_kwh = start_energy_kwh + charger.power_kw * time_seconds * SECONDS_TO_HOURS
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
+            time_charging_seconds = time_seconds
         else:
             # if we're above the charge taper cutoff, we'll use the powercurve
             energy_limit_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
-            charger_energy_kwh = self.powercurve.charge(
+            charger_energy_kwh, time_charging_seconds = self.powercurve.charge(
                 start_soc=start_energy_kwh,
                 full_soc=energy_limit_kwh,
                 power_kw=charger.power_kw,
@@ -153,4 +154,4 @@ class BEV(NamedTuple, MechatronicsInterface):
 
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
 
-        return updated_vehicle
+        return updated_vehicle, time_charging_seconds
