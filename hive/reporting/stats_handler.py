@@ -39,7 +39,7 @@ class Stats:
         computes all stats based on values accumulated throughout this run
         :return: a dictionary with stat values by key
         """
-        requests_served_percent = 1 - (self.cancelled_requests / self.requests)
+        requests_served_percent = 1 - (self.cancelled_requests / self.requests) if self.requests > 0 else 0
         total_state_count = sum(self.state_count.values())
         total_vkt = sum(self.vkt.values())
         vehicle_state_output = {}
@@ -66,8 +66,9 @@ class Stats:
 
     def log(self):
         log.info(f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(15))
+        requests_served_percent = (1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
         log.info(
-            f"{(1 - (self.cancelled_requests / self.requests)) * 100:.2f} % \t Requests Served"
+            f"{requests_served_percent:.2f} % \t Requests Served"
                 .expandtabs(15)
         )
 
