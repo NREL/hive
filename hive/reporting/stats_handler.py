@@ -163,8 +163,9 @@ class StatsHandler(Handler):
 
         self.stats.log()
         output = self.stats.compile_stats()
-        output_path = Path(runner_payload.e.config.scenario_output_directory).joinpath("summary_stats.json")
-        with output_path.open(mode="w") as f:
-            json.dump(output, f, indent=4)
-            log.info(f"summary stats written to {output_path}")
+        if env.config.global_config.write_outputs:
+            output_path = Path(runner_payload.e.config.scenario_output_directory).joinpath("summary_stats.json")
+            with output_path.open(mode="w") as f:
+                json.dump(output, f, indent=4)
+                log.info(f"summary stats written to {output_path}")
 
