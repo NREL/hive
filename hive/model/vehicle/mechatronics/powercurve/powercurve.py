@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from hive.util.units import Ratio, Kw, Seconds, KwH
@@ -18,13 +18,13 @@ class Powercurve(ABC):
                full_soc: Ratio,
                power_kw: Kw,
                duration_seconds: Seconds = 1  # seconds
-               ) -> KwH:
+               ) -> Tuple[KwH, Seconds]:
         """
 
         :param start_soc:
         :param full_soc:
         :param power_kw:
         :param duration_seconds:
-        :return:
+        :return: the charge amount along with the time spent charging
         """
 

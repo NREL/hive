@@ -6,6 +6,7 @@ import os
 from typing import TYPE_CHECKING, List
 
 from hive.model.vehicle import Vehicle
+from hive.reporting import vehicle_event_ops
 from hive.reporting.handler import Handler
 from hive.reporting.reporter import ReportType
 
@@ -18,9 +19,9 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class FileHandler(Handler):
+class SimLogHandler(Handler):
     """
-    A file handler that writes to a sim log
+    Generates the sim.log output file
 
     :param global_config: global project configuration
     :param scenario_output_directory: the output directory for this scenario
@@ -117,6 +118,12 @@ class FileHandler(Handler):
                 sim_time=sim_state.sim_time,
                 report_type=ReportType.STATION_STATE,
             )
+
+        if runner_payload.e.config.global_config.log_station_load:
+            station_load_reports = vehicle_event_ops.construct_station_load_events(tuple(reports), sim_state)
+            for report in station_load_reports:
+                entry = json.dumps(report.as_json(), default=str)
+                self.sim_log_file.write(entry + '\n')
 
         for report in reports:
             entry = json.dumps(report.as_json(), default=str)

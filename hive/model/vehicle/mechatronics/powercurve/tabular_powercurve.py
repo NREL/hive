@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict
+from typing import TYPE_CHECKING, Optional, Dict, Tuple
 
 import numpy as np
 
@@ -56,7 +56,7 @@ class TabularPowercurve(Powercurve):
                full_soc: Ratio,
                power_kw: Kw,
                duration_seconds: Seconds = 1  # seconds
-               ) -> KwH:
+               ) -> Tuple[KwH, Seconds]:
 
         """
          (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
@@ -64,7 +64,7 @@ class TabularPowercurve(Powercurve):
          :param full_soc: the cutoff energy limit
          :param power_kw: how fast to charge
          :param duration_seconds: the amount of time to charge for
-         :return: the energy source charged for this duration using this charger_id
+         :return: the energy source charged for this duration using this charger_id, along with the time charged
          """
 
         # iterate for as many seconds in a time step, by step_size_seconds
@@ -79,4 +79,4 @@ class TabularPowercurve(Powercurve):
 
             t += self.step_size_seconds
 
-        return energy_kwh
+        return energy_kwh, t

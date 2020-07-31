@@ -1,11 +1,12 @@
 import functools as ft
 import math
+import tempfile
 from pathlib import Path
 from typing import Dict, Union, Callable
 
+import h3
 import immutables
 import yaml
-from h3 import h3
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
@@ -352,7 +353,8 @@ def mock_config(
             'geofence_file': 'downtown_denver.geojson',
             'demand_forecast_file': 'denver_demand.csv'
         }
-    return HiveConfig.build(Path(resource_filename("hive.resources.scenarios.denver_downtown", "denver_demo.yaml")), {
+    test_output_directory = tempfile.TemporaryDirectory()
+    conf_without_temp_dir = HiveConfig.build(Path(resource_filename("hive.resources.scenarios.denver_downtown", "denver_demo.yaml")), {
         "sim": {
             'start_time': start_time,
             'end_time': end_time,
@@ -365,6 +367,9 @@ def mock_config(
         "network": {},
         "dispatcher": {}
     })
+    updated_global = conf_without_temp_dir.global_config._replace(output_base_directory=test_output_directory.name)
+
+    return conf_without_temp_dir._replace(global_config=updated_global)
 
 
 def mock_env(

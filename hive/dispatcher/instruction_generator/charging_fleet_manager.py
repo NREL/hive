@@ -71,6 +71,9 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
             max_search_radius_km=self.config.max_search_radius_km,
             vehicles=low_soc_vehicles,
             simulation_state=simulation_state,
+            environment=environment,
+            target_soc=environment.config.dispatcher.ideal_fastcharge_soc_limit,
+            charging_search_type=environment.config.dispatcher.charging_search_type
         )
         stop_charge_instructions = instruct_vehicles_to_sit_idle(len(high_soc_vehicles), high_soc_vehicles)
 

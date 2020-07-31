@@ -1,0 +1,6 @@
+time,geoid,charger_id,price_kwh
+0,86268cdafffffff,DC150,0.4
+0,86268cdafffffff,DC50,0.2
+0,86268cdafffffff,LEVEL_2,0.02
+0,86268cdafffffff,LEVEL_1,0.005
+

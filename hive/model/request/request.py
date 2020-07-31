@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
 
-from h3 import h3
+import h3
 
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.link import Link

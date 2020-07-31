@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
+from returns.result import Result, Success, Failure
 
-from h3 import h3
+import h3
 
 from hive.util.exception import SimulationStateError
 from hive.util.helpers import DictOps
@@ -143,6 +144,30 @@ def add_vehicle(sim: SimulationState, vehicle: Vehicle) -> Tuple[Optional[Except
             v_search=updated_v_search
         )
         return None, updated_sim
+
+
+def add_vehicle_returns(sim: SimulationState, vehicle: Vehicle) -> Result[SimulationState, Exception]:
+    """
+    adds a vehicle into the region supported by the RoadNetwork in this SimulationState
+
+    :param sim: the simulation state
+    :param vehicle: a vehicle
+    :return: updated SimulationState, or SimulationStateError
+    """
+    if not sim.road_network.geoid_within_geofence(vehicle.geoid):
+        error = SimulationStateError(f"cannot add vehicle {vehicle.id} to sim: not within road network geofence")
+        return Failure(error)
+    else:
+        search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
+        updated_v_locations = DictOps.add_to_location_dict(sim.v_locations, vehicle.geoid, vehicle.id)
+        updated_v_search = DictOps.add_to_location_dict(sim.v_search, search_geoid, vehicle.id)
+        updated_sim = sim._replace(
+            vehicles=DictOps.add_to_dict(sim.vehicles, vehicle.id, vehicle),
+            vehicle_iterator=sim.vehicle_iterator + (vehicle.id,),
+            v_locations=updated_v_locations,
+            v_search=updated_v_search
+        )
+        return Success(updated_sim)
 
 
 def modify_vehicle(sim: SimulationState,

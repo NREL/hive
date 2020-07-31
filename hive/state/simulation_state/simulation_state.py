@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.state.simulation_state.at_location_response import AtLocationResponse
 from hive.util.exception import SimulationStateError
@@ -134,7 +134,7 @@ class SimulationState(NamedTuple):
         vehicles = [self.vehicles[vid] for vid in self.vehicle_iterator]
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(vehicles, key=sort_key, reverse=sort_reversed)))
+            return tuple(sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))
         elif filter_function:
             return tuple(filter(filter_function, vehicles))
         elif sort:

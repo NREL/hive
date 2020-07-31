@@ -4,13 +4,16 @@ log_sim: True
 log_level: INFO
 log_sim_config:
 - 'instruction'
-- 'vehicle_state'
 - 'station_state'
+- 'vehicle_state'
 - 'add_request_event'
 - 'cancel_request_event'
 - 'pickup_request_event'
 - 'vehicle_charge_event'
 - 'vehicle_move_event'
+- 'station_load_event'
+log_station_capacities: True
+log_station_load: True
 log_period_seconds: 60
 local_parallelism: 1
 local_parallelism_timeout_sec: 60

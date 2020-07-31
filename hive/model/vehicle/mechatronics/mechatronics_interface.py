@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING, Tuple
 
+from hive.model.energy import EnergyType
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
@@ -33,6 +34,14 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         build from a dictionary
         :param d: the dictionary to build from
         :return: the built Mechatronics object
+        """
+
+    @abstractmethod
+    def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
+        """
+        construct an initial energy state for a Vehicle
+        :param percent_full: the amount of energy in the vehicle
+        :return: the Vehicle.energy at startup
         """
 
     @abstractmethod
@@ -84,12 +93,12 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Vehicle:
+    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
         :param vehicle:
         :param charger:
         :param time_seconds:
-        :return:
+        :return: the updated vehicle, along with the time spent charging
         """

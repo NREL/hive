@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
 from hive.config.config_builder import ConfigBuilder
+from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.util.units import Ratio, Seconds, Kilometers
 
 
@@ -13,6 +14,7 @@ class DispatcherConfig(NamedTuple):
     base_charging_range_km_threshold: Kilometers
     ideal_fastcharge_soc_limit: Ratio
     max_search_radius_km: Kilometers
+    charging_search_type: ChargingSearchType
 
     valid_dispatch_states: Tuple[str, ...]
     active_states: Tuple[str, ...]
@@ -39,6 +41,7 @@ class DispatcherConfig(NamedTuple):
         try:
             d['valid_dispatch_states'] = tuple(s.lower() for s in d['valid_dispatch_states'])
             d['active_states'] = tuple(d['active_states'])
+            d['charging_search_type'] = ChargingSearchType.from_string(d['charging_search_type'])
         except ValueError:
             return IOError("valid_dispatch_states and active_states must be in a list format")
 

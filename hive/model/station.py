@@ -4,7 +4,7 @@ import functools as ft
 from typing import NamedTuple, Dict, Optional
 
 import immutables
-from h3 import h3
+import h3
 
 from hive.model.energy.charger import Charger
 from hive.model.roadnetwork.link import Link
