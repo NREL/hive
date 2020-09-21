@@ -19,7 +19,7 @@ class TestSampleVehicles(TestCase):
         bases = (base,)
         sim = mock_sim(bases=bases)
         env = mock_env()
-        mechatronics_id = DefaultIds.mock_mechatronics_id()
+        mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
         loc_fn = build_default_location_sampling_fn(bases=bases)
         soc_fn = build_default_soc_sampling_fn()
 
@@ -33,7 +33,7 @@ class TestSampleVehicles(TestCase):
         )
 
         def check_vehicle(v: Vehicle):
-            self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_id())
+            self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
             self.assertEquals(v.energy.get(EnergyType.ELECTRIC),
                               env.mechatronics.get(mechatronics_id).battery_capacity_kwh)
             self.assertEquals(v.link, base.link)
@@ -55,7 +55,7 @@ class TestSampleVehicles(TestCase):
         bases = (base,)
         sim = mock_sim(bases=bases)
         env = mock_env()
-        mechatronics_id = DefaultIds.mock_mechatronics_id()
+        mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
 
         self.wonky_fn_calls = 0
 

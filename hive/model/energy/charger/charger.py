@@ -13,3 +13,4 @@ class Charger(NamedTuple):
     id: ChargerId
     energy_type: EnergyType
     rate: float
+    units: str
