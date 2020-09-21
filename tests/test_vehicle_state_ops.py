@@ -27,7 +27,7 @@ class TestVehicleStateOps(TestCase):
         result_sim = mr1.sim
 
         moved_vehicle = result_sim.vehicles.get(vehicle.id)
-        soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(moved_vehicle)
+        soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(moved_vehicle)
 
         self.assertLess(soc, 1, "should have used 1 unit of mock energy")
         self.assertNotEqual(somewhere, moved_vehicle.geoid, "should not be at the same location")

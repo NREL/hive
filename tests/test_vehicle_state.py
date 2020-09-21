@@ -413,8 +413,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(update_error, "should have no error from update call")
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
-        old_soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
-        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).battery_soc(updated_vehicle)
+        old_soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(vehicle)
+        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).fuel_source_soc(updated_vehicle)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchBase,
                               "should still be in a dispatch to base state")
@@ -587,8 +587,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(update_error, "should have no error from update call")
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
-        old_soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle)
-        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).battery_soc(updated_vehicle)
+        old_soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(vehicle)
+        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).fuel_source_soc(updated_vehicle)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchStation,
                               "should still be in a dispatch to station state")
@@ -620,7 +620,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_station = sim_updated.stations.get(station.id)
-        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).battery_soc(updated_vehicle)
+        new_soc = env.mechatronics.get(updated_vehicle.mechatronics_id).fuel_source_soc(updated_vehicle)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation,
                               "vehicle should be in ChargingStation state")
         self.assertEquals(updated_station.available_chargers.get(charger), 0,

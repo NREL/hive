@@ -146,7 +146,7 @@ class StatsHandler(Handler):
         env = runner_payload.e
 
         self.stats.mean_final_soc = np.mean([
-            env.mechatronics.get(v.mechatronics_id).battery_soc(v) for v in sim_state.vehicles.values()
+            env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.vehicles.values()
         ])
 
         self.stats.station_revenue = reduce(
