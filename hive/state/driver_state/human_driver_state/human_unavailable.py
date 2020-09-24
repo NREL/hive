@@ -29,8 +29,10 @@ class HumanUnavailable(NamedTuple, DriverState):
             #   being unavailable but not having a schedule is invalid.
             #   the schedule function returns true, so, we should be activated
             next_state = HumanAvailable(self.human_driver_attributes)
-            updated_sim = sim  # todo: update the driver state, wherever that is stored
-            return updated_sim
+            result = DriverState.apply_new_driver_state(sim,
+                                                        self.human_driver_attributes.vehicle_id,
+                                                        next_state)
+            return result
         else:
             # stay unavailable
             return None, sim

@@ -3,6 +3,7 @@ from typing import NamedTuple, Tuple, Optional
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
 from hive.state.driver_state.human_driver_state.human_unavailable import HumanUnavailable
+from hive.util import SimulationStateError
 
 
 class HumanAvailable(NamedTuple, DriverState):
@@ -30,6 +31,7 @@ class HumanAvailable(NamedTuple, DriverState):
         else:
             # transition to unavailable
             next_state = HumanUnavailable(self.human_driver_attributes)
-            updated_sim = sim  # todo: update the driver state, wherever that is stored
-            return updated_sim
-
+            result = DriverState.apply_new_driver_state(sim,
+                                                        self.human_driver_attributes.vehicle_id,
+                                                        next_state)
+            return result

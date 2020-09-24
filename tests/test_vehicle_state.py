@@ -838,7 +838,7 @@ class TestVehicleState(TestCase):
 
     def test_idle_enter(self):
         # should intially not be in an Idle state
-        vehicle = mock_vehicle().modify_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        vehicle = mock_vehicle().modify_vehicle_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 
@@ -852,7 +852,7 @@ class TestVehicleState(TestCase):
 
     def test_idle_exit(self):
         # should intially not be in an Idle state
-        vehicle = mock_vehicle().modify_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        vehicle = mock_vehicle().modify_vehicle_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 
@@ -868,7 +868,7 @@ class TestVehicleState(TestCase):
 
     def test_idle_update(self):
         # should intially not be in an Idle state
-        vehicle = mock_vehicle().modify_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        vehicle = mock_vehicle().modify_vehicle_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 
@@ -894,7 +894,7 @@ class TestVehicleState(TestCase):
     def test_idle_update_terminal(self):
         initial_soc = 0.0
         ititial_state = DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ())
-        vehicle = mock_vehicle(soc=initial_soc).modify_state(ititial_state)
+        vehicle = mock_vehicle(soc=initial_soc).modify_vehicle_state(ititial_state)
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 

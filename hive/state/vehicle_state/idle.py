@@ -70,6 +70,6 @@ class Idle(NamedTuple, VehicleState):
 
             updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
             updated_state = self._replace(idle_duration=updated_idle_duration)
-            updated_vehicle = less_energy_vehicle.modify_state(updated_state)
+            updated_vehicle = less_energy_vehicle.modify_vehicle_state(updated_state)
 
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)

@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import NamedTupleMeta, Tuple, Optional
 
+from hive.model.vehicle import Vehicle
 from hive.state.entity_state.entity_state import EntityState
+from hive.state.simulation_state import simulation_state_ops
+from hive.util import VehicleId, SimulationStateError
 
 
 class DriverState(ABCMeta, NamedTupleMeta, EntityState):
@@ -20,13 +25,15 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
     def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
 
-# a driver state allows us to add a separate set of states which can influence the
-# behavior of vehicles due to effects which are not fleet-related, but still
-# are accounted for on the agent-level.
-
-# a driver can be human or automated.
-
-# when the simulation attempts any fleet instructions, the set of vehicles
-# is to be filtered on the condition of "availability". an unavailable agent
-# is for example a human that is off-shift.
-
+    @classmethod
+    def apply_new_driver_state(mcs,
+                               sim: 'SimulationState',
+                               vehicle_id: VehicleId,
+                               new_state: DriverState
+                               ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        vehicle = sim.vehicles.get(vehicle_id)
+        if not vehicle:
+            return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+        else:
+            updated_vehicle = vehicle.modify_driver_state(new_state)
+            return simulation_state_ops.modify_vehicle(sim, updated_vehicle)

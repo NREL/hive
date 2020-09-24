@@ -6,7 +6,7 @@ from hive.state.driver_state.driver_state import DriverState
 
 class AutonomousAvailable(NamedTuple, DriverState):
     """
-    a human driver that is available to work
+    an autonomous driver that is available to work
     """
     driver_attributes: AutonomousDriverAttributes
 
