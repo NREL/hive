@@ -119,5 +119,5 @@ class DispatchTrip(NamedTuple, VehicleState):
         else:
             # update moved vehicle's state (holding the route)
             updated_state = self._replace(route=move_result.route_traversal.remaining_route)
-            updated_vehicle = moved_vehicle.modify_state(updated_state)
+            updated_vehicle = moved_vehicle.modify_vehicle_state(updated_state)
             return simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)

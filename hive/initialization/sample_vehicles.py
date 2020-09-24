@@ -9,6 +9,8 @@ from hive.model.base import Base
 from hive.model.roadnetwork import Link
 from hive.model.vehicle import Vehicle
 from hive.runner import Environment
+from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
+from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import add_vehicle_returns
 from hive.state.vehicle_state.idle import Idle
@@ -63,12 +65,14 @@ def sample_vehicles(
                     energy = mechatronics.initial_energy(initial_soc)
                     link = location_sampling_function()
                     vehicle_state = Idle(vehicle_id)
+                    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
                     vehicle = Vehicle(
                         id=vehicle_id,
                         mechatronics_id=mechatronics_id,
                         energy=energy,
                         link=link,
-                        vehicle_state=vehicle_state
+                        vehicle_state=vehicle_state,
+                        driver_state=driver_state
                     )
                     add_result = add_vehicle_returns(s, vehicle)
                     return add_result

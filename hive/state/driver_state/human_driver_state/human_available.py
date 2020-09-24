@@ -3,7 +3,6 @@ from typing import NamedTuple, Tuple, Optional
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
 from hive.state.driver_state.human_driver_state.human_unavailable import HumanUnavailable
-from hive.util import SimulationStateError
 
 
 class HumanAvailable(NamedTuple, DriverState):

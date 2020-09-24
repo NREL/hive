@@ -37,6 +37,8 @@ from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import Tabula
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
+from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
+from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
@@ -281,6 +283,7 @@ def mock_vehicle(
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
     link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
@@ -288,6 +291,7 @@ def mock_vehicle(
         energy=initial_energy,
         link=link,
         vehicle_state=state,
+        driver_state=driver_state
     )
 
 
@@ -300,13 +304,15 @@ def mock_vehicle_from_geoid(
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
+    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
     link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
         link=link,
-        vehicle_state=state
+        vehicle_state=state,
+        driver_state=driver_state
     )
 
 

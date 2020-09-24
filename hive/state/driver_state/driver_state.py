@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import NamedTupleMeta, Tuple, Optional
 
-from hive.model.vehicle import Vehicle
 from hive.state.entity_state.entity_state import EntityState
 from hive.state.simulation_state import simulation_state_ops
 from hive.util import VehicleId, SimulationStateError
