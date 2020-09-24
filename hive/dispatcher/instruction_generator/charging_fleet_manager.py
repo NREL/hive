@@ -59,7 +59,7 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
                 return False
 
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
-            battery_soc = mechatronics.battery_soc(v)
+            battery_soc = mechatronics.fuel_source_soc(v)
             is_stop_charge_candidate = battery_soc >= self.config.ideal_fastcharge_soc_limit
             return is_stop_charge_candidate
 

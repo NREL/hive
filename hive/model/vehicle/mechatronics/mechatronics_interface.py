@@ -52,7 +52,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def battery_soc(self, vehicle: Vehicle) -> Ratio:
+    def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
         """
         how much battery soc
         :return:

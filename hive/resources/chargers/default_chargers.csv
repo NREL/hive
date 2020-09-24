@@ -1,4 +1,4 @@
-charger_id,power_kw
-LEVEL_1,3.3
-LEVEL_2,7.2
-DCFC,50
+charger_id,energy_type,rate,units
+LEVEL_1,electric,3.3,kilowatts
+LEVEL_2,electric,7.2,kilowatts
+DCFC,electric,50,kilowatts

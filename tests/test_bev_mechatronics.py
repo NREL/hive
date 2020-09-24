@@ -1,7 +1,5 @@
 from unittest import TestCase
 
-from hive.model.energy.energytype import EnergyType
-from hive.util.units import hours_to_seconds, KM_TO_MILE, MILE_TO_KM
 from tests.mock_lobster import *
 
 
@@ -13,7 +11,7 @@ class TestBEV(TestCase):
 
         charged_vehicle, _ = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertAlmostEqual(
-            charged_vehicle.energy[EnergyType.ELECTRIC]/bev.battery_capacity_kwh,
+            charged_vehicle.energy[EnergyType.ELECTRIC] / bev.battery_capacity_kwh,
             1,
             places=2
         )
@@ -65,4 +63,3 @@ class TestBEV(TestCase):
             50 * MILE_TO_KM,
             places=1,
         )
-

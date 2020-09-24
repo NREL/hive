@@ -55,13 +55,13 @@ class BEV(NamedTuple, MechatronicsInterface):
             charge_taper_cutoff_kw=charge_taper_cutoff_kw
         )
 
-    def initial_energy(self, battery_soc: Ratio) -> Dict[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
-        :param battery_soc:
+        :param percent_full:
         :return:
         """
-        return {EnergyType.ELECTRIC: self.battery_capacity_kwh * battery_soc}
+        return {EnergyType.ELECTRIC: self.battery_capacity_kwh * percent_full}
 
     def range_remaining_km(self, vehicle: Vehicle) -> Kilometers:
         """
@@ -71,7 +71,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         return energy_kwh / (self.nominal_watt_hour_per_mile * WH_TO_KWH) * MILE_TO_KM
 
-    def battery_soc(self, vehicle: Vehicle) -> Ratio:
+    def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
         """
         what is the state of charge of the battery
         :return:
@@ -137,8 +137,8 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         start_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
 
-        if charger.power_kw < self.charge_taper_cutoff_kw:
-            charger_energy_kwh = start_energy_kwh + charger.power_kw * time_seconds * SECONDS_TO_HOURS
+        if charger.rate < self.charge_taper_cutoff_kw:
+            charger_energy_kwh = start_energy_kwh + charger.rate * time_seconds * SECONDS_TO_HOURS
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
             time_charging_seconds = time_seconds
         else:
@@ -147,7 +147,7 @@ class BEV(NamedTuple, MechatronicsInterface):
             charger_energy_kwh, time_charging_seconds = self.powercurve.charge(
                 start_soc=start_energy_kwh,
                 full_soc=energy_limit_kwh,
-                power_kw=charger.power_kw,
+                power_kw=charger.rate,
                 duration_seconds=time_seconds,
             )
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)

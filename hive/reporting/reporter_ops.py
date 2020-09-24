@@ -26,13 +26,15 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
         :param station: the station to observe
         :return: the capacity of this station as a CSV row dictionary
         """
-        capacity_kw: Kw = ft.reduce(
-            lambda acc, charger_id: acc + station.total_chargers.get(charger_id) * env.chargers.get(charger_id).power_kw,
+        # TODO: now that we've introduced other energy types, we should return a summary of charger rate by
+        #  energy time with corresponding units - ndr
+        rate: float = ft.reduce(
+            lambda acc, charger_id: acc + station.total_chargers.get(charger_id) * env.chargers.get(charger_id).rate,
             station.available_chargers.keys(),
             0.0
         )
 
-        return {'station_id': station.id, 'capacity_kw': capacity_kw}
+        return {'station_id': station.id, 'rate': rate}
 
     try:
         result: Tuple[immutables.Map, ...] = ft.reduce(
@@ -43,7 +45,7 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
 
         output_file = Path(env.config.scenario_output_directory).joinpath("station_capacities.csv")
         with output_file.open('w') as f:
-            writer = csv.DictWriter(f, fieldnames=['station_id', 'capacity_kw'])
+            writer = csv.DictWriter(f, fieldnames=['station_id', 'rate'])
             writer.writeheader()
             writer.writerows(result)
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple, NamedTuple
+from typing import NamedTuple
 
+from hive.model.energy.energytype import EnergyType
 from hive.util.typealiases import ChargerId
-from hive.util.units import Kw
 
 
 class Charger(NamedTuple):
@@ -11,4 +11,6 @@ class Charger(NamedTuple):
     Represents a charger_id in the simulation.
     """
     id: ChargerId
-    power_kw: Kw  # kilowatt
+    energy_type: EnergyType
+    rate: float
+    units: str

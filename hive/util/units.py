@@ -2,9 +2,12 @@
 KwH = float  # kilowatt-hours
 J = float  # joules
 KwH_per_H = float
+GallonGasoline = float
 
-# Power
+# Power/Rate
 Kw = float  # kilowatt
+GallonPerSecond = float
+GallonPerHour = float
 
 # Distance
 Meters = float  # meters
@@ -50,8 +53,9 @@ KM_TO_MILE = 0.621371
 MILE_TO_KM = 1.609344
 M_TO_KM = 1/1000
 
-#    Energy
+#    Energy Rate
 WattHourPerMile = float
 WH_TO_KWH = 0.001
+MilesPerGallon = float
 
 

@@ -20,6 +20,7 @@ from hive.dispatcher.instruction_generator.instruction_generator import Instruct
 from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
+from hive.model.energy.energytype import EnergyType
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
@@ -30,6 +31,7 @@ from hive.model.roadnetwork.route import Route
 from hive.model.station import Station
 from hive.model.vehicle import Vehicle
 from hive.model.vehicle.mechatronics.bev import BEV
+from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
@@ -42,7 +44,7 @@ from hive.state.simulation_state.update.update import Update
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import *
-from hive.util.units import Ratio, Kmph, Seconds, Currency
+from hive.util.units import *
 
 
 class DefaultIds:
@@ -64,8 +66,12 @@ class DefaultIds:
         return "b0"
 
     @classmethod
-    def mock_mechatronics_id(cls) -> MechatronicsId:
+    def mock_mechatronics_bev_id(cls) -> MechatronicsId:
         return "bev"
+
+    @classmethod
+    def mock_mechatronics_ice_id(cls) -> MechatronicsId:
+        return "ice"
 
 
 def mock_geojson() -> Dict:
@@ -246,25 +252,39 @@ def mock_bev(
     )
 
 
+def mock_ice(
+        tank_capacity_gallons=15,
+        idle_gallons_per_hour=0.2,
+        nominal_miles_per_gallon=30,
+) -> ICE:
+    # source: https://www.energy.gov/eere/vehicles/
+    #   fact-861-february-23-2015-idle-fuel-consumption-selected-gasoline-and-diesel-vehicles
+    return ICE(
+        mechatronics_id='ice',
+        tank_capacity_gallons=tank_capacity_gallons,
+        idle_gallons_per_hour=idle_gallons_per_hour,
+        nominal_miles_per_gallon=nominal_miles_per_gallon,
+    )
+
+
 def mock_vehicle(
         vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
         lat: float = 39.7539,
         lon: float = -104.974,
         h3_res: int = 15,
-        mechatronics_id: MechatronicsId = DefaultIds.mock_mechatronics_id(),
+        mechatronics: MechatronicsInterface = mock_bev(),
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
 
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
-    mechatronics = mock_env().mechatronics.get(mechatronics_id)
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
     link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
-        mechatronics_id=mechatronics_id,
+        mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
         link=link,
         vehicle_state=state,
@@ -274,17 +294,16 @@ def mock_vehicle(
 def mock_vehicle_from_geoid(
         vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
-        mechatronics_id: MechatronicsId = DefaultIds.mock_mechatronics_id(),
+        mechatronics: MechatronicsInterface = mock_bev(),
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
-    mechatronics = mock_env().mechatronics.get(mechatronics_id)
     initial_energy = mechatronics.initial_energy(soc)
     link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
-        mechatronics_id=mechatronics_id,
+        mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
         link=link,
         vehicle_state=state
@@ -354,19 +373,20 @@ def mock_config(
             'demand_forecast_file': 'denver_demand.csv'
         }
     test_output_directory = tempfile.TemporaryDirectory()
-    conf_without_temp_dir = HiveConfig.build(Path(resource_filename("hive.resources.scenarios.denver_downtown", "denver_demo.yaml")), {
-        "sim": {
-            'start_time': start_time,
-            'end_time': end_time,
-            'timestep_duration_seconds': timestep_duration_seconds,
-            'sim_h3_resolution': sim_h3_location_resolution,
-            'sim_h3_search_resolution': sim_h3_search_resolution,
-            'sim_name': 'test_sim',
-        },
-        "input": input,
-        "network": {},
-        "dispatcher": {}
-    })
+    conf_without_temp_dir = HiveConfig.build(
+        Path(resource_filename("hive.resources.scenarios.denver_downtown", "denver_demo.yaml")), {
+            "sim": {
+                'start_time': start_time,
+                'end_time': end_time,
+                'timestep_duration_seconds': timestep_duration_seconds,
+                'sim_h3_resolution': sim_h3_location_resolution,
+                'sim_h3_search_resolution': sim_h3_search_resolution,
+                'sim_name': 'test_sim',
+            },
+            "input": input,
+            "network": {},
+            "dispatcher": {}
+        })
     updated_global = conf_without_temp_dir.global_config._replace(output_base_directory=test_output_directory.name)
 
     return conf_without_temp_dir._replace(global_config=updated_global)
@@ -379,7 +399,7 @@ def mock_env(
 ) -> Environment:
     if mechatronics is None:
         mechatronics = {
-            DefaultIds.mock_mechatronics_id(): mock_bev(),
+            DefaultIds.mock_mechatronics_bev_id(): mock_bev(),
         }
 
     if chargers is None:
@@ -547,12 +567,19 @@ def mock_dcfc_charger_id():
 
 
 def mock_l1_charger():
-    return Charger(mock_l1_charger_id(), 3.3)
+    return Charger(mock_l1_charger_id(), energy_type=EnergyType.ELECTRIC, rate=3.3, units='kilowatts')
 
 
 def mock_l2_charger():
-    return Charger(mock_l2_charger_id(), 7.2)
+    return Charger(mock_l2_charger_id(), energy_type=EnergyType.ELECTRIC, rate=7.2, units='kilowatts')
 
 
 def mock_dcfc_charger():
-    return Charger(mock_dcfc_charger_id(), 50.0)
+    return Charger(mock_dcfc_charger_id(), energy_type=EnergyType.ELECTRIC, rate=50.0, units='kilowatts')
+
+
+def mock_gasoline_pump():
+    gal_per_minute = 10  # source: https://en.wikipedia.org/wiki/Gasoline_pump
+    gal_per_second = gal_per_minute / 60
+
+    return Charger("gas_pump", energy_type=EnergyType.GASOLINE, rate=gal_per_second, units='gal_gasoline')
