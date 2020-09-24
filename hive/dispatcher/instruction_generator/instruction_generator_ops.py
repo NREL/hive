@@ -179,7 +179,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
             # use the simple weighted euclidean distance ranking
 
-            top_charger = sorted(environment.chargers, key=lambda charger_id: -environment.chargers[charger_id].power_kw)[0]
+            top_charger = sorted(environment.chargers, key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
             cache = ft.reduce(
                 lambda acc, station_id: acc.update({station_id: top_charger}),
                 simulation_state.stations.keys(),

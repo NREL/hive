@@ -59,7 +59,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         # todo: log the completion of a trip
 
         vehicle = sim.vehicles.get(self.vehicle_id)
-        soc = env.mechatronics.get(vehicle.mechatronics_id).battery_soc(vehicle) if vehicle else 0
+        soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(vehicle) if vehicle else 0
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif soc == 0:
