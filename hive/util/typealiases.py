@@ -1,4 +1,4 @@
-from typing import Tuple, FrozenSet
+from typing import Tuple, FrozenSet, Callable
 
 # MODEL ID TYPES
 RequestId = str
@@ -11,6 +11,7 @@ PassengerId = str
 VehicleTypeId = str
 MechatronicsId = str
 ChargerId = str
+ScheduleId = str
 
 # POSITIONAL
 GeoId = str  # h3 geohash
@@ -23,3 +24,5 @@ GeoFenceSet = FrozenSet[GeoId]
 SimTime = int  # time in seconds consistent across inputs (epoch time preferred)
 SimStep = int  # the iteration of the simulation
 
+# FUNCTIONS
+ScheduleFunction = Callable[[SimTime], bool]
