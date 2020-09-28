@@ -25,4 +25,7 @@ SimTime = int  # time in seconds consistent across inputs (epoch time preferred)
 SimStep = int  # the iteration of the simulation
 
 # FUNCTIONS
-ScheduleFunction = Callable[[SimTime], bool]
+
+# if we create a DriverId type, and it has a lookup table on SimulationState, we may
+# want to change this from VehicleId to DriverId
+ScheduleFunction = Callable[['SimulationState', VehicleId], bool]
