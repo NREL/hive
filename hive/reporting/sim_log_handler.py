@@ -5,7 +5,7 @@ import logging
 import os
 from typing import TYPE_CHECKING, List
 
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting import vehicle_event_ops
 from hive.reporting.handler import Handler
 from hive.reporting.reporter import ReportType

@@ -16,4 +16,4 @@ class AutonomousAvailable(NamedTuple, DriverState):
 
     def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         # there is no other state for an autonomous driver, so, this is a noop
-        return sim
+        return None, sim

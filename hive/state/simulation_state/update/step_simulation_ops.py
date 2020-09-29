@@ -9,7 +9,7 @@ import immutables
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
@@ -21,6 +21,28 @@ if TYPE_CHECKING:
     from hive.runner.environment import Environment
 
 log = logging.getLogger(__name__)
+
+
+def perform_driver_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
+    """
+    helper function for StepSimulation which runs the update function for all driver states
+    :param simulation_state: the simulation state to update
+    :param env: the simulation environment
+    :return: the sim after all vehicle update functions have been called
+    """
+    def _step_drivers(s: SimulationState, vehicle: Vehicle) -> SimulationState:
+        driver_state = vehicle.driver_state
+        error, updated_sim = driver_state.update(s, env)
+        if error:
+            log.error(error)
+            return simulation_state
+        elif not updated_sim:
+            return simulation_state
+        else:
+            return updated_sim
+
+    next_state = ft.reduce(_step_drivers, simulation_state.get_vehicles(), simulation_state)
+    return next_state
 
 
 def perform_vehicle_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
@@ -56,10 +78,11 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
         sorted_charge_queueing_vehicles = tuple(sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time))
         return other_vehicles + sorted_charge_queueing_vehicles
 
+    # why sort here? see _sort_by_vehicle_state for an explanation
     vehicles = _sort_by_vehicle_state(simulation_state.get_vehicles())
     next_state = ft.reduce(_step_vehicle, vehicles, simulation_state)
 
-    return simulation_state_ops.tick(next_state)
+    return next_state
 
 
 def apply_instructions(sim: SimulationState,

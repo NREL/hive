@@ -7,7 +7,7 @@ from returns.result import Result, Failure, Success
 
 from hive.model.base import Base
 from hive.model.roadnetwork import Link
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.runner import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
 from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes

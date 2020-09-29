@@ -29,7 +29,7 @@ from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.station import Station
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface

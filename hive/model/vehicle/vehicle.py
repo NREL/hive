@@ -82,7 +82,10 @@ class Vehicle(NamedTuple):
                     raise IOError(f"was not able to find mechatronics '{mechatronics_id}' in environment, only found {found}")
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
-                # todo: some way to lookup the driver for this vehicle (where is that provided/stored?)
+                # todo: replace how we assign the initial driver state (load from file)
+                #   if it comes from a vehicles.csv row, it should simply be a key on `row`
+                #   if it comes from another source, we could add that argument to this signature or
+                #    call modify_driver_state() further down in the loading process.
                 driver_state = AutonomousAvailable(AutonomousDriverAttributes())
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)

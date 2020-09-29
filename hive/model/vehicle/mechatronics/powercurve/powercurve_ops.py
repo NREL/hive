@@ -1,5 +1,5 @@
 from hive.model.energy import Charger
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.model.vehicle.mechatronics import MechatronicsInterface
 from hive.util import Seconds, Ratio
 

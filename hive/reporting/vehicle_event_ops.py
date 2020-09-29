@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import TYPE_CHECKING, Tuple, Set, NamedTuple
+from typing import TYPE_CHECKING, Tuple, Set
 
-import immutables
 import h3
+import immutables
 
 from hive.model.energy import EnergyType
 from hive.model.roadnetwork import route
 from hive.model.station import Station
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util.typealiases import ChargerId, StationId, SimTime
+from hive.util.typealiases import ChargerId, StationId
 from hive.util.units import KwH
 
 if TYPE_CHECKING:
