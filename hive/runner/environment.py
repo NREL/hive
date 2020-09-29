@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
     from hive.reporting import Reporter
     from hive.config import HiveConfig
-    from hive.util.typealiases import MechatronicsId, ChargerId
+    from hive.util.typealiases import MechatronicsId, ChargerId, ScheduleId, ScheduleFunction
 
 
 class Environment(NamedTuple):
@@ -21,3 +21,4 @@ class Environment(NamedTuple):
     reporter: Reporter
     mechatronics: immutables.Map[MechatronicsId, MechatronicsInterface] = immutables.Map()
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
+    schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()

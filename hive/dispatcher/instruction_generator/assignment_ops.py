@@ -1,22 +1,21 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Callable, NamedTuple, Iterator, Dict, Optional
+from typing import Tuple, Callable, NamedTuple, Dict
 
-import numpy as np
 import h3
-from returns.result import ResultE, Failure, Success
+import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from hive.model.roadnetwork.route import route_distance_km, route_travel_time_seconds
 from hive.model.station import Station
-from hive.model.vehicle import Vehicle
 from hive.model.vehicle.mechatronics.powercurve import powercurve_ops
+from hive.model.vehicle.vehicle import Vehicle
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.charging_station import ChargingStation
-from hive.util import H3Ops, GeoId, SimTime, Seconds, Ratio, TupleOps
+from hive.util import H3Ops, GeoId, Seconds, Ratio, TupleOps
 from hive.util.typealiases import ChargerId
 
 EntityId = str

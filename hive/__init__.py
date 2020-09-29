@@ -19,7 +19,6 @@ infrastructure, levels of service, and additional energy outcomes. Developed in
 agent-based model that simulates MaaS operations over real world trip data.
 """
 
-# from logging.config import dictConfig
 import logging
 
 from tqdm import tqdm
@@ -27,7 +26,8 @@ from tqdm import tqdm
 from hive.app import run
 from hive.config import HiveConfig
 from hive.dispatcher import *
-from hive.state.simulation_state.update import StepSimulation, Update
+from hive.state.simulation_state.update.update import Update
+from hive.state.simulation_state.update.step_simulation import StepSimulation
 
 
 class TqdmHandler(logging.StreamHandler):

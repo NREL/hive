@@ -2,7 +2,7 @@ import functools as ft
 import math
 import tempfile
 from pathlib import Path
-from typing import Dict, Union, Callable
+from typing import Dict, Union
 
 import h3
 import immutables
@@ -29,7 +29,7 @@ from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.station import Station
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -37,6 +37,11 @@ from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import Tabula
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
+from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
+from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
+from hive.state.driver_state.driver_state import DriverState
+from hive.state.driver_state.human_driver_state.human_driver_state import HumanAvailable, HumanUnavailable
+from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
@@ -72,6 +77,10 @@ class DefaultIds:
     @classmethod
     def mock_mechatronics_ice_id(cls) -> MechatronicsId:
         return "ice"
+
+    @classmethod
+    def mock_schedule_id(cls) -> ScheduleId:
+        return "schedule0"
 
 
 def mock_geojson() -> Dict:
@@ -275,19 +284,21 @@ def mock_vehicle(
         mechatronics: MechatronicsInterface = mock_bev(),
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
-
+        driver_state: Optional[DriverState] = None,
 ) -> Vehicle:
-    state = vehicle_state if vehicle_state else Idle(vehicle_id)
+    v_state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes())
     link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
         link=link,
-        vehicle_state=state,
+        vehicle_state=v_state,
+        driver_state=d_state
     )
 
 
@@ -300,14 +311,22 @@ def mock_vehicle_from_geoid(
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
+    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
     link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
         link=link,
-        vehicle_state=state
+        vehicle_state=state,
+        driver_state=driver_state
     )
+
+
+def mock_human_driver(available: bool = True):
+    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), DefaultIds.mock_schedule_id())
+    state = HumanAvailable(attr) if available else HumanUnavailable(attr)
+    return state
 
 
 def mock_sim(
@@ -394,8 +413,9 @@ def mock_config(
 
 def mock_env(
         config: HiveConfig = mock_config(),
-        mechatronics: Dict[MechatronicsId, MechatronicsInterface] = None,
-        chargers: Optional[Dict[ChargerId, Charger]] = None
+        mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
+        chargers: Optional[Dict[ChargerId, Charger]] = None,
+        schedules: Optional[Dict[ScheduleId, Callable[['SimulationState', VehicleId], bool]]] = None
 ) -> Environment:
     if mechatronics is None:
         mechatronics = {
@@ -409,11 +429,20 @@ def mock_env(
             mock_dcfc_charger_id(): mock_dcfc_charger()
         }
 
+    if schedules is None:
+        def always_on_schedule(a, b):
+            return True
+
+        schedules = {
+            DefaultIds.mock_schedule_id(): always_on_schedule
+        }
+
     initial_env = Environment(
         config=config,
         reporter=mock_reporter(),
         mechatronics=immutables.Map(mechatronics),
-        chargers=immutables.Map(chargers)
+        chargers=immutables.Map(chargers),
+        schedules=immutables.Map(schedules)
     )
 
     return initial_env

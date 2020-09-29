@@ -8,6 +8,9 @@ from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.runner.environment import Environment
+from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
+from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
+from hive.state.driver_state.driver_state import DriverState
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.idle import Idle
 from hive.util.typealiases import *
@@ -38,6 +41,7 @@ class Vehicle(NamedTuple):
 
     # vehicle planning/operational properties
     vehicle_state: VehicleState
+    driver_state: DriverState
 
     # vehicle analytical properties
     balance: Currency = 0.0
@@ -78,6 +82,12 @@ class Vehicle(NamedTuple):
                     raise IOError(f"was not able to find mechatronics '{mechatronics_id}' in environment, only found {found}")
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
+                # todo: replace how we assign the initial driver state (load from file)
+                #   if it comes from a vehicles.csv row, it should simply be a key on `row`
+                #   if it comes from another source, we could add that argument to this signature or
+                #    call modify_driver_state() further down in the loading process.
+                driver_state = AutonomousAvailable(AutonomousDriverAttributes())
+
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.link_from_geoid(geoid)
 
@@ -86,7 +96,8 @@ class Vehicle(NamedTuple):
                     mechatronics_id=mechatronics_id,
                     energy=energy,
                     link=start_link,
-                    vehicle_state=Idle(vehicle_id)
+                    vehicle_state=Idle(vehicle_id),
+                    driver_state=driver_state
                 )
 
             except ValueError:
@@ -103,13 +114,21 @@ class Vehicle(NamedTuple):
         """
         return self._replace(energy=energy)
 
-    def modify_state(self, vehicle_state: VehicleState) -> Vehicle:
+    def modify_vehicle_state(self, vehicle_state: VehicleState) -> Vehicle:
         """
         modify the state of the vehicle. should only be use by the vehicle state ops
         :param vehicle_state:
         :return:
         """
         return self._replace(vehicle_state=vehicle_state)
+
+    def modify_driver_state(self, driver_state: DriverState) -> Vehicle:
+        """
+        modify the state of the vehicle's driver. should only be used by the driver state ops
+        :param driver_state:
+        :return:
+        """
+        return self._replace(driver_state=driver_state)
 
     def modify_link(self, link: Link) -> Vehicle:
         """

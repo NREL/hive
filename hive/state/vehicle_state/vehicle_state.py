@@ -71,7 +71,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         if not vehicle:
             return SimulationStateError(f"vehicle {vehicle_id} not found"), None
         else:
-            updated_vehicle = vehicle.modify_state(new_state)
+            updated_vehicle = vehicle.modify_vehicle_state(new_state)
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @abstractmethod

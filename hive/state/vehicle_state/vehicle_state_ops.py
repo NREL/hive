@@ -3,7 +3,7 @@ from typing import Tuple, Optional, NamedTuple
 from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
-from hive.model.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.vehicle_event_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops

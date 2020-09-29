@@ -19,7 +19,7 @@ from hive.initialization.load import load_simulation
 from hive.reporting import reporter_ops
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
-from hive.state.simulation_state.update import Update
+from hive.state.simulation_state.update.update import Update
 from hive.util import fs
 from hive.util.fp import throw_on_failure
 
