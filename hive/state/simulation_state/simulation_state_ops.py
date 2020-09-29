@@ -265,16 +265,15 @@ def add_station(sim: SimulationState, station: Station) -> Tuple[Optional[Except
     if not sim.road_network.geoid_within_geofence(station.geoid):
         error = SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
         return error, None
-    elif station.geoid in sim.s_locations:
-        error = SimulationStateError(f"cannot add {station.id} to sim: station already exists at {station.geoid}")
-        return error, None
     else:
         search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
+        updated_s_locations = DictOps.add_to_location_dict(sim.s_locations, station.geoid, station.id)
+        updated_s_search = DictOps.add_to_location_dict(sim.s_search, search_geoid, station.id)
         updated_sim = sim._replace(
             stations=DictOps.add_to_dict(sim.stations, station.id, station),
             station_iterator=sim.station_iterator + (station.id,),
-            s_locations=DictOps.add_to_dict(sim.s_locations, station.geoid, station.id),
-            s_search=DictOps.add_to_location_dict(sim.s_search, search_geoid, station.id)
+            s_locations=updated_s_locations,
+            s_search=updated_s_search
         )
         return None, updated_sim
 
@@ -294,18 +293,19 @@ def remove_station(sim: SimulationState, station_id: StationId) -> Tuple[
         return error, None
     else:
         search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
-
+        updated_s_locations = DictOps.remove_from_location_dict(sim.s_locations, station.geoid, station_id)
+        updated_s_search = DictOps.remove_from_location_dict(sim.s_search, search_geoid, station_id)
         updated_sim = sim._replace(
             stations=DictOps.remove_from_dict(sim.stations, station_id),
             station_iterator=tuple(sid for sid in sim.station_iterator if sid != station_id),
-            s_locations=DictOps.remove_from_dict(sim.s_locations, station.geoid),
-            s_search=DictOps.remove_from_location_dict(sim.s_search, search_geoid, station_id)
+            s_locations=updated_s_locations,
+            s_search=updated_s_search
         )
         return None, updated_sim
 
 
-def modify_station(sim: SimulationState, updated_station: Station) -> Tuple[
-    Optional[Exception], Optional[SimulationState]]:
+def modify_station(sim: SimulationState,
+                   updated_station: Station) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     given an updated station, update the SimulationState with that station
 
@@ -316,6 +316,10 @@ def modify_station(sim: SimulationState, updated_station: Station) -> Tuple[
     station = sim.stations.get(updated_station.id)
     if not station:
         error = SimulationStateError(f"cannot update station {station.id}, it was not already in the sim")
+        return error, None
+    elif station.geoid != updated_station.geoid:
+        msg = f"station {station.id} attempting to move from {station.geoid} to {updated_station.geoid}, which is not permitted"
+        error = SimulationStateError(msg)
         return error, None
     elif not sim.road_network.geoid_within_geofence(updated_station.geoid):
         error = SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
@@ -338,16 +342,15 @@ def add_base(sim: SimulationState, base: Base) -> Tuple[Optional[Exception], Opt
     if not sim.road_network.geoid_within_geofence(base.geoid):
         error = SimulationStateError(f"cannot add base {base.id} to sim: not within road network geofence")
         return error, None
-    elif base.geoid in sim.b_locations:
-        error = SimulationStateError(f"cannot add {base.id} to sim: base already exists at {base.geoid}")
-        return error, None
     else:
         search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
+        updated_b_locations = DictOps.add_to_location_dict(sim.b_locations, base.geoid, base.id)
+        updated_b_search = DictOps.add_to_location_dict(sim.b_search, search_geoid, base.id)
         updated_sim = sim._replace(
             bases=DictOps.add_to_dict(sim.bases, base.id, base),
             base_iterator=sim.base_iterator + (base.id,),
-            b_locations=DictOps.add_to_dict(sim.b_locations, base.geoid, base.id),
-            b_search=DictOps.add_to_location_dict(sim.b_search, search_geoid, base.id)
+            b_locations=updated_b_locations,
+            b_search=updated_b_search
         )
         return None, updated_sim
 
@@ -366,12 +369,13 @@ def remove_base(sim: SimulationState, base_id: BaseId) -> Tuple[Optional[Excepti
         return error, None
     else:
         search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
-
+        updated_b_locations = DictOps.remove_from_location_dict(sim.b_locations, base.geoid, base_id)
+        updated_b_search = DictOps.remove_from_location_dict(sim.b_search, search_geoid, base_id)
         updated_sim = sim._replace(
             bases=DictOps.remove_from_dict(sim.bases, base_id),
             base_iterator=tuple(bid for bid in sim.base_iterator if bid != base_id),
-            b_locations=DictOps.remove_from_dict(sim.b_locations, base.geoid),
-            b_search=DictOps.remove_from_location_dict(sim.b_search, search_geoid, base_id)
+            b_locations=updated_b_locations,
+            b_search=updated_b_search
         )
         return None, updated_sim
 
@@ -388,6 +392,10 @@ def modify_base(sim: SimulationState, updated_base: Base) -> Tuple[Optional[Exce
     base = sim.bases.get(updated_base.id)
     if not base:
         error = SimulationStateError(f"cannot update base {updated_base.id}, it was not already in the sim")
+        return error, None
+    elif base.geoid != updated_base.geoid:
+        msg = f"base {base.id} attempting to move from {base.geoid} to {updated_base.geoid}, which is not permitted"
+        error = SimulationStateError(msg)
         return error, None
     elif not sim.road_network.geoid_within_geofence(updated_base.geoid):
         error = SimulationStateError(f"cannot add base {updated_base.id} to sim: not within road network geofence")

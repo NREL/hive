@@ -27,8 +27,8 @@ class TestSimulationState(TestCase):
         result = sim_with_request.at_geoid(veh.geoid)
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
         self.assertIn(req.id, result['requests'], "should have found this request")
-        self.assertEqual(sta.id, result['station'], "should have found this station")
-        self.assertIsNone(result['base'], "should not have found this base")
+        self.assertEqual(sta.id, result['station'][0], "should have found this station")
+        self.assertEqual(result['base'], (), "should not have found this base")
 
     def test_vehicle_at_request(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -533,6 +533,19 @@ class TestSimulationState(TestCase):
         self.assertEqual(len(dcfc_stations), 1, 'only one station with dcfc charger_id')
         self.assertEqual(dcfc_stations[0].id, 's1', 's1 has dcfc charger_id')
 
+    def test_get_stations_at_same_geoid(self):
+        sim = mock_sim(stations=(
+            mock_station('s1', lat=0, lon=0, chargers=immutables.Map({mock_dcfc_charger_id(): 1}, )),
+            mock_station('s2', lat=0, lon=0, chargers=immutables.Map({mock_l2_charger_id(): 1}, )),
+        ))
+
+        geoid = h3.geo_to_h3(0, 0, sim.sim_h3_location_resolution)
+
+        stations = sim.s_locations[geoid]
+
+        self.assertIn('s1', stations, "station s1 should be at this geoid")
+        self.assertIn('s2', stations, "station s2 should be at this geoid")
+
     def test_get_bases(self):
         sim = mock_sim(bases=(
             mock_base('b1', lat=0, lon=0, stall_count=0),
@@ -547,6 +560,19 @@ class TestSimulationState(TestCase):
         sorted_bases = sim.get_bases(sort=True, sort_reversed=True, sort_key=lambda b: b.total_stalls)
 
         self.assertEqual(sorted_bases[0].id, 'b2', 'base 2 has the most stalls')
+
+    def test_get_bases_at_same_geoid(self):
+        sim = mock_sim(bases=(
+            mock_base('b1', lat=0, lon=0, stall_count=0),
+            mock_base('b2', lat=0, lon=0, stall_count=2),
+        ))
+
+        geoid = h3.geo_to_h3(0, 0, sim.sim_h3_location_resolution)
+
+        bases = sim.b_locations[geoid]
+
+        self.assertIn('b1', bases, "base b1 should be at this geoid")
+        self.assertIn('b2', bases, "base b2 should be at this geoid")
 
     def test_get_vehicles(self):
         sim = mock_sim(vehicles=(

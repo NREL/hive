@@ -131,21 +131,25 @@ def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simula
     :param simulation_state: the simulation state
     :return:
     """
-    instructions = ()
+    def _inner(acc: Tuple[Instruction, ...], veh: Vehicle) -> Tuple[Instruction, ...]:
+        if len(acc) == n:
+            return acc
+        elif not isinstance(veh.vehicle_state, ReserveBase):
+            return acc
+        else:
+            base = simulation_state.bases[veh.vehicle_state.base_id]
+            if not base.station_id:
+                return acc
+            else:
+                instruction = ChargeBaseInstruction(
+                    vehicle_id=veh.id,
+                    base_id=base.id,
+                    charger_id="LEVEL_2",
+                )
+                result = acc + (instruction,)
+                return result
 
-    for veh in vehicles:
-        if len(instructions) >= n:
-            break
-        base_id = simulation_state.b_locations[veh.geoid]
-        base = simulation_state.bases[base_id]
-        if base.station_id:
-            instruction = ChargeBaseInstruction(
-                vehicle_id=veh.id,
-                base_id=base.id,
-                charger_id="LEVEL_2",
-            )
-
-            instructions = instructions + (instruction,)
+    instructions = ft.reduce(_inner, vehicles, ())
 
     return instructions
 
