@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
 
 import immutables
-import h3
 
 from hive.state.simulation_state.at_location_response import AtLocationResponse
-from hive.util.exception import SimulationStateError
+from hive.util import geo
 from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
 
 if TYPE_CHECKING:
@@ -48,8 +47,8 @@ class SimulationState(NamedTuple):
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
     r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
-    s_locations: immutables.Map[GeoId, StationId] = immutables.Map()
-    b_locations: immutables.Map[GeoId, BaseId] = immutables.Map()
+    s_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
+    b_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
 
     # search collections   - a higher-level spatial representation used for ring search
     v_search: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
@@ -102,7 +101,7 @@ class SimulationState(NamedTuple):
         :param sort_reversed: the order of the resulting sort
         :return: tuple of sorted and filtered bases
         """
-        
+
         bases = [self.bases[bid] for bid in self.base_iterator]
 
         if filter_function and sort:
@@ -140,7 +139,7 @@ class SimulationState(NamedTuple):
         elif sort:
             return tuple(sorted(vehicles, key=sort_key, reverse=sort_reversed))
         else:
-            return tuple(vehicles) 
+            return tuple(vehicles)
 
     def get_requests(
             self,
@@ -168,7 +167,7 @@ class SimulationState(NamedTuple):
         elif sort:
             return tuple(sorted(requests, key=sort_key, reverse=sort_reversed))
         else:
-            return tuple(requests) 
+            return tuple(requests)
 
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """
@@ -178,8 +177,8 @@ class SimulationState(NamedTuple):
         """
         vehicles = self.v_locations[geoid] if geoid in self.v_locations else ()
         requests = self.r_locations[geoid] if geoid in self.r_locations else ()
-        station = self.s_locations[geoid] if geoid in self.s_locations else None
-        base = self.b_locations[geoid] if geoid in self.b_locations else None
+        station = self.s_locations[geoid] if geoid in self.s_locations else ()
+        base = self.b_locations[geoid] if geoid in self.b_locations else ()
 
         result = cast(AtLocationResponse, {
             'vehicles': vehicles,
@@ -206,10 +205,10 @@ class SimulationState(NamedTuple):
         if not vehicle or not request:
             return False
         else:
-            return SimulationState._same_geoid(vehicle.geoid,
-                                               request.origin,
-                                               self.sim_h3_location_resolution,
-                                               override_resolution)
+            return geo.same_simulation_location(vehicle.geoid,
+                                                request.origin,
+                                                self.sim_h3_location_resolution,
+                                                override_resolution)
 
     def vehicle_at_station(self,
                            vehicle_id: VehicleId,
@@ -228,10 +227,10 @@ class SimulationState(NamedTuple):
         if not vehicle or not station:
             return False
         else:
-            return SimulationState._same_geoid(vehicle.geoid,
-                                               station.geoid,
-                                               self.sim_h3_location_resolution,
-                                               override_resolution)
+            return geo.same_simulation_location(vehicle.geoid,
+                                                station.geoid,
+                                                self.sim_h3_location_resolution,
+                                                override_resolution)
 
     def vehicle_at_base(self,
                         vehicle_id: VehicleId,
@@ -250,35 +249,7 @@ class SimulationState(NamedTuple):
         if not vehicle or not base:
             return False
         else:
-            return SimulationState._same_geoid(vehicle.geoid,
-                                               base.geoid,
-                                               self.sim_h3_location_resolution,
-                                               override_resolution)
-
-    @classmethod
-    def _same_geoid(cls,
-                    a: GeoId,
-                    b: GeoId,
-                    sim_h3_resolution: int,
-                    override_resolution: Optional[int]) -> bool:
-        """
-        tests if two geoids are the same. allows for overriding test resolution to a parent level
-        todo: maybe move this to a geoutility collection somewhere like hive.util._
-
-        :param a: first geoid
-        :param b: second geoid
-        :param override_resolution: an overriding h3 spatial resolution, or, none to use this sim's default res
-        :return: True/False, or, a SimulationStateError
-        """
-        if override_resolution is None:
-            return a == b
-        elif override_resolution > sim_h3_resolution:
-            error = SimulationStateError(
-                f"cannot override geoid resolution {sim_h3_resolution} to smaller hex {override_resolution}")
-            return False
-        elif override_resolution == sim_h3_resolution:
-            return a == b
-
-        a_parent = h3.h3_to_parent(a, override_resolution)
-        b_parent = h3.h3_to_parent(b, override_resolution)
-        return a_parent == b_parent
+            return geo.same_simulation_location(vehicle.geoid,
+                                                base.geoid,
+                                                self.sim_h3_location_resolution,
+                                                override_resolution)

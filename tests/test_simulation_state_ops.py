@@ -146,7 +146,7 @@ class TestSimulationStateOps(TestCase):
 
         at_loc = sim_after_station.s_locations[station.geoid]
 
-        self.assertEqual(at_loc, station.id, "the station's id should be found at it's geoid")
+        self.assertEqual(at_loc[0], station.id, "the station's id should be found at it's geoid")
 
     def test_remove_station(self):
         station = mock_station()
@@ -156,6 +156,20 @@ class TestSimulationStateOps(TestCase):
         self.assertIsNone(error, "should have no error")
         self.assertNotIn(station.id, sim_after_remove.stations, "station should be removed")
         self.assertNotIn(station.geoid, sim_after_remove.s_locations, "nothing should be left at geoid")
+
+    def test_update_station(self):
+        station = mock_station()
+        sim = mock_sim(stations=(station,))
+        new_link = Link("blah", station.geoid, "blip", 1, 70)  # not a realistic test case
+        updated_station = station._replace(link=new_link)
+        error, sim_after_station = simulation_state_ops.modify_station(sim, updated_station)
+        self.assertIsNone(error, "should have no error")
+
+        updated_station_in_sim = sim_after_station.stations[station.id]
+        self.assertEqual(updated_station_in_sim.link, updated_station.link, "station should have been updated")
+
+        at_loc = sim_after_station.s_locations[station.geoid]
+        self.assertEqual(at_loc[0], station.id, "the station's id should be found at it's geoid")
 
     def test_add_base(self):
         base = mock_base()
@@ -168,7 +182,7 @@ class TestSimulationStateOps(TestCase):
 
         at_loc = sim_after_base.b_locations[base.geoid]
 
-        self.assertEqual(at_loc, base.id, "the base's id should be found at it's geoid")
+        self.assertEqual(at_loc[0], base.id, "the base's id should be found at it's geoid")
 
     def test_remove_base(self):
         base = mock_base()

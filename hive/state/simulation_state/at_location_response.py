@@ -18,5 +18,5 @@ class AtLocationResponse(Dict):
     """
     requests: Tuple[RequestId, ...]
     vehicles: Tuple[VehicleId, ...]
-    station: Optional[StationId]
-    base: Optional[BaseId]
+    station: Tuple[StationId, ...]
+    base: Tuple[BaseId, ...]

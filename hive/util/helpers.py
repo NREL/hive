@@ -65,6 +65,7 @@ class H3Ops:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
+
         :param geoid: the search origin
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
@@ -98,6 +99,7 @@ class H3Ops:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
+
         :param geoid: the search origin
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
@@ -166,8 +168,8 @@ class H3Ops:
         if locations_at_cell is None:
             return ()
         else:
-            return tuple(entities[entity_id]
-                         for entity_id in locations_at_cell)
+            found = tuple(entities[entity_id] for entity_id in locations_at_cell)
+            return found
 
     @classmethod
     def nearest_entity_point_to_point(cls,
