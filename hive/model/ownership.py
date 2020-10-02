@@ -13,13 +13,12 @@ class OwnershipType(Enum):
     """
 
     PRIVATE = 0
-    PUBLIC = 2
+    PUBLIC = 1
 
     @classmethod
     def from_string(cls, s: str) -> OwnershipType:
         values = {
             'private': cls.PRIVATE,
-            'fleet_private': cls.FLEET_PRIVATE,
             'public': cls.PUBLIC,
         }
         try:
