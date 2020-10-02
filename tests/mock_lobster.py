@@ -10,7 +10,6 @@ import yaml
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
-from hive.config.input import Input
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
