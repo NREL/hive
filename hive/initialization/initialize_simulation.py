@@ -79,7 +79,8 @@ def initialize_simulation(
 
     env_initial = Environment(config=config,
                               reporter=reporter,
-                              mechatronics=build_mechatronics_table(config.input_config),
+                              mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
+                                                                    config.input_config.scenario_directory),
                               chargers=build_chargers_table(config.input_config.chargers_file)
                               )
 

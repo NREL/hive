@@ -16,9 +16,9 @@ mechatronic_models = {
 }
 
 
-def build_mechatronics_table(input: Input) -> Dict[MechatronicsId, MechatronicsInterface]:
+def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) -> Dict[MechatronicsId, MechatronicsInterface]:
     mechatronics = {}
-    with open(input.mechatronics_file) as f:
+    with open(mechatronics_file) as f:
         config_dict = yaml.safe_load(f)
         for mechatronics_id in config_dict:
             # add the mechatronics id to the nested dictionary
@@ -41,13 +41,13 @@ def build_mechatronics_table(input: Input) -> Dict[MechatronicsId, MechatronicsI
                     # find the appropriate powertrain and powercurve resource
                     powertrain_file = fs.construct_asset_path(
                         powertrain_file,
-                        input.scenario_directory,
+                        scenario_directory,
                         "powertrain",
                         "powertrain"  # resources.powertrain
                     )
                     powercurve_file = fs.construct_asset_path(
                         powercurve_file,
-                        input.scenario_directory,
+                        scenario_directory,
                         "powercurve",
                         "powercurve"  # resources.powercurve
                     )
