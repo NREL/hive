@@ -39,7 +39,7 @@ class ChargingStation(NamedTuple, VehicleState):
         elif vehicle.geoid != station.geoid:
             return None, None
         else:
-            updated_station = station.checkout_charger(self.charger_id)
+            updated_station = station.checkout_charger(self.charger_id, self.vehicle_id)
             if not updated_station:
                 return None, None
             else:
@@ -69,7 +69,7 @@ class ChargingStation(NamedTuple, VehicleState):
         elif not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         else:
-            updated_station = station.return_charger(self.charger_id)
+            updated_station = station.return_charger(self.charger_id, self.vehicle_id)
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,

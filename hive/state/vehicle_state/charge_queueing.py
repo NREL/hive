@@ -39,8 +39,11 @@ class ChargeQueueing(NamedTuple, VehicleState):
         elif has_available_charger:
             # maybe here instead, re-directed to ChargingStation?
             return None, None
+        elif not station.ownership.is_member(self.vehicle_id):
+            # vehicle doesn't belong to the membership list of this station
+            return None, None
         else:
-            updated_station = station.enqueue_for_charger(self.charger_id)
+            updated_station = station.enqueue_for_charger(self.charger_id, self.vehicle_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
             if error:
                 return error, None
@@ -62,7 +65,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
             return SimulationStateError(f"station {self.station_id} not found"), None
         else:
 
-            updated_station = station.dequeue_for_charger(self.charger_id)
+            updated_station = station.dequeue_for_charger(self.charger_id, self.vehicle_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
             if error:
                 return error, None

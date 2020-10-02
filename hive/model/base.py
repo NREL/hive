@@ -6,6 +6,7 @@ import h3
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.ownership import Ownership, OwnershipType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -31,6 +32,8 @@ class Base(NamedTuple):
     available_stalls: int
     station_id: Optional[StationId]
 
+    ownership: Ownership = Ownership(OwnershipType.PUBLIC)
+
     @property
     def geoid(self):
         return self.link.start
@@ -41,11 +44,12 @@ class Base(NamedTuple):
               geoid: GeoId,
               road_network: RoadNetwork,
               station_id: Optional[StationId],
-              stall_count: int
+              stall_count: int,
+              ownership: Ownership = Ownership(OwnershipType.PUBLIC)
               ):
 
         link = road_network.link_from_geoid(geoid)
-        return Base(id, link, stall_count, stall_count, station_id)
+        return Base(id, link, stall_count, stall_count, station_id, ownership)
 
     @classmethod
     def from_row(
@@ -80,26 +84,29 @@ class Base(NamedTuple):
                 station_id_name = row['station_id'] if len(row['station_id']) > 0 else "none"
                 station_id = None if station_id_name.lower() == "none" else station_id_name
 
+                ownership = Ownership(OwnershipType.PUBLIC) if not row.get('ownership') else row.get('ownership')
+
                 return Base.build(
                     id=base_id,
                     geoid=geoid,
                     road_network=road_network,
                     station_id=station_id,
-                    stall_count=stall_count
+                    stall_count=stall_count,
+                    ownership=ownership,
                 )
 
             except ValueError:
                 raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
-    def has_available_stall(self) -> bool:
+    def has_available_stall(self, vehicle_id: VehicleId) -> bool:
         """
         Does base have a stall or not.
 
         :return: Boolean
         """
-        return bool(self.available_stalls > 0)
+        return bool(self.available_stalls > 0) and self.ownership.is_member(vehicle_id)
 
-    def checkout_stall(self) -> Optional[Base]:
+    def checkout_stall(self, vehicle_id: VehicleId) -> Optional[Base]:
         """
         Checks out a stall and returns the updated base if there are enough stalls.
 
@@ -108,10 +115,12 @@ class Base(NamedTuple):
         stalls = self.available_stalls
         if stalls < 1:
             return None
+        elif not self.ownership.is_member(vehicle_id):
+            return None
         else:
             return self._replace(available_stalls=stalls - 1)
 
-    def return_stall(self) -> Base:
+    def return_stall(self, vehicle_id: VehicleId) -> Base:
         """
         Checks out a stall and returns the updated base.
 
@@ -119,6 +128,8 @@ class Base(NamedTuple):
         """
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
-            raise SimulationStateError('Base already has maximum sta')
+            raise SimulationStateError('Base already has maximum stalls')
+        elif not self.ownership.is_member(vehicle_id):
+            raise SimulationStateError('receiving stall from vehicle id not in membership list')
         else:
             return self._replace(available_stalls=stalls + 1)

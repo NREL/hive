@@ -55,20 +55,46 @@ class TestBase(TestCase):
         self.assertIsNone(base.station_id)
 
     def test_checkout_stall(self):
-        updated_base = mock_base(stall_count=1).checkout_stall()
+        updated_base = mock_base(stall_count=1).checkout_stall(DefaultIds.mock_vehicle_id())
 
         self.assertEqual(updated_base.available_stalls, 0)
 
     def test_checkout_stall_none_avail(self):
         updated_base = mock_base(stall_count=0)
 
-        base_no_stall = updated_base.checkout_stall()
+        base_no_stall = updated_base.checkout_stall(DefaultIds.mock_vehicle_id())
 
         self.assertIsNone(base_no_stall)
 
     def test_return_stall(self):
-        updated_base = mock_base(stall_count=1).checkout_stall()
+        updated_base = mock_base(stall_count=1).checkout_stall(DefaultIds.mock_vehicle_id())
 
-        base_w_stall = updated_base.return_stall()
+        base_w_stall = updated_base.return_stall(DefaultIds.mock_vehicle_id())
 
         self.assertEqual(base_w_stall.available_stalls, 1)
+
+    def test_private_ownership(self):
+        vid = DefaultIds.mock_vehicle_id()
+
+        base = mock_base(
+            stall_count=1,
+            ownership=Ownership(OwnershipType.PRIVATE).add_member(vid)
+        )
+
+        updated_base = base.checkout_stall(vid)
+
+        self.assertEqual(updated_base.available_stalls, 0)
+
+    def test_bad_private_ownership(self):
+        vid = DefaultIds.mock_vehicle_id()
+        other_vid = "vehicle_trying_to_park_in_someone_elses_garage"
+
+        base = mock_base(
+            stall_count=1,
+            ownership=Ownership(OwnershipType.PRIVATE).add_member(vid)
+        )
+
+        updated_base = base.checkout_stall(other_vid)
+
+        self.assertIsNone(updated_base)
+

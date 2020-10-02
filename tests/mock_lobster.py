@@ -35,6 +35,7 @@ from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
+from hive.model.ownership import OwnershipType, Ownership
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -124,12 +125,14 @@ def mock_base(
         station_id: Optional[StationId] = None,
         stall_count: int = 1,
         road_network: RoadNetwork = mock_network(),
+        ownership: Ownership = Ownership(OwnershipType.PUBLIC),
 ) -> Base:
     return Base.build(base_id,
                       h3.geo_to_h3(lat, lon, h3_res),
                       road_network,
                       station_id,
                       stall_count,
+                      ownership,
                       )
 
 
@@ -150,23 +153,25 @@ def mock_station(
         h3_res: int = 15,
         chargers=None,
         road_network: RoadNetwork = mock_network(),
+        ownership: Ownership = Ownership(OwnershipType.PUBLIC),
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers)
+    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, ownership)
 
 
 def mock_station_from_geoid(
         station_id: StationId = DefaultIds.mock_station_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
         chargers=None,
-        road_network: RoadNetwork = mock_network()
+        road_network: RoadNetwork = mock_network(),
+        ownership: Ownership = Ownership(OwnershipType.PUBLIC),
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     elif isinstance(chargers, dict):
         chargers = immutables.Map(chargers)
-    return Station.build(station_id, geoid, road_network, chargers)
+    return Station.build(station_id, geoid, road_network, chargers, ownership)
 
 
 def mock_rate_structure(

@@ -30,7 +30,7 @@ class ReserveBase(NamedTuple, VehicleState):
         elif base.geoid != vehicle.geoid:
             return None, None
         else:
-            updated_base = base.checkout_stall()
+            updated_base = base.checkout_stall(self.vehicle_id)
             if not updated_base:
                 return None, None
             else:
@@ -51,7 +51,7 @@ class ReserveBase(NamedTuple, VehicleState):
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         else:
-            updated_base = base.return_stall()
+            updated_base = base.return_stall(self.vehicle_id)
             return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
