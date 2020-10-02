@@ -84,7 +84,7 @@ class Base(NamedTuple):
                 station_id_name = row['station_id'] if len(row['station_id']) > 0 else "none"
                 station_id = None if station_id_name.lower() == "none" else station_id_name
 
-                ownership = Ownership(OwnershipType.PUBLIC) if not row.get('ownership') else row.get('ownership')
+                # TODO: think about how to assing vehicles to bases based on fleet membership
 
                 return Base.build(
                     id=base_id,
@@ -92,7 +92,6 @@ class Base(NamedTuple):
                     road_network=road_network,
                     station_id=station_id,
                     stall_count=stall_count,
-                    ownership=ownership,
                 )
 
             except ValueError:

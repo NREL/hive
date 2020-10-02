@@ -97,7 +97,7 @@ class Station(NamedTuple):
                 charger_id: ChargerId = row['charger_id']
                 charger_count = int(float(row['charger_count']))
 
-                ownership = Ownership(OwnershipType.PUBLIC) if not row.get('ownership') else row.get('ownership')
+                # TODO: think about how to assign vehicles to stations based on fleet memebership
 
                 if charger_id is None:
                     raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
@@ -108,7 +108,6 @@ class Station(NamedTuple):
                         geoid=geoid,
                         road_network=road_network,
                         chargers=immutables.Map({charger_id: charger_count}),
-                        ownership=ownership,
                     )
                 elif charger_id in builder[station_id].total_chargers:
                     # combine counts from multiple rows which refer to this charger_id
@@ -119,7 +118,6 @@ class Station(NamedTuple):
                         geoid=geoid,
                         road_network=road_network,
                         chargers=immutables.Map({charger_id: charger_count + charger_already_loaded}),
-                        ownership=ownership,
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
@@ -131,7 +129,6 @@ class Station(NamedTuple):
                         geoid=geoid,
                         road_network=road_network,
                         chargers=updated_chargers,
-                        ownership=ownership,
                     )
 
             except ValueError as v:

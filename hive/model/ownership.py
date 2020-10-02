@@ -24,7 +24,7 @@ class OwnershipType(Enum):
         try:
             return values[s]
         except KeyError:
-            raise TypeError(f"ownership {s} not recognized, try: private, fleet_private, or public")
+            raise TypeError(f"ownership {s} not recognized, try: private or public")
 
 
 class Ownership(NamedTuple):
