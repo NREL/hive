@@ -10,6 +10,7 @@ import yaml
 from pkg_resources import resource_filename
 
 from hive.config import HiveConfig
+from hive.config.input import Input
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
@@ -583,3 +584,35 @@ def mock_gasoline_pump():
     gal_per_second = gal_per_minute / 60
 
     return Charger("gas_pump", energy_type=EnergyType.GASOLINE, rate=gal_per_second, units='gal_gasoline')
+
+
+def mock_input(
+        scenario_directory: str,  # loaded from command line
+        scenario_file: str,  # loaded from command line as well
+        vehicles_file: str,
+        requests_file: str,
+        bases_file: str,
+        stations_file: str,
+        mechatronics_file: str,
+        chargers_file: Optional[str],
+        road_network_file: Optional[str],
+        geofence_file: Optional[str],
+        rate_structure_file: Optional[str],
+        charging_price_file: Optional[str],
+        demand_forecast_file: Optional[str],
+) -> Input:
+    return Input(
+        scenario_directory=scenario_directory,  # loaded from command line
+        scenario_file=scenario_file,  # loaded from command line as well
+        vehicles_file=vehicles_file,
+        requests_file=requests_file,
+        bases_file=bases_file,
+        stations_file=stations_file,
+        mechatronics_file=mechatronics_file,
+        chargers_file=chargers_file,
+        road_network_file=road_network_file,
+        geofence_file=geofence_file,
+        rate_structure_file=rate_structure_file,
+        charging_price_file=charging_price_file,
+        demand_forecast_file=demand_forecast_file,
+    )
