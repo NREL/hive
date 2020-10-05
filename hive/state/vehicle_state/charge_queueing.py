@@ -1,12 +1,14 @@
+import logging
 from typing import NamedTuple, Tuple, Optional
 
-from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId, StationId, SimTime, ChargerId
+
+log = logging.getLogger(__name__)
 
 
 class ChargeQueueing(NamedTuple, VehicleState):
@@ -20,7 +22,8 @@ class ChargeQueueing(NamedTuple, VehicleState):
     charger_id: ChargerId
     enqueue_time: SimTime
 
-    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
                 entering a charge queueing state requires being at that station
                 :param sim: the simulation state
@@ -39,6 +42,9 @@ class ChargeQueueing(NamedTuple, VehicleState):
         elif has_available_charger:
             # maybe here instead, re-directed to ChargingStation?
             return None, None
+        elif not vehicle.membership.valid_membership(station.membership):
+            log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
+            return None, None
         else:
             updated_station = station.enqueue_for_charger(self.charger_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
@@ -47,10 +53,12 @@ class ChargeQueueing(NamedTuple, VehicleState):
             else:
                 return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         remove agent from queue before exiting this state
         :param sim:
@@ -84,7 +92,8 @@ class ChargeQueueing(NamedTuple, VehicleState):
 
     def _enter_default_terminal_state(self,
                                       sim: 'SimulationState',
-                                      env: Environment) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+                                      env: Environment) -> Tuple[
+        Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         go idle if the station disappeared, otherwise begin charging
         :param sim:
@@ -108,7 +117,8 @@ class ChargeQueueing(NamedTuple, VehicleState):
             else:
                 return None, (enter_sim, next_state)
 
-    def _perform_update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def _perform_update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         similarly to the idle state, we incur an idling penalty here
         :param sim:
@@ -125,4 +135,3 @@ class ChargeQueueing(NamedTuple, VehicleState):
             less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             return simulation_state_ops.modify_vehicle(sim, less_energy_vehicle)
-

@@ -6,6 +6,7 @@ import h3
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.membership import Membership
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -31,6 +32,8 @@ class Base(NamedTuple):
     available_stalls: int
     station_id: Optional[StationId]
 
+    membership: Membership = Membership
+
     @property
     def geoid(self):
         return self.link.start
@@ -41,11 +44,12 @@ class Base(NamedTuple):
               geoid: GeoId,
               road_network: RoadNetwork,
               station_id: Optional[StationId],
-              stall_count: int
+              stall_count: int,
+              membership: Membership = Membership()
               ):
 
         link = road_network.link_from_geoid(geoid)
-        return Base(id, link, stall_count, stall_count, station_id)
+        return Base(id, link, stall_count, stall_count, station_id, membership)
 
     @classmethod
     def from_row(
@@ -80,24 +84,26 @@ class Base(NamedTuple):
                 station_id_name = row['station_id'] if len(row['station_id']) > 0 else "none"
                 station_id = None if station_id_name.lower() == "none" else station_id_name
 
+                # TODO: think about how to assing vehicles to bases based on fleet membership
+
                 return Base.build(
                     id=base_id,
                     geoid=geoid,
                     road_network=road_network,
                     station_id=station_id,
-                    stall_count=stall_count
+                    stall_count=stall_count,
                 )
 
             except ValueError:
                 raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
-    def has_available_stall(self) -> bool:
+    def has_available_stall(self, vehicle_id: VehicleId) -> bool:
         """
         Does base have a stall or not.
 
         :return: Boolean
         """
-        return bool(self.available_stalls > 0)
+        return bool(self.available_stalls > 0) and self.membership.is_member(vehicle_id)
 
     def checkout_stall(self) -> Optional[Base]:
         """
@@ -119,6 +125,6 @@ class Base(NamedTuple):
         """
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
-            raise SimulationStateError('Base already has maximum sta')
+            raise SimulationStateError('Base already has maximum stalls')
         else:
             return self._replace(available_stalls=stalls + 1)

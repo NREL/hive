@@ -7,6 +7,7 @@ import h3
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.membership import Membership
 from hive.util.parsers import time_parser
 from hive.util.typealiases import *
 from hive.util.units import Currency, KM_TO_MILE, Kilometers
@@ -48,6 +49,8 @@ class Request(NamedTuple):
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
 
+    membership: Membership = Membership()
+
     @property
     def origin(self):
         return self.origin_link.start
@@ -69,6 +72,7 @@ class Request(NamedTuple):
               departure_time: SimTime,
               passengers: int,
               value: Currency = 0,
+              membership: Membership = Membership(),
               ) -> Request:
         assert (departure_time >= 0)
         assert (passengers > 0)
@@ -89,6 +93,7 @@ class Request(NamedTuple):
                        departure_time,
                        tuple(request_as_passengers),
                        value,
+                       membership=membership,
                        )
 
     @classmethod

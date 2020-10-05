@@ -1,15 +1,18 @@
+import logging
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.route import Route, valid_route
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import pick_up_trip, move
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId
+
+log = logging.getLogger(__name__)
 
 
 class ServicingTrip(NamedTuple, VehicleState):
@@ -37,6 +40,9 @@ class ServicingTrip(NamedTuple, VehicleState):
             locations = f"{request.geoid} != {vehicle.geoid}"
             message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
+        elif not vehicle.membership.valid_membership(request.membership):
+            log.debug(f"vehicle {vehicle.id} and request {request.id} don't share a membership")
+            return None, None
         else:
             route_is_valid = valid_route(self.route, request.origin, request.destination)
             # request exists: pick up the trip and enter a ServicingTrip state

@@ -1,6 +1,6 @@
+import logging
 from typing import Tuple, Optional, NamedTuple
 
-from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.reserve_base import ReserveBase
@@ -8,6 +8,8 @@ from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId, ChargerId
+
+log = logging.getLogger(__name__)
 
 
 class ChargingBase(NamedTuple, VehicleState):
@@ -28,10 +30,16 @@ class ChargingBase(NamedTuple, VehicleState):
         :return: an exception due to failure or an optional updated simulation, or (None, None) if not possible
         """
         base = sim.bases.get(self.base_id)
+        vehicle = sim.vehicles.get(self.vehicle_id)
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
+        elif not vehicle:
+                return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not base.station_id:
             return SimulationStateError(f"base {self.base_id} is not co-located with a station"), None
+        elif not vehicle.membership.valid_membership(base.membership):
+            log.debug(f"vehicle {vehicle.id} and base {base.id} don't share a membership")
+            return None, None
         else:
             station = sim.stations.get(base.station_id) if base.station_id else None
             if not station:
@@ -47,7 +55,8 @@ class ChargingBase(NamedTuple, VehicleState):
                     else:
                         return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
     def exit(self,

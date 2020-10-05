@@ -72,3 +72,4 @@ class TestBase(TestCase):
         base_w_stall = updated_base.return_stall()
 
         self.assertEqual(base_w_stall.available_stalls, 1)
+

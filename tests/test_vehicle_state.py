@@ -1,7 +1,5 @@
 from unittest import TestCase
 
-from hive.model.energy.energytype import EnergyType
-from hive.model.passenger import board_vehicle
 from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -34,6 +32,21 @@ class TestVehicleState(TestCase):
         available_chargers = updated_station.available_chargers.get(charger)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingStation, "should be in a charging state")
         self.assertEquals(available_chargers, 0, "should have claimed the only DCFC charger_id")
+
+    def test_charging_station_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        station = mock_station(membership=Membership.single_membership("lyft"))
+
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,)
+        )
+        env = mock_env()
+
+        state = ChargingStation(vehicle.id, station.id, mock_dcfc_charger_id())
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should return none for updated sim")
 
     def test_charging_station_exit(self):
         vehicle = mock_vehicle()
@@ -184,6 +197,27 @@ class TestVehicleState(TestCase):
         available_chargers = updated_station.available_chargers.get(charger)
         self.assertIsInstance(updated_vehicle.vehicle_state, ChargingBase, "should be in a charging state")
         self.assertEquals(available_chargers, 0, "should have claimed the only DCFC charger_id")
+
+    def test_charging_base_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        base = mock_base(
+            station_id=DefaultIds.mock_station_id(),
+            membership=Membership.single_membership("lyft"),
+        )
+        station = mock_station(membership=base.membership)
+
+        charger = mock_dcfc_charger_id()
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+            bases=(base,)
+        )
+        env = mock_env()
+
+        state = ChargingBase(vehicle.id, base.id, charger)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
 
     def test_charging_base_exit(self):
         vehicle = mock_vehicle()
@@ -373,6 +407,22 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchBase, "should be in a dispatch to base state")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
+    def test_dispatch_base_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        base = mock_base(membership=Membership.single_membership("lyft"))
+
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            bases=(base,)
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, base.geoid)
+
+        state = DispatchBase(vehicle.id, base.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
+
     def test_dispatch_base_exit(self):
         vehicle = mock_vehicle()
         base = mock_base()
@@ -524,6 +574,23 @@ class TestVehicleState(TestCase):
                               "should be in a dispatch to station state")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
+    def test_dispatch_station_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        station = mock_station(membership=Membership.single_membership("lyft"))
+        charger = mock_dcfc_charger_id()
+
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+        )
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, station.geoid)
+
+        state = DispatchStation(vehicle.id, station.id, route, charger)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
+
     def test_dispatch_station_enter_but_already_at_destination(self):
         # vehicle and station have the same geoid
         vehicle = mock_vehicle()
@@ -599,11 +666,11 @@ class TestVehicleState(TestCase):
         charger = mock_dcfc_charger_id()
         route = ()  # empty route should trigger a default transition
         state = DispatchStation(
-                DefaultIds.mock_vehicle_id(),
-                DefaultIds.mock_station_id(),
-                route,
-                charger
-            )
+            DefaultIds.mock_vehicle_id(),
+            DefaultIds.mock_station_id(),
+            route,
+            charger
+        )
         vehicle = mock_vehicle(soc=initial_soc, vehicle_state=state)
         station = mock_station()
         sim = mock_sim(
@@ -686,7 +753,8 @@ class TestVehicleState(TestCase):
         state = DispatchStation(vehicle.id, station.id, route, charger)
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
-        self.assertIsNone(enter_sim, "invalid route should have not changed sim state - station and route destination do not match")
+        self.assertIsNone(enter_sim,
+                          "invalid route should have not changed sim state - station and route destination do not match")
 
     ####################################################################################################################
     # DispatchTrip #####################################################################################################
@@ -710,6 +778,20 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, DispatchTrip, "should be in a dispatch to request state")
         self.assertEquals(updated_request.dispatched_vehicle, vehicle.id, "request should be assigned this vehicle")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_dispatch_trip_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        request = mock_request(membership=Membership.single_membership("lyft"))
+
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
 
     def test_dispatch_trip_exit(self):
         vehicle = mock_vehicle()
@@ -838,7 +920,8 @@ class TestVehicleState(TestCase):
 
     def test_idle_enter(self):
         # should intially not be in an Idle state
-        vehicle = mock_vehicle().modify_vehicle_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        vehicle = mock_vehicle().modify_vehicle_state(
+            DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 
@@ -852,7 +935,8 @@ class TestVehicleState(TestCase):
 
     def test_idle_exit(self):
         # should intially not be in an Idle state
-        vehicle = mock_vehicle().modify_vehicle_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        vehicle = mock_vehicle().modify_vehicle_state(
+            DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 
@@ -868,7 +952,8 @@ class TestVehicleState(TestCase):
 
     def test_idle_update(self):
         # should intially not be in an Idle state
-        vehicle = mock_vehicle().modify_vehicle_state(DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
+        vehicle = mock_vehicle().modify_vehicle_state(
+            DispatchBase(DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(), ()))
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
 
@@ -1076,7 +1161,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state") \
  \
-    ####################################################################################################################
+            ####################################################################################################################
+
     # ReserveBase ######################################################################################################
     ####################################################################################################################
 
@@ -1095,6 +1181,18 @@ class TestVehicleState(TestCase):
         updated_base = updated_sim.bases.get(base.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ReserveBase, "should be in an ReserveBase state")
         self.assertEqual(updated_base.available_stalls, 0, "only stall should now be occupied")
+
+    def test_reserve_base_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        base = mock_base(membership=Membership.single_membership("lyft"))
+
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,))
+        env = mock_env()
+
+        state = ReserveBase(vehicle.id, base.id)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
 
     def test_reserve_base_exit(self):
         vehicle = mock_vehicle()
@@ -1195,6 +1293,20 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "should be in a ServicingTrip state")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
+    def test_servicing_trip_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        request = mock_request(membership=Membership.single_membership("lyft"))
+
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.destination)
+
+        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
+
     def test_servicing_trip_exit(self):
         vehicle = mock_vehicle()
         request = mock_request_from_geoids(destination=vehicle.geoid)
@@ -1250,7 +1362,8 @@ class TestVehicleState(TestCase):
         error, exited_sim = state.exit(entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
-        self.assertIsNotNone(exited_sim, "should have allowed exit of ServicingTrip because out of fuel allows transition to OutOfService")
+        self.assertIsNotNone(exited_sim,
+                             "should have allowed exit of ServicingTrip because out of fuel allows transition to OutOfService")
 
     def test_servicing_trip_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)

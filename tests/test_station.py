@@ -72,7 +72,9 @@ class TestStation(TestCase):
         self.assertEqual(station2.total_chargers[mock_dcfc_charger_id()], 15)
 
     def test_checkout_charger(self):
-        updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 1})).checkout_charger(mock_dcfc_charger_id())
+        updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 1})).checkout_charger(
+            mock_dcfc_charger_id(),
+        )
 
         self.assertEqual(updated_station.available_chargers[mock_dcfc_charger_id()], 0)
 
@@ -84,7 +86,9 @@ class TestStation(TestCase):
         self.assertIsNone(no_dcfc_station)
 
     def test_return_charger(self):
-        updated_station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1})).checkout_charger(mock_l2_charger_id())
+        updated_station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1})).checkout_charger(
+            mock_l2_charger_id(),
+        )
 
         station_w_l2 = updated_station.return_charger(mock_l2_charger_id())
 
@@ -93,19 +97,29 @@ class TestStation(TestCase):
     def test_has_available_charge(self):
         station = mock_station()
 
-        self.assertEqual(station.has_available_charger(mock_dcfc_charger_id()), True, 'station should have 1 DCFC charger_id')
+        self.assertEqual(
+            station.has_available_charger(mock_dcfc_charger_id()),
+            True,
+            'station should have 1 DCFC charger_id',
+        )
 
     def test_enqueue_for_charger(self):
         station = mock_station()
 
-        has_queues = station.enqueue_for_charger(mock_dcfc_charger_id()).enqueue_for_charger(mock_dcfc_charger_id()).enqueue_for_charger(mock_l1_charger_id())
+        has_queues = station.enqueue_for_charger(
+            mock_dcfc_charger_id(),
+        ).enqueue_for_charger(
+            mock_dcfc_charger_id(),
+        ).enqueue_for_charger(
+            mock_l1_charger_id(),
+        )
         dc_count = has_queues.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
         l1_count = has_queues.enqueued_vehicle_count_for_charger(mock_l1_charger_id())
         l2_count = has_queues.enqueued_vehicle_count_for_charger(mock_l2_charger_id())
 
         self.assertEqual(dc_count, 2, "should have enqueued 2 vehicles for DC charging")
         self.assertEqual(l1_count, 1, "should have enqueued 1 vehicles for Level 1 charging")
-        self.assertEqual(l2_count, 0,  "should have enqueued 0 vehicles for Level 2 charging")
+        self.assertEqual(l2_count, 0, "should have enqueued 0 vehicles for Level 2 charging")
 
     def test_dequeue_for_charger(self):
         station = mock_station().enqueue_for_charger(mock_dcfc_charger_id())
@@ -117,4 +131,3 @@ class TestStation(TestCase):
 
         self.assertEqual(dequeue_1_count, 0, "should have dequeued the single vehicle")
         self.assertEqual(dequeue_2_count, 0, "cannot dequeue to a count below zero")
-

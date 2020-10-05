@@ -35,6 +35,7 @@ from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
+from hive.model.membership import Membership
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -124,12 +125,14 @@ def mock_base(
         station_id: Optional[StationId] = None,
         stall_count: int = 1,
         road_network: RoadNetwork = mock_network(),
+        membership: Membership = Membership(),
 ) -> Base:
     return Base.build(base_id,
                       h3.geo_to_h3(lat, lon, h3_res),
                       road_network,
                       station_id,
                       stall_count,
+                      membership,
                       )
 
 
@@ -150,23 +153,25 @@ def mock_station(
         h3_res: int = 15,
         chargers=None,
         road_network: RoadNetwork = mock_network(),
+        membership: Membership = Membership(),
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers)
+    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, membership)
 
 
 def mock_station_from_geoid(
         station_id: StationId = DefaultIds.mock_station_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
         chargers=None,
-        road_network: RoadNetwork = mock_network()
+        road_network: RoadNetwork = mock_network(),
+        membership: Membership = Membership(),
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     elif isinstance(chargers, dict):
         chargers = immutables.Map(chargers)
-    return Station.build(station_id, geoid, road_network, chargers)
+    return Station.build(station_id, geoid, road_network, chargers, membership)
 
 
 def mock_rate_structure(
@@ -190,7 +195,8 @@ def mock_request(
         h3_res: int = 15,
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
-        passengers: int = 1
+        passengers: int = 1,
+        membership: Membership = Membership(),
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -198,7 +204,8 @@ def mock_request(
         destination=h3.geo_to_h3(d_lat, d_lon, h3_res),
         road_network=road_network,
         departure_time=departure_time,
-        passengers=passengers
+        passengers=passengers,
+        membership=membership,
     )
 
 
@@ -209,7 +216,9 @@ def mock_request_from_geoids(
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
         passengers: int = 1,
-        value: Currency = 0
+        value: Currency = 0,
+        membership: Membership = Membership(),
+
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -219,6 +228,7 @@ def mock_request_from_geoids(
         departure_time=departure_time,
         passengers=passengers,
         value=value,
+        membership=membership,
     )
 
 
@@ -285,6 +295,7 @@ def mock_vehicle(
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
         driver_state: Optional[DriverState] = None,
+        membership: Membership = Membership(),
 ) -> Vehicle:
     v_state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
@@ -298,7 +309,8 @@ def mock_vehicle(
         energy=initial_energy,
         link=link,
         vehicle_state=v_state,
-        driver_state=d_state
+        driver_state=d_state,
+        membership=membership,
     )
 
 
@@ -308,6 +320,7 @@ def mock_vehicle_from_geoid(
         mechatronics: MechatronicsInterface = mock_bev(),
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
+        membership: Membership = Membership(),
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
@@ -319,7 +332,8 @@ def mock_vehicle_from_geoid(
         energy=initial_energy,
         link=link,
         vehicle_state=state,
-        driver_state=driver_state
+        driver_state=driver_state,
+        membership=membership,
     )
 
 

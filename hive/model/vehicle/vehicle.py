@@ -7,6 +7,7 @@ import h3
 from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.membership import Membership
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
 from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
@@ -46,6 +47,8 @@ class Vehicle(NamedTuple):
     # vehicle analytical properties
     balance: Currency = 0.0
     distance_traveled_km: Kilometers = 0.0
+
+    membership: Membership = Membership()
 
     @property
     def geoid(self):

@@ -3,10 +3,11 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Dict, Optional
 
-import immutables
 import h3
+import immutables
 
 from hive.model.energy.charger import Charger
+from hive.model.membership import Membership
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
@@ -42,6 +43,8 @@ class Station(NamedTuple):
     enqueued_vehicles: immutables.Map[ChargerId, int] = immutables.Map()
     balance: Currency = 0.0
 
+    membership: Membership = Membership()
+
     @property
     def geoid(self) -> GeoId:
         return self.link.start
@@ -51,7 +54,8 @@ class Station(NamedTuple):
               id: StationId,
               geoid: GeoId,
               road_network: RoadNetwork,
-              chargers: immutables.Map[Charger, int]
+              chargers: immutables.Map[Charger, int],
+              membership: Membership = Membership(),
               ):
         prices = ft.reduce(
             lambda prices_builder, charger: prices_builder.set(charger, 0.0),
@@ -59,7 +63,7 @@ class Station(NamedTuple):
             immutables.Map()
         )
         link = road_network.link_from_geoid(geoid)
-        return Station(id, link, chargers, chargers, prices)
+        return Station(id, link, chargers, chargers, prices, membership=membership)
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -93,6 +97,8 @@ class Station(NamedTuple):
                 charger_id: ChargerId = row['charger_id']
                 charger_count = int(float(row['charger_count']))
 
+                # TODO: think about how to assign vehicles to stations based on fleet memebership
+
                 if charger_id is None:
                     raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
                 elif station_id not in builder:
@@ -101,7 +107,7 @@ class Station(NamedTuple):
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_id: charger_count})
+                        chargers=immutables.Map({charger_id: charger_count}),
                     )
                 elif charger_id in builder[station_id].total_chargers:
                     # combine counts from multiple rows which refer to this charger_id
@@ -111,7 +117,7 @@ class Station(NamedTuple):
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_id: charger_count + charger_already_loaded})
+                        chargers=immutables.Map({charger_id: charger_count + charger_already_loaded}),
                     )
                 else:
                     # update this station charger_already_loaded = builder[station_id].total_chargers
@@ -122,7 +128,7 @@ class Station(NamedTuple):
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=updated_chargers
+                        chargers=updated_chargers,
                     )
 
             except ValueError as v:
@@ -135,14 +141,15 @@ class Station(NamedTuple):
         :param charger_id: charger_id type to be queried.
         :return: Boolean
         """
-        return charger_id in self.total_chargers and self.available_chargers[charger_id] > 0
+        return charger_id in self.total_chargers and \
+               self.available_chargers[charger_id] > 0
 
     def checkout_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
         Checks out a charger_id of type `charger_id` and returns an updated station if there are any available
 
         :param charger_id: the charger_id type to be checked out
-        :return: Updated station or None if no chargers available
+        :return: Updated station or None if no chargers available/ if vehicle is not a member
         """
 
         if self.has_available_charger(charger_id):
@@ -182,7 +189,7 @@ class Station(NamedTuple):
         """
         return self._replace(balance=self.balance + currency_received)
 
-    def enqueue_for_charger(self, charger_id: ChargerId) -> Station:
+    def enqueue_for_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
         increment the count of vehicles enqueued for a specific charger_id type - no limit
         :param charger_id: the charger_id type
@@ -196,6 +203,7 @@ class Station(NamedTuple):
         """
         decrement the count of vehicles enqueued for a specific charger_id type - min zero
         :param charger_id: the charger_id type
+        :param membership: the membership of the vehicle that want's to deque the charger
         :return: the updated Station
         """
         enqueued_count = self.enqueued_vehicles.get(charger_id, 0)
