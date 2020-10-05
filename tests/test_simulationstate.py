@@ -526,7 +526,7 @@ class TestSimulationState(TestCase):
         self.assertEqual(reversed_stations[0].id, 's2', 'station 2 is first in reversed')
 
         def has_dcfc(station: Station) -> bool:
-            return station.has_available_charger(mock_dcfc_charger_id(), DefaultIds.mock_vehicle_id())
+            return station.has_available_charger(mock_dcfc_charger_id())
 
         dcfc_stations = sim.get_stations(filter_function=has_dcfc)
 

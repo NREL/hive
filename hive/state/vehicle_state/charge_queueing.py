@@ -46,7 +46,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
             log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
             return None, None
         else:
-            updated_station = station.enqueue_for_charger(self.charger_id, vehicle.membership)
+            updated_station = station.enqueue_for_charger(self.charger_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
             if error:
                 return error, None

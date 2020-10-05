@@ -33,6 +33,8 @@ class ChargingBase(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
+        elif not vehicle:
+                return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not base.station_id:
             return SimulationStateError(f"base {self.base_id} is not co-located with a station"), None
         elif not vehicle.membership.valid_membership(base.membership):
@@ -75,7 +77,7 @@ class ChargingBase(NamedTuple, VehicleState):
         elif not station:
             return SimulationStateError(f"station for base {self.base_id} not found"), None
         else:
-            updated_station = station.return_charger(self.charger_id, vehicle.membership)
+            updated_station = station.return_charger(self.charger_id)
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,

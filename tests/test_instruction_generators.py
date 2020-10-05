@@ -76,10 +76,8 @@ class TestInstructionGenerators(TestCase):
         s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid)
         s1 = s1.enqueue_for_charger(
             mock_dcfc_charger_id(),
-            veh_low_battery.id,
         ).checkout_charger(
             mock_dcfc_charger_id(),
-            veh_low_battery.id,
         )
         s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid)
 

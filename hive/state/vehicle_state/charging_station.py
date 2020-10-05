@@ -44,7 +44,7 @@ class ChargingStation(NamedTuple, VehicleState):
             log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
             return None, None
         else:
-            updated_station = station.checkout_charger(self.charger_id, vehicle.membership)
+            updated_station = station.checkout_charger(self.charger_id)
             if not updated_station:
                 return None, None
             else:
@@ -75,7 +75,7 @@ class ChargingStation(NamedTuple, VehicleState):
         elif not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         else:
-            updated_station = station.return_charger(self.charger_id, vehicle.membership)
+            updated_station = station.return_charger(self.charger_id)
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,
