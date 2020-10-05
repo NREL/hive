@@ -176,7 +176,7 @@ input:
   charging_price_file: denver_charging_prices_by_geoid.csv
   demand_forecast_file: denver_demand.csv
   geofence_file: downtown_denver.geojson
-  mechatronics_file: mechatronics.csv
+  mechatronics_file: mechatronics.yaml
   rate_structure_file: rate_structure.csv
   requests_file: denver_demo_requests.csv
   road_network_file: downtown_denver.xml

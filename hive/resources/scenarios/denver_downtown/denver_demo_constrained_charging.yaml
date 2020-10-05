@@ -13,7 +13,7 @@ input:
   bases_file: denver_demo_bases.csv
   stations_file: denver_demo_stations_constrained.csv
   chargers_file: chargers_varied.csv
-  mechatronics_file: mechatronics.csv
+  mechatronics_file: mechatronics.yaml
   charging_price_file: denver_constrained_prices.csv
   rate_structure_file: rate_structure.csv
   geofence_file: downtown_denver.geojson
