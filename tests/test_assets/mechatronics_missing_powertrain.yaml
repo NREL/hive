@@ -1,0 +1,14 @@
+toy_car:
+  mechatronics_type: bev
+  powercurve_file: 'normalized.yaml'
+  battery_capacity_kwh: 10
+  nominal_max_charge_kw: 100
+  charge_taper_cutoff_kw: 100
+  nominal_watt_hour_per_mile: 1000
+  idle_kwh_per_hour: 0
+  
+toyota_corolla:
+  mechatronics_type: ice
+  tank_capacity_gallons: 10
+  idle_gallons_per_hour: 45
+  nominal_miles_per_gallon: 30

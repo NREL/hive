@@ -1,0 +1,15 @@
+leaf_50:
+  mechatronics_type: bev
+  powercurve_file: 'normalized.yaml'
+  powertrain_file: 'normalized.yaml'
+  battery_capacity_kwh: 50
+  nominal_max_charge_kw: 50
+  charge_taper_cutoff_kw: 10
+  nominal_watt_hour_per_mile: 225
+  idle_kwh_per_hour: 0.8
+  
+toyota_corolla:
+  mechatronics_type: ice
+  tank_capacity_gallons: 10
+  idle_gallons_per_hour: 45
+  nominal_miles_per_gallon: 30

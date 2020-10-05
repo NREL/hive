@@ -1,5 +1,5 @@
 input:
-  mechatronics_file: mechatronics.csv           # default comes from hive.resources.mechatronics.mechatronics.csv
+  mechatronics_file: mechatronics.yaml           # default comes from hive.resources.mechatronics.mechatronics.csv
   road_network_file: null                       # default is to construct a Haversine road network
   geofence_file: null                           # default is to have no geofencing
   rate_structure_file: null                     # default is $0.00 for all services

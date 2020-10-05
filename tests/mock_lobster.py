@@ -387,7 +387,7 @@ def mock_config(
             'chargers_file': 'default_chargers.csv',
             'charging_price_file': 'denver_charging_prices_by_geoid.csv',
             'rate_structure_file': 'rate_structure.csv',
-            'mechatronics_file': 'mechatronics.csv',
+            'mechatronics_file': 'mechatronics.yaml',
             'geofence_file': 'downtown_denver.geojson',
             'demand_forecast_file': 'denver_demand.csv'
         }
