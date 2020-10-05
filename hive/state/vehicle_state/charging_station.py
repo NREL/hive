@@ -1,13 +1,15 @@
+import logging
 from typing import Tuple, Optional, NamedTuple
 
-from hive.model.energy.charger import Charger
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, VehicleId, ChargerId
+
+log = logging.getLogger(__name__)
 
 
 class ChargingStation(NamedTuple, VehicleState):
@@ -38,8 +40,11 @@ class ChargingStation(NamedTuple, VehicleState):
             return SimulationStateError(f"station {self.station_id} not found"), None
         elif vehicle.geoid != station.geoid:
             return None, None
+        elif not vehicle.membership.valid_membership(station.membership):
+            log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
+            return None, None
         else:
-            updated_station = station.checkout_charger(self.charger_id, self.vehicle_id)
+            updated_station = station.checkout_charger(self.charger_id, vehicle.membership)
             if not updated_station:
                 return None, None
             else:
@@ -49,7 +54,8 @@ class ChargingStation(NamedTuple, VehicleState):
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
     def exit(self,
@@ -69,7 +75,7 @@ class ChargingStation(NamedTuple, VehicleState):
         elif not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         else:
-            updated_station = station.return_charger(self.charger_id, self.vehicle_id)
+            updated_station = station.return_charger(self.charger_id, vehicle.membership)
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,

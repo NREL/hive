@@ -1,16 +1,19 @@
+import logging
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.passenger import board_vehicle
 from hive.model.roadnetwork.route import Route, valid_route
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId
+
+log = logging.getLogger(__name__)
 
 
 class DispatchTrip(NamedTuple, VehicleState):
@@ -18,10 +21,12 @@ class DispatchTrip(NamedTuple, VehicleState):
     request_id: RequestId
     route: Route
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         checks that the request exists and if so, updates the request to know that this vehicle is on it's way
         :param sim: the sim state
@@ -35,6 +40,9 @@ class DispatchTrip(NamedTuple, VehicleState):
             return error, None
         elif not request:
             # not an error - may have been picked up. fail silently
+            return None, None
+        elif not vehicle.membership.valid_membership(request.membership):
+            log.debug(f"vehicle {vehicle.id} and request {request.id} don't share a membership")
             return None, None
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, request.geoid)

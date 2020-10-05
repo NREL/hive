@@ -1,4 +1,4 @@
-from typing import Tuple, FrozenSet, Callable
+from typing import Tuple, FrozenSet, Callable, TypeVar
 
 # MODEL ID TYPES
 RequestId = str
@@ -12,6 +12,10 @@ VehicleTypeId = str
 MechatronicsId = str
 ChargerId = str
 ScheduleId = str
+MemberId = str
+
+Entity = TypeVar('Entity')
+EntityId = TypeVar('EntityId')
 
 # POSITIONAL
 GeoId = str  # h3 geohash

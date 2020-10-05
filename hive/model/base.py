@@ -6,7 +6,7 @@ import h3
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.ownership import Ownership, OwnershipType
+from hive.model.membership import Membership
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -32,7 +32,7 @@ class Base(NamedTuple):
     available_stalls: int
     station_id: Optional[StationId]
 
-    ownership: Ownership = Ownership(OwnershipType.PUBLIC)
+    membership: Membership = Membership
 
     @property
     def geoid(self):
@@ -45,11 +45,11 @@ class Base(NamedTuple):
               road_network: RoadNetwork,
               station_id: Optional[StationId],
               stall_count: int,
-              ownership: Ownership = Ownership(OwnershipType.PUBLIC)
+              membership: Membership = Membership()
               ):
 
         link = road_network.link_from_geoid(geoid)
-        return Base(id, link, stall_count, stall_count, station_id, ownership)
+        return Base(id, link, stall_count, stall_count, station_id, membership)
 
     @classmethod
     def from_row(
@@ -103,9 +103,9 @@ class Base(NamedTuple):
 
         :return: Boolean
         """
-        return bool(self.available_stalls > 0) and self.ownership.is_member(vehicle_id)
+        return bool(self.available_stalls > 0) and self.membership.is_member(vehicle_id)
 
-    def checkout_stall(self, vehicle_id: VehicleId) -> Optional[Base]:
+    def checkout_stall(self) -> Optional[Base]:
         """
         Checks out a stall and returns the updated base if there are enough stalls.
 
@@ -114,12 +114,10 @@ class Base(NamedTuple):
         stalls = self.available_stalls
         if stalls < 1:
             return None
-        elif not self.ownership.is_member(vehicle_id):
-            return None
         else:
             return self._replace(available_stalls=stalls - 1)
 
-    def return_stall(self, vehicle_id: VehicleId) -> Base:
+    def return_stall(self) -> Base:
         """
         Checks out a stall and returns the updated base.
 
@@ -128,7 +126,5 @@ class Base(NamedTuple):
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
             raise SimulationStateError('Base already has maximum stalls')
-        elif not self.ownership.is_member(vehicle_id):
-            raise SimulationStateError('receiving stall from vehicle id not in membership list')
         else:
             return self._replace(available_stalls=stalls + 1)

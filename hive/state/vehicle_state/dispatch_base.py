@@ -1,3 +1,4 @@
+import logging
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.roadnetwork.route import Route, valid_route
@@ -10,6 +11,8 @@ from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId
+
+log = logging.getLogger(__name__)
 
 
 class DispatchBase(NamedTuple, VehicleState):
@@ -27,6 +30,9 @@ class DispatchBase(NamedTuple, VehicleState):
             return SimulationStateError(f"base {self.base_id} not found"), None
         elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not vehicle.membership.valid_membership(base.membership):
+            log.debug(f"vehicle {vehicle.id} and base {base.id} don't share a membership")
+            return None, None
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, base.geoid)
             if not route_is_valid:

@@ -7,7 +7,7 @@ import h3
 import immutables
 
 from hive.model.energy.charger import Charger
-from hive.model.ownership import Ownership, OwnershipType
+from hive.model.membership import Membership
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
@@ -43,7 +43,7 @@ class Station(NamedTuple):
     enqueued_vehicles: immutables.Map[ChargerId, int] = immutables.Map()
     balance: Currency = 0.0
 
-    ownership: Ownership = Ownership(OwnershipType.PUBLIC)
+    membership: Membership = Membership()
 
     @property
     def geoid(self) -> GeoId:
@@ -55,7 +55,7 @@ class Station(NamedTuple):
               geoid: GeoId,
               road_network: RoadNetwork,
               chargers: immutables.Map[Charger, int],
-              ownership: Ownership = Ownership(OwnershipType.PUBLIC),
+              membership: Membership = Membership(),
               ):
         prices = ft.reduce(
             lambda prices_builder, charger: prices_builder.set(charger, 0.0),
@@ -63,7 +63,7 @@ class Station(NamedTuple):
             immutables.Map()
         )
         link = road_network.link_from_geoid(geoid)
-        return Station(id, link, chargers, chargers, prices, ownership=ownership)
+        return Station(id, link, chargers, chargers, prices, membership=membership)
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -134,7 +134,7 @@ class Station(NamedTuple):
             except ValueError as v:
                 raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
 
-    def has_available_charger(self, charger_id: ChargerId, vehicle_id: VehicleId) -> bool:
+    def has_available_charger(self, charger_id: ChargerId) -> bool:
         """
         Indicates if a station has an available charge of type `charger_id`
 
@@ -142,40 +142,35 @@ class Station(NamedTuple):
         :return: Boolean
         """
         return charger_id in self.total_chargers and \
-               self.available_chargers[charger_id] > 0 and \
-               self.ownership.is_member(vehicle_id)
+               self.available_chargers[charger_id] > 0
 
-    def checkout_charger(self, charger_id: ChargerId, vehicle_id: VehicleId) -> Optional[Station]:
+    def checkout_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
         Checks out a charger_id of type `charger_id` and returns an updated station if there are any available
 
         :param charger_id: the charger_id type to be checked out
-        :param vehicle_id: the vehicle id that wants to checkout the charger
         :return: Updated station or None if no chargers available/ if vehicle is not a member
         """
 
-        if self.has_available_charger(charger_id, vehicle_id):
+        if self.has_available_charger(charger_id):
             previous_charger_count = self.available_chargers.get(charger_id)
             updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count - 1)
             return self._replace(available_chargers=updated_avail_chargers)
         else:
             return None
 
-    def return_charger(self, charger_id: ChargerId, vehicle_id: VehicleId) -> Station:
+    def return_charger(self, charger_id: ChargerId) -> Station:
         """
         Returns a charger_id of type `charger_id` to the station.
         Raises exception if available chargers exceeds total chargers
 
         :param charger_id: Charger to be returned
-        :param vehicle_id: the vehicle id that wants to return the charger
         :return: The updated station with returned charger_id
         """
         if charger_id in self.available_chargers:
             previous_charger_count = self.available_chargers.get(charger_id)
             if previous_charger_count > self.total_chargers.get(charger_id):
                 raise SimulationStateError("Station already has max chargers of this type")
-            elif not self.ownership.is_member(vehicle_id):
-                raise SimulationStateError("Got a charger back from a vehicle not in membership list")
             updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count + 1)
             return self._replace(available_chargers=updated_avail_chargers)
         else:
@@ -194,28 +189,23 @@ class Station(NamedTuple):
         """
         return self._replace(balance=self.balance + currency_received)
 
-    def enqueue_for_charger(self, charger_id: ChargerId, vehicle_id: VehicleId) -> Optional[Station]:
+    def enqueue_for_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
         increment the count of vehicles enqueued for a specific charger_id type - no limit
         :param charger_id: the charger_id type
-        :param vehicle_id: the vehicle that wan't to enqueue
         :return: the updated Station
         """
-        if not self.ownership.is_member(vehicle_id):
-            return None
         updated_enqueued_count = self.enqueued_vehicles.get(charger_id, 0) + 1
         updated_enqueued_vehicles = self.enqueued_vehicles.set(charger_id, updated_enqueued_count)
         return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
 
-    def dequeue_for_charger(self, charger_id: ChargerId, vehicle_id: VehicleId) -> Station:
+    def dequeue_for_charger(self, charger_id: ChargerId) -> Station:
         """
         decrement the count of vehicles enqueued for a specific charger_id type - min zero
         :param charger_id: the charger_id type
+        :param membership: the membership of the vehicle that want's to deque the charger
         :return: the updated Station
         """
-        if not self.ownership.is_member(vehicle_id):
-            raise SimulationStateError("vehicle is dequeueing but is not on membership list")
-
         enqueued_count = self.enqueued_vehicles.get(charger_id, 0)
         if not enqueued_count:
             return self

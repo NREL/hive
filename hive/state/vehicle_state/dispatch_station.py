@@ -1,16 +1,18 @@
+import logging
 from typing import NamedTuple, Tuple, Optional
 
-from hive.model.energy.charger import Charger
 from hive.model.roadnetwork.route import Route, valid_route
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, VehicleId, ChargerId
+
+log = logging.getLogger(__name__)
 
 
 class DispatchStation(NamedTuple, VehicleState):
@@ -19,10 +21,12 @@ class DispatchStation(NamedTuple, VehicleState):
     route: Route
     charger_id: ChargerId
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         station = sim.stations.get(self.station_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not station:
@@ -33,6 +37,9 @@ class DispatchStation(NamedTuple, VehicleState):
             # already there!
             next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
             return next_state.enter(sim, env)
+        elif not vehicle.membership.valid_membership(station.membership):
+            log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
+            return None, None
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, station.geoid)
             if not route_is_valid:

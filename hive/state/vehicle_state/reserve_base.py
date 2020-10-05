@@ -1,3 +1,4 @@
+import logging
 from typing import NamedTuple, Tuple, Optional
 
 from hive.runner.environment import Environment
@@ -6,15 +7,19 @@ from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId, BaseId
 
+log = logging.getLogger(__name__)
+
 
 class ReserveBase(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         to enter this state, the base must have a stall for the vehicle
         :param sim: the sim state
@@ -29,8 +34,12 @@ class ReserveBase(NamedTuple, VehicleState):
             return SimulationStateError(f"base {self.base_id} not found"), None
         elif base.geoid != vehicle.geoid:
             return None, None
+        elif not vehicle.membership.valid_membership(base.membership):
+            log.debug(f"vehicle {vehicle.id} and base {base.id} don't share a membership")
+            return None, None
+
         else:
-            updated_base = base.checkout_stall(self.vehicle_id)
+            updated_base = base.checkout_stall()
             if not updated_base:
                 return None, None
             else:
@@ -51,7 +60,7 @@ class ReserveBase(NamedTuple, VehicleState):
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         else:
-            updated_base = base.return_stall(self.vehicle_id)
+            updated_base = base.return_stall()
             return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
