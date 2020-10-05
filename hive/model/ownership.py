@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import NamedTuple
-
-from immutables import Map
+from typing import NamedTuple, FrozenSet, Tuple
 
 from hive.util.typealiases import VehicleId
 
@@ -34,22 +32,16 @@ class Ownership(NamedTuple):
     """
 
     ownership_type: OwnershipType
-    members: Map[VehicleId, int] = Map()
+    members: FrozenSet[VehicleId] = frozenset()
 
     def is_member(self, vehicle_id: VehicleId) -> bool:
         if self.ownership_type == OwnershipType.PUBLIC:
             return True
 
-        return self.members.get(vehicle_id) is not None
+        return vehicle_id in self.members
 
-    def add_member(self, vehicle_id: VehicleId) -> Ownership:
-        if self.is_member(vehicle_id):
-            return self
-        else:
-            return self._replace(members=self.members.set(vehicle_id, 0))
+    def add_members(self, vehicle_ids: Tuple[VehicleId, ...]) -> Ownership:
+        return self._replace(members=self.members.union(frozenset(vehicle_ids)))
 
-    def remove_member(self, vehicle_id: VehicleId) -> Ownership:
-        if not self.is_member(vehicle_id):
-            return self
-        else:
-            return self._replace(members=self.members.delete(vehicle_id))
+    def remove_members(self, vehicle_ids: Tuple[VehicleId, ...]) -> Ownership:
+        return self._replace(members=self.members.difference(frozenset(vehicle_ids)))

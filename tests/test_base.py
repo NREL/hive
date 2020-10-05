@@ -78,7 +78,7 @@ class TestBase(TestCase):
 
         base = mock_base(
             stall_count=1,
-            ownership=Ownership(OwnershipType.PRIVATE).add_member(vid)
+            ownership=Ownership(OwnershipType.PRIVATE).add_members((vid,))
         )
 
         updated_base = base.checkout_stall(vid)
@@ -91,7 +91,7 @@ class TestBase(TestCase):
 
         base = mock_base(
             stall_count=1,
-            ownership=Ownership(OwnershipType.PRIVATE).add_member(vid)
+            ownership=Ownership(OwnershipType.PRIVATE).add_members((vid,))
         )
 
         updated_base = base.checkout_stall(other_vid)

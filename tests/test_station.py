@@ -143,7 +143,7 @@ class TestStation(TestCase):
         vid = DefaultIds.mock_vehicle_id()
         other_vid = "nope_private_evs_only"
 
-        station = mock_station(ownership=Ownership(OwnershipType.PRIVATE).add_member(vid))
+        station = mock_station(ownership=Ownership(OwnershipType.PRIVATE).add_members((vid,)))
 
         updated_station = station.checkout_charger(mock_dcfc_charger_id(), vid)
         self.assertIsNotNone(updated_station)
