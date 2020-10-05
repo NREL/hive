@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import NamedTuple, Tuple, Optional
+from typing import NamedTuple
 
-from hive.util.helpers import TupleOps
+from immutables import Map
+
 from hive.util.typealiases import VehicleId
 
 
@@ -33,24 +34,22 @@ class Ownership(NamedTuple):
     """
 
     ownership_type: OwnershipType
-    members: Tuple[Optional[VehicleId], ...] = ()
+    members: Map[VehicleId, int] = Map()
 
     def is_member(self, vehicle_id: VehicleId) -> bool:
         if self.ownership_type == OwnershipType.PUBLIC:
             return True
 
-        return vehicle_id in self.members
+        return self.members.get(vehicle_id) is not None
 
     def add_member(self, vehicle_id: VehicleId) -> Ownership:
         if self.is_member(vehicle_id):
             return self
         else:
-            new_members = self.members + (vehicle_id,)
-            return self._replace(members=new_members)
+            return self._replace(members=self.members.set(vehicle_id, 0))
 
     def remove_member(self, vehicle_id: VehicleId) -> Ownership:
         if not self.is_member(vehicle_id):
             return self
         else:
-            new_members = TupleOps.remove(self.members, vehicle_id)
-            return self._replace(members=new_members)
+            return self._replace(members=self.members.delete(vehicle_id))
