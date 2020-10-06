@@ -12,6 +12,9 @@ from hive.runner import RunnerPayload
 
 
 class StatefulHandler(Handler):
+    """
+    prints the state of entities in the simulation to the state.log output file based on global logging settings
+    """
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
 

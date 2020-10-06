@@ -19,10 +19,7 @@ log = logging.getLogger(__name__)
 
 class EventfulHandler(Handler):
     """
-    Generates the sim.log output file
-
-    :param global_config: global project configuration
-    :param scenario_output_directory: the output directory for this scenario
+    handles events and appends them to the event.log output file based on global logging settings
     """
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
@@ -32,11 +29,8 @@ class EventfulHandler(Handler):
 
         self.global_config = global_config
 
-    def handle(
-            self,
-            reports: List[Report],
-            runner_payload: RunnerPayload,
-    ):
+    def handle(self, reports: List[Report], runner_payload: RunnerPayload):
+
         sim_state = runner_payload.s
 
         # station load events, written with reference to a specific station, take the sum of
