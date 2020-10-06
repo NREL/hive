@@ -37,3 +37,6 @@ class Membership(NamedTuple):
         :return:
         """
         return membership_id in self.members
+
+    def as_tuple(self) -> Tuple[MemberId, ...]:
+        return tuple(m for m in self.members)

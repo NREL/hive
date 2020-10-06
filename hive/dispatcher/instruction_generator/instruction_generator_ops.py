@@ -10,8 +10,8 @@ from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
-from hive.util import Kilometers, Ratio
-from hive.util.helpers import DictOps, H3Ops
+from hive.util import Ratio
+from hive.util.helpers import DictOps, H3Ops, TupleOps
 
 random.seed(123)
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+    from hive.util.typealiases import MemberId
 
 
 class InstructionGenerationResult(NamedTuple):
@@ -74,29 +75,46 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     return result
 
 
-def instruct_vehicles_return_to_base(n: int,
-                                     max_search_radius_km: Kilometers,
-                                     vehicles: Tuple[Vehicle],
-                                     simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_return_to_base(
+        vehicles: Tuple[Vehicle],
+        simulation_state: SimulationState,
+) -> Tuple[DispatchBaseInstruction, ...]:
     """
-    a helper function to send n vehicles back to the base
+    a helper function to send vehicles back to the base
 
-    :param n: how many vehicles to send back to base
-    :param max_search_radius_km: the maximum distance vehicles will search to a base
     :param vehicles: the list of vehicles to consider
     :param simulation_state: the simulation state
     :return:
     """
 
-    bases = tuple(simulation_state.bases.values())
+    def _base_assignment(
+            inst_acc: Tuple[DispatchBaseInstruction, ...],
+            membership_id: MemberId,
+    ) -> Tuple[DispatchBaseInstruction, ...]:
+        bases = simulation_state.get_bases(membership_id=membership_id)
+        member_vehicles = tuple(filter(lambda v: v.membership.is_member(membership_id), vehicles))
+        solution = assignment_ops.find_assignment(member_vehicles, bases, assignment_ops.h3_distance_cost)
 
-    solution = assignment_ops.find_assignment(vehicles, bases, assignment_ops.h3_distance_cost)
-    instructions = ft.reduce(lambda acc, pair: (*acc, DispatchBaseInstruction(pair[0], pair[1])), solution.solution, ())
+        instructions = ft.reduce(
+            lambda acc, pair: (*acc, DispatchBaseInstruction(pair[0], pair[1])),
+            solution.solution,
+            inst_acc)
 
-    return instructions
+        return instructions
+
+    memberships = set(TupleOps.flatten(tuple(v.membership.as_tuple() for v in vehicles)))
+
+    all_instructions = ft.reduce(
+        _base_assignment,
+        memberships,
+        ()
+    )
+
+    return all_instructions
 
 
-def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[
+    Instruction]:
     """
     a helper function to set n vehicles to reserve at the base
 
@@ -122,7 +140,8 @@ def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simul
     return instructions
 
 
-def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[
+    Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -131,6 +150,7 @@ def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simula
     :param simulation_state: the simulation state
     :return:
     """
+
     def _inner(acc: Tuple[Instruction, ...], veh: Vehicle) -> Tuple[Instruction, ...]:
         if len(acc) == n:
             return acc
@@ -177,6 +197,10 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     instructions = ()
 
     for veh in vehicles:
+        stations_at_play = TupleOps.flatten(
+            tuple(simulation_state.get_stations(membership_id=m) for m in veh.membership.members)
+        )
+
         if len(instructions) >= n:
             break
 
@@ -186,13 +210,14 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             top_charger = sorted(environment.chargers, key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
             cache = ft.reduce(
                 lambda acc, station_id: acc.update({station_id: top_charger}),
-                simulation_state.stations.keys(),
+                [station.id for station in stations_at_play],
                 immutables.Map()
             )
 
             def v_fn(s: Station):
                 station_has_top_charger = bool(s.available_chargers.get(top_charger))
                 return station_has_top_charger
+
             d_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger)
 
             is_valid_fn = v_fn
@@ -203,6 +228,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
 
             def v_fn(s: Station):
                 return True
+
             d_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
                 vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
             )
@@ -210,14 +236,13 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             distance_fn = d_fn
 
         nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
-                                               entities=simulation_state.stations,
+                                               entities=stations_at_play,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,
                                                is_valid=is_valid_fn,
                                                distance_function=distance_fn)
         if nearest_station:
-
             best_charger_id = cache.get(nearest_station.id)
 
             instruction = DispatchStationInstruction(
@@ -253,7 +278,8 @@ def instruct_vehicles_to_sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Ins
     return instructions
 
 
-def instruct_vehicles_to_reposition(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[Instruction]:
+def instruct_vehicles_to_reposition(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[
+    Instruction]:
     """
     a helper function to send n vehicles into the field at a random location
 

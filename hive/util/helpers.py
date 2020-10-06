@@ -86,7 +86,7 @@ class H3Ops:
     @classmethod
     def nearest_entity(cls,
                        geoid: GeoId,
-                       entities: immutables.Map[EntityId, Entity],
+                       entities: Tuple[Entity, ...],
                        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        distance_function: Callable[[Entity], float],
@@ -151,7 +151,7 @@ class H3Ops:
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
                              entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                             entities: immutables.Map[EntityId, Entity]) -> Tuple[Entity, ...]:
+                             entities: Tuple[Entity, ...]) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
@@ -165,7 +165,7 @@ class H3Ops:
         if locations_at_cell is None:
             return ()
         else:
-            found = tuple(entities[entity_id] for entity_id in locations_at_cell)
+            found = tuple(e for e in entities if e.id in locations_at_cell)
             return found
 
     @classmethod
@@ -321,6 +321,18 @@ class TupleOps:
         """
         t1, t2 = it.tee(t)
         return tuple(filter(predicate, t1)), tuple(it.filterfalse(predicate, t2))
+
+    @classmethod
+    def flatten(cls, nested_tuple: Tuple[Tuple[T, ...], ...]) -> Tuple[T, ...]:
+        """
+        flattens a tuple of tuples
+
+        taken from https://stackoverflow.com/a/10636583/11087167
+        :param nested_tuple: tuple to flatten
+        :return: flattened tuple
+        """
+
+        return tuple(sum(nested_tuple, ()))
 
 
 class EntityUpdateResult(NamedTuple):

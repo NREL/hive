@@ -90,9 +90,10 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
             instructions = instructions + repos_instructions
         elif active_diff > 0:
             # we can remove active_diff vehicles from service
+            if active_diff < n_active:
+                active_vehicles = active_vehicles[:active_diff]
+
             base_instructions = instruct_vehicles_return_to_base(
-                active_diff,
-                self.config.max_search_radius_km,
                 active_vehicles,
                 simulation_state,
             )
