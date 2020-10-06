@@ -1,6 +1,7 @@
 output_base_directory: ""
 log_run: True
-log_sim: True
+log_states: True
+log_events: True
 log_level: INFO
 log_sim_config:
 - 'instruction'
@@ -13,7 +14,6 @@ log_sim_config:
 - 'vehicle_move_event'
 - 'station_load_event'
 log_station_capacities: True
-log_station_load: True
 log_period_seconds: 60
 local_parallelism: 1
 local_parallelism_timeout_sec: 60

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional
 
 from hive.reporting.report_type import ReportType
-from hive.reporting.stats_handler import StatsHandler
+from hive.reporting.handler.stats_handler import StatsHandler
 
 if TYPE_CHECKING:
     from hive.runner.runner_payload import RunnerPayload
@@ -58,8 +58,7 @@ class Reporter:
         :param report:
         :return:
         """
-        if report.report_type in self.config.log_sim_config:
-            self.reports.append(report)
+        self.reports.append(report)
 
     def get_summary_stats(self) -> Optional[Dict]:
         """

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, List, Dict
 
 import numpy as np
 
-from hive.reporting.handler import Handler
+from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType
 
 if TYPE_CHECKING:
