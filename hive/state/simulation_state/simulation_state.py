@@ -6,7 +6,7 @@ import immutables
 
 from hive.state.simulation_state.at_location_response import AtLocationResponse
 from hive.util import geo
-from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId
+from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId, MemberId
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -38,6 +38,12 @@ class SimulationState(NamedTuple):
     bases: immutables.Map[BaseId, Base] = immutables.Map()
     vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
     requests: immutables.Map[RequestId, Request] = immutables.Map()
+
+    # membership collections
+    s_membership: immutables.Map[MemberId, Tuple[StationId, ...]] = immutables.Map()
+    b_membership: immutables.Map[MemberId, Tuple[RequestId, ...]] = immutables.Map()
+    v_membership: immutables.Map[MemberId, Tuple[VehicleId, ...]] = immutables.Map()
+    r_membership: immutables.Map[MemberId, Tuple[RequestId, ...]] = immutables.Map()
 
     station_iterator: Tuple[StationId, ...] = ()
     base_iterator: Tuple[BaseId, ...] = ()

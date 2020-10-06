@@ -1,4 +1,5 @@
 from typing import Tuple, FrozenSet, Callable, TypeVar
+from immutables import Map
 
 # MODEL ID TYPES
 RequestId = str
@@ -16,6 +17,9 @@ MemberId = str
 
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
+
+# Collections
+MembershipMap = Map[MemberId, Tuple[EntityId, ...]]
 
 # POSITIONAL
 GeoId = str  # h3 geohash
