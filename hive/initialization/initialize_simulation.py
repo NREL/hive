@@ -77,7 +77,7 @@ def initialize_simulation(
         reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_states:
         reporter.add_handler(StatefulHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.track_stats:
+    if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
 
     env_initial = Environment(config=config,

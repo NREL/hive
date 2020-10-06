@@ -20,10 +20,10 @@ class TestDictReaderStepper(TestCase):
             root_path = Path(parent)
             parent_hive_file = root_path.joinpath(".hive.yaml")
             with open(parent_hive_file, 'w') as file:
-                yaml.safe_dump({"log_sim": False}, file)
+                yaml.safe_dump({"log_states": False}, file)
             with tempfile.TemporaryDirectory(dir=parent) as child:
                 os.chdir(child)
                 result = global_hive_config_search()
                 self.assertIsInstance(result, GlobalConfig, "should be a GlobalConfig class instance")
-                self.assertFalse(result.log_sim, "should have found the modified config in the parent directory")  # default is "True"
+                self.assertFalse(result.log_states, "should have found the modified config in the parent directory")  # default is "True"
                 self.assertTrue(result.log_run, "should also contain keys from the default config")
