@@ -45,11 +45,6 @@ class SimulationState(NamedTuple):
     v_membership: immutables.Map[MemberId, Tuple[VehicleId, ...]] = immutables.Map()
     r_membership: immutables.Map[MemberId, Tuple[RequestId, ...]] = immutables.Map()
 
-    station_iterator: Tuple[StationId, ...] = ()
-    base_iterator: Tuple[BaseId, ...] = ()
-    vehicle_iterator: Tuple[VehicleId, ...] = ()
-    request_iterator: Tuple[RequestId, ...] = ()
-
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
     r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
@@ -68,6 +63,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
+            membership_id: MemberId = "no_membership",
     ) -> Tuple[Station, ...]:
         """
         returns a tuple of stations.
@@ -77,9 +73,14 @@ class SimulationState(NamedTuple):
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
         :param sort_reversed: the order of the resulting sort
+        :param membership_id: optional membership id
         :return: tuple of sorted and filtered stations
         """
-        stations = [self.stations[sid] for sid in self.station_iterator]
+        members = self.s_membership.get(membership_id)
+        if not members:
+            return ()
+
+        stations = [self.stations[sid] for sid in members]
 
         if filter_function and sort:
             return tuple(filter(filter_function, sorted(stations, key=sort_key, reverse=sort_reversed)))
@@ -96,6 +97,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
+            membership_id: MemberId = "no_membership",
     ) -> Tuple[Base, ...]:
         """
         returns a tuple of bases.
@@ -105,10 +107,14 @@ class SimulationState(NamedTuple):
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
         :param sort_reversed: the order of the resulting sort
+        :param membership_id: optional membership id
         :return: tuple of sorted and filtered bases
         """
+        members = self.b_membership.get(membership_id)
+        if not members:
+            return ()
 
-        bases = [self.bases[bid] for bid in self.base_iterator]
+        bases = [self.bases[bid] for bid in members]
 
         if filter_function and sort:
             return tuple(filter(filter_function, sorted(bases, key=sort_key, reverse=sort_reversed)))
@@ -125,6 +131,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
+            membership_id: MemberId = "no_membership",
     ) -> Tuple[Vehicle, ...]:
         """
         returns a tuple of vehicles.
@@ -134,9 +141,13 @@ class SimulationState(NamedTuple):
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
         :param sort_reversed: the order of the resulting sort
+        :param membership_id: optional membership id
         :return: tuple of sorted and filtered vehicles
         """
-        vehicles = [self.vehicles[vid] for vid in self.vehicle_iterator]
+        members = self.v_membership.get(membership_id)
+        if not members:
+            return ()
+        vehicles = [self.vehicles[vid] for vid in members]
 
         if filter_function and sort:
             return tuple(sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))
@@ -153,6 +164,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
+            membership_id: MemberId = "no_membership",
     ) -> Tuple[Request, ...]:
         """
         returns a tuple of requests.
@@ -162,9 +174,13 @@ class SimulationState(NamedTuple):
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
         :param sort_reversed: the order of the resulting sort
+        :param membership_id: optional membership id
         :return: tuple of sorted and filtered requests
         """
-        requests = [self.requests[rid] for rid in self.request_iterator]
+        members = self.r_membership.get(membership_id)
+        if not members:
+            return ()
+        requests = [self.requests[rid] for rid in members]
 
         if filter_function and sort:
             return tuple(filter(filter_function, sorted(requests, key=sort_key, reverse=sort_reversed)))

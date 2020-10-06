@@ -71,7 +71,6 @@ def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Except
         )
         updated_sim = sim._replace(
             requests=DictOps.add_to_dict(sim.requests, request.id, request),
-            request_iterator=sim.request_iterator + (request.id,),
             r_locations=DictOps.add_to_collection_dict(sim.r_locations, request.geoid, request.id),
             r_search=DictOps.add_to_collection_dict(sim.r_search, search_geoid, request.id),
             r_membership=updated_r_membership,
@@ -108,7 +107,6 @@ def remove_request(sim: SimulationState,
 
         updated_sim = sim._replace(
             requests=updated_requests,
-            request_iterator=tuple(rid for rid in sim.request_iterator if rid != request_id),
             r_locations=updated_r_locations,
             r_search=updated_r_search,
             r_membership=updated_r_membership,
@@ -173,7 +171,6 @@ def add_vehicle(sim: SimulationState, vehicle: Vehicle) -> Tuple[Optional[Except
         )
         updated_sim = sim._replace(
             vehicles=DictOps.add_to_dict(sim.vehicles, vehicle.id, vehicle),
-            vehicle_iterator=sim.vehicle_iterator + (vehicle.id,),
             v_locations=updated_v_locations,
             v_search=updated_v_search,
             v_membership=updated_v_membership,
@@ -203,7 +200,6 @@ def add_vehicle_returns(sim: SimulationState, vehicle: Vehicle) -> Result[Simula
         )
         updated_sim = sim._replace(
             vehicles=DictOps.add_to_dict(sim.vehicles, vehicle.id, vehicle),
-            vehicle_iterator=sim.vehicle_iterator + (vehicle.id,),
             v_locations=updated_v_locations,
             v_search=updated_v_search,
             v_membership=updated_v_membership,
@@ -272,7 +268,6 @@ def remove_vehicle(sim: SimulationState, vehicle_id: VehicleId) -> Tuple[
 
         updated_sim = sim._replace(
             vehicles=DictOps.remove_from_dict(sim.vehicles, vehicle_id),
-            vehicle_iterator=tuple(vid for vid in sim.vehicle_iterator if vid != vehicle_id),
             v_locations=DictOps.remove_from_collection_dict(sim.v_locations, vehicle.geoid, vehicle_id),
             v_search=DictOps.remove_from_collection_dict(sim.v_search, search_geoid, vehicle_id),
             v_membership=updated_v_membership,
@@ -324,7 +319,6 @@ def add_station(sim: SimulationState, station: Station) -> Tuple[Optional[Except
         )
         updated_sim = sim._replace(
             stations=DictOps.add_to_dict(sim.stations, station.id, station),
-            station_iterator=sim.station_iterator + (station.id,),
             s_locations=updated_s_locations,
             s_search=updated_s_search,
             s_membership=updated_s_membership,
@@ -356,7 +350,6 @@ def remove_station(sim: SimulationState, station_id: StationId) -> Tuple[
         )
         updated_sim = sim._replace(
             stations=DictOps.remove_from_dict(sim.stations, station_id),
-            station_iterator=tuple(sid for sid in sim.station_iterator if sid != station_id),
             s_locations=updated_s_locations,
             s_search=updated_s_search,
             s_membership=updated_s_membership,
@@ -413,7 +406,6 @@ def add_base(sim: SimulationState, base: Base) -> Tuple[Optional[Exception], Opt
         )
         updated_sim = sim._replace(
             bases=DictOps.add_to_dict(sim.bases, base.id, base),
-            base_iterator=sim.base_iterator + (base.id,),
             b_locations=updated_b_locations,
             b_search=updated_b_search,
             b_membership=updated_b_membership,
@@ -444,7 +436,6 @@ def remove_base(sim: SimulationState, base_id: BaseId) -> Tuple[Optional[Excepti
         )
         updated_sim = sim._replace(
             bases=DictOps.remove_from_dict(sim.bases, base_id),
-            base_iterator=tuple(bid for bid in sim.base_iterator if bid != base_id),
             b_locations=updated_b_locations,
             b_search=updated_b_search,
             b_membership=updated_b_membership,

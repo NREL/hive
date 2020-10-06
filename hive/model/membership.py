@@ -10,7 +10,7 @@ class Membership(NamedTuple):
     class representing a collection of member ids.
     """
 
-    members: FrozenSet[MemberId] = frozenset('no_membership')
+    members: FrozenSet[MemberId] = frozenset(['no_membership'])
 
     @classmethod
     def from_tuple(cls, member_ids: Tuple[MemberId, ...]) -> Membership:
