@@ -110,13 +110,11 @@ class StatsHandler(Handler):
         :return:
         """
 
+        sim_state = runner_payload.s
         state_counts = Counter(
             map(
-                lambda r: r.report['vehicle_state'],
-                filter(
-                    lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT or r.report_type == ReportType.VEHICLE_CHARGE_EVENT,
-                    reports
-                )
+                lambda v: v.vehicle_state.__class__.__name__,
+                sim_state.get_vehicles()
             )
         )
 
