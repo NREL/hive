@@ -64,7 +64,7 @@ class GlobalConfig(NamedTuple):
         d['output_base_directory'] = str(output_base_directory_absolute)
 
         # convert list of logged report types to a Set
-        d['log_sim_config'] = set(ReportType.from_string(rt) for rt in d['log_sim_config'])
+        d['log_sim_config'] = set(ReportType.from_string(rt) for rt in d['log_sim_config']) if d['log_sim_config'] else set()
 
         # store the .hive.yaml file path used
         d['global_settings_file_path'] = global_settings_file_path

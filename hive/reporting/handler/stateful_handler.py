@@ -15,8 +15,8 @@ class StatefulHandler(Handler):
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
 
-        sim_log_path = os.path.join(scenario_output_directory, 'state.log')
-        self.sim_log_file = open(sim_log_path, 'a')
+        log_path = os.path.join(scenario_output_directory, 'state.log')
+        self.log_file = open(log_path, 'a')
 
         self.global_config = global_config
 
@@ -46,8 +46,7 @@ class StatefulHandler(Handler):
             )
 
     def close(self, runner_payload: RunnerPayload):
-        pass
-
+        self.log_file.close()
 
     @staticmethod
     def vehicle_asdict(vehicle: Vehicle) -> dict:
@@ -110,4 +109,4 @@ class StatefulHandler(Handler):
             log_dict['sim_time'] = sim_time
             log_dict['report_type'] = report_type.name
             entry = json.dumps(log_dict, default=str)
-            self.sim_log_file.write(entry + '\n')
+            self.log_file.write(entry + '\n')

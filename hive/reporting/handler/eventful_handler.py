@@ -27,8 +27,8 @@ class EventfulHandler(Handler):
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
 
-        sim_log_path = os.path.join(scenario_output_directory, 'event.log')
-        self.sim_log_file = open(sim_log_path, 'a')
+        log_path = os.path.join(scenario_output_directory, 'event.log')
+        self.log_file = open(log_path, 'a')
 
         self.global_config = global_config
 
@@ -45,12 +45,12 @@ class EventfulHandler(Handler):
             station_load_reports = vehicle_event_ops.construct_station_load_events(tuple(reports), sim_state)
             for report in station_load_reports:
                 entry = json.dumps(report.as_json(), default=str)
-                self.sim_log_file.write(entry + '\n')
+                self.log_file.write(entry + '\n')
 
         for report in reports:
             if report.report_type in self.global_config.log_sim_config:
                 entry = json.dumps(report.as_json(), default=str)
-                self.sim_log_file.write(entry + '\n')
+                self.log_file.write(entry + '\n')
 
     def close(self, runner_payload: RunnerPayload):
-        self.sim_log_file.close()
+        self.log_file.close()
