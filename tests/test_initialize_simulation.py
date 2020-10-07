@@ -9,7 +9,8 @@ class TestInitializeSimulation(TestCase):
     def test_initialize_simulation(self):
         conf = mock_config()
 
-        updated_global_config = conf.global_config._replace(log_sim=False, log_run=False)
+        # deactivate logging to avoid writing log outputs from the test
+        updated_global_config = conf.global_config._replace(log_states=False, log_run=False, log_events=False, log_stats=False)
         updated_conf = conf._replace(global_config=updated_global_config)
 
         sim, env = initialize_simulation(updated_conf)

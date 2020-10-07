@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, List, Dict
 
 import numpy as np
 
-from hive.reporting.handler import Handler
+from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType
 
 if TYPE_CHECKING:
@@ -110,28 +110,27 @@ class StatsHandler(Handler):
         :return:
         """
 
+        # update the proportion of time spent by vehicles in each vehicle state
+        sim_state = runner_payload.s
         state_counts = Counter(
             map(
-                lambda r: r.report['vehicle_state'],
-                filter(
-                    lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT or r.report_type == ReportType.VEHICLE_CHARGE_EVENT,
-                    reports
-                )
+                lambda v: v.vehicle_state.__class__.__name__,
+                sim_state.get_vehicles()
             )
         )
-
         self.stats.state_count += state_counts
 
+        # capture the distance traveled in move states
         move_events = list(
             filter(
                 lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
                 reports
             )
         )
-
         for me in move_events:
             self.stats.vkt[me.report['vehicle_state']] += me.report['distance_km']
 
+        # count any requests and cancelled requests
         c = Counter(map(lambda r: r.report_type, reports))
         self.stats.requests += c[ReportType.ADD_REQUEST_EVENT]
         self.stats.cancelled_requests += c[ReportType.CANCEL_REQUEST_EVENT]

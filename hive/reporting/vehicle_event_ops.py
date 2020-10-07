@@ -11,6 +11,7 @@ from hive.model.roadnetwork import route
 from hive.model.station import Station
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
+from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util.typealiases import ChargerId, StationId
 from hive.util.units import KwH
@@ -20,10 +21,11 @@ if TYPE_CHECKING:
     from hive.state.vehicle_state.vehicle_state_ops import MoveResult
 
 
-def vehicle_move_event(move_result: MoveResult) -> Report:
+def vehicle_move_event(move_result: MoveResult, env: Environment) -> Report:
     """
     creates a vehicle move report based on the effect of one time step of moving
     :param move_result: the result of a move
+    :param env: the simulation environment
     :return: the vehicle move report
     """
     sim_time_start = move_result.sim.sim_time - move_result.sim.sim_timestep_duration_seconds
@@ -39,7 +41,7 @@ def vehicle_move_event(move_result: MoveResult) -> Report:
     )
     geoid = move_result.next_vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
-    geom = route.to_linestring(move_result.route_traversal.experienced_route)
+    geom = route.to_linestring(move_result.route_traversal.experienced_route, env)
     report_data = {
         'sim_time_start': sim_time_start,
         'sim_time_end': sim_time_end,

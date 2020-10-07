@@ -188,7 +188,7 @@ def move(sim: 'SimulationState',
         elif empty_vehicle_sim:
             return None, MoveResult(empty_vehicle_sim)
         else:
-            report = vehicle_move_event(move_result)
+            report = vehicle_move_event(move_result, env)
             env.reporter.file_report(report)
             return None, move_result
 
