@@ -69,7 +69,7 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
 
         # for each low_soc_vehicle that will conduct a refuel search, report the search event
         for v in low_soc_vehicles:
-            report = instruction_generator_event_ops.refuel_search_event(v, simulation_state.sim_time, environment)
+            report = instruction_generator_event_ops.refuel_search_event(v, simulation_state, environment)
             environment.reporter.file_report(report)
 
         charge_instructions = instruct_vehicles_to_dispatch_to_station(
