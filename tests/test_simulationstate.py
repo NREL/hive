@@ -28,7 +28,6 @@ class TestSimulationState(TestCase):
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
         self.assertIn(req.id, result['requests'], "should have found this request")
         self.assertIn(sta.id, result['station'], "should have found this station")
-        print(result)
         self.assertEqual(result['base'], frozenset(), "should not have found this base")
 
     def test_vehicle_at_request(self):
