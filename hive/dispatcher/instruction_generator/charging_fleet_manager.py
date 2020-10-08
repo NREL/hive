@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Tuple, NamedTuple, TYPE_CHECKING
 
+from hive.reporting import instruction_generator_event_ops
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.repositioning import Repositioning
@@ -65,6 +66,11 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
 
         low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate)
         high_soc_vehicles = simulation_state.get_vehicles(filter_function=stop_charge_candidate)
+
+        # for each low_soc_vehicle that will conduct a refuel search, report the search event
+        for v in low_soc_vehicles:
+            report = instruction_generator_event_ops.refuel_search_event(v, simulation_state, environment)
+            environment.reporter.file_report(report)
 
         charge_instructions = instruct_vehicles_to_dispatch_to_station(
             n=len(low_soc_vehicles),

@@ -202,3 +202,4 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
     result = _to_reports(all_stations_accumulator)
 
     return result
+
