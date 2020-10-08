@@ -16,6 +16,7 @@ class ReportType(Enum):
     VEHICLE_CHARGE_EVENT = 7
     VEHICLE_MOVE_EVENT = 8
     STATION_LOAD_EVENT = 9
+    REFUEL_SEARCH_EVENT = 10
 
     @classmethod
     def from_string(cls, s: str) -> ReportType:
@@ -28,7 +29,8 @@ class ReportType(Enum):
             "instruction": cls.INSTRUCTION,
             "vehicle_charge_event": cls.VEHICLE_CHARGE_EVENT,
             "vehicle_move_event": cls.VEHICLE_MOVE_EVENT,
-            "station_load_event": cls.STATION_LOAD_EVENT
+            "station_load_event": cls.STATION_LOAD_EVENT,
+            "refuel_search_event": cls.REFUEL_SEARCH_EVENT
         }
         try:
             return values[s]
