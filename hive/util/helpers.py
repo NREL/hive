@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools as it
 from abc import abstractmethod, ABC
 from math import radians, cos, sin, asin, sqrt, ceil
-from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple, FrozenSet
 
 import immutables
 import h3
@@ -375,9 +375,9 @@ class DictOps:
 
     @classmethod
     def add_to_location_dict(cls,
-                             xs: immutables.Map[str, Tuple[V, ...]],
+                             xs: immutables.Map[str, FrozenSet[V, ...]],
                              obj_geoid: str,
-                             obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
+                             obj_id: str) -> immutables.Map[str, FrozenSet[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -387,15 +387,15 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        ids_at_location = xs.get(obj_geoid, ())
-        updated_ids = (obj_id,) + ids_at_location
+        ids_at_location = xs.get(obj_geoid, frozenset())
+        updated_ids = ids_at_location.union([obj_id])
         return xs.set(obj_geoid, updated_ids)
 
     @classmethod
     def remove_from_location_dict(cls,
-                                  xs: immutables.Map[str, Tuple[V, ...]],
+                                  xs: immutables.Map[str, FrozenSet[V, ...]],
                                   obj_geoid: str,
-                                  obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
+                                  obj_id: str) -> immutables.Map[str, FrozenSet[V, ...]]:
         """
         updates Dicts that track the geoid of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -406,8 +406,8 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        ids_at_loc = xs.get(obj_geoid, ())
-        updated_ids = TupleOps.remove(ids_at_loc, obj_id)
+        ids_at_loc = xs.get(obj_geoid, frozenset())
+        updated_ids = ids_at_loc.difference([obj_id])
         return xs.delete(obj_geoid) if len(updated_ids) == 0 else xs.set(obj_geoid, updated_ids)
 
     @classmethod

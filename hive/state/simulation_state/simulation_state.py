@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
+from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING, FrozenSet
 
 import immutables
 
@@ -45,16 +45,16 @@ class SimulationState(NamedTuple):
     request_iterator: Tuple[RequestId, ...] = ()
 
     # location collections - the lowest-level spatial representation in Hive
-    v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
-    s_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
-    b_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
+    v_locations: immutables.Map[GeoId, FrozenSet[VehicleId, ...]] = immutables.Map()
+    r_locations: immutables.Map[GeoId, FrozenSet[RequestId, ...]] = immutables.Map()
+    s_locations: immutables.Map[GeoId, FrozenSet[StationId, ...]] = immutables.Map()
+    b_locations: immutables.Map[GeoId, FrozenSet[StationId, ...]] = immutables.Map()
 
     # search collections   - a higher-level spatial representation used for ring search
-    v_search: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_search: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
-    s_search: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
-    b_search: immutables.Map[GeoId, Tuple[BaseId, ...]] = immutables.Map()
+    v_search: immutables.Map[GeoId, FrozenSet[VehicleId, ...]] = immutables.Map()
+    r_search: immutables.Map[GeoId, FrozenSet[RequestId, ...]] = immutables.Map()
+    s_search: immutables.Map[GeoId, FrozenSet[StationId, ...]] = immutables.Map()
+    b_search: immutables.Map[GeoId, FrozenSet[BaseId, ...]] = immutables.Map()
 
     def get_stations(
             self,
