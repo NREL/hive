@@ -3,10 +3,10 @@ from __future__ import annotations
 import itertools as it
 from abc import abstractmethod, ABC
 from math import radians, cos, sin, asin, sqrt, ceil
-from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple
+from typing import Dict, Optional, TYPE_CHECKING, NamedTuple
 
-import immutables
 import h3
+import immutables
 
 from hive.util.exception import H3Error
 from hive.util.typealiases import *
@@ -14,7 +14,6 @@ from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.link import Link
-
 
 Key = TypeVar('Key')
 """
@@ -87,7 +86,7 @@ class H3Ops:
     @classmethod
     def nearest_entity(cls,
                        geoid: GeoId,
-                       entities: immutables.Map[EntityId, Entity],
+                       entities: Tuple[Entity, ...],
                        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
                        sim_h3_search_resolution: int,
                        distance_function: Callable[[Entity], float],
@@ -152,7 +151,7 @@ class H3Ops:
     def get_entities_at_cell(cls,
                              search_cell: GeoId,
                              entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                             entities: immutables.Map[EntityId, Entity]) -> Tuple[Entity, ...]:
+                             entities: Tuple[Entity, ...]) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
@@ -166,7 +165,7 @@ class H3Ops:
         if locations_at_cell is None:
             return ()
         else:
-            found = tuple(entities[entity_id] for entity_id in locations_at_cell)
+            found = tuple(e for e in entities if e.id in locations_at_cell)
             return found
 
     @classmethod
@@ -323,6 +322,18 @@ class TupleOps:
         t1, t2 = it.tee(t)
         return tuple(filter(predicate, t1)), tuple(it.filterfalse(predicate, t2))
 
+    @classmethod
+    def flatten(cls, nested_tuple: Tuple[Tuple[T, ...], ...]) -> Tuple[T, ...]:
+        """
+        flattens a tuple of tuples
+
+        taken from https://stackoverflow.com/a/10636583/11087167
+        :param nested_tuple: tuple to flatten
+        :return: flattened tuple
+        """
+
+        return tuple(sum(nested_tuple, ()))
+
 
 class EntityUpdateResult(NamedTuple):
     entities: Optional[Dict] = None
@@ -374,41 +385,41 @@ class DictOps:
         return tmp
 
     @classmethod
-    def add_to_location_dict(cls,
-                             xs: immutables.Map[str, Tuple[V, ...]],
-                             obj_geoid: str,
-                             obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
+    def add_to_collection_dict(cls,
+                               xs: immutables.Map[str, Tuple[V, ...]],
+                               collection_id: str,
+                               obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
         """
-        updates Dicts that track the geoid of entities
+        updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
 
         :param xs:
-        :param obj_geoid:
+        :param collection_id:
         :param obj_id:
         :return:
         """
-        ids_at_location = xs.get(obj_geoid, ())
+        ids_at_location = xs.get(collection_id, ())
         updated_ids = (obj_id,) + ids_at_location
-        return xs.set(obj_geoid, updated_ids)
+        return xs.set(collection_id, updated_ids)
 
     @classmethod
-    def remove_from_location_dict(cls,
-                                  xs: immutables.Map[str, Tuple[V, ...]],
-                                  obj_geoid: str,
-                                  obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
+    def remove_from_collection_dict(cls,
+                                    xs: immutables.Map[str, Tuple[V, ...]],
+                                    collection_id: str,
+                                    obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
         """
-        updates Dicts that track the geoid of entities
+        updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
         when a geoid has no ids after a remove, it deletes that geoid, to prevent geoid Dict memory leaks
 
         :param xs:
-        :param obj_geoid:
+        :param collection_id:
         :param obj_id:
         :return:
         """
-        ids_at_loc = xs.get(obj_geoid, ())
+        ids_at_loc = xs.get(collection_id, ())
         updated_ids = TupleOps.remove(ids_at_loc, obj_id)
-        return xs.delete(obj_geoid) if len(updated_ids) == 0 else xs.set(obj_geoid, updated_ids)
+        return xs.delete(collection_id) if len(updated_ids) == 0 else xs.set(collection_id, updated_ids)
 
     @classmethod
     def update_entity_dictionaries(cls,
@@ -434,12 +445,12 @@ class DictOps:
                 entities=entities_updated
             )
         # unset from old geoid add add to new one
-        locations_removed = DictOps.remove_from_location_dict(locations,
-                                                              old_entity.geoid,
-                                                              old_entity.id)
-        locations_updated = DictOps.add_to_location_dict(locations_removed,
-                                                         updated_entity.geoid,
-                                                         updated_entity.id)
+        locations_removed = DictOps.remove_from_collection_dict(locations,
+                                                                old_entity.geoid,
+                                                                old_entity.id)
+        locations_updated = DictOps.add_to_collection_dict(locations_removed,
+                                                           updated_entity.geoid,
+                                                           updated_entity.id)
 
         old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
         updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
@@ -452,12 +463,12 @@ class DictOps:
             )
 
         # update request search dict location
-        search_removed = DictOps.remove_from_location_dict(search,
-                                                           old_search_geoid,
-                                                           old_entity.id)
-        search_updated = DictOps.add_to_location_dict(search_removed,
-                                                      updated_search_geoid,
-                                                      updated_entity.id)
+        search_removed = DictOps.remove_from_collection_dict(search,
+                                                             old_search_geoid,
+                                                             old_entity.id)
+        search_updated = DictOps.add_to_collection_dict(search_removed,
+                                                        updated_search_geoid,
+                                                        updated_entity.id)
 
         return EntityUpdateResult(
             entities=entities_updated,

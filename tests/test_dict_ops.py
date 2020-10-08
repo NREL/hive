@@ -26,8 +26,8 @@ class TestDictOps(TestCase):
 
     def test_add_to_location_dict(self):
         some_locs = immutables.Map({'1234': ('v1', 'v2')})
-        update_at_loc = DictOps.add_to_location_dict(some_locs, '1234', 'v3')
-        update_empty_loc = DictOps.add_to_location_dict(some_locs, '5678', 'v4')
+        update_at_loc = DictOps.add_to_collection_dict(some_locs, '1234', 'v3')
+        update_empty_loc = DictOps.add_to_collection_dict(some_locs, '5678', 'v4')
         self.assertIn('v3', update_at_loc.get('1234'), "v3 should be added at location 1234")
         self.assertIn('v1', update_at_loc.get('1234'), "v1 should not have been removed at location 1234")
         self.assertIn('v2', update_at_loc.get('1234'), "v2 should not have been removed at location 1234")
@@ -36,13 +36,13 @@ class TestDictOps(TestCase):
 
     def test_remove_from_location_dict(self):
         some_locs = immutables.Map({'1234': ('v1', 'v2'), '5678': ('v3', )})
-        update_at_loc = DictOps.remove_from_location_dict(some_locs, '1234', 'v1')
-        update_empties_loc = DictOps.remove_from_location_dict(some_locs, '5678', 'v3')
+        update_at_loc = DictOps.remove_from_collection_dict(some_locs, '1234', 'v1')
+        update_empties_loc = DictOps.remove_from_collection_dict(some_locs, '5678', 'v3')
         self.assertNotIn('v1', update_at_loc.get('1234'), "v1 should have been removed at location 1234")
         self.assertIn('v2', update_at_loc.get('1234'), "v2 should not have been removed at location 1234")
         self.assertNotIn('5678', update_empties_loc.keys(), "location 5678 should have been emptied")
 
         with self.assertRaises(KeyError) as raised:
-            DictOps.remove_from_location_dict(some_locs, '910_', 'v4')
+            DictOps.remove_from_collection_dict(some_locs, '910_', 'v4')
 
         self.assertIsInstance(raised.exception, KeyError, "should have raised a KeyError")

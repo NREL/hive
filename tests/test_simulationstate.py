@@ -517,14 +517,6 @@ class TestSimulationState(TestCase):
             mock_station('s2', lat=1, lon=1, chargers=immutables.Map({mock_l2_charger_id(): 1}, )),
         ))
 
-        stations = sim.get_stations()
-
-        self.assertEqual(stations[0].id, 's1', 'station 1 is first')
-
-        reversed_stations = sim.get_stations(sort=True, sort_reversed=True)
-
-        self.assertEqual(reversed_stations[0].id, 's2', 'station 2 is first in reversed')
-
         def has_dcfc(station: Station) -> bool:
             return station.has_available_charger(mock_dcfc_charger_id())
 
@@ -553,10 +545,6 @@ class TestSimulationState(TestCase):
             mock_base('b3', lat=2, lon=2, stall_count=1),
         ))
 
-        bases = sim.get_bases()
-
-        self.assertEqual(bases[0].id, 'b1', 'base 1 is first')
-
         sorted_bases = sim.get_bases(sort=True, sort_reversed=True, sort_key=lambda b: b.total_stalls)
 
         self.assertEqual(sorted_bases[0].id, 'b2', 'base 2 has the most stalls')
@@ -582,10 +570,6 @@ class TestSimulationState(TestCase):
             mock_vehicle('v4', soc=0.1),
         ))
 
-        vehicles = sim.get_vehicles()
-
-        self.assertEqual(vehicles[-1].id, 'v4', 'v4 is last')
-
         sorted_and_filtered_vehicles = sim.get_vehicles(
             sort=True,
             sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
@@ -602,10 +586,6 @@ class TestSimulationState(TestCase):
         _, sim = simulation_state_ops.add_request(sim, r3)
         _, sim = simulation_state_ops.add_request(sim, r2)
         _, sim = simulation_state_ops.add_request(sim, r1)
-
-        requests = sim.get_requests()
-
-        self.assertEqual(requests[0].id, 'r3', 'r3 was added first')
 
         sorted_requests = sim.get_requests(sort=True, sort_key=lambda r: r.departure_time)
 

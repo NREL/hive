@@ -140,7 +140,9 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
 
         if active_diff < 0:
             # we have more active vehicles than we need
-            active_instructions = instruct_vehicles_return_to_base(abs(active_diff), self.max_search_radius_km, active_vehicles, simulation_state)
+            if abs(active_diff) < n_active:
+                active_vehicles = active_vehicles[:abs(active_diff)]
+            active_instructions = instruct_vehicles_return_to_base(active_vehicles, simulation_state)
             instructions = instructions + active_instructions
         elif active_diff > 0:
             # we we need more active vehicles in the field

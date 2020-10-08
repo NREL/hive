@@ -1,4 +1,5 @@
 from typing import Tuple, FrozenSet, Callable, TypeVar
+from immutables import Map
 
 # MODEL ID TYPES
 RequestId = str
@@ -12,10 +13,13 @@ VehicleTypeId = str
 MechatronicsId = str
 ChargerId = str
 ScheduleId = str
-MemberId = str
+MembershipId = str
 
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
+
+# Collections
+MembershipMap = Map[MembershipId, Tuple[EntityId, ...]]
 
 # POSITIONAL
 GeoId = str  # h3 geohash
