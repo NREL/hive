@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-    from hive.util.typealiases import MemberId
+    from hive.util.typealiases import MembershipId
 
 
 class InstructionGenerationResult(NamedTuple):
@@ -89,7 +89,7 @@ def instruct_vehicles_return_to_base(
 
     def _base_assignment(
             inst_acc: Tuple[DispatchBaseInstruction, ...],
-            membership_id: MemberId,
+            membership_id: MembershipId,
     ) -> Tuple[DispatchBaseInstruction, ...]:
         bases = simulation_state.get_bases(membership_id=membership_id)
         member_vehicles = tuple(filter(lambda v: v.membership.is_member(membership_id), vehicles))
@@ -198,7 +198,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
 
     for veh in vehicles:
         stations_at_play = TupleOps.flatten(
-            tuple(simulation_state.get_stations(membership_id=m) for m in veh.membership.members)
+            tuple(simulation_state.get_stations(membership_id=m) for m in veh.membership.memberships)
         )
 
         if len(instructions) >= n:

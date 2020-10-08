@@ -2,41 +2,49 @@ from __future__ import annotations
 
 from typing import Tuple, NamedTuple, FrozenSet
 
-from hive.util.typealiases import MemberId
+from hive.util.typealiases import MembershipId
+
+DEFAULT_MEMBERSHIP = "default_membership"
 
 
 class Membership(NamedTuple):
     """
-    class representing a collection of member ids.
+    class representing a collection of membership ids.
     """
 
-    members: FrozenSet[MemberId] = frozenset(['no_membership'])
+    memberships: FrozenSet[MembershipId] = frozenset([DEFAULT_MEMBERSHIP])
 
     @classmethod
-    def from_tuple(cls, member_ids: Tuple[MemberId, ...]) -> Membership:
+    def from_tuple(cls, member_ids: Tuple[MembershipId, ...]) -> Membership:
+        if DEFAULT_MEMBERSHIP in member_ids:
+            raise TypeError(f"membership id {DEFAULT_MEMBERSHIP} is a reserved id, please select another")
+
         return Membership(frozenset(member_ids))
 
     @classmethod
-    def single_membership(cls, member_id: MemberId) -> Membership:
-        return Membership(frozenset((member_id, )))
+    def single_membership(cls, member_id: MembershipId) -> Membership:
+        if DEFAULT_MEMBERSHIP == member_id:
+            raise TypeError(f"membership id {DEFAULT_MEMBERSHIP} is a reserved id, please select another")
+
+        return Membership(frozenset((member_id,)))
 
     def valid_membership(self, other_membership: Membership) -> bool:
         """
         tests membership against another membership.
 
         :param other_membership:
-        :return: true if there exists at least one overlapping member id, false otherwise
+        :return: true if there exists at least one overlapping membership id, false otherwise
         """
-        return len(self.members.intersection(other_membership.members)) > 0
+        return len(self.memberships.intersection(other_membership.memberships)) > 0
 
-    def is_member(self, membership_id: MemberId) -> bool:
+    def is_member(self, membership_id: MembershipId) -> bool:
         """
-        tests if membership id exists in member set
+        tests if membership id exists in membership set
 
         :param membership_id:
         :return:
         """
-        return membership_id in self.members
+        return membership_id in self.memberships
 
-    def as_tuple(self) -> Tuple[MemberId, ...]:
-        return tuple(m for m in self.members)
+    def as_tuple(self) -> Tuple[MembershipId, ...]:
+        return tuple(m for m in self.memberships)

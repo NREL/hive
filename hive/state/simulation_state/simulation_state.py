@@ -5,8 +5,9 @@ from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
 import immutables
 
 from hive.state.simulation_state.at_location_response import AtLocationResponse
+from hive.model.membership import DEFAULT_MEMBERSHIP
 from hive.util import geo
-from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId, MemberId
+from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId, MembershipId
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -40,10 +41,10 @@ class SimulationState(NamedTuple):
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
     # membership collections
-    s_membership: immutables.Map[MemberId, Tuple[StationId, ...]] = immutables.Map()
-    b_membership: immutables.Map[MemberId, Tuple[RequestId, ...]] = immutables.Map()
-    v_membership: immutables.Map[MemberId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_membership: immutables.Map[MemberId, Tuple[RequestId, ...]] = immutables.Map()
+    s_membership: immutables.Map[MembershipId, Tuple[StationId, ...]] = immutables.Map()
+    b_membership: immutables.Map[MembershipId, Tuple[RequestId, ...]] = immutables.Map()
+    v_membership: immutables.Map[MembershipId, Tuple[VehicleId, ...]] = immutables.Map()
+    r_membership: immutables.Map[MembershipId, Tuple[RequestId, ...]] = immutables.Map()
 
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
@@ -63,7 +64,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
-            membership_id: MemberId = "no_membership",
+            membership_id: MembershipId = DEFAULT_MEMBERSHIP,
     ) -> Tuple[Station, ...]:
         """
         returns a tuple of stations.
@@ -97,7 +98,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
-            membership_id: MemberId = "no_membership",
+            membership_id: MembershipId = DEFAULT_MEMBERSHIP,
     ) -> Tuple[Base, ...]:
         """
         returns a tuple of bases.
@@ -131,7 +132,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
-            membership_id: MemberId = "no_membership",
+            membership_id: MembershipId = DEFAULT_MEMBERSHIP,
     ) -> Tuple[Vehicle, ...]:
         """
         returns a tuple of vehicles.
@@ -164,7 +165,7 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
-            membership_id: MemberId = "no_membership",
+            membership_id: MembershipId = DEFAULT_MEMBERSHIP,
     ) -> Tuple[Request, ...]:
         """
         returns a tuple of requests.

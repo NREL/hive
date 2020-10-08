@@ -5,7 +5,7 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.state.vehicle_state.charging_base import ChargingBase
-from hive.util.typealiases import MemberId
+from hive.util.typealiases import MembershipId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -56,7 +56,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
         def _solve_assignment(
                 inst_acc: Tuple[DispatchTripInstruction, ...],
-                membership_id: MemberId,
+                membership_id: MembershipId,
         ) -> Tuple[DispatchTripInstruction, ...]:
 
             # collect the vehicles and requests for the assignment algorithm

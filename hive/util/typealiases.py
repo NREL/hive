@@ -13,13 +13,13 @@ VehicleTypeId = str
 MechatronicsId = str
 ChargerId = str
 ScheduleId = str
-MemberId = str
+MembershipId = str
 
 Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
 
 # Collections
-MembershipMap = Map[MemberId, Tuple[EntityId, ...]]
+MembershipMap = Map[MembershipId, Tuple[EntityId, ...]]
 
 # POSITIONAL
 GeoId = str  # h3 geohash
