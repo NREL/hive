@@ -16,7 +16,7 @@ class TestSimulationStateOps(TestCase):
         at_loc = sim_with_req.r_locations[req.origin]
 
         self.assertEqual(len(at_loc), 1, "should only have 1 request at this location")
-        self.assertEqual(at_loc[0], req.id, "the request's id should be found at it's geoid")
+        self.assertIn(req.id, at_loc, "the request's id should be found at it's geoid")
 
     def test_remove_request(self):
         req = mock_request()
@@ -90,7 +90,7 @@ class TestSimulationStateOps(TestCase):
         at_loc = sim_with_veh.v_locations[veh.geoid]
 
         self.assertEqual(len(at_loc), 1, "should only have 1 vehicle at this location")
-        self.assertEqual(at_loc[0], veh.id, "the vehicle's id should be found at it's geoid")
+        self.assertIn(veh.id, at_loc, "the vehicle's id should be found at it's geoid")
 
     def test_update_vehicle(self):
         veh = mock_vehicle()
@@ -146,7 +146,7 @@ class TestSimulationStateOps(TestCase):
 
         at_loc = sim_after_station.s_locations[station.geoid]
 
-        self.assertEqual(at_loc[0], station.id, "the station's id should be found at it's geoid")
+        self.assertIn(station.id, at_loc, "the station's id should be found at it's geoid")
 
     def test_remove_station(self):
         station = mock_station()
@@ -169,7 +169,7 @@ class TestSimulationStateOps(TestCase):
         self.assertEqual(updated_station_in_sim.link, updated_station.link, "station should have been updated")
 
         at_loc = sim_after_station.s_locations[station.geoid]
-        self.assertEqual(at_loc[0], station.id, "the station's id should be found at it's geoid")
+        self.assertIn(station.id, at_loc, "the station's id should be found at it's geoid")
 
     def test_add_base(self):
         base = mock_base()
@@ -182,7 +182,7 @@ class TestSimulationStateOps(TestCase):
 
         at_loc = sim_after_base.b_locations[base.geoid]
 
-        self.assertEqual(at_loc[0], base.id, "the base's id should be found at it's geoid")
+        self.assertIn(base.id, at_loc, "the base's id should be found at it's geoid")
 
     def test_remove_base(self):
         base = mock_base()
