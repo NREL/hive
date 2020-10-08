@@ -11,5 +11,5 @@ leaf_50:
 toyota_corolla:
   mechatronics_type: ice
   tank_capacity_gallons: 10
-  idle_gallons_per_hour: 45
+  idle_gallons_per_hour: 0.2
   nominal_miles_per_gallon: 30
