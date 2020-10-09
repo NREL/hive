@@ -386,9 +386,9 @@ class DictOps:
 
     @classmethod
     def add_to_collection_dict(cls,
-                               xs: immutables.Map[str, FrozenSet[V, ...]],
+                               xs: immutables.Map[str, FrozenSet[V]],
                                collection_id: str,
-                               obj_id: str) -> immutables.Map[str, FrozenSet[V, ...]]:
+                               obj_id: str) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -404,9 +404,9 @@ class DictOps:
 
     @classmethod
     def remove_from_collection_dict(cls,
-                                    xs: immutables.Map[str, FrozenSet[V, ...]],
+                                    xs: immutables.Map[str, FrozenSet[V]],
                                     collection_id: str,
-                                    obj_id: str) -> immutables.Map[str, FrozenSet[V, ...]]:
+                                    obj_id: str) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table

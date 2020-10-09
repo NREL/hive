@@ -41,10 +41,10 @@ class SimulationState(NamedTuple):
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
     # membership collections
-    s_membership: immutables.Map[MembershipId, Tuple[StationId, ...]] = immutables.Map()
-    b_membership: immutables.Map[MembershipId, Tuple[RequestId, ...]] = immutables.Map()
-    v_membership: immutables.Map[MembershipId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_membership: immutables.Map[MembershipId, Tuple[RequestId, ...]] = immutables.Map()
+    s_membership: immutables.Map[MembershipId, FrozenSet[StationId]] = immutables.Map()
+    b_membership: immutables.Map[MembershipId, FrozenSet[RequestId]] = immutables.Map()
+    v_membership: immutables.Map[MembershipId, FrozenSet[VehicleId]] = immutables.Map()
+    r_membership: immutables.Map[MembershipId, FrozenSet[RequestId]] = immutables.Map()
 
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, FrozenSet[VehicleId]] = immutables.Map()
