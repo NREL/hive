@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING, Tuple, Set
 import h3
 import immutables
 
-from hive.model.energy import EnergyType
+from hive.model.energy import EnergyType, Charger
 from hive.model.roadnetwork import route
 from hive.model.station import Station
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util.typealiases import ChargerId, StationId
+from hive.util.typealiases import StationId
 from hive.util.units import KwH
 
 if TYPE_CHECKING:
@@ -62,14 +62,15 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
                          next_vehicle: Vehicle,
                          next_sim: SimulationState,
                          station: Station,
-                         charger_id: ChargerId) -> Report:
+                         charger: Charger,
+                         ) -> Report:
     """
     reports information about the marginal effect of a charge event
     :param prev_vehicle: the previous vehicle state
     :param next_vehicle: the next vehicle state
     :param next_sim: the next simulation state after the charge event
     :param station: the station involved with the charge event (either before or after update)
-    :param charger_id: the charger_id type used
+    :param charger: the charger used
     :return: a charge event report
     """
 
@@ -78,8 +79,8 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
     vehicle_id = next_vehicle.id
     station_id = station.id
     vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
-    kwh_transacted = next_vehicle.energy[EnergyType.ELECTRIC] - prev_vehicle.energy[EnergyType.ELECTRIC]  # kwh
-    charger_price = station.charger_prices_per_kwh.get(charger_id)  # Currency
+    kwh_transacted = next_vehicle.energy[charger.energy_type] - prev_vehicle.energy[charger.energy_type]  # kwh
+    charger_price = station.charger_prices_per_kwh.get(charger.id)  # Currency
     charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
     geoid = next_vehicle.geoid
@@ -93,7 +94,7 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
         'vehicle_state': vehicle_state,
         'energy_kwh': kwh_transacted,
         'price': charging_price,
-        'charger_id': charger_id,
+        'charger_id': charger.id,
         'geoid': geoid,
         'lat': lat,
         'lon': lon

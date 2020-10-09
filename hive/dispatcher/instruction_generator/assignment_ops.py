@@ -261,6 +261,10 @@ def shortest_time_to_charge_ranking(
             estimates = {}
             for charger_id in station.total_chargers.keys():
                 charger = env.chargers.get(charger_id)
+                if not vehicle_mechatronics.valid_charger(charger):
+                    # vehicle can't use this charger so we skip it
+                    continue
+
                 # compute the charge time for the vehicle we are ranking
                 this_vehicle_charge_time = powercurve_ops.time_to_full(vehicle,
                                                                        vehicle_mechatronics,

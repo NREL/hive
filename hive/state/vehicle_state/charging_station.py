@@ -38,11 +38,17 @@ class ChargingStation(NamedTuple, VehicleState):
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
-        elif vehicle.geoid != station.geoid:
+
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        charger = env.chargers.get(self.charger_id)
+        if vehicle.geoid != station.geoid:
             return None, None
         elif not vehicle.membership.valid_membership(station.membership):
-            log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
-            return None, None
+            msg = f"vehicle {vehicle.id} and station {station.id} don't share a membership"
+            return SimulationStateError(msg), None
+        elif not mechatronics.valid_charger(charger):
+            msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
+            return SimulationStateError(msg), None
         else:
             updated_station = station.checkout_charger(self.charger_id)
             if not updated_station:

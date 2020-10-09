@@ -119,7 +119,9 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
             instructions = instructions + reserve_instructions
         elif base_charge_diff > 0:
             # we don't have enough charging vehicles
-            charge_instructions = instruct_vehicles_at_base_to_charge(base_charge_diff, reserve_vehicles, simulation_state)
+            if base_charge_diff < len(reserve_vehicles):
+                charge_vehicles = reserve_vehicles[:base_charge_diff]
+            charge_instructions = instruct_vehicles_at_base_to_charge(charge_vehicles, simulation_state, environment)
             instructions = instructions + charge_instructions
 
         if station_charge_diff < 0:

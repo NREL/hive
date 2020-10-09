@@ -2,3 +2,4 @@ charger_id,energy_type,rate,units
 LEVEL_1,electric,3.3,kilowatts
 LEVEL_2,electric,7.2,kilowatts
 DCFC,electric,50,kilowatts
+GAS_PUMP,gasoline,0.16,gal_per_second

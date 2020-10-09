@@ -37,7 +37,7 @@ class TestStationLoadHandler(TestCase):
             updated_vehicle,
             sim_charged,
             updated_station,
-            mock_dcfc_charger_id()
+            env.chargers.get(mock_dcfc_charger_id()),
         )
 
         # perhaps in the future, add tests with multiple events

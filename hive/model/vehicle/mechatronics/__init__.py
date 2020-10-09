@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import yaml
 from typing import Dict
 
-from hive.config.input import Input
+import yaml
+
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -16,7 +16,8 @@ mechatronic_models = {
 }
 
 
-def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) -> Dict[MechatronicsId, MechatronicsInterface]:
+def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) -> Dict[
+    MechatronicsId, MechatronicsInterface]:
     """
     constructs a dictionary containing all of the provided vehicle configurations where the key is the mechatronics ID
     and the contents are the appropriate mechatronics models with the desired attributes

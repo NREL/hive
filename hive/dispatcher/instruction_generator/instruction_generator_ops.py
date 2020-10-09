@@ -140,31 +140,40 @@ def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simul
     return instructions
 
 
-def instruct_vehicles_at_base_to_charge(n: int, vehicles: Tuple[Vehicle], simulation_state: SimulationState) -> Tuple[
+def instruct_vehicles_at_base_to_charge(
+        vehicles: Tuple[Vehicle],
+        simulation_state: SimulationState,
+        environment: Environment,
+) -> Tuple[
     Instruction]:
     """
     a helper function to set n vehicles to charge at the base
 
-    :param n: how many vehicles to charge at the base
     :param vehicles: the list of vehicles to consider
     :param simulation_state: the simulation state
+    :param environment: the environment
     :return:
     """
 
     def _inner(acc: Tuple[Instruction, ...], veh: Vehicle) -> Tuple[Instruction, ...]:
-        if len(acc) == n:
-            return acc
-        elif not isinstance(veh.vehicle_state, ReserveBase):
+        if not isinstance(veh.vehicle_state, ReserveBase):
             return acc
         else:
             base = simulation_state.bases[veh.vehicle_state.base_id]
             if not base.station_id:
                 return acc
             else:
+                mechatronics = environment.mechatronics.get(veh.mechatronics_id)
+
+                top_charger_id = sorted(filter(
+                    lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
+                    environment.chargers.keys()),
+                    key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
+
                 instruction = ChargeBaseInstruction(
                     vehicle_id=veh.id,
                     base_id=base.id,
-                    charger_id="LEVEL_2",
+                    charger_id=top_charger_id,
                 )
                 result = acc + (instruction,)
                 return result
@@ -206,19 +215,25 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
 
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
             # use the simple weighted euclidean distance ranking
+            mechatronics = environment.mechatronics.get(veh.mechatronics_id)
 
-            top_charger = sorted(environment.chargers, key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
+            top_charger_id = sorted(filter(
+                lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
+                environment.chargers.keys()),
+                key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
+
             cache = ft.reduce(
-                lambda acc, station_id: acc.update({station_id: top_charger}),
+                lambda acc, station_id: acc.update({station_id: top_charger_id}),
                 [station.id for station in stations_at_play],
                 immutables.Map()
             )
 
             def v_fn(s: Station):
-                station_has_top_charger = bool(s.available_chargers.get(top_charger))
-                return station_has_top_charger
+                station_has_top_charger = bool(s.available_chargers.get(top_charger_id))
+                vehicle_can_use_charger = mechatronics.valid_charger(environment.chargers[top_charger_id])
+                return station_has_top_charger and vehicle_can_use_charger
 
-            d_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger)
+            d_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger_id)
 
             is_valid_fn = v_fn
             distance_fn = d_fn
@@ -227,7 +242,10 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             # use the search-based metric which considers travel, queueing, and charging time
 
             def v_fn(s: Station):
-                return True
+                station_has_valid_charger = all([
+                    mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
+                ])
+                return station_has_valid_charger
 
             d_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
                 vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc

@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Dict, TYPE_CHECKING, Tuple
 
-from hive.model.energy import EnergyType
+from hive.model.energy import EnergyType, Charger
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
@@ -34,6 +34,14 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         build from a dictionary
         :param d: the dictionary to build from
         :return: the built Mechatronics object
+        """
+
+    @abstractmethod
+    def valid_charger(self, charger: Charger) -> bool:
+        """
+        check to see if the mechatronics instance can use a certain charger
+        :param charger: the charger to check
+        :return: true/false
         """
 
     @abstractmethod
