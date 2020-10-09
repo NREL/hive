@@ -27,8 +27,8 @@ class TestSimulationState(TestCase):
         result = sim_with_request.at_geoid(veh.geoid)
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
         self.assertIn(req.id, result['requests'], "should have found this request")
-        self.assertEqual(sta.id, result['station'][0], "should have found this station")
-        self.assertEqual(result['base'], (), "should not have found this base")
+        self.assertIn(sta.id, result['station'], "should have found this station")
+        self.assertEqual(result['base'], frozenset(), "should not have found this base")
 
     def test_vehicle_at_request(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)

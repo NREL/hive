@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING
+from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING, FrozenSet
 
 import immutables
 
@@ -41,22 +41,22 @@ class SimulationState(NamedTuple):
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
     # membership collections
-    s_membership: immutables.Map[MembershipId, Tuple[StationId, ...]] = immutables.Map()
-    b_membership: immutables.Map[MembershipId, Tuple[RequestId, ...]] = immutables.Map()
-    v_membership: immutables.Map[MembershipId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_membership: immutables.Map[MembershipId, Tuple[RequestId, ...]] = immutables.Map()
+    s_membership: immutables.Map[MembershipId, FrozenSet[StationId]] = immutables.Map()
+    b_membership: immutables.Map[MembershipId, FrozenSet[RequestId]] = immutables.Map()
+    v_membership: immutables.Map[MembershipId, FrozenSet[VehicleId]] = immutables.Map()
+    r_membership: immutables.Map[MembershipId, FrozenSet[RequestId]] = immutables.Map()
 
     # location collections - the lowest-level spatial representation in Hive
-    v_locations: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_locations: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
-    s_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
-    b_locations: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
+    v_locations: immutables.Map[GeoId, FrozenSet[VehicleId]] = immutables.Map()
+    r_locations: immutables.Map[GeoId, FrozenSet[RequestId]] = immutables.Map()
+    s_locations: immutables.Map[GeoId, FrozenSet[StationId]] = immutables.Map()
+    b_locations: immutables.Map[GeoId, FrozenSet[StationId]] = immutables.Map()
 
     # search collections   - a higher-level spatial representation used for ring search
-    v_search: immutables.Map[GeoId, Tuple[VehicleId, ...]] = immutables.Map()
-    r_search: immutables.Map[GeoId, Tuple[RequestId, ...]] = immutables.Map()
-    s_search: immutables.Map[GeoId, Tuple[StationId, ...]] = immutables.Map()
-    b_search: immutables.Map[GeoId, Tuple[BaseId, ...]] = immutables.Map()
+    v_search: immutables.Map[GeoId, FrozenSet[VehicleId]] = immutables.Map()
+    r_search: immutables.Map[GeoId, FrozenSet[RequestId]] = immutables.Map()
+    s_search: immutables.Map[GeoId, FrozenSet[StationId]] = immutables.Map()
+    b_search: immutables.Map[GeoId, FrozenSet[BaseId]] = immutables.Map()
 
     def get_stations(
             self,
@@ -198,10 +198,10 @@ class SimulationState(NamedTuple):
         :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
         :return: an Optional AtLocationResponse
         """
-        vehicles = self.v_locations[geoid] if geoid in self.v_locations else ()
-        requests = self.r_locations[geoid] if geoid in self.r_locations else ()
-        station = self.s_locations[geoid] if geoid in self.s_locations else ()
-        base = self.b_locations[geoid] if geoid in self.b_locations else ()
+        vehicles = self.v_locations[geoid] if geoid in self.v_locations else frozenset()
+        requests = self.r_locations[geoid] if geoid in self.r_locations else frozenset()
+        station = self.s_locations[geoid] if geoid in self.s_locations else frozenset()
+        base = self.b_locations[geoid] if geoid in self.b_locations else frozenset()
 
         result = cast(AtLocationResponse, {
             'vehicles': vehicles,

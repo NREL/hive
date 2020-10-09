@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools as it
 from abc import abstractmethod, ABC
 from math import radians, cos, sin, asin, sqrt, ceil
-from typing import Dict, Optional, TYPE_CHECKING, NamedTuple
+from typing import Dict, Optional, TypeVar, Callable, TYPE_CHECKING, NamedTuple, FrozenSet
 
 import h3
 import immutables
@@ -386,9 +386,9 @@ class DictOps:
 
     @classmethod
     def add_to_collection_dict(cls,
-                               xs: immutables.Map[str, Tuple[V, ...]],
+                               xs: immutables.Map[str, FrozenSet[V]],
                                collection_id: str,
-                               obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
+                               obj_id: str) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -398,15 +398,15 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        ids_at_location = xs.get(collection_id, ())
-        updated_ids = (obj_id,) + ids_at_location
+        ids_at_location = xs.get(collection_id, frozenset())
+        updated_ids = ids_at_location.union([obj_id])
         return xs.set(collection_id, updated_ids)
 
     @classmethod
     def remove_from_collection_dict(cls,
-                                    xs: immutables.Map[str, Tuple[V, ...]],
+                                    xs: immutables.Map[str, FrozenSet[V]],
                                     collection_id: str,
-                                    obj_id: str) -> immutables.Map[str, Tuple[V, ...]]:
+                                    obj_id: str) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -417,8 +417,8 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        ids_at_loc = xs.get(collection_id, ())
-        updated_ids = TupleOps.remove(ids_at_loc, obj_id)
+        ids_at_loc = xs.get(collection_id, frozenset())
+        updated_ids = ids_at_loc.difference([obj_id])
         return xs.delete(collection_id) if len(updated_ids) == 0 else xs.set(collection_id, updated_ids)
 
     @classmethod
