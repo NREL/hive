@@ -288,6 +288,10 @@ def shortest_time_to_charge_ranking(
                 overall_time_est = this_vehicle_charge_time + wait_estimate_for_charger
                 estimates.update({charger_id: overall_time_est})
 
+            if not estimates:
+                # there are no chargers the vehicle can use.
+                return 99999999999999
+
             best_charger_id = min(estimates, key=estimates.get)
 
             # writes to value stored in outer scope

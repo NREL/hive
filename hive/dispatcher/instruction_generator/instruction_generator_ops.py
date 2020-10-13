@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 import random
+import logging
 
 import h3
 import immutables
@@ -12,6 +13,8 @@ from hive.dispatcher.instruction_generator.charging_search_type import ChargingS
 from hive.model.station import Station
 from hive.util import Ratio
 from hive.util.helpers import DictOps, H3Ops, TupleOps
+
+log = logging.getLogger(__name__)
 
 random.seed(123)
 
@@ -144,8 +147,7 @@ def instruct_vehicles_at_base_to_charge(
         vehicles: Tuple[Vehicle],
         simulation_state: SimulationState,
         environment: Environment,
-) -> Tuple[
-    Instruction]:
+) -> Tuple[ChargeBaseInstruction]:
     """
     a helper function to set n vehicles to charge at the base
 
@@ -155,7 +157,7 @@ def instruct_vehicles_at_base_to_charge(
     :return:
     """
 
-    def _inner(acc: Tuple[Instruction, ...], veh: Vehicle) -> Tuple[Instruction, ...]:
+    def _inner(acc: Tuple[Instruction, ...], veh: Vehicle) -> Tuple[ChargeBaseInstruction, ...]:
         if not isinstance(veh.vehicle_state, ReserveBase):
             return acc
         else:
@@ -163,12 +165,23 @@ def instruct_vehicles_at_base_to_charge(
             if not base.station_id:
                 return acc
             else:
+                station = simulation_state.stations[base.station_id]
                 mechatronics = environment.mechatronics.get(veh.mechatronics_id)
 
-                top_charger_id = sorted(filter(
-                    lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
+                def _filter_function(cid: ChargerId) -> bool:
+                    station_has_charger = bool(station.available_chargers.get(cid))
+                    vehicle_can_use_charger = mechatronics.valid_charger(environment.chargers[cid])
+                    return station_has_charger and vehicle_can_use_charger
+
+                top_chargers = sorted(filter(
+                    _filter_function,
                     environment.chargers.keys()),
-                    key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
+                    key=lambda charger_id: -environment.chargers[charger_id].rate)
+
+                if not top_chargers:
+                    return acc
+                else:
+                    top_charger_id = top_chargers[0]
 
                 instruction = ChargeBaseInstruction(
                     vehicle_id=veh.id,
@@ -209,18 +222,24 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         stations_at_play = TupleOps.flatten(
             tuple(simulation_state.get_stations(membership_id=m) for m in veh.membership.memberships)
         )
+        mechatronics = environment.mechatronics.get(veh.mechatronics_id)
 
         if len(instructions) >= n:
             break
 
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
             # use the simple weighted euclidean distance ranking
-            mechatronics = environment.mechatronics.get(veh.mechatronics_id)
 
-            top_charger_id = sorted(filter(
+            top_chargers = sorted(filter(
                 lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
                 environment.chargers.keys()),
-                key=lambda charger_id: -environment.chargers[charger_id].rate)[0]
+                key=lambda charger_id: -environment.chargers[charger_id].rate)
+
+            if not top_chargers:
+                # no valid chargers exist for this vehicle
+                break
+            else:
+                top_charger_id = top_chargers[0]
 
             cache = ft.reduce(
                 lambda acc, station_id: acc.update({station_id: top_charger_id}),
