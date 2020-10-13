@@ -34,12 +34,18 @@ class ChargingBase(NamedTuple, VehicleState):
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         elif not vehicle:
-                return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not base.station_id:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        charger = env.chargers.get(self.charger_id)
+        if not base.station_id:
             return SimulationStateError(f"base {self.base_id} is not co-located with a station"), None
         elif not vehicle.membership.valid_membership(base.membership):
-            log.debug(f"vehicle {vehicle.id} and base {base.id} don't share a membership")
-            return None, None
+            msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
+            return SimulationStateError(msg), None
+        elif not mechatronics.valid_charger(charger):
+            msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
+            return SimulationStateError(msg), None
         else:
             station = sim.stations.get(base.station_id) if base.station_id else None
             if not station:

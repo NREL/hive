@@ -41,6 +41,15 @@ class ICE(NamedTuple, MechatronicsInterface):
             nominal_miles_per_gallon=nominal_miles_per_gallon,
         )
 
+    def valid_charger(self, charger: Charger) -> bool:
+        """
+        checks to make sure charger is gasoline energy type
+
+        :param charger: the charger to check
+        :return: true/false
+        """
+        return charger.energy_type == EnergyType.GASOLINE
+
     def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
@@ -116,7 +125,7 @@ class ICE(NamedTuple, MechatronicsInterface):
 
     def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
-        add energy into the system
+        add energy into the system. units for the charger are gallons per second
 
         :param vehicle:
         :param charger:

@@ -55,6 +55,14 @@ class BEV(NamedTuple, MechatronicsInterface):
             charge_taper_cutoff_kw=charge_taper_cutoff_kw
         )
 
+    def valid_charger(self, charger: Charger) -> bool:
+        """
+        checks to make sure charger is electric energy type
+        :param charger: the charger to check
+        :return: true/false
+        """
+        return charger.energy_type == EnergyType.ELECTRIC
+
     def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
         """
         return an energy dictionary from an initial soc

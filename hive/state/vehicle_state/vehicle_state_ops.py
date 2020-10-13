@@ -46,9 +46,8 @@ def charge(sim: 'SimulationState',
     else:
         charged_vehicle, _ = mechatronics.add_energy(vehicle, charger, sim.sim_timestep_duration_seconds)
 
-        # TODO: make this flexible wrt energy type (i.e. gasoline)
         # determine price of charge event
-        kwh_transacted = charged_vehicle.energy[EnergyType.ELECTRIC] - vehicle.energy[EnergyType.ELECTRIC]  # kwh
+        kwh_transacted = charged_vehicle.energy[charger.energy_type] - vehicle.energy[charger.energy_type]  # kwh
         charger_price = station.charger_prices_per_kwh.get(charger_id)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
@@ -60,7 +59,7 @@ def charge(sim: 'SimulationState',
         if veh_error:
             return veh_error, None
         else:
-            report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, updated_station, charger_id)
+            report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, updated_station, charger)
             env.reporter.file_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)

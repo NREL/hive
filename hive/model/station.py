@@ -97,8 +97,6 @@ class Station(NamedTuple):
                 charger_id: ChargerId = row['charger_id']
                 charger_count = int(float(row['charger_count']))
 
-                # TODO: think about how to assign vehicles to stations based on fleet memebership
-
                 if charger_id is None:
                     raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
                 elif station_id not in builder:

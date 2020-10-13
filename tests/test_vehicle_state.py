@@ -145,6 +145,21 @@ class TestVehicleState(TestCase):
 
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
+    def test_charging_station_invalid_charger(self):
+        station = mock_station()
+        charger = mock_dcfc_charger_id()
+        vehicle = mock_vehicle(mechatronics=mock_ice())
+        sim = mock_sim(
+            stations=(station,),
+            vehicles=(vehicle,),
+        )
+        env = mock_env(mechatronics={DefaultIds.mock_mechatronics_ice_id(): mock_ice()})
+
+        state = ChargingStation(DefaultIds.mock_vehicle_id(), DefaultIds.mock_station_id(), charger)
+        enter_error, sim_with_charging_vehicle = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
     def test_charging_station_subsequent_charge_instructions(self):
         vehicle = mock_vehicle()
         station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1}))
@@ -218,6 +233,23 @@ class TestVehicleState(TestCase):
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(updated_sim, "should have returned None for updated_sim")
+
+    def test_charging_base_invalid_charger(self):
+        station = mock_station()
+        base = mock_base(station_id=DefaultIds.mock_station_id())
+        charger = mock_l2_charger_id()
+        vehicle = mock_vehicle(mechatronics=mock_ice())
+        sim = mock_sim(
+            stations=(station,),
+            vehicles=(vehicle,),
+            bases=(base,),
+        )
+        env = mock_env(mechatronics={DefaultIds.mock_mechatronics_ice_id(): mock_ice()})
+
+        state = ChargingBase(vehicle.id, base.id, charger)
+        enter_error, sim_with_charging_vehicle = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_charging_base_exit(self):
         vehicle = mock_vehicle()
