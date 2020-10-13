@@ -79,6 +79,13 @@ class TestInstructionGenerators(TestCase):
         self.assertEqual(instructions[0].charger_id, mock_dcfc_charger_id(), "should have picked DCFC charger")
 
     def test_dispatch_station_ops_mismatch_charger_queue(self):
+        """
+        this tests the helper function instruct_vehicles_to_dispatch_to_station.
+
+        here we create a simulation in which the chargers that exist in the sim can't be used by the
+        vehicle; this edge case should not fail but rather result in zero instructions; given the
+        logic splits for each ChargingSearchType, we test ChargingSearchType.NEAREST_SHORTEST_QUEUE here
+        """
         station = mock_station()
         mechatronics = mock_ice()
         vehicle = mock_vehicle(
@@ -105,6 +112,13 @@ class TestInstructionGenerators(TestCase):
         self.assertEqual(len(instructions), 0, "should not have generated any instructions")
 
     def test_dispatch_station_ops_mismatch_charger_shortest_time(self):
+        """
+        this tests the helper function instruct_vehicles_to_dispatch_to_station.
+
+        here we create a simulation in which the chargers that exist in the sim can't be used by the
+        vehicle; this edge case should not fail but rather result in zero instructions; given the
+        logic splits for each ChargingSearchType, we test ChargingSearchType.SHORTEST_TIME_TO_CHARGE here
+        """
         station = mock_station()
         mechatronics = mock_ice()
         vehicle = mock_vehicle(

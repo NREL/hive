@@ -8,8 +8,8 @@ class EnergyType(Enum):
     """
     a strict set of energy types recognized in HIVE
     """
-    ELECTRIC = 0
-    GASOLINE = 1
+    ELECTRIC = "kilowatt_hours"
+    GASOLINE = "gallons_of_gasoline"
 
     @classmethod
     def from_string(cls, s: str) -> Optional[EnergyType]:
@@ -21,3 +21,7 @@ class EnergyType(Enum):
             return values[s]
         else:
             return None
+
+    @property
+    def units(self) -> str:
+        return self.value
