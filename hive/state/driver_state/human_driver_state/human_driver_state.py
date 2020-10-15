@@ -1,10 +1,13 @@
 from typing import NamedTuple, Tuple, Optional
 
+from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
 
-# these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
+from hive.util import SimulationStateError
 from hive.util.typealiases import ScheduleId
+
+# these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
 
 
 class HumanAvailable(NamedTuple, DriverState):
@@ -31,10 +34,19 @@ class HumanAvailable(NamedTuple, DriverState):
         :return: the updated simulation state with a possible state transition for this driver
         """
         schedule_function = env.schedules.get(self.attributes.schedule_id)
+        vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+
         if not schedule_function or schedule_function(sim, self.attributes.vehicle_id):
             # stay available
             return None, sim
+        elif not vehicle:
+            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found")
+            return error, None
         else:
+            # log transition
+            report = driver_schedule_event(sim, env, vehicle, ScheduleEventType.OFF)
+            env.reporter.file_report(report)
+
             # transition to unavailable
             next_state = HumanUnavailable(self.attributes)
             result = DriverState.apply_new_driver_state(sim,
@@ -66,7 +78,16 @@ class HumanUnavailable(NamedTuple, DriverState):
         :return: the updated simulation state with a possible state transition for this driver
         """
         schedule_function = env.schedules.get(self.attributes.schedule_id)
-        if not schedule_function or schedule_function(sim, self.attributes.vehicle_id):
+        vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+
+        if not vehicle:
+            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found")
+            return error, None
+        elif schedule_function and schedule_function(sim, self.attributes.vehicle_id):
+            # log transition
+            report = driver_schedule_event(sim, env, vehicle, ScheduleEventType.ON)
+            env.reporter.file_report(report)
+
             # transition to available, because of one of these reasons:
             #   being unavailable but not having a schedule is invalid.
             #   the schedule function returns true, so, we should be activated

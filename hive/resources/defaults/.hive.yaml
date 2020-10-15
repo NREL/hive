@@ -15,6 +15,7 @@ log_sim_config:
 - 'vehicle_move_event'
 - 'station_load_event'
 - 'refuel_search_event'
+- 'driver_schedule_event'
 log_station_capacities: True
 log_period_seconds: 60
 local_parallelism: 1

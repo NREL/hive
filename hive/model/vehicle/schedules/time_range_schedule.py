@@ -27,7 +27,9 @@ def build_time_range_schedules(file: str) -> Map[ScheduleId, ScheduleFunction]:
 
 def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
     """
-    reads a row of a time range CSV file
+    reads a row of a time range CSV file, adding the associated range as a
+    schedule function to the accumulator
+
     :param acc: the collection we are adding this row to
     :param row: the DictReader row of the time range file
     :return: the updated accumulator
