@@ -9,8 +9,6 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.membership import Membership
 from hive.runner.environment import Environment
-from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
-from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.idle import Idle
@@ -72,6 +70,8 @@ class Vehicle(NamedTuple):
             raise IOError("cannot load a vehicle without a 'lat'")
         elif 'lon' not in row:
             raise IOError("cannot load a vehicle without a 'lon'")
+        elif 'mechatronics_id' not in row:
+            raise IOError("cannot load a vehicle without a 'mechatronics_id'")
         else:
             try:
                 vehicle_id = row['vehicle_id']
@@ -82,14 +82,13 @@ class Vehicle(NamedTuple):
                 mechatronics = environment.mechatronics.get(mechatronics_id)
                 if not mechatronics:
                     found = set(environment.mechatronics.keys())
-                    raise IOError(f"was not able to find mechatronics '{mechatronics_id}' in environment, only found {found}")
+                    raise IOError(f"was not able to find mechatronics '{mechatronics_id}' for vehicle {vehicle_id} in environment: found {found}")
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
-                # todo: replace how we assign the initial driver state (load from file)
-                #   if it comes from a vehicles.csv row, it should simply be a key on `row`
-                #   if it comes from another source, we could add that argument to this signature or
-                #    call modify_driver_state() further down in the loading process.
-                driver_state = AutonomousAvailable(AutonomousDriverAttributes())
+                schedule_id = row.get('schedule_id')  # if None, it signals an autonomous vehicle, otherwise, human with schedule
+                if schedule_id and not schedule_id in environment.schedules.keys():
+                    raise IOError(f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
+                driver_state = DriverState.build(vehicle_id, schedule_id)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.link_from_geoid(geoid)

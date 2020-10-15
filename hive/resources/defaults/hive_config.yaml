@@ -11,6 +11,7 @@ sim:
                                                 # see https://github.com/uber/h3/blob/master/docs/core-library/restable.md
   sim_h3_search_resolution: 7                   # conduct bi-level search at h3 resolution 7
   request_cancel_time_seconds: 600              # requests are cancelled by default after 10 minutes of simulation wait time
+  schedule_type: "time_range"                   # finds human-driver schedules in a CSV file with start + end time ranges
 network:
   network_type: euclidean                       # default is to produce the Haversine Euclidean road newtork
   default_speed_kmph: 40.0                      # default Haversine network speeds are 40.0 kmph on each link

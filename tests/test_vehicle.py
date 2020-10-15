@@ -6,8 +6,8 @@ from tests.mock_lobster import *
 
 class TestVehicle(TestCase):
     def test_from_row(self):
-        source = """vehicle_id,lat,lon,mechatronics_id,initial_soc
-                    v1,39.7539,-104.976,bev,1.0"""
+        source = """vehicle_id,lat,lon,mechatronics_id,initial_soc,schedule_id
+                    v1,39.7539,-104.976,bev,1.0,schedule0"""
 
         row = next(DictReader(source.split()))
         road_network = mock_network()
@@ -24,8 +24,8 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.distance_traveled_km, 0)
 
     def test_from_row_bad_mechatronics_id(self):
-        source = """vehicle_id,lat,lon,mechatronics_id,initial_soc
-                    v1,39.7539,-104.976,beef!@#$,1.0"""
+        source = """vehicle_id,lat,lon,mechatronics_id,initial_soc,schedule_id
+                    v1,39.7539,-104.976,beef!@#$,1.0,schedule0"""
 
         row = next(DictReader(source.split()))
         road_network = mock_network()

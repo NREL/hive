@@ -1,0 +1,51 @@
+import functools as ft
+from csv import DictReader
+from datetime import datetime
+from pathlib import Path
+from typing import Dict
+
+from immutables import Map
+
+from hive.util.time_helpers import read_time_string, time_in_range
+from hive.util.typealiases import ScheduleFunction, ScheduleId, VehicleId
+
+
+def build_time_range_schedules(file: str) -> Map[ScheduleId, ScheduleFunction]:
+    """
+    given a CSV file of time ranges by ScheduleId, construct a time range schedule table
+    :param file: the CSV file
+    :return: the schedules
+    """
+    file_path = Path(file)
+    with file_path.open('r') as f:
+        reader = DictReader(f)
+        initial = Map[ScheduleId, ScheduleFunction]()
+        result = ft.reduce(read_time_range_row, reader, initial)
+
+    return result
+
+
+def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
+    """
+    reads a row of a time range CSV file
+    :param acc: the collection we are adding this row to
+    :param row: the DictReader row of the time range file
+    :return: the updated accumulator
+    """
+    schedule_id = row.get('schedule_id')
+    start_time_string = row.get('start_time')
+    if not start_time_string:
+        raise KeyError("time range file missing start_time column or entry missing")
+    end_time_string = row.get('end_time')
+    if not end_time_string:
+        raise KeyError("time range file missing end_time column or entry missing")
+    start_time = read_time_string(start_time_string)
+    end_time = read_time_string(end_time_string)
+
+    def _schedule_fn(sim: 'SimulationState', vehicle_id: VehicleId) -> bool:
+        sim_time = datetime.fromtimestamp(sim.sim_time).time()
+        within_scheduled_time = time_in_range(start_time, end_time, sim_time)
+        return within_scheduled_time
+
+    updated_schedules = acc.update({schedule_id: _schedule_fn})
+    return updated_schedules
