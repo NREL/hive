@@ -68,8 +68,8 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         sim_with_drivers_updated = perform_driver_state_updates(simulation_state, env)
         instr_result = generate_instructions(user_update_result.updated_fns, sim_with_drivers_updated, env)
         for i in instr_result.instruction_map.values():
-            env.reporter.file_report(self._instruction_to_report(i, simulation_state.sim_time))
-        sim_with_instructions = apply_instructions(simulation_state, env, instr_result.instruction_map)
+            env.reporter.file_report(self._instruction_to_report(i, sim_with_drivers_updated.sim_time))
+        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env, instr_result.instruction_map)
         sim_vehicles_updated = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
 
         # advance the simulation one time step

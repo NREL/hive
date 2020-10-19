@@ -2,13 +2,18 @@ from typing import NamedTuple, Tuple, Optional
 
 from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.driver_state.driver_state import DriverState
+from hive.util.typealiases import ScheduleId
 
 
 class AutonomousAvailable(NamedTuple, DriverState):
     """
     an autonomous driver that is available to work
     """
-    driver_attributes: AutonomousDriverAttributes
+    attributes: AutonomousDriverAttributes = AutonomousDriverAttributes()
+
+    @property
+    def schedule_id(cls) -> Optional[ScheduleId]:
+        return None
 
     @property
     def available(cls):

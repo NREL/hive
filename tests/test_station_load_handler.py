@@ -48,5 +48,5 @@ class TestStationLoadHandler(TestCase):
         r = result[0]
         self.assertEqual(r.report['station_id'], DefaultIds.mock_station_id(),
                          "should have captured which station this happened at")
-        self.assertGreater(r.report['energy_kwh'], 0.0,
+        self.assertGreater(r.report['energy'], 0.0,
                            "we should have captured the effect of 60 seconds of charge time")
