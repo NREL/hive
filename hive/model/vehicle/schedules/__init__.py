@@ -1,13 +1,13 @@
 from immutables import Map
 
-from hive.model.vehicle.schedules.time_range_schedule import build_time_range_schedules
+from hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_file
 from hive.util.typealiases import ScheduleFunction, ScheduleId
 from hive.model.vehicle.schedules.schedule_type import ScheduleType
 
 
 # each is expected to be a one-argument function that takes a file path
 _constructors = {
-    ScheduleType.TIME_RANGE: build_time_range_schedules
+    ScheduleType.TIME_RANGE: time_range_schedules_from_file
 }
 
 

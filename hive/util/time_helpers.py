@@ -4,13 +4,13 @@ import re
 
 def time_in_range(start, end, x):
     """
-    Return true if x is in the range [start, end].
-    taken from https://stackoverflow.com/a/10748024
+    Return true if x is in the range [start, end).
+    adapted from https://stackoverflow.com/a/10748024 with end-exclusive matching added
     """
     if start <= end:
-        return start <= x <= end
+        return start <= x < end
     else:
-        return start <= x or x <= end
+        return start <= x or x < end
 
 
 def read_time_string(s: str) -> time:
