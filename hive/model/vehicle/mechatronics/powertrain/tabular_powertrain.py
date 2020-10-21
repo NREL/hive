@@ -1,11 +1,11 @@
-from typing import Optional, Dict
+from typing import Dict
 
 import numpy as np
 
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
-from hive.util.units import KwH, KMPH_TO_MPH, KM_TO_MILE, WH_TO_KWH, WattHourPerMile
+from hive.util.units import KwH, valid_unit, get_unit_conversion
 
 
 class TabularPowertrain(Powertrain):
@@ -16,24 +16,38 @@ class TabularPowertrain(Powertrain):
     def __init__(
             self,
             data: Dict[str, str],
-            nominal_watt_hour_per_mile: Optional[WattHourPerMile] = None,
     ):
-        if not nominal_watt_hour_per_mile:
-            try:
-                nominal_watt_hour_per_mile = float(data['nominal_watt_hour_per_mile'])
-            except KeyError:
-                raise AttributeError("Must initialize TabularPowercurve with attribute nominal_max_charge_kw")
+        try:
+            scale_factor = float(data['scale_factor'])
+        except KeyError:
+            scale_factor = 1
 
-        expected_keys = ['consumption_model']
+        expected_keys = [
+            'consumption_model',
+            'speed_units',
+            'energy_units',
+            'distance_units',
+        ]
         for key in expected_keys:
             if key not in data:
                 raise IOError(f"invalid input file for tabular power train model missing key {key}")
 
+        if not valid_unit(data['speed_units']):
+            raise TypeError(f"{data['speed_units']} not a recognized unit in hive")
+        elif not valid_unit(data['distance_units']):
+            raise TypeError(f"{data['distance_units']} not a recognized unit in hive")
+        elif not valid_unit(data['energy_units']):
+            raise TypeError(f"{data['energy_units']} not a recognized unit in hive")
+
+        self.speed_units = data['speed_units']
+        self.energy_units = data['energy_units']
+        self.distance_units = data['distance_units']
+
         # linear interpolation function approximation via these lookup values
-        consumption_model = sorted(data['consumption_model'], key=lambda x: x['mph'])
-        self._consumption_mph = np.array(list(map(lambda x: x['mph'], consumption_model)))  # miles/hour
-        self._consumption_whmi = np.array(
-            list(map(lambda x: x['whmi'], consumption_model))) * nominal_watt_hour_per_mile  # watthour/mile
+        consumption_model = sorted(data['consumption_model'], key=lambda x: x['speed'])
+        self._consumption_speed = np.array(list(map(lambda x: x['speed'], consumption_model)))
+        self._consumption_energy_per_distance = np.array(
+            list(map(lambda x: x['energy_per_distance'], consumption_model))) * scale_factor
 
     def link_cost(self, link: Link) -> KwH:
         """
@@ -42,14 +56,16 @@ class TabularPowertrain(Powertrain):
         :param link: the link to calculate energy over.
         :return: energy in kilowatt-hours
         """
-        # link speed is in kilometer/hour
-        link_speed_mph = link.speed_kmph * KMPH_TO_MPH  # mph
-        watthour_per_mile = np.interp(link_speed_mph,
-                                      self._consumption_mph,
-                                      self._consumption_whmi)  # watthour / mile
+        # convert kilometers per hour to whatever units are used by this powertrain
+        link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
+
+        energy_per_distance = np.interp(link_speed,
+                                        self._consumption_speed,
+                                        self._consumption_energy_per_distance)
         # link distance is in kilometers
-        energy_wh = (watthour_per_mile * link.distance_km * KM_TO_MILE)  # watthour
-        energy_kwh = energy_wh * WH_TO_KWH  # kilowatthour
+        link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)
+        energy = energy_per_distance * link_distance
+        energy_kwh = energy * get_unit_conversion(self.energy_units, "kilowatthour")
         return energy_kwh
 
     def energy_cost(self, route: Route) -> KwH:

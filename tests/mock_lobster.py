@@ -236,7 +236,8 @@ def mock_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
     powertrain_file = resource_filename("hive.resources.powertrain", "normalized.yaml")
     with Path(powertrain_file).open() as f:
         data = yaml.safe_load(f)
-        return TabularPowertrain(data=data, nominal_watt_hour_per_mile=nominal_watt_hour_per_mile)
+        data['scale_factor'] = nominal_watt_hour_per_mile
+        return TabularPowertrain(data=data)
 
 
 def mock_powercurve(

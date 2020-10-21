@@ -26,7 +26,7 @@ class BEV(NamedTuple, MechatronicsInterface):
     battery_capacity_kwh: KwH
     idle_kwh_per_hour: KwH_per_H
     powertrain: Powertrain
-    powercurve:  Powercurve
+    powercurve: Powercurve
     nominal_watt_hour_per_mile: WattHourPerMile
     charge_taper_cutoff_kw: Kw
 
@@ -40,6 +40,10 @@ class BEV(NamedTuple, MechatronicsInterface):
         :return: the built Mechatronics object
         """
         nominal_watt_hour_per_mile = float(d['nominal_watt_hour_per_mile'])
+
+        # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
+        d['scale_factor'] = nominal_watt_hour_per_mile
+
         battery_capacity_kwh = float(d['battery_capacity_kwh'])
         powertrain = build_powertrain(d)
         powercurve = build_powercurve(d)

@@ -46,16 +46,51 @@ SECONDS_TO_HOURS = 1 / 3600
 
 #    Speed
 KMPH_TO_MPH = 0.621371
-MPH_TO_KMPH = 1/KMPH_TO_MPH
+MPH_TO_KMPH = 1 / KMPH_TO_MPH
 
 #    Distance
 KM_TO_MILE = 0.621371
 MILE_TO_KM = 1.609344
-M_TO_KM = 1/1000
+M_TO_KM = 1 / 1000
 
 #    Energy Rate
 WattHourPerMile = float
 WH_TO_KWH = 0.001
+KWH_TO_WH = 1 / WH_TO_KWH
 MilesPerGallon = float
 
+_unit_conversions = {
+    'mph': {
+        'kmph': MPH_TO_KMPH,
+    },
+    'kmph': {
+        'mph': KMPH_TO_MPH,
+    },
+    'mile': {
+        'kilometer': M_TO_KM,
+    },
+    'kilometer': {
+        'mile': KM_TO_MILE,
+    },
+    'watthour': {
+        'kilowatthour': WH_TO_KWH,
+    },
+    'kilowatthour': {
+        'watthour': KWH_TO_WH,
+    },
+}
 
+
+def valid_unit(unit: str) -> bool:
+    return unit in _unit_conversions.keys()
+
+
+def get_unit_conversion(from_unit: str, to_unit: str) -> float:
+    if not valid_unit(from_unit):
+        raise TypeError(f'{from_unit} not a recognized unit in hive')
+    elif not valid_unit(to_unit):
+        raise TypeError(f'{to_unit} not a recognized unit in hive')
+    elif from_unit == to_unit:
+        return 1
+
+    return _unit_conversions[from_unit][to_unit]
