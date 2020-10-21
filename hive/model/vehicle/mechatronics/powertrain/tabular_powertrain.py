@@ -5,7 +5,7 @@ import numpy as np
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.routetraversal import Route
 from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
-from hive.util.units import KwH, valid_unit, get_unit_conversion
+from hive.util.units import valid_unit, get_unit_conversion
 
 
 class TabularPowertrain(Powertrain):
@@ -54,7 +54,7 @@ class TabularPowertrain(Powertrain):
         uses mph tabular value to calculate energy over a link
 
         :param link: the link to calculate energy over.
-        :return: energy in units captured by self.speed_units
+        :return: energy in units captured by self.energy_units
         """
         # convert kilometers per hour to whatever units are used by this powertrain
         link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
