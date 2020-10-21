@@ -1,7 +1,7 @@
 toy_car:
   mechatronics_type: nuclear
   powercurve_file: 'normalized.yaml'
-  powertrain_file: 'normalized.yaml'
+  powertrain_file: 'normalized-electric.yaml'
   battery_capacity_kwh: 10
   nominal_max_charge_kw: 100
   charge_taper_cutoff_kw: 100
@@ -13,3 +13,4 @@ toyota_corolla:
   tank_capacity_gallons: 10
   idle_gallons_per_hour: 45
   nominal_miles_per_gallon: 30
+  powertrain_file: 'normalized-gasoline.yaml'

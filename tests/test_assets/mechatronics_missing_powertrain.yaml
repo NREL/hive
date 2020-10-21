@@ -12,3 +12,4 @@ toyota_corolla:
   tank_capacity_gallons: 10
   idle_gallons_per_hour: 45
   nominal_miles_per_gallon: 30
+  powertrain_file: 'normalized-gasoline.yaml'

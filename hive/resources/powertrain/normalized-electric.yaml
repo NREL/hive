@@ -1,4 +1,4 @@
-name: "normalized"
+name: "normalized-electric"
 type: "tabular"
 speed_units: "mph"
 energy_units: "watthour"

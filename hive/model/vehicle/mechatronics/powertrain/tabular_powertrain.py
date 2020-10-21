@@ -49,12 +49,12 @@ class TabularPowertrain(Powertrain):
         self._consumption_energy_per_distance = np.array(
             list(map(lambda x: x['energy_per_distance'], consumption_model))) * scale_factor
 
-    def link_cost(self, link: Link) -> KwH:
+    def link_cost(self, link: Link) -> float:
         """
         uses mph tabular value to calculate energy over a link
 
         :param link: the link to calculate energy over.
-        :return: energy in kilowatt-hours
+        :return: energy in units captured by self.speed_units
         """
         # convert kilometers per hour to whatever units are used by this powertrain
         link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
@@ -65,8 +65,7 @@ class TabularPowertrain(Powertrain):
         # link distance is in kilometers
         link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)
         energy = energy_per_distance * link_distance
-        energy_kwh = energy * get_unit_conversion(self.energy_units, "kilowatthour")
-        return energy_kwh
+        return energy
 
-    def energy_cost(self, route: Route) -> KwH:
+    def energy_cost(self, route: Route) -> float:
         return sum([self.link_cost(link) for link in route])

@@ -78,6 +78,7 @@ _unit_conversions = {
     'kilowatthour': {
         'watthour': KWH_TO_WH,
     },
+    'gal_gas': {}
 }
 
 
@@ -93,4 +94,9 @@ def get_unit_conversion(from_unit: str, to_unit: str) -> float:
     elif from_unit == to_unit:
         return 1
 
-    return _unit_conversions[from_unit][to_unit]
+    try:
+        conversion = _unit_conversions[from_unit][to_unit]
+    except KeyError:
+        raise NotImplemented(f"no conversion exists for {from_unit} to {to_unit}")
+
+    return conversion

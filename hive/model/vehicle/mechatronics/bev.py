@@ -45,6 +45,12 @@ class BEV(NamedTuple, MechatronicsInterface):
         d['scale_factor'] = nominal_watt_hour_per_mile
 
         battery_capacity_kwh = float(d['battery_capacity_kwh'])
+
+        if not d.get('powertrain_file'):
+            raise FileNotFoundError("missing powertrain file in mechatronics config")
+        elif not d.get('powercurve_file'):
+            raise FileNotFoundError("missing powercurve file in mechatronics config")
+
         powertrain = build_powertrain(d)
         powercurve = build_powercurve(d)
         idle_kwh_per_hour = float(d['idle_kwh_per_hour'])
@@ -116,7 +122,8 @@ class BEV(NamedTuple, MechatronicsInterface):
         :param route:
         :return:
         """
-        energy_used_kwh = self.powertrain.energy_cost(route)
+        energy_used = self.powertrain.energy_cost(route)
+        energy_used_kwh = energy_used * get_unit_conversion(self.powertrain.energy_units, "kilowatthour")
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
