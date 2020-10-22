@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import functools as ft
 import random
-import logging
 
 import h3
 import immutables
@@ -11,8 +10,9 @@ from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
+from hive.state.simulation_state.simulation_state_ops import add_instruction
 from hive.util import Ratio
-from hive.util.helpers import DictOps, H3Ops, TupleOps
+from hive.util.helpers import H3Ops, TupleOps
 
 log = logging.getLogger(__name__)
 
@@ -26,31 +26,29 @@ if TYPE_CHECKING:
 
 
 class InstructionGenerationResult(NamedTuple):
-    instruction_map: immutables.Map = immutables.Map()
+    sim: 'SimulationState'
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(self,
                                     instruction_generator: InstructionGenerator,
-                                    simulation_state: 'SimulationState',
                                     environment: Environment,
                                     ) -> InstructionGenerationResult:
         """
         generates instructions from one InstructionGenerator and updates the result accumulator
         :param environment:
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
-        :param simulation_state: the current simulation state
         :return: the updated accumulator
         """
-        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state, environment)
+        updated_gen, new_instructions = instruction_generator.generate_instructions(self.sim, environment)
 
-        updated_instruction_map = ft.reduce(
-            lambda acc, i: DictOps.add_to_dict(acc, i.vehicle_id, i),
+        updated_sim = ft.reduce(
+            lambda acc, i: add_instruction(acc, i.vehicle_id, i),
             new_instructions,
-            self.instruction_map
+            self.sim
         )
 
         return self._replace(
-            instruction_map=updated_instruction_map,
+            sim=updated_sim,
             updated_instruction_generators=self.updated_instruction_generators + (updated_gen,)
         )
 
@@ -70,9 +68,9 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     """
 
     result = ft.reduce(
-        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state, environment),
+        lambda acc, gen: acc.apply_instruction_generator(gen, environment),
         instruction_generators,
-        InstructionGenerationResult()
+        InstructionGenerationResult(simulation_state)
     )
 
     return result

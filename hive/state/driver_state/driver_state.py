@@ -24,7 +24,22 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
     def available(cls):
         pass
 
-    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    @abstractmethod
+    def update(self,
+               sim: 'SimulationState',
+               env: 'Environment',
+               ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        """
+        
+        :param sim: 
+        :param env: 
+        :param **kwargs: optional keyword arguments
+        :return: 
+        """
+        pass
+
+    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         there are no operations associated with entering a DriverState
         :param sim: the simulation state
@@ -33,7 +48,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None, sim
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         there are no operations associated with exiting a DriverState
         :param sim: the simulation state

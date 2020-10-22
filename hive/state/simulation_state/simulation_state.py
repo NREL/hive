@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from hive.model.request import Request
     from hive.model.station import Station
     from hive.model.vehicle import Vehicle
+    from hive.dispatcher.instruction.instruction import Instruction
 
 
 class SimulationState(NamedTuple):
@@ -39,6 +40,8 @@ class SimulationState(NamedTuple):
     bases: immutables.Map[BaseId, Base] = immutables.Map()
     vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
     requests: immutables.Map[RequestId, Request] = immutables.Map()
+
+    instructions: immutables.Map[VehicleId, Instruction] = immutables.Map()
 
     # membership collections
     s_membership: immutables.Map[MembershipId, FrozenSet[StationId]] = immutables.Map()

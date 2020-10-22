@@ -15,7 +15,8 @@ class EntityState:
     @abstractmethod
     def update(self,
                sim: 'SimulationState',
-               env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+               env: 'Environment',
+               ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         apply any effects due to an entity being advanced one discrete time unit in this EntityState
         :param sim: the simulation state

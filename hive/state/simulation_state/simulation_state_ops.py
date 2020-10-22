@@ -4,6 +4,7 @@ import functools as ft
 from typing import Optional, TYPE_CHECKING
 
 import h3
+import immutables
 from returns.result import Result, Success, Failure
 
 from hive.util.exception import SimulationStateError
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
     from hive.model.request import Request
     from hive.model.station import Station
     from hive.model.vehicle import Vehicle
+    from hive.dispatcher.instruction.instruction import Instruction
     from hive.state.simulation_state.simulation_state import SimulationState
 
 """
@@ -50,6 +52,36 @@ def remove_membership(
         entity_id: EntityId,
 ) -> MembershipMap:
     return DictOps.remove_from_collection_dict(membership_collection, member_id, entity_id)
+
+
+def add_instruction(
+        sim: SimulationState,
+        vehicle_id: VehicleId,
+        instruction: Instruction,
+) -> SimulationState:
+    """
+    add an instruction to the simulation state.
+
+    only one instruction can exist for each vehicle id.
+
+    :param sim:
+    :param vehicle_id:
+    :param instruction:
+    :return:
+    """
+    return sim._replace(instructions=DictOps.add_to_dict(sim.instructions, vehicle_id, instruction))
+
+
+def flush_instructions(
+        sim: SimulationState,
+) -> SimulationState:
+    """
+    reset the instruction map to be empty.
+
+    :param sim:
+    :return:
+    """
+    return sim._replace(instructions=immutables.Map())
 
 
 def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Exception], Optional[SimulationState]]:
