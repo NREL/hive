@@ -24,20 +24,6 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
     def available(cls):
         pass
 
-    @abstractmethod
-    def update(self,
-               sim: 'SimulationState',
-               env: 'Environment',
-               ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-        """
-        
-        :param sim: 
-        :param env: 
-        :param **kwargs: optional keyword arguments
-        :return: 
-        """
-        pass
-
     def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
         Optional[Exception], Optional['SimulationState']]:
         """
