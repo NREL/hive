@@ -56,13 +56,12 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         # TODO: I refactored the UserProvidedUpdateAccumulator to raise any errors due to a problem I had where it
         #  was failing silently. Once we decide on our error handling strategy we should revisit this. -NR
 
-        sim_with_drivers_updated = perform_driver_state_updates(simulation_state, env)
-
-        instr_result = generate_instructions(user_update_result.updated_fns, sim_with_drivers_updated, env)
+        instr_result = generate_instructions(user_update_result.updated_fns, simulation_state, env)
         log_instructions(instr_result.sim, env)
 
         # update drivers, update vehicles
-        sim_with_instructions = apply_instructions(instr_result.sim, env)
+        sim_with_drivers_updated = perform_driver_state_updates(instr_result.sim, env)
+        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env)
         sim_vehicles_updated = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
 
         # advance the simulation one time step

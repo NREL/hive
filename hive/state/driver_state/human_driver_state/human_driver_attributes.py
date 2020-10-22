@@ -9,7 +9,7 @@ class HumanDriverAttributes(NamedTuple):
     """
     vehicle_id: VehicleId
     schedule_id: ScheduleId
-    home_base: BaseId
+    home_base_id: BaseId
     # start_time: SimTime ?
     # agency_ids: frozenset[AgencyId] ?
 

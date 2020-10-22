@@ -1,8 +1,10 @@
 from typing import NamedTuple, Tuple, Optional
 
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
+from hive.dispatcher.instruction.instructions import DispatchBaseInstruction
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
+from hive.state.simulation_state.simulation_state_ops import add_instruction
 
 from hive.util import SimulationStateError
 from hive.util.typealiases import ScheduleId
@@ -71,7 +73,13 @@ class HumanUnavailable(NamedTuple, DriverState):
 
     def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
         Optional[Exception], Optional['SimulationState']]:
-        return None, sim
+        """
+        :param sim:
+        :param env:
+        :return:
+        """
+        return_home = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+        return add_instruction(sim, self.attributes.vehicle_id, return_home)
 
     def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
