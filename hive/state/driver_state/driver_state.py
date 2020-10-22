@@ -6,7 +6,7 @@ from typing import NamedTupleMeta, Tuple, Optional
 from hive.state.entity_state.entity_state import EntityState
 from hive.state.simulation_state import simulation_state_ops
 from hive.util import VehicleId, SimulationStateError
-from hive.util.typealiases import ScheduleId
+from hive.util.typealiases import ScheduleId, BaseId
 
 
 class DriverState(ABCMeta, NamedTupleMeta, EntityState):
@@ -79,11 +79,16 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @classmethod
-    def build(mcs, vehicle_id: VehicleId, schedule_id: Optional[ScheduleId]) -> DriverState:
+    def build(mcs,
+              vehicle_id: VehicleId,
+              schedule_id: Optional[ScheduleId],
+              base_id: Optional[BaseId],
+              ) -> DriverState:
         """
         constructs a new DriverState based on the provided arguments
         :param vehicle_id: the Vehicle associated with this DriverState
         :param schedule_id: if provided, sets the DriverState as a HumanUnavailable driver
+        :param base_id: used for HumanAvailable and HumanUnavailable
         :return: the driver state instance created
         """
         from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -93,5 +98,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
             driver_state = AutonomousAvailable()
             return driver_state
         else:
-            driver_state = HumanUnavailable(HumanDriverAttributes(vehicle_id, schedule_id))
+            if not base_id:
+                raise Exception("cannot build a vehicle with schedule but not a home base id")
+            driver_state = HumanUnavailable(HumanDriverAttributes(vehicle_id, schedule_id, base_id))
             return driver_state

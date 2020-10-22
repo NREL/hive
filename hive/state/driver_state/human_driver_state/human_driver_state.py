@@ -69,6 +69,10 @@ class HumanUnavailable(NamedTuple, DriverState):
     def available(cls):
         return False
 
+    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
+        return None, sim
+
     def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         test that the agent is unavailable to work. if not, transition to an available state.

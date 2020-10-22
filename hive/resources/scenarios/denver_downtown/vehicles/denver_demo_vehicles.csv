@@ -1,5 +1,5 @@
-﻿vehicle_id,lat,lon,mechatronics_id,initial_soc,schedule_id
-v1,39.754695,-104.988116,leaf_50,0.3,first
+﻿vehicle_id,lat,lon,mechatronics_id,initial_soc,schedule_id,home_base_id
+v1,39.754695,-104.988116,leaf_50,0.3,first,hb1
 v2,39.754695,-104.988116,leaf_50,0.3
 v3,39.754695,-104.988116,leaf_50,0.3
 v4,39.754695,-104.988116,leaf_50,0.3
