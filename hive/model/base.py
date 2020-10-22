@@ -128,3 +128,11 @@ class Base(NamedTuple):
             raise SimulationStateError('Base already has maximum stalls')
         else:
             return self._replace(available_stalls=stalls + 1)
+
+    def update_membership(self, member_ids: FrozenSet[str]) -> Base:
+        """
+        updates the membership(s) of the base
+        :param membership_tuple: a Tuple containing updated membership(s) of the base
+        :return:
+        """
+        return self._replace(membership=Membership.from_tuple(member_ids))

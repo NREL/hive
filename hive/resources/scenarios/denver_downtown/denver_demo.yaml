@@ -16,6 +16,7 @@ input:
   rate_structure_file: rate_structure.csv
   charging_price_file: denver_charging_prices_by_geoid.csv
   demand_forecast_file: denver_demand.csv
+  fleets_file: fleet_1.yaml
 dispatcher:
   valid_dispatch_states:
     - Idle

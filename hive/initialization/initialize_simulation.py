@@ -3,11 +3,12 @@ from __future__ import annotations
 import csv
 import functools as ft
 import logging
-from typing import Tuple, Dict
+from typing import Tuple, Dict, FrozenSet
 
 import immutables
 
 from hive.config import HiveConfig
+from hive.initialization.initialize_ops import process_fleet_file
 from hive.model.base import Base
 from hive.model.energy.charger import build_chargers_table
 from hive.model.roadnetwork.geofence import GeoFence
@@ -43,6 +44,17 @@ def initialize_simulation(
     vehicles_file = config.input_config.vehicles_file
     bases_file = config.input_config.bases_file
     stations_file = config.input_config.stations_file
+
+    if config.input_config.fleets_file:
+        fleets_file = config.input_config.fleets_file
+        vehicle_member_ids = process_fleet_file(fleets_file, 'vehicles')
+        base_member_ids = process_fleet_file(fleets_file, 'bases')
+        station_member_ids = process_fleet_file(fleets_file, 'stations')
+    else:
+        fleets_file = None
+        vehicle_member_ids = None
+        base_member_ids = None
+        station_member_ids = None
 
     if config.input_config.geofence_file:
         geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
@@ -94,21 +106,23 @@ def initialize_simulation(
     #  should instead hold aside any error reports and then do something below after finishing,
     #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
     # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
-    sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
-    sim_with_bases = _build_bases(bases_file, sim_with_vehicles)
-    sim_with_stations = _build_stations(stations_file, sim_with_bases)
+    sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, vehicle_member_ids, sim_initial, env_initial)
+    sim_with_bases = _build_bases(bases_file, base_member_ids, sim_with_vehicles)
+    sim_with_stations = _build_stations(stations_file, station_member_ids, sim_with_bases)
 
     return sim_with_stations, env_updated
 
 
 def _build_vehicles(
         vehicles_file: str,
+        vehicle_member_ids: immutables.Map[str, FrozenSet[str]],
         simulation_state: SimulationState,
         environment: Environment) -> Tuple[SimulationState, Environment]:
     """
     adds all vehicles from the provided vehicles file
 
     :param vehicles_file: the file to load vehicles from
+    :param vehicle_member_ids: a dictionary with all of the vehicle membership ids
     :param simulation_state: the partially-constructed simulation state
     :param environment: the partially-constructed environment
     :return: the SimulationState with vehicles in it
@@ -118,9 +132,11 @@ def _build_vehicles(
     def _add_row_unsafe(
             payload: Tuple[SimulationState, Environment],
             row: Dict[str, str]) -> Tuple[SimulationState, Environment]:
-
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
+        if vehicle_member_ids is not None:
+            if veh.id in vehicle_member_ids:
+                veh = veh.update_membership(vehicle_member_ids[veh.id])
         error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
         if error:
             log.error(error)
@@ -138,12 +154,14 @@ def _build_vehicles(
 
 
 def _build_bases(bases_file: str,
+                 base_member_ids: immutables.Map[str, FrozenSet[str]],
                  simulation_state: SimulationState,
                  ) -> SimulationState:
     """
     all your base are belong to us
 
     :param bases_file: path to file with bases
+    :param base_member_ids: a dictionary with all of the base membership ids
     :param simulation_state: the partial simulation state
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
@@ -151,6 +169,9 @@ def _build_bases(bases_file: str,
 
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
         base = Base.from_row(row, simulation_state.road_network)
+        if base_member_ids is not None:
+            if base.id in base_member_ids:
+                base = base.update_membership(base_member_ids[base.id])
         error, updated_sim = simulation_state_ops.add_base(sim, base)
         if error:
             log.error(error)
@@ -167,12 +188,14 @@ def _build_bases(bases_file: str,
 
 
 def _build_stations(stations_file: str,
+                    station_member_ids: immutables.Map[str, FrozenSet[str]],
                     simulation_state: SimulationState,
                     ) -> SimulationState:
     """
     all your station are belong to us
 
     :param stations_file: the file with stations in it
+    :param station_member_ids: a dictionary with all of the station membership ids
     :param simulation_state: the partial simulation state
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed

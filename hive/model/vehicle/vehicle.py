@@ -163,3 +163,11 @@ class Vehicle(NamedTuple):
         :return:
         """
         return self._replace(distance_traveled_km=self.distance_traveled_km + delta_d_km)
+
+    def update_membership(self, member_ids: FrozenSet[str]) -> Vehicle:
+        """
+        updates the membership(s) of the vehicle
+        :param membership_tuple: a Tuple containing updated membership(s) of the vehicle
+        :return:
+        """
+        return self._replace(membership=Membership.from_tuple(member_ids))
