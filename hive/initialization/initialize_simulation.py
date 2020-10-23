@@ -69,9 +69,6 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
-    if config.global_config.log_period_seconds < config.sim.timestep_duration_seconds:
-        raise RuntimeError("log time step must be greater than simulation time step")
-
     reporter = Reporter(config.global_config)
 
     if config.global_config.log_events:

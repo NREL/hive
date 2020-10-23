@@ -41,11 +41,6 @@ class Reporter:
         :param runner_payload: The runner payload.
         :return: Does not return a value.
         """
-
-        # TODO: This is too fragile. We should think about introducing a sim step parameter.
-        if runner_payload.s.sim_time % self.config.log_period_seconds != 0:
-            return
-
         for handler in self.handlers:
             handler.handle(self.reports, runner_payload)
 
