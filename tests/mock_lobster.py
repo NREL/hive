@@ -51,6 +51,7 @@ from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import *
 from hive.util.units import *
+from hive.util.parsers import time_parser
 
 
 class DefaultIds:
@@ -355,7 +356,7 @@ def mock_human_driver(available: bool = True,
 
 
 def mock_sim(
-        sim_time: SimTime = 0,
+        sim_time: int = 0,
         sim_timestep_duration_seconds: Seconds = 60,
         h3_location_res: int = 15,
         h3_search_res: int = 10,
@@ -365,7 +366,7 @@ def mock_sim(
 ) -> SimulationState:
     sim = SimulationState(
         road_network=mock_network(),
-        sim_time=sim_time,
+        sim_time=time_parser(sim_time),
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,
         sim_h3_search_resolution=h3_search_res,

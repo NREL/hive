@@ -20,7 +20,10 @@ class SimTime(int):
         return self.__class__(res)
 
     def __repr__(self):
-        return datetime.fromtimestamp(self).isoformat()
+        return datetime.utcfromtimestamp(self).isoformat()
 
     def __str__(self):
-        return datetime.fromtimestamp(self).isoformat()
+        return datetime.utcfromtimestamp(self).isoformat()
+
+    def time(self) -> datetime.time:
+        return datetime.utcfromtimestamp(self).time()
