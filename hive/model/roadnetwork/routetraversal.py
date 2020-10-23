@@ -7,8 +7,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.linktraversal import traverse_up_to
 from hive.model.roadnetwork.route import Route
-from hive.util import wkt
-from hive.util.helpers import TupleOps
+from hive.util import TupleOps
 from hive.util.typealiases import *
 from hive.util.units import Kilometers, Seconds
 

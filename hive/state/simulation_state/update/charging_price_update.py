@@ -15,7 +15,7 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.util.dict_reader_stepper import DictReaderStepper
-from hive.util.helpers import DictOps
+from hive.util import DictOps
 from hive.util.parsers import time_parser
 from hive.util.typealiases import StationId, ChargerId
 from hive.util.units import Currency

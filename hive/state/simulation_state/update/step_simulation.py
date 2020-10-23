@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import functools as ft
 import logging
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable
+import immutables
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable, List
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import generate_instructions
@@ -17,9 +18,12 @@ from hive.state.simulation_state.update.step_simulation_ops import (
     UserProvidedUpdateAccumulator,
     perform_driver_state_updates,
 )
+from hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
+    from hive.util.typealiases import VehicleId
+    from hive.dispatcher.instruction.instruction import Instruction
 
 log = logging.getLogger(__name__)
 
@@ -47,25 +51,39 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         :return: updated simulation state, with reports, along with the (optionally) updated StepSimulation
         """
         # allow the user to inject changes to the InstructionGenerators
+        # TODO: I refactored the UserProvidedUpdateAccumulator to raise any errors due to a problem I had where it
+        #  was failing silently. Once we decide on our error handling strategy we should revisit this. -NR
         user_update_result = ft.reduce(
             instruction_generator_update_fn(self.instruction_generator_update_fn, simulation_state),
             self.instruction_generators,
             UserProvidedUpdateAccumulator()
         )
 
-        # TODO: I refactored the UserProvidedUpdateAccumulator to raise any errors due to a problem I had where it
-        #  was failing silently. Once we decide on our error handling strategy we should revisit this. -NR
+        sim_with_drivers_updated = perform_driver_state_updates(simulation_state, env)
 
-        instr_result = generate_instructions(user_update_result.updated_fns, simulation_state, env)
-        log_instructions(instr_result.sim, env)
+        i_stack, updated_i_gens = generate_instructions(
+            user_update_result.updated_fns,
+            sim_with_drivers_updated,
+            env)
+
+        # pops the top instruction from the stack. this could be replaced with something like a priority queue
+        final_instructions = ()
+        for vid in i_stack.keys():
+            i, _ = DictOps.pop_from_stack_dict(i_stack, vid)
+            if not i:
+                continue
+            else:
+                final_instructions = (i,) + final_instructions
+
+
+        log_instructions(final_instructions, env, simulation_state.sim_time)
 
         # update drivers, update vehicles
-        sim_with_drivers_updated = perform_driver_state_updates(instr_result.sim, env)
-        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env)
+        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env, final_instructions)
         sim_vehicles_updated = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
 
         # advance the simulation one time step
         sim_next_time_step = simulation_state_ops.tick(sim_vehicles_updated)
 
-        updated_step_simulation = self._replace(instruction_generators=instr_result.updated_instruction_generators)
+        updated_step_simulation = self._replace(instruction_generators=updated_i_gens)
         return sim_next_time_step, updated_step_simulation

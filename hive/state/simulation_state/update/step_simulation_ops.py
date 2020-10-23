@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import functools as ft
 import logging
+import immutables
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.model.vehicle.vehicle import Vehicle
+from hive.model.vehicle.vehicle import Vehicle, VehicleId
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.simulation_state.simulation_state_ops import flush_instructions
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.util import TupleOps
 from hive.reporting.reporter import Report
@@ -31,9 +31,9 @@ def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
     return Report(ReportType.INSTRUCTION, i_dict)
 
 
-def log_instructions(sim: SimulationState, env: Environment):
-    for i in sim.instructions.values():
-        env.reporter.file_report(_instruction_to_report(i, sim.sim_time))
+def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_time: SimTime):
+    for i in instructions:
+        env.reporter.file_report(_instruction_to_report(i, sim_time))
 
 
 def perform_driver_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
@@ -103,16 +103,15 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
 
 def apply_instructions(sim: SimulationState,
                        env: Environment,
-                       ) -> SimulationState:
+                       instructions: Tuple[Instruction]) -> SimulationState:
     """
     this helper function takes a map with one instruction per agent at most, and attempts to apply each
     instruction to the simulation, managing the instruction's externalities, and managing failure.
-
     :param sim: the current simulation state
     :param env: the sim environment
+    :param instructions: all instructions to add at this time step
     :return: the simulation state modified by all successful Instructions
     """
-
     # construct the vehicle state transitions
     run_in_parallel = False  # env.config.system.local_parallelism > 1
 
@@ -124,7 +123,7 @@ def apply_instructions(sim: SimulationState,
         result = ((NotImplementedError, None),)
     else:
         # run in a synchronous loop
-        result = ft.reduce(lambda acc, i: acc + (i.apply_instruction(sim, env),), sim.instructions.values(), ())
+        result = ft.reduce(lambda acc, i: acc + (i.apply_instruction(sim, env),), instructions, ())
 
     has_errors, no_errors = TupleOps.partition(lambda t: t[0] is not None, result)
     valid_instruction_results = map(lambda t: t[1], no_errors)
@@ -135,7 +134,7 @@ def apply_instructions(sim: SimulationState,
             log.error(err)
 
     # update the simulation with each vehicle state transition in sequence
-    def _add_instruction_result(
+    def _add_instruction(
             s: SimulationState,
             i: InstructionResult,
     ) -> SimulationState:
@@ -149,9 +148,9 @@ def apply_instructions(sim: SimulationState,
             return updated_sim
 
     return ft.reduce(
-        _add_instruction_result,
+        _add_instruction,
         valid_instruction_results,
-        flush_instructions(sim)
+        sim
     )
 
 

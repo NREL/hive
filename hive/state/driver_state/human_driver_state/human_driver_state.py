@@ -1,13 +1,15 @@
 from typing import NamedTuple, Tuple, Optional
 
-from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
+from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import DispatchBaseInstruction
+from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
-from hive.state.simulation_state.simulation_state_ops import add_instruction
-
+from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.vehicle_state.dispatch_base import DispatchBase
 from hive.util import SimulationStateError
 from hive.util.typealiases import ScheduleId
+
 
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
 
@@ -27,7 +29,16 @@ class HumanAvailable(NamedTuple, DriverState):
     def available(cls):
         return True
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def generate_instruction(
+            self,
+            sim: 'SimulationState',
+            env: 'Environment',
+            previous_instructions,
+    ) -> Optional[Instruction]:
+        return None
+
+    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         test that the agent is available to work. if unavailable, transition to an unavailable state.
 
@@ -71,17 +82,33 @@ class HumanUnavailable(NamedTuple, DriverState):
     def available(cls):
         return False
 
-    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def generate_instruction(
+            self,
+            sim: 'SimulationState',
+            env: 'Environment',
+            previous_instructions,
+    ) -> Optional[Instruction]:
         """
+        return home
+
         :param sim:
         :param env:
+        :param previous_instructions:
         :return:
         """
-        return_home = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
-        return add_instruction(sim, self.attributes.vehicle_id, return_home)
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+        my_base = sim.bases.get(self.attributes.home_base_id)
+
+        if not my_base.geoid == my_vehicle.geoid and not isinstance(my_vehicle.vehicle_state, DispatchBase):
+            i = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+        else:
+            i = None
+
+        return i
+
+    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
+        Optional[Exception], Optional['SimulationState']]:
         """
         test that the agent is unavailable to work. if not, transition to an available state.
 

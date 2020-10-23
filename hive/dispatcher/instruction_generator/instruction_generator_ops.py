@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import List
+
 import functools as ft
 import random
 
@@ -10,9 +12,8 @@ from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
-from hive.state.simulation_state.simulation_state_ops import add_instruction
-from hive.util import Ratio
-from hive.util.helpers import H3Ops, TupleOps
+from hive.util import Ratio, TupleOps, DictOps
+from hive.util.helpers import H3Ops
 
 log = logging.getLogger(__name__)
 
@@ -24,32 +25,52 @@ if TYPE_CHECKING:
     from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
     from hive.util.typealiases import MembershipId
 
+i_map: immutables.Map[VehicleId, List[Instruction]] = immutables.Map()
+
 
 class InstructionGenerationResult(NamedTuple):
-    sim: 'SimulationState'
+    instruction_stack: immutables.Map[VehicleId, Tuple[Instruction]] = immutables.Map()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(self,
                                     instruction_generator: InstructionGenerator,
+                                    simulation_state: 'SimulationState',
                                     environment: Environment,
                                     ) -> InstructionGenerationResult:
         """
         generates instructions from one InstructionGenerator and updates the result accumulator
         :param environment:
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
+        :param simulation_state: the current simulation state
         :return: the updated accumulator
         """
-        updated_gen, new_instructions = instruction_generator.generate_instructions(self.sim, environment)
+        updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state, environment)
 
-        updated_sim = ft.reduce(
-            lambda acc, i: add_instruction(acc, i.vehicle_id, i),
+        updated_instruction_stack = ft.reduce(
+            lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i),
             new_instructions,
-            self.sim
+            self.instruction_stack
         )
 
         return self._replace(
-            sim=updated_sim,
+            instruction_stack=updated_instruction_stack,
             updated_instruction_generators=self.updated_instruction_generators + (updated_gen,)
+        )
+
+    def add_driver_instructions(self, simulation_state, environment):
+        new_instructions = ft.reduce(
+            lambda acc, v: (v.driver_state.generate_instruction(simulation_state, environment, self.instruction_stack),) + acc,
+            simulation_state.get_vehicles(),
+            ())
+
+        updated_instruction_stack = ft.reduce(
+            lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i) if i else acc,
+            new_instructions,
+            self.instruction_stack
+        )
+
+        return self._replace(
+            instruction_stack=updated_instruction_stack,
         )
 
 
@@ -60,7 +81,6 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     """
     applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
     and has an overwrite behavior with respect to generated Instructions in the instruction_map
-
     :param instruction_generators:
     :param simulation_state:
     :param environment:
@@ -68,12 +88,15 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     """
 
     result = ft.reduce(
-        lambda acc, gen: acc.apply_instruction_generator(gen, environment),
+        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state, environment),
         instruction_generators,
-        InstructionGenerationResult(simulation_state)
+        InstructionGenerationResult()
     )
 
-    return result
+    # give drivers a chance to add instructions
+    driver_result = result.add_driver_instructions(simulation_state, environment)
+
+    return driver_result
 
 
 def instruct_vehicles_return_to_base(

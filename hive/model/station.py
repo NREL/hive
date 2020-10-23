@@ -11,7 +11,7 @@ from hive.model.membership import Membership
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
-from hive.util.helpers import DictOps
+from hive.util import DictOps
 from hive.util.typealiases import *
 from hive.util.units import Currency
 
