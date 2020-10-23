@@ -224,10 +224,10 @@ class Station(NamedTuple):
         """
         return self.enqueued_vehicles.get(charger_id, 0)
 
-    def update_membership(self, member_ids: FrozenSet[str]) -> Station:
+    def update_membership(self, member_ids: Tuple[str, ...]) -> Station:
         """
         updates the membership(s) of the station
-        :param membership_tuple: a Tuple containing updated membership(s) of the station
+        :param member_ids: a Tuple containing updated membership(s) of the station
         :return:
         """
         return self._replace(membership=Membership.from_tuple(member_ids))

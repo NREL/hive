@@ -131,3 +131,20 @@ class TestStation(TestCase):
 
         self.assertEqual(dequeue_1_count, 0, "should have dequeued the single vehicle")
         self.assertEqual(dequeue_2_count, 0, "cannot dequeue to a count below zero")
+
+    def test_update_membership(self):
+        source = """station_id,lat,lon,charger_id,charger_count
+                         s1,37,122,DCFC,10
+                         """
+        network = mock_network()
+        row = next(DictReader(source.split()))
+
+        station = Station.from_row(row, {}, network)
+
+        self.assertEqual(station.membership.memberships, frozenset(['default_membership']),
+                         "should have default membership")
+
+        station = station.update_membership(('fleet_1', 'fleet_3'))
+
+        self.assertEqual(station.membership.memberships, frozenset(['fleet_1', 'fleet_3']),
+                         "should have membership for fleet_1 and fleet_3")

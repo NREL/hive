@@ -73,3 +73,19 @@ class TestBase(TestCase):
 
         self.assertEqual(base_w_stall.available_stalls, 1)
 
+    def test_update_membership(self):
+        source = """base_id,lat,lon,stall_count,station_id
+                            b1,37,122,10,s1"""
+
+        network = mock_network()
+        row = next(DictReader(source.split()))
+
+        base = Base.from_row(row, network)
+
+        self.assertEqual(base.membership.memberships, frozenset(['default_membership']),
+                         "should have default membership")
+
+        base = base.update_membership(('fleet_1', 'fleet_3'))
+
+        self.assertEqual(base.membership.memberships, frozenset(['fleet_1', 'fleet_3']),
+                         "should have membership for fleet_1 and fleet_3")
