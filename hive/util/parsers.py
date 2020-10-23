@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Union
 
-from hive.util.typealiases import SimTime
+from hive.model.sim_time import SimTime
 
 
 def time_parser(value: str) -> Union[IOError, SimTime]:
@@ -18,6 +18,6 @@ def time_parser(value: str) -> Union[IOError, SimTime]:
     if time.tzinfo:
         return NotImplemented("Timezones are not supported in hive. Please remove any timezone info")
 
-    return int(time.timestamp())
+    return SimTime(int(time.timestamp()))
 
 

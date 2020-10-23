@@ -91,8 +91,8 @@ class HiveConfig(NamedTuple):
 
             # check to see if the dispatcher update interval is in line with the time step interval
             time_steps = range(
-                hive_config.sim.start_time,
-                hive_config.sim.end_time,
+                int(hive_config.sim.start_time),
+                int(hive_config.sim.end_time),
                 hive_config.sim.timestep_duration_seconds,
             )
             d_interval = hive_config.dispatcher.default_update_interval_seconds

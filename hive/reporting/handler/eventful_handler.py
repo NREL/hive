@@ -43,7 +43,8 @@ class EventfulHandler(Handler):
 
         for report in reports:
             if report.report_type in self.global_config.log_sim_config:
-                entry = json.dumps(report.as_json(), default=str)
+                report_json = report.as_json()
+                entry = json.dumps(report_json, default=str)
                 self.log_file.write(entry + '\n')
 
     def close(self, runner_payload: RunnerPayload):

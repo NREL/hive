@@ -16,7 +16,7 @@ class Report(NamedTuple):
     report: Dict[str, str]
 
     def as_json(self) -> Dict[str, str]:
-        out = self.report
+        out = {str(k): str(v) for k, v in self.report.items()}
         out['report_type'] = self.report_type.name.lower()
         return out
 
