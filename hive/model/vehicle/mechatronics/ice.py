@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
 
 from hive.model.energy.energytype import EnergyType
@@ -14,6 +16,7 @@ if TYPE_CHECKING:
     from hive.model.roadnetwork.route import Route
     from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 
+log = logging.getLogger(__name__)
 
 class ICE(NamedTuple, MechatronicsInterface):
     """
@@ -140,6 +143,9 @@ class ICE(NamedTuple, MechatronicsInterface):
         :param time_seconds:
         :return: the updated vehicle, along with the time spent charging
         """
+        if not self.valid_charger(charger):
+            log.warning(f"ICE vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging.")
+            return vehicle, 0
         start_gal_gas = vehicle.energy[EnergyType.GASOLINE]
 
         pump_gal_gas = start_gal_gas + charger.rate * time_seconds
