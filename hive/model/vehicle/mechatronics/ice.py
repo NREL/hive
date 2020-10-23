@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
 
 from hive.model.energy.energytype import EnergyType
-from hive.model.roadnetwork.route import route_distance_km
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from hive.model.vehicle.mechatronics.powertrain import build_powertrain
 from hive.util.typealiases import MechatronicsId
 from hive.util.units import *
 
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from hive.model.energy.charger import Charger
     from hive.model.vehicle.vehicle import Vehicle
     from hive.model.roadnetwork.route import Route
+    from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 
 
 class ICE(NamedTuple, MechatronicsInterface):
@@ -22,6 +23,7 @@ class ICE(NamedTuple, MechatronicsInterface):
     mechatronics_id: MechatronicsId
     tank_capacity_gallons: GallonGasoline
     idle_gallons_per_hour: GallonPerHour
+    powertrain: Powertrain
     nominal_miles_per_gallon: MilesPerGallon
 
     @classmethod
@@ -34,10 +36,15 @@ class ICE(NamedTuple, MechatronicsInterface):
         tank_capacity_gallons = float(d['tank_capacity_gallons'])
         idle_gallons_per_hour = float(d['idle_gallons_per_hour'])
         nominal_miles_per_gallon = float(d['nominal_miles_per_gallon'])
+
+        # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
+        d['scale_factor'] = 1 / nominal_miles_per_gallon
+
         return ICE(
             mechatronics_id=d['mechatronics_id'],
             tank_capacity_gallons=tank_capacity_gallons,
             idle_gallons_per_hour=idle_gallons_per_hour,
+            powertrain=build_powertrain(d),
             nominal_miles_per_gallon=nominal_miles_per_gallon,
         )
 
@@ -100,8 +107,9 @@ class ICE(NamedTuple, MechatronicsInterface):
         :param route:
         :return:
         """
-        dist_mi = route_distance_km(route) * KM_TO_MILE
-        energy_used_gal_gas = dist_mi / self.nominal_miles_per_gallon
+        energy_used = self.powertrain.energy_cost(route)
+        energy_used_gal_gas = energy_used * get_unit_conversion(self.powertrain.energy_units, "gal_gas")
+
         vehicle_energy_gal_gas = vehicle.energy[EnergyType.GASOLINE]
         new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - energy_used_gal_gas)
         updated_vehicle = vehicle.modify_energy({EnergyType.GASOLINE: new_energy_gal_gas})
