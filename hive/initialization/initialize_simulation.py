@@ -115,14 +115,14 @@ def initialize_simulation(
 
 def _build_vehicles(
         vehicles_file: str,
-        vehicle_member_ids: immutables.Map[str, FrozenSet[str]],
+        vehicle_member_ids: immutables.Map[str, Tuple[str, ...]],
         simulation_state: SimulationState,
         environment: Environment) -> Tuple[SimulationState, Environment]:
     """
     adds all vehicles from the provided vehicles file
 
     :param vehicles_file: the file to load vehicles from
-    :param vehicle_member_ids: a dictionary with all of the vehicle membership ids
+    :param vehicle_member_ids: an immutables Map with all of the vehicle membership ids
     :param simulation_state: the partially-constructed simulation state
     :param environment: the partially-constructed environment
     :return: the SimulationState with vehicles in it
@@ -154,14 +154,14 @@ def _build_vehicles(
 
 
 def _build_bases(bases_file: str,
-                 base_member_ids: immutables.Map[str, FrozenSet[str]],
+                 base_member_ids: immutables.Map[str, Tuple[str, ...]],
                  simulation_state: SimulationState,
                  ) -> SimulationState:
     """
     all your base are belong to us
 
     :param bases_file: path to file with bases
-    :param base_member_ids: a dictionary with all of the base membership ids
+    :param base_member_ids: an immutables Map with all of the base membership ids
     :param simulation_state: the partial simulation state
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
@@ -188,14 +188,14 @@ def _build_bases(bases_file: str,
 
 
 def _build_stations(stations_file: str,
-                    station_member_ids: immutables.Map[str, FrozenSet[str]],
+                    station_member_ids: immutables.Map[str, Tuple[str, ...]],
                     simulation_state: SimulationState,
                     ) -> SimulationState:
     """
     all your station are belong to us
 
     :param stations_file: the file with stations in it
-    :param station_member_ids: a dictionary with all of the station membership ids
+    :param station_member_ids: an immutables Map with all of the station membership ids
     :param simulation_state: the partial simulation state
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
