@@ -207,9 +207,9 @@ def _build_stations(stations_file: str,
         return updated_builder
 
     def _add_station_unsafe(sim: SimulationState, station: Station) -> SimulationState:
-        # if station_member_ids is not None:
-        #     if station.id in station_member_ids:
-        #         station = station.update_membership(station_member_ids[station.id])
+        if station_member_ids is not None:
+            if station.id in station_member_ids:
+                station = station.update_membership(station_member_ids[station.id])
         error, sim_with_station = simulation_state_ops.add_station(sim, station)
         if error:
             log.error(error)
