@@ -1,5 +1,7 @@
 from typing import NamedTuple, Tuple, Optional
 
+import immutables
+
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import DispatchBaseInstruction
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
@@ -8,7 +10,7 @@ from hive.state.driver_state.human_driver_state.human_driver_attributes import H
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.dispatch_base import DispatchBase
 from hive.util import SimulationStateError
-from hive.util.typealiases import ScheduleId
+from hive.util.typealiases import ScheduleId, VehicleId
 
 
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
@@ -33,7 +35,7 @@ class HumanAvailable(NamedTuple, DriverState):
             self,
             sim: 'SimulationState',
             env: 'Environment',
-            previous_instructions,
+            previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         return None
 
@@ -86,7 +88,7 @@ class HumanUnavailable(NamedTuple, DriverState):
             self,
             sim: 'SimulationState',
             env: 'Environment',
-            previous_instructions,
+            previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         """
         return home

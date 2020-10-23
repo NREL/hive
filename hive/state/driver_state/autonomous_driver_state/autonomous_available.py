@@ -24,7 +24,7 @@ class AutonomousAvailable(NamedTuple, DriverState):
             self,
             sim: 'SimulationState',
             env: 'Environment',
-            previous_instructions,
+            previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         return None
 

@@ -30,7 +30,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
             self,
             sim: 'SimulationState',
             env: 'Environment',
-            previous_instructions,
+            previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         """
         allows the driver state to issue an optional instruction for the vehicle considering all the

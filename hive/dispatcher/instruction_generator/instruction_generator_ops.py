@@ -59,7 +59,11 @@ class InstructionGenerationResult(NamedTuple):
 
     def add_driver_instructions(self, simulation_state, environment):
         new_instructions = ft.reduce(
-            lambda acc, v: (v.driver_state.generate_instruction(simulation_state, environment, self.instruction_stack),) + acc,
+            lambda acc, v: (v.driver_state.generate_instruction(
+                simulation_state,
+                environment,
+                self.instruction_stack.get(v.id),
+            ),) + acc,
             simulation_state.get_vehicles(),
             ())
 
