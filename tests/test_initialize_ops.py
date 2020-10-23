@@ -27,8 +27,8 @@ class TestIntializeOps(TestCase):
                          "b3 should be a member of test_fleet_2")
 
         self.assertEqual(station_member_ids['s1'], ('test_fleet_1', 'test_fleet_2'),
-                         "v1 should be a member of both test_fleet_1 and test_fleet_2")
+                         "s1 should be a member of both test_fleet_1 and test_fleet_2")
         self.assertEqual(station_member_ids['s2'], ('test_fleet_1',),
-                         "v2 should be a member of test_fleet_1")
+                         "s2 should be a member of test_fleet_1")
         self.assertEqual(station_member_ids['bs1'], ('test_fleet_2',),
-                         "v3 should be a member of test_fleet_2")
+                         "bs1 should be a member of test_fleet_2")

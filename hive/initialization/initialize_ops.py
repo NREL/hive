@@ -6,11 +6,11 @@ import immutables
 
 def process_fleet_file(fleet_file: str, entity_type: str) -> immutables.Map[str, Tuple[str, ...]]:
     """
-    creates a dictionary that contains all of the fleet ids associated with the appropriate entity ids
+    creates an immutable map that contains all of the fleet ids associated with the appropriate entity ids
 
     :param fleet_file: the file to load memberships from
     :param entity_type: the category the entity falls under, such as vehicles, bases, or stations
-    :return: a dictionary mapping all entity ids with the appropriate memberships
+    :return: an immutable map mapping all entity ids with the appropriate memberships
     :raises Exception: from KEYErrors parsing the fleets file
         """
     fleet_id_map = immutables.Map()

@@ -132,6 +132,7 @@ def _build_vehicles(
     def _add_row_unsafe(
             payload: Tuple[SimulationState, Environment],
             row: Dict[str, str]) -> Tuple[SimulationState, Environment]:
+
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
         if vehicle_member_ids is not None:
