@@ -88,7 +88,8 @@ class DictOps:
                           collection_id: str,
                           obj: V) -> immutables.Map[str, Tuple[V]]:
         """
-        updates Dicts that hold a stack on entities
+        updates Dicts that hold a stack of entities;
+        note that the head of the tuple represents the top of the stack; elements always get inserted into the head;
         performs a shallow copy and update, treating Dict as an immutable hash table
 
         :param xs:
@@ -106,7 +107,8 @@ class DictOps:
                             collection_id: str,
                             ) -> Tuple[Optional[V], immutables.Map[str, Tuple[V]]]:
         """
-        pops an element from the stack and returns it
+        pops an element from the stack and returns it;
+        note that the head of the tuple represents the top of the stack; popped elements come from the tuple head;
         performs a shallow copy and update, treating Dict as an immutable hash table
 
         :param xs:

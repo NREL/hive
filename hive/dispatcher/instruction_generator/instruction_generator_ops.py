@@ -38,10 +38,12 @@ class InstructionGenerationResult(NamedTuple):
                                     environment: Environment,
                                     ) -> InstructionGenerationResult:
         """
-        generates instructions from one InstructionGenerator and updates the result accumulator
-        :param environment:
+        generates instructions from one of the InstructionGenerators;
+        each of these instructions are added to the stack for the appropriate vehicle id;
+
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
         :param simulation_state: the current simulation state
+        :param environment: the simulation environment
         :return: the updated accumulator
         """
         updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state, environment)
@@ -58,6 +60,14 @@ class InstructionGenerationResult(NamedTuple):
         )
 
     def add_driver_instructions(self, simulation_state, environment):
+        """
+        drivers are given a chance to optionally generate instructions;
+        each of these instructions are added to the stack for the appropriate vehicle id;
+
+        :param simulation_state: the current simulation state
+        :param environment: the simulation environment
+        :return:
+        """
         new_instructions = ft.reduce(
             lambda acc, v: (v.driver_state.generate_instruction(
                 simulation_state,
@@ -83,12 +93,15 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
                           environment: Environment,
                           ) -> InstructionGenerationResult:
     """
-    applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
-    and has an overwrite behavior with respect to generated Instructions in the instruction_map
-    :param instruction_generators:
-    :param simulation_state:
-    :param environment:
-    :return: the instructions generated for this time step, which has 0 or 1 instruction per vehicle
+    applies a set of InstructionGenerators to the SimulationState;
+    each time an instruction is generated it gets added to a stack (per vehicle id);
+    the last instruction to be added gets popped and executed;
+    thus, the order of instruction generation matters as the last instruction generated (per vehicle) gets executed;
+
+    :param instruction_generators: a tuple of instruction generators
+    :param simulation_state: the simulation state
+    :param environment: the simulation environment
+    :return: the instructions generated for this time step (0 to many instructions per vehicle)
     """
 
     result = ft.reduce(

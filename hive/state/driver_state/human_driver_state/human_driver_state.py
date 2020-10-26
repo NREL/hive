@@ -91,7 +91,8 @@ class HumanUnavailable(NamedTuple, DriverState):
             previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         """
-        return home
+        while in this state, the driver checks the vehicle location; if the vehicle is not at the home base,
+        a new instruction is generated to send the vehicle home.
 
         :param sim:
         :param env:
