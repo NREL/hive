@@ -4,8 +4,7 @@ from typing import NamedTuple, Dict, Union, Tuple
 
 from hive.config.config_builder import ConfigBuilder
 from hive.model.vehicle.schedules.schedule_type import ScheduleType
-from hive.util.parsers import time_parser
-from hive.util.typealiases import SimTime
+from hive.model.sim_time import SimTime
 from hive.util.units import Seconds
 
 
@@ -42,11 +41,11 @@ class Sim(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, Sim]:
-        start_time = time_parser(d['start_time'])
+        start_time = SimTime.build(d['start_time'])
         if isinstance(start_time, IOError):
             return start_time
 
-        end_time = time_parser(d['end_time'])
+        end_time = SimTime.build(d['end_time'])
         if isinstance(end_time, IOError):
             return end_time
 

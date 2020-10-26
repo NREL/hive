@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 from hive.model.request import Request, RequestRateStructure
+from hive.model.sim_time import SimTime
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.util.dict_reader_stepper import DictReaderStepper
-from hive.util.parsers import time_parser
 from hive.reporting.reporter import Report, ReportType
 
 log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
             raise IOError(f"{request_file} is not a valid path to a request file")
 
         if lazy_file_reading:
-            error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=time_parser)
+            error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=SimTime.build)
             if error:
                 raise error
         else:
@@ -63,7 +63,7 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
                 # converting to tuple then back to iterator should bring the whole file into memory
                 reader = iter(tuple(DictReader(f)))
 
-            stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=time_parser)
+            stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=SimTime.build)
 
         return UpdateRequests(stepper, rate_structure)
 

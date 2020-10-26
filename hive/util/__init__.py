@@ -9,7 +9,6 @@ from hive.util.exception import (
     UnitError,
     H3Error)
 from hive.util.helpers import H3Ops, DictOps, TupleOps, SwitchCase, EntityUpdateResult
-from hive.util.parsers import time_parser
 from hive.util.typealiases import (
     RequestId,
     VehicleId,
@@ -22,7 +21,6 @@ from hive.util.typealiases import (
     LinkId,
     RouteStepPointer,
     H3Line,
-    SimTime,
     SimStep
 )
 from hive.util.units import (

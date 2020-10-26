@@ -1,5 +1,4 @@
 from typing import Tuple, FrozenSet, Callable, TypeVar
-from hive.model.sim_time import SimTime
 
 from immutables import Map
 
@@ -31,7 +30,6 @@ H3Resolution = int
 H3Line = Tuple[GeoId, ...]
 GeoFenceSet = FrozenSet[GeoId]
 
-SimTime = SimTime  # datetime object
 SimStep = int  # the iteration of the simulation
 
 # FUNCTIONS

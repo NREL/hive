@@ -10,7 +10,7 @@ class TestUpdateRequests(TestCase):
         """
         test invariant: the below file resource exists
         """
-        sim_time = time_parser(180)  # will pull in all requests with departure_time earlier than 180
+        sim_time = SimTime.build(180)  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
         config = mock_config(
             start_time="2019-01-09T00:00:00",
@@ -31,7 +31,7 @@ class TestUpdateRequests(TestCase):
         won't add requests whos cancel_time has already been exceeded, will instead report them
         test invariant: the below file resource exists
         """
-        sim_time = time_parser(720)  # will pull in all requests with departure_time earlier than 720
+        sim_time = SimTime.build(720)  # will pull in all requests with departure_time earlier than 720
         expected_reqs = 18
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
         config = mock_config(
@@ -53,7 +53,7 @@ class TestUpdateRequests(TestCase):
         won't add requests whos cancel_time has already been exceeded, will instead report them
         test invariant: the below file resource exists
         """
-        sim_time = time_parser(720)  # will pull in all requests with departure_time earlier than 720
+        sim_time = SimTime.build(720)  # will pull in all requests with departure_time earlier than 720
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
         config = mock_config(
             start_time="2019-01-09T00:00:00",
@@ -73,7 +73,7 @@ class TestUpdateRequests(TestCase):
         """
         test invariant: the below file resource exists
         """
-        sim_time = time_parser(180)  # will pull in all requests with departure_time earlier than 180
+        sim_time = SimTime.build(180)  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
         config = mock_config(
             start_time="2019-01-09T00:00:00",
