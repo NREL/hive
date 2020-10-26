@@ -33,3 +33,21 @@ class TestVehicle(TestCase):
 
         with self.assertRaises(IOError):
             Vehicle.from_row(row, road_network, env)
+
+    def test_set_membership(self):
+        source = """vehicle_id,lat,lon,mechatronics_id,initial_soc,schedule_id
+                            v1,39.7539,-104.976,bev,1.0,schedule0"""
+
+        row = next(DictReader(source.split()))
+        road_network = mock_network()
+        env = mock_env()
+
+        vehicle = Vehicle.from_row(row, road_network, env)
+
+        self.assertEqual(vehicle.membership.memberships, frozenset(['default_membership']),
+                         "should have default membership")
+
+        vehicle = vehicle.set_membership(('fleet_1', 'fleet_3'))
+
+        self.assertEqual(vehicle.membership.memberships, frozenset(['fleet_1', 'fleet_3']),
+                         "should have membership for fleet_1 and fleet_3")

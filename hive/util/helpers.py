@@ -107,6 +107,8 @@ class H3Ops:
 
         :return: the nearest entity, or, None if not found within the constraints
         """
+        if not entities:
+            return None
         geoid_res = h3.h3_get_resolution(geoid)
         if geoid_res < sim_h3_search_resolution:
             raise H3Error('search resolution must be less than geoid resolution')
