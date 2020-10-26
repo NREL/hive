@@ -36,6 +36,7 @@ from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsI
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.model.vehicle.vehicle import Vehicle
+from hive.model.sim_time import SimTime
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -355,7 +356,7 @@ def mock_human_driver(available: bool = True,
 
 
 def mock_sim(
-        sim_time: SimTime = 0,
+        sim_time: int = 0,
         sim_timestep_duration_seconds: Seconds = 60,
         h3_location_res: int = 15,
         h3_search_res: int = 10,
@@ -365,7 +366,7 @@ def mock_sim(
 ) -> SimulationState:
     sim = SimulationState(
         road_network=mock_network(),
-        sim_time=sim_time,
+        sim_time=SimTime.build(sim_time),
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,
         sim_h3_search_resolution=h3_search_res,

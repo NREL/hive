@@ -3,10 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Tuple, NamedTuple
 
+from hive.model.sim_time import SimTime
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.util.dict_reader_stepper import DictReaderStepper
-from hive.util.parsers import time_parser
 
 
 class BasicForecaster(NamedTuple, ForecasterInterface):
@@ -28,7 +28,7 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
         if not Path(demand_forecast_file).is_file():
             raise IOError(f"{demand_forecast_file} is not a valid path to a request file")
 
-        error, reader = DictReaderStepper.from_file(demand_forecast_file, "sim_time", parser=time_parser)
+        error, reader = DictReaderStepper.from_file(demand_forecast_file, "sim_time", parser=SimTime.build)
         if error:
             raise error
         else:

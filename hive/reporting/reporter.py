@@ -16,7 +16,7 @@ class Report(NamedTuple):
     report: Dict[str, str]
 
     def as_json(self) -> Dict[str, str]:
-        out = self.report
+        out = {str(k): str(v) for k, v in self.report.items()}
         out['report_type'] = self.report_type.name.lower()
         return out
 
@@ -41,11 +41,6 @@ class Reporter:
         :param runner_payload: The runner payload.
         :return: Does not return a value.
         """
-
-        # TODO: This is too fragile. We should think about introducing a sim step parameter.
-        if runner_payload.s.sim_time % self.config.log_period_seconds != 0:
-            return
-
         for handler in self.handlers:
             handler.handle(self.reports, runner_payload)
 

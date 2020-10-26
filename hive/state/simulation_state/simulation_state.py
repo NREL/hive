@@ -6,8 +6,9 @@ import immutables
 
 from hive.state.simulation_state.at_location_response import AtLocationResponse
 from hive.model.membership import DEFAULT_MEMBERSHIP
+from hive.model.sim_time import SimTime
 from hive.util import geo
-from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, SimTime, GeoId, MembershipId
+from hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, GeoId, MembershipId
 
 if TYPE_CHECKING:
     from hive.model.roadnetwork.roadnetwork import RoadNetwork

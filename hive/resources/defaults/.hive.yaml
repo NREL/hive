@@ -17,7 +17,6 @@ log_sim_config:
 - 'refuel_search_event'
 - 'driver_schedule_event'
 log_station_capacities: True
-log_period_seconds: 60
 local_parallelism: 1
 local_parallelism_timeout_sec: 60
 lazy_file_reading: False

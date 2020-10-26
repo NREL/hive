@@ -9,7 +9,6 @@ from returns.io import IOResult, IOResultE
 from hive.model.station import Station
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util import Kw
 
 
 def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[Path]:
@@ -20,6 +19,7 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
     :param env: the environment with a Reporter instance
     :return: nothing, or, any exception
     """
+
     def _station_energy(station: Station) -> dict:
         """
         get the Kw capacity of a given station

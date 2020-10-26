@@ -1,12 +1,13 @@
 import logging
 from typing import NamedTuple, Tuple, Optional
 
+from hive.model.sim_time import SimTime
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import VehicleId, StationId, SimTime, ChargerId
+from hive.util.typealiases import VehicleId, StationId, ChargerId
 
 log = logging.getLogger(__name__)
 

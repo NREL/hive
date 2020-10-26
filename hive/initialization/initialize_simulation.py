@@ -69,9 +69,6 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
-    if config.global_config.log_period_seconds < config.sim.timestep_duration_seconds:
-        raise RuntimeError("log time step must be greater than simulation time step")
-
     reporter = Reporter(config.global_config)
 
     if config.global_config.log_events:
@@ -93,7 +90,7 @@ def initialize_simulation(
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
     #  should instead hold aside any error reports and then do something below after finishing,
     #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
-    # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
+    #  this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, sim_initial, env_initial)
     sim_with_bases = _build_bases(bases_file, sim_with_vehicles)
     sim_with_stations = _build_stations(stations_file, sim_with_bases)

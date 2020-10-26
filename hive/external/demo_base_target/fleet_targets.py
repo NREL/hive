@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from hive.util.typealiases import SimTime
+from hive.model.sim_time import SimTime
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
