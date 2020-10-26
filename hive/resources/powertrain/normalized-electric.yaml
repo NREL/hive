@@ -1,0 +1,32 @@
+name: "normalized-electric"
+type: "tabular"
+speed_units: "mph"
+energy_units: "watthour"
+distance_units: "mile"
+consumption_model:
+  - speed: 2.5
+    energy_per_distance: 1.435975446
+  - speed: 7.5
+    energy_per_distance: 1.252653024
+  - speed: 12.5
+    energy_per_distance: 1.152371252
+  - speed: 17.5
+    energy_per_distance: 1.035082396
+  - speed: 22.5
+    energy_per_distance: 0.952447407
+  - speed: 27.5
+    energy_per_distance: 0.929755405
+  - speed: 32.5
+    energy_per_distance: 0.953249563
+  - speed: 37.5
+    energy_per_distance: 0.995732494
+  - speed: 42.5
+    energy_per_distance: 1.037245858
+  - speed: 47.5
+    energy_per_distance: 1.098571736
+  - speed: 52.5
+    energy_per_distance: 1.159856089
+  - speed: 57.5
+    energy_per_distance: 1.18870426
+  - speed: 62.5
+    energy_per_distance: 1.283088977

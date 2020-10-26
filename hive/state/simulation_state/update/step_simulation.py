@@ -19,7 +19,7 @@ from hive.state.simulation_state.update.step_simulation_ops import (
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.dispatcher.instruction.instructions import Instruction
-    from hive.util.typealiases import SimTime
+    from hive.model.sim_time import SimTime
 
 log = logging.getLogger(__name__)
 

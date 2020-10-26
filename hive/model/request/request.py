@@ -8,7 +8,7 @@ from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.membership import Membership
-from hive.util.parsers import time_parser
+from hive.model.sim_time import SimTime
 from hive.util.typealiases import *
 from hive.util.units import Currency, KM_TO_MILE, Kilometers
 
@@ -130,7 +130,7 @@ class Request(NamedTuple):
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
-                departure_time_result = time_parser(row['departure_time'])
+                departure_time_result = SimTime.build(row['departure_time'])
                 if isinstance(departure_time_result, IOError):
                     return departure_time_result, None
 

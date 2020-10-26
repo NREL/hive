@@ -21,6 +21,7 @@ from hive.dispatcher.instruction_generator.position_fleet_manager import Positio
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
+from hive.model.membership import Membership
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
@@ -29,20 +30,20 @@ from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.station import Station
-from hive.model.vehicle.vehicle import Vehicle
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
-from hive.model.membership import Membership
+from hive.model.vehicle.vehicle import Vehicle
+from hive.model.sim_time import SimTime
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
 from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.driver_state.driver_state import DriverState
-from hive.state.driver_state.human_driver_state.human_driver_state import HumanAvailable, HumanUnavailable
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
+from hive.state.driver_state.human_driver_state.human_driver_state import HumanAvailable, HumanUnavailable
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
@@ -232,11 +233,12 @@ def mock_request_from_geoids(
     )
 
 
-def mock_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
-    powertrain_file = resource_filename("hive.resources.powertrain", "normalized.yaml")
+def mock_ev_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
+    powertrain_file = resource_filename("hive.resources.powertrain", "normalized-electric.yaml")
     with Path(powertrain_file).open() as f:
         data = yaml.safe_load(f)
-        return TabularPowertrain(data=data, nominal_watt_hour_per_mile=nominal_watt_hour_per_mile)
+        data['scale_factor'] = nominal_watt_hour_per_mile
+        return TabularPowertrain(data=data)
 
 
 def mock_powercurve(
@@ -264,11 +266,19 @@ def mock_bev(
         mechatronics_id='bev',
         battery_capacity_kwh=battery_capacity_kwh,
         idle_kwh_per_hour=idle_kwh_per_hour,
-        powertrain=mock_powertrain(nominal_watt_hour_per_mile),
+        powertrain=mock_ev_powertrain(nominal_watt_hour_per_mile),
         powercurve=mock_powercurve(nominal_max_charge_kw, battery_capacity_kwh),
         nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
         charge_taper_cutoff_kw=charge_taper_cutoff_kw,
     )
+
+
+def mock_ice_powertrain(nominal_miles_per_gallon) -> TabularPowertrain:
+    powertrain_file = resource_filename("hive.resources.powertrain", "normalized-gasoline.yaml")
+    with Path(powertrain_file).open() as f:
+        data = yaml.safe_load(f)
+        data['scale_factor'] = 1 / nominal_miles_per_gallon
+        return TabularPowertrain(data=data)
 
 
 def mock_ice(
@@ -283,6 +293,7 @@ def mock_ice(
         tank_capacity_gallons=tank_capacity_gallons,
         idle_gallons_per_hour=idle_gallons_per_hour,
         nominal_miles_per_gallon=nominal_miles_per_gallon,
+        powertrain=mock_ice_powertrain(nominal_miles_per_gallon),
     )
 
 
@@ -345,7 +356,7 @@ def mock_human_driver(available: bool = True,
 
 
 def mock_sim(
-        sim_time: SimTime = 0,
+        sim_time: int = 0,
         sim_timestep_duration_seconds: Seconds = 60,
         h3_location_res: int = 15,
         h3_search_res: int = 10,
@@ -355,7 +366,7 @@ def mock_sim(
 ) -> SimulationState:
     sim = SimulationState(
         road_network=mock_network(),
-        sim_time=sim_time,
+        sim_time=SimTime.build(sim_time),
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,
         sim_h3_search_resolution=h3_search_res,

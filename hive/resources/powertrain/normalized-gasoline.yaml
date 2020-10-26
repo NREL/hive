@@ -1,0 +1,40 @@
+name: "normalized-gasoline"
+type: "tabular"
+speed_units: "mph"
+energy_units: "gal_gas"
+distance_units: "mile"
+consumption_model:
+  - energy_per_distance: 3.91358486133
+    speed: 0
+  - energy_per_distance: 1.83667733508
+    speed: 5
+  - energy_per_distance: 1.3209582962700002
+    speed: 10
+  - energy_per_distance: 1.1027709404700001
+    speed: 15
+  - energy_per_distance: 0.98353025367
+    speed: 20
+  - energy_per_distance: 0.87915887892
+    speed: 25
+  - energy_per_distance: 0.8175159720000001
+    speed: 30
+  - energy_per_distance: 0.70257603543
+    speed: 35
+  - energy_per_distance: 0.6603528862200001
+    speed: 40
+  - energy_per_distance: 0.6429712339800001
+    speed: 45
+  - energy_per_distance: 0.6362691001500002
+    speed: 50
+  - energy_per_distance: 0.64934072334
+    speed: 55
+  - energy_per_distance: 0.6886621668899999
+    speed: 60
+  - energy_per_distance: 0.75051792006
+    speed: 65
+  - energy_per_distance: 0.82042948935
+    speed: 70
+  - energy_per_distance: 0.9007022289000001
+    speed: 75
+  - energy_per_distance: 1.00647063891
+    speed: 80

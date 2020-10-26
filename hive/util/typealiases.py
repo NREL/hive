@@ -1,4 +1,5 @@
 from typing import Tuple, FrozenSet, Callable, TypeVar
+
 from immutables import Map
 
 # MODEL ID TYPES
@@ -23,13 +24,12 @@ MembershipMap = Map[MembershipId, Tuple[EntityId, ...]]
 
 # POSITIONAL
 GeoId = str  # h3 geohash
-LinkId = str # road network link
+LinkId = str  # road network link
 RouteStepPointer = int
 H3Resolution = int
 H3Line = Tuple[GeoId, ...]
 GeoFenceSet = FrozenSet[GeoId]
 
-SimTime = int  # time in seconds consistent across inputs (epoch time preferred)
 SimStep = int  # the iteration of the simulation
 
 # FUNCTIONS

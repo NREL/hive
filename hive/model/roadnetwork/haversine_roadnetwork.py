@@ -6,7 +6,7 @@ from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
-from hive.util import SimTime
+from hive.model.sim_time import SimTime
 from hive.util.helpers import H3Ops
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
 from hive.util.units import Kilometers

@@ -10,13 +10,13 @@ import immutables
 import h3
 
 from hive.model.energy.charger import Charger, build_chargers_table
+from hive.model.sim_time import SimTime
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.util.dict_reader_stepper import DictReaderStepper
 from hive.util.helpers import DictOps
-from hive.util.parsers import time_parser
 from hive.util.typealiases import StationId, ChargerId
 from hive.util.units import Currency
 
@@ -62,7 +62,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
                 return acc + (default_price,)
 
             fallback_values = ft.reduce(create_default_price, table.keys(), ())
-            stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=time_parser)
+            stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=SimTime.build)
             return ChargingPriceUpdate(stepper, True)
         else:
             charging_path = Path(charging_price_file)
@@ -70,13 +70,13 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
                 raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
-                    error, stepper = DictReaderStepper.from_file(charging_path, "time", parser=time_parser)
+                    error, stepper = DictReaderStepper.from_file(charging_path, "time", parser=SimTime.build)
                     if error:
                         raise error
                 else:
                     with charging_path.open() as f:
                         reader = iter(tuple(DictReader(f)))
-                    stepper = DictReaderStepper.from_iterator(reader, "time", parser=time_parser)
+                    stepper = DictReaderStepper.from_iterator(reader, "time", parser=SimTime.build)
 
                 return ChargingPriceUpdate(stepper, False)
 

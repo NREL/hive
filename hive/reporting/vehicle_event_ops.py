@@ -6,15 +6,14 @@ from typing import TYPE_CHECKING, Tuple, Set
 import h3
 import immutables
 
-from hive.model.energy import EnergyType, Charger
+from hive.model.energy import Charger
 from hive.model.roadnetwork import route
 from hive.model.station import Station
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util.typealiases import StationId
-from hive.util.units import KwH
+from hive.util import StationId
 
 if TYPE_CHECKING:
     from hive.model.request.request import Request
@@ -181,6 +180,7 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
         transforms the accumulated values into Reports
         :return: a collection of STATION_LOAD_EVENT reports
         """
+
         def _cast_as_report(station_id: StationId):
             energy, energy_units = acc.get(station_id)
             report = Report(
@@ -194,6 +194,7 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
                 }
             )
             return report
+
         these_reports: Tuple[Report, ...] = tuple(map(_cast_as_report, acc.keys()))
         return these_reports
 
@@ -212,4 +213,3 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
     result = _to_reports(all_stations_accumulator)
 
     return result
-
