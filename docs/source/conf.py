@@ -48,6 +48,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'named_tuple',
     'sphinx_autodoc_typehints',
+    'recommonmark',
+    'sphinx_rtd_theme'
 ]
 
 autodoc_member_order = 'bysource'
@@ -85,7 +87,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'nature'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -140,7 +142,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'hive.tex', 'hive Documentation',
-     'Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames', 'manual'),
+     'NREL', 'manual'),
 ]
 
 
@@ -190,3 +192,13 @@ epub_exclude_files = ['search.html']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+from recommonmark.transform import AutoStructify
+
+github_doc_root = 'https://github.com/rtfd/recommonmark/tree/master/doc/'
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+            'url_resolver': lambda url: github_doc_root + url,
+            'auto_toc_tree_section': 'Contents',
+            }, True)
+    app.add_transform(AutoStructify)
