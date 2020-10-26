@@ -89,19 +89,6 @@ class HiveConfig(NamedTuple):
             log.info(f"hive config loaded from {str(scenario_file_path)}")
             log.info(f"\n{yaml.dump(conf)}")
 
-            # check to see if the dispatcher update interval is in line with the time step interval
-            time_steps = range(
-                hive_config.sim.start_time,
-                hive_config.sim.end_time,
-                hive_config.sim.timestep_duration_seconds,
-            )
-            d_interval = hive_config.dispatcher.default_update_interval_seconds
-            p_interval = hive_config.global_config.log_period_seconds
-            if not any(s % d_interval == 0 for s in time_steps):
-                log.warning(f"the default_update_interval of {d_interval} seconds is not in line with the time steps and may cause issues")
-            if not any(s % p_interval == 0 for s in time_steps):
-                log.warning(f"the progress_period of {p_interval} is not in line with the time steps")
-
             return hive_config
 
     def asdict(self) -> Dict:

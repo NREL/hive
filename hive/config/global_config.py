@@ -5,7 +5,6 @@ from typing import NamedTuple, Tuple, Dict, Set
 
 from hive.config.config_builder import ConfigBuilder
 from hive.reporting.reporter import ReportType
-from hive.util.units import Seconds
 
 
 class GlobalConfig(NamedTuple):
@@ -20,10 +19,8 @@ class GlobalConfig(NamedTuple):
     log_level: str
     log_sim_config: Set[ReportType]
     log_station_capacities: bool
-    log_period_seconds: Seconds
     lazy_file_reading: bool
     wkt_x_y_ordering: bool
-
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -41,9 +38,8 @@ class GlobalConfig(NamedTuple):
             'log_stats',
             'log_level',
             'log_sim_config',
-            'log_period_seconds',
             'lazy_file_reading',
-            'wkt_x_y_ordering'
+            'wkt_x_y_ordering',
         )
 
     @classmethod
@@ -64,7 +60,8 @@ class GlobalConfig(NamedTuple):
         d['output_base_directory'] = str(output_base_directory_absolute)
 
         # convert list of logged report types to a Set
-        d['log_sim_config'] = set(ReportType.from_string(rt) for rt in d['log_sim_config']) if d['log_sim_config'] else set()
+        d['log_sim_config'] = set(ReportType.from_string(rt) for rt in d['log_sim_config']) if d[
+            'log_sim_config'] else set()
 
         # store the .hive.yaml file path used
         d['global_settings_file_path'] = global_settings_file_path

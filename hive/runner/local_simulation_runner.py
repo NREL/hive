@@ -31,8 +31,8 @@ class LocalSimulationRunner(NamedTuple):
         """
 
         time_steps = tqdm(range(
-            runner_payload.e.config.sim.start_time,
-            runner_payload.e.config.sim.end_time,
+            int(runner_payload.e.config.sim.start_time),
+            int(runner_payload.e.config.sim.end_time),
             runner_payload.e.config.sim.timestep_duration_seconds,
         ))
 

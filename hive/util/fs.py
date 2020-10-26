@@ -78,7 +78,12 @@ def construct_asset_path(file: str, scenario_directory: str, default_directory_n
         if Path(fallback).is_file():
             return fallback
         else:
-            raise FileNotFoundError(file)
+            msg = f"could not find the file {file} in any of the following locations: \n" \
+                  f" - {Path(scenario_directory).joinpath(file)} \n" \
+                  f" - {Path(scenario_directory).joinpath(default_directory_name).joinpath(file)} \n" \
+                  f" - {Path(fallback)}"
+
+            raise FileNotFoundError(msg)
 
 
 def construct_scenario_asset_path(file: str, scenario_directory: str, default_directory_name: str) -> str:

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 import logging
-import immutables
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable, List
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.instruction_generator_ops import generate_instructions
@@ -22,8 +21,6 @@ from hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
-    from hive.util.typealiases import VehicleId
-    from hive.dispatcher.instruction.instruction import Instruction
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +71,6 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
                 continue
             else:
                 final_instructions = (i,) + final_instructions
-
 
         log_instructions(final_instructions, env, simulation_state.sim_time)
 
