@@ -21,8 +21,8 @@ sys.path.append(os.path.abspath("./ext"))
 # -- Project information -----------------------------------------------------
 
 project = 'hive'
-copyright = '2019, Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames'
-author = 'Brennan Borlaug, Nicholas Reinicke, Matt Moniot, Jacob Holden, Clement Rames'
+copyright = '2020, NREL'
+author = 'NREL'
 
 # The short X.Y version
 version = ''
