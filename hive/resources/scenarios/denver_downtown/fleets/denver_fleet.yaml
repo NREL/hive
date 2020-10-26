@@ -1,0 +1,39 @@
+uber:
+  vehicles:
+    - v1
+    - v2
+    - v3
+    - v4
+    - v5
+    - v6
+    - v7
+    - v14
+    - v15
+    - v16
+    - v20
+  stations:
+    - s1
+    - s2
+    - bs1
+  bases:
+    - b1
+
+lyft:
+  vehicles:
+    - v7
+    - v8
+    - v9
+    - v10
+    - v11
+    - v12
+    - v13
+    - v17
+    - v18
+    - v19
+    - v20
+  stations:
+    - s1
+    - s2
+    - bs1
+  bases:
+    - b1

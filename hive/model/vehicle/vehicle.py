@@ -164,7 +164,7 @@ class Vehicle(NamedTuple):
         """
         return self._replace(distance_traveled_km=self.distance_traveled_km + delta_d_km)
 
-    def update_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
+    def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """
         updates the membership(s) of the vehicle
         :param member_ids: a Tuple containing updated membership(s) of the vehicle

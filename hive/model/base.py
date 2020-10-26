@@ -129,7 +129,7 @@ class Base(NamedTuple):
         else:
             return self._replace(available_stalls=stalls + 1)
 
-    def update_membership(self, member_ids: Tuple[str, ...]) -> Base:
+    def set_membership(self, member_ids: Tuple[str, ...]) -> Base:
         """
         updates the membership(s) of the base
         :param member_ids: a Tuple containing updated membership(s) of the base

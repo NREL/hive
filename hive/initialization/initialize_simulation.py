@@ -137,7 +137,7 @@ def _build_vehicles(
         veh = Vehicle.from_row(row, sim.road_network, env)
         if vehicle_member_ids is not None:
             if veh.id in vehicle_member_ids:
-                veh = veh.update_membership(vehicle_member_ids[veh.id])
+                veh = veh.set_membership(vehicle_member_ids[veh.id])
         error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
         if error:
             log.error(error)
@@ -150,7 +150,6 @@ def _build_vehicles(
         reader = csv.DictReader(vf)
         initial_payload = simulation_state, environment
         sim_with_vehicles = ft.reduce(_add_row_unsafe, reader, initial_payload)
-
     return sim_with_vehicles
 
 
@@ -172,7 +171,7 @@ def _build_bases(bases_file: str,
         base = Base.from_row(row, simulation_state.road_network)
         if base_member_ids is not None:
             if base.id in base_member_ids:
-                base = base.update_membership(base_member_ids[base.id])
+                base = base.set_membership(base_member_ids[base.id])
         error, updated_sim = simulation_state_ops.add_base(sim, base)
         if error:
             log.error(error)
@@ -210,7 +209,7 @@ def _build_stations(stations_file: str,
     def _add_station_unsafe(sim: SimulationState, station: Station) -> SimulationState:
         if station_member_ids is not None:
             if station.id in station_member_ids:
-                station = station.update_membership(station_member_ids[station.id])
+                station = station.set_membership(station_member_ids[station.id])
         error, sim_with_station = simulation_state_ops.add_station(sim, station)
         if error:
             log.error(error)
