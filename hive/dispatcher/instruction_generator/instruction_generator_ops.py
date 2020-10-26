@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from typing import List
+
 import functools as ft
 import random
-import logging
 
 import h3
 import immutables
@@ -11,8 +12,8 @@ from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
-from hive.util import Ratio
-from hive.util.helpers import DictOps, H3Ops, TupleOps
+from hive.util import Ratio, TupleOps, DictOps
+from hive.util.helpers import H3Ops
 
 log = logging.getLogger(__name__)
 
@@ -24,9 +25,11 @@ if TYPE_CHECKING:
     from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
     from hive.util.typealiases import MembershipId
 
+i_map: immutables.Map[VehicleId, List[Instruction]] = immutables.Map()
+
 
 class InstructionGenerationResult(NamedTuple):
-    instruction_map: immutables.Map = immutables.Map()
+    instruction_stack: immutables.Map[VehicleId, Tuple[Instruction]] = immutables.Map()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(self,
@@ -35,23 +38,53 @@ class InstructionGenerationResult(NamedTuple):
                                     environment: Environment,
                                     ) -> InstructionGenerationResult:
         """
-        generates instructions from one InstructionGenerator and updates the result accumulator
-        :param environment:
+        generates instructions from one of the InstructionGenerators;
+        each of these instructions are added to the stack for the appropriate vehicle id;
+
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
         :param simulation_state: the current simulation state
+        :param environment: the simulation environment
         :return: the updated accumulator
         """
         updated_gen, new_instructions = instruction_generator.generate_instructions(simulation_state, environment)
 
-        updated_instruction_map = ft.reduce(
-            lambda acc, i: DictOps.add_to_dict(acc, i.vehicle_id, i),
+        updated_instruction_stack = ft.reduce(
+            lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i),
             new_instructions,
-            self.instruction_map
+            self.instruction_stack
         )
 
         return self._replace(
-            instruction_map=updated_instruction_map,
+            instruction_stack=updated_instruction_stack,
             updated_instruction_generators=self.updated_instruction_generators + (updated_gen,)
+        )
+
+    def add_driver_instructions(self, simulation_state, environment):
+        """
+        drivers are given a chance to optionally generate instructions;
+        each of these instructions are added to the stack for the appropriate vehicle id;
+
+        :param simulation_state: the current simulation state
+        :param environment: the simulation environment
+        :return:
+        """
+        new_instructions = ft.reduce(
+            lambda acc, v: (v.driver_state.generate_instruction(
+                simulation_state,
+                environment,
+                self.instruction_stack.get(v.id),
+            ),) + acc,
+            simulation_state.get_vehicles(),
+            ())
+
+        updated_instruction_stack = ft.reduce(
+            lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i) if i else acc,
+            new_instructions,
+            self.instruction_stack
+        )
+
+        return self._replace(
+            instruction_stack=updated_instruction_stack,
         )
 
 
@@ -60,13 +93,15 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
                           environment: Environment,
                           ) -> InstructionGenerationResult:
     """
-    applies a set of InstructionGenerators to the SimulationState. order of generators is preserved
-    and has an overwrite behavior with respect to generated Instructions in the instruction_map
+    applies a set of InstructionGenerators to the SimulationState;
+    each time an instruction is generated it gets added to a stack (per vehicle id);
+    the last instruction to be added gets popped and executed;
+    thus, the order of instruction generation matters as the last instruction generated (per vehicle) gets executed;
 
-    :param instruction_generators:
-    :param simulation_state:
-    :param environment:
-    :return: the instructions generated for this time step, which has 0 or 1 instruction per vehicle
+    :param instruction_generators: a tuple of instruction generators
+    :param simulation_state: the simulation state
+    :param environment: the simulation environment
+    :return: the instructions generated for this time step (0 to many instructions per vehicle)
     """
 
     result = ft.reduce(
@@ -75,7 +110,10 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
         InstructionGenerationResult()
     )
 
-    return result
+    # give drivers a chance to add instructions
+    driver_result = result.add_driver_instructions(simulation_state, environment)
+
+    return driver_result
 
 
 def instruct_vehicles_return_to_base(

@@ -7,7 +7,7 @@ import h3
 from returns.result import Result, Success, Failure
 
 from hive.util.exception import SimulationStateError
-from hive.util.helpers import DictOps
+from hive.util import DictOps
 from hive.util.typealiases import *
 
 if TYPE_CHECKING:

@@ -86,9 +86,10 @@ class Vehicle(NamedTuple):
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
                 schedule_id = row.get('schedule_id')  # if None, it signals an autonomous vehicle, otherwise, human with schedule
+                home_base_id = row.get('home_base_id')
                 if schedule_id and not schedule_id in environment.schedules.keys():
                     raise IOError(f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
-                driver_state = DriverState.build(vehicle_id, schedule_id)
+                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.link_from_geoid(geoid)

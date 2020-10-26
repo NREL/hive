@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from hive.util.typealiases import ScheduleId, VehicleId
+from hive.util.typealiases import ScheduleId, VehicleId, BaseId
 
 
 class HumanDriverAttributes(NamedTuple):
@@ -9,10 +9,9 @@ class HumanDriverAttributes(NamedTuple):
     """
     vehicle_id: VehicleId
     schedule_id: ScheduleId
-    # home_base: BaseId
+    home_base_id: BaseId
     # start_time: SimTime ?
     # agency_ids: frozenset[AgencyId] ?
-    pass
 
 
 

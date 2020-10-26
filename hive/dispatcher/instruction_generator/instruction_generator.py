@@ -6,7 +6,7 @@ from typing import Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.runner.environment import Environment
-    from hive.dispatcher.instruction.instruction_interface import Instruction
+    from hive.dispatcher.instruction.instruction import Instruction
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 

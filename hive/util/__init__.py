@@ -8,7 +8,9 @@ from hive.util.exception import (
     EntityError,
     UnitError,
     H3Error)
-from hive.util.helpers import H3Ops, DictOps, TupleOps, SwitchCase, EntityUpdateResult
+from hive.util.helpers import H3Ops, SwitchCase
+from hive.util.dict_ops import DictOps
+from hive.util.tuple_ops import TupleOps
 from hive.util.typealiases import (
     RequestId,
     VehicleId,

@@ -15,5 +15,5 @@ class TestInitializeSimulation(TestCase):
 
         sim, env = initialize_simulation(updated_conf)
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
-        self.assertEqual(len(sim.stations), 3, "should have loaded 3 stations")
-        self.assertEqual(len(sim.bases), 1, "should have loaded 1 base")
+        self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
+        self.assertEqual(len(sim.bases), 2, "should have loaded 1 base")

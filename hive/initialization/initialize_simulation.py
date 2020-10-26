@@ -24,7 +24,7 @@ from hive.reporting.handler.stats_handler import StatsHandler
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util.helpers import DictOps
+from hive.util import DictOps
 
 log = logging.getLogger(__name__)
 

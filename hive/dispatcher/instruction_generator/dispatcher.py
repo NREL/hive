@@ -43,6 +43,8 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
             if vehicle_state_str not in environment.config.dispatcher.valid_dispatch_states:
                 return False
+            elif not vehicle.driver_state.available:
+                return False
 
             mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
             range_remaining_km = mechatronics.range_remaining_km(vehicle)
