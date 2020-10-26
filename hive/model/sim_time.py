@@ -48,10 +48,16 @@ class SimTime(int):
         return self.__class__(res)
 
     def __repr__(self):
-        return datetime.utcfromtimestamp(int(self)).isoformat()
+        return self.as_iso_time()
 
     def __str__(self):
-        return datetime.utcfromtimestamp(int(self)).isoformat()
+        return self.as_iso_time()
 
     def as_datetime_time(self) -> datetime.time:
         return datetime.utcfromtimestamp(int(self)).time()
+
+    def as_epoch_time(self) -> int:
+        return int(self)
+
+    def as_iso_time(self) -> str:
+        return datetime.utcfromtimestamp(int(self)).isoformat()
