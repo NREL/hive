@@ -42,31 +42,24 @@ def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) ->
                 model = mechatronic_models[mechatronics_type]
             except KeyError:
                 raise IOError(f'{mechatronics_type} not registered with hive')
-            if mechatronics_type == 'bev':
-                try:
-                    powertrain_file = config_dict[mechatronics_id]['powertrain_file']
-                    powercurve_file = config_dict[mechatronics_id]['powercurve_file']
-                except KeyError as err:
-                    raise FileNotFoundError() from err
-                try:
-                    # find the appropriate powertrain and powercurve resource
-                    powertrain_file = fs.construct_asset_path(
-                        powertrain_file,
-                        scenario_directory,
-                        "powertrain",
-                        "powertrain"  # resources.powertrain
-                    )
-                    powercurve_file = fs.construct_asset_path(
-                        powercurve_file,
-                        scenario_directory,
-                        "powercurve",
-                        "powercurve"  # resources.powercurve
-                    )
-                    config_dict[mechatronics_id]['powertrain_file'] = powertrain_file
-                    config_dict[mechatronics_id]['powercurve_file'] = powercurve_file
 
-                except FileNotFoundError as e:
-                    raise e
+            if "powertrain_file" in config_dict[mechatronics_id]:
+                powertrain_file = fs.construct_asset_path(
+                    config_dict[mechatronics_id]['powertrain_file'],
+                    scenario_directory,
+                    "powertrain",
+                    "powertrain"  # resources.powertrain
+                )
+                config_dict[mechatronics_id]['powertrain_file'] = powertrain_file
+
+            if "powercurve_file" in config_dict[mechatronics_id]:
+                powercurve_file = fs.construct_asset_path(
+                    config_dict[mechatronics_id]['powercurve_file'],
+                    scenario_directory,
+                    "powercurve",
+                    "powercurve"  # resources.powercurve
+                )
+                config_dict[mechatronics_id]['powercurve_file'] = powercurve_file
 
             mechatronics[mechatronics_id] = model.from_dict(config_dict[mechatronics_id])
 
