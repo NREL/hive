@@ -11,13 +11,14 @@ class ReportType(Enum):
     VEHICLE_STATE = 2
     ADD_REQUEST_EVENT = 3
     PICKUP_REQUEST_EVENT = 4
-    CANCEL_REQUEST_EVENT = 5
-    INSTRUCTION = 6
-    VEHICLE_CHARGE_EVENT = 7
-    VEHICLE_MOVE_EVENT = 8
-    STATION_LOAD_EVENT = 9
-    REFUEL_SEARCH_EVENT = 10
-    DRIVER_SCHEDULE_EVENT = 11
+    DROPOFF_REQUEST_EVENT = 5
+    CANCEL_REQUEST_EVENT = 6
+    INSTRUCTION = 7
+    VEHICLE_CHARGE_EVENT = 8
+    VEHICLE_MOVE_EVENT = 9
+    STATION_LOAD_EVENT = 10
+    REFUEL_SEARCH_EVENT = 11
+    DRIVER_SCHEDULE_EVENT = 12
 
     @classmethod
     def from_string(cls, s: str) -> ReportType:
@@ -26,6 +27,7 @@ class ReportType(Enum):
             "vehicle_state": cls.VEHICLE_STATE,
             "add_request_event": cls.ADD_REQUEST_EVENT,
             "pickup_request_event": cls.PICKUP_REQUEST_EVENT,
+            "dropoff_request_event": cls.DROPOFF_REQUEST_EVENT,
             "cancel_request_event": cls.CANCEL_REQUEST_EVENT,
             "instruction": cls.INSTRUCTION,
             "vehicle_charge_event": cls.VEHICLE_CHARGE_EVENT,

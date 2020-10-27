@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Optional
 
+from hive.model.sim_time import SimTime
 from hive.util.typealiases import *
 
 

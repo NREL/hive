@@ -130,9 +130,10 @@ def report_pickup_request(vehicle: Vehicle,
     report_data = {
         'pickup_time': sim_time_start,
         'request_time': request.departure_time,
-        'wait_time_seconds': sim_time_start - request.departure_time,
+        'wait_time_seconds': (sim_time_start - request.departure_time).as_datetime_time,
         'vehicle_id': vehicle.id,
         'request_id': request.id,
+        'membership_id': vehicle.vehicle_state.membership_id,
         'price': request.value,
         'geoid': geoid,
         'lat': lat,
@@ -140,6 +141,36 @@ def report_pickup_request(vehicle: Vehicle,
     }
 
     report = Report(ReportType.PICKUP_REQUEST_EVENT, report_data)
+    return report
+
+
+def report_dropoff_request(vehicle: Vehicle,
+                          next_sim: SimulationState,
+                          ) -> Report:
+    """
+    reports information about the marginal effect of a request dropoff
+    :param vehicle: the vehicle that picked up the request
+    :param next_sim: simulation state when the dropoff occurs
+    :return: a dropoff request report
+    """
+
+    sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
+
+    geoid = vehicle.geoid
+    lat, lon = h3.h3_to_geo(geoid)
+
+    report_data = {
+        'dropoff_time': sim_time_start,
+        'travel_time': (sim_time_start - vehicle.vehicle_state.departure_time).as_datetime_time(),
+        'vehicle_id': vehicle.id,
+        'request_id': vehicle.vehicle_state.request_id,
+        'membership_id': vehicle.vehicle_state.membership_id,
+        'geoid': geoid,
+        'lat': lat,
+        'lon': lon
+    }
+
+    report = Report(ReportType.DROPOFF_REQUEST_EVENT, report_data)
     return report
 
 
