@@ -1,9 +1,15 @@
 # building the docs
 
+the hive docs source code lives in the hive repository under `hive.docs.source`
+
+these are rendered to html and pushed to https://github.nrel.gov/MBAP/hive-docs
+
+the hive-docs repo publishes the static html files to https://github.nrel.gov/pages/MBAP/hive-docs/
+
 install sphinx, themes and extensions
 
 ```
-conda install sphinx
+pip install sphinx
 pip install sphinx-rtd-theme
 pip install recommonmark
 pip install sphinx-markdown-tables
@@ -14,6 +20,12 @@ run build script
 ```bash
 cd hive/docs
 bash build_docs.sh
+```
+
+get hive-docs repo
+
+```bash
+git clone https://github.nrel.gov/MBAP/hive-docs.git
 ```
 
 run publish script
