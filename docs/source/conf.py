@@ -37,7 +37,6 @@ extensions = [
         "sphinx_rtd_theme",
         "recommonmark",
         "sphinx_markdown_tables",
-        "sphinxemoji.sphinxemoji",
 ]
 
 autodoc_member_order = 'bysource'
