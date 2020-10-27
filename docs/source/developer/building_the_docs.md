@@ -10,10 +10,15 @@ pip install sphinx-markdown-tables
 pip install sphinx-autodoc-typehints
 ```
 
-run build script
+run build script 
 ```bash
 cd hive/docs
 bash build_docs.sh
+```
+
+run publish script
+```bash
+bash publish_docs.sh
 ```
 
 or, manually
@@ -22,6 +27,8 @@ or, manually
 cd hive/docs
 
 cp ../README.md source/
+sed "s|docs/source/||" source/README.md > source/tmp_README.md
+mv source/tmp_README.md source/README.md
 
 make html
 

@@ -26,5 +26,5 @@ def emojize(file: Path):
 
 if __name__ == "__main__":
     for f in files:
-        print(f"working on file {f}")
+        print(f"emojizing file {f}")
         emojize(Path(f))

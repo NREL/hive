@@ -6,6 +6,7 @@ Welcome to hive's documentation!
    :hidden:
 
    README
+   inputs
    api-docs/index
    developer/index
 

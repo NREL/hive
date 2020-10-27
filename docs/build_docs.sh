@@ -8,6 +8,10 @@ HIVEDOC=../../hive-docs/
 # copy the readme into the source
 cp ../README.md source/
 
+# update image paths
+sed "s|docs/source/||" source/README.md > source/tmp_README.md
+mv source/tmp_README.md source/README.md
+
 # build sphinx html files
 make html
 
@@ -17,7 +21,4 @@ python emojize.py
 # move files into the hive-doc repo
 cp -r build/html/* $HIVEDOC
 
-cd $HIVEDOC || exit
-git add ./*
-git commit -m "publish docs"
-git push
+

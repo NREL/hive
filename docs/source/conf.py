@@ -12,9 +12,9 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./ext"))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -25,18 +25,17 @@ author = 'NREL'
 # The full version, including alpha/beta/rc tags
 release = 'v0.8.0'
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-        "sphinx.ext.autodoc",
-        'sphinx_autodoc_typehints',
-        "sphinx_rtd_theme",
-        "recommonmark",
-        "sphinx_markdown_tables",
+    "sphinx.ext.autodoc",
+    'sphinx_autodoc_typehints',
+    "sphinx_rtd_theme",
+    "recommonmark",
+    "sphinx_markdown_tables",
 ]
 
 autodoc_member_order = 'bysource'
@@ -51,7 +50,6 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -64,6 +62,14 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-rst_epilog = """
-.. |honeybee| replace:: 🐝
-"""
+from recommonmark.transform import AutoStructify
+
+github_doc_root = 'https://github.com/rtfd/recommonmark/tree/master/docs/'
+
+
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+        'url_resolver': lambda url: github_doc_root + url,
+        'auto_toc_tree_section': 'Contents',
+    }, True)
+    app.add_transform(AutoStructify)
