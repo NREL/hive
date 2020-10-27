@@ -15,9 +15,13 @@ class ConfigBuilder:
               config: Dict = None) -> T:
         """
         constructs a Config from a configuration Dict
+
         :param default_config: a dictionary containing default config values
+
         :param required_config: a dictionary containing required keys and their expected types
+
         :param config_constructor: a function that takes a dict and builds a Config object
+
         :param config: the Dict containing attributes to load for this Config
         :return: a Config, or, an error
         """

@@ -27,6 +27,7 @@ class Powertrain(metaclass=ABCMeta):
         """
         (estimated) energy cost to traverse this route
 
+
         :param route: a route, either experienced, or, estimated
         :return: energy cost of this route
         """

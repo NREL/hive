@@ -53,6 +53,7 @@ class TabularPowertrain(Powertrain):
         """
         uses mph tabular value to calculate energy over a link
 
+
         :param link: the link to calculate energy over.
         :return: energy in units captured by self.energy_units
         """

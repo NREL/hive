@@ -19,7 +19,9 @@ class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
         """
         takes a simulation state and modifies it, returning the updated simulation state
 
+
         :param simulation_state: the state to modify
+
         :param env: the environmental variables for this run
         :return: the updated sim state, along with any reporting;
         as well, an Optionally-updated SimulationUpdate function

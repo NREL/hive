@@ -20,6 +20,7 @@ class ForecasterInterface(metaclass=ABCNamedTupleMeta):
         """
         Generate forecast of some future state.
 
+
         :param simulation_state: The current simulation state
         :return: the update Forecaster along with the forecast
         """

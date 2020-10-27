@@ -20,6 +20,7 @@ def route_distance_km(route: Route) -> Kilometers:
     """
     Return the distance of the route in kilometers
 
+
     :param route: route to calculate distance on
     :rtype: :py:obj:`kilometers`
     :return: the distance in kilometers
@@ -34,6 +35,7 @@ def route_distance_km(route: Route) -> Kilometers:
 def route_travel_time_seconds(route: Route) -> Seconds:
     """
     returns the travel time, in seconds, for a route
+
     :param route: route to calculate time from
     :return: the travel time, in seconds
     """
@@ -50,8 +52,11 @@ def valid_route(route: Route,
     todo: we should check that the route is valid from a graph perspective here as well.
       we could step through the route via the road network and test that each link is incident
 
+
     :param route: the provided route
+
     :param src: the GeoId of the vehicle starting this route
+
     :param dst: the GeoId of the entity which is the destination for this route
                 if omitted, only source is checked
     :return: whether the route is valid
@@ -69,6 +74,7 @@ def to_linestring(route: Route, env: Environment) -> str:
     """
     converts the traversal to a WKT linestring or an empty polygon if the traversal was empty
     see https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+
     :param route: a route
     :return: a linestring or an empty WKT
     """

@@ -41,8 +41,11 @@ class InstructionGenerationResult(NamedTuple):
         generates instructions from one of the InstructionGenerators;
         each of these instructions are added to the stack for the appropriate vehicle id;
 
+
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
+
         :param simulation_state: the current simulation state
+
         :param environment: the simulation environment
         :return: the updated accumulator
         """
@@ -64,7 +67,9 @@ class InstructionGenerationResult(NamedTuple):
         drivers are given a chance to optionally generate instructions;
         each of these instructions are added to the stack for the appropriate vehicle id;
 
+
         :param simulation_state: the current simulation state
+
         :param environment: the simulation environment
         :return:
         """
@@ -98,8 +103,11 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     the last instruction to be added gets popped and executed;
     thus, the order of instruction generation matters as the last instruction generated (per vehicle) gets executed;
 
+
     :param instruction_generators: a tuple of instruction generators
+
     :param simulation_state: the simulation state
+
     :param environment: the simulation environment
     :return: the instructions generated for this time step (0 to many instructions per vehicle)
     """
@@ -123,7 +131,9 @@ def instruct_vehicles_return_to_base(
     """
     a helper function to send vehicles back to the base
 
+
     :param vehicles: the list of vehicles to consider
+
     :param simulation_state: the simulation state
     :return:
     """
@@ -159,8 +169,11 @@ def instruct_vehicles_at_base_to_reserve(n: int, vehicles: Tuple[Vehicle], simul
     """
     a helper function to set n vehicles to reserve at the base
 
+
     :param n: how many vehicles to set to reserve
+
     :param vehicles: the list of vehicles to consider
+
     :param simulation_state: the simulation state
     :return:
     """
@@ -189,8 +202,11 @@ def instruct_vehicles_at_base_to_charge(
     """
     a helper function to set n vehicles to charge at the base
 
+
     :param vehicles: the list of vehicles to consider
+
     :param simulation_state: the simulation state
+
     :param environment: the environment
     :return:
     """
@@ -244,12 +260,19 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     """
     a helper function to set n vehicles to charge at a station
 
+
     :param n: how many vehicles to charge at the base
+
     :param max_search_radius_km: the max kilometers to search for a station
+
     :param vehicles: the list of vehicles to consider
+
     :param simulation_state: the simulation state
+
     :param environment: the simulation environment
+
     :param target_soc: when ranking alternatives, use this target SoC value
+
     :param charging_search_type: the type of search to conduct
     :return: instructions for vehicles to charge at stations
     """
@@ -335,7 +358,9 @@ def instruct_vehicles_to_sit_idle(n: int, vehicles: Tuple[Vehicle]) -> Tuple[Ins
     """
     a helper function to set n vehicles to sit idle
 
+
     :param n: how many vehicles to change to idle
+
     :param vehicles: the list of vehicles to consider
     :return:
     """
@@ -358,8 +383,11 @@ def instruct_vehicles_to_reposition(n: int, vehicles: Tuple[Vehicle], simulation
     """
     a helper function to send n vehicles into the field at a random location
 
+
     :param n: how many vehicles to send to the field
+
     :param vehicles: the list of vehicles to consider
+
     :param simulation_state: the simulation state
     :return:
     """

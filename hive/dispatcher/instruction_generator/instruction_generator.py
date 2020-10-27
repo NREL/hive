@@ -26,7 +26,9 @@ class InstructionGenerator(metaclass=ABCNamedTupleMeta):
         generates vehicle instructions which can perform vehicle state transitions
         based on some objective
 
+
         :param simulation_state: the current simulation state
+
         :param environment: the simulation environment
 
         :return: the updated InstructionGenerator along with generated instructions

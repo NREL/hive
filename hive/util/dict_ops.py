@@ -31,8 +31,11 @@ class DictOps:
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
 
+
         :param xs:
+
         :param obj_id:
+
         :param obj:
         :return:
         """
@@ -44,7 +47,9 @@ class DictOps:
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
 
+
         :param xs:
+
         :param obj_id:
         :return:
         """
@@ -54,7 +59,9 @@ class DictOps:
     def merge_dicts(cls, old: immutables.Map[K, V], new: immutables.Map[K, V]) -> immutables.Map[K, V]:
         """
         merges two Dictionaries, replacing old kv pairs with new ones
+
         :param old: the old Dict
+
         :param new: the new Dict
         :return: a merged Dict
         """
@@ -73,8 +80,11 @@ class DictOps:
         updates Dicts that track collections of entities
         performs a shallow copy and update, treating Dict as an immutable hash table
 
+
         :param xs:
+
         :param collection_id:
+
         :param obj_id:
         :return:
         """
@@ -92,8 +102,11 @@ class DictOps:
         note that the head of the tuple represents the top of the stack; elements always get inserted into the head;
         performs a shallow copy and update, treating Dict as an immutable hash table
 
+
         :param xs:
+
         :param collection_id:
+
         :param obj_id:
         :return:
         """
@@ -111,8 +124,11 @@ class DictOps:
         note that the head of the tuple represents the top of the stack; popped elements come from the tuple head;
         performs a shallow copy and update, treating Dict as an immutable hash table
 
+
         :param xs:
+
         :param collection_id:
+
         :param obj_id:
         :return:
         """
@@ -133,8 +149,11 @@ class DictOps:
         performs a shallow copy and update, treating Dict as an immutable hash table
         when a geoid has no ids after a remove, it deletes that geoid, to prevent geoid Dict memory leaks
 
+
         :param xs:
+
         :param collection_id:
+
         :param obj_id:
         :return:
         """
@@ -151,10 +170,15 @@ class DictOps:
                                    sim_h3_search_resolution: int) -> EntityUpdateResult:
         """
         updates all dictionaries related to an entity
+
         :param updated_entity: an entity which itself should have an "id" and a "geoid" attribute
+
         :param entities: the dictionary containing Entities by EntityId
+
         :param locations: the finest-resolution geoindex of this entity type
+
         :param search: the upper-level resolution geoindex
+
         :param sim_h3_search_resolution: the h3 resolution of the search collection
         :return: the updated dictionaries
         """

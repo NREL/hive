@@ -19,8 +19,10 @@ class HaversineRoadNetwork(RoadNetwork):
     two nodes. LinkId is specified as a concatenation of the GeoId of its endpoints in which the order is given by
     origin and destination respectively.
 
+
     :param AVG_SPEED: the average speed over the network
     :type AVG_SPEED: :py:obj: kilometer/hour
+
     :param sim_h3_resolution: the h3 simulation level resolution. default 15
     :type sim_h3_resolution: :py:obj: int
 

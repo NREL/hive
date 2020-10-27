@@ -10,6 +10,7 @@ from hive.util.typealiases import ChargerId
 def build_chargers_table(chargers_file: str) -> Dict[ChargerId, Charger]:
     """
     constructs a table of the chargers available in this simulation
+
     :param chargers_file: the source chargers file
     :return: the chargers table for this Environment
     :raises: IOError

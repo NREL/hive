@@ -32,12 +32,19 @@ def sample_vehicles(
     """
     creates {count} vehicles using the provided sampling functions
 
+
     :param mechatronics_id: the id of the mechatronics used by these vehicles
+
     :param count:
+
     :param sim:
+
     :param env:
+
     :param location_sampling_function: samples the initial location for a vehicle
+
     :param soc_sampling_function: samples the initial state of charge for a vehicle
+
     :param offset: number to begin counting vehicle ids from (by default, begin counting from zero)
     :return: the updated setup, or, a failure
     """
@@ -50,12 +57,14 @@ def sample_vehicles(
         def _add_sample(i: int):
             """
             returns a function which creates the i'th vehicle
+
             :param i: the number to associate with this sampled vehicle
             :return: a function that adds vehicle i to the SimulationState
             """
             def _inner(s: SimulationState) -> Result[SimulationState, Exception]:
                 """
                 attempts to add the i'th vehicle to this simulation state
+
                 :param s: the SimulationState to update
                 :return: the updated simulation state, or, an exception
                 """
@@ -97,7 +106,9 @@ def build_default_location_sampling_fn(bases: Tuple[Base, ...], seed: int = 0) -
     """
     constructs a link sampling function that uniformly samples from the provided base locations
 
+
     :param bases: the available bases
+
     :param seed: random seed value
     :return: a link
     """
@@ -117,8 +128,11 @@ def build_default_soc_sampling_fn(lower_bound: Ratio = 1.0, upper_bound: Ratio =
     """
     constructs an SoC sampling function that uniformly samples between a lower and upper bound value
 
+
     :param lower_bound: the lower bound to sample from
+
     :param upper_bound: the upper bound to sample from
+
     :param seed: random seed value
     :return: an SoC value
     """

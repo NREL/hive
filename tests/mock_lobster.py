@@ -377,6 +377,7 @@ def mock_sim(
     def add_or_throw(fn: Callable):
         """
         test writers will be told if their added stations, vehicles, or bases are invalid
+
         :param fn: the sim add function
         :return: the updated sim
         ;raises: Exception when an add fails
@@ -502,10 +503,15 @@ def mock_haversine_zigzag_route(
 ) -> Route:
     """
     "zigs" lat steps and "zags" lon steps. all your base belong to us.
+
     :param n: number of steps
+
     :param lat_step_size: lat-wise step size
+
     :param lon_step_size: lon-wise step size
+
     :param speed_kmph: road speed
+
     :param h3_res: h3 resolution
     :return: a route
     """
@@ -513,7 +519,9 @@ def mock_haversine_zigzag_route(
     def step(acc: Tuple[Link, ...], i: int) -> Tuple[Link, ...]:
         """
         constructs the next Link
+
         :param acc: the route so far
+
         :param i: what link we are making
         :return: the route with another link added
         """

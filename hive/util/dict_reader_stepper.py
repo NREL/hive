@@ -77,9 +77,13 @@ class DictReaderStepper:
                  ):
         """
         creates a DictReaderStepper with an internal DictReaderIterator
+
         :param dict_reader: the dict reader, reading rows from a csv file
+
         :param step_column_name: the column we are comparing new bounds against
+
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
+
         :param parser: an optional parameter for parsing the input_config value
         """
         self._iterator = DictReaderIterator(dict_reader, step_column_name, initial_stop_condition, parser)
@@ -94,10 +98,14 @@ class DictReaderStepper:
                   ) -> Tuple[Optional[Exception], Optional[DictReaderStepper]]:
         """
         alternative constructor that takes a file path and returns a DictReaderStepper, or, a failure
+
         :param file: the file path
+
         :param step_column_name: the column we are comparing new bounds against
+
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
                note: descending not yet implemented
+
         :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
@@ -119,10 +127,14 @@ class DictReaderStepper:
         a file, allowing for programmatic data loading (for debugging, or, for
         dealing with default file contents)
 
+
         :param data: a provider of row-wise data similar to a CSV
+
         :param step_column_name: the key we are expecting in each Dict that we are comparing new bounds against
+
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
                note: descending not yet implemented
+
         :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
@@ -131,6 +143,7 @@ class DictReaderStepper:
     def read_until_stop_condition(self, stop_condition: Callable) -> Iterator[Dict[str, str]]:
         """
         reads rows from the DictReader as long as step_column_name is less than or equal to "value"
+
         :param stop_condition: the condition to validate. we will read all new
                       rows as long as each row's value evaluates to True
         :return: the updated DictReaderStepper and a tuple of rows, which may be empty if no new rows are consumable.

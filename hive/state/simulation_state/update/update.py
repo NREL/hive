@@ -36,8 +36,11 @@ class Update(NamedTuple):
                                                                                                     b: None) -> Update:
         """
         constructs the functionality to update the simulation each time step
+
         :param config:
+
         :param instruction_generators: any overriding dispatcher functionality
+
         :param instruction_generator_update_fn: user API for modifying InstructionGenerator models at each time step
         :return: the Update that will be applied at each time step
         """
@@ -67,6 +70,7 @@ class Update(NamedTuple):
     def apply_update(self, runner_payload: RunnerPayload) -> RunnerPayload:
         """
         applies the update at a time step, calling each SimulationUpdateFunction in order
+
         :param runner_payload: the current SimulationState and assets at the current simtime
         :return: the updated payload after one SimTime step
         """
@@ -98,8 +102,11 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
     was also updated, then store the updated version of the update function
     invariant: the update functions (self.u) were emptied before applying these
     (we don't want to duplicate them!)
+
     :param fn: an update function
+
     :param sim: the current state of the simulation
+
     :param env: the simulation environment
     :return: the updated payload, with update function applied to the simulation,
     and the update function possibly updated itself

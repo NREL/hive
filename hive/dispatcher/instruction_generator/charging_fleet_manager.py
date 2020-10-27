@@ -36,7 +36,9 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+
         :param simulation_state: The current simulation state
+
         :param environment: The simulation environment
 
         :return: the updated ChargingFleetManager along with instructions

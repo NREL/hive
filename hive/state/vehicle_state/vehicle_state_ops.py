@@ -20,10 +20,15 @@ def charge(sim: 'SimulationState',
            charger_id: ChargerId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
+
     :param sim: the simulation state
+
     :param env: the simulation environment
+
     :param vehicle_id: the vehicle transitioning
+
     :param station_id: the station where we are charging
+
     :param charger_id: the charger_id we are using
     :return: an exception due to failure or an optional updated simulation
     """
@@ -79,9 +84,13 @@ def _apply_route_traversal(sim: 'SimulationState',
     """
     Moves the vehicle and consumes energy.
 
+
     :param sim: the simulation state
+
     :param env: the simulation environment
+
     :param vehicle_id: the vehicle moving
+
     :param route: the route for the vehicle
     :return: an error, or a traverse result, or (None, None) if no traversal occurred
     """
@@ -136,8 +145,11 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
                                 vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     sets a vehicle to OutOfService if it is out of energy after a move event
+
     :param sim: the sim after a move event
+
     :param env: the sim environment
+
     :param vehicle_id: the vehicle that moved
     :return: an optional error, or an optional sim with the out of service vehicle, or (None, None) if no changes
     """
@@ -168,9 +180,13 @@ def move(sim: 'SimulationState',
          route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
     """
     moves the vehicle, and moves to OutOfService if resulting vehicle energy is empty
+
     :param sim: the sim state
+
     :param env: the sim environment
+
     :param vehicle_id: the vehicle to move
+
     :param route: the route for the vehicle
     :return: an optional error,
              or an optional sim with moved/OutOfService vehicle (or no change if no traversal occurred)
@@ -198,9 +214,13 @@ def pick_up_trip(sim: 'SimulationState',
                  request_id: RequestId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     has a vehicle pick up a trip and receive payment for it
+
     :param sim: the sim state
+
     :param env: the sim environment
+
     :param vehicle_id: the vehicle picking up the request
+
     :param request_id: the request to pick up
     :return: an error, or, the sim with the request picked up by the vehicle
     """

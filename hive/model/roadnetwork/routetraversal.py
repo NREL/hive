@@ -16,12 +16,16 @@ class RouteTraversal(NamedTuple):
     """
     A tuple that represents the result of traversing a route.
 
+
     :param remaining_time: The (estimated) time remaining in the route.
     :type remaining_time_seconds: :py:obj:`hours`
+
     :param travel_distance: The distance of the experienced route.
     :type travel_distance: :py:obj:`kilometers`
+
     :param experienced_route: The route that was traversed during a traversal.
     :type experienced_route: :py:obj:`Route`
+
     :param remaining_route: The route that remains after a traversal.
     :type remaining_route: :py:obj:`Route`
     """
@@ -41,6 +45,7 @@ class RouteTraversal(NamedTuple):
     def add_traversal(self, t: LinkTraversal) -> RouteTraversal:
         """
         take the result of a link traversal and update the route traversal
+
 
         :param t: a link traversal
         :return: the updated route traversal
@@ -66,6 +71,7 @@ class RouteTraversal(NamedTuple):
         """
         if a link wasn't traversed, be sure to add it to the remaining route
 
+
         :param link: a link for the remaining route
         :return: the updated RouteTraversal
         """
@@ -79,7 +85,9 @@ def traverse(route_estimate: Route,
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
+
     :param route_estimate: the current route estimate
+
     :param duration_seconds: size of the time step for this traversal, in seconds
     :return: a route experience and updated route estimate;
              or, nothing (None, None) if the route is consumed.

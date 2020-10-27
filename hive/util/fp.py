@@ -8,6 +8,7 @@ def throw_on_failure(io_result: IOResult):
 
     should only be used in the hive.app module (at the "end-of-the-world").
 
+
     :param io_result: a result from some IO operation
     :raises: any error result
     """

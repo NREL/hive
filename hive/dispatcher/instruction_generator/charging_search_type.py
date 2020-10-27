@@ -12,6 +12,7 @@ class ChargingSearchType(Enum):
     def from_string(string: str) -> ChargingSearchType:
         """
         parses an input configuration string as a ChargingSearchType
+
         :param string: the input string
         :return: a ChargingSearchType or an Error
         :raises: ValueError when the charging search type is unknown

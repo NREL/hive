@@ -43,7 +43,9 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         before beginning, it first calls a provided update function on the set of InstructionGenerators for any
         control models injected by the user
 
+
         :param simulation_state: state to modify
+
         :param env: the sim environment
         :return: updated simulation state, with reports, along with the (optionally) updated StepSimulation
         """

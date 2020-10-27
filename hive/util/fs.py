@@ -62,9 +62,13 @@ def construct_asset_path(file: str, scenario_directory: str, default_directory_n
     this will test "/home/jimbob/hive/denver/leaf.yaml" then "/home/jimbob/hive/denver/vehicles/leaf.yaml" and finally
     "hive/resources/powertrain/leaf.yaml" and return the first path where the file is found to exist.
 
+
     :param file: file we are seaching for
+
     :param scenario_directory: the scenario directory
+
     :param default_directory_name: the directory name where assets of this type are typically saved
+
     :param resources_subdirectory: the subdirectory of resources where we also expect this could be saved
     :return: the path string if the file exists, otherwise None
     :raises: FileNotFoundError if asset is not found
@@ -95,8 +99,11 @@ def construct_scenario_asset_path(file: str, scenario_directory: str, default_di
     this will test "/home/jimbob/hive/denver/vehicles.csv" then "/home/jimbob/hive/denver/vehicles/vehicles.csv" and return
     the first path where the file is found to exist.
 
+
     :param file: file we are searching for
+
     :param scenario_directory: the directory where the scenario file was found
+
     :param default_directory_name: the default directory name for the type of asset we are checking for
     :return: the path string if the file exists, otherwise None
     :raises: FileNotFoundError if asset is not found
@@ -115,6 +122,7 @@ def find_scenario(user_provided_scenario: str) -> Path:
     """
     allows users to declare built-in scenario filenames without absolute/relative paths or
     expects the user has provided a valid relative/absolute to another file
+
 
     :param user_provided_scenario: the scenario requested
     :return: the absolute path of this scenario if it exists

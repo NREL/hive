@@ -15,7 +15,9 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
     """
     logs each station and it's load capacity to the output directory
 
+
     :param sim: the (initial) simulation state
+
     :param env: the environment with a Reporter instance
     :return: nothing, or, any exception
     """
@@ -23,6 +25,7 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
     def _station_energy(station: Station) -> dict:
         """
         get the Kw capacity of a given station
+
         :param station: the station to observe
         :return: the capacity of this station as a CSV row dictionary
         """

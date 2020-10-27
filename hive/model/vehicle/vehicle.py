@@ -20,12 +20,19 @@ class Vehicle(NamedTuple):
     """
     Tuple that represents a vehicle in the simulation.
 
+
     :param id: A unique vehicle id.
+
     :param mechatronics_id: A id of the mechatronics component of the vehicle.
+
     :param energy: The energy of the vehicle
+
     :param link: The current location of the vehicle
+
     :param vehicle_state: The state that the vehicle is in.
+
     :param balance: How much revenue the vehicle has accumulated.
+
     :param distance_traveled_km: A accumulator to track how far a vehicle has traveled.
     """
     # core vehicle properties
@@ -57,9 +64,12 @@ class Vehicle(NamedTuple):
         """
         reads a csv row from file to generate a Vehicle
 
+
         :param environment:
+
         :param row: a row of a .csv which matches hive.util.pattern.vehicle_regex.
         this string will be stripped of whitespace characters (no spaces allowed in names!)
+
         :param road_network: the road network, used to find the vehicle's location in the sim
         :return: a vehicle, or, an IOError if failure occurred.
         """
@@ -112,6 +122,7 @@ class Vehicle(NamedTuple):
     def modify_energy(self, energy: Dict[EnergyType, float]) -> Vehicle:
         """
         modify the energy level of the vehicle. should only be used by the mechatronics ops
+
         :param energy:
         :return:
         """
@@ -120,6 +131,7 @@ class Vehicle(NamedTuple):
     def modify_vehicle_state(self, vehicle_state: VehicleState) -> Vehicle:
         """
         modify the state of the vehicle. should only be use by the vehicle state ops
+
         :param vehicle_state:
         :return:
         """
@@ -128,6 +140,7 @@ class Vehicle(NamedTuple):
     def modify_driver_state(self, driver_state: DriverState) -> Vehicle:
         """
         modify the state of the vehicle's driver. should only be used by the driver state ops
+
         :param driver_state:
         :return:
         """
@@ -136,6 +149,7 @@ class Vehicle(NamedTuple):
     def modify_link(self, link: Link) -> Vehicle:
         """
         modify the link of the vehicle. should only be used by the road network ops
+
         :param link:
         :return:
         """
@@ -144,6 +158,7 @@ class Vehicle(NamedTuple):
     def send_payment(self, amount: Currency) -> Vehicle:
         """
         updates the Vehicle's balance based on sending a payment
+
         :param amount: the amount to pay
         :return: the updated Vehicle
         """
@@ -152,6 +167,7 @@ class Vehicle(NamedTuple):
     def receive_payment(self, amount: Currency) -> Vehicle:
         """
         updates the Vehicle's balance based on receiving a payment
+
         :param amount: the amount to be paid
         :return: the updated Vehicle
         """
@@ -160,6 +176,7 @@ class Vehicle(NamedTuple):
     def tick_distance_traveled_km(self, delta_d_km: Kilometers) -> Vehicle:
         """
         adds distance to vehicle
+
         :param delta_d_km:
         :return:
         """
@@ -168,6 +185,7 @@ class Vehicle(NamedTuple):
     def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """
         updates the membership(s) of the vehicle
+
         :param member_ids: a Tuple containing updated membership(s) of the vehicle
         :return:
         """

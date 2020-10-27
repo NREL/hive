@@ -12,9 +12,13 @@ def same_simulation_location(a: GeoId,
     """
     tests if two geoids are at the same location in the simulation. allows for overriding test resolution to a parent level.
 
+
     :param a: first geoid
+
     :param b: second geoid
+
     :param sim_h3_resolution: resolution we want to compare at
+
     :param override_resolution: an overriding h3 spatial resolution, or, none to use this sim's default res
     :return: True/False, or, a SimulationStateError
     """

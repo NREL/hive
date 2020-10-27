@@ -50,8 +50,11 @@ def find_assignment(assignees: Tuple[Entity],
                     cost_fn: Callable[[Entity, Entity], float]) -> AssignmentSolution:
     """
 
+
     :param assignees: entities we are assigning to. assumed to have an id field.
+
     :param targets: the different entities that each assignee can be assigned to. assumed to have an id field.
+
     :param cost_fn: computes the cost of choosing a specific assignee (slot 1) with a specific target (slot 2)
     :return: a collection of pairs of (AssigneeId, TargetId) indicating the solution, along with it's cost
     """
@@ -92,7 +95,9 @@ def find_assignment(assignees: Tuple[Entity],
 def h3_distance_cost(a: Entity, b: Entity) -> float:
     """
     cost function based on the h3_distance between two entities
+
     :param a: one entity, expected to have a geoid
+
     :param b: another entity, expected to have a geoid
     :return: the h3_distance (number of cells between)
     """
@@ -105,7 +110,9 @@ def great_circle_distance_cost(a: Entity, b: Entity) -> float:
     cost function based on the great circle distance between two entities.
     reverts h3 geoid to a lat/lon pair and calculates the haversine distance.
 
+
     :param a: one entity, expected to have a geoid
+
     :param b: another entity, expected to have a geoid
     :return: the haversine (great circle) distance in lat/lon
     """
@@ -117,7 +124,9 @@ def nearest_shortest_queue_ranking(vehicle: Vehicle, charger_id: ChargerId):
     """
     set up a shortest queue ranking function which will rank distances from this vehicle
     and look for chargers of this type
+
     :param vehicle: the vehicle
+
     :param charger_id: the target charger type
     :return: a station ranking function
     """
@@ -126,8 +135,11 @@ def nearest_shortest_queue_ranking(vehicle: Vehicle, charger_id: ChargerId):
         sort ordering that prioritizes short vehicle queues where possible, using h3_distance
         as the base distance metric and extending that value by the proportion of available chargers
 
+
         :param vehicle: a vehicle
+
         :param station: a station
+
         :param charger_id: the type of charger we are using
         :return: the distance metric for this station, a function of it's queue size and distance
         """
@@ -153,9 +165,13 @@ def shortest_time_to_charge_ranking(
 
     this function returns a distance function which accepts a Station and returns Seconds
 
+
     :param vehicle: a vehicle
+
     :param sim: the simulation state
+
     :param env: the simulation environment
+
     :param target_soc: the SoC we are attempting to reach in this charge session
     :return: the distance metric for this vehicle/station pair (lower is better)
     """
@@ -167,6 +183,7 @@ def shortest_time_to_charge_ranking(
         """
         given a station charging alternative, determine the time it would take to charge
         using the best charger type available
+
         :param station: the station to rank
         :return: a ranking (estimated travel + queue + charge time)
         """
@@ -212,9 +229,13 @@ def shortest_time_to_charge_ranking(
                 """
                 computes the time estimated that a slot opens up for this vehicle to begin charging
 
+
                 :param _charging: a sorted list of remaining charge time estimates
+
                 :param _enqueued: a sorted list of charge time estimates for enqueued vehicles
+
                 :param _charger_id: the id of the charger these vehicles are competing for
+
                 :param time_passed: the amount of time that has been estimated
                 :return: the time in the future we should expect to begin charging, determined by a greedy assignment
                 """

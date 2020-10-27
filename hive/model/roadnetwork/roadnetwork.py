@@ -25,7 +25,9 @@ class RoadNetwork(ABC):
         """
         Returns a route between two road network property links
 
+
         :param origin: Link of the origin
+
         :param destination: Link of the destination
         :return: A route.
         """
@@ -35,7 +37,9 @@ class RoadNetwork(ABC):
         """
         Returns the road network distance between two geoids
 
+
         :param origin: Link of the origin
+
         :param destination: Link of the destination
         :return: the distance in kilometers.
         """
@@ -44,6 +48,7 @@ class RoadNetwork(ABC):
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
         """
         builds a location on the road network for a stationary simulation element
+
 
         :param geoid: geoid to map to network
         :return: The nearest property link if it exists.
@@ -54,6 +59,7 @@ class RoadNetwork(ABC):
         """
         confirms that the coordinate exists within the bounding polygon of this road network instance
 
+
         :param geoid: an h3 geoid
         :return: True/False
         """
@@ -62,6 +68,7 @@ class RoadNetwork(ABC):
     def update(self, sim_time: SimTime) -> RoadNetwork:
         """
         requests an update to the road network state to refect the provided simulation time
+
         :param sim_time:
         :return:
         """

@@ -16,6 +16,7 @@ run_log = logging.getLogger(__name__)
 def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environment]:
     """
     takes a scenario path and attempts to build all assets required to run a scenario
+
     :param scenario_file_path: the path to the scenario file we are using
     :return: the assets required to run a scenario
     :raises: Exception if the scenario_path is not found or if other scenario files are not found or fail to parse

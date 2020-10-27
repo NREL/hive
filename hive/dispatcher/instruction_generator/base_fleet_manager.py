@@ -34,7 +34,9 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
 
+
         :param environment:
+
         :param simulation_state: The current simulation state
 
         :return: the updated BaseFleetManager along with instructions

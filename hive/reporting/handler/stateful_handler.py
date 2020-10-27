@@ -28,7 +28,9 @@ class StatefulHandler(Handler):
         reports the vehicle and station state at the current time, written
         to state.log.
 
+
         :param reports: ignored
+
         :param runner_payload: provides the current simulation state
         """
         sim_state = runner_payload.s

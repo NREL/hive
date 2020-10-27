@@ -38,6 +38,7 @@ class Reporter:
         """
         called at each sim step.
 
+
         :param runner_payload: The runner payload.
         :return: Does not return a value.
         """
@@ -49,6 +50,7 @@ class Reporter:
     def file_report(self, report: Report):
         """
         files a single report to be handled later.
+
 
         :param report:
         :return:

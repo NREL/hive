@@ -36,6 +36,7 @@ def initialize_simulation(
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
 
+
     :param config: the configuration of this run
     :return: a SimulationState, or a SimulationStateError
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
@@ -119,9 +120,13 @@ def _build_vehicles(
     """
     adds all vehicles from the provided vehicles file
 
+
     :param vehicles_file: the file to load vehicles from
+
     :param vehicle_member_ids: an immutables Map with all of the vehicle membership ids
+
     :param simulation_state: the partially-constructed simulation state
+
     :param environment: the partially-constructed environment
     :return: the SimulationState with vehicles in it
     :raises Exception: from IOErrors parsing the vehicle, powertrain, or powercurve files
@@ -158,8 +163,11 @@ def _build_bases(bases_file: str,
     """
     all your base are belong to us
 
+
     :param bases_file: path to file with bases
+
     :param base_member_ids: an immutables Map with all of the base membership ids
+
     :param simulation_state: the partial simulation state
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
@@ -192,8 +200,11 @@ def _build_stations(stations_file: str,
     """
     all your station are belong to us
 
+
     :param stations_file: the file with stations in it
+
     :param station_member_ids: an immutables Map with all of the station membership ids
+
     :param simulation_state: the partial simulation state
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
