@@ -49,7 +49,6 @@ def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId
 
 
     :param request_id: request id
-
     :param passenger_id: integer for passenger in a request.
     :rtype: :py:obj:`PassengerId`
     :return: a new unique PassengerId
@@ -62,7 +61,6 @@ def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> T
     updates each passenger with a vehicle_id
 
     :param passengers: the passengers to board
-
     :param vehicle_id: the vehicle they are boarding
     :return: the passengers with their vehicle_id updated
     """

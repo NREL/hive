@@ -38,9 +38,7 @@ class Update(NamedTuple):
         constructs the functionality to update the simulation each time step
 
         :param config:
-
         :param instruction_generators: any overriding dispatcher functionality
-
         :param instruction_generator_update_fn: user API for modifying InstructionGenerator models at each time step
         :return: the Update that will be applied at each time step
         """
@@ -104,9 +102,7 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
     (we don't want to duplicate them!)
 
     :param fn: an update function
-
     :param sim: the current state of the simulation
-
     :param env: the simulation environment
     :return: the updated payload, with update function applied to the simulation,
     and the update function possibly updated itself

@@ -36,9 +36,7 @@ class BaseFleetManager(NamedTuple, InstructionGenerator):
 
 
         :param environment:
-
         :param simulation_state: The current simulation state
-
         :return: the updated BaseFleetManager along with instructions
         """
 

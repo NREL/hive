@@ -34,9 +34,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         under the condition of that state.
 
         :param sim: the simulation state
-
         :param env: the simulation environment
-
         :param state: the vehicle state we are updating
         :return: an exception due to failure or an optional updated simulation
         """
@@ -67,9 +65,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         this default enter operation simply modifies the vehicle's stored state value
 
         :param sim: the simulation state
-
         :param vehicle_id: the id of the vehicle to transition
-
         :param new_state: the state we are applying
         :return: an exception due to failure or an optional updated simulation
         """
@@ -88,7 +84,6 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         test if we have reached a terminal state and need to apply the default transition
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: True if the termination condition has been met
         """
@@ -104,7 +99,6 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         apply a transition to a default state after having met a terminal condition
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
@@ -118,7 +112,6 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         perform a simulation state update for a vehicle in this state
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """

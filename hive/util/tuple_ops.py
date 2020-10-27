@@ -69,7 +69,6 @@ class TupleOps:
         taken from https://docs.python.org/3/library/itertools.html (but result tuples reversed for readability)
 
         :param predicate: tests membership in result tuples
-
         :param t: the source tuple
         :return:
         """

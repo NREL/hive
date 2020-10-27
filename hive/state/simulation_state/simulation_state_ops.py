@@ -58,7 +58,6 @@ def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Except
     adds a request to the SimulationState
 
     :param sim: the simulation state
-
     :param request: the request to add
     :return: the updated simulation state, or an error
     """
@@ -90,7 +89,6 @@ def remove_request(sim: SimulationState,
 
 
     :param sim: the simulation state
-
     :param request_id: id of the request to delete
     :return: the updated simulation state (does not report failure)
     """
@@ -127,7 +125,6 @@ def modify_request(sim: SimulationState,
 
 
     :param sim: the simulation state
-
     :param updated_request:
     :return: the updated simulation, or an error
     """
@@ -162,7 +159,6 @@ def add_vehicle(sim: SimulationState, vehicle: Vehicle) -> Tuple[Optional[Except
 
 
     :param sim: the simulation state
-
     :param vehicle: a vehicle
     :return: updated SimulationState, or SimulationStateError
     """
@@ -193,7 +189,6 @@ def add_vehicle_returns(sim: SimulationState, vehicle: Vehicle) -> Result[Simula
 
 
     :param sim: the simulation state
-
     :param vehicle: a vehicle
     :return: updated SimulationState, or SimulationStateError
     """
@@ -225,7 +220,6 @@ def modify_vehicle(sim: SimulationState,
 
 
     :param sim: the simulation state
-
     :param updated_vehicle: the vehicle after calling a transition function and .step()
     :return: the updated simulation, or an error
     """
@@ -261,7 +255,6 @@ def remove_vehicle(sim: SimulationState, vehicle_id: VehicleId) -> Tuple[
 
 
     :param sim: the simulation state
-
     :param vehicle_id: the id of the vehicle
     :return: the updated simulation state
     """
@@ -298,7 +291,6 @@ def pop_vehicle(sim: SimulationState,
 
 
     :param sim: the simulation state
-
     :param vehicle_id: the id of the vehicle to pop
     :return: either a Tuple containing the updated state and the vehicle, or, an error
     """
@@ -320,7 +312,6 @@ def add_station(sim: SimulationState, station: Station) -> Tuple[Optional[Except
 
 
     :param sim: the simulation state
-
     :param station: the station to add
     :return: the updated SimulationState, or a error = SimulationStateError
     """
@@ -352,7 +343,6 @@ def remove_station(sim: SimulationState, station_id: StationId) -> Tuple[
 
 
     :param sim: the simulation state
-
     :param station_id: the id of the station to remove
     :return: the updated simulation state, or an exception
     """
@@ -385,7 +375,6 @@ def modify_station(sim: SimulationState,
 
 
     :param sim: the simulation state
-
     :param updated_station: the revised station data
     :return: the updated simulation, or an error
     """
@@ -413,7 +402,6 @@ def add_base(sim: SimulationState, base: Base) -> Tuple[Optional[Exception], Opt
 
 
     :param sim: the simulation state
-
     :param base: the base to add
     :return: the updated SimulationState, or a SimulationStateError
     """
@@ -444,7 +432,6 @@ def remove_base(sim: SimulationState, base_id: BaseId) -> Tuple[Optional[Excepti
 
 
     :param sim: the simulation state
-
     :param base_id: the id of the base to remove
     :return: the updated simulation state, or an exception
     """
@@ -477,7 +464,6 @@ def modify_base(sim: SimulationState, updated_base: Base) -> Tuple[Optional[Exce
 
 
     :param sim: the simulation state
-
     :param updated_base:
     :return: the updated simulation, or an error
     """
@@ -505,7 +491,6 @@ def update_road_network(sim: SimulationState, sim_time: SimTime) -> SimulationSt
 
 
     :param sim: the simulation state
-
     :param sim_time: the current sim time
     :return: updated simulation state (and road network)
     """

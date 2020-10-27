@@ -22,17 +22,11 @@ class Vehicle(NamedTuple):
 
 
     :param id: A unique vehicle id.
-
     :param mechatronics_id: A id of the mechatronics component of the vehicle.
-
     :param energy: The energy of the vehicle
-
     :param link: The current location of the vehicle
-
     :param vehicle_state: The state that the vehicle is in.
-
     :param balance: How much revenue the vehicle has accumulated.
-
     :param distance_traveled_km: A accumulator to track how far a vehicle has traveled.
     """
     # core vehicle properties
@@ -66,7 +60,6 @@ class Vehicle(NamedTuple):
 
 
         :param environment:
-
         :param row: a row of a .csv which matches hive.util.pattern.vehicle_regex.
         this string will be stripped of whitespace characters (no spaces allowed in names!)
 

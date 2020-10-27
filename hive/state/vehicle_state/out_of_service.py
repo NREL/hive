@@ -22,7 +22,6 @@ class OutOfService(NamedTuple, VehicleState):
         There is no terminal state for OutOfService
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: False
         """
@@ -36,7 +35,6 @@ class OutOfService(NamedTuple, VehicleState):
         There is no terminal state for OutOfService
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
         """
@@ -49,7 +47,6 @@ class OutOfService(NamedTuple, VehicleState):
         as of now, there is no update for being OutOfService
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: NOOP
         """

@@ -82,7 +82,6 @@ class Station(NamedTuple):
 
 
         :param row: a row as interpreted by csv.DictReader
-
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
 
@@ -217,7 +216,6 @@ class Station(NamedTuple):
         decrement the count of vehicles enqueued for a specific charger_id type - min zero
 
         :param charger_id: the charger_id type
-
         :param membership: the membership of the vehicle that want's to deque the charger
         :return: the updated Station
         """

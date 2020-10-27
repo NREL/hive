@@ -76,13 +76,9 @@ class SimulationState(NamedTuple):
 
 
         :param filter_function: function to filter results
-
         :param sort: whether or not to sort the results
-
         :param sort_key: the key to sort the results by
-
         :param sort_reversed: the order of the resulting sort
-
         :param membership_id: optional membership id
         :return: tuple of sorted and filtered stations
         """
@@ -115,13 +111,9 @@ class SimulationState(NamedTuple):
 
 
         :param filter_function: function to filter results
-
         :param sort: whether or not to sort the results
-
         :param sort_key: the key to sort the results by
-
         :param sort_reversed: the order of the resulting sort
-
         :param membership_id: optional membership id
         :return: tuple of sorted and filtered bases
         """
@@ -154,13 +146,9 @@ class SimulationState(NamedTuple):
 
 
         :param filter_function: function to filter results
-
         :param sort: whether or not to sort the results
-
         :param sort_key: the key to sort the results by
-
         :param sort_reversed: the order of the resulting sort
-
         :param membership_id: optional membership id
         :return: tuple of sorted and filtered vehicles
         """
@@ -192,13 +180,9 @@ class SimulationState(NamedTuple):
 
 
         :param filter_function: function to filter results
-
         :param sort: whether or not to sort the results
-
         :param sort_key: the key to sort the results by
-
         :param sort_reversed: the order of the resulting sort
-
         :param membership_id: optional membership id
         :return: tuple of sorted and filtered requests
         """
@@ -245,9 +229,7 @@ class SimulationState(NamedTuple):
 
 
         :param vehicle_id: the vehicle we are testing for proximity to a request
-
         :param request_id: the request we are testing for proximity to a vehicle
-
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
         :return: bool
         """
@@ -270,9 +252,7 @@ class SimulationState(NamedTuple):
 
 
         :param vehicle_id: the vehicle we are testing for proximity to a request
-
         :param station_id: the station we are testing for proximity to a vehicle
-
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
         :return: bool
         """
@@ -295,9 +275,7 @@ class SimulationState(NamedTuple):
 
 
         :param vehicle_id: the vehicle we are testing for proximity to a request
-
         :param base_id: the base we are testing for proximity to a vehicle
-
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
         :return: bool
         """

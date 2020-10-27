@@ -23,11 +23,8 @@ class Powercurve(ABC):
 
 
         :param start_soc:
-
         :param full_soc:
-
         :param power_kw:
-
         :param duration_seconds:
         :return: the charge amount along with the time spent charging
         """

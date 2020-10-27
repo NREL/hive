@@ -43,9 +43,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
 
         :param charging_price_file: the optional charging price file provided by the user
-
         :param chargers_file: the file listing all chargers for this scenario
-
         :param lazy_file_reading: if true, we load all file data into memory
         :return: a SimulationUpdate function pointing at the first line of a request file
         :raises: an exception if there were file reading issues
@@ -91,7 +89,6 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
 
         :param sim_state: the current sim state
-
         :param env: static environment variables
         :return: sim state plus new requests
         """
@@ -147,7 +144,6 @@ def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[Charger, Cur
 
 
     :param acc: the accumulator
-
     :param row: the row to add
     :return: the updated accumulator
     """
@@ -181,9 +177,7 @@ def _update_station_prices(simulation_state: SimulationState,
     updates a simulation state with prices for a station by station id
 
     :param result: the simulation state in a partial update state
-
     :param station_id: the station id of the station to update (assumed to be valid)
-
     :param prices_update: the prices in Currency that we are updating for each Charger
     :return: the updated SimulationState with station prices modified
     """
@@ -206,7 +200,6 @@ def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger,
     in the case that updates are written by GeoId, map those to StationIds
 
     :param this_update: the update, which may be by StationId or GeoId
-
     :param sim: the SimulationState provides h3 resolution and lookup tables
     :return: the price data organized by StationId
     """

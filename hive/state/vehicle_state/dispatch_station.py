@@ -55,7 +55,6 @@ class DispatchStation(NamedTuple, VehicleState):
         this terminates when we reach a station
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: True if we have reached the station
         """
@@ -69,7 +68,6 @@ class DispatchStation(NamedTuple, VehicleState):
         by default, transition into a ChargingStation event, but if not possible, then Idle
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: an exception due to failure or an optional updated simulation
         """
@@ -105,7 +103,6 @@ class DispatchStation(NamedTuple, VehicleState):
         take a step along the route to the station
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """

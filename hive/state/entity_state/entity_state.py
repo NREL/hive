@@ -21,7 +21,6 @@ class EntityState:
         apply any effects due to an entity being advanced one discrete time unit in this EntityState
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
@@ -35,7 +34,6 @@ class EntityState:
         apply any effects due to an entity transitioning into this state
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if invalid
         """
@@ -49,7 +47,6 @@ class EntityState:
         apply any effects due to an entity transitioning out of this state
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if invalid
         """

@@ -26,11 +26,8 @@ class Instruction(metaclass=ABCNamedTupleMeta):
         """
         attempts to apply an instruction to a vehicle
 
-
         :param sim_state: the state of the simulation
-
         :param env: the simulation environment
-
         :return: an exception, the resulting simulation state, or (None, None) if a bad instruction
         """
         pass

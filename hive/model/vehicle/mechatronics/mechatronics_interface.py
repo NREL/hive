@@ -90,7 +90,6 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
 
 
         :param vehicle:
-
         :param route:
         :return:
         """
@@ -102,7 +101,6 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
 
 
         :param vehicle:
-
         :param time_seconds:
         :return:
         """
@@ -114,9 +112,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
 
 
         :param vehicle:
-
         :param charger:
-
         :param time_seconds:
         :return: the updated vehicle, along with the time spent charging
         """

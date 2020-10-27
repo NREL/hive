@@ -65,19 +65,12 @@ class H3Ops:
 
 
         :param geoid: the search origin
-
         :param entities: a collection of a certain type of entity, by Id type
-
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
-
         :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
-
         :param is_valid: a function used to filter valid search results, such as checking stations for charger_id availability
-
         :param k: the number of concentric rings to check in the high-level search
-
         :param max_search_distance_km: the maximum distance a result can be from the search origin
-
         :return: the nearest entity, or, None if not found within the constraints
         """
         return cls.nearest_entity(
@@ -106,21 +99,13 @@ class H3Ops:
 
 
         :param geoid: the search origin
-
         :param entities: a collection of a certain type of entity, by Id type
-
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
-
         :param sim_h3_search_resolution: the h3 resolution of the entity_search collection
-
         :param is_valid: a function used to filter valid search results, such as checking stations for charger_id availability
-
         :param distance_function: a function used to evaluate the distance metric for selection
-
         :param k: the number of concentric rings to check in the high-level search
-
         :param max_search_distance_km: the maximum distance a result can be from the search origin
-
         :return: the nearest entity, or, None if not found within the constraints
         """
         if not entities:
@@ -174,11 +159,8 @@ class H3Ops:
 
 
         :param search_cell: the search-level h3 position we are looking at
-
         :param entity_search: the upper-level search collection for this entity type
-
         :param entity_locations: the lower-level location collection
-
         :param entities: the actual entities
         :return: any entities which are located at this search-level cell
         """
@@ -201,11 +183,8 @@ class H3Ops:
 
 
         :param geoid: GeoId to match to
-
         :param entities: Entities to search over
-
         :param entity_locations: Location of entities
-
         :param is_valid: Optional function to filter for valid entities
         :return: an optional entity if found
         """
@@ -231,7 +210,6 @@ class H3Ops:
 
 
         :param a: one geoid
-
         :param b: another geoid
         :return: the haversine distance between the two GeoIds
         """
@@ -257,7 +235,6 @@ class H3Ops:
 
 
         :param available_time_seconds: the amount of time to traverse
-
         :param property_link: the link we are finding a mid point along
         :return: a GeoId along the Link
         """

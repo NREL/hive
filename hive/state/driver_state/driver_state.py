@@ -38,9 +38,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
 
 
         :param sim:
-
         :param env:
-
         :param previous_instructions:
         :return:
         """
@@ -52,7 +50,6 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         there are no operations associated with entering a DriverState
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: always the unmodified simulation state
         """
@@ -64,7 +61,6 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         there are no operations associated with exiting a DriverState
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: always the unmodified simulation state
         """
@@ -80,9 +76,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         helper for updating a Vehicle with a new DriverState
 
         :param sim: the simulation state
-
         :param vehicle_id: the id of the vehicle to update
-
         :param new_state: the state to apply to the vehicle
         :return: the updated sim, or, an error
         """
@@ -103,9 +97,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         constructs a new DriverState based on the provided arguments
 
         :param vehicle_id: the Vehicle associated with this DriverState
-
         :param schedule_id: if provided, sets the DriverState as a HumanUnavailable driver
-
         :param base_id: used for HumanAvailable and HumanUnavailable
         :return: the driver state instance created
         """

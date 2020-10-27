@@ -38,9 +38,7 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
 
 
         :param simulation_state: The current simulation state
-
         :param environment: The simulation environment
-
         :return: the updated ChargingFleetManager along with instructions
         """
 

@@ -15,13 +15,9 @@ def time_to_full(
     fills an imaginary vehicle in order to determine the estimated time to charge
 
     :param vehicle: a vehicle to estimate
-
     :param mechatronics: the physics of this vehicle
-
     :param charger: the charger used
-
     :param target_soc: the stopping condition, a target vehicle SoC percentage
-
     :param sim_timestep_duration_seconds: the stride, in seconds, of the simulation
     :return: the time to charge
     """

@@ -41,7 +41,6 @@ def perform_driver_state_updates(simulation_state: SimulationState, env: Environ
     helper function for StepSimulation which runs the update function for all driver states
 
     :param simulation_state: the simulation state to update
-
     :param env: the simulation environment
     :return: the sim after all vehicle update functions have been called
     """
@@ -66,7 +65,6 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
     helper function for StepSimulation which applies a vehicle state update to each vehicle
 
     :param simulation_state: the simulation state to update
-
     :param env: the simulation environment
     :return: the sim after all vehicle update functions have been called
     """
@@ -114,9 +112,7 @@ def apply_instructions(sim: SimulationState,
     instruction to the simulation, managing the instruction's externalities, and managing failure.
 
     :param sim: the current simulation state
-
     :param env: the sim environment
-
     :param instructions: all instructions to add at this time step
     :return: the simulation state modified by all successful Instructions
     """
@@ -177,7 +173,6 @@ def instruction_generator_update_fn(
     applies a user-provided function designed to inject an external update to InstructionGenerators
 
     :param fn: the function which applies an update or returns None for no update
-
     :param sim: the simulation state, which will not be modified but available to the update function
     :return: the updated list of InstructionGenerators
     """

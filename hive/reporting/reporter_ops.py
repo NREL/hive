@@ -17,7 +17,6 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
 
 
     :param sim: the (initial) simulation state
-
     :param env: the environment with a Reporter instance
     :return: nothing, or, any exception
     """

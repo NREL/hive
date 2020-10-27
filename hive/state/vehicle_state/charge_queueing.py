@@ -29,7 +29,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
                 entering a charge queueing state requires being at that station
 
                 :param sim: the simulation state
-
                 :param env: the simulation environment
                 :return: an exception due to failure or an optional updated simulation
                 """
@@ -66,7 +65,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
         remove agent from queue before exiting this state
 
         :param sim:
-
         :param env:
         :return:
         """
@@ -87,7 +85,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
         or if it has at least one charger_id of the correct type
 
         :param sim:
-
         :param env:
         :return:
         """
@@ -105,7 +102,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
         go idle if the station disappeared, otherwise begin charging
 
         :param sim:
-
         :param env:
         :return:
         """
@@ -132,7 +128,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
         similarly to the idle state, we incur an idling penalty here
 
         :param sim:
-
         :param env:
         :return:
         """

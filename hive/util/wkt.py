@@ -12,7 +12,6 @@ def _point_to_string(point: Tuple[float, float], x_y_ordering: bool) -> str:
     converts a point tuple into a string pair for wkt printing
 
     :param point: a point in (Lat, Lon) ordering (y, x)
-
     :param x_y_ordering: if the output should be reversed into (x, y) ordering
     :return: a string pair for wkt printing
     """
@@ -27,7 +26,6 @@ def point_2d(point: Tuple[float, float], x_y_ordering: bool) -> str:
     creates a point when provided a pair, otherwise, returns an empty polygon
 
     :param point: a point in (Lat, Lon) ordering (y, x)
-
     :param x_y_ordering: if the output should be reversed into (x, y) ordering
     :return: a wkt point, tuple order preserved
     """
@@ -44,7 +42,6 @@ def linestring_2d(points: Tuple[Tuple[float, float], ...], x_y_ordering: bool) -
     polygon if no points are provided
 
     :param points: a sequence of points in (Lat, Lon) ordering (y, x)
-
     :param x_y_ordering: if the output should be reversed into (x, y) ordering
     :return: a wkt representation
     """

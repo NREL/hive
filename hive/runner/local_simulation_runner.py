@@ -26,7 +26,6 @@ class LocalSimulationRunner(NamedTuple):
         """
         steps through time, running a simulation, and producing a simulation result
 
-
         :param runner_payload: the initial state of the simulation
         :return: the final simulation state and dispatcher state
         """
@@ -49,7 +48,6 @@ class LocalSimulationRunner(NamedTuple):
     def step(cls, runner_payload: RunnerPayload) -> Optional[RunnerPayload]:
         """
         takes exactly one step forward, or, if the simulation has reached the end time, does nothing
-
 
         :param runner_payload: the current state of the simulation
         :return: the next simulation state after one simtime step, or, None if we have reached the end_time

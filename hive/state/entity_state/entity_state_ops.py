@@ -13,11 +13,8 @@ def transition_previous_to_next(sim: 'SimulationState',
     exits the previous state and enters the next state
 
     :param sim: the sim state
-
     :param env: the sim environment
-
     :param prev_state: the previous vehicle state
-
     :param next_state: the next state
     :return: error, or updated sim, or (None, None) if either exit or enter was invalid
     """

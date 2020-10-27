@@ -64,11 +64,8 @@ def construct_asset_path(file: str, scenario_directory: str, default_directory_n
 
 
     :param file: file we are seaching for
-
     :param scenario_directory: the scenario directory
-
     :param default_directory_name: the directory name where assets of this type are typically saved
-
     :param resources_subdirectory: the subdirectory of resources where we also expect this could be saved
     :return: the path string if the file exists, otherwise None
     :raises: FileNotFoundError if asset is not found
@@ -101,9 +98,7 @@ def construct_scenario_asset_path(file: str, scenario_directory: str, default_di
 
 
     :param file: file we are searching for
-
     :param scenario_directory: the directory where the scenario file was found
-
     :param default_directory_name: the default directory name for the type of asset we are checking for
     :return: the path string if the file exists, otherwise None
     :raises: FileNotFoundError if asset is not found

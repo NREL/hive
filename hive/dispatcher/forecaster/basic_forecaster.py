@@ -21,7 +21,6 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
         """
         loads a forecaster from a file
 
-
         :param demand_forecast_file: the file source
         :return: a BasicForecaster
         :raises: an exception if there were file loading issues
@@ -38,7 +37,6 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
     def generate_forecast(self, simulation_state: 'SimulationState') -> Tuple[BasicForecaster, Forecast]:
         """
         Generate fleet targets to be consumed by the dispatcher.
-
 
         :param simulation_state: The current simulation state
         :return: the update Manager along with the fleet target

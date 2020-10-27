@@ -31,7 +31,6 @@ class DispatchTrip(NamedTuple, VehicleState):
         checks that the request exists and if so, updates the request to know that this vehicle is on it's way
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: an exception, or a sim state, or (None, None) if the request isn't there anymore
         """
@@ -66,7 +65,6 @@ class DispatchTrip(NamedTuple, VehicleState):
         this terminates when we reach a base
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: True if we have reached the base
         """
@@ -80,7 +78,6 @@ class DispatchTrip(NamedTuple, VehicleState):
         by default, transition to ServicingTrip if possible, else Idle
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
         """
@@ -118,7 +115,6 @@ class DispatchTrip(NamedTuple, VehicleState):
         take a step along the route to the base
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """

@@ -46,7 +46,6 @@ class HumanAvailable(NamedTuple, DriverState):
 
 
         :param sim: the current simulation state
-
         :param env: the simulation environment
         :return: the updated simulation state with a possible state transition for this driver
         """
@@ -98,9 +97,7 @@ class HumanUnavailable(NamedTuple, DriverState):
 
 
         :param sim:
-
         :param env:
-
         :param previous_instructions:
         :return:
         """
@@ -122,7 +119,6 @@ class HumanUnavailable(NamedTuple, DriverState):
 
 
         :param sim: the current simulation state
-
         :param env: the simulation environment
         :return: the updated simulation state with a possible state transition for this driver
         """

@@ -33,9 +33,7 @@ class DictOps:
 
 
         :param xs:
-
         :param obj_id:
-
         :param obj:
         :return:
         """
@@ -49,7 +47,6 @@ class DictOps:
 
 
         :param xs:
-
         :param obj_id:
         :return:
         """
@@ -61,7 +58,6 @@ class DictOps:
         merges two Dictionaries, replacing old kv pairs with new ones
 
         :param old: the old Dict
-
         :param new: the new Dict
         :return: a merged Dict
         """
@@ -82,9 +78,7 @@ class DictOps:
 
 
         :param xs:
-
         :param collection_id:
-
         :param obj_id:
         :return:
         """
@@ -104,9 +98,7 @@ class DictOps:
 
 
         :param xs:
-
         :param collection_id:
-
         :param obj_id:
         :return:
         """
@@ -126,9 +118,7 @@ class DictOps:
 
 
         :param xs:
-
         :param collection_id:
-
         :param obj_id:
         :return:
         """
@@ -151,9 +141,7 @@ class DictOps:
 
 
         :param xs:
-
         :param collection_id:
-
         :param obj_id:
         :return:
         """
@@ -172,13 +160,9 @@ class DictOps:
         updates all dictionaries related to an entity
 
         :param updated_entity: an entity which itself should have an "id" and a "geoid" attribute
-
         :param entities: the dictionary containing Entities by EntityId
-
         :param locations: the finest-resolution geoindex of this entity type
-
         :param search: the upper-level resolution geoindex
-
         :param sim_h3_search_resolution: the h3 resolution of the search collection
         :return: the updated dictionaries
         """

@@ -45,7 +45,6 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
 
 
         :param simulation_state: state to modify
-
         :param env: the sim environment
         :return: updated simulation state, with reports, along with the (optionally) updated StepSimulation
         """

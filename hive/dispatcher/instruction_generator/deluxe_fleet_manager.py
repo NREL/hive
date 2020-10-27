@@ -53,9 +53,7 @@ class DeluxeFleetManager(NamedTuple, InstructionGenerator):
 
 
         :param environment:
-
         :param simulation_state: The current simulation state
-
         :return: the updated DeluxeManager along with fleet targets
         """
         instructions = ()

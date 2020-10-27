@@ -27,7 +27,6 @@ class Idle(NamedTuple, VehicleState):
         If energy has run out, we will move to OutOfService
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: True if we have run out of energy
         """
@@ -43,7 +42,6 @@ class Idle(NamedTuple, VehicleState):
         Idle is the global terminal state - NOOP
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
         """
@@ -61,7 +59,6 @@ class Idle(NamedTuple, VehicleState):
         incur an idling cost
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """

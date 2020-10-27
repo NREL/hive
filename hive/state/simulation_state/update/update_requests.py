@@ -37,9 +37,7 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
 
 
         :param request_file: file path for requests
-
         :param rate_structure_file:
-
         :param lazy_file_reading: a flag to enable lazy file loading. if false, the update function loads all reqs in memory
         :return: a SimulationUpdate function pointing at the first line of a request file
         :raises: an exception if there were issues loading the file
@@ -78,7 +76,6 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
 
 
         :param env: the static environment variables
-
         :param sim_state: the current sim state
         :return: sim state plus new requests
         """
@@ -108,11 +105,8 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
 
 
     :param it: expected to be a Request iterator which streams in row data taken from a DictReader
-
     :param initial_sim_state: the current sim state
-
     :param rate_structure:
-
     :param env:
     :return: sim state plus new requests
     """
@@ -127,11 +121,8 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
 
 
         :param sim: latest SimulationState
-
         :param row: one row as loaded via DictReader
-
         :param env: the simulation environment
-
         :param rate_structure: the rate structure for requests in the simulation
         :return: the updated sim and updated reporting
         """

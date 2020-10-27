@@ -14,8 +14,7 @@ def same_simulation_location(a: GeoId,
 
 
     :param a: first geoid
-
-    :param b: second geoid
+:param b: second geoid
 
     :param sim_h3_resolution: resolution we want to compare at
 

@@ -27,7 +27,6 @@ class ChargingStation(NamedTuple, VehicleState):
         entering a charge event requires attaining a charger_id from the station
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
@@ -73,7 +72,6 @@ class ChargingStation(NamedTuple, VehicleState):
         exiting a charge event requires returning the charger_id to the station
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
@@ -95,7 +93,6 @@ class ChargingStation(NamedTuple, VehicleState):
         test if charging is finished
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: True if the vehicle is fully charged
         """
@@ -114,7 +111,6 @@ class ChargingStation(NamedTuple, VehicleState):
         we default to idle, or reserve base if there is a base with stalls at the location
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
@@ -132,9 +128,7 @@ class ChargingStation(NamedTuple, VehicleState):
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
 
         :param sim: the simulation state
-
         :param env: the simulation environment
-
         :param self.vehicle_id: the vehicle transitioning
         :return: an exception due to failure or an optional updated simulation
         """

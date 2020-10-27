@@ -24,7 +24,6 @@ class ReserveBase(NamedTuple, VehicleState):
         to enter this state, the base must have a stall for the vehicle
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: an exception, an updated 'SimulationState', or (None, None) when the base has no stalls
         """
@@ -56,7 +55,6 @@ class ReserveBase(NamedTuple, VehicleState):
         releases the stall that this vehicle occupied
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: an exception, or an updated sim
         """
@@ -72,7 +70,6 @@ class ReserveBase(NamedTuple, VehicleState):
         There is no terminal state for ReserveBase
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return: False
         """
@@ -86,7 +83,6 @@ class ReserveBase(NamedTuple, VehicleState):
         There is no terminal state for ReserveBase
 
         :param sim: the sim state
-
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
         """
@@ -99,7 +95,6 @@ class ReserveBase(NamedTuple, VehicleState):
         as of now, there is no update for being ReserveBase
 
         :param sim: the simulation state
-
         :param env: the simulation environment
         :return: NOOP
         """

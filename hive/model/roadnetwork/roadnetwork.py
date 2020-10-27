@@ -27,7 +27,6 @@ class RoadNetwork(ABC):
 
 
         :param origin: Link of the origin
-
         :param destination: Link of the destination
         :return: A route.
         """
@@ -39,7 +38,6 @@ class RoadNetwork(ABC):
 
 
         :param origin: Link of the origin
-
         :param destination: Link of the destination
         :return: the distance in kilometers.
         """
