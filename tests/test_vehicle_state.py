@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from hive.model.membership import DEFAULT_MEMBERSHIP
 from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -800,7 +801,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(error, "should have no errors")
@@ -820,7 +821,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, "uber", route)
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(updated_sim, "should have returned None for updated_sim")
@@ -833,7 +834,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -853,7 +854,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(near, omf_brewing)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         enter_error, sim_with_dispatched_vehicle = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -878,7 +879,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = ()  # vehicle is at the request
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         enter_error, sim_with_dispatch_vehicle = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -899,7 +900,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(error, "should have no errors")
@@ -912,7 +913,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         enter_error, updated_sim = state.enter(sim, env)
 
         self.assertIsInstance(enter_error, Exception, "should have exception")
@@ -926,7 +927,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, request.geoid)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         enter_error, enter_sim = state.enter(sim, env)
 
         self.assertIsNone(enter_error, "should be no error")
@@ -941,7 +942,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
 
-        state = DispatchTrip(vehicle.id, request.id, route)
+        state = DispatchTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, route)
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
@@ -1309,14 +1310,15 @@ class TestVehicleState(TestCase):
     ####################################################################################################################
 
     def test_servicing_trip_enter(self):
-        vehicle = mock_vehicle()
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=vehicle.geoid)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(error, "should have no errors")
@@ -1334,20 +1336,21 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(updated_sim, "should have returned None for updated_sim")
 
     def test_servicing_trip_exit(self):
-        vehicle = mock_vehicle()
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids(destination=vehicle.geoid)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -1357,7 +1360,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
 
     def test_servicing_trip_exit_when_still_has_passengers(self):
-        vehicle = mock_vehicle()
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids()
         self.assertNotEqual(request.origin, request.destination, "test invariant failed")
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
@@ -1366,7 +1370,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -1377,7 +1381,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(exited_sim, "should not have allowed exit of ServicingTrip")
 
     def test_servicing_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
-        vehicle = mock_vehicle(soc=0)
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle(soc=0, vehicle_state=prev_state)
         request = mock_request_from_geoids()
         self.assertNotEqual(request.origin, request.destination, "test invariant failed")
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
@@ -1386,7 +1391,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -1400,14 +1405,15 @@ class TestVehicleState(TestCase):
     def test_servicing_trip_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
-        vehicle = mock_vehicle_from_geoid(geoid=near)
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle_from_geoid(geoid=near, vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=near, destination=omf_brewing)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(near, omf_brewing)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, sim_servicing = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -1425,14 +1431,15 @@ class TestVehicleState(TestCase):
         self.assertEqual(updated_vehicle.vehicle_state.passengers, request.passengers, "should have passengers")
 
     def test_servicing_trip_update_terminal(self):
-        vehicle = mock_vehicle()
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=vehicle.geoid, destination=vehicle.geoid)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = ()  # end of route
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, sim_servicing = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
@@ -1449,7 +1456,7 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         error, updated_sim = state.enter(sim, env)
 
         self.assertIsNone(error, "should have no errors")
@@ -1462,21 +1469,22 @@ class TestVehicleState(TestCase):
         env = mock_env()
         route = mock_route_from_geoids(request.geoid, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, updated_sim = state.enter(sim, env)
 
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_servicing_trip_enter_route_with_bad_source(self):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
-        vehicle = mock_vehicle()
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request()
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, request.destination)
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, enter_sim = state.enter(sim, env)
 
         self.assertIsNone(enter_error, "should be no error")
@@ -1484,14 +1492,15 @@ class TestVehicleState(TestCase):
 
     def test_servicing_trip_enter_route_with_bad_destination(self):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
-        vehicle = mock_vehicle_from_geoid()
+        prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), DEFAULT_MEMBERSHIP, ())
+        vehicle = mock_vehicle_from_geoid(vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=vehicle.geoid)
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, omf_brewing)  # request.destination should not be omf brewing co
 
-        state = ServicingTrip(vehicle.id, request.id, route, request.passengers)
+        state = ServicingTrip(vehicle.id, request.id, DEFAULT_MEMBERSHIP, sim.sim_time, route, request.passengers)
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")

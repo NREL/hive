@@ -14,6 +14,7 @@ from hive.reporting.reporter import Report, ReportType
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util import StationId
+from hive.util.time_helpers import time_diff
 
 if TYPE_CHECKING:
     from hive.model.request.request import Request
@@ -122,15 +123,16 @@ def report_pickup_request(vehicle: Vehicle,
     :return: a pickup request report
     """
 
-    sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
+    event_sim_time = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
 
     geoid = vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
+    wait_time = time_diff(request.departure_time.as_datetime_time(), event_sim_time.as_datetime_time())
 
     report_data = {
-        'pickup_time': sim_time_start,
+        'pickup_time': event_sim_time,
         'request_time': request.departure_time,
-        'wait_time_seconds': (sim_time_start - request.departure_time).as_datetime_time,
+        'wait_time_seconds': wait_time,
         'vehicle_id': vehicle.id,
         'request_id': request.id,
         'membership_id': vehicle.vehicle_state.membership_id,
@@ -145,23 +147,22 @@ def report_pickup_request(vehicle: Vehicle,
 
 
 def report_dropoff_request(vehicle: Vehicle,
-                          next_sim: SimulationState,
-                          ) -> Report:
+                           sim: SimulationState,
+                           ) -> Report:
     """
     reports information about the marginal effect of a request dropoff
     :param vehicle: the vehicle that picked up the request
-    :param next_sim: simulation state when the dropoff occurs
+    :param sim: simulation state when the dropoff occurs
     :return: a dropoff request report
     """
 
-    sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
-
     geoid = vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
+    travel_time = time_diff(vehicle.vehicle_state.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
 
     report_data = {
-        'dropoff_time': sim_time_start,
-        'travel_time': (sim_time_start - vehicle.vehicle_state.departure_time).as_datetime_time(),
+        'dropoff_time': sim.sim_time,
+        'travel_time': travel_time,
         'vehicle_id': vehicle.id,
         'request_id': vehicle.vehicle_state.request_id,
         'membership_id': vehicle.vehicle_state.membership_id,

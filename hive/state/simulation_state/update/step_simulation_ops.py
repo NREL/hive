@@ -89,9 +89,12 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
         :return: the vehicles with all ChargeQueueing vehicles at the tail
         """
         charge_queueing_vehicles, other_vehicles = TupleOps.partition(
-            lambda v: isinstance(v.vehicle_state, ChargeQueueing), vs)
-        sorted_charge_queueing_vehicles = tuple(
-            sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time))
+            lambda v: isinstance(v.vehicle_state, ChargeQueueing),
+            vs
+        )
+
+        sorted_charge_queueing_vehicles = tuple(sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time))
+
         return other_vehicles + sorted_charge_queueing_vehicles
 
     # why sort here? see _sort_by_vehicle_state for an explanation
