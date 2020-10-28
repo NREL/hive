@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
-from hive.model.energy.charger import Charger
+from hive.util.typealiases import MembershipId
 from hive.model.passenger import board_vehicle
 from hive.runner.environment import Environment
 from hive.state.vehicle_state.charging_base import ChargingBase
@@ -45,6 +45,7 @@ class IdleInstruction(NamedTuple, Instruction):
 class DispatchTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
+    membership_id: MembershipId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -60,7 +61,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
             end = request.origin
             route = sim_state.road_network.route(start, end)
             prev_state = vehicle.vehicle_state
-            next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
+            next_state = DispatchTrip(self.vehicle_id, self.request_id, self.membership_id, route)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -68,6 +69,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 class ServeTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
+    membership_id: MembershipId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -82,10 +84,10 @@ class ServeTripInstruction(NamedTuple, Instruction):
             start = request.origin
             end = request.destination
             route = sim_state.road_network.route(start, end)
-
+            sim_time = sim_state.sim_time
             passengers = board_vehicle(request.passengers, self.vehicle_id)
             prev_state = vehicle.vehicle_state
-            next_state = ServicingTrip(self.vehicle_id, self.request_id, route, passengers)
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, self.membership_id, sim_time, route, passengers)
 
             return None, InstructionResult(prev_state, next_state)
 

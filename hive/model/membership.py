@@ -28,6 +28,16 @@ class Membership(NamedTuple):
 
         return Membership(frozenset((member_id,)))
 
+    def memberships_in_common(self, other_membership: Membership) -> FrozenSet[MembershipId]:
+        """
+        lists the MembershipIds in common with another Membership, such as to identify
+        which ride hail service provider was used to pick up a request
+
+        :param other_membership: the memberships of another entity in the simulation
+        :return: the memberships in common
+        """
+        return self.memberships.intersection(other_membership.memberships)
+
     def valid_membership(self, other_membership: Membership) -> bool:
         """
         tests membership against another membership.
@@ -36,7 +46,7 @@ class Membership(NamedTuple):
         :param other_membership:
         :return: true if there exists at least one overlapping membership id, false otherwise
         """
-        return len(self.memberships.intersection(other_membership.memberships)) > 0
+        return len(self.memberships_in_common(other_membership)) > 0
 
     def is_member(self, membership_id: MembershipId) -> bool:
         """

@@ -38,6 +38,7 @@ class TestVehicle(TestCase):
         source = """vehicle_id,lat,lon,mechatronics_id,initial_soc,schedule_id,home_base_id
                             v1,39.7539,-104.976,bev,1.0,schedule0,hb1"""
 
+
         row = next(DictReader(source.split()))
         road_network = mock_network()
         env = mock_env()

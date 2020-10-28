@@ -77,7 +77,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
             solution = assignment_ops.find_assignment(available_vehicles, unassigned_requests,
                                                       assignment_ops.h3_distance_cost)
             instructions = ft.reduce(
-                lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1])),
+                lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1], membership_id)),
                 solution.solution,
                 inst_acc,
             )

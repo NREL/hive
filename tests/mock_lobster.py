@@ -84,6 +84,10 @@ class DefaultIds:
     def mock_schedule_id(cls) -> ScheduleId:
         return "schedule0"
 
+    @classmethod
+    def mock_membership_id(cls) -> MembershipId:
+        return "membership0"
+
 
 def mock_geojson() -> Dict:
     return {'type': 'Feature',
@@ -95,6 +99,10 @@ def mock_geojson() -> Dict:
                                           [-104.97337619703339, 39.767951988786585],
                                           [-104.97511663522859, 39.769196417473],
                                           [-105.00029227609865, 39.74962517224048]]]}}
+
+
+def mock_membership():
+    return Membership().from_tuple((DefaultIds.mock_membership_id(),))
 
 
 def mock_geofence(geojson: Dict = mock_geojson(), resolution: H3Resolution = 10) -> GeoFence:
@@ -142,9 +150,10 @@ def mock_base_from_geoid(
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.9740, 15),
         station_id: Optional[StationId] = None,
         stall_count: int = 1,
+        membership: Membership = Membership(),
         road_network: RoadNetwork = mock_network(),
 ) -> Base:
-    return Base.build(base_id, geoid, road_network, station_id, stall_count)
+    return Base.build(base_id, geoid, road_network, station_id, stall_count, membership)
 
 
 def mock_station(

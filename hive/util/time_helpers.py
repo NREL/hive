@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, datetime, date, timedelta
 import re
 
 
@@ -31,3 +31,23 @@ def read_time_string(s: str) -> time:
             return time_value
         except Exception as e:
             raise ValueError("unexpected error condition while parsing time from string") from e
+
+
+def time_diff(start: time, end: time) -> timedelta:
+    """
+    finds the time delta between two times. result has date line transitions removed.
+
+    :param start: the start time
+    :param end: the end time
+    :return: the time between the start event and the finish event, in hours/minutes/seconds
+    """
+    if start == end:
+        return timedelta()
+    else:
+        duration = datetime.combine(date.min, end) - datetime.combine(date.min, start)
+        if duration.days == -1:
+            # remove the "days" from the time transition
+            duration_without_day = duration + timedelta(days=1)
+            return duration_without_day
+        else:
+            return duration

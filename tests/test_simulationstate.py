@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.model.energy.energytype import EnergyType
+from hive.model.membership import DEFAULT_MEMBERSHIP
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -167,7 +167,7 @@ class TestSimulationState(TestCase):
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
         self.assertIsNone(e1, "test invariant failed")
 
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
 
         e2, instruction_result = instruction.apply_instruction(sim, env)
         if e2:
@@ -208,7 +208,7 @@ class TestSimulationState(TestCase):
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
         self.assertIsNone(e1, "test invariant failed")
 
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
         error, instruction_result = instruction.apply_instruction(sim, env)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         self.assertIsNotNone(sim_error, "no request at vehicle location should produce an error message")
@@ -217,6 +217,8 @@ class TestSimulationState(TestCase):
     def test_step_moving_vehicle(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
+        # membership_id = 'uber'
+        # membership = Membership.from_tuple((membership_id,))
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere,
                                        destination=somewhere_else,
@@ -225,11 +227,14 @@ class TestSimulationState(TestCase):
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
         self.assertIsNone(e1, "test invariant failed")
 
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
+        if sim_error:
+            self.fail(error.args)
+        # step: move once in ServicingTrip
         sim_moving_veh = perform_vehicle_state_updates(sim_updated, env)
 
         moved_veh = sim_moving_veh.vehicles[veh.id]
@@ -290,7 +295,7 @@ class TestSimulationState(TestCase):
         e1, sim_with_req = simulation_state_ops.add_request(sim, req)
         self.assertIsNone(e1, "test invariant failed")
 
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
         error, instruction_result = instruction.apply_instruction(sim_with_req, env)
         if error:
             self.fail(error.args)
@@ -317,7 +322,7 @@ class TestSimulationState(TestCase):
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
         self.assertIsNone(e1, "test invariant failed")
 
-        instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
+        instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
         env = mock_env()
         e2, instruction_result = instruction.apply_instruction(sim, env)
         if e2:

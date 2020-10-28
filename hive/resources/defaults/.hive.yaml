@@ -11,6 +11,7 @@ log_sim_config:
 - 'add_request_event'
 - 'cancel_request_event'
 - 'pickup_request_event'
+- 'dropoff_request_event'
 - 'vehicle_charge_event'
 - 'vehicle_move_event'
 - 'station_load_event'

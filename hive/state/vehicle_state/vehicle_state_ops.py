@@ -220,5 +220,10 @@ def pick_up_trip(sim: 'SimulationState',
         if mod_error:
             return mod_error, None
         else:
-            env.reporter.file_report(report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle))
+            try:
+                report = report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle)
+                env.reporter.file_report(report)
+            except:
+                # previous state may not be DispatchTrip (may not have expected attributes
+                pass
             return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)
