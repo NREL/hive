@@ -20,6 +20,7 @@ class OutOfService(NamedTuple, VehicleState):
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
         There is no terminal state for OutOfService
+
         :param sim: the sim state
         :param env: the sim environment
         :return: False
@@ -32,6 +33,7 @@ class OutOfService(NamedTuple, VehicleState):
                                       ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         There is no terminal state for OutOfService
+
         :param sim: the sim state
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
@@ -43,6 +45,7 @@ class OutOfService(NamedTuple, VehicleState):
                         env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         as of now, there is no update for being OutOfService
+
         :param sim: the simulation state
         :param env: the simulation environment
         :return: NOOP

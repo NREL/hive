@@ -25,18 +25,25 @@ class Request(NamedTuple):
     If a vehicle has been dispatched to service this Request, then it should hold the vehicle id
     and the time that vehicle was dispatched to it.
 
+
     :param id: A unique id for the request.
     :type id: :py:obj:`RequestId`
+
     :param origin: The geoid of the request origin.
     :type origin: :py:obj:`GeoId`
+
     :param destination: The geoid of the request destination.
     :type destination: :py:obj:`GeoId`
+
     :param departure_time: The time of departure.
     :type departure_time: :py:obj:`SimTime`
+
     :param passengers: A tuple of passengers associated with this request.
     :type passengers: :py:obj:`Tuple[Passenger]`
+
     :param dispatched_vehicle: The id of the vehicle dispatched to service this request.
     :type dispatched_vehicle: :py:obj:`Optional[VehicleId]`
+
     :param dispatched_vehicle_time: Time time which a vehicle was dispatched for this request.
     :type dispatched_vehicle_time: :py:obj:`Optional[SimTime]`
     """
@@ -103,8 +110,11 @@ class Request(NamedTuple):
         """
         takes a csv row and turns it into a Request
 
+
         :param row: a row as interpreted by csv.DictReader
+
         :param env: the static environment variables
+
         :param road_network: the road network
         :return: a Request, or an error
         """
@@ -152,7 +162,9 @@ class Request(NamedTuple):
         allows the dispatcher to update the request that a vehicle has been dispatched to them.
         this does not signal that the vehicle is guaranteed to pick them up.
 
+
         :param vehicle_id: the vehicle that is planning to service the request
+
         :param current_time: the current simulation time
         :return: the updated Request
         """
@@ -161,6 +173,7 @@ class Request(NamedTuple):
     def assign_value(self, rate_structure: RequestRateStructure, distance_km: Kilometers) -> Request:
         """
         used to assign a value to this request based on it's properties as well as possible surge pricing.
+
 
         :param rate_structure: the rate structure to apply to the request value
         :return: the updated request

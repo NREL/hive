@@ -5,6 +5,7 @@ from typing import Tuple, Dict
 def report_error(error: Exception) -> Dict:
     """
     helper to enforce standardization of observed errors reported during simulation run
+
     :param error: the error that occurred during simulation
     :return: packaged as a report
     """
@@ -23,6 +24,7 @@ class StateTransitionError(Exception):
 
     def __init__(self, state_type, this_state_name, next_state_name):
         """
+
 
         :param state_type: the kind of state object that failed (i.e, "vehicle", "charger_id", "request")
         :param this_state_name: state at beginning of transition

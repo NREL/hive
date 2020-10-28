@@ -25,8 +25,9 @@ class ChargingBase(NamedTuple, VehicleState):
               env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         entering a charge event requires attaining a charger_id from the station situated at the base
+
         :param sim: the simulation state
-        :param env: the simulation environment
+:param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if not possible
         """
         base = sim.bases.get(self.base_id)
@@ -70,8 +71,9 @@ class ChargingBase(NamedTuple, VehicleState):
              env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         exiting a charge event requires returning the charger_id to the station at the base
+
         :param sim: the simulation state
-        :param env: the simulation environment
+:param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
@@ -91,8 +93,9 @@ class ChargingBase(NamedTuple, VehicleState):
                                               env: Environment) -> bool:
         """
         test if charging is finished
+
         :param sim: the simulation state
-        :param env: the simulation environment
+:param env: the simulation environment
         :return: True if the vehicle is fully charged
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
@@ -108,8 +111,9 @@ class ChargingBase(NamedTuple, VehicleState):
                                       ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         we default to idle, or reserve base if there is a base with stalls at the location
+
         :param sim: the simulation state
-        :param env: the simulation environment
+:param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
         next_state = ReserveBase(self.vehicle_id, self.base_id)
@@ -124,9 +128,10 @@ class ChargingBase(NamedTuple, VehicleState):
                         env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
+
         :param sim: the simulation state
-        :param env: the simulation environment
-        :param self.vehicle_id: the vehicle transitioning
+:param env: the simulation environment
+:param self.vehicle_id: the vehicle transitioning
         :return: an exception due to failure or an optional updated simulation
         """
         base = sim.bases.get(self.base_id)

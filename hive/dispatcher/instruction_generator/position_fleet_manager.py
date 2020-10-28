@@ -50,7 +50,6 @@ class PositionFleetManager(NamedTuple, InstructionGenerator):
 
         :param environment:
         :param simulation_state: The current simulation state
-
         :return: the updated PositionFleetManger along with instructions
         """
 

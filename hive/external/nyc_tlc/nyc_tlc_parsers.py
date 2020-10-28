@@ -24,11 +24,17 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
 
     see https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 
+
     :param row: a row from a TLC Trip Record file
+
     :param id_number: a unique number to add to this request's name
+
     :param cancel_time: the duration_seconds that the request will be active, in seconds, before it cancels
+
     :param sim_h3_location_resolution: the h3 spatial resolution requests are stored at
+
     :param default_passengers: the fill value to use when passengers is missing from the row
+
     :param use_date_in_request_id: if True, adds the date as part of the Request's name,
     to make it easier to trace back to the source data, at the cost of a larger (unnecessary) memory footprint
     :return: a Request, or an exception if row is invalid

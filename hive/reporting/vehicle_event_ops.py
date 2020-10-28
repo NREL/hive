@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 def vehicle_move_event(move_result: MoveResult, env: Environment) -> Report:
     """
     creates a vehicle move report based on the effect of one time step of moving
+
     :param move_result: the result of a move
     :param env: the simulation environment
     :return: the vehicle move report
@@ -72,6 +73,7 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
                          ) -> Report:
     """
     reports information about the marginal effect of a charge event
+
     :param prev_vehicle: the previous vehicle state
     :param next_vehicle: the next vehicle state
     :param next_sim: the next simulation state after the charge event
@@ -117,6 +119,7 @@ def report_pickup_request(vehicle: Vehicle,
                           ) -> Report:
     """
     reports information about the marginal effect of a request pickup
+
     :param vehicle: the vehicle that picked up the request
     :param request: the request that was picked up
     :param next_sim: the next simulation state after the request pickup
@@ -179,6 +182,7 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
     """
     a station load report takes any vehicle charge events and attributes them to a
     station, so that, for each time step, we report the load of energy use at the station
+
     :param reports: the reports in this time step
     :param sim: the simulation state
     :return: a collection with one STATION_LOAD_EVENT per StationId
@@ -191,6 +195,7 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
         if the report has charging information, then add it to the accumulator.
         /
         expects that all reports fall between the same range of [sim_time_start, sim_time_end]
+
         :param acc: a mapping from station to current load
         :param report: a report of any type
         :return: the updated accumulator

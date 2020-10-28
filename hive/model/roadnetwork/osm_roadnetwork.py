@@ -67,8 +67,11 @@ class OSMRoadNetwork(RoadNetwork):
         """
         Taken from osmnx package, geo_utils module.
 
+
         :param route: the route to get attributes for
+
         :param attribute: the attribute of interest. will return all attributes if None
+
         :param minimize_key: the key to minimize over if multiple edges exist between two nodes
         :return: a tuple of attributes
         """
@@ -152,6 +155,7 @@ class OSMRoadNetwork(RoadNetwork):
         """
         Generates the starting link for a case when the origin geoid is not at a node
 
+
         :param node_id: the origin node id
         :return: the starting link of a route
         """
@@ -182,7 +186,9 @@ class OSMRoadNetwork(RoadNetwork):
 
         # TODO: consider implementing a way to snap incoming points to the nearest edge intersection.
 
+
         :param origin: the geoid of the origin
+
         :param destination: the geoid of the destination
         :return: a route between the origin and destination
         """
@@ -229,7 +235,9 @@ class OSMRoadNetwork(RoadNetwork):
         """
         Returns the road network distance between the origin and destination
 
+
         :param origin: the geoid of the origin
+
         :param destination: the geoid of the destination
         :return: the road network distance in kilometers
         """
@@ -243,6 +251,7 @@ class OSMRoadNetwork(RoadNetwork):
         """
         Returns a link from a single geoid. This link has the same origin and destination and
         has a speed and distance of 0. These links are used to map static objects to the road network.
+
 
         :param geoid: the geoid to snap to the road newtork
         :return: the link on the road network that is closest to the geoid
@@ -264,6 +273,7 @@ class OSMRoadNetwork(RoadNetwork):
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """
         Determines if a specific geoid is contained within the road network geofence.
+
 
         :param geoid: the geoid to test
         :return: True/False

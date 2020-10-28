@@ -40,6 +40,7 @@ class BEV(NamedTuple, MechatronicsInterface):
     def from_dict(cls, d: Dict[str, str]) -> BEV:
         """
         build from a dictionary
+
         :param d: the dictionary to build from
         :return: the built Mechatronics object
         """
@@ -72,6 +73,7 @@ class BEV(NamedTuple, MechatronicsInterface):
     def valid_charger(self, charger: Charger) -> bool:
         """
         checks to make sure charger is electric energy type
+
         :param charger: the charger to check
         :return: true/false
         """
@@ -80,6 +82,7 @@ class BEV(NamedTuple, MechatronicsInterface):
     def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
+
         :param percent_full:
         :return:
         """
@@ -104,6 +107,7 @@ class BEV(NamedTuple, MechatronicsInterface):
     def is_empty(self, vehicle: Vehicle) -> bool:
         """
         is the vehicle empty
+
         :param vehicle:
         :return:
         """
@@ -112,6 +116,7 @@ class BEV(NamedTuple, MechatronicsInterface):
     def is_full(self, vehicle: Vehicle) -> bool:
         """
         is the vehicle full
+
         :param vehicle:
         :return:
         """
@@ -122,7 +127,9 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         move over a set distance
 
+
         :param vehicle:
+
         :param route:
         :return:
         """
@@ -138,7 +145,9 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         idle for a set amount of time
 
+
         :param vehicle:
+
         :param time_seconds:
         :return:
         """
@@ -153,8 +162,11 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         add energy into the system
 
+
         :param vehicle:
+
         :param charger:
+
         :param time_seconds:
         :return: the updated vehicle, along with the time spent charging
         """

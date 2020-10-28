@@ -32,6 +32,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     def from_dict(cls, d: Dict[str, str]) -> MechatronicsInterface:
         """
         build from a dictionary
+
         :param d: the dictionary to build from
         :return: the built Mechatronics object
         """
@@ -40,6 +41,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     def valid_charger(self, charger: Charger) -> bool:
         """
         check to see if the mechatronics instance can use a certain charger
+
         :param charger: the charger to check
         :return: true/false
         """
@@ -48,6 +50,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
         """
         construct an initial energy state for a Vehicle
+
         :param percent_full: the amount of energy in the vehicle
         :return: the Vehicle.energy at startup
         """
@@ -85,6 +88,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
         move over a set distance
 
+
         :param vehicle:
         :param route:
         :return:
@@ -95,6 +99,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
         idle for a set amount of time
 
+
         :param vehicle:
         :param time_seconds:
         :return:
@@ -104,6 +109,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
+
 
         :param vehicle:
         :param charger:

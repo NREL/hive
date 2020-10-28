@@ -44,6 +44,7 @@ class HumanAvailable(NamedTuple, DriverState):
         """
         test that the agent is available to work. if unavailable, transition to an unavailable state.
 
+
         :param sim: the current simulation state
         :param env: the simulation environment
         :return: the updated simulation state with a possible state transition for this driver
@@ -94,6 +95,7 @@ class HumanUnavailable(NamedTuple, DriverState):
         while in this state, the driver checks the vehicle location; if the vehicle is not at the home base,
         a new instruction is generated to send the vehicle home.
 
+
         :param sim:
         :param env:
         :param previous_instructions:
@@ -114,6 +116,7 @@ class HumanUnavailable(NamedTuple, DriverState):
         Optional[Exception], Optional['SimulationState']]:
         """
         test that the agent is unavailable to work. if not, transition to an available state.
+
 
         :param sim: the current simulation state
         :param env: the simulation environment

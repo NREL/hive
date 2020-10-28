@@ -42,6 +42,7 @@ class Membership(NamedTuple):
         """
         tests membership against another membership.
 
+
         :param other_membership:
         :return: true if there exists at least one overlapping membership id, false otherwise
         """
@@ -50,6 +51,7 @@ class Membership(NamedTuple):
     def is_member(self, membership_id: MembershipId) -> bool:
         """
         tests if membership id exists in membership set
+
 
         :param membership_id:
         :return:

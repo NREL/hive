@@ -41,6 +41,7 @@ class InstructionGenerationResult(NamedTuple):
         generates instructions from one of the InstructionGenerators;
         each of these instructions are added to the stack for the appropriate vehicle id;
 
+
         :param instruction_generator: an InstructionGenerator to apply to the SimulationState
         :param simulation_state: the current simulation state
         :param environment: the simulation environment
@@ -63,6 +64,7 @@ class InstructionGenerationResult(NamedTuple):
         """
         drivers are given a chance to optionally generate instructions;
         each of these instructions are added to the stack for the appropriate vehicle id;
+
 
         :param simulation_state: the current simulation state
         :param environment: the simulation environment
@@ -97,6 +99,7 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     each time an instruction is generated it gets added to a stack (per vehicle id);
     the last instruction to be added gets popped and executed;
     thus, the order of instruction generation matters as the last instruction generated (per vehicle) gets executed;
+
 
     :param instruction_generators: a tuple of instruction generators
     :param simulation_state: the simulation state

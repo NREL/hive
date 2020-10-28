@@ -30,6 +30,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         Optional[Exception], Optional['SimulationState']]:
         """
         checks that the request exists and if so, updates the request to know that this vehicle is on it's way
+
         :param sim: the sim state
         :param env: the sim environment
         :return: an exception, or a sim state, or (None, None) if the request isn't there anymore
@@ -63,6 +64,7 @@ class DispatchTrip(NamedTuple, VehicleState):
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
         """
         this terminates when we reach a base
+
         :param sim: the sim state
         :param env: the sim environment
         :return: True if we have reached the base
@@ -75,6 +77,7 @@ class DispatchTrip(NamedTuple, VehicleState):
                                       ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
         """
         by default, transition to ServicingTrip if possible, else Idle
+
         :param sim: the sim state
         :param env: the sim environment
         :return:  an exception due to failure or an optional updated simulation
@@ -111,6 +114,7 @@ class DispatchTrip(NamedTuple, VehicleState):
                         env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         take a step along the route to the base
+
         :param sim: the simulation state
         :param env: the simulation environment
         :return: the sim state with vehicle moved

@@ -74,6 +74,7 @@ class SimulationState(NamedTuple):
         returns a tuple of stations.
         users can pass an optional filter and sort function.
 
+
         :param filter_function: function to filter results
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
@@ -107,6 +108,7 @@ class SimulationState(NamedTuple):
         """
         returns a tuple of bases.
         users can pass an optional filter and sort function.
+
 
         :param filter_function: function to filter results
         :param sort: whether or not to sort the results
@@ -142,6 +144,7 @@ class SimulationState(NamedTuple):
         returns a tuple of vehicles.
         users can pass an optional filter and sort function.
 
+
         :param filter_function: function to filter results
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
@@ -175,6 +178,7 @@ class SimulationState(NamedTuple):
         returns a tuple of requests.
         users can pass an optional filter and sort function.
 
+
         :param filter_function: function to filter results
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
@@ -199,6 +203,7 @@ class SimulationState(NamedTuple):
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """
         returns a dictionary with the list of ids found at this location for all entities
+
         :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
         :return: an Optional AtLocationResponse
         """
@@ -222,6 +227,7 @@ class SimulationState(NamedTuple):
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
 
+
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param request_id: the request we are testing for proximity to a vehicle
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
@@ -244,6 +250,7 @@ class SimulationState(NamedTuple):
         """
         tests whether vehicle is at the station within the scope of the given geoid resolution
 
+
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param station_id: the station we are testing for proximity to a vehicle
         :param override_resolution: a resolution to use for geo intersection test; if None, use self.sim_h3_location_resolution
@@ -265,6 +272,7 @@ class SimulationState(NamedTuple):
                         override_resolution: Optional[int] = None) -> bool:
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
+
 
         :param vehicle_id: the vehicle we are testing for proximity to a request
         :param base_id: the base we are testing for proximity to a vehicle

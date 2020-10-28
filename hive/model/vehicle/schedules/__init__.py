@@ -14,8 +14,10 @@ _constructors = {
 def build_schedules_table(schedule_type: ScheduleType, schedules_file: str) -> Map[ScheduleId, ScheduleFunction]:
     """
     builds the schedule table based on the provided schedule type and file
+
     :param schedule_type: the type of schedule to load. different schedule types require
     different programmatic implementations and argument types/structures
+
     :param schedules_file: the file providing parameters for the schedule type
     :return: a schedule lookup table for the simulation environment
     """

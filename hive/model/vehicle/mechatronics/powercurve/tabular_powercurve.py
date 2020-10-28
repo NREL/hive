@@ -60,6 +60,7 @@ class TabularPowercurve(Powercurve):
 
         """
          (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
+
          :param start_soc:
          :param full_soc: the cutoff energy limit
          :param power_kw: how fast to charge

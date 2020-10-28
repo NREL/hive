@@ -19,6 +19,7 @@ def charge(sim: 'SimulationState',
            charger_id: ChargerId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
+
     :param sim: the simulation state
     :param env: the simulation environment
     :param vehicle_id: the vehicle transitioning
@@ -78,6 +79,7 @@ def _apply_route_traversal(sim: 'SimulationState',
     """
     Moves the vehicle and consumes energy.
 
+
     :param sim: the simulation state
     :param env: the simulation environment
     :param vehicle_id: the vehicle moving
@@ -135,6 +137,7 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
                                 vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     sets a vehicle to OutOfService if it is out of energy after a move event
+
     :param sim: the sim after a move event
     :param env: the sim environment
     :param vehicle_id: the vehicle that moved
@@ -167,6 +170,7 @@ def move(sim: 'SimulationState',
          route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
     """
     moves the vehicle, and moves to OutOfService if resulting vehicle energy is empty
+
     :param sim: the sim state
     :param env: the sim environment
     :param vehicle_id: the vehicle to move
@@ -197,6 +201,7 @@ def pick_up_trip(sim: 'SimulationState',
                  request_id: RequestId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     has a vehicle pick up a trip and receive payment for it
+
     :param sim: the sim state
     :param env: the sim environment
     :param vehicle_id: the vehicle picking up the request

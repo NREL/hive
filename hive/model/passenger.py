@@ -11,14 +11,19 @@ class Passenger(NamedTuple):
     """
     A tuple representing a passenger in the simulation.
     
-    :param id: the unique id of the passenger 
+
+    :param id: the unique id of the passenger
     :type id: PassengerId 
-    :param origin: the pickup location of the passenger 
+
+    :param origin: the pickup location of the passenger
     :type origin: GeoId 
+
     :param destination: the destination location of the passenger
     :type destination: GeoId 
+
     :param departure_time: the departure time of the passenger
     :type departure_time: SimTime
+
     :param vehicle_id: id of the vehicle that the passenger is occupying
     :type vehicle_id: Optional[VehicleId]
     """
@@ -32,6 +37,7 @@ class Passenger(NamedTuple):
         """
         Assign a VehicleId to a passenger
 
+
         :param vehicle_id: vehicle id
         :return: updated Passenger
         """
@@ -41,6 +47,7 @@ class Passenger(NamedTuple):
 def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId:
     """
     Constructs a passenger id using a RequestId and an integer
+
 
     :param request_id: request id
     :param passenger_id: integer for passenger in a request.
@@ -53,6 +60,7 @@ def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId
 def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> Tuple[Passenger, ...]:
     """
     updates each passenger with a vehicle_id
+
     :param passengers: the passengers to board
     :param vehicle_id: the vehicle they are boarding
     :return: the passengers with their vehicle_id updated

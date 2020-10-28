@@ -23,7 +23,9 @@ def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) ->
     constructs a dictionary containing all of the provided vehicle configurations where the key is the mechatronics ID
     and the contents are the appropriate mechatronics models with the desired attributes
 
+
     :param mechatronics_file: the mechatronics configuration yaml file
+
     :param scenario_directory: the directory with the required scenario files
     :return: a dictionary of the different vehicle configurations where the keys are the mechatronics IDs
     :raises Exception due to IOErrors, missing required parameters in the mechatronics yaml

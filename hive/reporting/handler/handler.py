@@ -19,7 +19,9 @@ class Handler(ABC):
         """
         called at each log step.
 
+
         :param reports:
+
         :param runner_payload:
         :return:
         """

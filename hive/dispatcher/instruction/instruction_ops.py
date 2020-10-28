@@ -8,6 +8,7 @@ from hive.dispatcher.instruction.instructions import (
 def serialize(instruction: Instruction) -> str:
     """
     converts the instruction name and parameters into a string representation for serialization
+
     :param instruction: some instruction
     :return: a string representation of the instruction
     """

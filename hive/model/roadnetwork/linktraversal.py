@@ -9,10 +9,13 @@ class LinkTraversal(NamedTuple):
     """
     represents the traversal of a link.
 
+
     :param traversed: represents any part of the link that was traversed.
     :type traversed: :py:obj:`Optional[PropertyLink]`
+
     :param remaining: represents any part of the link that remains to be traversed
     :type remaining: :py:obj:`Optional[PropertyLink]`
+
     :param remaining_time: represents any time the agent has left to traverse additional links
     :type remaining_time_seconds: :py:obj:`hours`
     """
@@ -27,7 +30,9 @@ def traverse_up_to(link: Link,
     using the ground truth road network, and some agent Link traversal, attempt to traverse
     the link, based on travel time calculations from the Link's PropertyLink attributes.
 
+
     :param link: the plan the agent has to traverse a subset of a road network link
+
     :param available_time_seconds: the remaining time the agent has in this time step
     :return: the updated traversal, or, an exception.
              on update, if there is any remaining traversal, return an updated Link.

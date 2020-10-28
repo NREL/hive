@@ -20,18 +20,25 @@ class Station(NamedTuple):
     """
     A station that vehicles can use to refuel
 
+
     :param id: The unique id of the station.
     :type id: :py:obj:`StationId`
+
     :param geoid: The location of the station.
     :type geoid: :py:obj:`Geoid`
+
     :param total_chargers: A map of the charger_id types and quanitites for this station.
     :type total_chargers: :py:obj:`Dict[Charger, int]`
+
     :param available_chargers: Identifies how many plugs for each charger_id type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
+
     :param charger_prices_per_kwh: the cost to use chargers at this station
     :type charger_prices_per_kwh: :py:obj`Dict[Charger, Currency]`
+
     :param enqueued_vehicles: the count of vehicles currently enqueued for each charger_id
     :type enqueued_vehicles: :py:obj`Dict[Charger, int]`
+
     :param balance: the net income of this station
     :type balance: :py:obj:`Currency`
     """
@@ -73,9 +80,11 @@ class Station(NamedTuple):
         """
         takes a csv row and turns it into a Station
 
+
         :param row: a row as interpreted by csv.DictReader
         :param builder: the (partially-completed) collection of stations. needed in the case
         that there already was a row parsed for this station
+
         :param road_network: the road network
         :return: a Station, or an error
         """
@@ -136,6 +145,7 @@ class Station(NamedTuple):
         """
         Indicates if a station has an available charge of type `charger_id`
 
+
         :param charger_id: charger_id type to be queried.
         :return: Boolean
         """
@@ -145,6 +155,7 @@ class Station(NamedTuple):
     def checkout_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
         Checks out a charger_id of type `charger_id` and returns an updated station if there are any available
+
 
         :param charger_id: the charger_id type to be checked out
         :return: Updated station or None if no chargers available/ if vehicle is not a member
@@ -161,6 +172,7 @@ class Station(NamedTuple):
         """
         Returns a charger_id of type `charger_id` to the station.
         Raises exception if available chargers exceeds total chargers
+
 
         :param charger_id: Charger to be returned
         :return: The updated station with returned charger_id
@@ -182,6 +194,7 @@ class Station(NamedTuple):
     def receive_payment(self, currency_received: Currency) -> Station:
         """
         pay for charging costs
+
         :param currency_received: the currency received for a charge event
         :return: the updated Station
         """
@@ -190,6 +203,7 @@ class Station(NamedTuple):
     def enqueue_for_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
         increment the count of vehicles enqueued for a specific charger_id type - no limit
+
         :param charger_id: the charger_id type
         :return: the updated Station
         """
@@ -200,6 +214,7 @@ class Station(NamedTuple):
     def dequeue_for_charger(self, charger_id: ChargerId) -> Station:
         """
         decrement the count of vehicles enqueued for a specific charger_id type - min zero
+
         :param charger_id: the charger_id type
         :param membership: the membership of the vehicle that want's to deque the charger
         :return: the updated Station
@@ -219,6 +234,7 @@ class Station(NamedTuple):
     def enqueued_vehicle_count_for_charger(self, charger_id: ChargerId) -> int:
         """
         gets the current count of vehicles enqueued for a specific charger_id at this station
+
         :param charger_id: the charger_id type
         :return: the count of vehicles enqueued
         """
@@ -227,6 +243,7 @@ class Station(NamedTuple):
     def set_membership(self, member_ids: Tuple[str, ...]) -> Station:
         """
         updates the membership(s) of the station
+
         :param member_ids: a Tuple containing updated membership(s) of the station
         :return:
         """

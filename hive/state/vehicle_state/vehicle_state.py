@@ -32,6 +32,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState.
         under terminal conditions, exits the current state, enters a default transition state, and steps
         under the condition of that state.
+
         :param sim: the simulation state
         :param env: the simulation environment
         :param state: the vehicle state we are updating
@@ -62,6 +63,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                                 ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         this default enter operation simply modifies the vehicle's stored state value
+
         :param sim: the simulation state
         :param vehicle_id: the id of the vehicle to transition
         :param new_state: the state we are applying
@@ -80,6 +82,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                                               env: Environment) -> bool:
         """
         test if we have reached a terminal state and need to apply the default transition
+
         :param sim: the simulation state
         :param env: the simulation environment
         :return: True if the termination condition has been met
@@ -94,6 +97,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                                                  Optional[Tuple['SimulationState', VehicleState]]]:
         """
         apply a transition to a default state after having met a terminal condition
+
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
@@ -106,6 +110,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                         env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         perform a simulation state update for a vehicle in this state
+
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation

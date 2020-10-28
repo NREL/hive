@@ -15,14 +15,19 @@ class Base(NamedTuple):
     """
     Represents a base within the simulation.
 
+
     :param id: unique base id.
     :type id: str
+
     :param geoid: location of base.
     :type geoid: GeoId
+
     :param total_stalls: total number of parking stalls.
     :type total_stalls: int
+
     :param available_stalls: number of available parking stalls.
     :type available_stalls: int
+
     :param station_id: Optional station that is located at the base.
     :type station_id: Optional[StationId]
     """
@@ -59,6 +64,7 @@ class Base(NamedTuple):
     ) -> Base:
         """
         takes a csv row and turns it into a Base
+
 
         :param row: a row as interpreted by csv.DictReader
         :param sim_h3_resolution: the h3 resolution that events are experienced at
@@ -132,6 +138,7 @@ class Base(NamedTuple):
     def set_membership(self, member_ids: Tuple[str, ...]) -> Base:
         """
         updates the membership(s) of the base
+
         :param member_ids: a Tuple containing updated membership(s) of the base
         :return:
         """

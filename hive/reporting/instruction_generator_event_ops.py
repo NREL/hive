@@ -11,6 +11,7 @@ from hive.util import wkt
 def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment) -> Report:
     """
     report that a vehicle is searching for a station to refuel
+
     :param vehicle: the vehicle seeking refueling
     :param sim: the simulation state before the search event
     :param env: the simulation environment

@@ -21,6 +21,7 @@ class Powercurve(ABC):
                ) -> Tuple[KwH, Seconds]:
         """
 
+
         :param start_soc:
         :param full_soc:
         :param power_kw:

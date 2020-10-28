@@ -1,4 +1,4 @@
-# HIVE :honeybee:
+# HIVE :honeybee:  
 
 **H**ighly  
 **I**ntegrated  
@@ -119,7 +119,7 @@ The developer API is a [Sphinx](http://www.sphinx-doc.org/en/master/) project wh
 
 ## Looking at a default scenario
 
-![Map of Denver Downtown](docs/images/denver_demo.jpg?raw=true)
+![Map of Denver Downtown](docs/source/_static/denver_demo.jpg?raw=true)
 
 Running HIVE takes one argument, which is a configuration file. Hive comes packaged with a demo scenario for Downtown Denver, located at `hive/resources/scenarios/denver_demo.yaml`. This file names the inputs and the configuration Parameters for running HIVE.
 

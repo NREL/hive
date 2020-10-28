@@ -16,6 +16,7 @@ def time_in_range(start, end, x):
 def read_time_string(s: str) -> time:
     """
     parses a string in HH:MM:SS format into a datetime.time object
+
     :param s: the input string
     :return: the time parsed, or, an error
     """

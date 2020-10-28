@@ -34,7 +34,6 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
         :param environment:
         :param simulation_state: The current simulation state
-
         :return: the updated Dispatcher along with instructions
         """
         base_charging_range_km_threshold = environment.config.dispatcher.base_charging_range_km_threshold

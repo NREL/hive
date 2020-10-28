@@ -13,6 +13,7 @@ def time_to_full(
 ) -> Seconds:
     """
     fills an imaginary vehicle in order to determine the estimated time to charge
+
     :param vehicle: a vehicle to estimate
     :param mechatronics: the physics of this vehicle
     :param charger: the charger used

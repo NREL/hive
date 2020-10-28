@@ -19,11 +19,14 @@ class Link(NamedTuple):
     a partial link traversal, using an o/d pair which is within the link but
     not necessarily the end-points.
     
+
     :param link_id: The unique link id.
     :type link_id: :py:obj:`LinkId`
-    :param start: The starting endpoint of the link 
+
+    :param start: The starting endpoint of the link
     :type start: :py:obj:`GeoId`
-    :param end: The ending endpoint of the link 
+
+    :param end: The ending endpoint of the link
     :type end: :py:obj:`GeoId`
     """
     link_id: LinkId
@@ -59,6 +62,7 @@ class Link(NamedTuple):
         """
         Update the speed of the property link
 
+
         :param speed_kmph: speed to update to
         :return: an updated PropertyLink
         """
@@ -69,8 +73,11 @@ def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
     """
     Interpolate between two geoids given a ratio from a->b
 
+
     :param a: The starting point
+
     :param b: The ending point
+
     :param ratio: The ratio from a->b
     :return: An interpolated GeoId
     """

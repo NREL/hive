@@ -13,6 +13,7 @@ from hive.util.typealiases import ScheduleFunction, ScheduleId, VehicleId
 def time_range_schedules_from_file(file: str) -> Map[ScheduleId, ScheduleFunction]:
     """
     given a CSV file of time ranges by ScheduleId, construct a time range schedule table
+
     :param file: the CSV file
     :return: the schedules
     """
@@ -28,6 +29,7 @@ def time_range_schedules_from_file(file: str) -> Map[ScheduleId, ScheduleFunctio
 def time_range_schedules_from_string(string: str) -> Map[ScheduleId, ScheduleFunction]:
     """
     given a string in CSV format, construct a time range schedule table
+
     :param string: the CSV file string
     :return: the schedules
     """
@@ -43,7 +45,9 @@ def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
     reads a row of a time range CSV file, adding the associated range as a
     schedule function to the accumulator
 
+
     :param acc: the collection we are adding this row to
+
     :param row: the DictReader row of the time range file
     :return: the updated accumulator
     """

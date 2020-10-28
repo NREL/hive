@@ -11,6 +11,7 @@ def transition_previous_to_next(sim: 'SimulationState',
                                 ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
     exits the previous state and enters the next state
+
     :param sim: the sim state
     :param env: the sim environment
     :param prev_state: the previous vehicle state

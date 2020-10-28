@@ -37,6 +37,7 @@ class SwitchCase(ABC):
         """
         called when "key" does not exist in the SwitchCase
 
+
         :param arguments: the arguments to pass in the default case
         :return:
         """
@@ -62,6 +63,7 @@ class H3Ops:
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
 
+
         :param geoid: the search origin
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
@@ -69,7 +71,6 @@ class H3Ops:
         :param is_valid: a function used to filter valid search results, such as checking stations for charger_id availability
         :param k: the number of concentric rings to check in the high-level search
         :param max_search_distance_km: the maximum distance a result can be from the search origin
-
         :return: the nearest entity, or, None if not found within the constraints
         """
         return cls.nearest_entity(
@@ -96,6 +97,7 @@ class H3Ops:
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
 
+
         :param geoid: the search origin
         :param entities: a collection of a certain type of entity, by Id type
         :param entity_search: the location of objects of this entity type, registered at a high-level grid resolution
@@ -104,7 +106,6 @@ class H3Ops:
         :param distance_function: a function used to evaluate the distance metric for selection
         :param k: the number of concentric rings to check in the high-level search
         :param max_search_distance_km: the maximum distance a result can be from the search origin
-
         :return: the nearest entity, or, None if not found within the constraints
         """
         if not entities:
@@ -156,6 +157,7 @@ class H3Ops:
         """
         gives us entities within a high-level search cell
 
+
         :param search_cell: the search-level h3 position we are looking at
         :param entity_search: the upper-level search collection for this entity type
         :param entity_locations: the lower-level location collection
@@ -178,6 +180,7 @@ class H3Ops:
                                       ) -> Optional[Entity]:
         """
         A nearest neighbor search that scans all entities and returns the one with the lowest distance to the geoid.
+
 
         :param geoid: GeoId to match to
         :param entities: Entities to search over
@@ -205,6 +208,7 @@ class H3Ops:
         """
         computes the distance between two geoids
 
+
         :param a: one geoid
         :param b: another geoid
         :return: the haversine distance between the two GeoIds
@@ -228,6 +232,7 @@ class H3Ops:
     def point_along_link(cls, link: Link, available_time_seconds: Seconds) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
+
 
         :param available_time_seconds: the amount of time to traverse
         :param property_link: the link we are finding a mid point along

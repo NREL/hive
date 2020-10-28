@@ -24,6 +24,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         """
         cancels requests whose cancel time has been exceeded
 
+
         :param simulation_state: state to modify
         :param env: the scenario environment
         :return: state without cancelled requests, along with this update function
@@ -33,6 +34,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
                              request_id: RequestId) -> SimulationState:
             """
             inner function that removes each canceled request from the sim
+
             :param payload: the sim to update, along with errors we are storing
             :param request_id: this request to remove
             :return: the sim without the request
@@ -65,6 +67,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
 def _gen_report(r_id: RequestId, sim: SimulationState) -> Report:
     """
     Report of a cancellation
+
 
     :param r_id: request cancelled
     :param sim: the state of the sim before cancellation occurs

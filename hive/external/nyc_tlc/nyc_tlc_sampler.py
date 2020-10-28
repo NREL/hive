@@ -18,11 +18,17 @@ def down_sample_nyc_tlc_data(in_file: str,
     """
     down-samples in input_config TLC data file for Yellow cab data
 
+
     :param in_file: the source TLC data file
+
     :param out_file: a file in HIVE Request data format
+
     :param sample_size: number of agents to sample - performs no randomization
+
     :param request_cancel_time_buffer: the cancel time to set on each agent
+
     :param sim_h3_location_resolution:
+
     :param boundary_h3_resolution: the resolution for the bounding set of the nyc polygon
     :return:
     """
@@ -100,13 +106,21 @@ def sample_vehicles_in_geofence(num: int,
                                 max_charge_acceptance_kw: Kw):
     """
     samples points in the NYC polygon and creates Vehicles from them, writing to an output file
+
     :param num: number of vehicles
+
     :param out_file: the file to write the vehicles
+
     :param powertrain_id:
+
     :param powercurve_id:
+
     :param capacity:
+
     :param initial_soc:
+
     :param ideal_energy_limit:
+
     :param max_charge_acceptance_kw:
     """
 

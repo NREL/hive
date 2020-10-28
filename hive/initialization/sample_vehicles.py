@@ -50,12 +50,14 @@ def sample_vehicles(
         def _add_sample(i: int):
             """
             returns a function which creates the i'th vehicle
+
             :param i: the number to associate with this sampled vehicle
             :return: a function that adds vehicle i to the SimulationState
             """
             def _inner(s: SimulationState) -> Result[SimulationState, Exception]:
                 """
                 attempts to add the i'th vehicle to this simulation state
+
                 :param s: the SimulationState to update
                 :return: the updated simulation state, or, an exception
                 """
@@ -96,6 +98,7 @@ def sample_vehicles(
 def build_default_location_sampling_fn(bases: Tuple[Base, ...], seed: int = 0) -> Callable[[], Link]:
     """
     constructs a link sampling function that uniformly samples from the provided base locations
+
 
     :param bases: the available bases
     :param seed: random seed value
