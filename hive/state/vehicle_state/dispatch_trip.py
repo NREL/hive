@@ -11,7 +11,7 @@ from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import RequestId, VehicleId
+from hive.util.typealiases import RequestId, VehicleId, MembershipId
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 class DispatchTrip(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     request_id: RequestId
+    membership_id: MembershipId
     route: Route
 
     def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
@@ -98,7 +99,7 @@ class DispatchTrip(NamedTuple, VehicleState):
             # apply next state
 
             passengers = board_vehicle(request.passengers, self.vehicle_id)
-            next_state = ServicingTrip(self.vehicle_id, self.request_id, route, passengers)
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, self.membership_id, sim.sim_time, route, passengers)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None

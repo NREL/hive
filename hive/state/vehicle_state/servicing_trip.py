@@ -3,6 +3,8 @@ from typing import NamedTuple, Tuple, Optional
 
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.route import Route, valid_route
+from hive.model.sim_time import SimTime
+from hive.reporting.vehicle_event_ops import report_dropoff_request
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
@@ -10,7 +12,7 @@ from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import pick_up_trip, move
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import RequestId, VehicleId
+from hive.util.typealiases import RequestId, VehicleId, MembershipId
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +20,8 @@ log = logging.getLogger(__name__)
 class ServicingTrip(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     request_id: RequestId
+    membership_id: MembershipId
+    departure_time: SimTime
     route: Route
     passengers: Tuple[Passenger, ...]
 
@@ -85,6 +89,10 @@ class ServicingTrip(NamedTuple, VehicleState):
                     locations = f"{passenger.destination} != {vehicle.geoid}"
                     message = f"vehicle {self.vehicle_id} dropping off passenger {passenger.id} but location is wrong: {locations}"
                     return SimulationStateError(message), None
+
+        # ok, we can drop off these passengers
+        report = report_dropoff_request(vehicle, sim)
+        env.reporter.file_report(report)
         return None, sim
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
