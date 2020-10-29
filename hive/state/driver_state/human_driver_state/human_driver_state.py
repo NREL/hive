@@ -3,6 +3,7 @@ from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 import h3
 import logging
+import random
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
@@ -21,8 +22,9 @@ from hive.util import SimulationStateError
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.model.roadnetwork.roadnetwork import RoadNetwork
     from hive.runner.environment import Environment
-    from hive.util.typealiases import ScheduleId
+    from hive.util.typealiases import ScheduleId, GeoId
 
 log = logging.getLogger(__name__)
 
@@ -48,18 +50,25 @@ class HumanAvailable(NamedTuple, DriverState):
             self,
             sim: SimulationState,
             env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]],
+            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
-        def _get_reposition_location() -> str:
-            # find the most dense request search hex and sends vehicles to the center
-            best_search_hex = sorted(
-                [(k, len(v)) for k, v in sim.r_search.items()], key=lambda t: t[1],
-                reverse=True
-            )[0][0]
+        def _get_reposition_location() -> Optional[str]:
+            if len(sim.r_search) == 0:
+                # no requests in system, do nothing
+                return None
+            else:
+                # find the most dense request search hex and sends vehicles to the center
+                best_search_hex = sorted(
+                    [(k, len(v)) for k, v in sim.r_search.items()], key=lambda t: t[1],
+                    reverse=True
+                )[0][0]
             destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
             return destination
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+        if not my_vehicle:
+            log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
+
         state = my_vehicle.vehicle_state
 
         i = None
@@ -68,9 +77,12 @@ class HumanAvailable(NamedTuple, DriverState):
         # if the vehicle is at home, it should reposition;
         # and, if the vehicle has been idle for 30 minutes, it should reposition;
         if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
-            i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
+            dest = _get_reposition_location()
+            if dest:
+                i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
         elif isinstance(state, Idle):
-            if state.idle_duration > 1800:
+            dest = _get_reposition_location()
+            if state.idle_duration > 1800 and dest:
                 i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
 
         return i
@@ -125,7 +137,7 @@ class HumanUnavailable(NamedTuple, DriverState):
             self,
             sim: SimulationState,
             env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]],
+            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
         """
         while in this state, the driver checks the vehicle location; if the vehicle is not at the home base,
@@ -141,15 +153,21 @@ class HumanUnavailable(NamedTuple, DriverState):
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         my_base = sim.bases.get(self.attributes.home_base_id)
 
+        if not my_vehicle:
+            log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
+        if not my_base:
+            log.error(f"could not find base {self.attributes.home_base_id} in simulation "
+                      f"for veh {self.attributes.vehicle_id}")
+
         def at_home() -> bool:
             return my_base.geoid == my_vehicle.geoid
 
         if not at_home() and not isinstance(my_vehicle.vehicle_state, DispatchBase):
             i = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
-        elif my_base.station_id and isinstance(my_vehicle.vehicle_state, ReserveBase) and at_home():
+        elif my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase) and at_home():
             my_station = sim.stations.get(my_base.station_id)
             if not my_station:
-                log.warn(f"could not find station {my_base.station_id} for base {self.attributes.home_base_id}")
+                log.error(f"could not find station {my_base.station_id} for base {self.attributes.home_base_id}")
                 return None
 
             my_mechatronics = env.mechatronics.get(my_vehicle.mechatronics_id)

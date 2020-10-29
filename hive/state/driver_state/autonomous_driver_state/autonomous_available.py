@@ -31,7 +31,7 @@ class AutonomousAvailable(NamedTuple, DriverState):
             self,
             sim: SimulationState,
             env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]],
+            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)

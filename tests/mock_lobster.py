@@ -27,6 +27,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
+from hive.model.sim_time import SimTime
 from hive.model.station import Station
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
@@ -34,7 +35,6 @@ from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsI
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.model.vehicle.vehicle import Vehicle
-from hive.model.sim_time import SimTime
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -85,6 +85,14 @@ class DefaultIds:
     @classmethod
     def mock_membership_id(cls) -> MembershipId:
         return "membership0"
+
+
+def somewhere() -> GeoId:
+    return h3.geo_to_h3(39.7539, -104.974, 15)
+
+
+def somewhere_else() -> GeoId:
+    return h3.geo_to_h3(39.7579, -104.978, 15)
 
 
 def mock_geojson() -> Dict:
@@ -338,11 +346,12 @@ def mock_vehicle_from_geoid(
         mechatronics: MechatronicsInterface = mock_bev(),
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
+        driver_state: Optional[DriverState] = None,
         membership: Membership = Membership(),
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
-    driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
+    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
@@ -350,7 +359,7 @@ def mock_vehicle_from_geoid(
         energy=initial_energy,
         link=link,
         vehicle_state=state,
-        driver_state=driver_state,
+        driver_state=d_state,
         membership=membership,
     )
 
@@ -600,7 +609,7 @@ def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
 
 def mock_instruction_generators(
         config: HiveConfig = mock_config(),
-        ) -> Tuple[InstructionGenerator, ...]:
+) -> Tuple[InstructionGenerator, ...]:
     return (
         ChargingFleetManager(config.dispatcher),
         Dispatcher(config.dispatcher),
