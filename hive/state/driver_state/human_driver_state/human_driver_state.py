@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 import h3
+import logging
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.util.typealiases import ScheduleId
 
+log = logging.getLogger(__name__)
 
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
 
@@ -146,6 +148,10 @@ class HumanUnavailable(NamedTuple, DriverState):
             i = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
         elif my_base.station_id and isinstance(my_vehicle.vehicle_state, ReserveBase) and at_home():
             my_station = sim.stations.get(my_base.station_id)
+            if not my_station:
+                log.warn(f"could not find station {my_base.station_id} for base {self.attributes.home_base_id}")
+                return None
+
             my_mechatronics = env.mechatronics.get(my_vehicle.mechatronics_id)
 
             chargers = tuple(filter(
