@@ -7,6 +7,7 @@ import h3
 import immutables
 
 from hive.model.energy.charger import Charger
+from hive.model.energy.energytype import EnergyType
 from hive.model.membership import Membership
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -248,3 +249,4 @@ class Station(NamedTuple):
         :return:
         """
         return self._replace(membership=Membership.from_tuple(member_ids))
+

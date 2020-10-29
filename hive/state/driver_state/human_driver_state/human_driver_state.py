@@ -1,16 +1,27 @@
-from typing import NamedTuple, Tuple, Optional
+from __future__ import annotations
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
-import immutables
+import h3
 
 from hive.dispatcher.instruction.instruction import Instruction
-from hive.dispatcher.instruction.instructions import DispatchBaseInstruction
+from hive.dispatcher.instruction.instructions import (
+    DispatchBaseInstruction,
+    ChargeBaseInstruction,
+    RepositionInstruction,
+)
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
-from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.dispatch_base import DispatchBase
+from hive.state.vehicle_state.reserve_base import ReserveBase
+from hive.state.vehicle_state.charging_base import ChargingBase
+from hive.state.vehicle_state.idle import Idle
 from hive.util import SimulationStateError
-from hive.util.typealiases import ScheduleId, VehicleId
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
+    from hive.util.typealiases import ScheduleId
 
 
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
@@ -33,14 +44,37 @@ class HumanAvailable(NamedTuple, DriverState):
 
     def generate_instruction(
             self,
-            sim: 'SimulationState',
-            env: 'Environment',
+            sim: SimulationState,
+            env: Environment,
             previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
-        return None
+        def _get_reposition_location() -> str:
+            # find the most dense request search hex and sends vehicles to the center
+            best_search_hex = sorted(
+                [(k, len(v)) for k, v in sim.r_search.items()], key=lambda t: t[1],
+                reverse=True
+            )[0][0]
+            destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
+            return destination
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+        my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+        state = my_vehicle.vehicle_state
+
+        i = None
+
+        # once the vehicle is available it should reposition to seek out requests.
+        # if the vehicle is at home, it should reposition;
+        # and, if the vehicle has been idle for 30 minutes, it should reposition;
+        if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
+            i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
+        elif isinstance(state, Idle):
+            if state.idle_duration > 1800:
+                i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
+
+        return i
+
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         test that the agent is available to work. if unavailable, transition to an unavailable state.
 
@@ -87,8 +121,8 @@ class HumanUnavailable(NamedTuple, DriverState):
 
     def generate_instruction(
             self,
-            sim: 'SimulationState',
-            env: 'Environment',
+            sim: SimulationState,
+            env: Environment,
             previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         """
@@ -105,15 +139,32 @@ class HumanUnavailable(NamedTuple, DriverState):
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         my_base = sim.bases.get(self.attributes.home_base_id)
 
-        if not my_base.geoid == my_vehicle.geoid and not isinstance(my_vehicle.vehicle_state, DispatchBase):
+        def at_home() -> bool:
+            return my_base.geoid == my_vehicle.geoid
+
+        if not at_home() and not isinstance(my_vehicle.vehicle_state, DispatchBase):
             i = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+        elif my_base.station_id and isinstance(my_vehicle.vehicle_state, ReserveBase) and at_home():
+            my_station = sim.stations.get(my_base.station_id)
+            my_mechatronics = env.mechatronics.get(my_vehicle.mechatronics_id)
+
+            chargers = tuple(filter(
+                lambda c: my_mechatronics.valid_charger(c),
+                [env.chargers[cid] for cid in my_station.total_chargers.keys()]
+            ))
+            if not chargers:
+                i = None
+            else:
+                # take the lowest power charger
+                charger = sorted(chargers, key=lambda c: c.rate)[0]
+                i = ChargeBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id, charger.id)
         else:
             i = None
 
         return i
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         test that the agent is unavailable to work. if not, transition to an available state.
 

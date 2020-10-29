@@ -13,11 +13,9 @@ from hive.config import HiveConfig
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
-from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
@@ -321,7 +319,7 @@ def mock_vehicle(
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes())
+    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
@@ -344,7 +342,7 @@ def mock_vehicle_from_geoid(
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
-    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
+    driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
@@ -600,13 +598,10 @@ def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     return MockForecaster()
 
 
-def mock_instruction_generators_with_mock_forecast(
+def mock_instruction_generators(
         config: HiveConfig = mock_config(),
-        forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
+        ) -> Tuple[InstructionGenerator, ...]:
     return (
-        BaseFleetManager(config.dispatcher),
-        PositionFleetManager(mock_forecaster(forecast),
-                             config.dispatcher),
         ChargingFleetManager(config.dispatcher),
         Dispatcher(config.dispatcher),
     )
@@ -617,14 +612,14 @@ def mock_update(config: Optional[HiveConfig] = None,
     if config and instruction_generators:
         return Update.build(config, instruction_generators)
     elif config:
-        instruction_generators = mock_instruction_generators_with_mock_forecast(config)
+        instruction_generators = mock_instruction_generators(config)
         return Update.build(config, instruction_generators)
     elif instruction_generators:
         config = mock_config()
         return Update.build(config, instruction_generators)
     else:
         conf = mock_config()
-        instruction_generators = mock_instruction_generators_with_mock_forecast(conf)
+        instruction_generators = mock_instruction_generators(conf)
         return Update((), StepSimulation(instruction_generators))
 
 

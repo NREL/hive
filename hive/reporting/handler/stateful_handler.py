@@ -111,7 +111,7 @@ class StatefulHandler(Handler):
     def _report_entities(self, entities, asdict, sim_time, report_type):
         for e in entities:
             log_dict = asdict(e)
-            log_dict['sim_time'] = sim_time
+            log_dict['sim_time'] = str(sim_time)
             log_dict['report_type'] = report_type.name
             entry = json.dumps(log_dict, default=str)
             self.log_file.write(entry + '\n')

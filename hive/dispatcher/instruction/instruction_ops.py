@@ -1,8 +1,11 @@
-from hive.dispatcher.instruction.instruction import Instruction
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from hive.dispatcher.instruction.instructions import (
     IdleInstruction,
     DispatchTripInstruction
 )
+if TYPE_CHECKING:
+    from hive.dispatcher.instruction.instruction import Instruction
 
 
 def serialize(instruction: Instruction) -> str:

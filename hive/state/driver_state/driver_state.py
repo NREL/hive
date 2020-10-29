@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import NamedTupleMeta, Tuple, Optional
+from typing import NamedTupleMeta, Tuple, Optional, TYPE_CHECKING
 
-from hive.dispatcher.instruction.instruction import Instruction
-from hive.state.entity_state.entity_state import EntityState
+from hive.util import SimulationStateError
 from hive.state.simulation_state import simulation_state_ops
-from hive.util import VehicleId, SimulationStateError
-from hive.util.typealiases import ScheduleId, BaseId
+from hive.state.entity_state.entity_state import EntityState
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
+    from hive.util.typealiases import ScheduleId, BaseId, VehicleId
+    from hive.dispatcher.instruction.instruction import Instruction
 
 
 class DriverState(ABCMeta, NamedTupleMeta, EntityState):
@@ -28,8 +32,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
     @abstractmethod
     def generate_instruction(
             self,
-            sim: 'SimulationState',
-            env: 'Environment',
+            sim: SimulationState,
+            env: Environment,
             previous_instructions: Optional[Tuple[Instruction, ...]],
     ) -> Optional[Instruction]:
         """
@@ -44,8 +48,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None
 
-    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         there are no operations associated with entering a DriverState
 
@@ -55,8 +59,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None, sim
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         there are no operations associated with exiting a DriverState
 
@@ -68,10 +72,10 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
 
     @classmethod
     def apply_new_driver_state(mcs,
-                               sim: 'SimulationState',
+                               sim: SimulationState,
                                vehicle_id: VehicleId,
                                new_state: DriverState
-                               ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                               ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         helper for updating a Vehicle with a new DriverState
 
@@ -102,10 +106,11 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         :return: the driver state instance created
         """
         from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
+        from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
         from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
         from hive.state.driver_state.human_driver_state.human_driver_state import HumanUnavailable
         if not schedule_id:
-            driver_state = AutonomousAvailable()
+            driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
             return driver_state
         else:
             if not base_id:
