@@ -9,11 +9,11 @@ from tests.mock_lobster import *
 class TestLocalSimulationRunner(TestCase):
 
     def test_run(self):
-        config = mock_config(end_time=20, timestep_duration_seconds=1)
+        config = mock_config(end_time=600, timestep_duration_seconds=60)
         env = mock_env(config)
         req = mock_request(
             request_id='1',
-            departure_time=0,
+            departure_time=SimTime.build(0),
             passengers=2
         )
         initial_sim = mock_sim(

@@ -25,11 +25,4 @@ dispatcher:
   valid_dispatch_states:                        # allow agents to service a trip coming only from these vehicle states
     - idle
     - repositioning
-  active_states:                                # when targeting an active fleet size, account for vehicles in these states
-    - idle
-    - repositioning
-    - dispatchtrip
-    - servicingtrip
-    - dispatchstation
-    - chargingstation
   charging_search_type: nearest_shortest_queue  # "nearest_shortest_queue", or, "shortest_time_to_charge"
