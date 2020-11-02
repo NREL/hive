@@ -44,7 +44,7 @@ class ServicingTrip(NamedTuple, VehicleState):
             locations = f"{request.geoid} != {vehicle.geoid}"
             message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
-        elif not vehicle.membership.valid_membership(request.membership):
+        elif not vehicle.membership.is_member(request.fleet_id):
             log.debug(f"vehicle {vehicle.id} and request {request.id} don't share a membership")
             return None, None
         else:
