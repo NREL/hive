@@ -26,3 +26,4 @@ dispatcher:
     - idle
     - repositioning
   charging_search_type: nearest_shortest_queue  # "nearest_shortest_queue", or, "shortest_time_to_charge"
+  idle_time_out_seconds: 1800                   # how long vehicles will idle before timing out, 30 minutes

@@ -67,7 +67,7 @@ class HumanAvailable(NamedTuple, DriverState):
         if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
             return human_look_for_requests(my_vehicle, sim)
         elif isinstance(state, Idle):
-            if state.idle_duration > 1800:
+            if state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
                 return human_look_for_requests(my_vehicle, sim)
         else:
             return None

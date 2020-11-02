@@ -16,6 +16,8 @@ class DispatcherConfig(NamedTuple):
     max_search_radius_km: Kilometers
     charging_search_type: ChargingSearchType
 
+    idle_time_out_seconds: Seconds
+
     valid_dispatch_states: Tuple[str, ...]
 
     @classmethod

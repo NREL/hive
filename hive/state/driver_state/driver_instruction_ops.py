@@ -166,8 +166,8 @@ def av_dispatch_base_instruction(
     :param env:
     :return:
     """
-    if veh.vehicle_state.idle_duration > 1800:
-        # timeout after 30 minutes of being idle
+    if veh.vehicle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
+        # timeout after being idle too long
         bases_at_play = TupleOps.flatten(
             tuple(sim.get_bases(membership_id=m) for m in veh.membership.memberships)
         )

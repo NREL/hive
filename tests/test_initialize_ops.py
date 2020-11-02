@@ -7,7 +7,7 @@ from hive.initialization.initialize_ops import process_fleet_file
 class TestIntializeOps(TestCase):
 
     def test_process_fleet_file(self):
-        fleets_file_location = resource_filename("hive.resources.scenarios.denver_downtown.fleets", "denver_fleet.yaml")
+        fleets_file_location = resource_filename("hive.resources.scenarios.denver_downtown.fleets", "denver_duel_fleets.yaml")
 
         veh_member_ids = process_fleet_file(fleets_file_location, 'vehicles')
         base_member_ids = process_fleet_file(fleets_file_location, 'bases')
