@@ -1,7 +1,7 @@
 from typing import Optional, NamedTuple, Tuple
 
 from hive.model.roadnetwork.link import Link
-from hive.util.helpers import H3Ops
+from hive.util.h3_ops import H3Ops
 from hive.util.units import Seconds
 
 

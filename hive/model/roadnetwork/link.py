@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional
 
 import h3
 
-from hive.util.helpers import H3Ops
+from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import LinkId, GeoId
 from hive.util.units import Kilometers, Kmph, Seconds, Ratio, hours_to_seconds
 

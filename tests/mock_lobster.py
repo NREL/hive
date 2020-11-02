@@ -49,7 +49,7 @@ from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.step_simulation import StepSimulation
 from hive.state.simulation_state.update.update import Update
 from hive.state.vehicle_state.vehicle_state import VehicleState
-from hive.util.helpers import H3Ops
+from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import *
 from hive.util.units import *
 

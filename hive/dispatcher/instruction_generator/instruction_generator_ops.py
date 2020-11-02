@@ -13,7 +13,7 @@ from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
 from hive.util import Ratio, TupleOps, DictOps
-from hive.util.helpers import H3Ops
+from hive.util.h3_ops import H3Ops
 
 log = logging.getLogger(__name__)
 
