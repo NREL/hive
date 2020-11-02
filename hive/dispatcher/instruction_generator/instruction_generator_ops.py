@@ -265,6 +265,22 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         )
         mechatronics = environment.mechatronics.get(veh.mechatronics_id)
 
+        def is_valid_fn(s: Station):
+            """
+            predicate that tests if a station + vehicle have a matching fleet id, and if so,
+            that the station provides chargers which match the vehicle's mechatronics
+            :param s: the station to test
+            :return: true if the station is valid for this vehicle
+            """
+            station_matches_fleet_id = s.membership.valid_membership(veh.membership)
+            if not station_matches_fleet_id:
+                return False
+            else:
+                station_has_valid_charger = any([
+                    mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
+                ])
+                return station_has_valid_charger
+
         if len(instructions) >= n:
             break
 
@@ -288,30 +304,20 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
                 immutables.Map()
             )
 
-            def v_fn(s: Station):
-                station_has_top_charger = bool(s.available_chargers.get(top_charger_id))
-                vehicle_can_use_charger = mechatronics.valid_charger(environment.chargers[top_charger_id])
-                return station_has_top_charger and vehicle_can_use_charger
-
-            d_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger_id)
-
-            is_valid_fn = v_fn
-            distance_fn = d_fn
+            distance_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger_id)
 
         else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
             # use the search-based metric which considers travel, queueing, and charging time
 
             def v_fn(s: Station):
-                station_has_valid_charger = all([
+                station_has_valid_charger = any([
                     mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
                 ])
                 return station_has_valid_charger
 
-            d_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
+            distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
                 vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
             )
-            is_valid_fn = v_fn
-            distance_fn = d_fn
 
         nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
                                                entities=stations_at_play,
