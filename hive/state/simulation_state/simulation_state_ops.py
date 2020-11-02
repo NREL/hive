@@ -9,6 +9,7 @@ from returns.result import Result, Success, Failure
 from hive.util.exception import SimulationStateError
 from hive.util import DictOps
 from hive.util.typealiases import *
+from hive.model.sim_time import SimTime
 
 if TYPE_CHECKING:
     from hive.model.base import Base

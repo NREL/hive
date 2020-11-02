@@ -1,22 +1,26 @@
-from typing import Tuple, Optional, NamedTuple
+from __future__ import annotations
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.vehicle_event_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
-from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, RequestId, ChargerId
 from hive.util.typealiases import VehicleId
 
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
 
-def charge(sim: 'SimulationState',
+
+def charge(sim: SimulationState,
            env: Environment,
            vehicle_id: VehicleId,
            station_id: StationId,
-           charger_id: ChargerId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+           charger_id: ChargerId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
 
@@ -66,13 +70,13 @@ def charge(sim: 'SimulationState',
 
 
 class MoveResult(NamedTuple):
-    sim: 'SimulationState'
+    sim: SimulationState
     prev_vehicle: Optional[Vehicle] = None
     next_vehicle: Optional[Vehicle] = None
     route_traversal: RouteTraversal = RouteTraversal()
 
 
-def _apply_route_traversal(sim: 'SimulationState',
+def _apply_route_traversal(sim: SimulationState,
                            env: Environment,
                            vehicle_id: VehicleId,
                            route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
@@ -132,9 +136,9 @@ def _apply_route_traversal(sim: 'SimulationState',
             return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
 
 
-def _go_out_of_service_on_empty(sim: 'SimulationState',
+def _go_out_of_service_on_empty(sim: SimulationState,
                                 env: Environment,
-                                vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                                vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     sets a vehicle to OutOfService if it is out of energy after a move event
 
@@ -164,7 +168,7 @@ def _go_out_of_service_on_empty(sim: 'SimulationState',
         return None, None
 
 
-def move(sim: 'SimulationState',
+def move(sim: SimulationState,
          env: Environment,
          vehicle_id: VehicleId,
          route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
@@ -195,10 +199,10 @@ def move(sim: 'SimulationState',
             return None, move_result
 
 
-def pick_up_trip(sim: 'SimulationState',
+def pick_up_trip(sim: SimulationState,
                  env: Environment,
                  vehicle_id: VehicleId,
-                 request_id: RequestId) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                 request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     has a vehicle pick up a trip and receive payment for it
 

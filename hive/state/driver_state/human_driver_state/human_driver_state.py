@@ -3,18 +3,20 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
-import h3
-
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
     DispatchBaseInstruction,
-    ChargeBaseInstruction,
-    RepositionInstruction,
 )
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
+from hive.state.driver_state.driver_instruction_ops import (
+    human_charge_at_home,
+    idle_if_at_soc_limit,
+    human_look_for_requests,
+)
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
 from hive.state.vehicle_state.charging_base import ChargingBase
+from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.dispatch_base import DispatchBase
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.reserve_base import ReserveBase
@@ -52,18 +54,6 @@ class HumanAvailable(NamedTuple, DriverState):
             env: Environment,
             previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
-        def _get_reposition_location() -> Optional[str]:
-            if len(sim.r_search) == 0:
-                # no requests in system, do nothing
-                return None
-            else:
-                # find the most dense request search hex and sends vehicles to the center
-                best_search_hex = sorted(
-                    [(k, len(v)) for k, v in sim.r_search.items()], key=lambda t: t[1],
-                    reverse=True
-                )[0][0]
-            destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
-            return destination
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         if not my_vehicle:
@@ -71,21 +61,16 @@ class HumanAvailable(NamedTuple, DriverState):
 
         state = my_vehicle.vehicle_state
 
-        i = None
-
         # once the vehicle is available it should reposition to seek out requests.
         # if the vehicle is at home, it should reposition;
         # and, if the vehicle has been idle for 30 minutes, it should reposition;
         if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
-            dest = _get_reposition_location()
-            if dest:
-                i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
+            return human_look_for_requests(my_vehicle, sim)
         elif isinstance(state, Idle):
-            dest = _get_reposition_location()
-            if state.idle_duration > 1800 and dest:
-                i = RepositionInstruction(self.attributes.vehicle_id, _get_reposition_location())
-
-        return i
+            if state.idle_duration > 1800:
+                return human_look_for_requests(my_vehicle, sim)
+        else:
+            return None
 
     def update(self, sim: SimulationState, env: Environment) -> Tuple[
         Optional[Exception], Optional[SimulationState]]:
@@ -163,29 +148,14 @@ class HumanUnavailable(NamedTuple, DriverState):
             return my_base.geoid == my_vehicle.geoid
 
         if not at_home() and not isinstance(my_vehicle.vehicle_state, DispatchBase):
-            i = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+            # dispatch to home base
+            return DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
         elif my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase) and at_home():
-            my_station = sim.stations.get(my_base.station_id)
-            if not my_station:
-                log.error(f"could not find station {my_base.station_id} for base {self.attributes.home_base_id}")
-                return None
-
-            my_mechatronics = env.mechatronics.get(my_vehicle.mechatronics_id)
-
-            chargers = tuple(filter(
-                lambda c: my_mechatronics.valid_charger(c),
-                [env.chargers[cid] for cid in my_station.total_chargers.keys()]
-            ))
-            if not chargers:
-                i = None
-            else:
-                # take the lowest power charger
-                charger = sorted(chargers, key=lambda c: c.rate)[0]
-                i = ChargeBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id, charger.id)
+            return human_charge_at_home(my_vehicle, my_base, sim, env)
+        elif isinstance(my_vehicle.vehicle_state, ChargingStation):
+            return idle_if_at_soc_limit(my_vehicle, env)
         else:
-            i = None
-
-        return i
+            return None
 
     def update(self, sim: SimulationState, env: Environment) -> Tuple[
         Optional[Exception], Optional[SimulationState]]:
