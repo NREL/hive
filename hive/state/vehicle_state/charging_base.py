@@ -33,31 +33,39 @@ class ChargingBase(NamedTuple, VehicleState):
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not base:
-            return SimulationStateError(f"base {self.base_id} not found"), None
+            msg = f"base {self.base_id} not found"
+            return SimulationStateError(msg), None
         elif not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            msg = f"vehicle {self.vehicle_id} not found"
+            return SimulationStateError(msg), None
 
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         charger = env.chargers.get(self.charger_id)
         if not base.station_id:
-            return SimulationStateError(f"base {self.base_id} is not co-located with a station"), None
+            msg = f"base {self.base_id} is not co-located with a station"
+            return SimulationStateError(msg), None
         elif not vehicle.membership.valid_membership(base.membership):
             msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
             return SimulationStateError(msg), None
         elif not mechatronics.valid_charger(charger):
             msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
+            log.warning(msg)
             return SimulationStateError(msg), None
         else:
             station = sim.stations.get(base.station_id) if base.station_id else None
             if not station:
-                return SimulationStateError(f"station {base.station_id} not found"), None
+                msg = f"station {base.station_id} not found for vehicle {self.vehicle_id}"
+                log.warning(msg)
+                return SimulationStateError(msg), None
             else:
                 updated_station = station.checkout_charger(self.charger_id)
                 if not updated_station:
+                    log.warning(f"vehicle {self.vehicle_id} can't checkout {self.charger_id} from {station.id}")
                     return None, None
                 else:
                     error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                     if error:
+                        log.warning(f"unable to update station {station.id}")
                         return error, None
                     else:
                         return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)

@@ -5,17 +5,18 @@ from typing import NamedTuple, Dict, Optional
 
 import h3
 import immutables
+import logging
 
 from hive.model.energy.charger import Charger
-from hive.model.energy.energytype import EnergyType
 from hive.model.membership import Membership
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.util.exception import SimulationStateError
 from hive.util import DictOps
+from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 from hive.util.units import Currency
 
+log = logging.getLogger(__name__)
 
 class Station(NamedTuple):
     """
@@ -249,4 +250,3 @@ class Station(NamedTuple):
         :return:
         """
         return self._replace(membership=Membership.from_tuple(member_ids))
-

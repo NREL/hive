@@ -183,3 +183,4 @@ class Vehicle(NamedTuple):
         :return:
         """
         return self._replace(membership=Membership.from_tuple(member_ids))
+

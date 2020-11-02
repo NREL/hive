@@ -1,9 +1,9 @@
 from __future__ import annotations
+
+import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 import h3
-import logging
-import random
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
@@ -14,19 +14,19 @@ from hive.dispatcher.instruction.instructions import (
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
-from hive.state.vehicle_state.dispatch_base import DispatchBase
-from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.charging_base import ChargingBase
+from hive.state.vehicle_state.dispatch_base import DispatchBase
 from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.util import SimulationStateError
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.model.roadnetwork.roadnetwork import RoadNetwork
     from hive.runner.environment import Environment
-    from hive.util.typealiases import ScheduleId, GeoId
+    from hive.util.typealiases import ScheduleId
 
 log = logging.getLogger(__name__)
+
 
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
 
