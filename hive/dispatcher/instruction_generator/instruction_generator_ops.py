@@ -309,12 +309,6 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
             # use the search-based metric which considers travel, queueing, and charging time
 
-            def v_fn(s: Station):
-                station_has_valid_charger = any([
-                    mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
-                ])
-                return station_has_valid_charger
-
             distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
                 vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
             )
