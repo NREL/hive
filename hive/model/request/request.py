@@ -4,10 +4,10 @@ from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
 
 import h3
 
+from hive.model.membership import DEFAULT_MEMBERSHIP, Membership
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.membership import Membership
 from hive.model.sim_time import SimTime
 from hive.util.typealiases import *
 from hive.util.units import Currency, KM_TO_MILE, Kilometers
@@ -26,9 +26,11 @@ class Request(NamedTuple):
     If a vehicle has been dispatched to service this Request, then it should hold the vehicle id
     and the time that vehicle was dispatched to it.
 
-
     :param id: A unique id for the request.
     :type id: :py:obj:`RequestId`
+
+    :param fleet_id: the id of the fleet this request was submitted to.
+    :type fleet_id: :py:obj:`MembershipId`
 
     :param origin: The geoid of the request origin.
     :type origin: :py:obj:`GeoId`
@@ -49,6 +51,7 @@ class Request(NamedTuple):
     :type dispatched_vehicle_time: :py:obj:`Optional[SimTime]`
     """
     id: RequestId
+    fleet_id: MembershipId
     origin_link: Link
     destination_link: Link
     departure_time: SimTime
@@ -56,8 +59,6 @@ class Request(NamedTuple):
     value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
-
-    membership: Membership = Membership()
 
     @property
     def origin(self):
@@ -67,10 +68,6 @@ class Request(NamedTuple):
     def destination(self):
         return self.destination_link.end
 
-    @property
-    def geoid(self):
-        return self.origin
-
     @classmethod
     def build(cls,
               request_id: RequestId,
@@ -79,8 +76,8 @@ class Request(NamedTuple):
               road_network: RoadNetwork,
               departure_time: SimTime,
               passengers: int,
-              value: Currency = 0,
-              membership: Membership = Membership(),
+              fleet_id: MembershipId,
+              value: Currency = 0
               ) -> Request:
         assert (departure_time >= 0)
         assert (passengers > 0)
@@ -95,14 +92,19 @@ class Request(NamedTuple):
             )
             for pass_idx in range(0, passengers)
         ]
-        return Request(request_id,
-                       origin_link,
-                       destination_link,
-                       departure_time,
-                       tuple(request_as_passengers),
-                       value,
-                       membership=membership,
-                       )
+        request = Request(request_id,
+                          fleet_id,
+                          origin_link,
+                          destination_link,
+                          departure_time,
+                          tuple(request_as_passengers),
+                          value,
+                          )
+        return request
+
+    @property
+    def geoid(self):
+        return self.origin
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -135,15 +137,13 @@ class Request(NamedTuple):
             return IOError("cannot load a request without a number of 'passengers'"), None
         else:
             request_id = row['request_id']
+            fleet_id = row.get('fleet_id', DEFAULT_MEMBERSHIP)
             try:
+
                 o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
                 d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
-                if 'fleet_id' in row:
-                    membership = Membership.single_membership(row['fleet_id'])
-                else:
-                    membership = Membership()
 
                 departure_time_result = SimTime.build(row['departure_time'])
                 if isinstance(departure_time_result, TimeParseError):
@@ -152,12 +152,12 @@ class Request(NamedTuple):
                 passengers = int(row['passengers'])
                 request = Request.build(
                     request_id=request_id,
+                    fleet_id=fleet_id,
                     origin=o_geoid,
                     destination=d_geoid,
                     road_network=road_network,
                     departure_time=departure_time_result,
-                    passengers=passengers,
-                    membership=membership
+                    passengers=passengers
                 )
                 return None, request
             except ValueError:

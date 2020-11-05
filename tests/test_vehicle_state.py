@@ -814,7 +814,7 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
-        request = mock_request(membership=Membership.single_membership("lyft"))
+        request = mock_request(fleet_id="lyft")
 
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
@@ -1329,7 +1329,7 @@ class TestVehicleState(TestCase):
 
     def test_servicing_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
-        request = mock_request(membership=Membership.single_membership("lyft"))
+        request = mock_request(fleet_id="lyft")
 
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
