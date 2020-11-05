@@ -191,6 +191,7 @@ class BEV(NamedTuple, MechatronicsInterface):
             )
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
 
+
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
 
         return updated_vehicle, time_charging_seconds

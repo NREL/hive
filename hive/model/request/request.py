@@ -11,6 +11,7 @@ from hive.model.membership import Membership
 from hive.model.sim_time import SimTime
 from hive.util.typealiases import *
 from hive.util.units import Currency, KM_TO_MILE, Kilometers
+from hive.util.exception import TimeParseError
 
 if TYPE_CHECKING:
     from hive.model.request import RequestRateStructure
@@ -139,9 +140,13 @@ class Request(NamedTuple):
                 d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
+                if 'fleet_id' in row:
+                    membership = Membership.single_membership(row['fleet_id'])
+                else:
+                    membership = Membership()
 
                 departure_time_result = SimTime.build(row['departure_time'])
-                if isinstance(departure_time_result, IOError):
+                if isinstance(departure_time_result, TimeParseError):
                     return departure_time_result, None
 
                 passengers = int(row['passengers'])
@@ -151,7 +156,8 @@ class Request(NamedTuple):
                     destination=d_geoid,
                     road_network=road_network,
                     departure_time=departure_time_result,
-                    passengers=passengers
+                    passengers=passengers,
+                    membership=membership
                 )
                 return None, request
             except ValueError:

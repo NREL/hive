@@ -138,7 +138,6 @@ class SimulationState(NamedTuple):
             sort: bool = False,
             sort_key: Callable = lambda k: k,
             sort_reversed: bool = False,
-            membership_id: MembershipId = DEFAULT_MEMBERSHIP,
     ) -> Tuple[Vehicle, ...]:
         """
         returns a tuple of vehicles.
@@ -149,13 +148,9 @@ class SimulationState(NamedTuple):
         :param sort: whether or not to sort the results
         :param sort_key: the key to sort the results by
         :param sort_reversed: the order of the resulting sort
-        :param membership_id: optional membership id
         :return: tuple of sorted and filtered vehicles
         """
-        members = self.v_membership.get(membership_id)
-        if not members:
-            return ()
-        vehicles = [self.vehicles[vid] for vid in members]
+        vehicles = [v for v in self.vehicles.values()]
 
         if filter_function and sort:
             return tuple(sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))

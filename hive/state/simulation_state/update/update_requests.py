@@ -83,7 +83,8 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
         current_sim_time = sim_state.sim_time
 
         def stop_condition(value: int) -> bool:
-            return value < current_sim_time
+            stop = value < current_sim_time
+            return stop
 
         result = update_requests_from_iterator(
             self.reader.read_until_stop_condition(stop_condition),

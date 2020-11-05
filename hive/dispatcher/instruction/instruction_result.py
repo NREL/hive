@@ -1,6 +1,8 @@
-from typing import NamedTuple
+from __future__ import annotations
+from typing import NamedTuple, TYPE_CHECKING
 
-from hive.state.vehicle_state.vehicle_state import VehicleState
+if TYPE_CHECKING:
+    from hive.state.vehicle_state.vehicle_state import VehicleState
 
 
 class InstructionResult(NamedTuple):

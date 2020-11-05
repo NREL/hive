@@ -1,11 +1,16 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import h3
 
-from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.report_type import ReportType
 from hive.reporting.reporter import Report
-from hive.runner import Environment
-from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util import wkt
+
+if TYPE_CHECKING:
+    from hive.model.vehicle.vehicle import Vehicle
+    from hive.runner import Environment
+    from hive.state.simulation_state.simulation_state import SimulationState
 
 
 def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment) -> Report:
