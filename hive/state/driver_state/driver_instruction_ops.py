@@ -40,11 +40,13 @@ def human_charge_at_home(
     """
 
     my_station = sim.stations.get(home_base.station_id)
+    my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
+
     if not my_station:
         log.error(f"could not find station {home_base.station_id} for home_base {home_base.id}")
         return None
-
-    my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
+    elif my_mechatronics.is_full(veh):
+        return None
 
     chargers = tuple(filter(
         lambda c: my_mechatronics.valid_charger(c),
