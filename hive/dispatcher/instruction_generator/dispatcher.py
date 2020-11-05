@@ -38,32 +38,32 @@ class Dispatcher(NamedTuple, InstructionGenerator):
         """
         base_charging_range_km_threshold = environment.config.dispatcher.base_charging_range_km_threshold
 
-        def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-            vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
-            if vehicle_state_str not in environment.config.dispatcher.valid_dispatch_states:
-                return False
-            elif not vehicle.driver_state.available:
-                return False
-
-            mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
-            range_remaining_km = mechatronics.range_remaining_km(vehicle)
-
-            # if we are at a base, do we have enough remaining range to leave the base?
-            if isinstance(vehicle.vehicle_state,
-                          ChargingBase) and range_remaining_km < base_charging_range_km_threshold:
-                return False
-            # do we have enough remaining range to allow us to match?
-            return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold)
-
         def _solve_assignment(
                 inst_acc: Tuple[DispatchTripInstruction, ...],
                 membership_id: MembershipId,
         ) -> Tuple[DispatchTripInstruction, ...]:
+            def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
+                vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
+                if vehicle_state_str not in environment.config.dispatcher.valid_dispatch_states:
+                    return False
+                elif not vehicle.driver_state.available:
+                    return False
+                elif not vehicle.membership.is_member(membership_id):
+                    return False
+
+                mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
+                range_remaining_km = mechatronics.range_remaining_km(vehicle)
+
+                # if we are at a base, do we have enough remaining range to leave the base?
+                if isinstance(vehicle.vehicle_state,
+                              ChargingBase) and range_remaining_km < base_charging_range_km_threshold:
+                    return False
+                # do we have enough remaining range to allow us to match?
+                return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold)
 
             # collect the vehicles and requests for the assignment algorithm
             available_vehicles = simulation_state.get_vehicles(
                 filter_function=_is_valid_for_dispatch,
-                membership_id=membership_id,
             )
             unassigned_requests = simulation_state.get_requests(
                 sort=True,

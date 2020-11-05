@@ -10,11 +10,8 @@ from typing import TYPE_CHECKING
 import pkg_resources
 import yaml
 
-from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
-from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.initialization.load import load_simulation
 from hive.reporting import reporter_ops
 from hive.runner.local_simulation_runner import LocalSimulationRunner
@@ -79,7 +76,8 @@ def run() -> int:
             # log_fh.setLevel(env.config.global_config.log_level)
             log_fh.setFormatter(formatter)
             log.addHandler(log_fh)
-            log.info(f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
+            log.info(
+                f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
 
         if env.config.global_config.log_station_capacities:
             result = reporter_ops.log_station_capacities(sim, env)
@@ -89,11 +87,6 @@ def run() -> int:
         # this ordering is important as the later managers will override any instructions from the previous
         # instruction generator for a specific vehicle id.
         instruction_generators = (
-            BaseFleetManager(env.config.dispatcher),
-            PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.input_config.demand_forecast_file),
-                config=env.config.dispatcher,
-            ),
             ChargingFleetManager(env.config.dispatcher),
             # DeluxeFleetManager(max_search_radius_km=env.config.network.max_search_radius_km),
             Dispatcher(env.config.dispatcher),

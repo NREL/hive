@@ -2,22 +2,22 @@ from __future__ import annotations
 
 import functools as ft
 import logging
-import immutables
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.model.vehicle.vehicle import Vehicle, VehicleId
+from hive.model.vehicle.vehicle import Vehicle
+from hive.reporting.report_type import ReportType
+from hive.reporting.reporter import Report
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.util import TupleOps
-from hive.reporting.reporter import Report
-from hive.reporting.report_type import ReportType
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
+    from hive.state.simulation_state.simulation_state import SimulationState
     from hive.util.typealiases import SimTime
 
 log = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def perform_driver_state_updates(simulation_state: SimulationState, env: Environ
         else:
             return updated_sim
 
-    next_state = ft.reduce(_step_drivers, simulation_state.get_vehicles(), simulation_state)
+    next_state = ft.reduce(_step_drivers, simulation_state.vehicles.values(), simulation_state)
     return next_state
 
 
@@ -96,12 +96,14 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
             vs
         )
 
-        sorted_charge_queueing_vehicles = tuple(sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time))
+        sorted_charge_queueing_vehicles = tuple(
+            sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time))
 
         return other_vehicles + sorted_charge_queueing_vehicles
 
     # why sort here? see _sort_by_vehicle_state for an explanation
-    vehicles = _sort_by_vehicle_state(simulation_state.get_vehicles())
+    vehicles = _sort_by_vehicle_state(simulation_state.vehicles.values())
+
     next_state = ft.reduce(_step_vehicle, vehicles, simulation_state)
 
     return next_state

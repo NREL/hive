@@ -16,6 +16,18 @@ def report_error(error: Exception) -> Dict:
     return data
 
 
+class TimeParseError(Exception):
+    """
+    raised when time parsing fails
+    """
+
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)
+
+
 class StateTransitionError(Exception):
     """
     calls out a breach in the simulation's physics observed when
@@ -132,5 +144,3 @@ class CombinedException(Exception):
             ""
         )
         return repr(combined)
-
-

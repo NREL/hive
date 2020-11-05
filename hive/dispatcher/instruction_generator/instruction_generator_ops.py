@@ -76,7 +76,7 @@ class InstructionGenerationResult(NamedTuple):
                 environment,
                 self.instruction_stack.get(v.id),
             ),) + acc,
-            simulation_state.get_vehicles(),
+            simulation_state.vehicles.values(),
             ())
 
         updated_instruction_stack = ft.reduce(

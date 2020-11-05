@@ -1,16 +1,33 @@
-from typing import NamedTuple, Tuple, Optional
+from __future__ import annotations
 
-import immutables
+import logging
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.dispatcher.instruction.instruction import Instruction
-from hive.dispatcher.instruction.instructions import DispatchBaseInstruction
+from hive.dispatcher.instruction.instructions import (
+    DispatchBaseInstruction,
+)
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
+from hive.state.driver_state.driver_instruction_ops import (
+    human_charge_at_home,
+    idle_if_at_soc_limit,
+    human_look_for_requests,
+)
 from hive.state.driver_state.driver_state import DriverState
 from hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
-from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.vehicle_state.charging_base import ChargingBase
+from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.dispatch_base import DispatchBase
+from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.util import SimulationStateError
-from hive.util.typealiases import ScheduleId, VehicleId
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
+    from hive.util.typealiases import ScheduleId
+
+log = logging.getLogger(__name__)
 
 
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
@@ -33,14 +50,30 @@ class HumanAvailable(NamedTuple, DriverState):
 
     def generate_instruction(
             self,
-            sim: 'SimulationState',
-            env: 'Environment',
-            previous_instructions: Optional[Tuple[Instruction, ...]],
+            sim: SimulationState,
+            env: Environment,
+            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
-        return None
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+        my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+        if not my_vehicle:
+            log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
+
+        state = my_vehicle.vehicle_state
+
+        # once the vehicle is available it should reposition to seek out requests.
+        # if the vehicle is at home, it should reposition;
+        # and, if the vehicle has been idle for 30 minutes, it should reposition;
+        if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
+            return human_look_for_requests(my_vehicle, sim)
+        elif isinstance(state, Idle):
+            if state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
+                return human_look_for_requests(my_vehicle, sim)
+        else:
+            return None
+
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         test that the agent is available to work. if unavailable, transition to an unavailable state.
 
@@ -87,9 +120,9 @@ class HumanUnavailable(NamedTuple, DriverState):
 
     def generate_instruction(
             self,
-            sim: 'SimulationState',
-            env: 'Environment',
-            previous_instructions: Optional[Tuple[Instruction, ...]],
+            sim: SimulationState,
+            env: Environment,
+            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
         """
         while in this state, the driver checks the vehicle location; if the vehicle is not at the home base,
@@ -105,10 +138,24 @@ class HumanUnavailable(NamedTuple, DriverState):
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         my_base = sim.bases.get(self.attributes.home_base_id)
 
-        if not my_base.geoid == my_vehicle.geoid and not isinstance(my_vehicle.vehicle_state, DispatchBase):
-            i = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+        if not my_vehicle:
+            log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
+        if not my_base:
+            log.error(f"could not find base {self.attributes.home_base_id} in simulation "
+                      f"for veh {self.attributes.vehicle_id}")
+
+        def at_home() -> bool:
+            return my_base.geoid == my_vehicle.geoid
+
+        if not at_home() and not isinstance(my_vehicle.vehicle_state, DispatchBase):
+            # dispatch to home base
+            return DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+        elif my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase) and at_home():
+            return human_charge_at_home(my_vehicle, my_base, sim, env)
+        elif isinstance(my_vehicle.vehicle_state, ChargingStation):
+            return idle_if_at_soc_limit(my_vehicle, env)
         else:
-            i = None
+            return None
 
         return i
 

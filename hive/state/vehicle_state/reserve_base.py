@@ -34,9 +34,10 @@ class ReserveBase(NamedTuple, VehicleState):
         elif not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         elif base.geoid != vehicle.geoid:
+            log.warning(f"ReserveBase.enter(): vehicle {vehicle.id} not at same location as {base.id}")
             return None, None
         elif not vehicle.membership.valid_membership(base.membership):
-            log.debug(f"vehicle {vehicle.id} and base {base.id} don't share a membership")
+            log.warning(f"ReserveBase.enter(): vehicle {vehicle.id} and base {base.id} don't share a membership")
             return None, None
 
         else:

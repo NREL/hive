@@ -3,6 +3,8 @@ from csv import DictReader
 
 from tests.mock_lobster import *
 
+from hive.util.exception import TimeParseError
+
 
 class TestRequest(TestCase):
     request_id = "test"
@@ -80,4 +82,4 @@ class TestRequest(TestCase):
         network = mock_network()
         error, request = Request.from_row(row, env, network)
         self.assertIsNone(request)
-        self.assertIsInstance(error, IOError)
+        self.assertIsInstance(error, TimeParseError)

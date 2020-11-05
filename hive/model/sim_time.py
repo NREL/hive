@@ -3,12 +3,14 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Union
 
+from hive.util.exception import TimeParseError
+
 
 class SimTime(int):
-    ERROR_MSG = "Unable to parse datetime. Make sure the time is an ISO 8601 string or an epoch integer"
+    ERROR_MSG = "Unable to parse datetime. Make sure the time is an ISO 8601 string or an epoch integer."
 
     @classmethod
-    def build(cls, value: Union[str, int]) -> Union[IOError, SimTime]:
+    def build(cls, value: Union[str, int]) -> Union[TimeParseError, SimTime]:
         if isinstance(value, str):
             try:
                 time = datetime.fromisoformat(value)
@@ -16,14 +18,14 @@ class SimTime(int):
                 try:
                     time = datetime.utcfromtimestamp(int(value))
                 except (ValueError, TypeError):
-                    return IOError(cls.ERROR_MSG)
+                    return TimeParseError(cls.ERROR_MSG + f" got {value}")
         elif isinstance(value, int):
             try:
                 time = datetime.utcfromtimestamp(value)
             except (ValueError, TypeError):
-                return IOError(cls.ERROR_MSG)
+                return TimeParseError(cls.ERROR_MSG + f" got {value}")
         else:
-            return IOError(cls.ERROR_MSG)
+            return TimeParseError(cls.ERROR_MSG + f" got {value}")
 
         if time.tzinfo:
             time = time.replace(tzinfo=None)
