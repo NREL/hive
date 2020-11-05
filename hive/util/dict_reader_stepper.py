@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import csv
+import logging
+
 from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple
+
+log = logging.getLogger(__name__)
 
 
 class DictReaderIterator:
@@ -32,9 +36,9 @@ class DictReaderIterator:
         if self.history:
             # we stored an extra value from last time; return that
             value = self.parser(self.history[self.step_column_name])
-            if isinstance(value, IOError):
-                # TODO: pass this to an error log
-                print(value)
+            if isinstance(value, Exception):
+                raise value
+
             elif self.stop_condition(value):
                 # stored value is within range
                 tmp = self.history
@@ -46,9 +50,8 @@ class DictReaderIterator:
         else:
             row = next(self.reader)
             value = self.parser(row[self.step_column_name])
-            if isinstance(value, IOError):
-                # TODO: pass this to an error log
-                print(value)
+            if isinstance(value, Exception):
+                raise value
             elif self.stop_condition(value):
                 # value is within range
                 return row

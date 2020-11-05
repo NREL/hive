@@ -5,9 +5,7 @@ from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
-from hive.util.typealiases import MembershipId
 from hive.model.passenger import board_vehicle
-from hive.runner.environment import Environment
 from hive.state.vehicle_state.charging_base import ChargingBase
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.dispatch_base import DispatchBase
@@ -18,13 +16,14 @@ from hive.state.vehicle_state.repositioning import Repositioning
 from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId, ChargerId
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.state.vehicle_state.vehicle_state import VehicleState
+    from hive.util.typealiases import MembershipId
+    from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId, ChargerId
+    from hive.runner.environment import Environment
 
 
 class IdleInstruction(NamedTuple, Instruction):
@@ -87,7 +86,8 @@ class ServeTripInstruction(NamedTuple, Instruction):
             sim_time = sim_state.sim_time
             passengers = board_vehicle(request.passengers, self.vehicle_id)
             prev_state = vehicle.vehicle_state
-            next_state = ServicingTrip(self.vehicle_id, self.request_id, self.membership_id, sim_time, route, passengers)
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, self.membership_id, sim_time, route,
+                                       passengers)
 
             return None, InstructionResult(prev_state, next_state)
 

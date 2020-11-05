@@ -16,8 +16,9 @@ class DispatcherConfig(NamedTuple):
     max_search_radius_km: Kilometers
     charging_search_type: ChargingSearchType
 
+    idle_time_out_seconds: Seconds
+
     valid_dispatch_states: Tuple[str, ...]
-    active_states: Tuple[str, ...]
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -40,7 +41,6 @@ class DispatcherConfig(NamedTuple):
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
         try:
             d['valid_dispatch_states'] = tuple(s.lower() for s in d['valid_dispatch_states'])
-            d['active_states'] = tuple(d['active_states'])
             d['charging_search_type'] = ChargingSearchType.from_string(d['charging_search_type'])
         except ValueError:
             return IOError("valid_dispatch_states and active_states must be in a list format")

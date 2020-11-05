@@ -9,11 +9,11 @@ from tests.mock_lobster import *
 class TestLocalSimulationRunner(TestCase):
 
     def test_run(self):
-        config = mock_config(end_time=20, timestep_duration_seconds=1)
+        config = mock_config(end_time=600, timestep_duration_seconds=60)
         env = mock_env(config)
         req = mock_request(
             request_id='1',
-            departure_time=0,
+            departure_time=SimTime.build(0),
             passengers=2
         )
         initial_sim = mock_sim(
@@ -43,7 +43,7 @@ class TestLocalSimulationRunner(TestCase):
         config = mock_config()
         env = mock_env(config)
         sim = mock_sim()
-        update = Update((CancelRequests()), StepSimulation(mock_instruction_generators_with_mock_forecast(config)))
+        update = Update((CancelRequests()), StepSimulation(mock_instruction_generators(config)))
         runner_payload = RunnerPayload(sim, env, update)
 
         stepped = LocalSimulationRunner.step(runner_payload)
@@ -54,7 +54,7 @@ class TestLocalSimulationRunner(TestCase):
         config = mock_config(end_time=20, start_time=40, timestep_duration_seconds=1)
         env = mock_env(config)
         sim = mock_sim(sim_time=40)
-        update = Update((CancelRequests()), StepSimulation(mock_instruction_generators_with_mock_forecast(config)))
+        update = Update((CancelRequests()), StepSimulation(mock_instruction_generators(config)))
         runner_payload = RunnerPayload(sim, env, update)
 
         stepped = LocalSimulationRunner.step(runner_payload)

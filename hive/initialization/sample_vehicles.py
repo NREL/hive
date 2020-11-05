@@ -67,7 +67,7 @@ def sample_vehicles(
                     energy = mechatronics.initial_energy(initial_soc)
                     link = location_sampling_function()
                     vehicle_state = Idle(vehicle_id)
-                    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
+                    driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
                     vehicle = Vehicle(
                         id=vehicle_id,
                         mechatronics_id=mechatronics_id,

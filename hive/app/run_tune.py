@@ -7,16 +7,13 @@ from typing import Dict
 import ray
 from ray import tune
 
-from hive.dispatcher.forecaster.basic_forecaster import BasicForecaster
-from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
+from hive.initialization.load import load_simulation
 from hive.reporting.reporter import Reporter
-from hive.runner.load import load_simulation
 from hive.runner.local_simulation_runner import LocalSimulationRunner
 from hive.runner.runner_payload import RunnerPayload
-from hive.state.simulation_state.update import Update
+from hive.state.simulation_state.update.update import Update
 from hive.util import fs
 
 parser = argparse.ArgumentParser(description="run hive")
@@ -67,11 +64,6 @@ class OptimizationWrapper(tune.Trainable):
         sim, env = load_simulation(fs.find_scenario(scenario_file))
 
         instruction_generators = (
-            BaseFleetManager(env.config.dispatcher),
-            PositionFleetManager(
-                demand_forecaster=BasicForecaster.build(env.config.input_config.demand_forecast_file),
-                config=env.config.dispatcher,
-            ),
             ChargingFleetManager(env.config.dispatcher),
             Dispatcher(env.config.dispatcher),
         )

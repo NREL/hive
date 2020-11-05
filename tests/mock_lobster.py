@@ -13,11 +13,9 @@ from hive.config import HiveConfig
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from hive.dispatcher.instruction.instructions import *
-from hive.dispatcher.instruction_generator.base_fleet_manager import BaseFleetManager
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction_generator.position_fleet_manager import PositionFleetManager
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
@@ -29,6 +27,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
+from hive.model.sim_time import SimTime
 from hive.model.station import Station
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
@@ -36,7 +35,6 @@ from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsI
 from hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from hive.model.vehicle.vehicle import Vehicle
-from hive.model.sim_time import SimTime
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -87,6 +85,14 @@ class DefaultIds:
     @classmethod
     def mock_membership_id(cls) -> MembershipId:
         return "membership0"
+
+
+def somewhere() -> GeoId:
+    return h3.geo_to_h3(39.7539, -104.974, 15)
+
+
+def somewhere_else() -> GeoId:
+    return h3.geo_to_h3(39.7579, -104.978, 15)
 
 
 def mock_geojson() -> Dict:
@@ -321,7 +327,7 @@ def mock_vehicle(
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes())
+    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     link = road_network.link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
@@ -340,11 +346,12 @@ def mock_vehicle_from_geoid(
         mechatronics: MechatronicsInterface = mock_bev(),
         vehicle_state: Optional[VehicleState] = None,
         soc: Ratio = 1,
+        driver_state: Optional[DriverState] = None,
         membership: Membership = Membership(),
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
-    driver_state = AutonomousAvailable(AutonomousDriverAttributes())
+    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     link = mock_network().link_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
@@ -352,7 +359,7 @@ def mock_vehicle_from_geoid(
         energy=initial_energy,
         link=link,
         vehicle_state=state,
-        driver_state=driver_state,
+        driver_state=d_state,
         membership=membership,
     )
 
@@ -600,13 +607,10 @@ def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     return MockForecaster()
 
 
-def mock_instruction_generators_with_mock_forecast(
+def mock_instruction_generators(
         config: HiveConfig = mock_config(),
-        forecast: int = 1) -> Tuple[InstructionGenerator, ...]:
+) -> Tuple[InstructionGenerator, ...]:
     return (
-        BaseFleetManager(config.dispatcher),
-        PositionFleetManager(mock_forecaster(forecast),
-                             config.dispatcher),
         ChargingFleetManager(config.dispatcher),
         Dispatcher(config.dispatcher),
     )
@@ -617,14 +621,14 @@ def mock_update(config: Optional[HiveConfig] = None,
     if config and instruction_generators:
         return Update.build(config, instruction_generators)
     elif config:
-        instruction_generators = mock_instruction_generators_with_mock_forecast(config)
+        instruction_generators = mock_instruction_generators(config)
         return Update.build(config, instruction_generators)
     elif instruction_generators:
         config = mock_config()
         return Update.build(config, instruction_generators)
     else:
         conf = mock_config()
-        instruction_generators = mock_instruction_generators_with_mock_forecast(conf)
+        instruction_generators = mock_instruction_generators(conf)
         return Update((), StepSimulation(instruction_generators))
 
 
