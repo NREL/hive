@@ -18,6 +18,7 @@ from hive.model.station import Station
 from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.model.vehicle.schedules import build_schedules_table
 from hive.model.vehicle.vehicle import Vehicle
+from hive.reporting.handler.instruction_handler import InstructionHandler
 from hive.reporting.handler.stateful_handler import StatefulHandler
 from hive.reporting.reporter import Reporter
 from hive.reporting.handler.eventful_handler import EventfulHandler
@@ -87,6 +88,8 @@ def initialize_simulation(
         reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_states:
         reporter.add_handler(StatefulHandler(config.global_config, config.scenario_output_directory))
+    if config.global_config.log_instructions:
+        reporter.add_handler(InstructionHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
 

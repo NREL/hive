@@ -13,7 +13,7 @@ from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
 from hive.util import Ratio, TupleOps, DictOps
-from hive.util.helpers import H3Ops
+from hive.util.h3_ops import H3Ops
 
 log = logging.getLogger(__name__)
 
@@ -260,10 +260,23 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     instructions = ()
 
     for veh in vehicles:
-        stations_at_play = TupleOps.flatten(
-            tuple(simulation_state.get_stations(membership_id=m) for m in veh.membership.memberships)
-        )
         mechatronics = environment.mechatronics.get(veh.mechatronics_id)
+
+        def is_valid_fn(s: Station):
+            """
+            predicate that tests if a station + vehicle have a matching fleet id, and if so,
+            that the station provides chargers which match the vehicle's mechatronics
+            :param s: the station to test
+            :return: true if the station is valid for this vehicle
+            """
+            station_matches_fleet_id = s.membership.valid_membership(veh.membership)
+            if not station_matches_fleet_id:
+                return False
+            else:
+                station_has_valid_charger = any([
+                    mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
+                ])
+                return station_has_valid_charger
 
         if len(instructions) >= n:
             break
@@ -284,37 +297,21 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
 
             cache = ft.reduce(
                 lambda acc, station_id: acc.update({station_id: top_charger_id}),
-                [station.id for station in stations_at_play],
+                simulation_state.stations.keys(),
                 immutables.Map()
             )
 
-            def v_fn(s: Station):
-                station_has_top_charger = bool(s.available_chargers.get(top_charger_id))
-                vehicle_can_use_charger = mechatronics.valid_charger(environment.chargers[top_charger_id])
-                return station_has_top_charger and vehicle_can_use_charger
-
-            d_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger_id)
-
-            is_valid_fn = v_fn
-            distance_fn = d_fn
+            distance_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger_id)
 
         else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
             # use the search-based metric which considers travel, queueing, and charging time
 
-            def v_fn(s: Station):
-                station_has_valid_charger = all([
-                    mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
-                ])
-                return station_has_valid_charger
-
-            d_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
+            distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
                 vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
             )
-            is_valid_fn = v_fn
-            distance_fn = d_fn
 
         nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
-                                               entities=stations_at_play,
+                                               entities=simulation_state.stations.values(),
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,

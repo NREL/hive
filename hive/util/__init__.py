@@ -8,7 +8,8 @@ from hive.util.exception import (
     EntityError,
     UnitError,
     H3Error)
-from hive.util.helpers import H3Ops, SwitchCase
+from hive.util.h3_ops import H3Ops
+from hive.util.switch_case import SwitchCase
 from hive.util.dict_ops import DictOps
 from hive.util.tuple_ops import TupleOps
 from hive.util.typealiases import (
