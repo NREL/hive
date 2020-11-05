@@ -57,6 +57,7 @@ class StatefulHandler(Handler):
     def vehicle_asdict(vehicle: Vehicle) -> dict:
         output = {
             'vehicle_id': vehicle.id,
+            'memberships': str(vehicle.membership),
             'vehicle_state': vehicle.vehicle_state.__class__.__name__,
             'balance': vehicle.balance,
             'distance_traveled_km': vehicle.distance_traveled_km,
@@ -82,6 +83,7 @@ class StatefulHandler(Handler):
         del(out_dict["id"])
 
         out_dict["station_id"] = station.id
+        out_dict["memberships"] = str(station.membership)
 
         # deconstruct origin_link
         out_dict['link_id'] = station.link.link_id

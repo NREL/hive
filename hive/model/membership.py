@@ -60,3 +60,10 @@ class Membership(NamedTuple):
 
     def as_tuple(self) -> Tuple[MembershipId, ...]:
         return tuple(m for m in self.memberships)
+
+    def __str__(self):
+        """
+        string representation of memberships
+        :return: a comma-delimited string of the membership ids
+        """
+        return ",".join(self.memberships)
