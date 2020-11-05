@@ -87,7 +87,7 @@ class TestHumanDriverState(TestCase):
     def test_home_charge_instruction(self):
         # vehicle and base/station are at same location (i.e. vehicle is at home)
         state = mock_human_driver(available=False, schedule_id="off")
-        veh = mock_vehicle_from_geoid(driver_state=state, geoid=somewhere())
+        veh = mock_vehicle_from_geoid(driver_state=state, geoid=somewhere(), soc=0.5)
         station = mock_station_from_geoid(geoid=somewhere())
         base = mock_base_from_geoid(station_id=station.id, geoid=somewhere())
         sim = mock_sim(vehicles=(veh,), bases=(base,), stations=(station,))
