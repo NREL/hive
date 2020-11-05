@@ -260,9 +260,6 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     instructions = ()
 
     for veh in vehicles:
-        stations_at_play = TupleOps.flatten(
-            tuple(simulation_state.get_stations(membership_id=m) for m in veh.membership.memberships)
-        )
         mechatronics = environment.mechatronics.get(veh.mechatronics_id)
 
         def is_valid_fn(s: Station):
@@ -300,7 +297,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
 
             cache = ft.reduce(
                 lambda acc, station_id: acc.update({station_id: top_charger_id}),
-                [station.id for station in stations_at_play],
+                simulation_state.stations.keys(),
                 immutables.Map()
             )
 
@@ -314,7 +311,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             )
 
         nearest_station = H3Ops.nearest_entity(geoid=veh.geoid,
-                                               entities=stations_at_play,
+                                               entities=simulation_state.stations.values(),
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,
