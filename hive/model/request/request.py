@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
 
 import h3
 
-from hive.model.membership import DEFAULT_MEMBERSHIP
+from hive.model.membership import DEFAULT_MEMBERSHIP, Membership
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -144,10 +144,6 @@ class Request(NamedTuple):
                 d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
-                if 'fleet_id' in row:
-                    membership = Membership.single_membership(row['fleet_id'])
-                else:
-                    membership = Membership()
 
                 departure_time_result = SimTime.build(row['departure_time'])
                 if isinstance(departure_time_result, TimeParseError):
@@ -161,8 +157,7 @@ class Request(NamedTuple):
                     destination=d_geoid,
                     road_network=road_network,
                     departure_time=departure_time_result,
-                    passengers=passengers,
-                    membership=membership
+                    passengers=passengers
                 )
                 return None, request
             except ValueError:
