@@ -67,16 +67,12 @@ def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Except
         return SimulationStateError(f"origin {request.origin} not within road network geofence"), None
     else:
         search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
-        updated_r_membership = ft.reduce(
-            ft.partial(add_membership, entity_id=request.id),
-            request.membership.memberships,
-            sim.r_membership
-        )
+
         updated_sim = sim._replace(
             requests=DictOps.add_to_dict(sim.requests, request.id, request),
             r_locations=DictOps.add_to_collection_dict(sim.r_locations, request.geoid, request.id),
             r_search=DictOps.add_to_collection_dict(sim.r_search, search_geoid, request.id),
-            r_membership=updated_r_membership,
+            r_membership=DictOps.add_to_collection_dict(sim.r_membership, request.fleet_id, request.id),
         )
         return None, updated_sim
 
@@ -103,11 +99,7 @@ def remove_request(sim: SimulationState,
         updated_requests = DictOps.remove_from_dict(sim.requests, request.id)
         updated_r_locations = DictOps.remove_from_collection_dict(sim.r_locations, request.geoid, request.id)
         updated_r_search = DictOps.remove_from_collection_dict(sim.r_search, search_geoid, request.id)
-        updated_r_membership = ft.reduce(
-            ft.partial(remove_membership, entity_id=request.id),
-            request.membership.memberships,
-            sim.r_membership
-        )
+        updated_r_membership = DictOps.remove_from_collection_dict(sim.r_membership, request.fleet_id, request.id)
 
         updated_sim = sim._replace(
             requests=updated_requests,
