@@ -44,9 +44,9 @@ class ChargeQueueing(NamedTuple, VehicleState):
         elif has_available_charger:
             # maybe here instead, re-directed to ChargingStation?
             return None, None
-        elif not vehicle.membership.valid_membership(station.membership):
-            log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
-            return None, None
+        elif not station.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"vehicle {vehicle.id} doesn't have access to {station.id}"
+            return SimulationStateError(msg), None
         else:
             updated_station = station.enqueue_for_charger(self.charger_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)

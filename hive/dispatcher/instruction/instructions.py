@@ -44,7 +44,6 @@ class IdleInstruction(NamedTuple, Instruction):
 class DispatchTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
-    membership_id: MembershipId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -60,34 +59,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
             end = request.origin
             route = sim_state.road_network.route(start, end)
             prev_state = vehicle.vehicle_state
-            next_state = DispatchTrip(self.vehicle_id, self.request_id, self.membership_id, route)
-
-            return None, InstructionResult(prev_state, next_state)
-
-
-class ServeTripInstruction(NamedTuple, Instruction):
-    vehicle_id: VehicleId
-    request_id: RequestId
-    membership_id: MembershipId
-
-    def apply_instruction(self,
-                          sim_state: SimulationState,
-                          env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
-        vehicle = sim_state.vehicles.get(self.vehicle_id)
-        request = sim_state.requests.get(self.request_id)
-        if not vehicle:
-            return SimulationStateError(f"vehicle {vehicle} not found"), None
-        elif not request:
-            return SimulationStateError(f"request {request} not found"), None
-        else:
-            start = request.origin
-            end = request.destination
-            route = sim_state.road_network.route(start, end)
-            sim_time = sim_state.sim_time
-            passengers = board_vehicle(request.passengers, self.vehicle_id)
-            prev_state = vehicle.vehicle_state
-            next_state = ServicingTrip(self.vehicle_id, self.request_id, self.membership_id, sim_time, route,
-                                       passengers)
+            next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
 
             return None, InstructionResult(prev_state, next_state)
 

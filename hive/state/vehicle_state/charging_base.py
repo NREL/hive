@@ -49,8 +49,8 @@ class ChargingBase(NamedTuple, VehicleState):
         if not base.station_id:
             msg = f"base {self.base_id} is not co-located with a station"
             return SimulationStateError(msg), None
-        elif not vehicle.membership.valid_membership(base.membership):
-            msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
+        elif not base.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"vehicle {vehicle.id} doesn't have access to base {base.id}"
             return SimulationStateError(msg), None
         elif not mechatronics.valid_charger(charger):
             msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"

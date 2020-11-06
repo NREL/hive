@@ -44,8 +44,8 @@ class ChargingStation(NamedTuple, VehicleState):
         charger = env.chargers.get(self.charger_id)
         if vehicle.geoid != station.geoid:
             return None, None
-        elif not vehicle.membership.valid_membership(station.membership):
-            msg = f"vehicle {vehicle.id} and station {station.id} don't share a membership"
+        elif not station.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"vehicle {vehicle.id} doesn't have access to station {station.id}"
             return SimulationStateError(msg), None
         elif not mechatronics.valid_charger(charger):
             msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"

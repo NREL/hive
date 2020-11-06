@@ -82,8 +82,7 @@ class TestBase(TestCase):
 
         base = Base.from_row(row, network)
 
-        self.assertEqual(base.membership.memberships, frozenset(['default_membership']),
-                         "should have default membership")
+        self.assertTrue(base.membership.public, "should be public")
 
         base = base.set_membership(('fleet_1', 'fleet_3'))
 

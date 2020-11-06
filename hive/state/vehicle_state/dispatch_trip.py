@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import NamedTuple, Tuple, Optional
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.passenger import board_vehicle
 from hive.model.roadnetwork.route import Route, valid_route
@@ -13,21 +15,23 @@ from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId, MembershipId
 
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+
 log = logging.getLogger(__name__)
 
 
 class DispatchTrip(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     request_id: RequestId
-    membership_id: MembershipId
     route: Route
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         checks that the request exists and if so, updates the request to know that this vehicle is on it's way
 
@@ -43,9 +47,9 @@ class DispatchTrip(NamedTuple, VehicleState):
         elif not request:
             # not an error - may have been picked up. fail silently
             return None, None
-        elif not vehicle.membership.is_member(request.fleet_id):
-            log.debug(f"vehicle {vehicle.id} and request {request.id} don't share a membership")
-            return None, None
+        elif not request.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"vehicle {vehicle.id} doesn't have access to request {request.id}"
+            return SimulationStateError(msg), None
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, request.geoid)
             if not route_is_valid:
@@ -58,10 +62,10 @@ class DispatchTrip(NamedTuple, VehicleState):
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a base
 
@@ -72,9 +76,9 @@ class DispatchTrip(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _enter_default_terminal_state(self,
-                                      sim: 'SimulationState',
+                                      sim: SimulationState,
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         by default, transition to ServicingTrip if possible, else Idle
 
@@ -102,7 +106,7 @@ class DispatchTrip(NamedTuple, VehicleState):
             # apply next state
 
             passengers = board_vehicle(request.passengers, self.vehicle_id)
-            next_state = ServicingTrip(self.vehicle_id, self.request_id, self.membership_id, sim.sim_time, route, passengers)
+            next_state = ServicingTrip(self.vehicle_id, self.request_id, sim.sim_time, route, passengers)
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None
@@ -110,8 +114,8 @@ class DispatchTrip(NamedTuple, VehicleState):
                 return None, (enter_sim, next_state)
 
     def _perform_update(self,
-                        sim: 'SimulationState',
-                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                        sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the base
 

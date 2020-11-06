@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import logging
-from typing import NamedTuple, Tuple, Optional
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId, BaseId
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -14,18 +19,18 @@ class ReserveBase(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         to enter this state, the base must have a stall for the vehicle
 
         :param sim: the sim state
         :param env: the sim environment
-        :return: an exception, an updated 'SimulationState', or (None, None) when the base has no stalls
+        :return: an exception, an updated SimulationState, or (None, None) when the base has no stalls
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
@@ -36,9 +41,9 @@ class ReserveBase(NamedTuple, VehicleState):
         elif base.geoid != vehicle.geoid:
             log.warning(f"ReserveBase.enter(): vehicle {vehicle.id} not at same location as {base.id}")
             return None, None
-        elif not vehicle.membership.valid_membership(base.membership):
-            log.warning(f"ReserveBase.enter(): vehicle {vehicle.id} and base {base.id} don't share a membership")
-            return None, None
+        elif not base.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"ReserveBase.enter(): vehicle {vehicle.id} does not have access to base {base.id}"
+            return SimulationStateError(msg), None
 
         else:
             updated_base = base.checkout_stall()
@@ -51,7 +56,7 @@ class ReserveBase(NamedTuple, VehicleState):
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         releases the stall that this vehicle occupied
 
@@ -66,7 +71,7 @@ class ReserveBase(NamedTuple, VehicleState):
             updated_base = base.return_stall()
             return simulation_state_ops.modify_base(sim, updated_base)
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         There is no terminal state for ReserveBase
 
@@ -77,9 +82,9 @@ class ReserveBase(NamedTuple, VehicleState):
         return False
 
     def _enter_default_terminal_state(self,
-                                      sim: 'SimulationState',
+                                      sim: SimulationState,
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         There is no terminal state for ReserveBase
 
@@ -90,8 +95,8 @@ class ReserveBase(NamedTuple, VehicleState):
         return None, (sim, self)
 
     def _perform_update(self,
-                        sim: 'SimulationState',
-                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                        sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         as of now, there is no update for being ReserveBase
 
