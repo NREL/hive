@@ -4,7 +4,6 @@ from hive.dispatcher.instruction.instructions import (
     DispatchTripInstruction,
     ChargeStationInstruction,
     ChargeBaseInstruction,
-    ServeTripInstruction,
     RepositionInstruction,
     ReserveBaseInstruction,
 )

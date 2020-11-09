@@ -4,7 +4,7 @@ from typing import Tuple, NamedTuple, FrozenSet
 
 from hive.util.typealiases import MembershipId
 
-DEFAULT_MEMBERSHIP = "default_membership"
+PUBLIC_MEMBERSHIP_ID = "public"
 
 
 class Membership(NamedTuple):
@@ -12,21 +12,47 @@ class Membership(NamedTuple):
     class representing a collection of membership ids.
     """
 
-    memberships: FrozenSet[MembershipId] = frozenset([DEFAULT_MEMBERSHIP])
+    memberships: FrozenSet[MembershipId] = frozenset()
 
     @classmethod
     def from_tuple(cls, member_ids: Tuple[MembershipId, ...]) -> Membership:
-        if DEFAULT_MEMBERSHIP in member_ids:
-            raise TypeError(f"membership id {DEFAULT_MEMBERSHIP} is a reserved id, please select another")
+        """
+        build membership from tuple.
 
+        :param member_ids:
+        :return:
+        """
+        if any([m == PUBLIC_MEMBERSHIP_ID for m in member_ids]):
+            raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
         return Membership(frozenset(member_ids))
 
     @classmethod
-    def single_membership(cls, member_id: MembershipId) -> Membership:
-        if DEFAULT_MEMBERSHIP == member_id:
-            raise TypeError(f"membership id {DEFAULT_MEMBERSHIP} is a reserved id, please select another")
+    def single_membership(cls, membership_id: MembershipId) -> Membership:
+        """
+        build membership with single member id
 
-        return Membership(frozenset((member_id,)))
+        :param membership_id:
+        :return:
+        """
+        if membership_id == PUBLIC_MEMBERSHIP_ID:
+            raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
+        return Membership(frozenset((membership_id,)))
+
+    @property
+    def public(self) -> bool:
+        return len(self.memberships) == 0
+
+    def add_membership(self, membership_id: MembershipId) -> Membership:
+        """
+        add a single membership id
+
+        :param membership_id:
+        :return:
+        """
+        if membership_id == PUBLIC_MEMBERSHIP_ID:
+            raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
+        new_member_ids = [m for m in self.memberships] + [membership_id]
+        return self._replace(memberships=frozenset(new_member_ids))
 
     def memberships_in_common(self, other_membership: Membership) -> FrozenSet[MembershipId]:
         """
@@ -38,25 +64,29 @@ class Membership(NamedTuple):
         """
         return self.memberships.intersection(other_membership.memberships)
 
-    def valid_membership(self, other_membership: Membership) -> bool:
+    def grant_access_to_membership(self, other_membership: Membership) -> bool:
         """
-        tests membership against another membership.
-
+        returns true if another membership has access to this membership
 
         :param other_membership:
-        :return: true if there exists at least one overlapping membership id, false otherwise
+        :return:
         """
-        return len(self.memberships_in_common(other_membership)) > 0
+        if self.public:
+            return True
+        else:
+            return len(self.memberships_in_common(other_membership)) > 0
 
-    def is_member(self, membership_id: MembershipId) -> bool:
+    def grant_access_to_membership_id(self, membership_id: MembershipId) -> bool:
         """
-        tests if membership id exists in membership set
-
+        returns true if the membership id is valid for this membership
 
         :param membership_id:
         :return:
         """
-        return membership_id in self.memberships
+        if self.public:
+            return True
+        else:
+            return membership_id in self.memberships
 
     def as_tuple(self) -> Tuple[MembershipId, ...]:
         return tuple(m for m in self.memberships)

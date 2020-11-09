@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import NamedTuple, Tuple, Optional
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.roadnetwork.route import Route, valid_route
 from hive.runner.environment import Environment
@@ -14,6 +16,9 @@ from hive.util.typealiases import StationId, VehicleId, ChargerId
 
 log = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+
 
 class DispatchStation(NamedTuple, VehicleState):
     vehicle_id: VehicleId
@@ -21,12 +26,12 @@ class DispatchStation(NamedTuple, VehicleState):
     route: Route
     charger_id: ChargerId
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         station = sim.stations.get(self.station_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not station:
@@ -37,9 +42,9 @@ class DispatchStation(NamedTuple, VehicleState):
             # already there!
             next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
             return next_state.enter(sim, env)
-        elif not vehicle.membership.valid_membership(station.membership):
-            log.debug(f"vehicle {vehicle.id} and station {station.id} don't share a membership")
-            return None, None
+        elif not station.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"vehicle {vehicle.id} and station {station.id} don't share a membership"
+            return SimulationStateError(msg), None
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, station.geoid)
             if not route_is_valid:
@@ -47,10 +52,10 @@ class DispatchStation(NamedTuple, VehicleState):
             else:
                 return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a station
 
@@ -61,9 +66,9 @@ class DispatchStation(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _enter_default_terminal_state(self,
-                                      sim: 'SimulationState',
+                                      sim: SimulationState,
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         by default, transition into a ChargingStation event, but if not possible, then Idle
 
@@ -97,8 +102,8 @@ class DispatchStation(NamedTuple, VehicleState):
                 return None, (enter_sim, next_state)
 
     def _perform_update(self,
-                        sim: 'SimulationState',
-                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                        sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the station
 

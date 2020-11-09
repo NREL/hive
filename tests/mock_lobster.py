@@ -19,7 +19,7 @@ from hive.dispatcher.instruction_generator.instruction_generator import Instruct
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
-from hive.model.membership import Membership, DEFAULT_MEMBERSHIP
+from hive.model.membership import Membership
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
@@ -212,7 +212,7 @@ def mock_request(
         road_network: RoadNetwork = mock_network(),
         departure_time: SimTime = 0,
         passengers: int = 1,
-        fleet_id: MembershipId = DEFAULT_MEMBERSHIP,
+        fleet_id: Optional[MembershipId] = None,
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -233,7 +233,7 @@ def mock_request_from_geoids(
         departure_time: SimTime = 0,
         passengers: int = 1,
         value: Currency = 0,
-        fleet_id: MembershipId = DEFAULT_MEMBERSHIP,
+        fleet_id: Optional[MembershipId] = None,
 
 ) -> Request:
     return Request.build(

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.dispatcher.instruction.instruction import Instruction
     from hive.model.vehicle.vehicle import Vehicle
+    from hive.model.request.request import Request
     from hive.config.dispatcher_config import DispatcherConfig
 
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
@@ -48,7 +49,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
                     return False
                 elif not vehicle.driver_state.available:
                     return False
-                elif not vehicle.membership.is_member(membership_id):
+                elif not vehicle.membership.grant_access_to_membership_id(membership_id):
                     return False
 
                 mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
@@ -61,23 +62,28 @@ class Dispatcher(NamedTuple, InstructionGenerator):
                 # do we have enough remaining range to allow us to match?
                 return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold)
 
+            def _valid_request(r: Request) -> bool:
+                not_already_dispatched = not r.dispatched_vehicle
+                valid_access = r.membership.grant_access_to_membership_id(membership_id)
+                return not_already_dispatched and valid_access
+
             # collect the vehicles and requests for the assignment algorithm
             available_vehicles = simulation_state.get_vehicles(
                 filter_function=_is_valid_for_dispatch,
             )
+
             unassigned_requests = simulation_state.get_requests(
                 sort=True,
                 sort_key=lambda r: r.value,
                 sort_reversed=True,
-                filter_function=lambda r: not r.dispatched_vehicle,
-                membership_id=membership_id,
+                filter_function=_valid_request,
             )
 
             # select assignment of vehicles to requests
             solution = assignment_ops.find_assignment(available_vehicles, unassigned_requests,
                                                       assignment_ops.h3_distance_cost)
             instructions = ft.reduce(
-                lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1], membership_id)),
+                lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1])),
                 solution.solution,
                 inst_acc,
             )

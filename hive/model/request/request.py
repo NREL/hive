@@ -4,14 +4,14 @@ from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
 
 import h3
 
-from hive.model.membership import DEFAULT_MEMBERSHIP, Membership
+from hive.model.membership import Membership
 from hive.model.passenger import Passenger, create_passenger_id
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.sim_time import SimTime
+from hive.util.exception import TimeParseError
 from hive.util.typealiases import *
 from hive.util.units import Currency, KM_TO_MILE, Kilometers
-from hive.util.exception import TimeParseError
 
 if TYPE_CHECKING:
     from hive.model.request import RequestRateStructure
@@ -27,35 +27,20 @@ class Request(NamedTuple):
     and the time that vehicle was dispatched to it.
 
     :param id: A unique id for the request.
-    :type id: :py:obj:`RequestId`
-
-    :param fleet_id: the id of the fleet this request was submitted to.
-    :type fleet_id: :py:obj:`MembershipId`
-
     :param origin: The geoid of the request origin.
-    :type origin: :py:obj:`GeoId`
-
     :param destination: The geoid of the request destination.
-    :type destination: :py:obj:`GeoId`
-
     :param departure_time: The time of departure.
-    :type departure_time: :py:obj:`SimTime`
-
     :param passengers: A tuple of passengers associated with this request.
-    :type passengers: :py:obj:`Tuple[Passenger]`
-
+    :param membership: the membership of the fleet.
     :param dispatched_vehicle: The id of the vehicle dispatched to service this request.
-    :type dispatched_vehicle: :py:obj:`Optional[VehicleId]`
-
     :param dispatched_vehicle_time: Time time which a vehicle was dispatched for this request.
-    :type dispatched_vehicle_time: :py:obj:`Optional[SimTime]`
     """
     id: RequestId
-    fleet_id: MembershipId
     origin_link: Link
     destination_link: Link
     departure_time: SimTime
     passengers: Tuple[Passenger, ...]
+    membership: Membership = Membership()
     value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
@@ -76,7 +61,7 @@ class Request(NamedTuple):
               road_network: RoadNetwork,
               departure_time: SimTime,
               passengers: int,
-              fleet_id: MembershipId,
+              fleet_id: Optional[MembershipId] = None,
               value: Currency = 0
               ) -> Request:
         assert (departure_time >= 0)
@@ -92,14 +77,20 @@ class Request(NamedTuple):
             )
             for pass_idx in range(0, passengers)
         ]
-        request = Request(request_id,
-                          fleet_id,
-                          origin_link,
-                          destination_link,
-                          departure_time,
-                          tuple(request_as_passengers),
-                          value,
-                          )
+        if fleet_id:
+            membership = Membership.single_membership(fleet_id)
+        else:
+            membership = Membership()
+
+        request = Request(
+            id=request_id,
+            origin_link=origin_link,
+            destination_link=destination_link,
+            departure_time=departure_time,
+            passengers=tuple(request_as_passengers),
+            membership=membership,
+            value=value,
+        )
         return request
 
     @property
@@ -137,7 +128,7 @@ class Request(NamedTuple):
             return IOError("cannot load a request without a number of 'passengers'"), None
         else:
             request_id = row['request_id']
-            fleet_id = row.get('fleet_id', DEFAULT_MEMBERSHIP)
+            fleet_id = row.get('fleet_id')
             try:
 
                 o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])

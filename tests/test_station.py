@@ -141,8 +141,7 @@ class TestStation(TestCase):
 
         station = Station.from_row(row, {}, network)
 
-        self.assertEqual(station.membership.memberships, frozenset(['default_membership']),
-                         "should have default membership")
+        self.assertTrue(station.membership.public, "should be public")
 
         station = station.set_membership(('fleet_1', 'fleet_3'))
 

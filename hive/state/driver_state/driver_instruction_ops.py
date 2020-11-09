@@ -170,13 +170,16 @@ def av_dispatch_base_instruction(
     """
     if veh.vehicle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
         # timeout after being idle too long
-        bases_at_play = TupleOps.flatten(
-            tuple(sim.get_bases(membership_id=m) for m in veh.membership.memberships)
-        )
+
+        def valid_fn(base: Base) -> bool:
+            vehicle_has_access = base.membership.grant_access_to_membership(veh.membership)
+            return vehicle_has_access
+
         best_base = H3Ops.nearest_entity_by_great_circle_distance(
             geoid=veh.geoid,
-            entities=bases_at_play,
+            entities=sim.bases.values(),
             entity_search=sim.b_search,
+            is_valid=valid_fn,
             sim_h3_search_resolution=sim.sim_h3_search_resolution,
             max_search_distance_km=env.config.dispatcher.max_search_radius_km,
         )

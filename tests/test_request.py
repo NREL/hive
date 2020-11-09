@@ -47,7 +47,7 @@ class TestRequest(TestCase):
         self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
-        self.assertEqual(req.fleet_id, DEFAULT_MEMBERSHIP)
+        self.assertTrue(req.membership.public)
 
     def test_from_row_with_fleet_id(self):
         source = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers,fleet_id
@@ -62,7 +62,7 @@ class TestRequest(TestCase):
         self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
-        self.assertEqual(req.fleet_id, 'uber')
+        self.assertTrue('uber' in req.membership.memberships)
 
     def test_from_row_datetime_bad(self):
         row = {

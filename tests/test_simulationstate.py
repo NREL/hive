@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from hive.model.membership import DEFAULT_MEMBERSHIP
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -159,90 +158,7 @@ class TestSimulationState(TestCase):
 
         self.assertIsNone(sim_updated)
 
-    def test_set_vehicle_instruction_serve_trip(self):
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
-        req = mock_request_from_geoids(origin=somewhere, passengers=2)
-        env = mock_env()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
-        self.assertIsNone(e1, "test invariant failed")
 
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
-
-        e2, instruction_result = instruction.apply_instruction(sim, env)
-        if e2:
-            self.fail(e2.args)
-        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-
-        self.assertIsNotNone(sim_updated)
-
-        # should now be servicing a trip
-        updated_veh = sim_updated.vehicles[veh.id]
-        self.assertIsInstance(updated_veh.vehicle_state, ServicingTrip)
-
-        veh_passengers = updated_veh.vehicle_state.passengers
-        passenger_ids_in_vehicle = set(map(lambda p: p.id, veh_passengers))
-
-        # check that both passengers boarded correctly
-        for passenger in req.passengers:
-            self.assertIn(passenger.id,
-                          passenger_ids_in_vehicle,
-                          f"passenger {passenger.id} should be in the vehicle but isn't")
-
-        for passenger in veh_passengers:
-            self.assertEqual(passenger.vehicle_id,
-                             veh.id,
-                             f"the passenger should now reference it's vehicle id")
-
-        # request should have been removed
-        self.assertNotIn(req.id, sim_updated.requests, "request should be removed from sim")
-
-        self.assertTrue(len(updated_veh.vehicle_state.route) > 0, "should have a route")
-
-    def test_set_vehicle_instruction_serve_trip_no_reqs(self):
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
-        req = mock_request_from_geoids(origin=somewhere_else, passengers=2)
-        env = mock_env()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
-        self.assertIsNone(e1, "test invariant failed")
-
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
-        error, instruction_result = instruction.apply_instruction(sim, env)
-        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-        self.assertIsNotNone(sim_error, "no request at vehicle location should produce an error message")
-        self.assertIsNone(sim_updated, "sim update should not have happened")
-
-    def test_step_moving_vehicle(self):
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
-        # membership_id = 'uber'
-        # membership = Membership.from_tuple((membership_id,))
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
-        req = mock_request_from_geoids(origin=somewhere,
-                                       destination=somewhere_else,
-                                       passengers=2)
-        env = mock_env()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
-        self.assertIsNone(e1, "test invariant failed")
-
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
-        error, instruction_result = instruction.apply_instruction(sim, env)
-        if error:
-            self.fail(error.args)
-        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
-        if sim_error:
-            self.fail(error.args)
-        # step: move once in ServicingTrip
-        sim_moving_veh = perform_vehicle_state_updates(sim_updated, env)
-
-        moved_veh = sim_moving_veh.vehicles[veh.id]
-
-        self.assertNotEqual(veh.geoid, moved_veh.geoid, 'Vehicle should have moved')
-        self.assertGreater(veh.energy[EnergyType.ELECTRIC],
-                           moved_veh.energy[EnergyType.ELECTRIC],
-                           'Vehicle should consume energy while moving.')
 
     def test_step_charging_vehicle(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -282,34 +198,6 @@ class TestSimulationState(TestCase):
                         veh.energy[EnergyType.ELECTRIC],
                         "Idle vehicle should have consumed energy")
 
-    def test_terminal_state_ending_trip(self):
-        # approx 8.5 km distance.
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
-        veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.5)
-        req = mock_request_from_geoids(origin=somewhere,
-                                       destination=somewhere_else,
-                                       passengers=2)
-        env = mock_env()
-        sim = mock_sim(sim_timestep_duration_seconds=1000, vehicles=(veh,))
-        e1, sim_with_req = simulation_state_ops.add_request(sim, req)
-        self.assertIsNone(e1, "test invariant failed")
-
-        instruction = ServeTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
-        error, instruction_result = instruction.apply_instruction(sim_with_req, env)
-        if error:
-            self.fail(error.args)
-        sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim_with_req, env, instruction_result.prev_state, instruction_result.next_state)
-        self.assertIsNotNone(sim_updated, "Vehicle should have transitioned to servicing trip")
-
-        sim_veh_at_dest_servicing = perform_vehicle_state_updates(sim_updated, env)  # gets to end of trip
-        sim_idle = perform_vehicle_state_updates(sim_veh_at_dest_servicing, env)  # actually transitions to IDLE
-
-        idle_veh = sim_idle.vehicles[veh.id]
-
-        self.assertIsInstance(idle_veh.vehicle_state, Idle, "Vehicle should have transitioned to idle.")
-        self.assertEqual(idle_veh.geoid, req.destination, "Vehicle should be at request destination.")
-        self.assertEqual(req.id not in sim_idle.requests, True, "Request should have been removed from simulation.")
 
     def test_terminal_state_starting_trip(self):
         # approx 8.5 km distance.
@@ -322,7 +210,7 @@ class TestSimulationState(TestCase):
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
         self.assertIsNone(e1, "test invariant failed")
 
-        instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id, membership_id=DEFAULT_MEMBERSHIP)
+        instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
         env = mock_env()
         e2, instruction_result = instruction.apply_instruction(sim, env)
         if e2:

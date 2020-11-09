@@ -45,8 +45,8 @@ class AssignmentSolution(NamedTuple):
         )
 
 
-def find_assignment(assignees: Tuple[Entity],
-                    targets: Tuple[Entity],
+def find_assignment(assignees: Tuple[Entity, ...],
+                    targets: Tuple[Entity, ...],
                     cost_fn: Callable[[Entity, Entity], float]) -> AssignmentSolution:
     """
 

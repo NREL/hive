@@ -103,13 +103,13 @@ class Base(NamedTuple):
             except ValueError:
                 raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
-    def has_available_stall(self, vehicle_id: VehicleId) -> bool:
+    def has_available_stall(self, membership: Membership) -> bool:
         """
         Does base have a stall or not.
 
         :return: Boolean
         """
-        return bool(self.available_stalls > 0) and self.membership.is_member(vehicle_id)
+        return bool(self.available_stalls > 0) and self.membership.grant_access_to_membership(membership)
 
     def checkout_stall(self) -> Optional[Base]:
         """

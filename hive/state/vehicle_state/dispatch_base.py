@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import NamedTuple, Tuple, Optional
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.roadnetwork.route import Route, valid_route
 from hive.runner.environment import Environment
@@ -12,6 +13,9 @@ from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId
 
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+
 log = logging.getLogger(__name__)
 
 
@@ -20,19 +24,19 @@ class DispatchBase(NamedTuple, VehicleState):
     base_id: BaseId
     route: Route
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not vehicle.membership.valid_membership(base.membership):
-            log.debug(f"vehicle {vehicle.id} and base {base.id} don't share a membership")
-            return None, None
+        elif not base.membership.grant_access_to_membership(vehicle.membership):
+            msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
+            return SimulationStateError(msg), None
         else:
             route_is_valid = valid_route(self.route, vehicle.geoid, base.geoid)
             if not route_is_valid:
@@ -40,10 +44,10 @@ class DispatchBase(NamedTuple, VehicleState):
             else:
                 return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a base
 
@@ -54,9 +58,9 @@ class DispatchBase(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _enter_default_terminal_state(self,
-                                      sim: 'SimulationState',
+                                      sim: SimulationState,
                                       env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         by default, transition to ReserveBase if there are stalls, otherwise, Idle
 
@@ -84,8 +88,8 @@ class DispatchBase(NamedTuple, VehicleState):
                 return None, (enter_sim, next_state)
 
     def _perform_update(self,
-                        sim: 'SimulationState',
-                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+                        sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the base
 

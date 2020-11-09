@@ -15,6 +15,7 @@ input:
   chargers_file: chargers_varied.csv
   mechatronics_file: mechatronics.yaml
   charging_price_file: denver_constrained_prices.csv
+  fleets_file: denver_demo_fleet.yaml
   rate_structure_file: rate_structure.csv
   geofence_file: downtown_denver.geojson
   demand_forecast_file: denver_demand.csv
