@@ -1,2 +1,2 @@
-include environment.yml LICENSE README.md setup.py
+include LICENSE README.md setup.py
 recursive-include hive/resources *
