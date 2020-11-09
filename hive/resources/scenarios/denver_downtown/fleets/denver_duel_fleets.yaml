@@ -1,6 +1,6 @@
 tnc_1:
   vehicles:
-    - v1   # human-driven
+    - v1   # human-driven, both fleets
     - v2   # electric vehicles
     - v3
     - v4
@@ -19,6 +19,7 @@ tnc_1:
 
 tnc_2:
   vehicles:
+    - v1   # human-driven, both fleets
     - v7   # electric vehicles
     - v8
     - v9

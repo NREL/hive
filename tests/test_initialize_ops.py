@@ -13,19 +13,15 @@ class TestIntializeOps(TestCase):
         base_member_ids = process_fleet_file(fleets_file_location, 'bases')
         station_member_ids = process_fleet_file(fleets_file_location, 'stations')
 
-        self.assertEqual(veh_member_ids['v7'], ('uber', 'lyft'),
-                         "v7 should be a member of both uber and lyft")
-        self.assertEqual(veh_member_ids['v1'], ('uber',),
-                         "v2 should be a member of uber")
-        self.assertEqual(veh_member_ids['v13'], ('lyft',),
-                         "v3 should be a member of lyft")
+        self.assertEqual(len(veh_member_ids['v7']), 2,
+                         "v7 should be a member of two fleets")
+        self.assertEqual(len(veh_member_ids['v1']), 3,
+                         "v1 should be a member of two fleets plus have a private membership")
+        self.assertEqual(len(veh_member_ids['v13']), 1,
+                         "v3 should be a member of only one fleet")
 
-        self.assertEqual(base_member_ids['b1'], ('uber', 'lyft'),
-                         "b1 should be a member of both uber and lyft")
+        self.assertEqual(len(base_member_ids['b1']), 1,
+                         "b1 should only be a member of one fleet")
 
-        self.assertEqual(station_member_ids['s1'], ('uber', 'lyft'),
-                         "s1 should be a member of both uber and lyft")
-        self.assertEqual(station_member_ids['s2'], ('uber', 'lyft'),
-                         "s2 should be a member of both uber and lyft")
-        self.assertEqual(station_member_ids['bs1'], ('uber', 'lyft'),
-                         "bs1 should be a member of both uber and lyft")
+        self.assertEqual(len(station_member_ids['s1']), 1,
+                         "s1 should be only be a member of one fleet")
