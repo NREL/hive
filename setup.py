@@ -32,7 +32,7 @@ setup(
         "networkx",
         "PyYAML",
         "tqdm",
-        "h3-py==3.6.4",
+        "h3>=3.7",
         "scipy",
         "returns",
     ],

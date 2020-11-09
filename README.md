@@ -70,13 +70,13 @@ Installing can be completed either using [pip](https://pypi.org/project/pip/) an
 
 #### install and run via pip/conda
 
-first, create a new conda environment running:
+Hive depends on python version 3.7. One way to satisfy this is to use conda 
 
-    > conda env create -f <path/to/hive>/environment.yml
+    > conda create -n hive python=3.7 
 
 then, to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
 
-    > python -m pip install -e <path/to/hive>
+    > pip install -e <path/to/hive>
 
 Then you can run hive as a command line application. For example, to run the built-in Denver scenario, type:
 
