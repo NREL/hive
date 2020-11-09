@@ -26,6 +26,15 @@ setup(
     packages=find_packages(),
     python_requires=">=3.7",
     install_requires=[
+        "immutables",
+        "numpy",
+        "pandas",
+        "networkx",
+        "PyYAML",
+        "tqdm",
+        "h3-py==3.6.4",
+        "scipy",
+        "returns",
     ],
     include_package_data=True,
     package_data={

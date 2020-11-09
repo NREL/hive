@@ -10,7 +10,6 @@ dependencies:
   - pandas
   - pip
   - PyYAML
-  - rtree
   - tqdm
   - h3-py=3.6.4
   - scipy

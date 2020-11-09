@@ -45,7 +45,7 @@ The project is currently closed-source, pre-release, with plans to open-source i
 
 ## Dependencies
 
-HIVE has four major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
+HIVE has these major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
 
 - [H3](https://github.com/uber/h3)
 - [PyYAML](https://github.com/yaml/pyyaml)
@@ -59,7 +59,6 @@ While HIVE is also dependent on the following libraries, there are plans to remo
 
 - [numpy](https://www.numpy.org/)
 - [pandas](https://pandas.pydata.org/)
-- [rtree](https://pypi.org/project/Rtree/)
 
 ## Setup
 
