@@ -9,6 +9,7 @@ log_sim_config:
 - 'instruction'
 - 'station_state'
 - 'vehicle_state'
+- 'driver_state'
 - 'add_request_event'
 - 'cancel_request_event'
 - 'pickup_request_event'
