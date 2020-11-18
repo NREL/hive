@@ -9,6 +9,7 @@ from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType
 from hive.reporting.reporter import Report
 from hive.runner import RunnerPayload
+from hive.state.driver_state.driver_state import DriverState
 
 
 class StatefulHandler(Handler):
@@ -25,15 +26,22 @@ class StatefulHandler(Handler):
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
         """
-        reports the vehicle and station state at the current time, written
-        to state.log.
-
+        reports the driver, vehicle and station state at the current time for all
+        entities, written to state.log.
 
         :param reports: ignored
 
         :param runner_payload: provides the current simulation state
         """
         sim_state = runner_payload.s
+        if ReportType.DRIVER_STATE in self.global_config.log_sim_config:
+            self._report_entities(
+                entities=sim_state.vehicles.values(),
+                asdict=self.driver_asdict,
+                sim_time=sim_state.sim_time,
+                report_type=ReportType.DRIVER_STATE,
+            )
+
         if ReportType.VEHICLE_STATE in self.global_config.log_sim_config:
             self._report_entities(
                 entities=sim_state.vehicles.values(),
@@ -52,6 +60,17 @@ class StatefulHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()
+
+    @staticmethod
+    def driver_asdict(vehicle: Vehicle) -> dict:
+        output = {
+            'vehicle_id': vehicle.id,
+            'driver_state': vehicle.driver_state.__class__.__name__,
+            'schedule_id': vehicle.driver_state.schedule_id if vehicle.driver_state.schedule_id else "",
+            'available': vehicle.driver_state.available,
+        }
+
+        return output
 
     @staticmethod
     def vehicle_asdict(vehicle: Vehicle) -> dict:
