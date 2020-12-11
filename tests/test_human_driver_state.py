@@ -113,4 +113,41 @@ class TestHumanDriverState(TestCase):
 
         self.assertIsInstance(i, RepositionInstruction)
 
+    def test_stop_fast_charging_instruction(self):
+        state = mock_human_driver(available=True, schedule_id="on")
+        veh = mock_vehicle(
+            driver_state=state,
+            vehicle_state=ChargingStation(
+                vehicle_id=DefaultIds.mock_vehicle_id(),
+                station_id=DefaultIds.mock_station_id(),
+                charger_id=mock_dcfc_charger_id(),
+            ),
+            soc=0.9
+        )
+        sim = mock_sim(vehicles=(veh,))
+        env = mock_env()
+
+        # the default soc limit for charging at a station is 0.8 so we should generate an idle instruction.
+        i = veh.driver_state.generate_instruction(sim, env)
+
+        self.assertIsInstance(i, IdleInstruction)
+
+    def test_turn_off_at_home(self):
+        state = mock_human_driver(available=False, schedule_id="off")
+        veh = mock_vehicle_from_geoid(
+            driver_state=state,
+            vehicle_state=Idle(vehicle_id=DefaultIds.mock_vehicle_id()),
+            geoid=somewhere(),
+        )
+        base = mock_base_from_geoid(geoid=somewhere())
+        sim = mock_sim(vehicles=(veh,), bases=(base,))
+        env = mock_env()
+
+        # the driver is at home and idle so it should try to turn off (i.e. transition to ReserveBase).
+        i = veh.driver_state.generate_instruction(sim, env)
+
+        self.assertIsInstance(i, ReserveBaseInstruction)
+
+
+
 
