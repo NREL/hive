@@ -5,20 +5,23 @@ from typing import Optional, TYPE_CHECKING
 
 import h3
 
+from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
     ChargeBaseInstruction,
     DispatchBaseInstruction,
     IdleInstruction,
     RepositionInstruction,
 )
+from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_dispatch_to_station
 from hive.util import TupleOps, H3Ops
+from hive.model.roadnetwork.route import route_distance_km
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.runner.environment import Environment
     from hive.model.vehicle.vehicle import Vehicle
     from hive.model.base import Base
-    from hive.util.typealiases import GeoId
+    from hive.util.typealiases import GeoId, BaseId
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +61,49 @@ def human_charge_at_home(
         # take the lowest power charger
         charger = sorted(chargers, key=lambda c: c.rate)[0]
         return ChargeBaseInstruction(veh.id, home_base.id, charger.id)
+
+
+def human_go_home(
+        veh: Vehicle,
+        home_base: Base,
+        sim: SimulationState,
+        env: Environment,
+) -> Optional[Instruction]:
+    """
+    human drivers go home at the end of their shift.
+    edge case: vehicles may not have enough remaining range to
+    reach their home from their current location.
+
+    :param veh: the vehicle ending their shift
+    :param home_base: the vehicle's home
+    :param sim: the current simulation state
+    :param env: the environment for this simulation
+    :return: the instruction for this driver
+    """
+    mechatronics = env.mechatronics.get(veh.mechatronics_id)
+    remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
+    if not remaining_range:
+        return None
+    else:
+        route = sim.road_network.route(veh.geoid, home_base.geoid)
+        required_range = route_distance_km(route)
+        if required_range < remaining_range:
+            # has enough remaining range to make it home sweet home
+            instruction = DispatchBaseInstruction(veh.id, home_base.id)
+            return instruction
+        else:
+            # needs to go charge on the way home
+            charge_instructions = instruct_vehicles_to_dispatch_to_station(
+                n=1,
+                max_search_radius_km=env.config.dispatcher.max_search_radius_km,
+                vehicles=(veh,),
+                simulation_state=sim,
+                environment=env,
+                target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
+                charging_search_type=env.config.dispatcher.charging_search_type
+            )
+
+            return TupleOps.head_optional(charge_instructions)
 
 
 def human_look_for_requests(
