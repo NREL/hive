@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 from typing import Tuple, Optional, Dict, Union
 
-import networkx as nx
 import h3
+import networkx as nx
+import numpy as np
 from networkx.classes.multidigraph import MultiDiGraph
-from rtree import index
+from scipy.spatial import cKDTree
 
 from hive.external.miniosmnx.core import graph_from_file
 from hive.model.roadnetwork.geofence import GeoFence
@@ -45,16 +46,15 @@ class OSMRoadNetwork(RoadNetwork):
         G, geoid_to_node_id = self._parse_road_network_graph(graph_from_file(road_network_file))
 
         self.G = G
+        self._nodes = [nid for nid in self.G.nodes()]
         self.geoid_to_node_id = geoid_to_node_id
-        self.rtree = self._build_rtree()
+        self.kdtree = self._build_kdtree()
 
-    def _build_rtree(self) -> index.Index:
-        tree = index.Index()
-        nudge = .0000000001
-        for nid in self.G.nodes():
-            lat = self.G.nodes[nid]['y']
-            lon = self.G.nodes[nid]['x']
-            tree.insert(nid, (lat - nudge, lon - nudge, lat + nudge, lon + nudge))
+    def _build_kdtree(self) -> cKDTree:
+        lat = 'y'
+        lon = 'x'
+        points = [(self.G.nodes[nid][lat], self.G.nodes[nid][lon]) for nid in self._nodes]
+        tree = cKDTree(np.array(points))
 
         return tree
 
@@ -288,9 +288,8 @@ class OSMRoadNetwork(RoadNetwork):
         #     return self.geofence.contains(geoid)
 
     def get_nearest_node(self, lat, lon) -> str:
-        node_id = list(self.rtree.nearest((lat, lon, lat, lon), 1))[0]
-
-        return node_id
+        _, i = self.kdtree.query([lat, lon])
+        return self._nodes[int(i)]
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
         raise NotImplementedError("updates are not implemented")

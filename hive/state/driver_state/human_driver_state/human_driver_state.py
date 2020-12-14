@@ -5,7 +5,7 @@ from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
-    DispatchBaseInstruction,
+    DispatchBaseInstruction, ReserveBaseInstruction,
 )
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
 from hive.state.driver_state.driver_instruction_ops import (
@@ -62,11 +62,15 @@ class HumanAvailable(NamedTuple, DriverState):
         state = my_vehicle.vehicle_state
 
         # once the vehicle is available it should reposition to seek out requests.
-        # if the vehicle is at home, it should reposition;
-        # and, if the vehicle has been idle for 30 minutes, it should reposition;
         if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
+            # if the driver is sitting at home we try to seek out requests
             return human_look_for_requests(my_vehicle, sim)
+        elif isinstance(my_vehicle.vehicle_state, ChargingStation):
+            # if the driver is charging we unplug if we reach the soc limit
+            return idle_if_at_soc_limit(my_vehicle, env)
         elif isinstance(state, Idle):
+            # if the driver has been idle for longer than the idle_time_out_seconds limit, we move to seek out greener
+            # pastures
             if state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
                 return human_look_for_requests(my_vehicle, sim)
         else:
@@ -147,13 +151,17 @@ class HumanUnavailable(NamedTuple, DriverState):
         def at_home() -> bool:
             return my_base.geoid == my_vehicle.geoid
 
+        ah = at_home()
+
         if not at_home() and not isinstance(my_vehicle.vehicle_state, DispatchBase):
-            # dispatch to home base
+            # if we're not at home and off shift we try to return home
             return DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
         elif my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase) and at_home():
+            # otherwise, if we're at home and we have a plug, we try to charge to full
             return human_charge_at_home(my_vehicle, my_base, sim, env)
-        elif isinstance(my_vehicle.vehicle_state, ChargingStation):
-            return idle_if_at_soc_limit(my_vehicle, env)
+        elif at_home() and isinstance(my_vehicle.vehicle_state, Idle):
+            # finally, if we're at home and idling, we turn the vehicle off
+            return ReserveBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
         else:
             return None
 

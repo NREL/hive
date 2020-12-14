@@ -45,7 +45,7 @@ The project is currently closed-source, pre-release, with plans to open-source i
 
 ## Dependencies
 
-HIVE has four major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
+HIVE has these major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
 
 - [H3](https://github.com/uber/h3)
 - [PyYAML](https://github.com/yaml/pyyaml)
@@ -59,7 +59,6 @@ While HIVE is also dependent on the following libraries, there are plans to remo
 
 - [numpy](https://www.numpy.org/)
 - [pandas](https://pandas.pydata.org/)
-- [rtree](https://pypi.org/project/Rtree/)
 
 ## Setup
 
@@ -71,13 +70,13 @@ Installing can be completed either using [pip](https://pypi.org/project/pip/) an
 
 #### install and run via pip/conda
 
-first, create a new conda environment running:
+Hive depends on python version 3.7. One way to satisfy this is to use conda 
 
-    > conda env create -f <path/to/hive>/environment.yml
+    > conda create -n hive python=3.7 
 
 then, to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
 
-    > python -m pip install -e <path/to/hive>
+    > pip install -e <path/to/hive>
 
 Then you can run hive as a command line application. For example, to run the built-in Denver scenario, type:
 
