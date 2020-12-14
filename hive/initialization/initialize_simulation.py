@@ -27,6 +27,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util import DictOps
+from hive.util.typealiases import BaseId, VehicleId
 
 log = logging.getLogger(__name__)
 
@@ -109,7 +110,8 @@ def initialize_simulation(
     # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
     sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, vehicle_member_ids, sim_initial, env_initial)
     sim_with_bases = _build_bases(bases_file, base_member_ids, sim_with_vehicles)
-    sim_with_stations = _build_stations(stations_file, station_member_ids, sim_with_bases)
+    sim_with_home_bases = _assign_home_base_memberships(sim_with_bases)
+    sim_with_stations = _build_stations(stations_file, station_member_ids, sim_with_home_bases)
 
     return sim_with_stations, env_updated
 
@@ -186,6 +188,40 @@ def _build_bases(bases_file: str,
         sim_with_bases = ft.reduce(_add_row_unsafe, reader, simulation_state)
 
     return sim_with_bases
+
+
+def _assign_home_base_memberships(sim: SimulationState) -> SimulationState:
+    def _find_human_drivers(acc: SimulationState, v: Vehicle) -> SimulationState:
+        home_base_id = v.driver_state.home_base_id
+        if home_base_id is None:
+            return acc
+        else:
+            home_base = sim.bases.get(home_base_id)
+            if not home_base:
+                log.error(f"home base {home_base_id} does not exist but is listed as home base for vehicle {v.id}")
+                return acc
+            else:
+                home_base_membership_id = f"{v.id}_private_{home_base_id}"
+                updated_v = v.add_membership(home_base_membership_id)
+                updated_b = home_base.add_membership(home_base_membership_id)
+                error_v, with_v = simulation_state_ops.modify_vehicle(acc, updated_v)
+                if error_v:
+                    log.error(error_v)
+                    return acc
+                else:
+                    error_b, with_b = simulation_state_ops.modify_base(with_v, updated_b)
+                    if error_b:
+                        log.error(error_b)
+                        return acc
+                    else:
+                        return with_b
+
+    result = ft.reduce(
+        _find_human_drivers,
+        sim.get_vehicles(),
+        sim
+    )
+    return result
 
 
 def _build_stations(stations_file: str,

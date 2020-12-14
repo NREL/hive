@@ -29,6 +29,15 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
     def available(cls):
         pass
 
+    @property
+    def is_human_driver(cls) -> bool:
+        return cls.schedule_id is not None
+
+    @property
+    @abstractmethod
+    def home_base_id(cls) -> Optional[BaseId]:
+        pass
+
     @abstractmethod
     def generate_instruction(
             self,

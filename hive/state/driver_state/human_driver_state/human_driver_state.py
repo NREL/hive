@@ -21,7 +21,7 @@ from hive.state.vehicle_state.dispatch_base import DispatchBase
 from hive.state.vehicle_state.dispatch_station import DispatchStation
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.reserve_base import ReserveBase
-from hive.util import SimulationStateError
+from hive.util import SimulationStateError, BaseId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -48,6 +48,10 @@ class HumanAvailable(NamedTuple, DriverState):
     @property
     def available(cls):
         return True
+
+    @property
+    def home_base_id(cls) -> Optional[BaseId]:
+        return cls.attributes.home_base_id
 
     def generate_instruction(
             self,
@@ -77,8 +81,10 @@ class HumanAvailable(NamedTuple, DriverState):
         else:
             return None
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def update(self,
+               sim: SimulationState,
+               env: Environment
+               ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         test that the agent is available to work. if unavailable, transition to an unavailable state.
 
@@ -122,6 +128,10 @@ class HumanUnavailable(NamedTuple, DriverState):
     @property
     def available(cls):
         return False
+
+    @property
+    def home_base_id(cls) -> Optional[BaseId]:
+        return cls.attributes.home_base_id
 
     def generate_instruction(
             self,
