@@ -191,6 +191,14 @@ def _build_bases(bases_file: str,
 
 
 def _assign_home_base_memberships(sim: SimulationState) -> SimulationState:
+    """
+    vehicles which had a home base assigned will automatically generate a home base membership id
+    which links the vehicle and the base, in order to avoid having to specify this (obvious) relationship
+    in the fleets configuration of a scenario.
+
+    :param sim: partial simulation state with vehicles and bases added
+    :return: sim state where vehicles + bases which should have a private relationship have been updated
+    """
     def _find_human_drivers(acc: SimulationState, v: Vehicle) -> SimulationState:
         home_base_id = v.driver_state.home_base_id
         if home_base_id is None:
