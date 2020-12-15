@@ -107,7 +107,7 @@ def initialize_simulation(
     sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, sim_initial, env_initial)
     sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids, sim_with_vehicles)
     sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids, sim_with_bases)
-    sim_with_home_bases = _assign_home_base_memberships(sim_with_stations)
+    sim_with_home_bases = _assign_private_memberships(sim_with_stations)
 
     return sim_with_home_bases, env_updated
 
@@ -186,7 +186,7 @@ def _build_bases(bases_file: str,
     return sim_with_bases
 
 
-def _assign_home_base_memberships(sim: SimulationState) -> SimulationState:
+def _assign_private_memberships(sim: SimulationState) -> SimulationState:
     """
     vehicles which had a home base assigned will automatically generate a home base membership id
     which links the vehicle and the base, in order to avoid having to specify this (obvious) relationship
@@ -225,7 +225,7 @@ def _assign_home_base_memberships(sim: SimulationState) -> SimulationState:
                         if not station:
                             return with_b
                         else:
-                            error_s, with_s = simulation_state_ops.modify_station(acc, updated_s)
+                            error_s, with_s = simulation_state_ops.modify_station(with_b, updated_s)
                             if error_s:
                                 log.error(error_s)
                                 return acc
