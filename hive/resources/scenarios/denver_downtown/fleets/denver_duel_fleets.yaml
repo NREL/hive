@@ -36,11 +36,3 @@ tnc_2:
     - bs2
   bases:
     - b2
-
-v1private:
-  vehicles:
-    - v1
-  stations:
-    - hbs1
-  bases:
-    - hb1

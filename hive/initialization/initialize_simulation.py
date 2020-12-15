@@ -212,6 +212,9 @@ def _assign_home_base_memberships(sim: SimulationState) -> SimulationState:
                 home_base_membership_id = f"{v.id}_private_{home_base_id}"
                 updated_v = v.add_membership(home_base_membership_id)
                 updated_b = home_base.add_membership(home_base_membership_id)
+                station = sim.stations.get(home_base.station_id)
+                updated_s = station.add_membership(home_base_membership_id) if station else None
+
                 error_v, with_v = simulation_state_ops.modify_vehicle(acc, updated_v)
                 if error_v:
                     log.error(error_v)
@@ -222,7 +225,16 @@ def _assign_home_base_memberships(sim: SimulationState) -> SimulationState:
                         log.error(error_b)
                         return acc
                     else:
-                        return with_b
+                        # bases are not required to have stations (they are optional)
+                        if not station:
+                            return with_b
+                        else:
+                            error_s, with_s = simulation_state_ops.modify_station(acc, updated_s)
+                            if error_s:
+                                log.error(error_s)
+                                return acc
+                            else:
+                                return with_s
 
     result = ft.reduce(
         _find_human_drivers,
