@@ -39,22 +39,6 @@ def tick(sim: SimulationState) -> SimulationState:
     )
 
 
-def add_membership(
-        membership_collection: MembershipMap,
-        member_id: MembershipId,
-        entity_id: EntityId,
-) -> MembershipMap:
-    return DictOps.add_to_collection_dict(membership_collection, member_id, entity_id)
-
-
-def remove_membership(
-        membership_collection: MembershipMap,
-        member_id: MembershipId,
-        entity_id: EntityId,
-) -> MembershipMap:
-    return DictOps.remove_from_collection_dict(membership_collection, member_id, entity_id)
-
-
 def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     adds a request to the SimulationState
@@ -69,24 +53,10 @@ def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Except
     else:
         search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
 
-        if request.membership.public:
-            updated_r_membership = add_membership(
-                sim.r_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=request.id,
-            )
-        else:
-            updated_r_membership = ft.reduce(
-                ft.partial(add_membership, entity_id=request.id),
-                request.membership.memberships,
-                sim.r_membership
-            )
-
         updated_sim = sim._replace(
             requests=DictOps.add_to_dict(sim.requests, request.id, request),
             r_locations=DictOps.add_to_collection_dict(sim.r_locations, request.geoid, request.id),
             r_search=DictOps.add_to_collection_dict(sim.r_search, search_geoid, request.id),
-            r_membership=updated_r_membership,
         )
         return None, updated_sim
 
@@ -113,24 +83,11 @@ def remove_request(sim: SimulationState,
         updated_requests = DictOps.remove_from_dict(sim.requests, request.id)
         updated_r_locations = DictOps.remove_from_collection_dict(sim.r_locations, request.geoid, request.id)
         updated_r_search = DictOps.remove_from_collection_dict(sim.r_search, search_geoid, request.id)
-        if request.membership.public:
-            updated_r_membership = remove_membership(
-                sim.r_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=request.id,
-            )
-        else:
-            updated_r_membership = ft.reduce(
-                ft.partial(remove_membership, entity_id=request.id),
-                request.membership.memberships,
-                sim.r_membership
-            )
 
         updated_sim = sim._replace(
             requests=updated_requests,
             r_locations=updated_r_locations,
             r_search=updated_r_search,
-            r_membership=updated_r_membership,
         )
 
         return None, updated_sim
@@ -188,24 +145,10 @@ def add_vehicle(sim: SimulationState, vehicle: Vehicle) -> Tuple[Optional[Except
         updated_v_locations = DictOps.add_to_collection_dict(sim.v_locations, vehicle.geoid, vehicle.id)
         updated_v_search = DictOps.add_to_collection_dict(sim.v_search, search_geoid, vehicle.id)
 
-        if vehicle.membership.public:
-            updated_v_membership = add_membership(
-                sim.v_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=vehicle.id,
-            )
-        else:
-            updated_v_membership = ft.reduce(
-                ft.partial(add_membership, entity_id=vehicle.id),
-                vehicle.membership.memberships,
-                sim.v_membership
-            )
-
         updated_sim = sim._replace(
             vehicles=DictOps.add_to_dict(sim.vehicles, vehicle.id, vehicle),
             v_locations=updated_v_locations,
             v_search=updated_v_search,
-            v_membership=updated_v_membership,
         )
         return None, updated_sim
 
@@ -226,23 +169,10 @@ def add_vehicle_returns(sim: SimulationState, vehicle: Vehicle) -> Result[Simula
         search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
         updated_v_locations = DictOps.add_to_collection_dict(sim.v_locations, vehicle.geoid, vehicle.id)
         updated_v_search = DictOps.add_to_collection_dict(sim.v_search, search_geoid, vehicle.id)
-        if vehicle.membership.public:
-            updated_v_membership = add_membership(
-                sim.v_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=vehicle.id,
-            )
-        else:
-            updated_v_membership = ft.reduce(
-                ft.partial(add_membership, entity_id=vehicle.id),
-                vehicle.membership.memberships,
-                sim.v_membership
-            )
         updated_sim = sim._replace(
             vehicles=DictOps.add_to_dict(sim.vehicles, vehicle.id, vehicle),
             v_locations=updated_v_locations,
             v_search=updated_v_search,
-            v_membership=updated_v_membership,
         )
         return Success(updated_sim)
 
@@ -302,24 +232,10 @@ def remove_vehicle(sim: SimulationState, vehicle_id: VehicleId) -> Tuple[
         vehicle = sim.vehicles[vehicle_id]
         search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
 
-        if vehicle.membership.public:
-            updated_v_membership = remove_membership(
-                sim.v_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=vehicle.id,
-            )
-        else:
-            updated_v_membership = ft.reduce(
-                ft.partial(remove_membership, entity_id=vehicle.id),
-                vehicle.membership.memberships,
-                sim.v_membership
-            )
-
         updated_sim = sim._replace(
             vehicles=DictOps.remove_from_dict(sim.vehicles, vehicle_id),
             v_locations=DictOps.remove_from_collection_dict(sim.v_locations, vehicle.geoid, vehicle_id),
             v_search=DictOps.remove_from_collection_dict(sim.v_search, search_geoid, vehicle_id),
-            v_membership=updated_v_membership,
         )
         return None, updated_sim
 
@@ -363,23 +279,10 @@ def add_station(sim: SimulationState, station: Station) -> Tuple[Optional[Except
         search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
         updated_s_locations = DictOps.add_to_collection_dict(sim.s_locations, station.geoid, station.id)
         updated_s_search = DictOps.add_to_collection_dict(sim.s_search, search_geoid, station.id)
-        if station.membership.public:
-            updated_s_membership = add_membership(
-                sim.s_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=station.id,
-            )
-        else:
-            updated_s_membership = ft.reduce(
-                ft.partial(add_membership, entity_id=station.id),
-                station.membership.memberships,
-                sim.s_membership
-            )
         updated_sim = sim._replace(
             stations=DictOps.add_to_dict(sim.stations, station.id, station),
             s_locations=updated_s_locations,
             s_search=updated_s_search,
-            s_membership=updated_s_membership,
         )
         return None, updated_sim
 
@@ -403,24 +306,10 @@ def remove_station(sim: SimulationState, station_id: StationId) -> Tuple[
         updated_s_locations = DictOps.remove_from_collection_dict(sim.s_locations, station.geoid, station_id)
         updated_s_search = DictOps.remove_from_collection_dict(sim.s_search, search_geoid, station_id)
 
-        if station.membership.public:
-            updated_s_membership = remove_membership(
-                sim.s_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=station.id,
-            )
-        else:
-            updated_s_membership = ft.reduce(
-                ft.partial(remove_membership, entity_id=station.id),
-                station.membership.memberships,
-                sim.s_membership
-            )
-
         updated_sim = sim._replace(
             stations=DictOps.remove_from_dict(sim.stations, station_id),
             s_locations=updated_s_locations,
             s_search=updated_s_search,
-            s_membership=updated_s_membership,
         )
         return None, updated_sim
 
@@ -469,24 +358,11 @@ def add_base(sim: SimulationState, base: Base) -> Tuple[Optional[Exception], Opt
         search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
         updated_b_locations = DictOps.add_to_collection_dict(sim.b_locations, base.geoid, base.id)
         updated_b_search = DictOps.add_to_collection_dict(sim.b_search, search_geoid, base.id)
-        if base.membership.public:
-            updated_b_membership = add_membership(
-                sim.b_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=base.id,
-            )
-        else:
-            updated_b_membership = ft.reduce(
-                ft.partial(add_membership, entity_id=base.id),
-                base.membership.memberships,
-                sim.b_membership
-            )
 
         updated_sim = sim._replace(
             bases=DictOps.add_to_dict(sim.bases, base.id, base),
             b_locations=updated_b_locations,
             b_search=updated_b_search,
-            b_membership=updated_b_membership,
         )
         return None, updated_sim
 
@@ -508,23 +384,10 @@ def remove_base(sim: SimulationState, base_id: BaseId) -> Tuple[Optional[Excepti
         search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
         updated_b_locations = DictOps.remove_from_collection_dict(sim.b_locations, base.geoid, base_id)
         updated_b_search = DictOps.remove_from_collection_dict(sim.b_search, search_geoid, base_id)
-        if base.membership.public:
-            updated_b_membership = remove_membership(
-                sim.b_membership,
-                member_id=PUBLIC_MEMBERSHIP_ID,
-                entity_id=base.id,
-            )
-        else:
-            updated_b_membership = ft.reduce(
-                ft.partial(remove_membership, entity_id=base.id),
-                base.membership.memberships,
-                sim.b_membership
-            )
         updated_sim = sim._replace(
             bases=DictOps.remove_from_dict(sim.bases, base_id),
             b_locations=updated_b_locations,
             b_search=updated_b_search,
-            b_membership=updated_b_membership,
         )
         return None, updated_sim
 

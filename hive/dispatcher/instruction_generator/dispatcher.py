@@ -90,11 +90,9 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
             return instructions
 
-        memberships = set(simulation_state.v_membership.keys()).intersection(set(simulation_state.r_membership.keys()))
-
         all_instructions = ft.reduce(
             _solve_assignment,
-            memberships,
+            environment.fleet_ids,
             (),
         )
 

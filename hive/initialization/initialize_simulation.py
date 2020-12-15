@@ -8,7 +8,7 @@ from typing import Tuple, Dict, FrozenSet
 import immutables
 
 from hive.config import HiveConfig
-from hive.initialization.initialize_ops import process_fleet_file
+from hive.initialization.initialize_ops import process_fleet_file, read_fleet_ids_from_file
 from hive.model.base import Base
 from hive.model.energy.charger import build_chargers_table
 from hive.model.roadnetwork.geofence import GeoFence
@@ -43,26 +43,13 @@ def initialize_simulation(
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
 
-    vehicles_file = config.input_config.vehicles_file
-    bases_file = config.input_config.bases_file
-    stations_file = config.input_config.stations_file
-
-    if config.input_config.fleets_file:
-        fleets_file = config.input_config.fleets_file
-        vehicle_member_ids = process_fleet_file(fleets_file, 'vehicles')
-        base_member_ids = process_fleet_file(fleets_file, 'bases')
-        station_member_ids = process_fleet_file(fleets_file, 'stations')
-    else:
-        fleets_file = None
-        vehicle_member_ids = None
-        base_member_ids = None
-        station_member_ids = None
-
+    # deprecated geofence input
     if config.input_config.geofence_file:
         geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
     else:
         geofence = None
 
+    # set up road network based on user-configured road network type
     if config.network.network_type == 'euclidean':
         road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
     elif config.network.network_type == 'osm_network':
@@ -75,6 +62,7 @@ def initialize_simulation(
     else:
         raise IOError(f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
 
+    # initial sim state with road network and no entities
     sim_initial = SimulationState(
         road_network=road_network,
         sim_time=config.sim.start_time,
@@ -83,8 +71,8 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
+    # configure reporting
     reporter = Reporter(config.global_config)
-
     if config.global_config.log_events:
         reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_states:
@@ -94,26 +82,34 @@ def initialize_simulation(
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
 
+    # create simulation environment
+    fleet_ids = read_fleet_ids_from_file(config.input_config.fleets_file) if config.input_config.fleets_file else []
     env_initial = Environment(config=config,
                               reporter=reporter,
                               mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
                                                                     config.input_config.scenario_directory),
                               chargers=build_chargers_table(config.input_config.chargers_file),
                               schedules=build_schedules_table(config.sim.schedule_type,
-                                                              config.input_config.schedules_file)
+                                                              config.input_config.schedules_file),
+                              fleet_ids=fleet_ids
                               )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
     #  should instead hold aside any error reports and then do something below after finishing,
     #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
 
-    # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
-    sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, vehicle_member_ids, sim_initial, env_initial)
-    sim_with_bases = _build_bases(bases_file, base_member_ids, sim_with_vehicles)
-    sim_with_home_bases = _assign_home_base_memberships(sim_with_bases)
-    sim_with_stations = _build_stations(stations_file, station_member_ids, sim_with_home_bases)
+    # read in fleet memberships for vehicles/stations/bases
+    vehicle_member_ids = process_fleet_file(config.input_config.fleets_file, 'vehicles') if config.input_config.fleets_file else None
+    base_member_ids = process_fleet_file(config.input_config.fleets_file, 'bases') if config.input_config.fleets_file else None
+    station_member_ids = process_fleet_file(config.input_config.fleets_file, 'stations') if config.input_config.fleets_file else None
 
-    return sim_with_stations, env_updated
+    # populate simulation with entities
+    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, sim_initial, env_initial)
+    sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids, sim_with_vehicles)
+    sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids, sim_with_bases)
+    sim_with_home_bases = _assign_home_base_memberships(sim_with_stations)
+
+    return sim_with_home_bases, env_updated
 
 
 def _build_vehicles(

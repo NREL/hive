@@ -2,6 +2,7 @@ from typing import Tuple
 
 import yaml
 import immutables
+from typing import FrozenSet
 
 
 def process_fleet_file(fleet_file: str, entity_type: str) -> immutables.Map[str, Tuple[str, ...]]:
@@ -27,3 +28,19 @@ def process_fleet_file(fleet_file: str, entity_type: str) -> immutables.Map[str,
                     fleet_id_map_mutation.set(entity_id, (fleet_id,))
         fleet_id_map = fleet_id_map_mutation.finish()
     return fleet_id_map
+
+
+def read_fleet_ids_from_file(fleet_file: str) -> FrozenSet[str]:
+    """
+
+    :param fleet_file: the file containing fleet information
+    :return: the list of base-level keys in the fleet file, which should be fleet ids
+    :raises: IOError if fleet_file does not exist or is not a yaml file
+    """
+    try:
+        with open(fleet_file) as f:
+            fleet_dict = yaml.safe_load(f)
+        result = frozenset(fleet_dict.keys())
+        return result
+    except Exception as e:
+        raise IOError(f"failed reading fleet ids from fleet file {fleet_file}") from e

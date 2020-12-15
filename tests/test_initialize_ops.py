@@ -15,8 +15,6 @@ class TestIntializeOps(TestCase):
 
         self.assertEqual(len(veh_member_ids['v7']), 2,
                          "v7 should be a member of two fleets")
-        self.assertEqual(len(veh_member_ids['v1']), 3,
-                         "v1 should be a member of two fleets plus have a private membership")
         self.assertEqual(len(veh_member_ids['v13']), 1,
                          "v3 should be a member of only one fleet")
 
