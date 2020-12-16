@@ -8,7 +8,7 @@ from typing import Tuple, Dict, FrozenSet
 import immutables
 
 from hive.config import HiveConfig
-from hive.initialization.initialize_ops import process_fleet_file
+from hive.initialization.initialize_ops import process_fleet_file, read_fleet_ids_from_file
 from hive.model.base import Base
 from hive.model.energy.charger import build_chargers_table
 from hive.model.roadnetwork.geofence import GeoFence
@@ -27,6 +27,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util import DictOps
+from hive.util.typealiases import BaseId, VehicleId
 
 log = logging.getLogger(__name__)
 
@@ -42,26 +43,13 @@ def initialize_simulation(
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
 
-    vehicles_file = config.input_config.vehicles_file
-    bases_file = config.input_config.bases_file
-    stations_file = config.input_config.stations_file
-
-    if config.input_config.fleets_file:
-        fleets_file = config.input_config.fleets_file
-        vehicle_member_ids = process_fleet_file(fleets_file, 'vehicles')
-        base_member_ids = process_fleet_file(fleets_file, 'bases')
-        station_member_ids = process_fleet_file(fleets_file, 'stations')
-    else:
-        fleets_file = None
-        vehicle_member_ids = None
-        base_member_ids = None
-        station_member_ids = None
-
+    # deprecated geofence input
     if config.input_config.geofence_file:
         geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
     else:
         geofence = None
 
+    # set up road network based on user-configured road network type
     if config.network.network_type == 'euclidean':
         road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
     elif config.network.network_type == 'osm_network':
@@ -74,6 +62,7 @@ def initialize_simulation(
     else:
         raise IOError(f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
 
+    # initial sim state with road network and no entities
     sim_initial = SimulationState(
         road_network=road_network,
         sim_time=config.sim.start_time,
@@ -82,8 +71,8 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
+    # configure reporting
     reporter = Reporter(config.global_config)
-
     if config.global_config.log_events:
         reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_states:
@@ -93,25 +82,34 @@ def initialize_simulation(
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
 
+    # create simulation environment
+    fleet_ids = read_fleet_ids_from_file(config.input_config.fleets_file) if config.input_config.fleets_file else []
     env_initial = Environment(config=config,
                               reporter=reporter,
                               mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
                                                                     config.input_config.scenario_directory),
                               chargers=build_chargers_table(config.input_config.chargers_file),
                               schedules=build_schedules_table(config.sim.schedule_type,
-                                                              config.input_config.schedules_file)
+                                                              config.input_config.schedules_file),
+                              fleet_ids=fleet_ids
                               )
 
     # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
     #  should instead hold aside any error reports and then do something below after finishing,
     #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
 
-    # this way, they get to see all of the errors at once instead of having to fail, fix, and reload constantly :-)
-    sim_with_vehicles, env_updated = _build_vehicles(vehicles_file, vehicle_member_ids, sim_initial, env_initial)
-    sim_with_bases = _build_bases(bases_file, base_member_ids, sim_with_vehicles)
-    sim_with_stations = _build_stations(stations_file, station_member_ids, sim_with_bases)
+    # read in fleet memberships for vehicles/stations/bases
+    vehicle_member_ids = process_fleet_file(config.input_config.fleets_file, 'vehicles') if config.input_config.fleets_file else None
+    base_member_ids = process_fleet_file(config.input_config.fleets_file, 'bases') if config.input_config.fleets_file else None
+    station_member_ids = process_fleet_file(config.input_config.fleets_file, 'stations') if config.input_config.fleets_file else None
 
-    return sim_with_stations, env_updated
+    # populate simulation with entities
+    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, sim_initial, env_initial)
+    sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids, sim_with_vehicles)
+    sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids, sim_with_bases)
+    sim_with_home_bases = _assign_private_memberships(sim_with_stations)
+
+    return sim_with_home_bases, env_updated
 
 
 def _build_vehicles(
@@ -186,6 +184,60 @@ def _build_bases(bases_file: str,
         sim_with_bases = ft.reduce(_add_row_unsafe, reader, simulation_state)
 
     return sim_with_bases
+
+
+def _assign_private_memberships(sim: SimulationState) -> SimulationState:
+    """
+    vehicles which had a home base assigned will automatically generate a home base membership id
+    which links the vehicle and the base, in order to avoid having to specify this (obvious) relationship
+    in the fleets configuration of a scenario.
+
+    :param sim: partial simulation state with vehicles and bases added
+    :return: sim state where vehicles + bases which should have a private relationship have been updated
+    """
+    def _find_human_drivers(acc: SimulationState, v: Vehicle) -> SimulationState:
+        home_base_id = v.driver_state.home_base_id
+        if home_base_id is None:
+            return acc
+        else:
+            home_base = sim.bases.get(home_base_id)
+            if not home_base:
+                log.error(f"home base {home_base_id} does not exist but is listed as home base for vehicle {v.id}")
+                return acc
+            else:
+                home_base_membership_id = f"{v.id}_private_{home_base_id}"
+                updated_v = v.add_membership(home_base_membership_id)
+                updated_b = home_base.add_membership(home_base_membership_id)
+                station = sim.stations.get(home_base.station_id)
+                updated_s = station.add_membership(home_base_membership_id) if station else None
+
+                error_v, with_v = simulation_state_ops.modify_vehicle(acc, updated_v)
+                if error_v:
+                    log.error(error_v)
+                    return acc
+                else:
+                    error_b, with_b = simulation_state_ops.modify_base(with_v, updated_b)
+                    if error_b:
+                        log.error(error_b)
+                        return acc
+                    else:
+                        # bases are not required to have stations (they are optional)
+                        if not station:
+                            return with_b
+                        else:
+                            error_s, with_s = simulation_state_ops.modify_station(with_b, updated_s)
+                            if error_s:
+                                log.error(error_s)
+                                return acc
+                            else:
+                                return with_s
+
+    result = ft.reduce(
+        _find_human_drivers,
+        sim.get_vehicles(),
+        sim
+    )
+    return result
 
 
 def _build_stations(stations_file: str,

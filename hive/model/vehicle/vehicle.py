@@ -177,10 +177,19 @@ class Vehicle(NamedTuple):
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """
-        updates the membership(s) of the vehicle
+        sets the membership(s) of the vehicle
 
         :param member_ids: a Tuple containing updated membership(s) of the vehicle
         :return:
         """
         return self._replace(membership=Membership.from_tuple(member_ids))
 
+    def add_membership(self, membership_id: MembershipId) -> Vehicle:
+        """
+        adds the membership to the vehicle
+
+        :param membership_id: a membership for the vehicle
+        :return:
+        """
+        updated_membership = self.membership.add_membership(membership_id)
+        return self._replace(membership=updated_membership)

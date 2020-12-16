@@ -14,6 +14,7 @@ from hive.state.driver_state.driver_state import DriverState
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.reserve_base import ReserveBase
+from hive.util import BaseId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -36,6 +37,10 @@ class AutonomousAvailable(NamedTuple, DriverState):
     @property
     def available(cls):
         return True
+
+    @property
+    def home_base_id(cls) -> Optional[BaseId]:
+        return None
 
     def generate_instruction(
             self,

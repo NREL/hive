@@ -460,7 +460,8 @@ def mock_env(
         config: HiveConfig = mock_config(),
         mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
         chargers: Optional[Dict[ChargerId, Charger]] = None,
-        schedules: Optional[Dict[ScheduleId, Callable[['SimulationState', VehicleId], bool]]] = None
+        schedules: Optional[Dict[ScheduleId, Callable[['SimulationState', VehicleId], bool]]] = None,
+        fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()])
 ) -> Environment:
     if mechatronics is None:
         mechatronics = {
@@ -487,7 +488,8 @@ def mock_env(
         reporter=mock_reporter(),
         mechatronics=immutables.Map(mechatronics),
         chargers=immutables.Map(chargers),
-        schedules=immutables.Map(schedules)
+        schedules=immutables.Map(schedules),
+        fleet_ids=fleet_ids
     )
 
     return initial_env

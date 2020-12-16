@@ -11,9 +11,9 @@ class TestInstructionGenerators(TestCase):
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
         far_from_somewhere = h3.geo_to_h3(39.755, -104.976, 15)
 
-        req = mock_request_from_geoids(origin=somewhere)
-        close_veh = mock_vehicle_from_geoid(vehicle_id='close_veh', geoid=near_to_somewhere)
-        far_veh = mock_vehicle_from_geoid(vehicle_id='far_veh', geoid=far_from_somewhere)
+        req = mock_request_from_geoids(origin=somewhere, fleet_id=DefaultIds.mock_membership_id())
+        close_veh = mock_vehicle_from_geoid(vehicle_id='close_veh', geoid=near_to_somewhere, membership=mock_membership())
+        far_veh = mock_vehicle_from_geoid(vehicle_id='far_veh', geoid=far_from_somewhere, membership=mock_membership())
         sim = mock_sim(
             h3_location_res=9,
             h3_search_res=9,

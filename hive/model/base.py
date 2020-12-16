@@ -137,9 +137,19 @@ class Base(NamedTuple):
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Base:
         """
-        updates the membership(s) of the base
+        sets the membership(s) of the base
 
         :param member_ids: a Tuple containing updated membership(s) of the base
         :return:
         """
         return self._replace(membership=Membership.from_tuple(member_ids))
+
+    def add_membership(self, membership_id: MembershipId) -> Base:
+        """
+        adds the membership to the base
+
+        :param membership_id: a membership for the base
+        :return: updated base
+        """
+        updated_membership = self.membership.add_membership(membership_id)
+        return self._replace(membership=updated_membership)
