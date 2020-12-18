@@ -41,7 +41,7 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
         :return: the updated ChargingFleetManager along with instructions
         """
 
-        # find vehicles that fall below the minimum threshold and charge them.
+        # find vehicles that fall below the sum of the threshold distance and nearest valid station distance
 
         def charge_candidate(v: Vehicle) -> bool:
             proper_state = isinstance(v.vehicle_state, Idle) or isinstance(v.vehicle_state, Repositioning)
