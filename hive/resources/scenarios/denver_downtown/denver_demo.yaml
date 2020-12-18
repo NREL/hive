@@ -11,7 +11,6 @@ input:
   requests_file: denver_demo_requests.csv
   bases_file: denver_demo_bases.csv
   stations_file: denver_demo_stations.csv
-  fleets_file: denver_demo_fleet.yaml
   road_network_file: downtown_denver.xml
   geofence_file: downtown_denver.geojson
   rate_structure_file: rate_structure.csv

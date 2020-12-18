@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import logging
 from typing import Tuple, Optional, Dict, Union
+from pathlib import Path
 
 import h3
+import json
 import networkx as nx
 import numpy as np
 from networkx.classes.multidigraph import MultiDiGraph
@@ -33,7 +35,7 @@ class OSMRoadNetwork(RoadNetwork):
 
     def __init__(
             self,
-            road_network_file: str,
+            road_network_file: Path,
             geofence: Optional[GeoFence] = None,
             sim_h3_resolution: H3Resolution = 15,
             default_speed_kmph: Kmph = 40.0,
@@ -43,7 +45,15 @@ class OSMRoadNetwork(RoadNetwork):
 
         self.default_speed_kmph = default_speed_kmph
 
-        G, geoid_to_node_id = self._parse_road_network_graph(graph_from_file(road_network_file))
+        if road_network_file.suffix == ".xml":
+            G, geoid_to_node_id = self._parse_osmnx_graph(graph_from_file(str(road_network_file)))
+        elif road_network_file.suffix == ".json":
+            G, geoid_to_node_id = self._load_json_graph(road_network_file)
+        else:
+            raise TypeError(f"road network file of type {road_network_file.suffix} not supported by OSMRoadNetwork.")
+
+        if not nx.is_strongly_connected(G):
+            raise RuntimeError("Only strongly connected graphs are allowed.")
 
         self.G = G
         self._nodes = [nid for nid in self.G.nodes()]
@@ -51,9 +61,14 @@ class OSMRoadNetwork(RoadNetwork):
         self.kdtree = self._build_kdtree()
 
     def _build_kdtree(self) -> cKDTree:
-        lat = 'y'
-        lon = 'x'
-        points = [(self.G.nodes[nid][lat], self.G.nodes[nid][lon]) for nid in self._nodes]
+        try:
+            points = [(self.G.nodes[nid]['y'], self.G.nodes[nid]['x']) for nid in self._nodes]
+        except KeyError:
+            try:
+                points = [(self.G.nodes[nid]['lat'], self.G.nodes[nid]['lon']) for nid in self._nodes]
+            except KeyError:
+                raise Exception("node attributes must have either (y, x) or (lat, lon) information")
+
         tree = cKDTree(np.array(points))
 
         return tree
@@ -89,6 +104,8 @@ class OSMRoadNetwork(RoadNetwork):
         return attribute_values
 
     def _parse_osm_speed(self, osm_speed: Union[str, list]) -> Kmph:
+
+        # TODO: maybe we move this into a separate preprocessing library and only allow a certain type of input. -ndr
 
         def _parse_speed_string(speed_string: str) -> Kmph:
             if not any(char.isdigit() for char in speed_string):
@@ -132,9 +149,7 @@ class OSMRoadNetwork(RoadNetwork):
 
         return speed_kmph
 
-    def _parse_road_network_graph(self, g: MultiDiGraph) -> Tuple[MultiDiGraph, Dict]:
-        if not nx.is_strongly_connected(g):
-            raise RuntimeError("Only strongly connected graphs are allowed.")
+    def _parse_osmnx_graph(self, g: MultiDiGraph) -> Tuple[MultiDiGraph, Dict]:
         geoid_map = {}
         geoid_to_node_id = {}
         for nid in g.nodes():
@@ -150,6 +165,37 @@ class OSMRoadNetwork(RoadNetwork):
         nx.set_edge_attributes(g, hive_speed, 'speed_kmph')
 
         return g, geoid_to_node_id
+
+    def _load_json_graph(self, json_file: Path) -> Tuple[MultiDiGraph, Dict]:
+        """
+        loads a networkx graph from a json file and maps the x, y coordinates to a geoid
+        :param json_file: the json file to load
+
+        :return: a networkx graph and a mapping between geoid and node id
+        """
+        with json_file.open('r') as f:
+            g = nx.node_link_graph(json.load(f))
+
+        geoid_map = {}
+        geoid_to_node_id = {}
+        for nid in g.nodes():
+            node = g.nodes[nid]
+            try:
+                geoid = h3.geo_to_h3(node['y'], node['x'], resolution=self.sim_h3_resolution)
+            except KeyError:
+                try:
+                    geoid = h3.geo_to_h3(node['lat'], node['lon'], resolution=self.sim_h3_resolution)
+                except KeyError:
+                    raise Exception("node attributes must have either (y, x) or (lat, lon) information")
+
+            geoid_map[nid] = {'geoid': geoid}
+            geoid_to_node_id[geoid] = nid
+
+        nx.set_node_attributes(g, geoid_map)
+
+        return g, geoid_to_node_id
+
+
 
     def _generate_route_start(self, origin_node_id, origin_geoid) -> Route:
         """
