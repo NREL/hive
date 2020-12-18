@@ -12,7 +12,7 @@ input:
   bases_file: denver_demo_fleets_bases.csv
   stations_file: denver_demo_fleets_stations.csv
   fleets_file: denver_duel_fleets.yaml
-  road_network_file: downtown_denver.xml
+  road_network_file: downtown_denver_network.json
   geofence_file: downtown_denver.geojson
   rate_structure_file: rate_structure.csv
   charging_price_file: denver_charging_prices_by_geoid.csv

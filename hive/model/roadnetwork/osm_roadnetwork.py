@@ -1,14 +1,13 @@
 from __future__ import annotations
 
+import json
 import logging
-from typing import Tuple, Optional, Dict, Union
 from pathlib import Path
+from typing import Tuple, Optional, Dict
 
 import h3
-import json
 import networkx as nx
 import numpy as np
-from networkx.classes.multidigraph import MultiDiGraph
 from scipy.spatial import cKDTree
 
 from hive.external.miniosmnx.core import graph_from_file
@@ -19,7 +18,7 @@ from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
 from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import GeoId, H3Resolution
-from hive.util.units import Kilometers, Kmph, M_TO_KM, MPH_TO_KMPH
+from hive.util.units import Kilometers, Kmph, M_TO_KM
 
 log = logging.getLogger(__name__)
 
@@ -28,10 +27,6 @@ class OSMRoadNetwork(RoadNetwork):
     """
     Implements an open street maps road network utilizing the osmnx and networkx libraries
     """
-    _unit_conversion = {
-        'mph': MPH_TO_KMPH,
-        'kmph': 1,
-    }
 
     def __init__(
             self,
@@ -46,14 +41,49 @@ class OSMRoadNetwork(RoadNetwork):
         self.default_speed_kmph = default_speed_kmph
 
         if road_network_file.suffix == ".xml":
-            G, geoid_to_node_id = self._parse_osmnx_graph(graph_from_file(str(road_network_file)))
+            log.warning(".xml files have been deprecated in hive. please switch to using .json formats")
+            G = graph_from_file(str(road_network_file))
         elif road_network_file.suffix == ".json":
-            G, geoid_to_node_id = self._load_json_graph(road_network_file)
+            with road_network_file.open('r') as f:
+                G = nx.node_link_graph(json.load(f))
         else:
             raise TypeError(f"road network file of type {road_network_file.suffix} not supported by OSMRoadNetwork.")
 
         if not nx.is_strongly_connected(G):
             raise RuntimeError("Only strongly connected graphs are allowed.")
+
+        #  label each node with an h3 geoid so we can building links from the graph
+        geoid_map = {}
+        geoid_to_node_id = {}
+        for nid in G.nodes():
+            node = G.nodes[nid]
+            try:
+                geoid = h3.geo_to_h3(node['y'], node['x'], resolution=self.sim_h3_resolution)
+            except KeyError:
+                try:
+                    geoid = h3.geo_to_h3(node['lat'], node['lon'], resolution=self.sim_h3_resolution)
+                except KeyError:
+                    raise Exception("node attributes must have either (y, x) or (lat, lon) information")
+
+            geoid_map[nid] = {'geoid': geoid}
+            geoid_to_node_id[geoid] = nid
+
+        nx.set_node_attributes(G, geoid_map)
+
+        # check to make sure the graph has the right information on the links
+        missing_length = 0
+        missing_speed = 0
+        for _, _, d in G.edges(data=True):
+            if 'length' not in d:
+                missing_length += 1
+            if 'speed_kmph' not in d:
+                missing_speed += 1
+
+        if missing_length > 0:
+            raise Exception(f"found {missing_length} links in the road network that don't have length information")
+        elif missing_speed > 0:
+            log.warning(f"found {missing_speed} links in the road network that don't have speed information.\n"
+                        f"hive will automatically set these to {self.default_speed_kmph} kmph.")
 
         self.G = G
         self._nodes = [nid for nid in self.G.nodes()]
@@ -102,100 +132,6 @@ class OSMRoadNetwork(RoadNetwork):
                 attribute_value = data[attribute]
             attribute_values = attribute_values + (attribute_value,)
         return attribute_values
-
-    def _parse_osm_speed(self, osm_speed: Union[str, list]) -> Kmph:
-
-        # TODO: maybe we move this into a separate preprocessing library and only allow a certain type of input. -ndr
-
-        def _parse_speed_string(speed_string: str) -> Kmph:
-            if not any(char.isdigit() for char in speed_string):
-                # no numbers in string, set as defualt
-                return self.default_speed_kmph
-            else:
-                # try to parse the string assuming the format '{speed} {units}'
-                try:
-                    speed = float(speed_string.split(' ')[0])
-                except ValueError:
-                    log.warning(f"attempted to parse speed {speed_string} but was unable to convert to a number. "
-                                f"setting as default speed of {self.default_speed_kmph} kmph")
-                    return self.default_speed_kmph
-
-                try:
-                    units = speed_string.split(' ')[1]
-                    unit_conversion = self._unit_conversion[units]
-                except IndexError:
-                    log.warning(f"attempted to parse speed {speed_string} but was unable to discern units. "
-                                f"setting as default speed of {self.default_speed_kmph} kmph")
-                    return self.default_speed_kmph
-
-                return speed * unit_conversion
-
-        # capture any strings that should be lists
-        if '[' in osm_speed:
-            osm_speed = eval(osm_speed)
-
-        if isinstance(osm_speed, list):
-            # if the speed is a list, we'll take the first speed.
-            if isinstance(osm_speed[0], str):
-                speed_kmph = _parse_speed_string(osm_speed[0])
-            else:
-                # the first element is not a string, set to default since we don't know how to handle
-                speed_kmph = self.default_speed_kmph
-        elif isinstance(osm_speed, str):
-            speed_kmph = _parse_speed_string(osm_speed)
-        else:
-            # if the speed neither a list nor a string (i.e. None), we set as default
-            speed_kmph = self.default_speed_kmph
-
-        return speed_kmph
-
-    def _parse_osmnx_graph(self, g: MultiDiGraph) -> Tuple[MultiDiGraph, Dict]:
-        geoid_map = {}
-        geoid_to_node_id = {}
-        for nid in g.nodes():
-            node = g.nodes[nid]
-            geoid = h3.geo_to_h3(node['y'], node['x'], resolution=self.sim_h3_resolution)
-            geoid_map[nid] = {'geoid': geoid}
-            geoid_to_node_id[geoid] = nid
-
-        nx.set_node_attributes(g, geoid_map)
-
-        osm_speed = nx.get_edge_attributes(g, 'maxspeed')
-        hive_speed = {k: self._parse_osm_speed(v) for k, v in osm_speed.items()}
-        nx.set_edge_attributes(g, hive_speed, 'speed_kmph')
-
-        return g, geoid_to_node_id
-
-    def _load_json_graph(self, json_file: Path) -> Tuple[MultiDiGraph, Dict]:
-        """
-        loads a networkx graph from a json file and maps the x, y coordinates to a geoid
-        :param json_file: the json file to load
-
-        :return: a networkx graph and a mapping between geoid and node id
-        """
-        with json_file.open('r') as f:
-            g = nx.node_link_graph(json.load(f))
-
-        geoid_map = {}
-        geoid_to_node_id = {}
-        for nid in g.nodes():
-            node = g.nodes[nid]
-            try:
-                geoid = h3.geo_to_h3(node['y'], node['x'], resolution=self.sim_h3_resolution)
-            except KeyError:
-                try:
-                    geoid = h3.geo_to_h3(node['lat'], node['lon'], resolution=self.sim_h3_resolution)
-                except KeyError:
-                    raise Exception("node attributes must have either (y, x) or (lat, lon) information")
-
-            geoid_map[nid] = {'geoid': geoid}
-            geoid_to_node_id[geoid] = nid
-
-        nx.set_node_attributes(g, geoid_map)
-
-        return g, geoid_to_node_id
-
-
 
     def _generate_route_start(self, origin_node_id, origin_geoid) -> Route:
         """
@@ -263,7 +199,13 @@ class OSMRoadNetwork(RoadNetwork):
 
             link_id = str(nid_1) + "-" + str(nid_2)
             distance_km = route_attributes[i]['length'] * M_TO_KM
-            speed_kmph = route_attributes[i]['speed_kmph']
+
+            try:
+                speed_kmph = route_attributes[i]['speed_kmph']
+            except KeyError:
+                log.debug(f"found a road network link without any speed information, "
+                            f"using default speed of {self.default_speed_kmph} kmph")
+                speed_kmph = self.default_speed_kmph
 
             link = Link(
                 link_id=link_id,

@@ -21,17 +21,19 @@ class TestOSMRoadNetwork(TestCase):
         sim_h3_resolution = 15
         network = mock_osm_network(h3_res=sim_h3_resolution)
 
-        # points chosen to lie exactly on the road network
         origin_point = (39.7481388, -104.9935966)
         destination_point = (39.7613596, -104.981728)
 
         origin = h3.geo_to_h3(origin_point[0], origin_point[1], sim_h3_resolution)
         destination = h3.geo_to_h3(destination_point[0], destination_point[1], sim_h3_resolution)
 
+        origin_link = network.link_from_geoid(origin)
+        destination_link = network.link_from_geoid(destination)
+
         route = network.route(origin, destination)
 
-        self.assertEqual(origin, route[0].start, "route should start at origin")
-        self.assertEqual(destination, route[-1].end, "route should end at origin")
+        self.assertEqual(origin_link.start, route[0].start, "route should start at origin")
+        self.assertEqual(destination_link.end, route[-1].end, "route should end at origin")
 
     def test_get_nearest_node(self):
         network = mock_osm_network()
