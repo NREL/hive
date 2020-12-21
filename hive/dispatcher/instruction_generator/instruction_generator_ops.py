@@ -12,6 +12,7 @@ from hive.dispatcher.instruction_generator.charging_search_type import ChargingS
 from hive.model.station import Station
 from hive.util import Ratio, DictOps
 from hive.util.h3_ops import H3Ops
+from hive.util.units import Kilometers
 
 log = logging.getLogger(__name__)
 
@@ -209,3 +210,75 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
             instructions = instructions + (instruction,)
 
     return instructions
+
+
+def get_nearest_valid_station_distance(max_search_radius_km: float,
+                                       vehicle: Vehicle,
+                                       simulation_state: SimulationState,
+                                       environment: Environment,
+                                       target_soc: Ratio,
+                                       charging_search_type: ChargingSearchType) -> Kilometers:
+    """
+        a helper function to find the distance between a vehicle and the closest valid station
+
+        :param max_search_radius_km: the max kilometers to search for a station
+        :param vehicle: the vehicle to consider
+        :param simulation_state: the simulation state
+        :param environment: the simulation environment
+        :param target_soc: when ranking alternatives, use this target SoC value
+        :param charging_search_type: the type of search to conduct
+        :return: the distance in km to the nearest valid station
+        """
+
+    mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
+
+    def is_valid_fn(s: Station):
+        """
+        predicate that tests if a station + vehicle have a matching fleet id, and if so,
+        that the station provides chargers which match the vehicle's mechatronics
+        :param s: the station to test
+        :return: true if the station is valid for this vehicle
+        """
+        vehicle_has_access = s.membership.grant_access_to_membership(vehicle.membership)
+        if not vehicle_has_access:
+            return False
+        else:
+            station_has_valid_charger = any([
+                mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
+            ])
+            return station_has_valid_charger
+
+    if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
+        # use the simple weighted euclidean distance ranking
+
+        top_chargers = sorted(filter(
+            lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
+            environment.chargers.keys()),
+            key=lambda charger_id: -environment.chargers[charger_id].rate)
+
+        if not top_chargers:
+            # no valid chargers exist for this vehicle
+            return 99999999999999
+        else:
+            top_charger_id = top_chargers[0]
+
+        distance_fn = assignment_ops.nearest_shortest_queue_ranking(vehicle, top_charger_id)
+
+    else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
+        # use the search-based metric which considers travel, queueing, and charging time
+
+        distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
+            vehicle=vehicle, sim=simulation_state, env=environment, target_soc=target_soc
+        )
+    nearest_station = H3Ops.nearest_entity(geoid=vehicle.geoid,
+                                           entities=simulation_state.stations.values(),
+                                           entity_search=simulation_state.s_search,
+                                           sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
+                                           max_search_distance_km=max_search_radius_km,
+                                           is_valid=is_valid_fn,
+                                           distance_function=distance_fn)
+
+    if nearest_station:
+        return simulation_state.road_network.distance_by_geoid_km(origin=vehicle.geoid, destination=nearest_station.geoid)
+
+    return 99999999999999
