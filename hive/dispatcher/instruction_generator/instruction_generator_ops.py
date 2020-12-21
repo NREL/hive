@@ -279,6 +279,6 @@ def get_nearest_valid_station_distance(max_search_radius_km: float,
                                            distance_function=distance_fn)
 
     if nearest_station:
-        return H3Ops.great_circle_distance(a=vehicle.geoid, b=nearest_station.geoid)
+        return simulation_state.road_network.distance_by_geoid_km(origin=vehicle.geoid, destination=nearest_station.geoid)
 
     return 99999999999999
