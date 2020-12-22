@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import functools as ft
 import logging
+from pathlib import Path
 from typing import Tuple, Dict, FrozenSet
 
 import immutables
@@ -56,7 +57,7 @@ def initialize_simulation(
         road_network = OSMRoadNetwork(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
-            road_network_file=config.input_config.road_network_file,
+            road_network_file=Path(config.input_config.road_network_file),
             default_speed_kmph=config.network.default_speed_kmph,
         )
     else:
