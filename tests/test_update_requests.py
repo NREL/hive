@@ -59,7 +59,7 @@ class TestUpdateRequests(TestCase):
             start_time="2019-01-09T00:00:00",
             end_time="2019-01-10T00:00:00",
         )
-        env = mock_env(config)
+        env = mock_env(config, fleet_ids=frozenset())
         req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
