@@ -18,7 +18,7 @@ input:
   rate_structure_file: rate_structure.csv
   geofence_file: downtown_denver.geojson
   demand_forecast_file: denver_demand.csv
-  road_network_file: downtown_denver.xml
+  road_network_file: downtown_denver_network.json
 dispatcher:
   valid_dispatch_states:
     - Idle
