@@ -141,6 +141,14 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             warning = f"request {req.id} with cancel_time {this_req_cancel_time} cannot be added at time {current_time}"
             log.warning(warning)
             return sim
+        elif len(env.fleet_ids) > 0 and len(req.membership.memberships) == 0:
+            warning = f"request {req.id} is missing membership and will not be be added"
+            log.warning(warning)
+            return sim
+        elif len(env.fleet_ids) == 0 and len(req.membership.memberships) > 0:
+            warning = f"request {req.id} has membership but there is no fleets file. This request will not be added"
+            log.warning(warning)
+            return sim
         else:
             distance_km = sim.road_network.distance_by_geoid_km(req.origin, req.destination)
             req_updated = req.assign_value(rate_structure, distance_km)

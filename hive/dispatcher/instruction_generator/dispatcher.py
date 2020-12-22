@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, NamedTuple, TYPE_CHECKING
+from typing import Tuple, NamedTuple, TYPE_CHECKING, Optional
 
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.state.vehicle_state.charging_base import ChargingBase
@@ -41,7 +41,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
         def _solve_assignment(
                 inst_acc: Tuple[DispatchTripInstruction, ...],
-                membership_id: MembershipId,
+                membership_id: Optional[MembershipId],
         ) -> Tuple[DispatchTripInstruction, ...]:
             def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
                 vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
@@ -49,7 +49,7 @@ class Dispatcher(NamedTuple, InstructionGenerator):
                     return False
                 elif not vehicle.driver_state.available:
                     return False
-                elif not vehicle.membership.grant_access_to_membership_id(membership_id):
+                elif membership_id is not None and not vehicle.membership.grant_access_to_membership_id(membership_id):
                     return False
 
                 mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
@@ -90,9 +90,14 @@ class Dispatcher(NamedTuple, InstructionGenerator):
 
             return instructions
 
+        if len(environment.fleet_ids) > 0:
+            fleet_ids = environment.fleet_ids
+        else:
+            fleet_ids = frozenset([None])
+
         all_instructions = ft.reduce(
             _solve_assignment,
-            environment.fleet_ids,
+            fleet_ids,
             (),
         )
 
