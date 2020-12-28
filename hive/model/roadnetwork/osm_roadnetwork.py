@@ -229,8 +229,8 @@ class OSMRoadNetwork(RoadNetwork):
         :param destination: the geoid of the destination
         :return: the road network distance in kilometers
         """
-        route = route_distance_km(self.route(origin, destination))
-        return route
+        distance = route_distance_km(self.route(origin, destination))
+        return distance
 
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
         """
