@@ -170,10 +170,9 @@ class HumanUnavailable(NamedTuple, DriverState):
                     return None
                 if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(my_vehicle.vehicle_state, ChargingStation):
                     if my_base.station_id is None:
-                        # let the vehicle go charge if it's trying to
+                        # let the vehicle go charge if it's trying to, since it has no home charger
                         return None
                     else:
-
                         if my_mechatronics.range_remaining_km(my_vehicle) < sim.road_network.distance_by_geoid_km(my_vehicle.geoid, my_base.geoid):
                             # not enough range to get home - stick with the plan
                             return None
