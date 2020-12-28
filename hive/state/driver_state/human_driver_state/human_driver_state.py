@@ -162,22 +162,37 @@ class HumanUnavailable(NamedTuple, DriverState):
             return None
         else:
             at_home = my_base.geoid == my_vehicle.geoid
+            my_mechatronics = env.mechatronics.get(my_vehicle.mechatronics_id)
 
-            if not at_home and not isinstance(my_vehicle.vehicle_state, DispatchBase):
-                # let the vehicle go charge if it's trying to
-                if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(my_vehicle.vehicle_state, ChargingStation):
+            if not at_home:
+                if isinstance(my_vehicle.vehicle_state, DispatchBase):
+                    # stick with the plan
                     return None
+                if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(my_vehicle.vehicle_state, ChargingStation):
+                    if my_base.station_id is None:
+                        # let the vehicle go charge if it's trying to
+                        return None
+                    else:
+
+                        if my_mechatronics.range_remaining_km(my_vehicle) < sim.road_network.distance_by_geoid_km(my_vehicle.geoid, my_base.geoid):
+                            # not enough range to get home - stick with the plan
+                            return None
+                        else:
+                            # let's save money and head home to charge
+                            return DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
                 else:
                     # go home or charge on the way home if you need to
                     return human_go_home(my_vehicle, my_base, sim, env)
-            elif my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase) and at_home:
-                # otherwise, if we're at home and we have a plug, we try to charge to full
-                return human_charge_at_home(my_vehicle, my_base, sim, env)
-            elif at_home and isinstance(my_vehicle.vehicle_state, Idle):
-                # finally, if we're at home and idling, we turn the vehicle off
-                return ReserveBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
             else:
-                return None
+                not_full = my_mechatronics.fuel_source_soc(my_vehicle) < env.config.dispatcher.ideal_fastcharge_soc_limit
+                if not_full and my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase):
+                    # otherwise, if we're at home and we have a plug, we try to charge to full
+                    return human_charge_at_home(my_vehicle, my_base, sim, env)
+                elif isinstance(my_vehicle.vehicle_state, Idle):
+                    # finally, if we're at home and idling, we turn the vehicle off
+                    return ReserveBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+                else:
+                    return None
 
     def update(self,
                sim: 'SimulationState',

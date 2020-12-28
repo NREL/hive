@@ -14,7 +14,7 @@ from hive.external.miniosmnx.core import graph_from_file
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.route import Route, route_distance_km
 from hive.model.sim_time import SimTime
 from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import GeoId, H3Resolution
@@ -229,11 +229,8 @@ class OSMRoadNetwork(RoadNetwork):
         :param destination: the geoid of the destination
         :return: the road network distance in kilometers
         """
-        route = self.route(origin, destination)
-        distance_km = 0
-        for link in route:
-            distance_km += link.distance_km
-        return distance_km
+        route = route_distance_km(self.route(origin, destination))
+        return route
 
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
         """

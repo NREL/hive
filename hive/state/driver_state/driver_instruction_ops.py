@@ -85,8 +85,7 @@ def human_go_home(
     if not remaining_range:
         return None
     else:
-        route = sim.road_network.route(veh.geoid, home_base.geoid)
-        required_range = route_distance_km(route)
+        required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
         if required_range < remaining_range:
             # has enough remaining range to make it home sweet home
             instruction = DispatchBaseInstruction(veh.id, home_base.id)
