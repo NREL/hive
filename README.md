@@ -10,7 +10,7 @@ HIVE is a mobility services research platform developed by the Mobility and Adva
 ## What is HIVE
 
 HIVE is a complete autonomous ridehail simulator supporting charging infrastructure and fleet composition research, designed for ease-of-use, scalability, and co-simulation. HIVE employs powerful, community-driven deep reinforcement learning algorithms to synthesize an optimal fleet performance and for runs over HPC systems for large-scale problems. HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity playouts over arbitrary road networks and demand scenarios.
-​
+
 ## Why HIVE?
 
 When the Mobility, Behavior, and Advanced Powertrains group began looking to answer questions related to fleet sizing, charging infrastructure, and dynamic energy pricing, we could not find a simulator which was right-sized for our research questions. Most modern models for mobility services have a large barrier-to-entry due to the complex interactions of mode choice, economics, and model tuning required to use the leading micro and mesoscopic transportation models (BEAM, POLARIS, MATSim, SUMO, AMoDeus, etc.). Additionally, they have heavyweight technical infrastructure demands where deployment of these models requires a specialized team. HIVE attempts to fill a gap for researchers seeking to study the economic and energy impacts of autonomous ride hail fleets by providing the following feature set:
@@ -45,55 +45,34 @@ The project is currently closed-source, pre-release, with plans to open-source i
 
 ## Dependencies
 
-HIVE has these major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
+HIVE has these major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable hash map to replace the standard Python `Dict` type. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers. Numpy and Pandas provide some tabular operations, and can be used to inspect HIVE output logs.
 
-- [H3](https://github.com/uber/h3)
+- [h3-py](https://github.com/uber/h3-py)
 - [PyYAML](https://github.com/yaml/pyyaml)
 - [immutables](https://github.com/MagicStack/immutables)
 - [networkx](https://github.com/networkx/networkx)
 - [SciPy](https://www.scipy.org/)
-
-_note: Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/) which can cause issues on Windows. If you encounter errors when attempting the standard Hive installation instructions below, then consider first running `conda install -c conda-forge h3-py`._
-
-While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Pandas is being used to interact with open street maps. Rtree is used for quick node lookup on the road network.
-
 - [numpy](https://www.numpy.org/)
 - [pandas](https://pandas.pydata.org/)
 
-## Setup
+_note: previous h3-py installations would cause problems for Windows users. be sure to install the latest version._
 
-HIVE is currently available on [github.nrel.gov](github.nrel.gov). You must be connected (via LAN/VPN) to NREL and have an account with the correct access privileges to access it.
+#### Setup
 
-    > git clone https://github.nrel.gov/MBAP/hive
+HIVE is currently available on [github.nrel.gov](github.nrel.gov). You must be connected (via LAN/VPN) to NREL and have an account with the correct access privileges to access it. The simplest way to install HIVE is via the MBAP pypi repository:
 
-Installing can be completed either using [pip](https://pypi.org/project/pip/) and [conda](https://www.anaconda.com/) or by running python at the command line:
+    > pip install nrel_hive --extra-index-url=https://github.nrel.gov/pages/MBAP/mbap-pypi/
+    
+#### Run
 
-#### install and run via pip/conda
-
-Hive depends on python version 3.7. One way to satisfy this is to use conda 
-
-    > conda create -n hive python=3.7 
-
-then, to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
-
-    > pip install -e <path/to/hive>
-
-Then you can run hive as a command line application. For example, to run the built-in Denver scenario, type:
+To run the built-in Denver scenario, type:
 
     > hive denver_demo.yaml
    
 Note: the program will automatically look for the default scenarios, listed below. If you want
-the program to use a file outside of this location, just specify the optional `--path` argument:
+the program to run an arbitrary scenario, just specify the file path as an argument:
 
     > hive some_other_directory/my_scenario.yaml
-
-#### run as a vanilla python module
-
-To run from the console, run the module (along with a scenario file, such as `denver_demo.yaml`):
-       
-    > cd hive
-    > python -m hive denver_demo.yaml
-
 
 #### available scenarios
 
@@ -104,6 +83,7 @@ scenario | description
 denver_demo.yaml | default demo scenario with 20 vehicles and 2.5k requests synthesized with uniform time/location sampling
 denver_rl_toy.yaml | extremely simple scenario for testing RL
 denver_demo_constrained_charging.yaml | default scenario with limited charging supply
+denver_demo_fleets.yaml | default scenario with two ride hail fleets
 manhattan.yaml | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset
 
 #### global configuration
@@ -221,7 +201,7 @@ HIVE intends to implement the following features:
 - [x] Support for state-of-the-art RL control algorithms
 - [x] Charge Queueing
 - [ ] Ridehail Pooling
-- [ ] Gasoline vehicles
+- [x] Gasoline vehicles
 - [ ] Distributed HPC cluster implementation for large problem inputs
 
 ## License
