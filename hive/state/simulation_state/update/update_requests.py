@@ -150,8 +150,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             log.warning(warning)
             return sim
         else:
-            distance_km = sim.road_network.distance_by_geoid_km(req.origin, req.destination)
-            req_updated = req.assign_value(rate_structure, distance_km)
+            req_updated = req.assign_value(rate_structure, sim.road_network)
             error, sim_updated = simulation_state_ops.add_request(sim, req_updated)
             if error:
                 log.error(error)

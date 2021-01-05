@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 from pathlib import Path
 from typing import Tuple, Optional, Dict
 
@@ -278,3 +279,20 @@ class OSMRoadNetwork(RoadNetwork):
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
         raise NotImplementedError("updates are not implemented")
+
+    def random_link(self) -> Link:
+        """
+        returns a link by doing a uniform random sample from all nodes in the graph
+
+        :return: a random link
+        """
+        random_node_id = random.choice(self._nodes)
+
+        return Link(
+            link_id=str(random_node_id) + "-" + str(random_node_id),
+            start=self.G.nodes[random_node_id]['geoid'],
+            end=self.G.nodes[random_node_id]['geoid'],
+            distance_km=0,
+            speed_kmph=0,
+        )
+

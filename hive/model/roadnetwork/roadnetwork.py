@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Callable
 
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
@@ -68,5 +68,13 @@ class RoadNetwork(ABC):
         requests an update to the road network state to refect the provided simulation time
 
         :param sim_time:
+        :return:
+        """
+
+    @abstractmethod
+    def random_link(self) -> Link:
+        """
+        returns a random link from the road network
+
         :return:
         """
