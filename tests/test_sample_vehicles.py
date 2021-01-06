@@ -20,7 +20,7 @@ class TestSampleVehicles(TestCase):
         sim = mock_sim(bases=bases)
         env = mock_env()
         mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
-        loc_fn = build_default_location_sampling_fn(bases=bases)
+        loc_fn = build_default_location_sampling_fn()
         soc_fn = build_default_soc_sampling_fn()
 
         result: Result = sample_vehicles(
@@ -57,12 +57,12 @@ class TestSampleVehicles(TestCase):
 
         self.wonky_fn_calls = 0
 
-        def wonky_loc_fn() -> Link:
+        def wonky_loc_fn(s) -> Link:
             self.wonky_fn_calls += 1
             if self.wonky_fn_calls == fail_at_vehicle_n:
                 raise AttributeError(failure_msg)
-            fn = build_default_location_sampling_fn(bases=bases)
-            return fn()
+            fn = build_default_location_sampling_fn()
+            return fn(s)
 
         soc_fn = build_default_soc_sampling_fn()
 
