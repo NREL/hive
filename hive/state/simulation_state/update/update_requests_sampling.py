@@ -36,6 +36,10 @@ def default_request_sampling_function(sim: SimulationState) -> Tuple[Request, ..
         random_origin_link = sim.road_network.random_link()
         random_destination_link = sim.road_network.random_link()
 
+        while random_origin_link.start == random_destination_link.start:
+            random_origin_link = sim.road_network.random_link()
+            random_destination_link = sim.road_network.random_link()
+
         request = Request.build(
             request_id=rid,
             origin=random_origin_link.start,
