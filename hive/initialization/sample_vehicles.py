@@ -23,7 +23,7 @@ def sample_vehicles(
         count: int,
         sim: SimulationState,
         env: Environment,
-        location_sampling_function: Callable[[], Link],
+        location_sampling_function: Callable[[SimulationState], Link],
         soc_sampling_function: Callable[[], Ratio],
         offset: int = 0,
 ) -> Result[SimulationState, Exception]:
@@ -64,7 +64,7 @@ def sample_vehicles(
                     vehicle_id = f"v{i}"
                     initial_soc = soc_sampling_function()
                     energy = mechatronics.initial_energy(initial_soc)
-                    link = location_sampling_function()
+                    link = location_sampling_function(s)
                     vehicle_state = Idle(vehicle_id)
                     driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
                     vehicle = Vehicle(
@@ -96,7 +96,7 @@ def sample_vehicles(
         return result
 
 
-def build_default_location_sampling_fn(bases: Tuple[Base, ...], seed: int = 0) -> Callable[[], Link]:
+def build_default_location_sampling_fn(seed: int = 0) -> Callable[[], Link]:
     """
     constructs a link sampling function that uniformly samples from the provided base locations
 
@@ -105,17 +105,17 @@ def build_default_location_sampling_fn(bases: Tuple[Base, ...], seed: int = 0) -
     :param seed: random seed value
     :return: a link
     """
-    if len(bases) == 0:
-        raise AssertionError(f"must have at least one base to sample from")
-    else:
-        random.seed(seed)
+    random.seed(seed)
 
-        def _inner() -> Link:
-            sampled = random.sample(bases, 1)
-            link = sampled[0].link
-            return link
+    def _inner(sim: SimulationState) -> Link:
+        bases = tuple(sim.bases.values())
+        if len(bases) == 0:
+            raise AssertionError(f"must have at least one base to sample from")
+        sampled = random.sample(bases, 1)
+        link = sampled[0].link
+        return link
 
-        return _inner
+    return _inner
 
 
 def build_default_soc_sampling_fn(lower_bound: Ratio = 1.0, upper_bound: Ratio = 1.0, seed: int = 0) -> Callable[

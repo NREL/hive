@@ -127,9 +127,7 @@ def initialize_simulation_with_sampling(
 
     # sample vehicles
     if not vehicle_location_sampling_function:
-        vehicle_location_sampling_function = build_default_location_sampling_fn(
-            bases=tuple(sim_with_bases.bases.values())
-        )
+        vehicle_location_sampling_function = build_default_location_sampling_fn()
     if not vehicle_soc_sampling_function:
         vehicle_soc_sampling_function = build_default_soc_sampling_fn()
 
