@@ -15,24 +15,21 @@ from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import add_vehicle_returns
 from hive.state.vehicle_state.idle import Idle
 from hive.util import Ratio
-from hive.util.typealiases import MechatronicsId
 
 log = logging.getLogger(__name__)
 
 
 def sample_vehicles(
-  mechatronics_id: MechatronicsId,
-  count: int,
-  sim: SimulationState,
-  env: Environment,
-  location_sampling_function: Callable[[], Link],
-  soc_sampling_function: Callable[[], Ratio],
-  offset: int = 0,
-) -> Result[Tuple[SimulationState, Environment], Exception]:
+        count: int,
+        sim: SimulationState,
+        env: Environment,
+        location_sampling_function: Callable[[], Link],
+        soc_sampling_function: Callable[[], Ratio],
+        offset: int = 0,
+) -> Result[SimulationState, Exception]:
     """
     creates {count} vehicles using the provided sampling functions
 
-    :param mechatronics_id: the id of the mechatronics used by these vehicles
     :param count:
     :param sim:
     :param env:
@@ -42,6 +39,7 @@ def sample_vehicles(
     :return: the updated setup, or, a failure
     """
 
+    mechatronics_id = random.choice(list(env.mechatronics.keys()))
     mechatronics = env.mechatronics.get(mechatronics_id)
     if not mechatronics:
         return Failure(KeyError(f"mechatronics with id {mechatronics_id} not found"))
@@ -54,6 +52,7 @@ def sample_vehicles(
             :param i: the number to associate with this sampled vehicle
             :return: a function that adds vehicle i to the SimulationState
             """
+
             def _inner(s: SimulationState) -> Result[SimulationState, Exception]:
                 """
                 attempts to add the i'th vehicle to this simulation state
@@ -80,9 +79,11 @@ def sample_vehicles(
                     return add_result
                 except Exception as e:
                     return Failure(e)
+
             return _inner
 
-        log.info(f"sampling vehicles {offset} through {offset + count - 1} ({count} vehicles) with mechatronics id {mechatronics_id}")
+        log.info(
+            f"sampling vehicles {offset} through {offset + count - 1} ({count} vehicles) with mechatronics id {mechatronics_id}")
 
         # sample i vehicles, adding each to the sim
         # fail fast if an exception is encountered
@@ -113,10 +114,12 @@ def build_default_location_sampling_fn(bases: Tuple[Base, ...], seed: int = 0) -
             sampled = random.sample(bases, 1)
             link = sampled[0].link
             return link
+
         return _inner
 
 
-def build_default_soc_sampling_fn(lower_bound: Ratio = 1.0, upper_bound: Ratio = 1.0, seed: int = 0) -> Callable[[], Ratio]:
+def build_default_soc_sampling_fn(lower_bound: Ratio = 1.0, upper_bound: Ratio = 1.0, seed: int = 0) -> Callable[
+    [], Ratio]:
     """
     constructs an SoC sampling function that uniformly samples between a lower and upper bound value
 
@@ -125,7 +128,8 @@ def build_default_soc_sampling_fn(lower_bound: Ratio = 1.0, upper_bound: Ratio =
     :param seed: random seed value
     :return: an SoC value
     """
-    assert lower_bound <= upper_bound, ArithmeticError(f"lower bound {lower_bound} must be less than or equal to upper bound {upper_bound}")
+    assert lower_bound <= upper_bound, ArithmeticError(
+        f"lower bound {lower_bound} must be less than or equal to upper bound {upper_bound}")
     assert lower_bound >= 0, ArithmeticError(f"lower bound {lower_bound} must be in the range [0, 1]")
     assert lower_bound <= 1, ArithmeticError(f"lower bound {lower_bound} must be in the range [0, 1]")
     assert upper_bound >= 0, ArithmeticError(f"upper bound {upper_bound} must be in the range [0, 1]")

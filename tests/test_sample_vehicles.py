@@ -3,8 +3,8 @@ from unittest import TestCase
 from returns.primitives.exceptions import UnwrapFailedError
 from returns.result import Result
 
-from hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, build_default_soc_sampling_fn
-from hive.model.energy import EnergyType
+from hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, \
+    build_default_soc_sampling_fn
 from tests.mock_lobster import *
 
 
@@ -24,7 +24,6 @@ class TestSampleVehicles(TestCase):
         soc_fn = build_default_soc_sampling_fn()
 
         result: Result = sample_vehicles(
-            mechatronics_id=mechatronics_id,
             count=n,
             sim=sim,
             env=env,
@@ -55,7 +54,6 @@ class TestSampleVehicles(TestCase):
         bases = (base,)
         sim = mock_sim(bases=bases)
         env = mock_env()
-        mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
 
         self.wonky_fn_calls = 0
 
@@ -69,7 +67,6 @@ class TestSampleVehicles(TestCase):
         soc_fn = build_default_soc_sampling_fn()
 
         result: Result = sample_vehicles(
-            mechatronics_id=mechatronics_id,
             count=n,
             sim=sim,
             env=env,
