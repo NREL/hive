@@ -1,5 +1,5 @@
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
-from hive.util.dict_reader_stepper import DictReaderStepper
+from hive.util.iterators import DictReaderStepper
 from hive.util.exception import (
     StateOfChargeError,
     StateTransitionError,

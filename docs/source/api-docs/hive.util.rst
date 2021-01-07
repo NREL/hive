@@ -31,7 +31,7 @@ hive.util.dict\_ops module
 hive.util.dict\_reader\_stepper module
 --------------------------------------
 
-.. automodule:: hive.util.dict_reader_stepper
+.. automodule:: hive.util.iterators
    :members:
    :undoc-members:
    :show-inheritance:

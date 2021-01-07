@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.state.simulation_state.update.update_requests import UpdateRequests
+from hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
 from tests.mock_lobster import *
 
 
@@ -20,7 +20,7 @@ class TestUpdateRequests(TestCase):
         req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
-        fn = UpdateRequests.build(req_file, rate_structure_file)
+        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 2, "should have added the reqs")
         for req in result.requests.values():
@@ -42,7 +42,7 @@ class TestUpdateRequests(TestCase):
         req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
-        fn = UpdateRequests.build(req_file, rate_structure_file)
+        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(expected_reqs, len(result.requests), "should have added the reqs")
         for req in result.requests.values():
@@ -63,7 +63,7 @@ class TestUpdateRequests(TestCase):
         req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
-        fn = UpdateRequests.build(req_file, rate_structure_file)
+        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         for req in result.requests.values():
             print(req)
@@ -83,7 +83,7 @@ class TestUpdateRequests(TestCase):
         req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
         rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
-        fn = UpdateRequests.build(req_file, rate_structure_file, lazy_file_reading=True)
+        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file, lazy_file_reading=True)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 2, "should have added the reqs")
         for req in result.requests.values():

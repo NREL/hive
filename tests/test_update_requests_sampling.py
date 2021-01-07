@@ -6,22 +6,18 @@ from tests.mock_lobster import *
 
 class TestUpdateRequestsSampling(TestCase):
 
-    def test_update_default_sampling(self):
-        """
-        default sampler just adds N_Vehicles/4 random requests into the sim at each timestep
-        :return:
-        """
-
-        #  sim with 12 vehicles
+    def test_update(self):
         sim = mock_sim(
-            vehicles=tuple(mock_vehicle(vehicle_id=str(i)) for i in range(12)),
+            sim_time=SimTime.build(180),
             road_network=mock_osm_network(),
         )
         env = mock_env()
 
-        fn = UpdateRequestsSampling.build()
+        requests = tuple(mock_request(request_id=str(i)) for i in range(5))
+
+        fn = UpdateRequestsSampling.build(sampled_requests=requests)
         result, _ = fn.update(sim, env)
-        self.assertEqual(len(result.requests), 3, "should have added 12/4 = 3 requests")
+        self.assertEqual(len(result.requests), 5, "should have added 5 requests")
 
         for r in result.requests.values():
             self.assertNotEqual(r.origin, r.destination, "origin and destination should not be equal")

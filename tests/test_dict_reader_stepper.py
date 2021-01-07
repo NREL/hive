@@ -3,7 +3,7 @@ from unittest import TestCase
 from pkg_resources import resource_filename
 
 from hive.model.sim_time import SimTime
-from hive.util.dict_reader_stepper import *
+from hive.util.iterators import *
 
 
 class TestDictReaderStepper(TestCase):
@@ -16,7 +16,7 @@ class TestDictReaderStepper(TestCase):
 
     def test_invalid_file(self):
         test_filename = "invalid#Q(F*E:/file/location"
-        error, stepper = DictReaderStepper.from_file(test_filename, "blargrog", parser=SimTime.build)
+        error, stepper = DictReaderStepper.build(test_filename, "blargrog", parser=SimTime.build)
         self.assertIsNone(stepper)
         self.assertIsInstance(error, Exception)
 
@@ -25,7 +25,7 @@ class TestDictReaderStepper(TestCase):
                                           "denver_demo_requests.csv")
         stop_time = SimTime.build('1970-01-01T00:12:00')
         stop_condition = self._generate_stop_condition(stop_time)
-        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=SimTime.build)
+        _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         result = tuple(stepper.read_until_stop_condition(stop_condition))
         self.assertEqual(len(result), 20, f"should have found 20 rows with departure time earlier than {stop_time}")
         self.assertEqual(
@@ -44,7 +44,7 @@ class TestDictReaderStepper(TestCase):
     def test_reading_two_consecutive_times(self):
         test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
-        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=SimTime.build)
+        _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         stop1 = SimTime.build('1970-01-01T00:12:00')
         stop2 = SimTime.build('1970-01-01T00:14:00')
         result1 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
@@ -70,7 +70,7 @@ class TestDictReaderStepper(TestCase):
     def test_no_agents_after_end_of_file(self):
         test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
-        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=SimTime.build)
+        _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(SimTime.build(9999998))))
         result = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(SimTime.build(9999999))))
         self.assertEqual(len(result), 0, "should find no more agents after end of time")
@@ -78,7 +78,7 @@ class TestDictReaderStepper(TestCase):
     def test_no_second_file_reading_on_repeated_value(self):
         test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
-        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=SimTime.build)
+        _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         stop = SimTime.build('1970-01-01T00:12:00')
         result1 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop)))
         result2 = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop)))
@@ -88,7 +88,7 @@ class TestDictReaderStepper(TestCase):
     def test_correct_management_of_stored_value_after_repeated_value(self):
         test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
-        _, stepper = DictReaderStepper.from_file(test_filename, "departure_time", parser=SimTime.build)
+        _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         stop1 = SimTime.build('1970-01-01T00:12:00')
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(stop1)))

@@ -17,6 +17,7 @@ from hive.initialization.sample_vehicles import (
     build_default_location_sampling_fn,
     build_default_soc_sampling_fn,
 )
+from hive.initialization.sample_requests import default_request_sampler
 from hive.model.base import Base
 from hive.model.energy.charger import build_chargers_table
 from hive.model.request import Request
@@ -47,10 +48,11 @@ log = logging.getLogger(__name__)
 def initialize_simulation_with_sampling(
         config: HiveConfig,
         vehicle_count: int,
+        request_count: int,
         instruction_generators: Tuple[InstructionGenerator, ...],
-        vehicle_location_sampling_function: Optional[Callable[[], Link]] = None,
-        vehicle_soc_sampling_function: Optional[Callable[[], Ratio]] = None,
-        request_sampling_function: Optional[Callable[[SimulationState], Tuple[Request, ...]]] = None,
+        vehicle_location_sampling_function: Optional[Callable[..., Link]] = None,
+        vehicle_soc_sampling_function: Optional[Callable[..., Ratio]] = None,
+        request_sampling_function: Optional[Callable[..., Tuple[Request, ...]]] = None,
 ) -> RunnerPayload:
     """
     constructs a RunnerPayload, ready to simulate.
@@ -58,6 +60,7 @@ def initialize_simulation_with_sampling(
 
     :param config: the configuration of this run
     :param vehicle_count: how many vehicles to initialize
+    :param request_count: how many requests to initialize
     :param instruction_generators: which instruction generators to use
     :param vehicle_location_sampling_function: an optional location sampling function; uses default if none
     :param vehicle_soc_sampling_function: an optional vehicle soc sampling function; uses default if none
@@ -113,13 +116,13 @@ def initialize_simulation_with_sampling(
                     "this input will be ignored and entities will not have any fleet information.")
 
     env = Environment(config=config,
-                              reporter=reporter,
-                              mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
-                                                                    config.input_config.scenario_directory),
-                              chargers=build_chargers_table(config.input_config.chargers_file),
-                              schedules=build_schedules_table(config.sim.schedule_type,
-                                                              config.input_config.schedules_file),
-                              )
+                      reporter=reporter,
+                      mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
+                                                            config.input_config.scenario_directory),
+                      chargers=build_chargers_table(config.input_config.chargers_file),
+                      schedules=build_schedules_table(config.sim.schedule_type,
+                                                      config.input_config.schedules_file),
+                      )
 
     # populate simulation with static entities
     sim_with_bases = _build_bases(config.input_config.bases_file, sim_initial)
@@ -145,12 +148,9 @@ def initialize_simulation_with_sampling(
         raise Exception(sample_result._inner_value.args[0])
 
     if request_sampling_function is None:
-        update_requests = UpdateRequestsSampling.build(rate_structure_file=config.input_config.rate_structure_file)
+        sampled_requests = default_request_sampler(request_count, sim_w_vehicles, env)
     else:
-        update_requests = UpdateRequestsSampling.build(
-            rate_structure_file=config.input_config.rate_structure_file,
-            sampling_function=request_sampling_function,
-        )
+        sampled_requests = request_sampling_function(request_count, sim_w_vehicles, env)
 
     update = Update(
         pre_step_update=(
@@ -159,7 +159,7 @@ def initialize_simulation_with_sampling(
                 config.input_config.chargers_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,
             ),
-            update_requests,
+            UpdateRequestsSampling.build(sampled_requests),
             CancelRequests(),
         ),
         step_update=StepSimulation(instruction_generators)
