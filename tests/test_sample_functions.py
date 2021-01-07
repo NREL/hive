@@ -3,12 +3,25 @@ from unittest import TestCase
 from returns.primitives.exceptions import UnwrapFailedError
 from returns.result import Result
 
+from hive.initialization.sample_requests import default_request_sampler
 from hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, \
     build_default_soc_sampling_fn
 from tests.mock_lobster import *
 
 
 class TestSampleVehicles(TestCase):
+
+    def test_sample_n_requests_default(self):
+        n = 100
+        sim = mock_sim(road_network=mock_osm_network())
+        env = mock_env()
+
+        sample_requests = default_request_sampler(n, sim, env)
+
+        self.assertEquals(len(sample_requests), n, f"should have sampled {n} requests")
+
+        for r in sample_requests:
+            self.assertNotEqual(r.origin, r.destination, f"request should not have equal origin and destination")
 
     def test_sample_n_vehicles_default(self):
         """

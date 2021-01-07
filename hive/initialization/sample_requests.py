@@ -40,7 +40,7 @@ def default_request_sampler(
         request = Request.build(
             request_id="r" + str(id_counter),
             origin=random_source_link.start,
-            destination=random_source_link.end,
+            destination=random_destination_link.end,
             road_network=simulation_state.road_network,
             departure_time=random.choice(possible_timesteps),
             passengers=random.choice([1, 2, 3, 4]),
