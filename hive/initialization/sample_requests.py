@@ -22,6 +22,13 @@ def default_request_sampler(
     """
 
     requests = []
+
+    possible_timesteps = list(range(
+        int(environment.config.sim.start_time),
+        int(environment.config.sim.end_time),
+        environment.config.sim.timestep_duration_seconds,
+    ))
+
     id_counter = 0
     while len(requests) < count:
         random_source_link = simulation_state.road_network.random_link()
@@ -29,12 +36,6 @@ def default_request_sampler(
 
         if random_source_link.link_id == random_destination_link.link_id:
             continue
-
-        possible_timesteps = list(range(
-            int(environment.config.sim.start_time),
-            int(environment.config.sim.end_time),
-            environment.config.sim.timestep_duration_seconds,
-        ))
 
         request = Request.build(
             request_id="r" + str(id_counter),
