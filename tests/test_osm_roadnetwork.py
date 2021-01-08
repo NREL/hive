@@ -21,35 +21,17 @@ class TestOSMRoadNetwork(TestCase):
         sim_h3_resolution = 15
         network = mock_osm_network(h3_res=sim_h3_resolution)
 
-        origin_point = (39.7481388, -104.9935966)
-        destination_point = (39.7613596, -104.981728)
+        o_lat, o_lon = (39.7481388, -104.9935966)
+        d_lat, d_lon = (39.7613596, -104.981728)
 
-        origin = h3.geo_to_h3(origin_point[0], origin_point[1], sim_h3_resolution)
-        destination = h3.geo_to_h3(destination_point[0], destination_point[1], sim_h3_resolution)
+        origin = h3.geo_to_h3(o_lat, o_lon, sim_h3_resolution)
+        destination = h3.geo_to_h3(d_lat, d_lon, sim_h3_resolution)
 
-        origin_link = network.link_from_geoid(origin)
-        destination_link = network.link_from_geoid(destination)
+        origin_link = network.stationary_location_from_geoid(origin)
+        destination_link = network.stationary_location_from_geoid(destination)
+        route = network.route(origin_link, destination_link)
 
-        route = network.route(origin, destination)
-
-        self.assertEqual(origin_link.start, route[0].start, "route should start at origin")
-        self.assertEqual(destination_link.end, route[-1].end, "route should end at origin")
-
-    def test_get_nearest_node(self):
-        network = mock_osm_network()
-        G = network.G
-
-        # first, we find the northern most node
-        max_lat = 0
-        max_node = None
-        for nid in G.nodes():
-            lat = G.nodes[nid]['y']
-            if lat > max_lat:
-                max_lat = lat
-                max_node = nid
-
-        node = network.G.nodes[max_node]
-
-        nearest_node = network.get_nearest_node(node['y']+0.5, node['x'])
-
-        self.assertEqual(max_node, nearest_node, "node should be nearest to itself")
+        self.assertEqual(origin_link.link_id, route[0].link_id, "origin link id should be first route link id")
+        self.assertEqual(destination_link.link_id, route[-1].link_id, "destination link id should be the last route link id")
+        self.assertEqual(origin_link.start, route[0].start, "route should start at origin GeoId (stationary road network location)")
+        self.assertEqual(destination_link.end, route[-1].end, "route should end at destination GeoId (stationary road network location)")

@@ -177,7 +177,7 @@ def shortest_time_to_charge_ranking(
         :param station: the station to rank
         :return: a ranking (estimated travel + queue + charge time)
         """
-        route = sim.road_network.route(vehicle.geoid, station.geoid)
+        route = sim.road_network.route(vehicle.link, station.link)
         distance_km = route_distance_km(route)
 
         if not vehicle_mechatronics or remaining_range < distance_km:

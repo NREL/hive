@@ -2,6 +2,8 @@ from unittest import TestCase
 
 from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
+from hive.state.vehicle_state.servicing_trip import ServicingTrip
+from hive.model.passenger import board_vehicle
 from hive.state.vehicle_state.out_of_service import OutOfService
 from tests.mock_lobster import *
 
@@ -549,6 +551,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_dispatch_base_enter_route_with_bad_source(self):
+        # omf brewing is not the same location as the vehicle
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         base = mock_base()
@@ -565,6 +568,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     def test_dispatch_base_enter_route_with_bad_destination(self):
+        # omf brewing is not the same location as the base
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         base = mock_base()

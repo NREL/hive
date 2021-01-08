@@ -66,8 +66,8 @@ class Request(NamedTuple):
               ) -> Request:
         assert (departure_time >= 0)
         assert (passengers > 0)
-        origin_link = road_network.link_from_geoid(origin)
-        destination_link = road_network.link_from_geoid(destination)
+        origin_link = road_network.stationary_location_from_geoid(origin)
+        destination_link = road_network.stationary_location_from_geoid(destination)
         request_as_passengers = [
             Passenger(
                 create_passenger_id(request_id, pass_idx),

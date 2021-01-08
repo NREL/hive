@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
-from hive.model.roadnetwork.route import Route, valid_route
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state import VehicleState
@@ -30,19 +30,19 @@ class DispatchBase(NamedTuple, VehicleState):
     def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.link, base.link) if vehicle and base else False
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         elif not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not is_valid:
+            return None, None
         elif not base.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
             return SimulationStateError(msg), None
         else:
-            route_is_valid = valid_route(self.route, vehicle.geoid, base.geoid)
-            if not route_is_valid:
-                return None, None
-            else:
-                return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            return result
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim

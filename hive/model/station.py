@@ -71,7 +71,7 @@ class Station(NamedTuple):
             chargers.keys(),
             immutables.Map()
         )
-        link = road_network.link_from_geoid(geoid)
+        link = road_network.stationary_location_from_geoid(geoid)
         return Station(id, link, chargers, chargers, prices, membership=membership)
 
     @classmethod

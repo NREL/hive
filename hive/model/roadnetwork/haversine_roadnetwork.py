@@ -52,13 +52,13 @@ class HaversineRoadNetwork(RoadNetwork):
 
         return start, end
 
-    def route(self, origin: GeoId, destination: GeoId) -> Route:
-        link_id = self._geoids_to_link_id(origin, destination)
-        link_dist_km = self.distance_by_geoid_km(origin, destination)
+    def route(self, origin: Link, destination: Link) -> Route:
+        link_id = self._geoids_to_link_id(origin.start, destination.end)
+        link_dist_km = self.distance_by_geoid_km(origin.start, destination.end)
         link = Link(
             link_id=link_id,
-            start=origin,
-            end=destination,
+            start=origin.start,
+            end=destination.end,
             distance_km=link_dist_km,
             speed_kmph=self._AVG_SPEED_KMPH,
         )
