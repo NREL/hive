@@ -173,7 +173,9 @@ class HumanUnavailable(NamedTuple, DriverState):
                         # let the vehicle go charge if it's trying to, since it has no home charger
                         return None
                     else:
-                        if my_mechatronics.range_remaining_km(my_vehicle) < sim.road_network.distance_by_geoid_km(my_vehicle.geoid, my_base.geoid):
+                        remaining_range = my_mechatronics.range_remaining_km(my_vehicle)
+                        required_range = sim.road_network.distance_by_geoid_km(my_vehicle.geoid, my_base.geoid)
+                        if remaining_range < required_range + env.config.dispatcher.charging_range_km_threshold:
                             # not enough range to get home - stick with the plan
                             return None
                         else:
