@@ -63,3 +63,13 @@ class TestBEV(TestCase):
             50 * MILE_TO_KM,
             places=1,
         )
+
+    def test_calc_required_soc(self):
+        bev = mock_bev(battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000)
+
+        required_soc = bev.calc_required_soc(50 * MILE_TO_KM)
+
+        self.assertEqual(
+            required_soc,
+            1.0,
+        )

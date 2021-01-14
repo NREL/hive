@@ -57,3 +57,13 @@ class TestICE(TestCase):
             100 * MILE_TO_KM,
             places=1,
         )
+
+    def test_calc_required_soc(self):
+        ice = mock_ice(tank_capacity_gallons=10, nominal_miles_per_gallon=10)
+
+        required_tank_capacity = ice.calc_required_soc(100 * MILE_TO_KM)
+
+        self.assertEqual(
+            required_tank_capacity,
+            1.0,
+        )
