@@ -11,6 +11,7 @@ def default_request_sampler(
         count: int,
         simulation_state: SimulationState,
         environment: Environment,
+        random_seed: int = 0
 ) -> Tuple[Request, ...]:
     """
     samples `count` requests uniformly across time and space
@@ -18,11 +19,14 @@ def default_request_sampler(
     :param count: the number of requests to sample
     :param simulation_state: the simulation state
     :param environment: the environment
+    :param random_seed: the random seed used for the random selections
 
     :return: a tuple of the sampled requests
     """
     if not isinstance(simulation_state.road_network, OSMRoadNetwork):
         raise NotImplementedError("request sampling is only implemented for the OSMRoadNetwork")
+
+    random.seed(random_seed)
 
     requests = []
 
@@ -51,6 +55,8 @@ def default_request_sampler(
         )
 
         requests.append(request)
+
+        id_counter += 1
 
     sorted_reqeusts = sorted(requests, key=lambda r: r.departure_time)
 
