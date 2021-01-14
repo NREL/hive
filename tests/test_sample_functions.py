@@ -3,12 +3,25 @@ from unittest import TestCase
 from returns.primitives.exceptions import UnwrapFailedError
 from returns.result import Result
 
-from hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, build_default_soc_sampling_fn
-from hive.model.energy import EnergyType
+from hive.initialization.sample_requests import default_request_sampler
+from hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, \
+    build_default_soc_sampling_fn
 from tests.mock_lobster import *
 
 
 class TestSampleVehicles(TestCase):
+
+    def test_sample_n_requests_default(self):
+        n = 100
+        sim = mock_sim(road_network=mock_osm_network())
+        env = mock_env()
+
+        sample_requests = default_request_sampler(n, sim, env)
+
+        self.assertEquals(len(sample_requests), n, f"should have sampled {n} requests")
+
+        for r in sample_requests:
+            self.assertNotEqual(r.origin, r.destination, f"request should not have equal origin and destination")
 
     def test_sample_n_vehicles_default(self):
         """
@@ -20,11 +33,10 @@ class TestSampleVehicles(TestCase):
         sim = mock_sim(bases=bases)
         env = mock_env()
         mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
-        loc_fn = build_default_location_sampling_fn(bases=bases)
+        loc_fn = build_default_location_sampling_fn()
         soc_fn = build_default_soc_sampling_fn()
 
         result: Result = sample_vehicles(
-            mechatronics_id=mechatronics_id,
             count=n,
             sim=sim,
             env=env,
@@ -55,21 +67,19 @@ class TestSampleVehicles(TestCase):
         bases = (base,)
         sim = mock_sim(bases=bases)
         env = mock_env()
-        mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
 
         self.wonky_fn_calls = 0
 
-        def wonky_loc_fn() -> Link:
+        def wonky_loc_fn(s) -> Link:
             self.wonky_fn_calls += 1
             if self.wonky_fn_calls == fail_at_vehicle_n:
                 raise AttributeError(failure_msg)
-            fn = build_default_location_sampling_fn(bases=bases)
-            return fn()
+            fn = build_default_location_sampling_fn()
+            return fn(s)
 
         soc_fn = build_default_soc_sampling_fn()
 
         result: Result = sample_vehicles(
-            mechatronics_id=mechatronics_id,
             count=n,
             sim=sim,
             env=env,

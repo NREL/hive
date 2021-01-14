@@ -8,17 +8,17 @@ from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
 from hive.model.request import Request, RequestRateStructure
 from hive.model.sim_time import SimTime
+from hive.reporting.reporter import Report, ReportType
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
-from hive.util.dict_reader_stepper import DictReaderStepper
-from hive.reporting.reporter import Report, ReportType
+from hive.util.iterators import DictReaderStepper
 
 log = logging.getLogger(__name__)
 
 
-class UpdateRequests(NamedTuple, SimulationUpdateFunction):
+class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
     """
     loads requests from a file, which is assumed to be sorted by Request
     """
@@ -56,7 +56,7 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
             raise IOError(f"{request_file} is not a valid path to a request file")
 
         if lazy_file_reading:
-            error, stepper = DictReaderStepper.from_file(request_file, "departure_time", parser=SimTime.build)
+            error, stepper = DictReaderStepper.build(request_file, "departure_time", parser=SimTime.build)
             if error:
                 raise error
         else:
@@ -66,11 +66,11 @@ class UpdateRequests(NamedTuple, SimulationUpdateFunction):
 
             stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=SimTime.build)
 
-        return UpdateRequests(stepper, rate_structure)
+        return UpdateRequestsFromFile(stepper, rate_structure)
 
     def update(self,
                sim_state: SimulationState,
-               env: Environment) -> Tuple[SimulationState, Optional[UpdateRequests]]:
+               env: Environment) -> Tuple[SimulationState, Optional[UpdateRequestsFromFile]]:
         """
         add requests from file when the simulation reaches the request's time
 
@@ -150,8 +150,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             log.warning(warning)
             return sim
         else:
-            distance_km = sim.road_network.distance_by_geoid_km(req.origin, req.destination)
-            req_updated = req.assign_value(rate_structure, distance_km)
+            req_updated = req.assign_value(rate_structure, sim.road_network)
             error, sim_updated = simulation_state_ops.add_request(sim, req_updated)
             if error:
                 log.error(error)

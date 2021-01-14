@@ -15,7 +15,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
-from hive.util.dict_reader_stepper import DictReaderStepper
+from hive.util.iterators import DictReaderStepper
 from hive.util import DictOps
 from hive.util.typealiases import StationId, ChargerId
 from hive.util.units import Currency
@@ -71,7 +71,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
                 raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
-                    error, stepper = DictReaderStepper.from_file(charging_path, "time", parser=SimTime.build)
+                    error, stepper = DictReaderStepper.build(charging_path, "time", parser=SimTime.build)
                     if error:
                         raise error
                 else:

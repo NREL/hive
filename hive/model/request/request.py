@@ -167,14 +167,17 @@ class Request(NamedTuple):
         """
         return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
 
-    def assign_value(self, rate_structure: RequestRateStructure, distance_km: Kilometers) -> Request:
+    def assign_value(self, rate_structure: RequestRateStructure, road_network: RoadNetwork) -> Request:
         """
         used to assign a value to this request based on it's properties as well as possible surge pricing.
 
 
         :param rate_structure: the rate structure to apply to the request value
+        :param road_network: the road network used for computing distances
+
         :return: the updated request
         """
+        distance_km = road_network.distance_by_geoid_km(self.origin, self.destination)
         distance_miles = distance_km * KM_TO_MILE
         price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
         return self._replace(value=max(rate_structure.minimum_price, price))

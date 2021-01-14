@@ -19,11 +19,11 @@ from hive.model.station import Station
 from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.model.vehicle.schedules import build_schedules_table
 from hive.model.vehicle.vehicle import Vehicle
+from hive.reporting.handler.eventful_handler import EventfulHandler
 from hive.reporting.handler.instruction_handler import InstructionHandler
 from hive.reporting.handler.stateful_handler import StatefulHandler
-from hive.reporting.reporter import Reporter
-from hive.reporting.handler.eventful_handler import EventfulHandler
 from hive.reporting.handler.stats_handler import StatsHandler
+from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
@@ -60,7 +60,8 @@ def initialize_simulation(
             default_speed_kmph=config.network.default_speed_kmph,
         )
     else:
-        raise IOError(f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
+        raise IOError(
+            f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
 
     # initial sim state with road network and no entities
     sim_initial = SimulationState(
@@ -99,12 +100,16 @@ def initialize_simulation(
     #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
 
     # read in fleet memberships for vehicles/stations/bases
-    vehicle_member_ids = process_fleet_file(config.input_config.fleets_file, 'vehicles') if config.input_config.fleets_file else None
-    base_member_ids = process_fleet_file(config.input_config.fleets_file, 'bases') if config.input_config.fleets_file else None
-    station_member_ids = process_fleet_file(config.input_config.fleets_file, 'stations') if config.input_config.fleets_file else None
+    vehicle_member_ids = process_fleet_file(config.input_config.fleets_file,
+                                            'vehicles') if config.input_config.fleets_file else None
+    base_member_ids = process_fleet_file(config.input_config.fleets_file,
+                                         'bases') if config.input_config.fleets_file else None
+    station_member_ids = process_fleet_file(config.input_config.fleets_file,
+                                            'stations') if config.input_config.fleets_file else None
 
     # populate simulation with entities
-    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, sim_initial, env_initial)
+    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, sim_initial,
+                                                     env_initial)
     sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids, sim_with_vehicles)
     sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids, sim_with_bases)
     sim_with_home_bases = _assign_private_memberships(sim_with_stations)
@@ -195,6 +200,7 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
     :param sim: partial simulation state with vehicles and bases added
     :return: sim state where vehicles + bases which should have a private relationship have been updated
     """
+
     def _find_human_drivers(acc: SimulationState, v: Vehicle) -> SimulationState:
         home_base_id = v.driver_state.home_base_id
         if home_base_id is None:

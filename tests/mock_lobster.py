@@ -381,9 +381,10 @@ def mock_sim(
         vehicles: Tuple[Vehicle, ...] = (),
         stations: Tuple[Station, ...] = (),
         bases: Tuple[Base, ...] = (),
+        road_network: RoadNetwork = mock_network(),
 ) -> SimulationState:
     sim = SimulationState(
-        road_network=mock_network(),
+        road_network=road_network,
         sim_time=SimTime.build(sim_time),
         sim_timestep_duration_seconds=sim_timestep_duration_seconds,
         sim_h3_location_resolution=h3_location_res,

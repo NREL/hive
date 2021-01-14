@@ -2,10 +2,35 @@ from __future__ import annotations
 
 import csv
 import logging
-
-from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple
+from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple, NamedTuple
 
 log = logging.getLogger(__name__)
+
+
+class NamedTupleIterator:
+    """
+    iterator that deals with a set of named tuples
+    """
+
+    def __init__(self, items: Tuple[NamedTuple, ...], step_attr_name: str, stop_condition: Callable):
+        self._iterator = iter(items)
+        self.step_attr_name = step_attr_name
+        self.stop_condition = stop_condition
+
+    def update_stop_condition(self, stop_condition: Callable):
+        self.stop_condition = stop_condition
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        item = next(self._iterator)
+        value = getattr(item, self.step_attr_name)
+        if self.stop_condition(value):
+            # value is okay, keep iterating
+            return item
+        else:
+            raise StopIteration
 
 
 class DictReaderIterator:
@@ -90,12 +115,12 @@ class DictReaderStepper:
         self._file = file_reference
 
     @classmethod
-    def from_file(cls,
-                  file: str,
-                  step_column_name: str,
-                  initial_stop_condition: Callable = lambda x: x < 0,
-                  parser: Callable = lambda x: x,
-                  ) -> Tuple[Optional[Exception], Optional[DictReaderStepper]]:
+    def build(cls,
+              file: str,
+              step_column_name: str,
+              initial_stop_condition: Callable = lambda x: x < 0,
+              parser: Callable = lambda x: x,
+              ) -> Tuple[Optional[Exception], Optional[DictReaderStepper]]:
         """
         alternative constructor that takes a file path and returns a DictReaderStepper, or, a failure
 

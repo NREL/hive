@@ -10,7 +10,7 @@ from hive.state.simulation_state.update.cancel_requests import CancelRequests
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
 from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from hive.state.simulation_state.update.step_simulation import StepSimulation
-from hive.state.simulation_state.update.update_requests import UpdateRequests
+from hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
 
 if TYPE_CHECKING:
     from hive.runner import RunnerPayload
@@ -50,7 +50,7 @@ class Update(NamedTuple):
                 config.input_config.chargers_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,
             ),
-            UpdateRequests.build(
+            UpdateRequestsFromFile.build(
                 config.input_config.requests_file,
                 config.input_config.rate_structure_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,

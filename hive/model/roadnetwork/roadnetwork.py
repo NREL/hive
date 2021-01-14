@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Callable
 
 import h3
 
@@ -95,3 +95,4 @@ class RoadNetwork(ABC):
         :param sim_time:
         :return:
         """
+
