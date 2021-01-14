@@ -96,10 +96,3 @@ class RoadNetwork(ABC):
         :return:
         """
 
-    @abstractmethod
-    def random_link(self) -> Link:
-        """
-        returns a random link from the road network
-
-        :return:
-        """

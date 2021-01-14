@@ -4,6 +4,7 @@ from typing import Tuple
 from hive.model.request import Request
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
+from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 
 
 def default_request_sampler(
@@ -20,6 +21,8 @@ def default_request_sampler(
 
     :return: a tuple of the sampled requests
     """
+    if not isinstance(simulation_state.road_network, OSMRoadNetwork):
+        raise NotImplementedError("request sampling is only implemented for the OSMRoadNetwork")
 
     requests = []
 
@@ -28,11 +31,12 @@ def default_request_sampler(
         int(environment.config.sim.end_time),
         environment.config.sim.timestep_duration_seconds,
     ))
+    possible_links = list(simulation_state.road_network.link_helper.links.values())
 
     id_counter = 0
     while len(requests) < count:
-        random_source_link = simulation_state.road_network.random_link()
-        random_destination_link = simulation_state.road_network.random_link()
+        random_source_link = random.choice(possible_links)
+        random_destination_link = random.choice(possible_links)
 
         if random_source_link.link_id == random_destination_link.link_id:
             continue

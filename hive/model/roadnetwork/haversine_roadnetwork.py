@@ -93,5 +93,3 @@ class HaversineRoadNetwork(RoadNetwork):
     def update(self, sim_time: SimTime) -> RoadNetwork:
         raise NotImplementedError("updates are not implemented")
 
-    def random_link(self) -> Link:
-        raise NotImplementedError("random_link method no implemented for the HaversineRoadnetwork")
