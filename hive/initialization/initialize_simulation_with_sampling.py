@@ -53,6 +53,7 @@ def initialize_simulation_with_sampling(
         vehicle_location_sampling_function: Optional[Callable[..., Link]] = None,
         vehicle_soc_sampling_function: Optional[Callable[..., Ratio]] = None,
         request_sampling_function: Optional[Callable[..., Tuple[Request, ...]]] = None,
+        random_seed: int = 0,
 ) -> RunnerPayload:
     """
     constructs a RunnerPayload, ready to simulate.
@@ -65,6 +66,7 @@ def initialize_simulation_with_sampling(
     :param vehicle_location_sampling_function: an optional location sampling function; uses default if none
     :param vehicle_soc_sampling_function: an optional vehicle soc sampling function; uses default if none
     :param request_sampling_function: an optional request sampling function; uses default if none
+    :param random_seed: the random seed used for all sampling functions
 
     :return: a RunnerPayload
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
@@ -130,9 +132,9 @@ def initialize_simulation_with_sampling(
 
     # sample vehicles
     if not vehicle_location_sampling_function:
-        vehicle_location_sampling_function = build_default_location_sampling_fn()
+        vehicle_location_sampling_function = build_default_location_sampling_fn(seed=random_seed)
     if not vehicle_soc_sampling_function:
-        vehicle_soc_sampling_function = build_default_soc_sampling_fn()
+        vehicle_soc_sampling_function = build_default_soc_sampling_fn(seed=random_seed)
 
     sample_result = sample_vehicles(
         count=vehicle_count,
@@ -148,9 +150,9 @@ def initialize_simulation_with_sampling(
         raise Exception(sample_result._inner_value.args[0])
 
     if request_sampling_function is None:
-        sampled_requests = default_request_sampler(request_count, sim_w_vehicles, env)
+        sampled_requests = default_request_sampler(request_count, sim_w_vehicles, env, random_seed=random_seed)
     else:
-        sampled_requests = request_sampling_function(request_count, sim_w_vehicles, env)
+        sampled_requests = request_sampling_function(request_count, sim_w_vehicles, env, random_seed)
 
     update = Update(
         pre_step_update=(
