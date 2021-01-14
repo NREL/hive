@@ -12,7 +12,7 @@ input:
   requests_file: nyc_20k.csv
   bases_file: nyc_bases.csv
   stations_file: nyc_stations.csv
-  road_network_file: nyc_manhattan.xml
+  road_network_file: manhattan_network.json
   geofence_file: nyc_single_polygon.geojson
   rate_structure_file: rate_structure.csv
   charging_price_file: nyc_fixed.csv

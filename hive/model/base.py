@@ -53,7 +53,7 @@ class Base(NamedTuple):
               membership: Membership = Membership()
               ):
 
-        link = road_network.link_from_geoid(geoid)
+        link = road_network.stationary_location_from_geoid(geoid)
         return Base(id, link, stall_count, stall_count, station_id, membership)
 
     @classmethod

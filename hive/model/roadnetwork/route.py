@@ -16,6 +16,10 @@ any route in the system is a tuple of PropertyLinks
 """
 
 
+def empty_route() -> Route:
+    return ()
+
+
 def route_distance_km(route: Route) -> Kilometers:
     """
     Return the distance of the route in kilometers
@@ -43,31 +47,31 @@ def route_travel_time_seconds(route: Route) -> Seconds:
     return int(tt)
 
 
-def valid_route(route: Route,
-                src: GeoId,
-                dst: Optional[GeoId] = None) -> bool:
+def route_cooresponds_with_entities(route: Route,
+                                    src: Link,
+                                    dst: Optional[Link] = None) -> bool:
     """
-    checks if the route is valid
-
-    todo: we should check that the route is valid from a graph perspective here as well.
-      we could step through the route via the road network and test that each link is incident
-
-
-    :param route: the provided route
-
-    :param src: the GeoId of the vehicle starting this route
-
-    :param dst: the GeoId of the entity which is the destination for this route
-                if omitted, only source is checked
-    :return: whether the route is valid
+    validates that the route correctly corresponds with any related entities
+    :param route: the route
+    :param src: a (positional) source link (where link.start == link.end)
+    :param dst: an optional (positional) destination link (where link.start == link.end)
+    :return: if the route is valid for this src(/dst)
     """
     if TupleOps.is_empty(route):
         # an empty route is valid if no destination is being confirmed or if the src matches the dst
-        return not dst or src == dst
-    elif not dst:
-        return src == TupleOps.head(route).start
+        is_valid = not dst or src.start == dst.end
+        return is_valid
     else:
-        return src == TupleOps.head(route).start and dst == TupleOps.last(route).end
+        start_link = route[0]
+        if not dst:
+            # just confirm the start link is correct
+            is_valid = start_link.start == src.start
+            return is_valid
+        else:
+            # confirm both src and dst
+            end_link = route[-1]
+            is_valid = start_link.start == src.start and end_link.end == dst.end
+            return is_valid
 
 
 def to_linestring(route: Route, env: Environment) -> str:

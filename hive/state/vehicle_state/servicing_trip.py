@@ -4,7 +4,7 @@ import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.passenger import Passenger
-from hive.model.roadnetwork.route import Route, valid_route
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.model.sim_time import SimTime
 from hive.reporting.vehicle_event_ops import report_dropoff_request
 from hive.runner.environment import Environment
@@ -39,6 +39,7 @@ class ServicingTrip(NamedTuple, VehicleState):
               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
+        is_valid = route_cooresponds_with_entities(self.route, request.origin_link, request.destination_link) if vehicle and request else False
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         if not request:
@@ -48,19 +49,19 @@ class ServicingTrip(NamedTuple, VehicleState):
             locations = f"{request.geoid} != {vehicle.geoid}"
             message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
+        elif not is_valid:
+            return None, None
         elif not request.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} doesn't have access to request {request.id}"
             return SimulationStateError(msg), None
         else:
-            route_is_valid = valid_route(self.route, request.origin, request.destination)
             # request exists: pick up the trip and enter a ServicingTrip state
             pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, self.request_id)
-            if not route_is_valid:
-                return None, None
-            elif pickup_error:
+            if pickup_error:
                 return pickup_error, None
             else:
-                return VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, self)
+                enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, self)
+                return enter_result
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """

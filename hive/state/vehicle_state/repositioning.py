@@ -1,6 +1,6 @@
 from typing import NamedTuple, Tuple, Optional
 
-from hive.model.roadnetwork.route import Route, valid_route
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state import VehicleState
@@ -20,14 +20,14 @@ class Repositioning(NamedTuple, VehicleState):
 
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         vehicle = sim.vehicles.get(self.vehicle_id)
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.link) if vehicle else False
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not is_valid:
+            return None, None
         else:
-            route_is_valid = valid_route(self.route, vehicle.geoid)
-            if not route_is_valid:
-                return None, None
-            else:
-                return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            return result
 
     def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim

@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_result import InstructionResult
-from hive.model.passenger import board_vehicle
+from hive.model.roadnetwork.link import Link
 from hive.state.vehicle_state.charging_base import ChargingBase
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.dispatch_base import DispatchBase
@@ -14,15 +14,13 @@ from hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.repositioning import Repositioning
 from hive.state.vehicle_state.reserve_base import ReserveBase
-from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.util.exception import SimulationStateError
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.util.typealiases import MembershipId
-    from hive.util.typealiases import StationId, VehicleId, RequestId, GeoId, BaseId, ChargerId
+    from hive.util.typealiases import StationId, VehicleId, RequestId, BaseId, ChargerId
     from hive.runner.environment import Environment
 
 
@@ -55,8 +53,8 @@ class DispatchTripInstruction(NamedTuple, Instruction):
         elif not request:
             return SimulationStateError(f"request {request} not found"), None
         else:
-            start = vehicle.geoid
-            end = request.origin
+            start = vehicle.link
+            end = request.origin_link
             route = sim_state.road_network.route(start, end)
             prev_state = vehicle.vehicle_state
             next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
@@ -79,8 +77,8 @@ class DispatchStationInstruction(NamedTuple, Instruction):
         elif not station:
             return SimulationStateError(f"station {station} not found"), None
         else:
-            start = vehicle.geoid
-            end = station.geoid
+            start = vehicle.link
+            end = station.link
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
@@ -139,8 +137,8 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         else:
-            start = vehicle.geoid
-            end = base.geoid
+            start = vehicle.link
+            end = base.link
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
@@ -151,7 +149,7 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
 
 class RepositionInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
-    destination: GeoId
+    destination: Link
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -160,7 +158,7 @@ class RepositionInstruction(NamedTuple, Instruction):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-            start = vehicle.geoid
+            start = vehicle.link
             route = sim_state.road_network.route(start, self.destination)
 
             prev_state = vehicle.vehicle_state

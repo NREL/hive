@@ -12,6 +12,7 @@ from hive.dispatcher.instruction.instructions import (
     IdleInstruction,
     RepositionInstruction,
 )
+from hive.model.roadnetwork.link import Link
 from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_dispatch_to_station
 from hive.util import TupleOps, H3Ops
 from hive.model.roadnetwork.route import route_distance_km
@@ -117,7 +118,7 @@ def human_look_for_requests(
     :return:
     """
 
-    def _get_reposition_location() -> Optional[GeoId]:
+    def _get_reposition_location() -> Optional[Link]:
         """
         takes the most dense request search hex as a proxy for high demand areas
         :return:
@@ -132,7 +133,8 @@ def human_look_for_requests(
                 reverse=True
             )[0][0]
         destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
-        return destination
+        destination_link = sim.road_network.stationary_location_from_geoid(destination)
+        return destination_link
 
     dest = _get_reposition_location()
     if dest:

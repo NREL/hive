@@ -68,6 +68,32 @@ class Link(NamedTuple):
         """
         return self._replace(speed_kmph=speed_kmph)
 
+    def update_start(self, new_start: GeoId) -> Link:
+        """
+        changes the start GeoId of the (experienced) Link. used to set trip positions on
+        partially-traversed Links or to set a location of a stationary entity.
+        :param new_start: the new start GeoId (should be a position along the h3_line between
+                          Link.start and Link.end)
+        :return: the link with an updated start GeoId
+        """
+        if new_start == self.start:
+            return self
+        else:
+            return self._replace(start=new_start)
+
+    def update_end(self, new_end: GeoId) -> Link:
+        """
+        changes the end GeoId of the (experienced) Link. used to set trip positions on
+        partially-traversed Links or to set a location of a stationary entity.
+        :param new_end: the new end GeoId (should be a position along the h3_line between
+                          Link.start and Link.end)
+        :return: the link with an updated end GeoId
+        """
+        if new_end == self.end:
+            return self
+        else:
+            return self._replace(end=new_end)
+
 
 def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
     """

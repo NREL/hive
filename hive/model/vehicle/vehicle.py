@@ -95,7 +95,7 @@ class Vehicle(NamedTuple):
                 driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                start_link = road_network.link_from_geoid(geoid)
+                start_link = road_network.stationary_location_from_geoid(geoid)
 
                 return Vehicle(
                     id=vehicle_id,

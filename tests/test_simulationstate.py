@@ -3,6 +3,7 @@ from unittest import TestCase
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
 from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from tests.mock_lobster import *
 
 
@@ -305,8 +306,9 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim(vehicles=(veh,))
         env = mock_env()
+        somewhere_else_link = sim.road_network.stationary_location_from_geoid(somewhere_else)
 
-        instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else)
+        instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else_link)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
@@ -389,7 +391,8 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
-        instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), inbox_cafe_in_torvet_julianehab_greenland)
+        dst_link = sim.road_network.stationary_location_from_geoid(inbox_cafe_in_torvet_julianehab_greenland)
+        instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), dst_link)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)

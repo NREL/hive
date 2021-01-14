@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
-from hive.model.roadnetwork.route import Route, valid_route
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
@@ -30,10 +30,10 @@ class DispatchStation(NamedTuple, VehicleState):
         Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         station = sim.stations.get(self.station_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.link, station.link) if vehicle and station else False
         if not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         elif not vehicle:
@@ -42,15 +42,14 @@ class DispatchStation(NamedTuple, VehicleState):
             # already there!
             next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
             return next_state.enter(sim, env)
+        elif not is_valid:
+            return None, None
         elif not station.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} and station {station.id} don't share a membership"
             return SimulationStateError(msg), None
         else:
-            route_is_valid = valid_route(self.route, vehicle.geoid, station.geoid)
-            if not route_is_valid:
-                return None, None
-            else:
-                return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            return result
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim

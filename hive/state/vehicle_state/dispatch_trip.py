@@ -4,7 +4,7 @@ import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.passenger import board_vehicle
-from hive.model.roadnetwork.route import Route, valid_route
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import vehicle_state_ops
@@ -13,7 +13,7 @@ from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import RequestId, VehicleId, MembershipId
+from hive.util.typealiases import RequestId, VehicleId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -26,8 +26,7 @@ class DispatchTrip(NamedTuple, VehicleState):
     request_id: RequestId
     route: Route
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
     def enter(self, sim: SimulationState, env: Environment) -> Tuple[
@@ -41,6 +40,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.link, request.origin_link) if vehicle and request else False
         if not vehicle:
             error = SimulationStateError(f"vehicle {self.vehicle_id} does not exist")
             return error, None
@@ -50,17 +50,16 @@ class DispatchTrip(NamedTuple, VehicleState):
         elif not request.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} doesn't have access to request {request.id}"
             return SimulationStateError(msg), None
+        elif not is_valid:
+            return None, None
         else:
-            route_is_valid = valid_route(self.route, vehicle.geoid, request.geoid)
-            if not route_is_valid:
-                return None, None
+            updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
+            error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
+            if error:
+                return error, None
             else:
-                updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
-                error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
-                if error:
-                    return error, None
-                else:
-                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                return result
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
@@ -102,7 +101,7 @@ class DispatchTrip(NamedTuple, VehicleState):
                 return None, (enter_sim, next_state)
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
-            route = sim.road_network.route(request.origin, request.destination)
+            route = sim.road_network.route(request.origin_link, request.destination_link)
             # apply next state
 
             passengers = board_vehicle(request.passengers, self.vehicle_id)
@@ -110,6 +109,14 @@ class DispatchTrip(NamedTuple, VehicleState):
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None
+            elif not enter_sim:
+                # can't enter ServicingTrip - request no longer exists! move to Idle
+                idle_state = Idle(self.vehicle_id)
+                idle_error, idle_sim = idle_state.enter(sim, env)
+                if idle_error:
+                    return idle_error, None
+                else:
+                    return None, (idle_sim, idle_state)
             else:
                 return None, (enter_sim, next_state)
 

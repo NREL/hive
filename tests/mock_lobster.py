@@ -24,7 +24,7 @@ from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.osm_roadnetwork import OSMRoadNetwork
+from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime

@@ -116,24 +116,20 @@ def _apply_route_traversal(sim: SimulationState,
         experienced_route = traverse_result.experienced_route
         less_energy_vehicle = mechatronics.move(vehicle, experienced_route)
         step_distance_km = traverse_result.traversal_distance_km
-        remaining_route = traverse_result.remaining_route
 
-        if not remaining_route:
-            geoid = experienced_route[-1].end
-            link = sim.road_network.link_from_geoid(geoid)
-            updated_vehicle = less_energy_vehicle.modify_link(link=link).tick_distance_traveled_km(step_distance_km)
+        if not experienced_route:
+            return SimulationStateError(f"after traversal, no route was experienced for vehicle {vehicle_id} at time {sim.sim_time}"), None
         else:
-            updated_vehicle = less_energy_vehicle.modify_link(link=remaining_route[0]).tick_distance_traveled_km(
-                step_distance_km)
-
-        error, updated_sim = simulation_state_ops.modify_vehicle(
-            sim,
-            updated_vehicle,
-        )
-        if error:
-            return error, None
-        else:
-            return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
+            last_link_traversed = experienced_route[-1]
+            # quick trick here to turn the final traversed link into a Positional Link (where link.start == link.end)
+            # used to represent the Vehicle's new position
+            vehicle_position = last_link_traversed.update_start(last_link_traversed.end)
+            updated_vehicle = less_energy_vehicle.modify_link(link=vehicle_position).tick_distance_traveled_km(step_distance_km)
+            error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+            if error:
+                return error, None
+            else:
+                return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
 
 
 def _go_out_of_service_on_empty(sim: SimulationState,
