@@ -39,13 +39,11 @@ class TestInitializeSimulation(TestCase):
 
         updated_conf = conf._replace(global_config=updated_global_config)
 
-        payload = initialize_simulation_with_sampling(
+        sim, env = initialize_simulation_with_sampling(
             config=updated_conf,
             vehicle_count=20,
-            request_count=100,
-            instruction_generators=(),
         )
-        self.assertEqual(len(payload.s.vehicles), 20, "should have loaded 20 vehicles")
-        self.assertEqual(len(payload.s.stations), 4, "should have loaded 4 stations")
-        self.assertEqual(len(payload.s.bases), 2, "should have loaded 2 bases")
+        self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
+        self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
+        self.assertEqual(len(sim.bases), 2, "should have loaded 2 bases")
 
