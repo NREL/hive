@@ -92,9 +92,28 @@ def human_go_home(
     if not remaining_range:
         return None
     else:
-        required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
+        if EnergyType.ELECTRIC in veh.energy:
+            required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
+            if home_base.station_id is None:
+                # no charger at home, they will need enough range to go home and to get to a station in the morning
+                required_range += get_nearest_valid_station_distance(
+                    max_search_radius_km=env.config.dispatcher.max_search_radius_km,
+                    vehicle=veh,
+                    geoid=home_base.geoid,
+                    simulation_state=sim,
+                    environment=env,
+                    target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
+                    charging_search_type=env.config.dispatcher.charging_search_type
+                )
+
+            target_soc = mechatronics.calc_required_soc(required_range +
+                                                        env.config.dispatcher.charging_range_km_threshold)
+        else:
+            required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
+            target_soc = env.config.dispatcher.ideal_fastcharge_soc_limit
+
         if required_range < remaining_range:
-            # has enough remaining range to make it home sweet home
+            # has enough remaining range to make it home sweet home (and possibly a station in the morning)
             instruction = DispatchBaseInstruction(veh.id, home_base.id)
             return instruction
         else:
@@ -105,7 +124,7 @@ def human_go_home(
                 vehicles=(veh,),
                 simulation_state=sim,
                 environment=env,
-                target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
+                target_soc=target_soc,
                 charging_search_type=env.config.dispatcher.charging_search_type
             )
 
