@@ -13,8 +13,12 @@ from hive.dispatcher.instruction.instructions import (
     RepositionInstruction,
 )
 from hive.model.roadnetwork.link import Link
-from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_dispatch_to_station
+from hive.dispatcher.instruction_generator.instruction_generator_ops import (
+    instruct_vehicles_to_dispatch_to_station,
+    get_nearest_valid_station_distance,
+)
 from hive.util import TupleOps, H3Ops
+from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import route_distance_km
 
 if TYPE_CHECKING:

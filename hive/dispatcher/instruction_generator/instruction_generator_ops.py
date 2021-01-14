@@ -10,6 +10,7 @@ from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.model.station import Station
+from hive.util.typealiases import GeoId
 from hive.util import Ratio, DictOps
 from hive.util.h3_ops import H3Ops
 from hive.util.units import Kilometers
@@ -214,6 +215,7 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
 
 def get_nearest_valid_station_distance(max_search_radius_km: float,
                                        vehicle: Vehicle,
+                                       geoid: GeoId,
                                        simulation_state: SimulationState,
                                        environment: Environment,
                                        target_soc: Ratio,
@@ -223,6 +225,7 @@ def get_nearest_valid_station_distance(max_search_radius_km: float,
 
         :param max_search_radius_km: the max kilometers to search for a station
         :param vehicle: the vehicle to consider
+        :param geoid: the geoid of the origin
         :param simulation_state: the simulation state
         :param environment: the simulation environment
         :param target_soc: when ranking alternatives, use this target SoC value
@@ -270,7 +273,7 @@ def get_nearest_valid_station_distance(max_search_radius_km: float,
         distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
             vehicle=vehicle, sim=simulation_state, env=environment, target_soc=target_soc
         )
-    nearest_station = H3Ops.nearest_entity(geoid=vehicle.geoid,
+    nearest_station = H3Ops.nearest_entity(geoid=geoid,
                                            entities=simulation_state.stations.values(),
                                            entity_search=simulation_state.s_search,
                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
@@ -279,6 +282,6 @@ def get_nearest_valid_station_distance(max_search_radius_km: float,
                                            distance_function=distance_fn)
 
     if nearest_station:
-        return simulation_state.road_network.distance_by_geoid_km(origin=vehicle.geoid, destination=nearest_station.geoid)
+        return simulation_state.road_network.distance_by_geoid_km(origin=geoid, destination=nearest_station.geoid)
 
     return 99999999999999
