@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from hive.model.vehicle.vehicle import Vehicle
     from hive.model.base import Base
     from hive.util.typealiases import GeoId, BaseId
-    from hive.util.units import *
 
 log = logging.getLogger(__name__)
 
@@ -86,7 +85,6 @@ def human_go_home(
     :param env: the environment for this simulation
     :return: the instruction for this driver
     """
-
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
     remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
     if not remaining_range:
