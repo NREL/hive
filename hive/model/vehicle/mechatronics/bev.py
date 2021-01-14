@@ -96,6 +96,15 @@ class BEV(NamedTuple, MechatronicsInterface):
         energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         return energy_kwh / (self.nominal_watt_hour_per_mile * WH_TO_KWH) * MILE_TO_KM
 
+    def calc_required_soc(self, required_range: Kilometers) -> Ratio:
+        """
+        what is the required soc to travel a given distance
+        :param required_range: the distance the vehicle needs to travel
+        :return:
+        """
+        required_energy_kwh = (required_range / MILE_TO_KM) * (self.nominal_watt_hour_per_mile * WH_TO_KWH)
+        return required_energy_kwh / self.battery_capacity_kwh
+
     def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
         """
         what is the state of charge of the battery

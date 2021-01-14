@@ -82,9 +82,6 @@ def human_go_home(
     :param env: the environment for this simulation
     :return: the instruction for this driver
     """
-    def _calc_required_soc() -> float:
-        required_energy_kwh = (required_range / MILE_TO_KM) * (mechatronics.nominal_watt_hour_per_mile * WH_TO_KWH)
-        return required_energy_kwh / mechatronics.battery_capacity_kwh
 
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
     remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
