@@ -9,18 +9,14 @@ from typing import Tuple, Dict, Optional, Callable
 import immutables
 from returns.primitives.exceptions import UnwrapFailedError
 
-from hive import Update, StepSimulation
 from hive.config import HiveConfig
-from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.initialization.sample_vehicles import (
     sample_vehicles,
     build_default_location_sampling_fn,
     build_default_soc_sampling_fn,
 )
-from hive.initialization.sample_requests import default_request_sampler
 from hive.model.base import Base
 from hive.model.energy.charger import build_chargers_table
-from hive.model.request import Request
 from hive.model.roadnetwork import Link
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
@@ -33,13 +29,9 @@ from hive.reporting.handler.instruction_handler import InstructionHandler
 from hive.reporting.handler.stateful_handler import StatefulHandler
 from hive.reporting.handler.stats_handler import StatsHandler
 from hive.reporting.reporter import Reporter
-from hive.runner import RunnerPayload
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.simulation_state.update.cancel_requests import CancelRequests
-from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
-from hive.state.simulation_state.update.update_requests_sampling import UpdateRequestsSampling
 from hive.util import DictOps, Ratio
 
 log = logging.getLogger(__name__)
@@ -48,27 +40,21 @@ log = logging.getLogger(__name__)
 def initialize_simulation_with_sampling(
         config: HiveConfig,
         vehicle_count: int,
-        request_count: int,
-        instruction_generators: Tuple[InstructionGenerator, ...],
         vehicle_location_sampling_function: Optional[Callable[..., Link]] = None,
         vehicle_soc_sampling_function: Optional[Callable[..., Ratio]] = None,
-        request_sampling_function: Optional[Callable[..., Tuple[Request, ...]]] = None,
         random_seed: int = 0,
-) -> RunnerPayload:
+) -> Tuple[SimulationState, Environment]:
     """
-    constructs a RunnerPayload, ready to simulate.
-    uses sampling functions to build vehicles and requests
+    constructs a SimulationState and Environment with sampled vehicles.
+    uses sampling functions to build vehicles
 
     :param config: the configuration of this run
     :param vehicle_count: how many vehicles to initialize
-    :param request_count: how many requests to initialize
-    :param instruction_generators: which instruction generators to use
     :param vehicle_location_sampling_function: an optional location sampling function; uses default if none
     :param vehicle_soc_sampling_function: an optional vehicle soc sampling function; uses default if none
-    :param request_sampling_function: an optional request sampling function; uses default if none
     :param random_seed: the random seed used for all sampling functions
 
-    :return: a RunnerPayload
+    :return: a Simulation State and an Environment
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
 
@@ -149,25 +135,7 @@ def initialize_simulation_with_sampling(
     except UnwrapFailedError:
         raise Exception(sample_result._inner_value.args[0])
 
-    if request_sampling_function is None:
-        sampled_requests = default_request_sampler(request_count, sim_w_vehicles, env, random_seed=random_seed)
-    else:
-        sampled_requests = request_sampling_function(request_count, sim_w_vehicles, env, random_seed)
-
-    update = Update(
-        pre_step_update=(
-            ChargingPriceUpdate.build(
-                config.input_config.charging_price_file,
-                config.input_config.chargers_file,
-                lazy_file_reading=config.global_config.lazy_file_reading,
-            ),
-            UpdateRequestsSampling.build(sampled_requests),
-            CancelRequests(),
-        ),
-        step_update=StepSimulation(instruction_generators)
-    )
-
-    return RunnerPayload(sim_w_vehicles, env, update)
+    return sim_w_vehicles, env
 
 
 def _build_bases(bases_file: str,
