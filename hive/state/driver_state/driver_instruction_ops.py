@@ -13,8 +13,12 @@ from hive.dispatcher.instruction.instructions import (
     RepositionInstruction,
 )
 from hive.model.roadnetwork.link import Link
-from hive.dispatcher.instruction_generator.instruction_generator_ops import instruct_vehicles_to_dispatch_to_station
+from hive.dispatcher.instruction_generator.instruction_generator_ops import (
+    instruct_vehicles_to_dispatch_to_station,
+    get_nearest_valid_station_distance,
+)
 from hive.util import TupleOps, H3Ops
+from hive.model.energy.energytype import EnergyType
 from hive.model.roadnetwork.route import route_distance_km
 
 if TYPE_CHECKING:
@@ -87,8 +91,25 @@ def human_go_home(
         return None
     else:
         required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
+        if (home_base.station_id is None) and (EnergyType.ELECTRIC in veh.energy):
+            # no charger at home, need enough charge to make it to a station in the morning
+            required_range += get_nearest_valid_station_distance(
+                max_search_radius_km=env.config.dispatcher.max_search_radius_km,
+                vehicle=veh,
+                geoid=home_base.geoid,
+                simulation_state=sim,
+                environment=env,
+                target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
+                charging_search_type=env.config.dispatcher.charging_search_type
+            )
+
+            target_soc = mechatronics.calc_required_soc(required_range +
+                                                        env.config.dispatcher.charging_range_km_threshold)
+        else:
+            target_soc = env.config.dispatcher.ideal_fastcharge_soc_limit
+
         if required_range < remaining_range:
-            # has enough remaining range to make it home sweet home
+            # has enough remaining range to make it home sweet home (and possibly a station in the morning)
             instruction = DispatchBaseInstruction(veh.id, home_base.id)
             return instruction
         else:
@@ -99,7 +120,7 @@ def human_go_home(
                 vehicles=(veh,),
                 simulation_state=sim,
                 environment=env,
-                target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
+                target_soc=target_soc,
                 charging_search_type=env.config.dispatcher.charging_search_type
             )
 

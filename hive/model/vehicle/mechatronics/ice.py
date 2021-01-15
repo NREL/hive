@@ -81,6 +81,16 @@ class ICE(NamedTuple, MechatronicsInterface):
         km = miles * MILE_TO_KM
         return km
 
+    def calc_required_soc(self, required_range: Kilometers) -> Ratio:
+        """
+        what is the required tank capacity to travel a given distance
+        :param required_range: the distance the vehicle needs to travel
+        :return:
+        """
+        miles = required_range / MILE_TO_KM
+        required_energy_gal_gas = miles / self.nominal_miles_per_gallon
+        return required_energy_gal_gas / self.tank_capacity_gallons
+
     def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
         """
         what is the level of the fuel tank

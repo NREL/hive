@@ -53,6 +53,7 @@ class ChargingFleetManager(NamedTuple, InstructionGenerator):
             nearest_station_distance = get_nearest_valid_station_distance(
                 max_search_radius_km=self.config.max_search_radius_km,
                 vehicle=v,
+                geoid=v.geoid,
                 simulation_state=simulation_state,
                 environment=environment,
                 target_soc=environment.config.dispatcher.ideal_fastcharge_soc_limit,
