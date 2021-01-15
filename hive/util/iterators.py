@@ -16,6 +16,7 @@ class NamedTupleIterator:
         self._iterator = iter(items)
         self.step_attr_name = step_attr_name
         self.stop_condition = stop_condition
+        self.history = None
 
     def update_stop_condition(self, stop_condition: Callable):
         self.stop_condition = stop_condition
@@ -24,13 +25,27 @@ class NamedTupleIterator:
         return self
 
     def __next__(self):
-        item = next(self._iterator)
-        value = getattr(item, self.step_attr_name)
-        if self.stop_condition(value):
-            # value is okay, keep iterating
-            return item
+        if self.history:
+            # we stored an extra value from last time; return that
+            value = getattr(self.history, self.step_attr_name)
+            if self.stop_condition(value):
+                # stored value is within range
+                tmp = self.history
+                self.history = None
+                return tmp
+            else:
+                # stored value is not in range
+                raise StopIteration
         else:
-            raise StopIteration
+            item = next(self._iterator)
+            value = getattr(item, self.step_attr_name)
+            if self.stop_condition(value):
+                # value is within range
+                return item
+            else:
+                # set aside row for the future, end iteration
+                self.history = item
+                raise StopIteration
 
 
 class DictReaderIterator:
