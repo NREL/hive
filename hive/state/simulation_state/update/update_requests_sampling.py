@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import NamedTuple, Tuple, Optional
 
 from hive.model.request import RequestRateStructure, Request
+from hive.reporting.report_type import ReportType
+from hive.reporting.reporter import Report
 from hive.runner.environment import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import add_request
@@ -87,6 +89,12 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
             if error:
                 log.error(error)
                 return sim
+            else:
+                report_data = {
+                    'request_id': request.id,
+                    'departure_time': request.departure_time,
+                }
+                env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
             return new_sim
 
         updated_sim = ft.reduce(
