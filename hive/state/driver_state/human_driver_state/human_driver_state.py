@@ -7,6 +7,7 @@ from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instructions import (
     DispatchBaseInstruction, ReserveBaseInstruction,
 )
+from hive.dispatcher.instruction_generator.instruction_generator_ops import get_nearest_valid_station_distance
 from hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
 from hive.state.driver_state.driver_instruction_ops import (
     human_charge_at_home,
@@ -169,12 +170,24 @@ class HumanUnavailable(NamedTuple, DriverState):
                     # stick with the plan
                     return None
                 if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(my_vehicle.vehicle_state, ChargingStation):
+                    remaining_range = my_mechatronics.range_remaining_km(my_vehicle)
+                    required_range = sim.road_network.distance_by_geoid_km(my_vehicle.geoid, my_base.geoid)
                     if my_base.station_id is None:
-                        # let the vehicle go charge if it's trying to, since it has no home charger
-                        return None
+                        # check to see if the vehicle has enough charge to get to a station in morning, go home if yes
+                        required_range += get_nearest_valid_station_distance(
+                            max_search_radius_km=env.config.dispatcher.max_search_radius_km,
+                            vehicle=my_vehicle,
+                            geoid=my_base.geoid,
+                            simulation_state=sim,
+                            environment=env,
+                            target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
+                            charging_search_type=env.config.dispatcher.charging_search_type
+                        )
+                        if remaining_range > required_range + env.config.dispatcher.charging_range_km_threshold:
+                            return DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+                        else:
+                            return None
                     else:
-                        remaining_range = my_mechatronics.range_remaining_km(my_vehicle)
-                        required_range = sim.road_network.distance_by_geoid_km(my_vehicle.geoid, my_base.geoid)
                         if remaining_range < required_range + env.config.dispatcher.charging_range_km_threshold:
                             # not enough range to get home - stick with the plan
                             return None
