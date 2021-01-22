@@ -1,7 +1,9 @@
 from hive.util.typealiases import LinkId
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TypeVar
+from ast import literal_eval
 import re
 
+NodeId = TypeVar('NodeId')
 
 def create_link_id(src: int, dst: int) -> LinkId:
     """
@@ -13,21 +15,25 @@ def create_link_id(src: int, dst: int) -> LinkId:
     return f"{src}-{dst}"
 
 
-def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[int, int]]]:
+def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[NodeId, NodeId]]]:
     """
     expects the provided string is of the form {src_node_id}-{dst_node_id}
     :param link_id: a string that is a LinkId
     :return: an error, or, a tuple containing both node ids
     """
-    try:
-        regex_result = re.search('(\d+)-(\d+)', link_id)
-        if not len(regex_result.groups()) == 2:
-            return Exception(f"LinkId {link_id} does not take the form (\d+)-(\d+)"), None
-        else:
-            src, dst = int(regex_result.group(1)), int(regex_result.group(2))
-            return None, (src, dst)
-    except Exception as e:
-        return e, None
+    result = link_id.split("-")
+    if len(result) < 2:
+        return Exception(f"LinkId {link_id} does not take the form src_node_id-dst_node_id"), None
+    elif len(result) > 2:
+        return Exception(f"LinkId {link_id} can only have one dash (-) character in the form src_node_id-dst_node_id"), None
+    else:
+        try:
+            src = literal_eval(result[0])
+            dst = literal_eval(result[1])
+        except ValueError:
+            return Exception(f"LinkId {link_id} cannot be parsed."), None
+
+        return None, (src, dst)
 
 
 def reverse_link_id(link_id: LinkId) -> Tuple[Optional[Exception], Optional[LinkId]]:
