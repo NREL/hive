@@ -30,7 +30,7 @@ class TestSampleVehicles(TestCase):
         n = 10
         base = mock_base()
         bases = (base,)
-        sim = mock_sim(bases=bases)
+        sim = mock_sim(bases=bases, road_network=mock_osm_network())
         env = mock_env()
         mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
         loc_fn = build_default_location_sampling_fn()
@@ -65,7 +65,7 @@ class TestSampleVehicles(TestCase):
         failure_msg = f"fails after {fail_at_vehicle_n} attempts"
         base = mock_base()
         bases = (base,)
-        sim = mock_sim(bases=bases)
+        sim = mock_sim(bases=bases, road_network=mock_osm_network())
         env = mock_env()
 
         self.wonky_fn_calls = 0
