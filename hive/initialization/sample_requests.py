@@ -42,7 +42,8 @@ def default_request_sampler(
         random_source_link = random.choice(possible_links)
         random_destination_link = random.choice(possible_links)
 
-        if random_source_link.link_id == random_destination_link.link_id:
+        if random_source_link.start == random_destination_link.end:
+            # skip if the request starts and ends at the same location
             continue
 
         request = Request.build(
