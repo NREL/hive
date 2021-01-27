@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import networkx as nx
 
@@ -50,9 +50,23 @@ class OSMRoadNetwork(RoadNetwork):
             raise TypeError(f"road network file of type {road_network_file.suffix} not supported by OSMRoadNetwork.")
 
         # validate network
+
         #   road network must be strongly connected
         if not nx.is_strongly_connected(graph):
             raise RuntimeError("Only strongly connected graphs are allowed.")
+
+        #   node ids must be either an integer or a tuple of integers
+        def _valid_node_id(nid: Union[int, tuple]) -> bool:
+            if isinstance(nid, int):
+                return True
+            elif isinstance(nid, tuple):
+                return all([isinstance(n, int) for n in nid])
+            else:
+                return False
+
+        if not all(map(_valid_node_id, graph.nodes())):
+            raise TypeError("all node ids must be either an integer or a tuple of integers")
+
         #   check to make sure the graph has the right information on the links
         missing_length = 0
         missing_speed = 0
@@ -68,7 +82,8 @@ class OSMRoadNetwork(RoadNetwork):
                         f"hive will automatically set these to {self.default_speed_kmph} kmph.")
 
         # build tables on the network edges for spatial lookup and LinkId lookup
-        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph, default_distance_km)
+        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph,
+                                                                        default_distance_km)
         if link_helper_error:
             raise link_helper_error
         else:
@@ -104,7 +119,8 @@ class OSMRoadNetwork(RoadNetwork):
             if link_path_error:
                 log.error(f"unable to build route from {src_link} to {dst_link}")
                 log.error(link_path_error)
-                log.error(f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}")
+                log.error(
+                    f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}")
                 return empty_route()
             else:
                 # modify the start and end GeoIds based on the positions in the src/dst links
