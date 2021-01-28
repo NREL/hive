@@ -123,7 +123,7 @@ def find_scenario(user_provided_scenario: str) -> Path:
     :return: the absolute path of this scenario if it exists
     :raises: FileNotFoundError
     """
-    absolute_path = Path(user_provided_scenario)
+    absolute_path = Path(user_provided_scenario).absolute()
     relative_path = Path.cwd().joinpath(user_provided_scenario)
     den_path = Path(pkg_resources.resource_filename("hive.resources.scenarios.denver_downtown", user_provided_scenario))
     nyc_path = Path(pkg_resources.resource_filename("hive.resources.scenarios.manhattan", user_provided_scenario))

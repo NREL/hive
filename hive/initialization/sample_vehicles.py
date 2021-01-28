@@ -6,7 +6,7 @@ from typing import Callable, Tuple
 from returns.result import Result, Failure, Success
 
 from hive.model.base import Base
-from hive.model.roadnetwork import Link
+from hive.model.roadnetwork import Link, OSMRoadNetwork
 from hive.model.vehicle.vehicle import Vehicle
 from hive.runner import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -108,12 +108,13 @@ def build_default_location_sampling_fn(seed: int = 0) -> Callable[[], Link]:
     random.seed(seed)
 
     def _inner(sim: SimulationState) -> Link:
-        bases = tuple(sim.bases.values())
-        if len(bases) == 0:
-            raise AssertionError(f"must have at least one base to sample from")
-        sampled = random.sample(bases, 1)
-        link = sampled[0].link
-        return link
+        if not isinstance(sim.road_network, OSMRoadNetwork):
+            raise NotImplementedError(f"this sampling function is only implemented for the OSMRoadNetwork")
+        links = list(sim.road_network.link_helper.links.values())
+        if len(links) == 0:
+            raise AssertionError(f"must have at least one link to sample from")
+        random_link = random.choice(links)
+        return random_link
 
     return _inner
 
