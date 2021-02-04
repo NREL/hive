@@ -140,7 +140,7 @@ def nearest_shortest_queue_ranking(
         vehicle: Vehicle,
         station: Station,
         env: Environment,
-        max_dist=999999999.0) -> Tuple[ChargerId, float]:
+        max_dist=999999999.0) -> Optional[Tuple[ChargerId, float]]:
     """
     sort ordering that prioritizes short vehicle queues where possible, using h3_distance
     as the base distance metric and extending that value by the proportion of available chargers
@@ -184,7 +184,7 @@ def shortest_time_to_charge_distance(
         vehicle: Vehicle,
         sim: SimulationState,
         env: Environment,
-        target_soc: Ratio) -> Callable[[Station], Seconds]:
+        target_soc: Ratio) -> Callable[[Station], float]:
     """
     ranks this station by an estimate of the time which would pass until this agent reaches a target charge level
 
@@ -199,7 +199,8 @@ def shortest_time_to_charge_distance(
     """
 
     def fn(station: Station) -> Seconds:
-        _, dist = shortest_time_to_charge_ranking(sim, env, vehicle, station, target_soc)
+        result = shortest_time_to_charge_ranking(sim, env, vehicle, station, target_soc)
+        dist = 999999999.0 if result is None else result[1]
         return dist
 
     return fn
