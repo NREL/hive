@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 import random
-from typing import List
+from typing import List, Callable
 
 import immutables
 
@@ -119,6 +119,28 @@ def generate_instructions(instruction_generators: Tuple[InstructionGenerator, ..
     return driver_result
 
 
+def valid_station_for_vehicle(vehicle: Vehicle, env: Environment) -> Callable[[Station], bool]:
+    """
+    only allows vehicles to use stations where the membership is correct
+    and the fuel type is correct
+    :param vehicle: the vehicle
+    :param env: simulation environment
+    :return: valid station function
+    """
+    mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+
+    def _inner(station: Station):
+        vehicle_has_access = station.membership.grant_access_to_membership(vehicle.membership)
+        if not vehicle_has_access:
+            return False
+        else:
+            station_has_valid_charger = any([
+                mechatronics.valid_charger(env.chargers.get(cid)) for cid in station.total_chargers.keys()
+            ])
+            return station_has_valid_charger
+    return _inner
+
+
 def instruct_vehicles_to_dispatch_to_station(n: int,
                                              max_search_radius_km: float,
                                              vehicles: Tuple[Vehicle, ...],
@@ -142,23 +164,6 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
     instructions = ()
 
     for veh in vehicles:
-        mechatronics = environment.mechatronics.get(veh.mechatronics_id)
-
-        def is_valid_fn(s: Station):
-            """
-            predicate that tests if a station + vehicle have a matching fleet id, and if so,
-            that the station provides chargers which match the vehicle's mechatronics
-            :param s: the station to test
-            :return: true if the station is valid for this vehicle
-            """
-            vehicle_has_access = s.membership.grant_access_to_membership(veh.membership)
-            if not vehicle_has_access:
-                return False
-            else:
-                station_has_valid_charger = any([
-                    mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
-                ])
-                return station_has_valid_charger
 
         if len(instructions) >= n:
             break
@@ -166,29 +171,12 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
             # use the simple weighted euclidean distance ranking
 
-            top_chargers = sorted(filter(
-                lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
-                environment.chargers.keys()),
-                key=lambda charger_id: -environment.chargers[charger_id].rate)
-
-            if not top_chargers:
-                # no valid chargers exist for this vehicle
-                break
-            else:
-                top_charger_id = top_chargers[0]
-
-            cache = ft.reduce(
-                lambda acc, station_id: acc.update({station_id: top_charger_id}),
-                simulation_state.stations.keys(),
-                immutables.Map()
-            )
-
-            distance_fn = assignment_ops.nearest_shortest_queue_ranking(veh, top_charger_id)
+            distance_fn = assignment_ops.nearest_shortest_queue_distance(veh, environment)
 
         else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
             # use the search-based metric which considers travel, queueing, and charging time
 
-            distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
+            distance_fn = assignment_ops.shortest_time_to_charge_distance(
                 vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc
             )
 
@@ -197,10 +185,18 @@ def instruct_vehicles_to_dispatch_to_station(n: int,
                                                entity_search=simulation_state.s_search,
                                                sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                                max_search_distance_km=max_search_radius_km,
-                                               is_valid=is_valid_fn,
+                                               is_valid=valid_station_for_vehicle(veh, environment),
                                                distance_function=distance_fn)
         if nearest_station:
-            best_charger_id = cache.get(nearest_station.id)
+            # get the best charger id for this station. re-computes distance ranking one last time
+            # this could be removed if our nearest entity search also returned the best charger id
+            # these both could return "None" but that shouldn't be possible if we found a nearest station
+            if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
+                best_charger_id, best_charger_rank = assignment_ops.nearest_shortest_queue_ranking(veh, nearest_station, environment)
+            else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
+                best_charger_id, best_charger_rank = assignment_ops.shortest_time_to_charge_ranking(
+                    vehicle=veh, station=nearest_station, sim=simulation_state, env=environment, target_soc=target_soc
+                )
 
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
@@ -233,52 +229,24 @@ def get_nearest_valid_station_distance(max_search_radius_km: float,
         :return: the distance in km to the nearest valid station
         """
 
-    mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
-
-    def is_valid_fn(s: Station):
-        """
-        predicate that tests if a station + vehicle have a matching fleet id, and if so,
-        that the station provides chargers which match the vehicle's mechatronics
-        :param s: the station to test
-        :return: true if the station is valid for this vehicle
-        """
-        vehicle_has_access = s.membership.grant_access_to_membership(vehicle.membership)
-        if not vehicle_has_access:
-            return False
-        else:
-            station_has_valid_charger = any([
-                mechatronics.valid_charger(environment.chargers.get(cid)) for cid in s.total_chargers.keys()
-            ])
-            return station_has_valid_charger
-
     if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
         # use the simple weighted euclidean distance ranking
 
-        top_chargers = sorted(filter(
-            lambda cid: mechatronics.valid_charger(environment.chargers[cid]),
-            environment.chargers.keys()),
-            key=lambda charger_id: -environment.chargers[charger_id].rate)
-
-        if not top_chargers:
-            # no valid chargers exist for this vehicle
-            return 99999999999999
-        else:
-            top_charger_id = top_chargers[0]
-
-        distance_fn = assignment_ops.nearest_shortest_queue_ranking(vehicle, top_charger_id)
+        distance_fn = assignment_ops.nearest_shortest_queue_distance(vehicle, environment)
 
     else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
         # use the search-based metric which considers travel, queueing, and charging time
 
-        distance_fn, cache = assignment_ops.shortest_time_to_charge_ranking(
+        distance_fn, cache = assignment_ops.shortest_time_to_charge_distance(
             vehicle=vehicle, sim=simulation_state, env=environment, target_soc=target_soc
         )
+
     nearest_station = H3Ops.nearest_entity(geoid=geoid,
                                            entities=simulation_state.stations.values(),
                                            entity_search=simulation_state.s_search,
                                            sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
                                            max_search_distance_km=max_search_radius_km,
-                                           is_valid=is_valid_fn,
+                                           is_valid=valid_station_for_vehicle(vehicle, environment),
                                            distance_function=distance_fn)
 
     if nearest_station:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from distutils.util import strtobool
 import functools as ft
 from typing import NamedTuple, Dict, Optional
 
@@ -7,6 +8,7 @@ import h3
 import immutables
 import logging
 
+from hive.model.energy import EnergyType
 from hive.model.energy.charger import Charger
 from hive.model.membership import Membership
 from hive.model.roadnetwork.link import Link
@@ -17,6 +19,7 @@ from hive.util.typealiases import *
 from hive.util.units import Currency
 
 log = logging.getLogger(__name__)
+
 
 class Station(NamedTuple):
     """
@@ -35,6 +38,9 @@ class Station(NamedTuple):
     :param available_chargers: Identifies how many plugs for each charger_id type are unoccupied.
     :type available_chargers: :py:obj:`Dict[Charger, int]`
 
+    :param on_shift_chargers: Lists the charger ids for chargers that can be used while on-shift (in a station charging search)
+    :type on_shift_chargers: :py:obj`FrozenSet[ChargerId]`
+
     :param charger_prices_per_kwh: the cost to use chargers at this station
     :type charger_prices_per_kwh: :py:obj`Dict[Charger, Currency]`
 
@@ -48,6 +54,7 @@ class Station(NamedTuple):
     link: Link
     total_chargers: immutables.Map[ChargerId, int]
     available_chargers: immutables.Map[ChargerId, int]
+    on_shift_chargers: FrozenSet[ChargerId]
     charger_prices_per_kwh: immutables.Map[ChargerId, Currency]
     enqueued_vehicles: immutables.Map[ChargerId, int] = immutables.Map()
     balance: Currency = 0.0
@@ -64,6 +71,7 @@ class Station(NamedTuple):
               geoid: GeoId,
               road_network: RoadNetwork,
               chargers: immutables.Map[Charger, int],
+              on_shift: FrozenSet[ChargerId],
               membership: Membership = Membership(),
               ):
         prices = ft.reduce(
@@ -72,7 +80,15 @@ class Station(NamedTuple):
             immutables.Map()
         )
         link = road_network.stationary_location_from_geoid(geoid)
-        return Station(id, link, chargers, chargers, prices, membership=membership)
+        return Station(
+            id=id,
+            link=link,
+            total_chargers=chargers,
+            available_chargers=chargers,
+            on_shift_chargers=on_shift,
+            charger_prices_per_kwh=prices,
+            membership=membership
+        )
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -100,6 +116,8 @@ class Station(NamedTuple):
             raise IOError("cannot load a station without a 'charger_id' value")
         elif 'charger_count' not in row:
             raise IOError("cannot load a station without a 'charger_count' value")
+        elif 'on_shift' not in row:
+            raise IOError("cannot load a station without an 'on_shift' value")
         else:
             station_id = row['station_id']
             try:
@@ -107,37 +125,47 @@ class Station(NamedTuple):
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 charger_id: ChargerId = row['charger_id']
                 charger_count = int(float(row['charger_count']))
+                on_shift = bool(strtobool(row['on_shift'].lower()))
 
                 if charger_id is None:
                     raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
                 elif station_id not in builder:
                     # create this station
-                    return Station.build(
-                        id=station_id,
-                        geoid=geoid,
-                        road_network=road_network,
-                        chargers=immutables.Map({charger_id: charger_count}),
-                    )
-                elif charger_id in builder[station_id].total_chargers:
-                    # combine counts from multiple rows which refer to this charger_id
-                    charger_already_loaded = builder[station_id].total_chargers[charger_id]
 
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
+                        chargers=immutables.Map({charger_id: charger_count}),
+                        on_shift=frozenset([charger_id]) if on_shift else frozenset()
+                    )
+                elif charger_id in builder[station_id].total_chargers:
+                    # combine counts from multiple rows which refer to this charger_id
+                    charger_already_loaded = builder[station_id].total_chargers[charger_id]
+
+                    # notice we 're-build' the station here. this re-runs the 'price builder' for what
+                    # may include a different set of chargers. but, that's not the case here. we could
+                    # probably instead use builder[station_id]._replace() instead?
+                    return Station.build(
+                        id=station_id,
+                        geoid=geoid,
+                        road_network=road_network,
                         chargers=immutables.Map({charger_id: charger_count + charger_already_loaded}),
+                        on_shift=builder[station_id].on_shift_chargers
                     )
                 else:
-                    # update this station charger_already_loaded = builder[station_id].total_chargers
-                    charger_already_loaded = builder[station_id].total_chargers
+                    # update this station
+                    prev_station = builder[station_id]
+                    charger_already_loaded = prev_station.total_chargers
                     updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_id, charger_count)
+                    updated_on_shift_chargers = prev_station.on_shift_chargers.union([charger_id]) if on_shift else prev_station.on_shift_chargers
 
                     return Station.build(
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
                         chargers=updated_chargers,
+                        on_shift=updated_on_shift_chargers
                     )
 
             except ValueError as v:
@@ -147,12 +175,19 @@ class Station(NamedTuple):
         """
         Indicates if a station has an available charge of type `charger_id`
 
-
         :param charger_id: charger_id type to be queried.
         :return: Boolean
         """
-        return charger_id in self.total_chargers and \
-               self.available_chargers[charger_id] > 0
+        return charger_id in self.total_chargers and self.available_chargers[charger_id] > 0
+
+    def has_on_shift_charging(self) -> bool:
+        """
+        Indicates if this station has at least one charger which is listed as available "on-shift"
+        (as opposed to off-shift base charging, home charging, etc)
+
+        :return: true if on shift charging is available
+        """
+        return len(self.on_shift_chargers) > 0
 
     def checkout_charger(self, charger_id: ChargerId) -> Optional[Station]:
         """
