@@ -7,7 +7,7 @@ from tests.mock_lobster import *
 class TestStation(TestCase):
 
     def test_from_row(self):
-        source = """station_id,lat,lon,charger_id,charger_count,on_shift
+        source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
                  s1,37,122,DCFC,10,true
                  """
         network = mock_network()
@@ -24,7 +24,7 @@ class TestStation(TestCase):
         self.assertEqual(station.total_chargers[mock_dcfc_charger_id()], 10)
 
     def test_from_multiple_rows(self):
-        source = """station_id,lat,lon,charger_id,charger_count,on_shift
+        source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
                   s1,37,122,DCFC,10,true
                   s1,37,122,LEVEL_2,5,false
                   """
@@ -49,7 +49,7 @@ class TestStation(TestCase):
         self.assertEqual(station2.total_chargers[mock_l2_charger_id()], 5)
 
     def test_repeated_charger_id_entry(self):
-        source = """station_id,lat,lon,charger_id,charger_count,on_shift
+        source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
                   s1,37,122,DCFC,10,true
                   s1,37,122,DCFC,5,true
                   """
@@ -133,7 +133,7 @@ class TestStation(TestCase):
         self.assertEqual(dequeue_2_count, 0, "cannot dequeue to a count below zero")
 
     def test_set_membership(self):
-        source = """station_id,lat,lon,charger_id,charger_count,on_shift
+        source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
                          s1,37,122,DCFC,10,true
                          """
         network = mock_network()

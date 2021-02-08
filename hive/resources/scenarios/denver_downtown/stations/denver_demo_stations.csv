@@ -1,4 +1,4 @@
-station_id,lat,lon,charger_count,charger_id,on_shift
+station_id,lat,lon,charger_count,charger_id,on_shift_access
 s1,39.752233,-104.976061,300,DCFC,true
 s1,39.752233,-104.976061,300,GAS_PUMP,true
 s2,39.759521,-104.97526,300,DCFC,true

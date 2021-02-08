@@ -175,7 +175,7 @@ def nearest_shortest_queue_ranking(
     # find the lowest nearest_shortest_queue distance metric
     # amongst the possible on-shift charging options at this station
     initial = (None, max_dist)
-    best_charger_id, best_charger_rank = ft.reduce(_inner, station.on_shift_chargers, initial)
+    best_charger_id, best_charger_rank = ft.reduce(_inner, station.on_shift_access_chargers, initial)
 
     return None if best_charger_id is None else best_charger_id, best_charger_rank
 
