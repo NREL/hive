@@ -25,7 +25,9 @@ class TestDriverInstructionOps(TestCase):
         env = mock_env()
 
         result = human_go_home(veh, base, sim, env)
-        self.assertEqual(result, DispatchStationInstruction(veh.id, station.id, mock_dcfc_charger_id()))
+        self.assertIsInstance(result, DispatchStationInstruction)
+        self.assertEqual(result.station_id, station.id)
+        self.assertEqual(result.vehicle_id, veh.id)
 
     def test_human_go_home_without_enough_range_no_home_charger(self):
         veh = mock_vehicle(soc=0.02, lat=0, lon=0)
@@ -35,4 +37,6 @@ class TestDriverInstructionOps(TestCase):
         env = mock_env()
 
         result = human_go_home(veh, base, sim, env)
-        self.assertEqual(result, DispatchStationInstruction(veh.id, station.id, mock_dcfc_charger_id()))
+        self.assertIsInstance(result, DispatchStationInstruction)
+        self.assertEqual(result.station_id, station.id)
+        self.assertEqual(result.vehicle_id, veh.id)

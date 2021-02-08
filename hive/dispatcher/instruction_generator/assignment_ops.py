@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Callable, NamedTuple, Dict
+from typing import Tuple, Callable, NamedTuple, Dict, Optional
 
 import h3
 import numpy as np
@@ -116,43 +116,75 @@ def great_circle_distance_cost(a: Entity, b: Entity) -> float:
     return distance
 
 
-def nearest_shortest_queue_ranking(vehicle: Vehicle, charger_id: ChargerId):
+def nearest_shortest_queue_distance(vehicle: Vehicle, env: Environment) -> Callable[[Station], float]:
     """
-    set up a shortest queue ranking function which will rank distances from this vehicle
-    and look for chargers of this type
+    set up a shortest queue distance function which will rank station alternatives based on
+    the availability of on-shift charging and a simple heuristic based on Euclidean distance
+    and smallest queue size.
 
     :param vehicle: the vehicle
-    :param charger_id: the target charger type
-    :return: a station ranking function
+    :param env: simulation environment
+    :return: a station distance function
     """
-    def _inner(station: Station) -> float:
-        """
-        sort ordering that prioritizes short vehicle queues where possible, using h3_distance
-        as the base distance metric and extending that value by the proportion of available chargers
+
+    max_dist = 999999999.0
+
+    def fn(station: Station) -> float:
+        _, rank = nearest_shortest_queue_ranking(vehicle, station, env, max_dist)
+        return rank
+
+    return fn
 
 
-        :param vehicle: a vehicle
-        :param station: a station
-        :param charger_id: the type of charger we are using
-        :return: the distance metric for this station, a function of it's queue size and distance
-        """
-        dc_chargers = station.total_chargers.get(charger_id, 0)
-        if not dc_chargers:
-            return float("inf")
+def nearest_shortest_queue_ranking(
+        vehicle: Vehicle,
+        station: Station,
+        env: Environment,
+        max_dist=999999999.0) -> Optional[Tuple[ChargerId, float]]:
+    """
+    sort ordering that prioritizes short vehicle queues where possible, using h3_distance
+    as the base distance metric and extending that value by the proportion of available chargers
+
+    :param vehicle: the vehicle
+    :param station: a station
+    :param env: simulation environment
+    :param max_dist: upper-bound on distance values
+    :return: the distance metric for this station, a function of it's queue sizes and h3 distance
+    """
+
+    distance = h3.h3_distance(vehicle.geoid, station.geoid)
+    vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+
+    def _inner(acc: Tuple[Optional[ChargerId], float], charger_id: ChargerId) -> Tuple[ChargerId, float]:
+        charger = env.chargers.get(charger_id)
+        total_chargers = station.total_chargers.get(charger_id)
+        if not vehicle_mechatronics.valid_charger(charger) or total_chargers is None:
+            # vehicle can't use this charger so we skip it, or,
+            # station doesn't actually have this charger (an error condition really)
+            return acc
         else:
-            distance = h3.h3_distance(vehicle.geoid, station.geoid)
-            queue_factor = station.enqueued_vehicle_count_for_charger(charger_id) / dc_chargers
-            distance_metric = distance + distance * queue_factor
-            return distance_metric
+            prev_best_charger_id, prev_best_distance_metric = acc
+            enqueued_for_charger_id = station.enqueued_vehicle_count_for_charger(charger_id)
+            queue_factor = enqueued_for_charger_id / total_chargers
+            this_distance_metric = distance + distance * queue_factor
+            if prev_best_distance_metric < this_distance_metric:
+                return acc
+            else:
+                return charger_id, this_distance_metric
 
-    return _inner
+    # find the lowest nearest_shortest_queue distance metric
+    # amongst the possible on-shift charging options at this station
+    initial = (None, max_dist)
+    best_charger_id, best_charger_rank = ft.reduce(_inner, station.on_shift_access_chargers, initial)
+
+    return None if best_charger_id is None else best_charger_id, best_charger_rank
 
 
-def shortest_time_to_charge_ranking(
+def shortest_time_to_charge_distance(
         vehicle: Vehicle,
         sim: SimulationState,
         env: Environment,
-        target_soc: Ratio) -> Tuple[Callable[[Station], Seconds], Dict]:
+        target_soc: Ratio) -> Callable[[Station], float]:
     """
     ranks this station by an estimate of the time which would pass until this agent reaches a target charge level
 
@@ -165,148 +197,161 @@ def shortest_time_to_charge_ranking(
     :param target_soc: the SoC we are attempting to reach in this charge session
     :return: the distance metric for this vehicle/station pair (lower is better)
     """
+
+    def fn(station: Station) -> Seconds:
+        result = shortest_time_to_charge_ranking(sim, env, vehicle, station, target_soc)
+        dist = 999999999.0 if result is None else result[1]
+        return dist
+
+    return fn
+
+
+def shortest_time_to_charge_ranking(
+        sim: SimulationState,
+        env: Environment,
+        vehicle: Vehicle,
+        station: Station,
+        target_soc: Ratio) -> Optional[Tuple[ChargerId, float]]:
+    """
+    given a station charging alternative, determine the time it would take to charge
+    using the best charger type available
+
+    :param sim: simulation state
+    :param env: the simulation environment
+    :param vehicle: the vehicle
+    :param station: the station to rank
+    :param target_soc: target vehicle charging SoC percentage
+    :return: a ranking (estimated travel + queue + charge time) for accessing the best-ranked charger
+    """
+
     vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     remaining_range = vehicle_mechatronics.range_remaining_km(vehicle) if vehicle_mechatronics else 0.0
-    cache = {}
+    route = sim.road_network.route(vehicle.link, station.link)
+    distance_km = route_distance_km(route)
 
-    def _inner(station: Station) -> Seconds:
-        """
-        given a station charging alternative, determine the time it would take to charge
-        using the best charger type available
+    if not vehicle_mechatronics or remaining_range < distance_km:
+        # vehicle does not have remaining range to reach this station
+        # return a signal that demotes this Station alternative to the bottom of the ranking
+        return None
+    else:
 
-        :param station: the station to rank
-        :return: a ranking (estimated travel + queue + charge time)
-        """
-        route = sim.road_network.route(vehicle.link, station.link)
-        distance_km = route_distance_km(route)
+        def _veh_at_station(v: Vehicle) -> bool:
+            return isinstance(v.vehicle_state, ChargingStation) and v.vehicle_state.station_id == station.id
 
-        if not vehicle_mechatronics or remaining_range < distance_km:
-            # vehicle does not have remaining range to reach this station
-            # return a signal that demotes this Station alternative to the bottom of the ranking
-            return 99999999999999
-        else:
+        def _veh_enqueued(v: Vehicle) -> bool:
+            return isinstance(v.vehicle_state, ChargeQueueing) and v.vehicle_state.station_id == station.id
 
-            def _veh_at_station(v: Vehicle) -> bool:
-                return isinstance(v.vehicle_state, ChargingStation) and v.vehicle_state.station_id == station.id
-
-            def _veh_enqueued(v: Vehicle) -> bool:
-                return isinstance(v.vehicle_state, ChargeQueueing) and v.vehicle_state.station_id == station.id
-
-            def _time_to_full_by_charger_id(c: ChargerId):
-                def _time_to_full(v: Vehicle) -> Seconds:
-                    _mech = env.mechatronics.get(v.mechatronics_id)
-                    _charger = env.chargers.get(c)
-                    if not _mech or not _charger:
-                        return 0
-                    else:
-                        time_est = powercurve_ops.time_to_full(v,
-                                                               _mech,
-                                                               _charger,
-                                                               target_soc,
-                                                               sim.sim_timestep_duration_seconds)
-                        return time_est
-
-                return _time_to_full
-
-            def _sort_enqueue_time(v: Vehicle) -> float:
-                enqueue_time = v.vehicle_state.enqueue_time
-                return enqueue_time
-
-            def _greedy_assignment(_charging: Tuple[Seconds, ...],
-                                   _enqueued: Tuple[Seconds, ...],
-                                   _charger_id: ChargerId,
-                                   time_passed: Seconds = 0) -> Seconds:
-                """
-                computes the time estimated that a slot opens up for this vehicle to begin charging
-
-
-                :param _charging: a sorted list of remaining charge time estimates
-                :param _enqueued: a sorted list of charge time estimates for enqueued vehicles
-                :param _charger_id: the id of the charger these vehicles are competing for
-                :param time_passed: the amount of time that has been estimated
-                :return: the time in the future we should expect to begin charging, determined by a greedy assignment
-                """
-                if len(_charging) == len(_enqueued) == 0:
-                    return time_passed
-                elif len(_charging) < station.total_chargers.get(charger_id):
-                    return time_passed
+        def _time_to_full_by_charger_id(c: ChargerId):
+            def _time_to_full(v: Vehicle) -> Seconds:
+                _mech = env.mechatronics.get(v.mechatronics_id)
+                _charger = env.chargers.get(c)
+                if not _mech or not _charger:
+                    return 0
                 else:
-                    # advance time
-                    next_released_charger_time = TupleOps.head(_charging)
+                    time_est = powercurve_ops.time_to_full(v,
+                                                           _mech,
+                                                           _charger,
+                                                           target_soc,
+                                                           sim.sim_timestep_duration_seconds)
+                    return time_est
 
-                    updated_time_passed = time_passed + next_released_charger_time
+            return _time_to_full
 
-                    # remove charging agents who are done
-                    _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
-                    _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
+        def _sort_enqueue_time(v: Vehicle) -> float:
+            enqueue_time = v.vehicle_state.enqueue_time
+            return enqueue_time
 
-                    vacancies = station.total_chargers.get(_charger_id) - len(_charging_vacated)
-                    if vacancies <= 0:
-                        # no space for any changes from enqueued -> charging
-                        return _greedy_assignment(
-                            _charging=_charging_vacated,
-                            _enqueued=_enqueued,
-                            _charger_id=_charger_id,
-                            time_passed=updated_time_passed
-                        )
-                    else:
-                        # dequeue longest-waiting agents
-                        _enqueued_to_dequeue = _enqueued[0:vacancies]
-                        _updated_enqueued = _enqueued[vacancies:]
-                        _updated_charging = tuple(sorted(_charging_vacated + _enqueued_to_dequeue))
+        def _greedy_assignment(_charging: Tuple[Seconds, ...],
+                               _enqueued: Tuple[Seconds, ...],
+                               _charger_id: ChargerId,
+                               time_passed: Seconds = 0) -> Seconds:
+            """
+            computes the time estimated that a slot opens up for this vehicle to begin charging
 
-                        return _greedy_assignment(
-                            _charging=_updated_charging,
-                            _enqueued=_updated_enqueued,
-                            _charger_id=_charger_id,
-                            time_passed=updated_time_passed
-                        )
 
-            # collect all vehicles that are either charging or enqueued at this station
-            vehicles_at_station = sim.get_vehicles(filter_function=_veh_at_station)
-            vehicles_enqueued = sim.get_vehicles(filter_function=_veh_enqueued, sort=True, sort_key=_sort_enqueue_time)
+            :param _charging: a sorted list of remaining charge time estimates
+            :param _enqueued: a sorted list of charge time estimates for enqueued vehicles
+            :param _charger_id: the id of the charger these vehicles are competing for
+            :param time_passed: the amount of time that has been estimated
+            :return: the time in the future we should expect to begin charging, determined by a greedy assignment
+            """
+            if len(_charging) == len(_enqueued) == 0:
+                return time_passed
+            elif len(_charging) < station.total_chargers.get(charger_id):
+                return time_passed
+            else:
+                # advance time
+                next_released_charger_time = TupleOps.head(_charging)
 
-            estimates = {}
-            for charger_id in station.total_chargers.keys():
-                charger = env.chargers.get(charger_id)
-                if not vehicle_mechatronics.valid_charger(charger):
-                    # vehicle can't use this charger so we skip it
-                    continue
+                updated_time_passed = time_passed + next_released_charger_time
 
-                # compute the charge time for the vehicle we are ranking
-                this_vehicle_charge_time = powercurve_ops.time_to_full(vehicle,
-                                                                       vehicle_mechatronics,
-                                                                       charger,
-                                                                       target_soc,
-                                                                       sim.sim_timestep_duration_seconds)
+                # remove charging agents who are done
+                _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
+                _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
 
-                # collect all estimated remaining charge times for charging vehicles and sort them
-                charging = filter(lambda v: v.vehicle_state.charger_id == charger_id, vehicles_at_station)
-                charging_time_to_full: Tuple[Seconds, ...] = tuple(sorted(map(_time_to_full_by_charger_id(charger_id), charging)))
+                vacancies = station.total_chargers.get(_charger_id) - len(_charging_vacated)
+                if vacancies <= 0:
+                    # no space for any changes from enqueued -> charging
+                    return _greedy_assignment(
+                        _charging=_charging_vacated,
+                        _enqueued=_enqueued,
+                        _charger_id=_charger_id,
+                        time_passed=updated_time_passed
+                    )
+                else:
+                    # dequeue longest-waiting agents
+                    _enqueued_to_dequeue = _enqueued[0:vacancies]
+                    _updated_enqueued = _enqueued[vacancies:]
+                    _updated_charging = tuple(sorted(_charging_vacated + _enqueued_to_dequeue))
 
-                # collect estimated remaining charge times for vehicles enqueued for this charger
-                # leave them sorted by enqueue time
-                enqueued = filter(lambda v: v.vehicle_state.charger_id == charger_id, vehicles_enqueued)
-                enqueued_time_to_full: Tuple[Seconds, ...] = tuple(map(_time_to_full_by_charger_id(charger_id), enqueued))
+                    return _greedy_assignment(
+                        _charging=_updated_charging,
+                        _enqueued=_updated_enqueued,
+                        _charger_id=_charger_id,
+                        time_passed=updated_time_passed
+                    )
 
-                # compute the estimated wait time to access a charger for the vehicle we are ranking
-                wait_estimate_for_charger = _greedy_assignment(charging_time_to_full, enqueued_time_to_full, charger_id)
+        # collect all vehicles that are either charging or enqueued at this station
+        vehicles_at_station = sim.get_vehicles(filter_function=_veh_at_station)
+        vehicles_enqueued = sim.get_vehicles(filter_function=_veh_enqueued, sort=True, sort_key=_sort_enqueue_time)
 
-                # combine wait time with charge time
-                overall_time_est = this_vehicle_charge_time + wait_estimate_for_charger
-                estimates.update({charger_id: overall_time_est})
+        estimates = {}
+        for charger_id in station.total_chargers.keys():
+            charger = env.chargers.get(charger_id)
+            if not vehicle_mechatronics.valid_charger(charger):
+                # vehicle can't use this charger so we skip it
+                continue
 
-            if not estimates:
-                # there are no chargers the vehicle can use.
-                return 99999999999999
+            # compute the charge time for the vehicle we are ranking
+            this_vehicle_charge_time = powercurve_ops.time_to_full(vehicle,
+                                                                   vehicle_mechatronics,
+                                                                   charger,
+                                                                   target_soc,
+                                                                   sim.sim_timestep_duration_seconds)
 
-            best_charger_id = min(estimates, key=estimates.get)
+            # collect all estimated remaining charge times for charging vehicles and sort them
+            charging = filter(lambda v: v.vehicle_state.charger_id == charger_id, vehicles_at_station)
+            charging_time_to_full: Tuple[Seconds, ...] = tuple(sorted(map(_time_to_full_by_charger_id(charger_id), charging)))
 
-            # writes to value stored in outer scope
-            cache.update({station.id: best_charger_id})
+            # collect estimated remaining charge times for vehicles enqueued for this charger
+            # leave them sorted by enqueue time
+            enqueued = filter(lambda v: v.vehicle_state.charger_id == charger_id, vehicles_enqueued)
+            enqueued_time_to_full: Tuple[Seconds, ...] = tuple(map(_time_to_full_by_charger_id(charger_id), enqueued))
 
-            # return the best "distance" aka shortest estimated time to finish charging
-            best_overall_time = estimates.get(best_charger_id)
-            dispatch_time_seconds = route_travel_time_seconds(route)
-            return dispatch_time_seconds + best_overall_time
-    return _inner, cache
+            # compute the estimated wait time to access a charger for the vehicle we are ranking
+            wait_estimate_for_charger = _greedy_assignment(charging_time_to_full, enqueued_time_to_full, charger_id)
+
+            # combine wait time with charge time
+            overall_time_est = this_vehicle_charge_time + wait_estimate_for_charger
+            estimates.update({charger_id: overall_time_est})
+
+        if not estimates:
+            # there are no chargers the vehicle can use.
+            return None
+
+        best_charger_id = min(estimates, key=estimates.get)
+
+        # return the best "distance" aka shortest estimated time to finish charging
+        best_overall_time = estimates.get(best_charger_id)
+        dispatch_time_seconds = route_travel_time_seconds(route)
+        return best_charger_id, dispatch_time_seconds + best_overall_time

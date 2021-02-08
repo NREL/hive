@@ -17,9 +17,9 @@ class TestInstructionGenerators(TestCase):
         logic splits for each ChargingSearchType, we test ChargingSearchType.NEAREST_SHORTEST_QUEUE here
         """
         station = mock_station()
-        mechatronics = mock_ice()
+        ice_mechatronics = mock_ice()
         vehicle = mock_vehicle(
-            mechatronics=mechatronics,
+            mechatronics=ice_mechatronics,
             soc=0.1,
         )
 
@@ -27,11 +27,11 @@ class TestInstructionGenerators(TestCase):
             vehicles=(vehicle,),
             stations=(station,),
         )
-        env = mock_env(mechatronics={mechatronics.mechatronics_id: mechatronics})
+        env = mock_env(mechatronics={ice_mechatronics.mechatronics_id: ice_mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(
             n=1,
-            max_search_radius_km=100,
+            max_search_radius_km=10,
             vehicles=(vehicle,),
             simulation_state=sim,
             environment=env,

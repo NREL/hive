@@ -168,18 +168,22 @@ def mock_station(
         lon: float = -104.974,
         h3_res: int = 15,
         chargers=None,
+        on_shift_access_chargers=None,
         road_network: RoadNetwork = mock_network(),
         membership: Membership = Membership(),
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, membership)
+    if on_shift_access_chargers is None:
+        on_shift_access_chargers = frozenset(chargers.keys())
+    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, on_shift_access_chargers, membership)
 
 
 def mock_station_from_geoid(
         station_id: StationId = DefaultIds.mock_station_id(),
         geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
         chargers=None,
+        on_shift_access_chargers=None,
         road_network: RoadNetwork = mock_network(),
         membership: Membership = Membership(),
 ) -> Station:
@@ -187,7 +191,9 @@ def mock_station_from_geoid(
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     elif isinstance(chargers, dict):
         chargers = immutables.Map(chargers)
-    return Station.build(station_id, geoid, road_network, chargers, membership)
+    if on_shift_access_chargers is None:
+        on_shift_access_chargers = frozenset(chargers.keys())
+    return Station.build(station_id, geoid, road_network, chargers, on_shift_access_chargers, membership)
 
 
 def mock_rate_structure(
