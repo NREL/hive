@@ -46,22 +46,26 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             return result
 
     def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
-        # ok, this is exiting the state, so, we should be able to empty ourselves of passengers
-        # the logic should resemble ServicingTrip.exit
+        # todo:
+        #  ok, this is exiting the state, so, we should be able to empty ourselves of passengers
+        #  the logic should resemble ServicingTrip.exit
         pass
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
-        # only one trip in our state and we are at it's destination
+        # todo:
+        #  only one trip in our state and we are at it's destination
         pass
 
     def _enter_default_terminal_state(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception],
                                                                                             Optional[Tuple[SimulationState, VehicleState]]]:
-        # should be the same as ServicingTrip._enter_default_terminal_state
+        # todo:
+        #  should be the same as ServicingTrip._enter_default_terminal_state
         pass
 
     def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        # - are we at a trip destination?
-        #   - we need something similar to ServicingTrip.exit
-        #   - we need to check if we have more trips
-        # - otherwise it should be a typical move operation
+        # todo:
+        #  - are we at a trip destination?
+        #    - we need something similar to ServicingTrip.exit
+        #    - we need to check if we have more trips
+        #  - otherwise it should be a typical move operation
         pass
