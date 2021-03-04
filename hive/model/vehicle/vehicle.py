@@ -36,7 +36,7 @@ class Vehicle(NamedTuple):
     mechatronics_id: MechatronicsId
     energy: Dict[EnergyType, float]
 
-    # location
+    # current vehicle location
     link: Link
 
     # vehicle planning/operational properties
@@ -92,7 +92,8 @@ class Vehicle(NamedTuple):
                 home_base_id = row.get('home_base_id')
                 if schedule_id and not schedule_id in environment.schedules.keys():
                     raise IOError(f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
-                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id)
+                allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id, allows_pooling)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_link = road_network.stationary_location_from_geoid(geoid)

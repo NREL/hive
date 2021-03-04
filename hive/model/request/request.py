@@ -40,6 +40,7 @@ class Request(NamedTuple):
     destination_link: Link
     departure_time: SimTime
     passengers: Tuple[Passenger, ...]
+    allows_pooling: bool
     membership: Membership = Membership()
     value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
@@ -61,6 +62,7 @@ class Request(NamedTuple):
               road_network: RoadNetwork,
               departure_time: SimTime,
               passengers: int,
+              allows_pooling: bool,
               fleet_id: Optional[MembershipId] = None,
               value: Currency = 0
               ) -> Request:
@@ -88,6 +90,7 @@ class Request(NamedTuple):
             destination_link=destination_link,
             departure_time=departure_time,
             passengers=tuple(request_as_passengers),
+            allows_pooling=allows_pooling,
             membership=membership,
             value=value,
         )
@@ -141,6 +144,8 @@ class Request(NamedTuple):
                     return departure_time_result, None
 
                 passengers = int(row['passengers'])
+                allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+
                 request = Request.build(
                     request_id=request_id,
                     fleet_id=fleet_id,
@@ -148,7 +153,8 @@ class Request(NamedTuple):
                     destination=d_geoid,
                     road_network=road_network,
                     departure_time=departure_time_result,
-                    passengers=passengers
+                    passengers=passengers,
+                    allows_pooling=allows_pooling
                 )
                 return None, request
             except ValueError:

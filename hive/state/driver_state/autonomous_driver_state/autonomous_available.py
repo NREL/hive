@@ -39,6 +39,10 @@ class AutonomousAvailable(NamedTuple, DriverState):
         return True
 
     @property
+    def allows_pooling(cls):
+        return True
+
+    @property
     def home_base_id(cls) -> Optional[BaseId]:
         return None
 

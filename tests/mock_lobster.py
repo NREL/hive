@@ -373,8 +373,9 @@ def mock_vehicle_from_geoid(
 def mock_human_driver(available: bool = True,
                       schedule_id: ScheduleId = DefaultIds.mock_schedule_id(),
                       home_base_id: BaseId = DefaultIds.mock_base_id(),
+                      allows_pooling: bool = True
                       ):
-    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), schedule_id, home_base_id)
+    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), schedule_id, home_base_id, allows_pooling)
     state = HumanAvailable(attr) if available else HumanUnavailable(attr)
     return state
 

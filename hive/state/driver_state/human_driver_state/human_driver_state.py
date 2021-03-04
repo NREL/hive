@@ -51,6 +51,10 @@ class HumanAvailable(NamedTuple, DriverState):
         return True
 
     @property
+    def allows_pooling(cls):
+        return cls.attributes.allows_pooling
+
+    @property
     def home_base_id(cls) -> Optional[BaseId]:
         return cls.attributes.home_base_id
 
@@ -131,6 +135,10 @@ class HumanUnavailable(NamedTuple, DriverState):
     @property
     def available(cls):
         return False
+
+    @property
+    def allows_pooling(cls):
+        return cls.attributes.allows_pooling
 
     @property
     def home_base_id(cls) -> Optional[BaseId]:

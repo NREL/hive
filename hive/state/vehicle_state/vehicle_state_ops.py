@@ -1,12 +1,17 @@
 from __future__ import annotations
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Union
 
-from hive.model.roadnetwork.route import Route
+from hive.model.request import Request
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
+from hive.model.trip import Trip
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.vehicle_event_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from hive.state.vehicle_state.servicing_trip import ServicingTrip
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, RequestId, ChargerId
 from hive.util.typealiases import VehicleId
@@ -227,3 +232,49 @@ def pick_up_trip(sim: SimulationState,
                 # previous state may not be DispatchTrip (may not have expected attributes
                 pass
             return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)
+
+
+def enter_servicing_state(sim: SimulationState,
+                          env: Environment,
+                          vehicle_id: VehicleId,
+                          trip: Trip,
+                          servicing_state: Union[ServicingTrip, ServicingPoolingTrip]
+                          ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    """
+    attempts to enter a servicing state
+    :param sim: the simulation state
+    :param env: the simulation environment
+    :param vehicle_id: the vehicle servicing the trip
+    :param trip: the trip to service
+    :param servicing_state: a Servicing vehicle state
+    :return: the simulation update result containing the effect of this transition
+    """
+    vehicle = sim.vehicles.get(vehicle_id)
+    request = sim.requests.get(trip.request_id)
+    is_valid = route_cooresponds_with_entities(
+        trip.route,
+        request.origin_link,
+        request.destination_link
+    ) if request and vehicle else False
+    if not vehicle:
+        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+    if not request:
+        # request was already picked up
+        return None, None
+    elif request and request.geoid != vehicle.geoid:
+        locations = f"{request.geoid} != {vehicle.geoid}"
+        message = f"vehicle {vehicle_id} ended trip to request {trip.request_id} but locations do not match: {locations}"
+        return SimulationStateError(message), None
+    elif not is_valid:
+        return None, None
+    elif not request.membership.grant_access_to_membership(vehicle.membership):
+        msg = f"vehicle {vehicle.id} doesn't have access to request {trip.request_id}"
+        return SimulationStateError(msg), None
+    else:
+        # request exists: pick up the trip and enter a ServicingTrip state
+        pickup_error, pickup_sim = pick_up_trip(sim, env, vehicle_id, trip.request_id)
+        if pickup_error:
+            return pickup_error, None
+        else:
+            enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, vehicle_id, servicing_state)
+            return enter_result
