@@ -34,9 +34,16 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        vehicle = sim.vehicles.get(self.vehicle_id)
+        mech = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
+        num_passengers = sum([len(trip.passengers) for trip in self.trips.values()])
+
         error0, active_trip = get_active_pooling_trip(self)
         if error0:
             return error0, None
+        elif not mech or mech.total_number_of_seats() < num_passengers:
+            # cannot pick up more passengers than we have room for
+            return None, None
         else:
             result = enter_servicing_state(sim, env, self.vehicle_id, active_trip, self)
             return result
