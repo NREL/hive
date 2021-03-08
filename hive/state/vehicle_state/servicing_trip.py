@@ -8,7 +8,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_ops import enter_servicing_state, drop_off_trip
+from hive.state.vehicle_state.servicing_ops import validate_new_servicing_state, drop_off_trip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.util.exception import SimulationStateError
@@ -32,7 +32,7 @@ class ServicingTrip(NamedTuple, VehicleState):
     def enter(self,
               sim: SimulationState,
               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        result = enter_servicing_state(sim, env, self.vehicle_id, self.trip, self)
+        result = validate_new_servicing_state(sim, env, self.vehicle_id, self.trip, self)
         return result
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

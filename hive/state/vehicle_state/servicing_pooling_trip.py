@@ -9,7 +9,7 @@ from hive.model.trip import Trip
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, remove_completed_trip, enter_servicing_state, drop_off_trip
+from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, remove_completed_trip, validate_new_servicing_state, drop_off_trip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.util import SimulationStateError
@@ -45,7 +45,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             # cannot pick up more passengers than we have room for
             return None, None
         else:
-            result = enter_servicing_state(sim, env, self.vehicle_id, active_trip, self)
+            result = validate_new_servicing_state(sim, env, self.vehicle_id, active_trip, self)
             return result
 
     def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
@@ -62,14 +62,28 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         return None, None
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: 'Environment') -> bool:
+        """
+        if the active pooling trip is finished and we have no further trips
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: true if our trip is done
+        """
         error0, active_trip = get_active_pooling_trip(self)
         if error0:
             return False
         else:
             return len(self.trips) == 1 and len(active_trip.route) == 0
 
-    def _enter_default_terminal_state(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception],
-                                                                                             Optional[Tuple['SimulationState', VehicleState]]]:
+    def _enter_default_terminal_state(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception],                                                                                    Optional[Tuple['SimulationState', VehicleState]]]:
+        """
+        after dropping off the last passenger, we default to an idle state. this
+        behavior is more likely to have occurred during an update.
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: this vehicle in an idle state
+        """
         next_state = Idle(self.vehicle_id)
         enter_error, enter_sim = next_state.enter(sim, env)
         if enter_error:
@@ -78,6 +92,13 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             return None, (enter_sim, next_state)
 
     def _perform_update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+        """
+        move forward on our trip
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: the vehicle after advancing in time on a servicing trip
+        """
         error0, active_trip = get_active_pooling_trip(self)
         if error0:
             return error0, None

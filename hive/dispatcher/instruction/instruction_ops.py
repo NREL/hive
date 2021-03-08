@@ -1,24 +1,43 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from hive.dispatcher.instruction.instructions import (
-    IdleInstruction,
-    DispatchTripInstruction
-)
-if TYPE_CHECKING:
-    from hive.dispatcher.instruction.instruction import Instruction
+
+from typing import Tuple, Optional
+
+import functools as ft
+import immutables
+
+from hive.model.request import Request
+from hive.model.trip import Trip
+from hive.model.vehicle.vehicle import Vehicle, RequestId
+from hive.state.vehicle_state.rerouted_pooling_trip import ReroutedPoolingTrip
+from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from hive.util import SimulationStateError, TupleOps
 
 
-def serialize(instruction: Instruction) -> str:
+def create_reroute_pooling_trip(sim: 'SimulationState',
+                                env: 'Environment',
+                                vehicle: Vehicle,
+                                trip_order: Tuple[RequestId, ...],
+                                new_requests: Tuple[Request, ...]
+                                ) -> Tuple[Optional[Exception], Optional[ReroutedPoolingTrip]]:
     """
-    converts the instruction name and parameters into a string representation for serialization
+    constructs a new trip plan based on the provided requests.
 
-    :param instruction: some instruction
-    :return: a string representation of the instruction
+    we may be carrying some passengers already. we may be diverting sooner or later
+    along our trip plan. we must assume any request may be mid-flight or may not yet
+    be picked up.
+
+    :param sim: the sim state
+    :param env: the sim environment
+    :param vehicle: vehicle being re-routed
+    :param trip_order: the proposed trip order from dispatch
+    :param new_requests: the requests which are newly added to this pooling trip
+    :return: the
     """
-    if isinstance(instruction, IdleInstruction):
-        return f'{{"instruction": "IdleInstruction", "vehicle_id": "{instruction.vehicle_id}"}}'
-    elif isinstance(instruction, DispatchTripInstruction):
-        return f'{{"instruction": "DispatchTripInstruction", "vehicle_id": "{instruction.vehicle_id}", "request_id": "{instruction.request_id}"}}'
-    else:
-        # incomplete here
-        raise NotImplementedError
+
+    # updated_trips = ft.reduce(
+    #     lambda acc, r: acc.set(r.id, Trip(r, r.departure_time, (), r.passengers)),
+    #     new_requests,
+    #     vehicle.vehicle_state.trips
+    # )
+    # first_trip = updated_trips.get(TupleOps.head(trip_order))
+    # sim.road_network.route()

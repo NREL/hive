@@ -3,17 +3,17 @@ from __future__ import annotations
 from typing import NamedTuple, Tuple
 
 from hive.model.passenger import Passenger
+from hive.model.request import Request
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
-from hive.util.typealiases import RequestId
 
 
 class Trip(NamedTuple):
     """
     models an active trip.
 
-    :param request_id: The request which ordered the trip
-    :type request_id: :py:obj:`RequestId`
+    :param request: The request which ordered the trip
+    :type request: :py:obj:`Request`
 
     :param departure_time: The time at which the vehicle picked up the request
     :type departure_time: :py:obj:`SimTime`
@@ -24,7 +24,7 @@ class Trip(NamedTuple):
     :param passengers: The passenger entities taking the trip
     :type route: :py:obj:`Tuple[Passenger]`
     """
-    request_id: RequestId
+    request: Request
     departure_time: SimTime
     route: Route
     passengers: Tuple[Passenger, ...]

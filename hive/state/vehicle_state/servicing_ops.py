@@ -2,15 +2,18 @@ from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
 from typing import Union
+import functools as ft
 
-from hive.model.roadnetwork.route import route_cooresponds_with_entities
+from hive.model.roadnetwork.route import route_cooresponds_with_entities, routes_are_connected
 from hive.model.trip import Trip
 from hive.reporting.vehicle_event_ops import report_pickup_request, report_dropoff_request
 from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.vehicle_state.rerouted_pooling_trip import ReroutedPoolingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
+from hive.util.iterators import sliding
 
 if TYPE_CHECKING:
     from hive.state.vehicle_state.servicing_trip import ServicingTrip
@@ -113,7 +116,7 @@ def enter_servicing_state(sim: SimulationState,
                           servicing_state: Union[ServicingTrip, ServicingPoolingTrip]
                           ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
     """
-    attempts to enter a servicing state
+    attempts to enter a servicing state, first validating
     :param sim: the simulation state
     :param env: the simulation environment
     :param vehicle_id: the vehicle servicing the trip
@@ -187,3 +190,48 @@ def remove_completed_trip(sim: SimulationState,
         updated_vehicle = vehicle.modify_vehicle_state(updated_state)
         error, result = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         return error, (result, len(updated_trips))
+
+
+def enter_re_routed_pooling_state(sim: SimulationState,
+                                  env: Environment,
+                                  state: ReroutedPoolingTrip
+                                  ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    """
+    checks that the proposed new re routing state is correct by confirming
+    the route plans are connected and ordered and that there are enough seats
+    for all Passengers to ride.
+
+    :param sim: the simulation state
+    :param env: the simulation environment
+    :param state: the vehicle state to apply
+    :return: either the simulation with the updated state, or, an error
+    """
+
+    # do we have space for additional passengers?
+    vehicle = sim.vehicles.get(state.vehicle_id)
+    mech = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
+    current_passenger_count = sum([len(trip.passengers) for trip in state.trips.values()])
+    req_id = state.re_route_request_id
+    request = sim.requests.get(req_id)
+    updated_passenger_count = len(request.passengers) + current_passenger_count if request else None
+    has_space_for_new_passengers = updated_passenger_count <= mech.total_number_of_seats() if mech else False
+
+    # are the routes correct? just check endpoint edge ids in order
+    trips_ordered = (state.re_route,) + ft.reduce(lambda acc, r_id: acc + (state.trips.get(r_id),), state.trip_order, ())
+    trips_match = all(ft.reduce(
+        lambda acc, pair: acc + (routes_are_connected(pair[0], pair[1]),),
+        sliding(trips_ordered, 2),
+        ()
+    ))
+
+    if request is None:
+        return SimulationStateError(f"proposed request {req_id} not found"), None
+    elif not has_space_for_new_passengers:
+        return SimulationStateError(f"request {req_id} attempting to board vehicle {state.vehicle_id} but not enough space"), None
+    elif not trips_match:
+        return SimulationStateError(f"proposed pooling re-route for request {req_id}, vehicle {state.vehicle_id} has invalid links"), None
+    else:
+
+        # looks good, let's switch to this re-routing state
+        enter_result = VehicleState.apply_new_vehicle_state(sim, state.vehicle_id, state)
+        return enter_result

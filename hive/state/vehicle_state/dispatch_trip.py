@@ -107,7 +107,7 @@ class DispatchTrip(NamedTuple, VehicleState):
             # create the trip to service
             route = sim.road_network.route(request.origin_link, request.destination_link)
             passengers = board_vehicle(request.passengers, self.vehicle_id)
-            trip = Trip(self.request_id, sim.sim_time, route, passengers)
+            trip = Trip(request, sim.sim_time, route, passengers)
 
             # create the state (pooling, or, standard servicing trip, depending on the sitch)
             pooling_trip = vehicle.driver_state.allows_pooling() and request.allows_pooling

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import csv
 import logging
-from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple, NamedTuple
+from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple, NamedTuple, Iterable, Generator
 
+from itertools import islice, tee
 log = logging.getLogger(__name__)
 
 
@@ -188,3 +189,16 @@ class DictReaderStepper:
     def close(self):
         if self._file:
             self._file.close()
+
+
+def sliding(iterable: Iterable, size: int) -> Generator:
+    """
+    iterate a sliding window over some iterable with a fixed window size
+    taken from [[https://codereview.stackexchange.com/a/239386]]
+    :param iterable: the iterable to traverse
+    :param size: the window size for sliding
+    :return: an iterable of sliding windows over the original iterator
+    """
+    iterables = tee(iter(iterable), size)
+    window = zip(*(islice(t, n, None) for n, t in enumerate(iterables)))
+    yield from window
