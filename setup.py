@@ -6,6 +6,8 @@ from setuptools import setup, find_packages
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+with open(path.join(here, 'NOTICE.md'), encoding='utf-8') as f:
+    notice = f.read()
 
 setup(
     name="nrel_hive",
@@ -20,7 +22,7 @@ setup(
         "Intended Audience :: Science/Research",
         "License :: Other/Proprietary License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.7",
         "Topic :: Scientific/Engineering"
     ],
     packages=find_packages(),
@@ -45,6 +47,6 @@ setup(
     },
     author="National Renewable Energy Laboratory",
     author_email="Reinicke, Nicholas <Nicholas.Reinicke@nrel.gov>",
-    license="Copyright ©2020 Alliance for Sustainable Energy, LLC All Rights Reserved",
+    license=notice,
     keywords="transportation simulation ride-hail data-driven agent-based model ABM"
 )

@@ -10,7 +10,7 @@ HIVE is a mobility services research platform developed by the Mobility and Adva
 ## What is HIVE
 
 HIVE is a complete autonomous ridehail simulator supporting charging infrastructure and fleet composition research, designed for ease-of-use, scalability, and co-simulation. HIVE employs powerful, community-driven deep reinforcement learning algorithms to synthesize an optimal fleet performance and for runs over HPC systems for large-scale problems. HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity playouts over arbitrary road networks and demand scenarios.
-​
+
 ## Why HIVE?
 
 When the Mobility, Behavior, and Advanced Powertrains group began looking to answer questions related to fleet sizing, charging infrastructure, and dynamic energy pricing, we could not find a simulator which was right-sized for our research questions. Most modern models for mobility services have a large barrier-to-entry due to the complex interactions of mode choice, economics, and model tuning required to use the leading micro and mesoscopic transportation models (BEAM, POLARIS, MATSim, SUMO, AMoDeus, etc.). Additionally, they have heavyweight technical infrastructure demands where deployment of these models requires a specialized team. HIVE attempts to fill a gap for researchers seeking to study the economic and energy impacts of autonomous ride hail fleets by providing the following feature set:
@@ -41,8 +41,6 @@ HIVE is not a fully-featured Activity-Based Model, does not simulate all vehicle
 | Supports broad set of travel modes                 |            | :red_car: | :train: |
 | Congestion modeling via kinetic wave model         |            | :red_car: | :train: |
 
-The project is currently closed-source, pre-release, with plans to open-source in summer of 2020.
-
 ## Dependencies
 
 HIVE has these major dependencies. Uber H3 is a geospatial index which HIVE uses for positioning and search. PyYAML is used to load YAML-based configuration and scenario files. Immutables provides the implementation of an immutable map to replace the standard Python `Dict` type, which will (likely) be available in Python 3.9. NetworkX provides a graph library used as a road network. SciPy provides some optimization algorithms used by HIVE dispatchers.
@@ -52,50 +50,42 @@ HIVE has these major dependencies. Uber H3 is a geospatial index which HIVE uses
 - [immutables](https://github.com/MagicStack/immutables)
 - [networkx](https://github.com/networkx/networkx)
 - [SciPy](https://www.scipy.org/)
+  - Numpy (linear interpolation)
+  - Pandas (networkx dep., some file reading)
+  - SciPy libraries (Kuhn-Munkres assignment algorithm)
 
 _note: Uber H3 depends on an installation of [cmake](https://pypi.org/project/cmake/) which can cause issues on Windows. If you encounter errors when attempting the standard Hive installation instructions below, then consider first running `conda install -c conda-forge h3-py`._
 
-While HIVE is also dependent on the following libraries, there are plans to remove them. Numpy is being used to interpolate tabular data. Pandas is being used to interact with open street maps. Rtree is used for quick node lookup on the road network.
+## Installation
 
-- [numpy](https://www.numpy.org/)
-- [pandas](https://pandas.pydata.org/)
+HIVE is currently available at two different repository locations:
 
-## Setup
+    > git clone https://github.nrel.gov/MBAP/hive  // NREL Github Enterprise
+    > git clone https://github.com/NREL/hive       // Github
 
-HIVE is currently available on [github.nrel.gov](github.nrel.gov). You must be connected (via LAN/VPN) to NREL and have an account with the correct access privileges to access it.
-
-    > git clone https://github.nrel.gov/MBAP/hive
-
-Installing can be completed either using [pip](https://pypi.org/project/pip/) and [conda](https://www.anaconda.com/) or by running python at the command line:
-
-#### install and run via pip/conda
-
-Hive depends on python version 3.7. One way to satisfy this is to use conda 
+Hive depends on python version 3.7. One way to satisfy this is to use conda to create a dedicated 'hive' Python environment: 
 
     > conda create -n hive python=3.7 
 
-then, to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
+to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
 
     > pip install -e <path/to/hive>
 
 Then you can run hive as a command line application. For example, to run the built-in Denver scenario, type:
 
     > hive denver_demo.yaml
+    
+You can also directly run the hive application from the python command, which does not require building the executable to run, but should be run in the root repo directory:
+
+    > cd <path/to/hive>
+    > python -m hive denver_demo.yaml
    
 Note: the program will automatically look for the default scenarios, listed below. If you want
-the program to use a file outside of this location, just specify the optional `--path` argument:
+the program to use a file outside of this location, provide a valid path:
 
     > hive some_other_directory/my_scenario.yaml
 
-#### run as a vanilla python module
-
-To run from the console, run the module (along with a scenario file, such as `denver_demo.yaml`):
-       
-    > cd hive
-    > python -m hive denver_demo.yaml
-
-
-#### available scenarios
+## Built-In Scenarios
 
 The following built-in scenario files come out-of-the-box, and available directly by name:
 
@@ -104,13 +94,14 @@ scenario | description
 denver_demo.yaml | default demo scenario with 20 vehicles and 2.5k requests synthesized with uniform time/location sampling
 denver_rl_toy.yaml | extremely simple scenario for testing RL
 denver_demo_constrained_charging.yaml | default scenario with limited charging supply
+denver_demo_fleets.yaml | default scenario with two competing TNC fleets
 manhattan.yaml | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset
 
 #### global configuration
 
 Some values are set by a global configuration file. The defaults are set at hive/resources/defaults/.hive.yaml. If you want
 to override any entries in this file, you can create a new one by the same name `.hive.yaml` and place it in your working
-directory or a parent directory. Hive will also check your base user directory for this file (aka `~/.hive.yaml`).
+directory or a parent directory. Hive will also check your base user directory for this file (aka `~/.hive.yaml`). This can be useful if you would like to reduce the output files or change the default output base directory (for example, to something like as `~/hive/output`).
 
 #### build api documentation (optional)
 
@@ -122,9 +113,28 @@ The developer API is a [Sphinx](http://www.sphinx-doc.org/en/master/) project wh
 
 Running HIVE takes one argument, which is a configuration file. Hive comes packaged with a demo scenario for Downtown Denver, located at `hive/resources/scenarios/denver_demo.yaml`. This file names the inputs and the configuration Parameters for running HIVE.
 
-the Denver demo scenario is configured to log output to a folder named `denver_demo_outputs` which is also tagged with a timestamp. These output files can be parsed by Pandas using `pd.read_json(output_file.json, lines=True)` (for Pandas > 0.19.0). Additionally, some high-level stats are shown at the console.
+the Denver demo scenario is configured to log output to a folder named `denver_demo_outputs` which is also tagged with a timestamp. These output files can be parsed by Pandas (for Pandas > 0.19.0):
 
-Running this scenario should produce an output similar to the following:
+```python
+import pandas as pd
+# log files store JSON rows, like a document store
+output_file = "~/hive/output/denver_demo_2021-02-08_11-00-07/state.log"
+pd.read_json(output_file, lines=True)
+```
+
+By default, there are these outputs:
+
+file name | file type | description
+--------- | --------- | -----------
+event.log              | JSON rows | events that occur, such as vehicle movement, pickup + dropoff events, etc
+instruction.log        | JSON rows | instructions sent from dispatcher to drivers
+\<config\>.yaml        | YAML      | the input configuration serialized (can be read back by HIVE)
+run.log                | text      | console log output
+state.log              | JSON rows | entity states at every time step
+station_capacities.csv | CSV       | energy load capacity for each station
+summary_stats.json     | JSON      | summary stats as displayed in run.log but in JSON format
+
+Running this scenario should produce an output similar to the following. First, HIVE announces where it is loading configuration from. It then dumps the global and scenario configuration to the console. Finally, after around 65 lines, it begins running the simulation with a progress bar. After, it prints the summary stats to the console and exits.
 
 ```
 [INFO] - hive -
@@ -210,7 +220,7 @@ Process finished with exit code 0
 HIVE is designed to answer questions about data-driven optimal fleet control. An interface for OpenAI Gym is provided in a separate repo, [gym-hive](https://github.nrel.gov/MBAP/gym-hive). For more information on OpenAI Gym, please visit the [OpenAI Gym website](https://gym.openai.com/).
 
 ## Roadmap
-_Updated June 1st, 2020_
+_Updated March, 2021_
 
 HIVE intends to implement the following features:
 
@@ -221,11 +231,15 @@ HIVE intends to implement the following features:
 - [x] Support for state-of-the-art RL control algorithms
 - [x] Charge Queueing
 - [ ] Ridehail Pooling
-- [ ] Gasoline vehicles
+- [x] Gasoline vehicles
 - [ ] Distributed HPC cluster implementation for large problem inputs
 
-## License
+## Citation
 
-Highly Integrated Vehicle Ecosystem (HIVE)  Copyright ©2020   Alliance for Sustainable Energy, LLC All Rights Reserved
+Please contact the authors if you intend to publish research which has used HIVE in order to receive guidance on citation.
 
-This computer software was produced by Alliance for Sustainable Energy, LLC under Contract No. DE-AC36-08GO28308 with the U.S. Department of Energy. For 5 years from the date permission to assert copyright was obtained, the Government is granted for itself and others acting on its behalf a non-exclusive, paid-up, irrevocable worldwide license in this software to reproduce, prepare derivative works, and perform publicly and display publicly, by or on behalf of the Government. There is provision for the possible extension of the term of this license. Subsequent to that period or any extension granted, the Government is granted for itself and others acting on its behalf a non-exclusive, paid-up, irrevocable worldwide license in this software to reproduce, prepare derivative works, distribute copies to the public, perform publicly and display publicly, and to permit others to do so. The specific term of the license can be identified by inquiry made to Alliance for Sustainable Energy, LLC or DOE. NEITHER ALLIANCE FOR SUSTAINABLE ENERGY, LLC, THE UNITED STATES NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHT
+## Notice
+
+Copyright © 2019 Alliance for Sustainable Energy, LLC, Inc. All Rights Reserved
+
+This computer software was produced by Alliance for Sustainable Energy, LLC under Contract No. DE-AC36-08GO28308 with the U.S. Department of Energy. For 5 years from the date permission to assert copyright was obtained, the Government is granted for itself and others acting on its behalf a nonexclusive, paid-up, irrevocable worldwide license in this software to reproduce, prepare derivative works, and perform publicly and display publicly, by or on behalf of the Government. There is provision for the possible extension of the term of this license. Subsequent to that period or any extension granted, the Government is granted for itself and others acting on its behalf a nonexclusive, paid-up, irrevocable worldwide license in this software to reproduce, prepare derivative works, distribute copies to the public, perform publicly and display publicly, and to permit others to do so. The specific term of the license can be identified by inquiry made to Contractor or DOE. NEITHER ALLIANCE FOR SUSTAINABLE ENERGY, LLC, THE UNITED STATES NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
