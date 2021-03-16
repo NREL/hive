@@ -28,7 +28,7 @@ class HiveConfig(NamedTuple):
     network: Network
     dispatcher: DispatcherConfig
 
-    out_dir_time: str
+    scenario_output_directory: Path = Path("")
 
     @classmethod
     def build(cls, scenario_file_path: Path, config: Dict = None) -> Union[Exception, HiveConfig]:
@@ -76,13 +76,21 @@ class HiveConfig(NamedTuple):
                 if key not in conf:
                     log.warning(f"scenario file is missing a '{key}' section may cause errors")
 
+            sconfig = Sim.build(conf.get('sim'))
+            iconfig = Input.build(conf.get('input'), scenario_file_path, conf.get('cache'))
+            nconfig = Network.build(conf.get('network'))
+            dconfig = DispatcherConfig.build(conf.get('dispatcher'))
+
+            scenario_name = sconfig.sim_name + "_" + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            scenario_output_directory = Path(global_config.output_base_directory) / Path(scenario_name)
+
             hive_config = HiveConfig(
                 global_config=global_config,
-                input_config=Input.build(conf.get('input'), scenario_file_path, conf.get('cache')),
-                sim=Sim.build(conf.get('sim')),
-                network=Network.build(conf.get('network')),
-                dispatcher=DispatcherConfig.build(conf.get('dispatcher')),
-                out_dir_time=datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+                input_config=iconfig,
+                sim=sconfig,
+                network=nconfig,
+                dispatcher=dconfig,
+                scenario_output_directory=scenario_output_directory,
             )
 
             log.info(f"output directory set to {hive_config.input_config.scenario_directory}")
@@ -118,9 +126,6 @@ class HiveConfig(NamedTuple):
 
         return out_dict
 
-    @property
-    def scenario_output_directory(self) -> str:
-        run_name = self.sim.sim_name + '_' + self.out_dir_time
-        output_directory = os.path.join(self.global_config.output_base_directory, run_name)
-        return output_directory
+    def set_scenario_output_directory(self, output_directory: Path) -> HiveConfig:
+        return self._replace(scenario_output_directory=output_directory)
 

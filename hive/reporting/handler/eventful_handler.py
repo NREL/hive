@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from hive.reporting import vehicle_event_ops
@@ -22,9 +23,9 @@ class EventfulHandler(Handler):
     handles events and appends them to the event.log output file based on global logging settings
     """
 
-    def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
+    def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
-        log_path = os.path.join(scenario_output_directory, 'event.log')
+        log_path = scenario_output_directory / 'event.log'
         self.log_file = open(log_path, 'a')
 
         self.global_config = global_config
