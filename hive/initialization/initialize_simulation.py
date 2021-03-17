@@ -72,21 +72,9 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
-    # configure reporting
-    reporter = Reporter(config.global_config)
-    if config.global_config.log_events:
-        reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.log_states:
-        reporter.add_handler(StatefulHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.log_instructions:
-        reporter.add_handler(InstructionHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.log_stats:
-        reporter.add_handler(StatsHandler())
-
     # create simulation environment
     fleet_ids = read_fleet_ids_from_file(config.input_config.fleets_file) if config.input_config.fleets_file else []
     env_initial = Environment(config=config,
-                              reporter=reporter,
                               mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
                                                                     config.input_config.scenario_directory),
                               chargers=build_chargers_table(config.input_config.chargers_file),
@@ -94,10 +82,6 @@ def initialize_simulation(
                                                               config.input_config.schedules_file),
                               fleet_ids=fleet_ids
                               )
-
-    # todo: maybe instead of reporting errors to the env.Reporter in these builder functions, we
-    #  should instead hold aside any error reports and then do something below after finishing,
-    #  such as allowing the user to decide how to respond (via a config param such as "fail on load errors")
 
     # read in fleet memberships for vehicles/stations/bases
     vehicle_member_ids = process_fleet_file(config.input_config.fleets_file,

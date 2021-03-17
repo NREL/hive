@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import NamedTuple, TYPE_CHECKING, FrozenSet
 
+from hive.reporting.reporter import Reporter
+
 import immutables
 
 if TYPE_CHECKING:
     from hive.model.energy.charger import Charger
     from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
-    from hive.reporting import Reporter
     from hive.config import HiveConfig
     from hive.util.typealiases import MechatronicsId, ChargerId, ScheduleId, ScheduleFunction, MembershipId
 
@@ -18,8 +19,19 @@ class Environment(NamedTuple):
 
     """
     config: HiveConfig
-    reporter: Reporter
     mechatronics: immutables.Map[MechatronicsId, MechatronicsInterface] = immutables.Map()
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
     schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
     fleet_ids: FrozenSet[MembershipId] = frozenset()
+
+    reporter: Reporter = Reporter()
+
+    def set_reporter(self, reporter: Reporter) -> Environment:
+        """
+        allows the reporter to be updated after the environment is built.
+
+        :param reporter: the reporter to be used
+
+        :return: the updated environment
+        """
+        return self._replace(reporter=reporter)

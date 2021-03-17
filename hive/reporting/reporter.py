@@ -26,8 +26,7 @@ class Reporter:
     A class that generates reports for the simulation.
     """
 
-    def __init__(self, config: GlobalConfig):
-        self.config = config
+    def __init__(self):
         self.reports: List[Report] = []
         self.handlers: List[Handler] = []
 
