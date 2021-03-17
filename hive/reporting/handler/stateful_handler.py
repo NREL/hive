@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from typing import List
 
 from hive.config.global_config import GlobalConfig
@@ -17,9 +18,9 @@ class StatefulHandler(Handler):
     prints the state of entities in the simulation to the state.log output file based on global logging settings
     """
 
-    def __init__(self, global_config: GlobalConfig, scenario_output_directory: str):
+    def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
-        log_path = os.path.join(scenario_output_directory, 'state.log')
+        log_path = scenario_output_directory / 'state.log'
         self.log_file = open(log_path, 'a')
 
         self.global_config = global_config
