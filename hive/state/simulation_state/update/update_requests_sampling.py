@@ -93,6 +93,7 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
                 report_data = {
                     'request_id': request.id,
                     'departure_time': request.departure_time,
+                    'fleet_id': str(request.membership),
                 }
                 env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
             return new_sim

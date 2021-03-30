@@ -167,6 +167,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                     report_data = {
                         'request_id': req.id,
                         'departure_time': dep_t,
+                        'fleet_id': str(req.membership)
                     }
                     env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
                     return sim_updated
