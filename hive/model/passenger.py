@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Optional
 
+from hive.model.membership import Membership
 from hive.model.sim_time import SimTime
 from hive.util.typealiases import *
 
@@ -31,6 +32,7 @@ class Passenger(NamedTuple):
     origin: GeoId
     destination: GeoId
     departure_time: SimTime
+    membership: Membership
     vehicle_id: Optional[VehicleId] = None
 
     def add_vehicle_id(self, vehicle_id: VehicleId) -> Passenger:

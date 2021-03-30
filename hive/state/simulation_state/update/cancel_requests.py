@@ -68,16 +68,18 @@ def _gen_report(r_id: RequestId, sim: SimulationState) -> Report:
     """
     Report of a cancellation
 
-
     :param r_id: request cancelled
     :param sim: the state of the sim before cancellation occurs
     :return: a report
     """
     dep_t = sim.requests[r_id].departure_time
     sim_t = sim.sim_time
+    req = sim.requests.get(r_id)
+    membership = str(req.membership) if req else ""
     report_data = {
         'request_id': r_id,
         'departure_time': dep_t,
         'cancel_time': sim_t,
+        'fleet_id': membership,
     }
     return Report(ReportType.CANCEL_REQUEST_EVENT, report_data)

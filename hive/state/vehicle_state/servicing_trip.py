@@ -6,7 +6,7 @@ from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from hive.model.passenger import Passenger
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.model.sim_time import SimTime
-from hive.reporting.vehicle_event_ops import report_dropoff_request
+from hive.reporting.vehicle_event_ops import report_servicing_trip_dropoff_request
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
@@ -97,7 +97,7 @@ class ServicingTrip(NamedTuple, VehicleState):
                     return SimulationStateError(message), None
 
         # ok, we can drop off these passengers
-        report = report_dropoff_request(vehicle, sim)
+        report = report_servicing_trip_dropoff_request(vehicle, sim)
         env.reporter.file_report(report)
         return None, sim
 
