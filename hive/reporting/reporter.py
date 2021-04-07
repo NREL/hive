@@ -26,8 +26,7 @@ class Reporter:
     A class that generates reports for the simulation.
     """
 
-    def __init__(self, config: GlobalConfig):
-        self.config = config
+    def __init__(self):
         self.reports: List[Report] = []
         self.handlers: List[Handler] = []
 
@@ -57,7 +56,7 @@ class Reporter:
         """
         self.reports.append(report)
 
-    def get_summary_stats(self) -> Optional[Dict]:
+    def get_summary_stats(self, rp: RunnerPayload) -> Optional[Dict]:
         """
         if a summary StatsHandler exists, return the final report from the collection of statistics
         :return: the stats Dictionary, or, None
@@ -65,7 +64,7 @@ class Reporter:
         final_report = None
         for handler in self.handlers:
             if isinstance(handler, StatsHandler):
-                final_report = handler.get_stats()
+                final_report = handler.get_stats(rp)
         return final_report
 
     def close(self, runner_payload: RunnerPayload):

@@ -87,24 +87,12 @@ def initialize_simulation_with_sampling(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution
     )
 
-    # configure reporting
-    reporter = Reporter(config.global_config)
-    if config.global_config.log_events:
-        reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.log_states:
-        reporter.add_handler(StatefulHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.log_instructions:
-        reporter.add_handler(InstructionHandler(config.global_config, config.scenario_output_directory))
-    if config.global_config.log_stats:
-        reporter.add_handler(StatsHandler())
-
     # create simulation environment
     if config.input_config.fleets_file:
         log.warning("the simulation is using sampling which doesn't support a fleet file input;\n"
                     "this input will be ignored and entities will not have any fleet information.")
 
     env = Environment(config=config,
-                      reporter=reporter,
                       mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
                                                             config.input_config.scenario_directory),
                       chargers=build_chargers_table(config.input_config.chargers_file),

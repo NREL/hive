@@ -70,19 +70,21 @@ class Request(NamedTuple):
         assert (passengers > 0)
         origin_link = road_network.stationary_location_from_geoid(origin)
         destination_link = road_network.stationary_location_from_geoid(destination)
-        request_as_passengers = [
-            Passenger(
-                create_passenger_id(request_id, pass_idx),
-                origin_link.start,
-                destination_link.end,
-                departure_time
-            )
-            for pass_idx in range(0, passengers)
-        ]
         if fleet_id:
             membership = Membership.single_membership(fleet_id)
         else:
             membership = Membership()
+
+        request_as_passengers = [
+            Passenger(
+                id=create_passenger_id(request_id, pass_idx),
+                origin=origin_link.start,
+                destination=destination_link.end,
+                departure_time=departure_time,
+                membership=membership
+            )
+            for pass_idx in range(0, passengers)
+        ]
 
         request = Request(
             id=request_id,

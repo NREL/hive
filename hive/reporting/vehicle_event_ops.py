@@ -14,7 +14,7 @@ from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.util import StationId
+from hive.util import StationId, TupleOps
 from hive.util.time_helpers import time_diff
 
 if TYPE_CHECKING:
@@ -139,7 +139,7 @@ def report_pickup_request(vehicle: Vehicle,
         'wait_time_seconds': wait_time,
         'vehicle_id': vehicle.id,
         'request_id': request.id,
-        'request_membership': request.membership,
+        'fleet_id': request.membership,
         'price': request.value,
         'geoid': geoid,
         'lat': lat,
@@ -155,7 +155,9 @@ def report_dropoff_request(vehicle: Vehicle,
                            trip: Trip
                            ) -> Report:
     """
-    reports information about the marginal effect of a request dropoff
+    reports information about the marginal effect of a request dropoff from a ServicingTrip state
+    which allows us to assume some ServicingTrip vehicle state properties.
+
     :param vehicle: the vehicle that picked up the request
     :param sim: simulation state when the dropoff occurs
     :param trip: the trip that has completed
@@ -164,6 +166,9 @@ def report_dropoff_request(vehicle: Vehicle,
 
     geoid = vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
+    travel_time = time_diff(vehicle.vehicle_state.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
+    # somewhat a hack, we just grab the membership from the first passenger
+    membership = TupleOps.head(vehicle.vehicle_state.passengers).membership
     travel_time = time_diff(trip.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
 
     report_data = {
@@ -171,6 +176,7 @@ def report_dropoff_request(vehicle: Vehicle,
         'travel_time': travel_time,
         'vehicle_id': vehicle.id,
         'request_id': vehicle.vehicle_state.trip.request_id,
+        'fleet_id': str(membership),
         'geoid': geoid,
         'lat': lat,
         'lon': lon

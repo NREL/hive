@@ -23,6 +23,7 @@ class GlobalConfig(NamedTuple):
     lazy_file_reading: bool
     wkt_x_y_ordering: bool
 
+
     @classmethod
     def default_config(cls) -> Dict:
         return {}
