@@ -5,7 +5,7 @@ from typing import Union
 import functools as ft
 
 from hive.model.roadnetwork.route import route_cooresponds_with_entities, routes_are_connected
-from hive.model.trip import Trip
+from hive.model.vehicle.trip import Trip
 from hive.reporting.vehicle_event_ops import report_pickup_request, report_dropoff_request
 from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
@@ -47,7 +47,7 @@ def pick_up_trip(sim: SimulationState,
                  vehicle_id: VehicleId,
                  request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
-    has a vehicle pick up a trip and receive payment for it
+    has a vehicle pick up a trip and receive payment for it.
 
     :param sim: the sim state
     :param env: the sim environment
@@ -125,7 +125,7 @@ def enter_servicing_state(sim: SimulationState,
     :return: the simulation update result containing the effect of this transition
     """
     vehicle = sim.vehicles.get(vehicle_id)
-    request = sim.requests.get(trip.request_id)
+    request = sim.requests.get(trip.request.id)
     is_valid = route_cooresponds_with_entities(
         trip.route,
         request.origin_link,
@@ -138,16 +138,16 @@ def enter_servicing_state(sim: SimulationState,
         return None, None
     elif request and request.geoid != vehicle.geoid:
         locations = f"{request.geoid} != {vehicle.geoid}"
-        message = f"vehicle {vehicle_id} ended trip to request {trip.request_id} but locations do not match: {locations}"
+        message = f"vehicle {vehicle_id} ended trip to request {trip.request.id} but locations do not match: {locations}"
         return SimulationStateError(message), None
     elif not is_valid:
         return None, None
     elif not request.membership.grant_access_to_membership(vehicle.membership):
-        msg = f"vehicle {vehicle.id} doesn't have access to request {trip.request_id}"
+        msg = f"vehicle {vehicle.id} doesn't have access to request {trip.request.id}"
         return SimulationStateError(msg), None
     else:
         # request exists: pick up the trip and enter a ServicingTrip state
-        pickup_error, pickup_sim = pick_up_trip(sim, env, vehicle_id, trip.request_id)
+        pickup_error, pickup_sim = pick_up_trip(sim, env, vehicle_id, trip.request.id)
         if pickup_error:
             return pickup_error, None
         else:

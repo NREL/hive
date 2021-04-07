@@ -9,7 +9,7 @@ import immutables
 from hive.model.energy import Charger
 from hive.model.roadnetwork import route
 from hive.model.station import Station
-from hive.model.trip import Trip
+from hive.model.vehicle.trip import Trip
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.runner import Environment

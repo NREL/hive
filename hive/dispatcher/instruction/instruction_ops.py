@@ -2,15 +2,9 @@ from __future__ import annotations
 
 from typing import Tuple, Optional
 
-import functools as ft
-import immutables
-
 from hive.model.request import Request
-from hive.model.trip import Trip
 from hive.model.vehicle.vehicle import Vehicle, RequestId
 from hive.state.vehicle_state.rerouted_pooling_trip import ReroutedPoolingTrip
-from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-from hive.util import SimulationStateError, TupleOps
 
 
 def create_reroute_pooling_trip(sim: 'SimulationState',

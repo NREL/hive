@@ -6,12 +6,12 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
 import immutables
 
 from hive.model.roadnetwork.route import Route
-from hive.model.trip import Trip
+from hive.model.vehicle.trip import Trip
 from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_ops import enter_re_routed_pooling_state, get_active_pooling_trip
+from hive.state.vehicle_state.servicing_ops import enter_re_routed_pooling_state
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move

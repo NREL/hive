@@ -7,7 +7,7 @@ import immutables
 
 from hive.model.passenger import board_vehicle
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
-from hive.model.trip import Trip
+from hive.model.vehicle.trip import Trip
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import vehicle_state_ops
@@ -83,7 +83,7 @@ class DispatchTrip(NamedTuple, VehicleState):
                                       env: Environment
                                       ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
-        by default, transition to ServicingTrip if possible, else Idle
+        by default, transition to a Servicing state (if possible), else Idle if the conditions are not correct.
 
         :param sim: the sim state
         :param env: the sim environment
@@ -110,17 +110,18 @@ class DispatchTrip(NamedTuple, VehicleState):
             trip = Trip(request, sim.sim_time, route, passengers)
 
             # create the state (pooling, or, standard servicing trip, depending on the sitch)
-            pooling_trip = vehicle.driver_state.allows_pooling() and request.allows_pooling
+            pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
             next_state = ServicingPoolingTrip(
                 vehicle_id=self.vehicle_id,
                 trips=immutables.Map({self.request_id: trip}),
-                trip_order=(self.request_id, ),
+                trip_order=(self.request_id,),
                 num_passengers=len(passengers)
             ) if pooling_trip else ServicingTrip(
                 vehicle_id=self.vehicle_id,
                 trip=trip
             )
 
+            # enter the servicing state
             enter_error, enter_sim = next_state.enter(sim, env)
             if enter_error:
                 return enter_error, None

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.model.trip import Trip
+from hive.model.vehicle.trip import Trip
 from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.servicing_trip import ServicingTrip

@@ -7,6 +7,7 @@ from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_ops import create_reroute_pooling_trip
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.roadnetwork.link import Link
+from hive.model.vehicle.trip_phase import TripPhase
 from hive.state.vehicle_state.charging_base import ChargingBase
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.dispatch_base import DispatchBase
@@ -62,6 +63,15 @@ class DispatchTripInstruction(NamedTuple, Instruction):
             next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
 
             return None, InstructionResult(prev_state, next_state)
+
+
+class DispatchPoolingTripInstruction(NamedTuple, Instruction):
+    vehicle_id: VehicleId
+    trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+
+    def apply_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        # see https://github.com/NREL/hive/issues/9 for implementation plan
+        pass
 
 
 class ReroutePoolingTripInstruction(NamedTuple, Instruction):

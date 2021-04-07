@@ -5,11 +5,11 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
 
 import immutables
 
-from hive.model.trip import Trip
+from hive.model.vehicle.trip import Trip
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, remove_completed_trip, validate_new_servicing_state, drop_off_trip
+from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, remove_completed_trip, enter_servicing_state, drop_off_trip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.util import SimulationStateError
@@ -45,7 +45,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             # cannot pick up more passengers than we have room for
             return None, None
         else:
-            result = validate_new_servicing_state(sim, env, self.vehicle_id, active_trip, self)
+            result = enter_servicing_state(sim, env, self.vehicle_id, active_trip, self)
             return result
 
     def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
@@ -115,7 +115,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             else:
                 # update moved vehicle's state (holding the route)
                 moved_trip = active_trip.update_route(move_result.route_traversal.remaining_route)
-                moved_trips = self.trips.update({active_trip.request_id, moved_trip})
+                moved_trips = self.trips.update({active_trip.request.id, moved_trip})
                 moved_state = self._replace(trips=moved_trips)
                 moved_vehicle = moved_vehicle.modify_vehicle_state(moved_state)
 
