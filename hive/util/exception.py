@@ -144,3 +144,15 @@ class CombinedException(Exception):
             ""
         )
         return repr(combined)
+
+
+class InstructionError(Exception):
+    """
+    reports that an instruction was erroneous
+    """
+
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)

@@ -4,7 +4,7 @@ import logging
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
-from hive.dispatcher.instruction.instruction_ops import create_reroute_pooling_trip
+from hive.dispatcher.instruction.instruction_ops import create_reroute_pooling_trip, trip_plan_ordering_is_valid, trip_plan_covers_previous
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
@@ -17,7 +17,8 @@ from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.repositioning import Repositioning
 from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-from hive.util.exception import SimulationStateError
+from hive.state.vehicle_state.servicing_pooling_trip2 import ServicingPoolingTrip2
+from hive.util.exception import SimulationStateError, InstructionError
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,31 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
 
     def apply_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         # see https://github.com/NREL/hive/issues/9 for implementation plan
-        pass
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        v_state = vehicle.vehicle_state
+
+        if isinstance(v_state, ServicingPoolingTrip2):
+            # inspect previous state and test for coverage of requests/state
+            if not trip_plan_covers_previous(v_state, self.trip_plan):
+                msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
+                error = InstructionError(msg)
+                return error, None
+            elif not trip_plan_ordering_is_valid(self.trip_plan, v_state):
+                msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
+                error = InstructionError(msg)
+                return error, None
+            else:
+                # todo: it's valid, let's apply it
+                pass
+        else:
+            # apply without checking previous state
+            if not trip_plan_ordering_is_valid(self.trip_plan):
+                msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
+                error = InstructionError(msg)
+                return error, None
+            else:
+                # todo: it's valid, let's apply it
+                pass
 
 
 class ReroutePoolingTripInstruction(NamedTuple, Instruction):
