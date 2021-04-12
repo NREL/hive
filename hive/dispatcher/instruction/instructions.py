@@ -4,7 +4,8 @@ import logging
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
-from hive.dispatcher.instruction.instruction_ops import create_reroute_pooling_trip, trip_plan_ordering_is_valid, trip_plan_covers_previous
+from hive.dispatcher.instruction.instruction_ops import create_reroute_pooling_trip, trip_plan_ordering_is_valid, trip_plan_covers_previous, \
+    trip_plan_all_requests_allow_pooling, create_dispatch_pooling_trip, test_vehicle_has_seats
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
@@ -75,28 +76,35 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         v_state = vehicle.vehicle_state
 
-        if isinstance(v_state, ServicingPoolingTrip2):
-            # inspect previous state and test for coverage of requests/state
-            if not trip_plan_covers_previous(v_state, self.trip_plan):
-                msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
-                error = InstructionError(msg)
-                return error, None
-            elif not trip_plan_ordering_is_valid(self.trip_plan, v_state):
-                msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
-                error = InstructionError(msg)
-                return error, None
-            else:
-                # todo: it's valid, let's apply it
-                pass
+        req_allow_pooling_error_msg = trip_plan_all_requests_allow_pooling(sim_state, self.trip_plan)
+        seating_error = test_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
+
+        if isinstance(v_state, ServicingPoolingTrip2) and not trip_plan_covers_previous(v_state, self.trip_plan):
+            msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
+            error = InstructionError(msg)
+            return error, None
+        elif not trip_plan_ordering_is_valid(self.trip_plan, v_state):
+            msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
+            error = InstructionError(msg)
+            return error, None
+        elif not vehicle.driver_state.allows_pooling:
+            msg = f"attempting to assign a pooling trip to vehicle {self.vehicle_id} which does not allow pooling"
+            error = InstructionError(msg)
+            return error, None
+        elif seating_error is not None:
+            msg = f"pooling trip plan for vehicle {self.vehicle_id} exceeds seating constraint at step {seating_error}"
+            error = InstructionError(msg)
+            return error, None
+        elif req_allow_pooling_error_msg is not None:
+            msg = f"errors with requests assigned to pooling trip for vehicle {self.vehicle_id}: {req_allow_pooling_error_msg}"
+            error = InstructionError(msg)
+            return error, None
         else:
-            # apply without checking previous state
-            if not trip_plan_ordering_is_valid(self.trip_plan):
-                msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
-                error = InstructionError(msg)
+            error, next_state = create_dispatch_pooling_trip(sim_state, env, vehicle, self.trip_plan)
+            if error is not None:
                 return error, None
             else:
-                # todo: it's valid, let's apply it
-                pass
+                return None, InstructionResult(vehicle.vehicle_state, next_state)
 
 
 class ReroutePoolingTripInstruction(NamedTuple, Instruction):

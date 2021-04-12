@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict
+from typing import NamedTuple, Dict, Optional
 
 import h3
 
@@ -42,12 +42,15 @@ class Vehicle(NamedTuple):
     # vehicle planning/operational properties
     vehicle_state: VehicleState
     driver_state: DriverState
+    total_seats: int
+    # available_seats: int
 
     # vehicle analytical properties
     balance: Currency = 0.0
     distance_traveled_km: Kilometers = 0.0
 
     membership: Membership = Membership()
+
 
     @property
     def geoid(self):
@@ -93,6 +96,7 @@ class Vehicle(NamedTuple):
                 if schedule_id and not schedule_id in environment.schedules.keys():
                     raise IOError(f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
                 allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+                available_seats = int(row.get('available_seats', 0))
                 driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id, allows_pooling)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
@@ -104,11 +108,13 @@ class Vehicle(NamedTuple):
                     energy=energy,
                     link=start_link,
                     vehicle_state=Idle(vehicle_id),
-                    driver_state=driver_state
+                    driver_state=driver_state,
+                    total_seats=available_seats,
+                    # available_seats=available_seats
                 )
 
-            except ValueError:
-                raise IOError(f"a numeric value could not be parsed from {row}")
+            except ValueError as err:
+                raise IOError(f"failure reading vehicle row {row}") from err
 
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state})"
@@ -194,3 +200,24 @@ class Vehicle(NamedTuple):
         """
         updated_membership = self.membership.add_membership(membership_id)
         return self._replace(membership=updated_membership)
+
+    # todo: manage this in the vehicle state instead
+    # def add_passengers(self, n_passengers: int) -> Optional[Vehicle]:
+    #     """
+    #     adds some passengers to the vehicle
+    #
+    #     :param n_passengers: the number of passengers to add
+    #     :returns: the updated vehicle, or None if there are not enough seats available
+    #     """
+    #     if n_passengers > self.available_seats:
+    #         return None
+    #     else:
+    #         updated = self._replace(
+    #             available_seats=self.available_seats - n_passengers
+    #         )
+    #         return updated
+    #
+    # def remove_passengers(self, n_passengers: int) -> Optional[Vehicle]:
+    #     """
+    #     remove some passengers from this vehicle
+    #     """

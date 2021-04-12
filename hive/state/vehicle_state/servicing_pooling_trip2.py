@@ -5,6 +5,8 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
 
 import immutables
 
+from hive.model.request import Request
+from hive.model.roadnetwork import Route
 from hive.model.trip2 import Trip2
 from hive.model.vehicle.trip import Trip
 from hive.model.vehicle.trip_phase import TripPhase
@@ -29,7 +31,8 @@ class ServicingPoolingTrip2(NamedTuple, VehicleState):
     """
     vehicle_id: VehicleId
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
-    trips: immutables.Map[RequestId, Trip2]
+    trips: immutables.Map[RequestId, Request]
+    routes: Tuple[Route, ...]
     num_passengers: int
 
     def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
