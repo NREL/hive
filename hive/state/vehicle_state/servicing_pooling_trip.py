@@ -5,18 +5,22 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
 
 import immutables
 
-from hive.model.vehicle.trip import Trip
-from hive.state.simulation_state import simulation_state_ops
+from hive.model.request import Request
+from hive.model.roadnetwork import Route
+from hive.model.sim_time import SimTime
+from hive.model.vehicle.trip_phase import TripPhase
+from hive.runner.environment import Environment
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, remove_completed_trip, enter_servicing_state, drop_off_trip
+from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, pick_up_trip, \
+    update_active_pooling_trip, transitioning_from_dispatch_trip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
-from hive.util import SimulationStateError
+from hive.util import SimulationStateError, TupleOps
 from hive.util.typealiases import RequestId, VehicleId
 
 if TYPE_CHECKING:
-    pass
+    from hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -26,29 +30,66 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
     a pooling trip is in service, for the given trips in the given trip_order.
     """
     vehicle_id: VehicleId
-    trips: immutables.Map[RequestId, Trip]
-    trip_order: Tuple[RequestId, ...]
+    trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+    boarded_requests: immutables.Map[RequestId, Request]
+    departure_times: immutables.Map[RequestId, SimTime]
+    routes: Tuple[Route, ...]
     num_passengers: int
 
-    def update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        """
+        transition from DispatchTrip into a pooling trip service leg
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an error, or, the sim with state entered
+        """
+        # validate the first step of the trip plan for this vehicle
         vehicle = sim.vehicles.get(self.vehicle_id)
-        mech = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
-        num_passengers = sum([len(trip.passengers) for trip in self.trips.values()])
+        first_trip_phase = TupleOps.head_optional(self.trip_plan)
 
-        error0, active_trip = get_active_pooling_trip(self)
-        if error0:
-            return error0, None
-        elif not mech or mech.total_number_of_seats() < num_passengers:
-            # cannot pick up more passengers than we have room for
-            return None, None
+        if vehicle is None:
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif not transitioning_from_dispatch_trip(vehicle):
+            # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
+            prev_state = vehicle.vehicle_state.__class__.__name__
+            msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
+            error = SimulationStateError(msg)
+            return error, None
+        elif first_trip_phase is None:
+            msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state without any trip plan"
+            error = SimulationStateError(msg)
+            return error, None
         else:
-            result = enter_servicing_state(sim, env, self.vehicle_id, active_trip, self)
-            return result
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+            # validate the request for the first step in the trip plan
+            request_id, trip_phase = first_trip_phase
+            request = sim.requests.get(request_id)
+
+            if trip_phase is not TripPhase.PICKUP:
+                msg = f"vehicle {vehicle.id} attempting to enter ServicingPoolingTrip but first request in plan {request_id} expects a DROPOFF phase which is irrational"
+                return SimulationStateError(msg), None
+            elif request is None:
+                msg = f"vehicle {vehicle.id} has ServicingPoolingTrip with request {request_id} stored in trip plan but not in requests collection"
+                return SimulationStateError(msg), None
+            elif not request.membership.grant_access_to_membership(vehicle.membership):
+                msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} with mis-matched memberships/fleets"
+                return SimulationStateError(msg), None
+            else:
+
+                # perform pickup action, removing request from the simulation
+                pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, request_id)
+                if pickup_error:
+                    return pickup_error, None
+                else:
+                    boarded_state = self._replace(boarded_requests=immutables.Map({request.id: request}))
+                    enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, boarded_state)
+                    return enter_result
+
+    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         cannot call "exit" on ServicingPoolingTrip, must be exited via it's update method.
         the state is modeling a trip. exiting would mean dropping off passengers prematurely.
@@ -61,21 +102,19 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         """
         return None, None
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: 'Environment') -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
-        if the active pooling trip is finished and we have no further trips
+        ignored: this should be handled in the update phase when the length of the final route is zero.
 
         :param sim: the simulation state
         :param env: the simulation environment
         :return: true if our trip is done
         """
-        error0, active_trip = get_active_pooling_trip(self)
-        if error0:
-            return False
-        else:
-            return len(self.trips) == 1 and len(active_trip.route) == 0
+        return False
 
-    def _enter_default_terminal_state(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception],                                                                                    Optional[Tuple['SimulationState', VehicleState]]]:
+    def _enter_default_terminal_state(self,
+                                      sim: SimulationState,
+                                      env: Environment) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         after dropping off the last passenger, we default to an idle state. this
         behavior is more likely to have occurred during an update.
@@ -91,55 +130,48 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         else:
             return None, (enter_sim, next_state)
 
-    def _perform_update(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        move forward on our trip
+        move forward on our trip, making pickups and dropoffs as needed
 
         :param sim: the simulation state
         :param env: the simulation environment
         :return: the vehicle after advancing in time on a servicing trip
         """
-        error0, active_trip = get_active_pooling_trip(self)
-        if error0:
-            return error0, None
+
+        # grab the current trip
+        err1, active_trip = get_active_pooling_trip(self)
+        if err1 is not None:
+            return err1, None
         else:
-            error1, move_result = move(sim, env, self.vehicle_id, active_trip.route)
+            # move forward in current trip plan
+            move_error, move_result = move(sim, env, self.vehicle_id, active_trip.route)
             moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
-            if error1:
-                return error1, None
+            if move_error:
+                return move_error, None
             elif not moved_vehicle:
                 return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
             elif isinstance(moved_vehicle.vehicle_state, OutOfService):
                 return None, move_result.sim
             else:
-                # update moved vehicle's state (holding the route)
-                moved_trip = active_trip.update_route(move_result.route_traversal.remaining_route)
-                moved_trips = self.trips.update({active_trip.request.id, moved_trip})
-                moved_state = self._replace(trips=moved_trips)
-                moved_vehicle = moved_vehicle.modify_vehicle_state(moved_state)
-
-                # have we reached our (current) destination? (lead trip.route is empty)
-                if len(moved_trip.route) != 0:
-                    # nope, still driving towards that destination
-                    result = simulation_state_ops.modify_vehicle(move_result.sim, moved_vehicle)
-                    return result
-                else:
-                    # drop these passengers off (triggers a report)
-                    error2, sim2 = drop_off_trip(sim, env, self.vehicle_id, moved_trip)
-                    if error2:
-                        return error2, None
+                # update moved vehicle's state
+                updated_route = move_result.route_traversal.remaining_route
+                err2, sim2 = update_active_pooling_trip(move_result.sim, env, self, updated_route)
+                updated_vehicle = sim2.vehicles.get(self.vehicle_id)
+                if updated_vehicle is None:
+                    return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+                elif isinstance(updated_vehicle.vehicle_state, ServicingPoolingTrip):
+                    # if we finished all trip plans, we can terminate this ServicingPoolingTrip state
+                    if len(updated_vehicle.vehicle_state.trip_plan) == 0:
+                        # todo: generate "end of pooling trip" report, calculate all request travel times
+                        #  using ServicingPoolingTrip.departure_times
+                        idle_result = self._enter_default_terminal_state(sim2, env)
+                        return idle_result
                     else:
-                        # since this is a pooling trip, remove the moved_trip
-                        error3, remove_result = remove_completed_trip(move_result.sim, env, self.vehicle_id)
-                        if error3:
-                            return error3, None
-                        else:
-                            # if that was our last pooling trip, then we can go Idle
-                            sim3, remaining_trips = remove_result
-                            if len(self.trips) == 0:
-                                next_state = Idle(self.vehicle_id)
-                                result = next_state.enter(sim, env)
-                                return result
-                            else:
-                                return None, sim3
+                        return None, sim2
+                else:
+                    # somehow our vehicle fell off it's ServicingPoolingTrip horse during this update
+                    state_name = updated_vehicle.vehicle_state.__class__.__name__
+                    err3 = SimulationStateError(f"vehicle {self.vehicle_id} had invalid state change from ServicingPoolingTrip to {state_name}")
+                    return err3, None

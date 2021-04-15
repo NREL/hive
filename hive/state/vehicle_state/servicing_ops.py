@@ -1,45 +1,218 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING, NamedTuple
 from typing import Union
 import functools as ft
 
-from hive.model.roadnetwork.route import route_cooresponds_with_entities, routes_are_connected
-from hive.model.vehicle.trip import Trip
+import immutables
+
+from hive.model.request import Request
+from hive.model.roadnetwork.route import route_cooresponds_with_entities, routes_are_connected, Route
+from hive.model.vehicle.trip_phase import TripPhase
+from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.vehicle_event_ops import report_pickup_request, report_dropoff_request
 from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.vehicle_state.rerouted_pooling_trip import ReroutedPoolingTrip
+from hive.state.simulation_state.simulation_state_ops import modify_vehicle
+from hive.state.vehicle_state.dispatch_trip import DispatchTrip
+from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
 from hive.util.iterators import sliding
 
 if TYPE_CHECKING:
-    from hive.state.vehicle_state.servicing_trip import ServicingTrip
     from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+
+
+def create_servicing_state(sim: SimulationState, request: Request, vehicle: Vehicle) -> VehicleState:
+    """
+    creates the correct servicing state, depending on the allowance of pooling behavior
+
+    :param sim: the simulation state
+    :param request: the request
+    :param vehicle: the vehicle
+    :return: the resulting vehicle state, either ServicingTrip or ServicingPoolingTrip
+    """
+    # generate the data to describe the trip for this request
+    # where the pickup phase is currently happening + doesn't need to be added to the trip plan
+    route = sim.road_network.route(request.origin_link, request.destination_link)
+    trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
+    departure_time = sim.sim_time
+
+    # create the state (pooling, or, standard servicing trip, depending on the sitch)
+    pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
+    next_state = ServicingPoolingTrip(
+        vehicle_id=vehicle.id,
+        trip_plan=trip_plan,
+        boarded_requests=immutables.Map({request.id: request}),
+        departure_times=immutables.Map({request.id, departure_time}),
+        routes=(route,),
+        num_passengers=len(request.passengers)
+    ) if pooling_trip else ServicingTrip(
+        vehicle_id=vehicle.id,
+        request=request,
+        departure_time=departure_time,
+        route=route
+    )
+    return next_state
+
+
+class ActivePoolingTrip(NamedTuple):
+    request_id: RequestId
+    trip_phase: TripPhase
+    route: Route
 
 
 def get_active_pooling_trip(
         vehicle_state: ServicingPoolingTrip
-) -> Tuple[Optional[Exception], Optional[Trip]]:
+) -> Tuple[Optional[Exception], Optional[ActivePoolingTrip]]:
     """
-    helper to unpack the request id and trip data for the currently-active
-    trip (the first trip in the trip_order)
+    helper to grab the currently-active trip
+
     :param vehicle_state: the servicing state to inspect
-    :return: the request id and trip, or, an error
+    :return: the active pooling trip we are servicing
     """
 
-    first_trip = TupleOps.head_optional(vehicle_state.trip_order)
-    trip = vehicle_state.trips.get(first_trip.request_id) if first_trip else None
-    if not first_trip:
-        error = SimulationStateError(f"ServicingPoolingTrip has empty trip_order during enter method")
+    first_trip = TupleOps.head_optional(vehicle_state.trip_plan)
+    first_route = TupleOps.head_optional(vehicle_state.routes)
+    if first_trip is None:
+        error = SimulationStateError(
+            f"attempting to grab the active request in ServicingPoolingTrip for vehicle {vehicle_state.vehicle_id} but request plan is empty"
+        )
         return error, None
-    elif not trip:
-        error = SimulationStateError(f"trip with request id {first_trip} missing from trips collection {vehicle_state.trips}")
+    elif first_route is None:
+        error = SimulationStateError(
+            f"attempting to grab the active request in ServicingPoolingTrip for vehicle {vehicle_state.vehicle_id} but route plan is empty"
+        )
         return error, None
     else:
-        return None, trip
+        request_id, trip_phase = first_trip
+        active_pooling_trip = ActivePoolingTrip(request_id, trip_phase, first_route)
+        return active_pooling_trip
+
+
+def complete_trip_phase(
+        sim: SimulationState,
+        env: Environment,
+        vehicle: Vehicle,
+        active_trip: ActivePoolingTrip
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    performs the action associated with closing out a trip phase.
+
+    invariant: the Vehicle must be in a ServicingPoolingTrip state!
+
+    :param sim: the simulation state
+    :param env: the simulation environment
+    :param vehicle: the vehicle
+    :param active_trip: the active pooling trip phase to close out
+    :return: an error, or, the updated simulation state
+    """
+
+    vehicle_state = vehicle.vehicle_state
+    updated_trip_plan = TupleOps.tail(vehicle_state.trip_plan)
+    updated_routes = TupleOps.tail(vehicle_state.routes)
+    if active_trip.trip_phase == TripPhase.PICKUP:
+        # perform pickup operation and update remaining route plan
+        request = sim.requests.get(active_trip.request_id)
+        if request is None:
+            return SimulationStateError(f"request {active_trip.request_id} not found"), None
+        else:
+            err2, sim2 = pick_up_trip(sim, env, vehicle.id, request.id)
+            if err2 is not None:
+                return err2, None
+            else:
+                # add this request to the boarded vehicles
+                updated_boarded_requests = vehicle_state.boarded_requests.set(request.id, request)
+                updated_num_passengers = vehicle_state.num_passengers + len(request.passengers)
+                updated_departure_times = vehicle_state.departure_times.set(request.id, sim.sim_time)
+                updated_vehicle_state = vehicle_state._replace(
+                    trip_plan=updated_trip_plan,
+                    routes=updated_routes,
+                    boarded_requests=updated_boarded_requests,
+                    num_passengers=updated_num_passengers,
+                    departure_times=updated_departure_times
+                )
+                updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
+                result = modify_vehicle(sim2, updated_vehicle)
+                return result
+
+    elif active_trip.trip_phase == TripPhase.DROPOFF:
+        # perform dropoff operation and update remaining route plan
+        request = vehicle.vehicle_state.boarded_requests.get(active_trip.request_id)
+        if request is None:
+            error = SimulationStateError(
+                f"request {active_trip.request_id} should have boarded pooling with vehicle {vehicle.id} but not found"
+            )
+            return error, None
+        else:
+            # result = drop_off_trip(sim, env, vehicle.id, request)
+            # return result
+            err2, sim2 = drop_off_trip(sim, env, vehicle.id, request)
+            if err2 is not None:
+                return err2, None
+            else:
+                # remove this request from the boarded vehicles
+                updated_boarded_requests = vehicle_state.boarded_requests.delete(request.id)
+                updated_num_passengers = vehicle_state.num_passengers - len(request.passengers)
+                updated_vehicle_state = vehicle_state._replace(
+                    trip_plan=updated_trip_plan,
+                    routes=updated_routes,
+                    boarded_requests=updated_boarded_requests,
+                    num_passengers=updated_num_passengers
+                )
+                updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
+                result = modify_vehicle(sim2, updated_vehicle)
+                return result
+    else:
+        return SimulationStateError(f"invalid trip phase {active_trip.trip_phase}"), None
+
+
+def update_active_pooling_trip(
+        sim: SimulationState,
+        env: Environment,
+        vehicle_state: ServicingPoolingTrip,
+        updated_route: Route
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    helper to update the route of the leading trip when no route changes are required
+
+    :param vehicle_state:
+    :return:
+    """
+    vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
+    if vehicle is None:
+        return SimulationStateError(f"vehicle {vehicle_state.vehicle_id} not found"), None
+    elif len(updated_route) > 0:
+        # all we need to do is replace the route at the head of the route plan
+        tail = TupleOps.tail(vehicle_state.routes)
+        updated_routes = (updated_route,) + tail
+        updated_state = vehicle_state._replace(routes=updated_routes)
+        updated_vehicle = vehicle.modify_vehicle_state(updated_state)
+        result = modify_vehicle(sim, updated_vehicle)
+        return result
+    else:
+        # we reached the end of a route, so, we need to perform whatever trip phase
+        # action is required and then update the vehicle state accordingly
+        err1, active_trip = get_active_pooling_trip(vehicle_state)
+        if err1 is not None:
+            return err1, None
+        else:
+            result = complete_trip_phase(sim, env, vehicle, active_trip)
+            return result
+
+
+def transitioning_from_dispatch_trip(vehicle: Vehicle) -> bool:
+    """
+    checks that the vehicle is in a DispatchTrip state
+    helper prevents cyclic dependency between vehicle state classes
+
+    :param vehicle: the vehicle
+    :return: True, if the vehicle has a DispatchTrip state
+    """
+    return isinstance(vehicle.vehicle_state, DispatchTrip)
 
 
 def pick_up_trip(sim: SimulationState,
@@ -79,7 +252,7 @@ def pick_up_trip(sim: SimulationState,
 def drop_off_trip(sim: SimulationState,
                   env: Environment,
                   vehicle_id: VehicleId,
-                  trip: Trip
+                  request: Request
                   ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     handles the dropping off of passengers, which is really mostly a validation
@@ -97,62 +270,16 @@ def drop_off_trip(sim: SimulationState,
         return SimulationStateError(f"vehicle {vehicle_id} not found"), None
     else:
         # confirm each passenger has reached their destination
-        for passenger in trip.passengers:
+        for passenger in request.passengers:
             if passenger.destination != vehicle.geoid:
                 locations = f"{passenger.destination} != {vehicle.geoid}"
                 message = f"vehicle {vehicle_id} dropping off passenger {passenger.id} but location is wrong: {locations}"
                 return SimulationStateError(message), None
 
-        report = report_dropoff_request(vehicle, sim, trip)
+        report = report_dropoff_request(vehicle, sim, request)
         env.reporter.file_report(report)
 
         return None, sim
-
-
-def enter_servicing_state(sim: SimulationState,
-                          env: Environment,
-                          vehicle_id: VehicleId,
-                          trip: Trip,
-                          servicing_state: Union[ServicingTrip, ServicingPoolingTrip]
-                          ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-    """
-    attempts to enter a servicing state, first validating
-    :param sim: the simulation state
-    :param env: the simulation environment
-    :param vehicle_id: the vehicle servicing the trip
-    :param trip: the trip to service
-    :param servicing_state: a Servicing vehicle state
-    :return: the simulation update result containing the effect of this transition
-    """
-    vehicle = sim.vehicles.get(vehicle_id)
-    request = sim.requests.get(trip.request.id)
-    is_valid = route_cooresponds_with_entities(
-        trip.route,
-        request.origin_link,
-        request.destination_link
-    ) if request and vehicle else False
-    if not vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
-    if not request:
-        # request was already picked up
-        return None, None
-    elif request and request.geoid != vehicle.geoid:
-        locations = f"{request.geoid} != {vehicle.geoid}"
-        message = f"vehicle {vehicle_id} ended trip to request {trip.request.id} but locations do not match: {locations}"
-        return SimulationStateError(message), None
-    elif not is_valid:
-        return None, None
-    elif not request.membership.grant_access_to_membership(vehicle.membership):
-        msg = f"vehicle {vehicle.id} doesn't have access to request {trip.request.id}"
-        return SimulationStateError(msg), None
-    else:
-        # request exists: pick up the trip and enter a ServicingTrip state
-        pickup_error, pickup_sim = pick_up_trip(sim, env, vehicle_id, trip.request.id)
-        if pickup_error:
-            return pickup_error, None
-        else:
-            enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, vehicle_id, servicing_state)
-            return enter_result
 
 
 def remove_completed_trip(sim: SimulationState,
@@ -191,47 +318,3 @@ def remove_completed_trip(sim: SimulationState,
         error, result = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         return error, (result, len(updated_trips))
 
-
-def enter_re_routed_pooling_state(sim: SimulationState,
-                                  env: Environment,
-                                  state: ReroutedPoolingTrip
-                                  ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-    """
-    checks that the proposed new re routing state is correct by confirming
-    the route plans are connected and ordered and that there are enough seats
-    for all Passengers to ride.
-
-    :param sim: the simulation state
-    :param env: the simulation environment
-    :param state: the vehicle state to apply
-    :return: either the simulation with the updated state, or, an error
-    """
-
-    # do we have space for additional passengers?
-    vehicle = sim.vehicles.get(state.vehicle_id)
-    mech = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
-    current_passenger_count = sum([len(trip.passengers) for trip in state.trips.values()])
-    req_id = state.re_route_request_id
-    request = sim.requests.get(req_id)
-    updated_passenger_count = len(request.passengers) + current_passenger_count if request else None
-    has_space_for_new_passengers = updated_passenger_count <= mech.total_number_of_seats() if mech else False
-
-    # are the routes correct? just check endpoint edge ids in order
-    trips_ordered = (state.re_route,) + ft.reduce(lambda acc, r_id: acc + (state.trips.get(r_id),), state.trip_order, ())
-    trips_match = all(ft.reduce(
-        lambda acc, pair: acc + (routes_are_connected(pair[0], pair[1]),),
-        sliding(trips_ordered, 2),
-        ()
-    ))
-
-    if request is None:
-        return SimulationStateError(f"proposed request {req_id} not found"), None
-    elif not has_space_for_new_passengers:
-        return SimulationStateError(f"request {req_id} attempting to board vehicle {state.vehicle_id} but not enough space"), None
-    elif not trips_match:
-        return SimulationStateError(f"proposed pooling re-route for request {req_id}, vehicle {state.vehicle_id} has invalid links"), None
-    else:
-
-        # looks good, let's switch to this re-routing state
-        enter_result = VehicleState.apply_new_vehicle_state(sim, state.vehicle_id, state)
-        return enter_result

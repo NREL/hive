@@ -175,6 +175,14 @@ class Request(NamedTuple):
         """
         return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
 
+    def unassign_dispatched_vehicle(self) -> Request:
+        """
+        removes any vehicle listed as assigned to this request
+        :return: the updated request
+        """
+        updated = self._replace(dispatched_vehicle=None, dispatched_vehicle_time=None)
+        return updated
+
     def assign_value(self, rate_structure: RequestRateStructure, road_network: RoadNetwork) -> Request:
         """
         used to assign a value to this request based on it's properties as well as possible surge pricing.

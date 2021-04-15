@@ -11,9 +11,7 @@ from hive.model.request import Request
 from hive.model.roadnetwork import Route, Link
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.model.vehicle.vehicle import Vehicle, RequestId
-from hive.state.vehicle_state.rerouted_pooling_trip import ReroutedPoolingTrip
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-from hive.state.vehicle_state.servicing_pooling_trip2 import ServicingPoolingTrip2
 from hive.util import GeoId
 from hive.util.exception import InstructionError
 
@@ -120,7 +118,7 @@ def trip_plan_all_requests_allow_pooling(sim: 'SimulationState',
     def _test_req(test_errors: Tuple[Tuple[str, ...], Tuple[str, ...]],
                   r_id: RequestId) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
         sim_error_ids, pool_error_ids = test_errors
-        req = sim.requests.get(r_id)
+        req = sim.boarded_requests.get(r_id)
         if req is None:
             updated_sim_error_ids = sim_error_ids + (r_id, )
             return updated_sim_error_ids, pool_error_ids
@@ -147,81 +145,50 @@ def trip_plan_all_requests_allow_pooling(sim: 'SimulationState',
         return None
 
 
-def create_dispatch_pooling_trip(sim: 'SimulationState',
-                                 env: 'Environment',
-                                 vehicle: Vehicle,
-                                 trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
-                                 ) -> Tuple[Optional[Exception], Optional[ServicingPoolingTrip]]:
-    """
-    create a vehicle state representing a new pooling trip plan.
-
-    this pooling state has been validated and so within this scope while constructing the route plan
-    we trust that the trip plan accounts for all trips already boarded.
-
-    :param sim: the sim state
-    :param env: the sim environment
-    :param vehicle: vehicle being re-routed
-    :param trip_plan: the proposed trip plan from dispatch
-    :return: the dispatch pooling trip state
-    """
-
-    # create each route for the route plan
-    def _create_route(acc: Tuple[Link, Tuple[Route, ...]],
-                      plan_step: Tuple[RequestId, TripPhase]) -> Tuple[Link, Tuple[Route, ...]]:
-        prev_link, solution = acc
-        req_id, t = plan_step
-        request = sim.requests.get(req_id)
-        if request is None:
-            log.error(f"attempting to build pooling trip with {req_id} which is not in the simulation")
-            return acc
-        else:
-            next_link = request.origin_link if t == TripPhase.PICKUP else request.destination_link
-            next_route = sim.road_network.route(prev_link, next_link)
-            next_routes = solution + (next_route, )
-            return next_link, next_routes
-
-    initial = (vehicle.geoid, ())
-    _, route_plan = ft.reduce(_create_route, trip_plan, initial)
-
-    req_ids, _ = tuple(zip(*trip_plan))
-    req_ids_unique = frozenset(req_ids)
-    reqs = immutables.Map({r_id: sim.requests.get(r_id) for r_id in req_ids_unique})
-    num_passengers = sum([len(r.passengers) for r in reqs.values()])
-
-    state = ServicingPoolingTrip2(
-        vehicle_id=vehicle.id,
-        trip_plan=trip_plan,
-        trips=reqs,
-        routes=route_plan,
-        num_passengers=num_passengers
-    )
-    return None, state
-
-
-def create_reroute_pooling_trip(sim: 'SimulationState',
-                                env: 'Environment',
-                                vehicle: Vehicle,
-                                trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
-                                ) -> Tuple[Optional[Exception], Optional[ReroutedPoolingTrip]]:
-    """
-    constructs a new trip plan based on the provided requests.
-
-    we may be carrying some passengers already. we may be diverting sooner or later
-    along our trip plan. we must assume any request may be mid-flight or may not yet
-    be picked up.
-
-    :param sim: the sim state
-    :param env: the sim environment
-    :param vehicle: vehicle being re-routed
-    :param trip_order: the proposed trip order from dispatch
-    :param new_requests: the requests which are newly added to this pooling trip
-    :return: the
-    """
-
-    # updated_trips = ft.reduce(
-    #     lambda acc, r: acc.set(r.id, Trip(r, r.departure_time, (), r.passengers)),
-    #     new_requests,
-    #     vehicle.vehicle_state.trips
-    # )
-    # first_trip = updated_trips.get(TupleOps.head(trip_order))
-    # sim.road_network.route()
+# def create_dispatch_pooling_trip(sim: 'SimulationState',
+#                                  vehicle: Vehicle,
+#                                  trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+#                                  ) -> Tuple[Optional[Exception], Optional[ServicingPoolingTrip]]:
+#     """
+#     create a vehicle state representing a new pooling trip plan.
+#
+#     this pooling state has been validated and so within this scope while constructing the route plan
+#     we trust that the trip plan accounts for all trips already boarded.
+#
+#     :param sim: the sim state
+#     :param vehicle: vehicle being re-routed
+#     :param trip_plan: the proposed trip plan from dispatch
+#     :return: the dispatch pooling trip state
+#     """
+#
+#     # create each route for the route plan
+#     def _create_route(acc: Tuple[Link, Tuple[Route, ...]],
+#                       plan_step: Tuple[RequestId, TripPhase]) -> Tuple[Link, Tuple[Route, ...]]:
+#         prev_link, solution = acc
+#         req_id, t = plan_step
+#         request = sim.requests.get(req_id)
+#         if request is None:
+#             log.error(f"attempting to build pooling trip with {req_id} which is not in the simulation")
+#             return acc
+#         else:
+#             next_link = request.origin_link if t == TripPhase.PICKUP else request.destination_link
+#             next_route = sim.road_network.route(prev_link, next_link)
+#             next_routes = solution + (next_route, )
+#             return next_link, next_routes
+#
+#     initial = (vehicle.geoid, ())
+#     _, route_plan = ft.reduce(_create_route, trip_plan, initial)
+#
+#     req_ids, _ = tuple(zip(*trip_plan))
+#     req_ids_unique = frozenset(req_ids)
+#     reqs = immutables.Map({r_id: sim.requests.get(r_id) for r_id in req_ids_unique})
+#     num_passengers = sum([len(r.passengers) for r in reqs.values()])
+#
+#     state = ServicingPoolingTrip(
+#         vehicle_id=vehicle.id,
+#         trip_plan=trip_plan,
+#         trips=reqs,
+#         routes=route_plan,
+#         num_passengers=num_passengers
+#     )
+#     return None, state

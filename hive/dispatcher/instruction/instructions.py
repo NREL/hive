@@ -18,7 +18,7 @@ from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.repositioning import Repositioning
 from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-from hive.state.vehicle_state.servicing_pooling_trip2 import ServicingPoolingTrip2
+from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.util.exception import SimulationStateError, InstructionError
 
 log = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
         req_allow_pooling_error_msg = trip_plan_all_requests_allow_pooling(sim_state, self.trip_plan)
         seating_error = test_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
 
-        if isinstance(v_state, ServicingPoolingTrip2) and not trip_plan_covers_previous(v_state, self.trip_plan):
+        if isinstance(v_state, ServicingPoolingTrip) and not trip_plan_covers_previous(v_state, self.trip_plan):
             msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
             error = InstructionError(msg)
             return error, None
@@ -100,45 +100,49 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            error, next_state = create_dispatch_pooling_trip(sim_state, env, vehicle, self.trip_plan)
-            if error is not None:
-                return error, None
-            else:
-                return None, InstructionResult(vehicle.vehicle_state, next_state)
+            # todo: do we want a DispatchPoolingTrip state, which tracks the longer-term plan we devised here?
+            #  - DispatchPoolingTrip would get us to the first trip plan step and then convert us into ServicingPoolingTrip
+            #  - using only DispatchTrip here instead would mean our DispatchTrip should also allow an optional trip_plan to pass along
+            pass
+            # error, next_state = create_dispatch_pooling_trip(sim_state, vehicle, self.trip_plan)
+            # if error is not None:
+            #     return error, None
+            # else:
+            #     return None, InstructionResult(vehicle.vehicle_state, next_state)
 
 
-class ReroutePoolingTripInstruction(NamedTuple, Instruction):
-    vehicle_id: VehicleId
-    trip_order: Tuple[RequestId, ...]
-
-    def apply_instruction(self,
-                          sim_state: SimulationState,
-                          env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
-
-        vehicle = sim_state.vehicles.get(self.vehicle_id)
-        new_trip_request_ids = set(self.trip_order).difference(vehicle.vehicle_state.trip_order) if vehicle else None
-        new_trip_requests = tuple(map(sim_state.requests.get, new_trip_request_ids)) if new_trip_request_ids else None
-
-        if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not isinstance(vehicle.vehicle_state, ServicingPoolingTrip):
-            return SimulationStateError(f"vehicle {self.vehicle_id} not pooling but instructed to re-route for pooling"), None
-        elif any(map(lambda r: r is None, new_trip_requests)):
-            r_ids, _ = zip(*(filter(lambda pair: pair[1] is None, zip(self.trip_order, new_trip_requests))))
-            return SimulationStateError(f"requests {r_ids} for pooling trip not found"), None
-        else:
-            # make sure the user included all request ids, including ones that may be mid-flight
-            old_reqs_missing = set(vehicle.vehicle_state.trip_order).difference(self.trip_order) if vehicle else None
-            if len(old_reqs_missing) > 0:
-                return SimulationStateError(f"new re-route plan is missing current request ids {old_reqs_missing}"), None
-            else:
-                # create the rerouting state, computing all new routes in the supplied order
-                prev_state = vehicle.vehicle_state
-                error, next_state = create_reroute_pooling_trip(sim_state, env, vehicle, self.trip_order, new_trip_requests)
-                if error:
-                    return error, None
-                else:
-                    return None, InstructionResult(prev_state, next_state)
+# class ReroutePoolingTripInstruction(NamedTuple, Instruction):
+#     vehicle_id: VehicleId
+#     trip_order: Tuple[RequestId, ...]
+#
+#     def apply_instruction(self,
+#                           sim_state: SimulationState,
+#                           env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+#
+#         vehicle = sim_state.vehicles.get(self.vehicle_id)
+#         new_trip_request_ids = set(self.trip_order).difference(vehicle.vehicle_state.trip_order) if vehicle else None
+#         new_trip_requests = tuple(map(sim_state.requests.get, new_trip_request_ids)) if new_trip_request_ids else None
+#
+#         if not vehicle:
+#             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+#         elif not isinstance(vehicle.vehicle_state, ServicingPoolingTrip):
+#             return SimulationStateError(f"vehicle {self.vehicle_id} not pooling but instructed to re-route for pooling"), None
+#         elif any(map(lambda r: r is None, new_trip_requests)):
+#             r_ids, _ = zip(*(filter(lambda pair: pair[1] is None, zip(self.trip_order, new_trip_requests))))
+#             return SimulationStateError(f"requests {r_ids} for pooling trip not found"), None
+#         else:
+#             # make sure the user included all request ids, including ones that may be mid-flight
+#             old_reqs_missing = set(vehicle.vehicle_state.trip_order).difference(self.trip_order) if vehicle else None
+#             if len(old_reqs_missing) > 0:
+#                 return SimulationStateError(f"new re-route plan is missing current request ids {old_reqs_missing}"), None
+#             else:
+#                 # create the rerouting state, computing all new routes in the supplied order
+#                 prev_state = vehicle.vehicle_state
+#                 error, next_state = create_reroute_pooling_trip(sim_state, env, vehicle, self.trip_order, new_trip_requests)
+#                 if error:
+#                     return error, None
+#                 else:
+#                     return None, InstructionResult(prev_state, next_state)
 
 
 class DispatchStationInstruction(NamedTuple, Instruction):

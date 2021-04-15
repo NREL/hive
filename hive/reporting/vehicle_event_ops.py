@@ -9,7 +9,6 @@ import immutables
 from hive.model.energy import Charger
 from hive.model.roadnetwork import route
 from hive.model.station import Station
-from hive.model.vehicle.trip import Trip
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
 from hive.runner import Environment
@@ -152,7 +151,7 @@ def report_pickup_request(vehicle: Vehicle,
 
 def report_dropoff_request(vehicle: Vehicle,
                            sim: SimulationState,
-                           trip: Trip
+                           request: Request
                            ) -> Report:
     """
     reports information about the marginal effect of a request dropoff from a ServicingTrip state
@@ -160,22 +159,21 @@ def report_dropoff_request(vehicle: Vehicle,
 
     :param vehicle: the vehicle that picked up the request
     :param sim: simulation state when the dropoff occurs
-    :param trip: the trip that has completed
+    :param request: request for the trip that has completed
     :return: a dropoff request report
     """
 
     geoid = vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
-    travel_time = time_diff(vehicle.vehicle_state.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
     # somewhat a hack, we just grab the membership from the first passenger
-    membership = TupleOps.head(vehicle.vehicle_state.passengers).membership
-    travel_time = time_diff(trip.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
+    membership = TupleOps.head(request.passengers).membership
+    travel_time = time_diff(request.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
 
     report_data = {
         'dropoff_time': sim.sim_time,
         'travel_time': travel_time,
         'vehicle_id': vehicle.id,
-        'request_id': vehicle.vehicle_state.trip.request_id,
+        'request_id': request.id,
         'fleet_id': str(membership),
         'geoid': geoid,
         'lat': lat,

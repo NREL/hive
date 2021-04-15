@@ -7,14 +7,14 @@ import immutables
 
 from hive.model.passenger import board_vehicle
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
-from hive.model.vehicle.trip import Trip
+from hive.model.vehicle.trip_phase import TripPhase
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
+from hive.state.simulation_state.simulation_state_ops import modify_request
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-from hive.state.vehicle_state.servicing_trip import ServicingTrip
+from hive.state.vehicle_state.servicing_ops import create_servicing_state
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId
@@ -66,7 +66,22 @@ class DispatchTrip(NamedTuple, VehicleState):
                 return result
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        return None, sim
+        """
+        release the vehicle from the request it was dispatched to
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an error, or, the updated simulation state, where the request is no longer awaiting this vehicle
+        """
+        request = sim.requests.get(self.request_id)
+        if request is None:
+            # request doesn't exist, doesn't need to be updated
+            return None, sim
+        else:
+            updated_request = request.unassign_dispatched_vehicle()
+            # todo: possibly log this event here
+            result = modify_request(sim, updated_request)
+            return result
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
@@ -93,7 +108,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         request = sim.requests.get(self.request_id)
         if request and request.geoid != vehicle.geoid:
             locations = f"{request.geoid} != {vehicle.geoid}"
-            message = f"vehicle {self.vehicle_id} ended trip to request {self.request_id} but locations do not match: {locations}. sim_time: {sim.sim_time}"
+            message = f"vehicle {self.vehicle_id} ended dispatch trip to request {self.request_id} but locations do not match: {locations}. sim_time: {sim.sim_time}"
             return SimulationStateError(message), None
         elif not request:
             # request already got picked up or was cancelled; go an Idle state
@@ -104,22 +119,7 @@ class DispatchTrip(NamedTuple, VehicleState):
             else:
                 return None, (enter_sim, next_state)
         else:
-            # create the trip to service
-            route = sim.road_network.route(request.origin_link, request.destination_link)
-            passengers = board_vehicle(request.passengers, self.vehicle_id)
-            trip = Trip(request, sim.sim_time, route, passengers)
-
-            # create the state (pooling, or, standard servicing trip, depending on the sitch)
-            pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
-            next_state = ServicingPoolingTrip(
-                vehicle_id=self.vehicle_id,
-                trips=immutables.Map({self.request_id: trip}),
-                trip_order=(self.request_id,),
-                num_passengers=len(passengers)
-            ) if pooling_trip else ServicingTrip(
-                vehicle_id=self.vehicle_id,
-                trip=trip
-            )
+            next_state = create_servicing_state(sim, request, vehicle)
 
             # enter the servicing state
             enter_error, enter_sim = next_state.enter(sim, env)
