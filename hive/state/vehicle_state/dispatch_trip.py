@@ -14,7 +14,9 @@ from hive.state.simulation_state.simulation_state_ops import modify_request
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.state.vehicle_state.servicing_ops import create_servicing_state
+# from hive.state.vehicle_state.servicing_ops import create_servicing_state
+from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId
@@ -119,7 +121,28 @@ class DispatchTrip(NamedTuple, VehicleState):
             else:
                 return None, (enter_sim, next_state)
         else:
-            next_state = create_servicing_state(sim, request, vehicle)
+            # generate the data to describe the trip for this request
+            # where the pickup phase is currently happening + doesn't need to be added to the trip plan
+            route = sim.road_network.route(request.origin_link, request.destination_link)
+            trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
+            departure_time = sim.sim_time
+
+            # create the state (pooling, or, standard servicing trip, depending on the sitch)
+            pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
+            next_state = ServicingPoolingTrip(
+                vehicle_id=vehicle.id,
+                trip_plan=trip_plan,
+                boarded_requests=immutables.Map({request.id: request}),
+                departure_times=immutables.Map({request.id, departure_time}),
+                routes=(route,),
+                num_passengers=len(request.passengers)
+            ) if pooling_trip else ServicingTrip(
+                vehicle_id=vehicle.id,
+                request=request,
+                departure_time=departure_time,
+                route=route
+            )
+            # return next_state
 
             # enter the servicing state
             enter_error, enter_sim = next_state.enter(sim, env)

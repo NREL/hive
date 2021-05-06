@@ -15,8 +15,6 @@ from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import modify_vehicle
-from hive.state.vehicle_state.dispatch_trip import DispatchTrip
-from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
@@ -26,37 +24,37 @@ if TYPE_CHECKING:
     from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 
 
-def create_servicing_state(sim: SimulationState, request: Request, vehicle: Vehicle) -> VehicleState:
-    """
-    creates the correct servicing state, depending on the allowance of pooling behavior
-
-    :param sim: the simulation state
-    :param request: the request
-    :param vehicle: the vehicle
-    :return: the resulting vehicle state, either ServicingTrip or ServicingPoolingTrip
-    """
-    # generate the data to describe the trip for this request
-    # where the pickup phase is currently happening + doesn't need to be added to the trip plan
-    route = sim.road_network.route(request.origin_link, request.destination_link)
-    trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
-    departure_time = sim.sim_time
-
-    # create the state (pooling, or, standard servicing trip, depending on the sitch)
-    pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
-    next_state = ServicingPoolingTrip(
-        vehicle_id=vehicle.id,
-        trip_plan=trip_plan,
-        boarded_requests=immutables.Map({request.id: request}),
-        departure_times=immutables.Map({request.id, departure_time}),
-        routes=(route,),
-        num_passengers=len(request.passengers)
-    ) if pooling_trip else ServicingTrip(
-        vehicle_id=vehicle.id,
-        request=request,
-        departure_time=departure_time,
-        route=route
-    )
-    return next_state
+# def create_servicing_state(sim: SimulationState, request: Request, vehicle: Vehicle) -> VehicleState:
+#     """
+#     creates the correct servicing state, depending on the allowance of pooling behavior
+#
+#     :param sim: the simulation state
+#     :param request: the request
+#     :param vehicle: the vehicle
+#     :return: the resulting vehicle state, either ServicingTrip or ServicingPoolingTrip
+#     """
+#     # generate the data to describe the trip for this request
+#     # where the pickup phase is currently happening + doesn't need to be added to the trip plan
+#     route = sim.road_network.route(request.origin_link, request.destination_link)
+#     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
+#     departure_time = sim.sim_time
+#
+#     # create the state (pooling, or, standard servicing trip, depending on the sitch)
+#     pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
+#     next_state = ServicingPoolingTrip(
+#         vehicle_id=vehicle.id,
+#         trip_plan=trip_plan,
+#         boarded_requests=immutables.Map({request.id: request}),
+#         departure_times=immutables.Map({request.id, departure_time}),
+#         routes=(route,),
+#         num_passengers=len(request.passengers)
+#     ) if pooling_trip else ServicingTrip(
+#         vehicle_id=vehicle.id,
+#         request=request,
+#         departure_time=departure_time,
+#         route=route
+#     )
+#     return next_state
 
 
 class ActivePoolingTrip(NamedTuple):
@@ -212,7 +210,8 @@ def transitioning_from_dispatch_trip(vehicle: Vehicle) -> bool:
     :param vehicle: the vehicle
     :return: True, if the vehicle has a DispatchTrip state
     """
-    return isinstance(vehicle.vehicle_state, DispatchTrip)
+    # modified to class name to avoid bringing in DispatchTrip import!
+    return vehicle.vehicle_state.__class__.__name__ == "DispatchTrip"
 
 
 def pick_up_trip(sim: SimulationState,
@@ -300,7 +299,7 @@ def remove_completed_trip(sim: SimulationState,
     if state is None:
         error = SimulationStateError(f"vehicle {vehicle_id} not found in simulation state")
         return error, None
-    elif not isinstance(state, ServicingPoolingTrip):
+    elif not state.__class__.__name__ == "ServicingPoolingTrip":
         error = SimulationStateError(f"vehicle {vehicle_id} state not pooling but attemping to remove it's oldest pooling trip")
         return error, None
     elif len(state.trips) == 0:
