@@ -140,7 +140,7 @@ class DispatchTrip(NamedTuple, VehicleState):
                         sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        take a step along the route to the base
+        take a step along the route to the request
 
         :param sim: the simulation state
         :param env: the simulation environment

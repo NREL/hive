@@ -4,11 +4,12 @@ import logging
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
-from hive.dispatcher.instruction.instruction_ops import create_reroute_pooling_trip, trip_plan_ordering_is_valid, trip_plan_covers_previous, \
-    trip_plan_all_requests_allow_pooling, create_dispatch_pooling_trip, test_vehicle_has_seats
+from hive.dispatcher.instruction.instruction_ops import trip_plan_ordering_is_valid, trip_plan_covers_previous, \
+    trip_plan_all_requests_allow_pooling, test_vehicle_has_seats
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
+from hive.state.vehicle_state import dispatch_ops
 from hive.state.vehicle_state.charging_base import ChargingBase
 from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.state.vehicle_state.dispatch_base import DispatchBase
@@ -100,49 +101,11 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            # todo: do we want a DispatchPoolingTrip state, which tracks the longer-term plan we devised here?
-            #  - DispatchPoolingTrip would get us to the first trip plan step and then convert us into ServicingPoolingTrip
-            #  - using only DispatchTrip here instead would mean our DispatchTrip should also allow an optional trip_plan to pass along
-            pass
-            # error, next_state = create_dispatch_pooling_trip(sim_state, vehicle, self.trip_plan)
-            # if error is not None:
-            #     return error, None
-            # else:
-            #     return None, InstructionResult(vehicle.vehicle_state, next_state)
-
-
-# class ReroutePoolingTripInstruction(NamedTuple, Instruction):
-#     vehicle_id: VehicleId
-#     trip_order: Tuple[RequestId, ...]
-#
-#     def apply_instruction(self,
-#                           sim_state: SimulationState,
-#                           env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
-#
-#         vehicle = sim_state.vehicles.get(self.vehicle_id)
-#         new_trip_request_ids = set(self.trip_order).difference(vehicle.vehicle_state.trip_order) if vehicle else None
-#         new_trip_requests = tuple(map(sim_state.requests.get, new_trip_request_ids)) if new_trip_request_ids else None
-#
-#         if not vehicle:
-#             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-#         elif not isinstance(vehicle.vehicle_state, ServicingPoolingTrip):
-#             return SimulationStateError(f"vehicle {self.vehicle_id} not pooling but instructed to re-route for pooling"), None
-#         elif any(map(lambda r: r is None, new_trip_requests)):
-#             r_ids, _ = zip(*(filter(lambda pair: pair[1] is None, zip(self.trip_order, new_trip_requests))))
-#             return SimulationStateError(f"requests {r_ids} for pooling trip not found"), None
-#         else:
-#             # make sure the user included all request ids, including ones that may be mid-flight
-#             old_reqs_missing = set(vehicle.vehicle_state.trip_order).difference(self.trip_order) if vehicle else None
-#             if len(old_reqs_missing) > 0:
-#                 return SimulationStateError(f"new re-route plan is missing current request ids {old_reqs_missing}"), None
-#             else:
-#                 # create the rerouting state, computing all new routes in the supplied order
-#                 prev_state = vehicle.vehicle_state
-#                 error, next_state = create_reroute_pooling_trip(sim_state, env, vehicle, self.trip_order, new_trip_requests)
-#                 if error:
-#                     return error, None
-#                 else:
-#                     return None, InstructionResult(prev_state, next_state)
+            error, next_state = dispatch_ops.begin_or_replan_dispatch_pooling_state(sim_state, self.vehicle_id, self.trip_plan)
+            if error is not None:
+                return error, None
+            else:
+                return None, InstructionResult(vehicle.vehicle_state, next_state)
 
 
 class DispatchStationInstruction(NamedTuple, Instruction):
