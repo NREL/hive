@@ -38,6 +38,64 @@ parser.add_argument(
 log = logging.getLogger("hive")
 
 
+def run_sim(scenario_file, position=0):
+    """
+    runs a single sim and writes outputs
+
+    :param scenario_file: the scenario file to run
+    :param position: the tqdm position
+
+    :return: 0 for success
+    """
+    sim, env = load_simulation(scenario_file)
+
+    # initialize logging
+    logging.basicConfig(level=env.config.global_config.log_level, format='%(message)s')
+    if env.config.global_config.log_run:
+        run_log_path = os.path.join(env.config.scenario_output_directory, 'run.log')
+        log_fh = logging.FileHandler(run_log_path)
+        formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
+        # log_fh.setLevel(env.config.global_config.log_level)
+        log_fh.setFormatter(formatter)
+        log.addHandler(log_fh)
+        log.info(
+            f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
+
+    if env.config.global_config.log_station_capacities:
+        result = reporter_ops.log_station_capacities(sim, env)
+        throw_on_failure(result)
+
+    # build the set of instruction generators which compose the control system for this hive run
+    # this ordering is important as the later managers will override any instructions from the previous
+    # instruction generator for a specific vehicle id.
+    instruction_generators = (
+        ChargingFleetManager(env.config.dispatcher),
+        Dispatcher(env.config.dispatcher),
+    )
+
+    update = Update.build(env.config, instruction_generators)
+    initial_payload = RunnerPayload(sim, env, update)
+
+    log.info(f"running {env.config.sim.sim_name} for time {initial_payload.e.config.sim.start_time} "
+             f"to {initial_payload.e.config.sim.end_time}:")
+    start = time.time()
+    sim_result = LocalSimulationRunner.run(initial_payload, position)
+    end = time.time()
+
+    log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
+
+    env.reporter.close(sim_result)
+
+    if env.config.global_config.write_outputs:
+        config_dump = env.config.asdict()
+        dump_name = env.config.sim.sim_name + ".yaml"
+        dump_path = os.path.join(env.config.scenario_output_directory, dump_name)
+        with open(dump_path, 'w') as f:
+            yaml.dump(config_dump, f, sort_keys=False)
+
+    return 0
+
+
 def run() -> int:
     """
     entry point for a hive application run
@@ -62,55 +120,12 @@ def run() -> int:
         # create the configuration and load the simulation
         try:
             scenario_file = fs.find_scenario(args.scenario_file)
-            sim, env = load_simulation(scenario_file)
         except FileNotFoundError as fe:
             log.error(fe)
             return 1
 
-        # initialize logging
-        logging.basicConfig(level=env.config.global_config.log_level, format='%(message)s')
-        if env.config.global_config.log_run:
-            run_log_path = os.path.join(env.config.scenario_output_directory, 'run.log')
-            log_fh = logging.FileHandler(run_log_path)
-            formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
-            # log_fh.setLevel(env.config.global_config.log_level)
-            log_fh.setFormatter(formatter)
-            log.addHandler(log_fh)
-            log.info(
-                f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
 
-        if env.config.global_config.log_station_capacities:
-            result = reporter_ops.log_station_capacities(sim, env)
-            throw_on_failure(result)
-
-        # build the set of instruction generators which compose the control system for this hive run
-        # this ordering is important as the later managers will override any instructions from the previous
-        # instruction generator for a specific vehicle id.
-        instruction_generators = (
-            ChargingFleetManager(env.config.dispatcher),
-            # DeluxeFleetManager(max_search_radius_km=env.config.network.max_search_radius_km),
-            Dispatcher(env.config.dispatcher),
-        )
-
-        update = Update.build(env.config, instruction_generators)
-        initial_payload = RunnerPayload(sim, env, update)
-
-        log.info(f"running simulation for time {initial_payload.e.config.sim.start_time} "
-                 f"to {initial_payload.e.config.sim.end_time}:")
-        start = time.time()
-        sim_result = LocalSimulationRunner.run(initial_payload)
-        end = time.time()
-
-        log.info(f'done! time elapsed: {round(end - start, 2)} seconds')
-
-        env.reporter.close(sim_result)
-
-        if env.config.global_config.write_outputs:
-            config_dump = env.config.asdict()
-            dump_name = env.config.sim.sim_name + ".yaml"
-            dump_path = os.path.join(env.config.scenario_output_directory, dump_name)
-            with open(dump_path, 'w') as f:
-                yaml.dump(config_dump, f, sort_keys=False)
+        run_sim(scenario_file)
 
         return 0
 

@@ -43,7 +43,10 @@ setup(
         "hive.resources": ["*"]
     },
     entry_points={
-        'console_scripts': ['hive=hive.app.run:run'],
+        'console_scripts': [
+            'hive=hive.app.run:run',
+            'hive-batch=hive.app.run_batch:run',
+        ],
     },
     author="National Renewable Energy Laboratory",
     author_email="Reinicke, Nicholas <Nicholas.Reinicke@nrel.gov>",

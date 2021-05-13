@@ -61,6 +61,7 @@ class StatefulHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()
+        self.log_file = None
 
     @staticmethod
     def driver_asdict(vehicle: Vehicle) -> dict:
