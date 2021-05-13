@@ -48,8 +48,12 @@ class ServicingTrip(NamedTuple, VehicleState):
         :return: an error, or, the sim with state entered
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        request = sim.requests.get(self.request.id)
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+        elif request is None:
+            # request moved on to greener pastures
+            return None, None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
             # the only supported transition into ServicingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__

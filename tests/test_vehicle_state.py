@@ -877,7 +877,7 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_trip_update_terminal(self):
         vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
-        request = mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac30e2d3")
+        request = mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac70e2d3")
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
@@ -892,9 +892,8 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_request = sim_updated.requests.get(request.id)
-        expected_passengers = board_vehicle(request.passengers, vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "vehicle should be in ServicingTrip state")
-        self.assertIn(expected_passengers[0], updated_vehicle.vehicle_state.trip.passengers, "passenger not picked up")
+        self.assertEquals(request, updated_vehicle.vehicle_state.request, "passengers not picked up")
         self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
 
     def test_dispatch_trip_enter_no_request(self):
@@ -1329,7 +1328,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingTrip, "should be in a ServicingTrip state")
-        self.assertEquals(len(updated_vehicle.vehicle_state.trip.route), 1, "should have a route")
+        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_servicing_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
@@ -1432,7 +1431,7 @@ class TestVehicleState(TestCase):
             vehicle.energy[EnergyType.ELECTRIC],
             "should have less energy",
         )
-        self.assertEqual(updated_vehicle.vehicle_state.trip.passengers, request.passengers, "should have passengers")
+        self.assertEqual(updated_vehicle.vehicle_state.passengers, request.passengers, "should have passengers")
 
     def test_servicing_trip_update_terminal(self):
         prev_state = DispatchTrip(DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), ())
@@ -1456,15 +1455,24 @@ class TestVehicleState(TestCase):
     def test_servicing_trip_enter_no_request(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        sim = mock_sim(vehicles=(vehicle,))  # request not added to sim
+        e0, sim_with_req = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e0, "test invariant failed")
+
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        rev_route = mock_route_from_geoids(request.geoid, vehicle.geoid)
 
-        state = ServicingTrip(vehicle.id, request, sim.sim_time, route)
-        error, updated_sim = state.enter(sim, env)
+        vs0 = DispatchTrip(vehicle.id, request.id, route)
+        e2, s0 = vs0.enter(sim_with_req, env)
+        self.assertIsNone(e2, "test invariant failed")
 
-        self.assertIsNone(error, "should have no errors")
-        self.assertIsNone(updated_sim, "no request at location should result in no update to sim")
+        # begin test
+        e1, sim_no_req = simulation_state_ops.remove_request(s0, request.id)
+        vs1 = ServicingTrip(vehicle.id, request, sim_no_req.sim_time, rev_route)
+        e3, s1 = vs1.enter(sim_no_req, env)
+
+        self.assertIsNone(e3, "should have no errors")
+        self.assertIsNone(s1, "no request at location should result in no update to sim")
 
     def test_servicing_trip_enter_no_vehicle(self):
         vehicle = mock_vehicle()
