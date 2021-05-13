@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING, NamedTuple
-from typing import Union
-import functools as ft
-
-import immutables
 
 from hive.model.request import Request
-from hive.model.roadnetwork.route import route_cooresponds_with_entities, routes_are_connected, Route
+from hive.model.roadnetwork.route import Route
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.vehicle_event_ops import report_pickup_request, report_dropoff_request
@@ -15,46 +11,10 @@ from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import modify_vehicle
-from hive.state.vehicle_state.servicing_trip import ServicingTrip
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
-from hive.util.iterators import sliding
 
 if TYPE_CHECKING:
     from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-
-
-# def create_servicing_state(sim: SimulationState, request: Request, vehicle: Vehicle) -> VehicleState:
-#     """
-#     creates the correct servicing state, depending on the allowance of pooling behavior
-#
-#     :param sim: the simulation state
-#     :param request: the request
-#     :param vehicle: the vehicle
-#     :return: the resulting vehicle state, either ServicingTrip or ServicingPoolingTrip
-#     """
-#     # generate the data to describe the trip for this request
-#     # where the pickup phase is currently happening + doesn't need to be added to the trip plan
-#     route = sim.road_network.route(request.origin_link, request.destination_link)
-#     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
-#     departure_time = sim.sim_time
-#
-#     # create the state (pooling, or, standard servicing trip, depending on the sitch)
-#     pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
-#     next_state = ServicingPoolingTrip(
-#         vehicle_id=vehicle.id,
-#         trip_plan=trip_plan,
-#         boarded_requests=immutables.Map({request.id: request}),
-#         departure_times=immutables.Map({request.id, departure_time}),
-#         routes=(route,),
-#         num_passengers=len(request.passengers)
-#     ) if pooling_trip else ServicingTrip(
-#         vehicle_id=vehicle.id,
-#         request=request,
-#         departure_time=departure_time,
-#         route=route
-#     )
-#     return next_state
 
 
 class ActivePoolingTrip(NamedTuple):

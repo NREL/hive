@@ -8,7 +8,6 @@ from hive.model.roadnetwork import Route
 from hive.model.sim_time import SimTime
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_ops import drop_off_trip, pick_up_trip
@@ -47,7 +46,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not isinstance(vehicle.vehicle_state, DispatchTrip):
+        elif not vehicle.vehicle_state.__class__.__name__ == "DispatchTrip":
             # the only supported transition into ServicingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
             msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
