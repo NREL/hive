@@ -11,11 +11,11 @@ from hive.model.sim_time import SimTime
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.runner.environment import Environment
 from hive.state.vehicle_state.idle import Idle
-from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, pick_up_trip, \
-    update_active_pooling_trip, transitioning_from_dispatch_trip
+    update_active_pooling_trip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import SimulationStateError, TupleOps
 from hive.util.typealiases import RequestId, VehicleId
 
@@ -36,6 +36,10 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
     routes: Tuple[Route, ...]
     num_passengers: int
 
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.SERVICING_POOLING_TRIP
+
     def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
@@ -53,7 +57,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
 
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not transitioning_from_dispatch_trip(vehicle):
+        elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
             # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
             msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
@@ -153,7 +157,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
                 return move_error, None
             elif not moved_vehicle:
                 return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-            elif isinstance(moved_vehicle.vehicle_state, OutOfService):
+            elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
                 return None, move_result.sim
             else:
                 # update moved vehicle's state
@@ -162,13 +166,14 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
                 updated_vehicle = sim2.vehicles.get(self.vehicle_id)
                 if updated_vehicle is None:
                     return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-                elif isinstance(updated_vehicle.vehicle_state, ServicingPoolingTrip):
+                elif updated_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
                     # if we finished all trip plans, we can terminate this ServicingPoolingTrip state
                     if len(updated_vehicle.vehicle_state.trip_plan) == 0:
                         # todo: generate "end of pooling trip" report, calculate all request travel times
                         #  using ServicingPoolingTrip.departure_times
-                        idle_result = self._enter_default_terminal_state(sim2, env)
-                        return idle_result
+                        err, term_result = self._enter_default_terminal_state(sim2, env)
+                        term_sim, _ = term_result
+                        return err, term_sim
                     else:
                         return None, sim2
                 else:

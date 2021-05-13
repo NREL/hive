@@ -840,12 +840,13 @@ class TestVehicleState(TestCase):
         state = DispatchTrip(vehicle.id, request.id, route)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+        self.assertTrue(entered_sim.requests.get(request.id).dispatched_vehicle == vehicle.id, "test precondition not met")
 
         # begin test
         error, exited_sim = state.exit(entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
-        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+        self.assertIsNone(exited_sim.requests.get(request.id).dispatched_vehicle, "should have unset the dispatched vehicle")
 
     def test_dispatch_trip_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -875,8 +876,8 @@ class TestVehicleState(TestCase):
         )
 
     def test_dispatch_trip_update_terminal(self):
-        vehicle = mock_vehicle()
-        request = mock_request()
+        vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
+        request = mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac30e2d3")
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()

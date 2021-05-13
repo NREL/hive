@@ -12,9 +12,9 @@ from hive.model.vehicle.trip_phase import TripPhase
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import vehicle_state_ops, dispatch_ops, servicing_ops
-from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import TupleOps
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId
@@ -33,6 +33,10 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     boarded_requests: immutables.Map[RequestId, Request] = immutables.Map()
     departure_times: immutables.Map[RequestId, SimTime] = immutables.Map()
     num_passengers: int = 0
+
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.DISPATCH_POOLING_TRIP
 
     def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
@@ -167,7 +171,7 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
             return move_error, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif isinstance(moved_vehicle.vehicle_state, OutOfService):
+        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:
             # update moved vehicle's state (holding the route)

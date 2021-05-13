@@ -25,6 +25,7 @@ def sample_vehicles(
         env: Environment,
         location_sampling_function: Callable[[SimulationState], Link],
         soc_sampling_function: Callable[[], Ratio],
+        total_seats: int = 4,
         offset: int = 0,
 ) -> Result[SimulationState, Exception]:
     """
@@ -73,7 +74,8 @@ def sample_vehicles(
                         energy=energy,
                         link=link,
                         vehicle_state=vehicle_state,
-                        driver_state=driver_state
+                        driver_state=driver_state,
+                        total_seats=total_seats
                     )
                     add_result = add_vehicle_returns(s, vehicle)
                     return add_result

@@ -9,10 +9,10 @@ from hive.model.sim_time import SimTime
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
-from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.servicing_ops import drop_off_trip, pick_up_trip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
 
@@ -27,6 +27,10 @@ class ServicingTrip(NamedTuple, VehicleState):
     request: Request
     departure_time: SimTime
     route: Route
+
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.SERVICING_TRIP
 
     def update(self,
                sim: SimulationState,
@@ -46,7 +50,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not vehicle.vehicle_state.__class__.__name__ == "DispatchTrip":
+        elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
             # the only supported transition into ServicingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
             msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
@@ -116,14 +120,14 @@ class ServicingTrip(NamedTuple, VehicleState):
         :return: the sim state with vehicle moved
         """
 
-        move_error, move_result = move(sim, env, self.vehicle_id, self.trip.route)
+        move_error, move_result = move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
         if move_error:
             return move_error, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif isinstance(moved_vehicle.vehicle_state, OutOfService):
+        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:
             # update moved vehicle's state
@@ -136,11 +140,12 @@ class ServicingTrip(NamedTuple, VehicleState):
                 return error2, None
             elif len(updated_route) == 0:
                 # let's drop the passengers off during this time step and go Idle
-                error3, sim3 = drop_off_trip(sim, env, self.vehicle_id, self.request)
+                error3, sim3 = drop_off_trip(sim2, env, self.vehicle_id, self.request)
                 if error3:
                     return error3, None
                 else:
-                    idle_result = self._enter_default_terminal_state(sim3, env)
-                    return idle_result
+                    err, term_result = self._enter_default_terminal_state(sim3, env)
+                    term_sim, _ = term_result
+                    return err, term_sim
             else:
                 return None, sim2

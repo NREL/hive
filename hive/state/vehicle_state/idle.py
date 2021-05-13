@@ -2,8 +2,9 @@ from typing import NamedTuple, Tuple, Optional
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
 from hive.util.units import Seconds
@@ -12,6 +13,10 @@ from hive.util.units import Seconds
 class Idle(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     idle_duration: Seconds = 0
+
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.IDLE
 
     def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)

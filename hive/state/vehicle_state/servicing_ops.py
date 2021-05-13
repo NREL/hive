@@ -11,6 +11,7 @@ from hive.runner import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import modify_vehicle
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
 
 if TYPE_CHECKING:
@@ -162,18 +163,6 @@ def update_active_pooling_trip(
             return result
 
 
-def transitioning_from_dispatch_trip(vehicle: Vehicle) -> bool:
-    """
-    checks that the vehicle is in a DispatchTrip state
-    helper prevents cyclic dependency between vehicle state classes
-
-    :param vehicle: the vehicle
-    :return: True, if the vehicle has a DispatchTrip state
-    """
-    # modified to class name to avoid bringing in DispatchTrip import!
-    return vehicle.vehicle_state.__class__.__name__ == "DispatchTrip"
-
-
 def pick_up_trip(sim: SimulationState,
                  env: Environment,
                  vehicle_id: VehicleId,
@@ -259,8 +248,8 @@ def remove_completed_trip(sim: SimulationState,
     if state is None:
         error = SimulationStateError(f"vehicle {vehicle_id} not found in simulation state")
         return error, None
-    elif not state.__class__.__name__ == "ServicingPoolingTrip":
-        error = SimulationStateError(f"vehicle {vehicle_id} state not pooling but attemping to remove it's oldest pooling trip")
+    elif not state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+        error = SimulationStateError(f"vehicle {vehicle_id} state not pooling but attempting to remove it's oldest pooling trip")
         return error, None
     elif len(state.trips) == 0:
         error = SimulationStateError("remove first trip called on vehicle with no trips")

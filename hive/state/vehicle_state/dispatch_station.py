@@ -8,9 +8,9 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.charging_station import ChargingStation
-from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, VehicleId, ChargerId
 
@@ -25,6 +25,10 @@ class DispatchStation(NamedTuple, VehicleState):
     station_id: StationId
     route: Route
     charger_id: ChargerId
+
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.DISPATCH_STATION
 
     def update(self, sim: SimulationState, env: Environment) -> Tuple[
         Optional[Exception], Optional[SimulationState]]:
@@ -118,7 +122,7 @@ class DispatchStation(NamedTuple, VehicleState):
             return move_error, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif isinstance(moved_vehicle.vehicle_state, OutOfService):
+        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:
             # update moved vehicle's state (holding the route)

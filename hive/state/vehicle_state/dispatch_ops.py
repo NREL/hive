@@ -1,15 +1,13 @@
 import functools as ft
 from typing import Tuple, Optional
 
-import immutables
-
 from hive.model.roadnetwork import Route, Link
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.model.vehicle.vehicle import Vehicle
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
-from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import VehicleId, RequestId, iterators, SimulationStateError
 
 
@@ -146,7 +144,7 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
         route = sim.road_network.route(vehicle.link, first_req_link)
         vehicle_state = vehicle.vehicle_state
 
-        if isinstance(vehicle_state, ServicingPoolingTrip):
+        if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
             # already servicing pooling - copy over passenger state
             next_state = DispatchPoolingTrip(
                 vehicle_id,
