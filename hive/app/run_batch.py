@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import traceback
 from multiprocessing import Pool
 from pathlib import Path
@@ -73,7 +74,15 @@ def run() -> int:
 
     sim_args = [SimArgs(f, i) for i, f in enumerate(config.scenario_files)]
 
-    with Pool(len(config.scenario_files)) as p:
+    # check to make sure we don't exceed system CPU
+    max_cpu = os.cpu_count()
+
+    if len(config.scenario_files) > max_cpu:
+        cpu = max_cpu
+    else:
+        cpu = len(config.scenario_files)
+
+    with Pool(cpu) as p:
         results = p.map(safe_sim, sim_args)
 
     return 0
