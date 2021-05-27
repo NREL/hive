@@ -8,7 +8,7 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
-from hive.util import VehicleId, RequestId, iterators, SimulationStateError
+from hive.util import VehicleId, RequestId, iterators, SimulationStateError, TupleOps
 
 
 def requests_exist_and_match_membership(sim: SimulationState, vehicle: Vehicle, requests: Tuple[RequestId, ...]) -> bool:
@@ -46,7 +46,7 @@ def modify_vehicle_assignment(sim: SimulationState,
     :return: either an error, or, the updated simulation
     """
 
-    def _assign(acc, req_id):
+    def _modify(acc, req_id):
         err, sim = acc
         req = sim.requests.get(req_id) if sim is not None else None
         if err is not None:
@@ -60,7 +60,7 @@ def modify_vehicle_assignment(sim: SimulationState,
             return result
 
     initial = None, sim
-    result = ft.reduce(_assign, requests, initial)
+    result = ft.reduce(_modify, requests, initial)
     return result
 
 
@@ -130,7 +130,7 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
     :return: a DispatchPoolingTrip state, or, an error
     """
     vehicle = sim.vehicles.get(vehicle_id)
-    first_trip, _ = tuple(zip(*trip_plan)) if len(trip_plan) > 0 else None
+    first_trip = TupleOps.head_optional(trip_plan)
 
     if vehicle is None:
         error = SimulationStateError(f"attempting to dispatch vehicle {vehicle_id} that does not exist")

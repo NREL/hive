@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
+from hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
 from hive.model.passenger import board_vehicle
 from hive.state.vehicle_state.out_of_service import OutOfService
@@ -1629,3 +1630,193 @@ class TestVehicleState(TestCase):
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNone(updated_sim, "should not have entered a queueing state")
+
+    ####################################################################################################################
+    # DispatchPoolingTrip ##############################################################################################
+    ####################################################################################################################
+
+    def test_dispatch_pooling_trip_enter(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
+
+        state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        updated_request = updated_sim.requests.get(request.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchPoolingTrip, "should be in a dispatch to request state")
+        self.assertEquals(updated_request.dispatched_vehicle, vehicle.id, "request should be assigned this vehicle")
+        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_dispatch_pooling_trip_enter_two_requests(self):
+        vehicle = mock_vehicle()
+        r1 = mock_request('r1', 39.70, -104.97, 39.85, -104.97) # pickup 1, dropoff 2
+        r2 = mock_request('r2', 39.75, -104.97, 39.80, -104.97) # pickup 2, dropoff 1
+        s0 = mock_sim(vehicles=(vehicle,))
+        env = mock_env()
+        e1, s1 = simulation_state_ops.add_request(s0, r1)
+        e2, s2 = simulation_state_ops.add_request(s1, r2)
+
+        self.assertIsNone(e1, "test invariant failed")
+        self.assertIsNone(e2, "test invariant failed")
+
+        route = mock_route_from_geoids(vehicle.geoid, r1.geoid)
+        trip_plan = ((r1.id, TripPhase.PICKUP), (r2.id, TripPhase.PICKUP), (r2.id, TripPhase.DROPOFF), (r1.id, TripPhase.DROPOFF))
+
+        state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        error, updated_sim = state.enter(s2, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        updated_r1 = updated_sim.requests.get(r1.id)
+        updated_r2 = updated_sim.requests.get(r2.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchPoolingTrip, "should be in a dispatch to request state")
+        self.assertEquals(updated_r1.dispatched_vehicle, vehicle.id, "r1 should be assigned this vehicle")
+        self.assertEquals(updated_r2.dispatched_vehicle, vehicle.id, "r2 should be assigned this vehicle")
+        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+
+    def test_dispatch_pooling_trip_bad_membership(self):
+        vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
+        request = mock_request(fleet_id="lyft")
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
+
+        state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(updated_sim, "should have returned None for updated_sim")
+
+    def test_dispatch_pooling_trip_exit(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
+
+        state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        enter_error, entered_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+        self.assertTrue(entered_sim.requests.get(request.id).dispatched_vehicle == vehicle.id, "test precondition not met")
+
+        # begin test
+        error, exited_sim = state.exit(entered_sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertIsNone(exited_sim.requests.get(request.id).dispatched_vehicle, "should have unset the dispatched vehicle")
+
+    def test_dispatch_pooling_trip_update(self):
+        near = h3.geo_to_h3(39.7539, -104.974, 15)
+        far = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle_from_geoid(geoid=near)
+        request = mock_request_from_geoids(origin=far)
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(near, far)
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
+
+        state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        enter_error, sim_with_dispatched_vehicle = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(sim_with_dispatched_vehicle, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
+        self.assertIsInstance(updated_vehicle.vehicle_state, DispatchPoolingTrip,
+                              "should still be in a dispatch to request state")
+        self.assertLess(
+            updated_vehicle.energy[EnergyType.ELECTRIC],
+            vehicle.energy[EnergyType.ELECTRIC],
+            "should have less energy",
+        )
+
+    def test_dispatch_pooling_trip_update_terminal(self):
+        vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
+        request = mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac70e2d3")
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = ()  # vehicle is at the request
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
+
+        state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        enter_error, sim_with_dispatch_vehicle = state.enter(sim, env)
+        self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
+
+        update_error, sim_updated = state.update(sim_with_dispatch_vehicle, env)
+        self.assertIsNone(update_error, "should have no error from update call")
+
+        updated_vehicle = sim_updated.vehicles.get(vehicle.id)
+        updated_request = sim_updated.requests.get(request.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, ServicingPoolingTrip, "vehicle should be in ServicingPoolingTrip state")
+        self.assertEquals(request, updated_vehicle.vehicle_state.request, "passengers not picked up")
+        self.assertIsNone(updated_request, "request should no longer exist as it has been picked up")
+
+    def test_dispatch_pooling_trip_enter_no_request(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim(vehicles=(vehicle,))  # request not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        error, updated_sim = state.enter(sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+        self.assertIsNone(updated_sim, "no request at location should result in no update to sim")
+
+    def test_dispatch_pooling_trip_enter_no_vehicle(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        sim = mock_sim()  # vehicle not added to sim
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, updated_sim = state.enter(sim, env)
+
+        self.assertIsInstance(enter_error, Exception, "should have exception")
+
+    def test_dispatch_pooling_trip_enter_route_with_bad_source(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(omf_brewing, request.geoid)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+
+    def test_dispatch_pooling_trip_enter_route_with_bad_destination(self):
+        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
+
+        state = DispatchTrip(vehicle.id, request.id, route)
+        enter_error, enter_sim = state.enter(sim, env)
+        self.assertIsNone(enter_error, "should be no error")
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
