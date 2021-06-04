@@ -33,7 +33,7 @@ class TestVehicleStateOps(TestCase):
 
         self.assertLess(soc, 1, "should have used 1 unit of mock energy")
         self.assertNotEqual(somewhere, moved_vehicle.geoid, "should not be at the same location")
-        self.assertNotEqual(somewhere, moved_vehicle.position.start, "link start location should not be the same")
+        self.assertNotEqual(somewhere, moved_vehicle.position.geoid, "link start location should not be the same")
 
     def test_charge(self):
 

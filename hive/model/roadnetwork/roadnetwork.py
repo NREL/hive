@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional, Callable
+from typing import Optional
 
 import h3
 
@@ -55,15 +55,13 @@ class RoadNetwork(ABC):
 
     def position_from_geoid(self, geoid: GeoId) -> Optional[EntityPosition]:
         """
-        creates a Link which represents a fixed location on the road network for
-        stationary entities such as Requests, Stations, and Bases.
-        if the provided GeoId does not exist on the line of GeoIds coincident with this Link,
+        returns a position from a GeoId.
+        if the provided GeoId does not exist on the line of GeoIds coincident with the Link,
         then the nearest one is selected
 
         :param geoid: the location for the stationary entity
 
-        :return: the nearest Link to the GeoId, with start/end locations modified to match
-        the stationary location
+        :return: the position on the link nearest to the GeoId
         """
         link = self.link_from_geoid(geoid)
         if not link:
@@ -97,4 +95,3 @@ class RoadNetwork(ABC):
         :param sim_time:
         :return:
         """
-

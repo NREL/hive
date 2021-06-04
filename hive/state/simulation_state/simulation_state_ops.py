@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import functools as ft
 from typing import Optional, TYPE_CHECKING
 
 import h3
 from returns.result import Result, Success, Failure
 
-from hive.model.membership import PUBLIC_MEMBERSHIP_ID
 from hive.model.sim_time import SimTime
 from hive.util import DictOps
 from hive.util.exception import SimulationStateError

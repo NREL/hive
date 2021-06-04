@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
+from hive.model.roadnetwork.link import EntityPosition
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle.vehicle import Vehicle
@@ -123,7 +124,7 @@ def _apply_route_traversal(sim: SimulationState,
             last_link_traversed = experienced_route[-1]
             # quick trick here to turn the final traversed link into a Positional Link (where link.start == link.end)
             # used to represent the Vehicle's new position
-            vehicle_position = last_link_traversed.update_start(last_link_traversed.end)
+            vehicle_position = EntityPosition(last_link_traversed.link_id, last_link_traversed.end)
             updated_vehicle = less_energy_vehicle.modify_position(position=vehicle_position).tick_distance_traveled_km(step_distance_km)
             error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
             if error:

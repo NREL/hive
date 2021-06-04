@@ -3,8 +3,7 @@ from __future__ import annotations
 import functools as ft
 from typing import Optional, NamedTuple
 
-from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.linktraversal import LinkTraversal
+from hive.model.roadnetwork.linktraversal import LinkTraversalResult, LinkTraversal
 from hive.model.roadnetwork.linktraversal import traverse_up_to
 from hive.model.roadnetwork.route import Route
 from hive.util import TupleOps
@@ -42,7 +41,7 @@ class RouteTraversal(NamedTuple):
         """
         return self.remaining_time_seconds == 0.0
 
-    def add_traversal(self, t: LinkTraversal) -> RouteTraversal:
+    def add_traversal(self, t: LinkTraversalResult) -> RouteTraversal:
         """
         take the result of a link traversal and update the route traversal
 
@@ -67,12 +66,12 @@ class RouteTraversal(NamedTuple):
             remaining_route=updated_remaining_route,
         )
 
-    def add_link_not_traversed(self, link: Link) -> RouteTraversal:
+    def add_link_not_traversed(self, link: LinkTraversal) -> RouteTraversal:
         """
         if a link wasn't traversed, be sure to add it to the remaining route
 
 
-        :param link: a link for the remaining route
+        :param link: a link traversal for the remaining route
         :return: the updated RouteTraversal
         """
         return self._replace(
@@ -102,7 +101,7 @@ def traverse(route_estimate: Route,
 
         # function that steps through the route
         def _traverse(acc: Tuple[Optional[Exception], Optional[RouteTraversal]],
-                      link: Link) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
+                      link: LinkTraversal) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
             acc_failures, acc_traversal = acc
             if acc_traversal.no_time_left():
                 return acc_failures, acc_traversal.add_link_not_traversed(link)

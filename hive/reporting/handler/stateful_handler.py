@@ -108,8 +108,8 @@ class StatefulHandler(Handler):
 
         # deconstruct origin_link
         out_dict['link_id'] = station.position.link_id
-        out_dict['geoid'] = station.position.start
-        del (out_dict['link'])
+        out_dict['geoid'] = station.position.geoid
+        del (out_dict['position'])
 
         # deconstruct total_charges
         for key, val in station.total_chargers.items():

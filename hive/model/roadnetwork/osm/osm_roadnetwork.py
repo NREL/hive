@@ -139,13 +139,13 @@ class OSMRoadNetwork(RoadNetwork):
         :param destination: the geoid of the destination
         :return: the road network distance in kilometers
         """
-        o_link = self.link_from_geoid(origin)
-        d_link = self.link_from_geoid(destination)
-        if not o_link or not d_link:
+        o = self.position_from_geoid(origin)
+        d = self.position_from_geoid(destination)
+        if not o or not d:
             log.error(f"failed finding nearest links to distance query between GeoIds {origin}, {destination}")
             return 0.0
         else:
-            distance = route_distance_km(self.route(o_link, d_link))
+            distance = route_distance_km(self.route(o, d))
             return distance
 
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:

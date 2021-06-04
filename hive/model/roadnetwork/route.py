@@ -1,19 +1,15 @@
-from typing import Tuple, Optional
-
 import functools as ft
+from typing import Tuple, Optional
 
 import h3
 
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.runner import Environment
 from hive.util import TupleOps, wkt
-from hive.util.typealiases import GeoId
 from hive.util.units import Kilometers, Seconds
 
-Route = Tuple[Link, ...]
-"""
-any route in the system is a tuple of PropertyLinks
-"""
+Route = Tuple[LinkTraversal, ...]
 
 
 def empty_route() -> Route:
@@ -48,29 +44,30 @@ def route_travel_time_seconds(route: Route) -> Seconds:
 
 
 def route_cooresponds_with_entities(route: Route,
-                                    src: Link,
-                                    dst: Optional[Link] = None) -> bool:
+                                    src: EntityPosition,
+                                    dst: Optional[EntityPosition] = None) -> bool:
     """
     validates that the route correctly corresponds with any related entities
+
     :param route: the route
-    :param src: a (positional) source link (where link.start == link.end)
-    :param dst: an optional (positional) destination link (where link.start == link.end)
+    :param src: a source position
+    :param dst: an optional destination position
     :return: if the route is valid for this src(/dst)
     """
     if TupleOps.is_empty(route):
         # an empty route is valid if no destination is being confirmed or if the src matches the dst
-        is_valid = not dst or src.start == dst.end
+        is_valid = not dst or src == dst
         return is_valid
     else:
         start_link = route[0]
         if not dst:
             # just confirm the start link is correct
-            is_valid = start_link.start == src.start
+            is_valid = start_link.start == src.geoid
             return is_valid
         else:
             # confirm both src and dst
             end_link = route[-1]
-            is_valid = start_link.start == src.start and end_link.end == dst.end
+            is_valid = start_link.start == src.geoid and end_link.end == dst.geoid
             return is_valid
 
 
