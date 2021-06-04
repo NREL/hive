@@ -4,7 +4,7 @@ from typing import Optional, NamedTuple, Dict
 
 import h3
 
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.membership import Membership
 from hive.util.exception import SimulationStateError
@@ -32,7 +32,7 @@ class Base(NamedTuple):
     :type station_id: Optional[StationId]
     """
     id: BaseId
-    link: Link
+    position: EntityPosition
     total_stalls: int
     available_stalls: int
     station_id: Optional[StationId]
@@ -41,7 +41,7 @@ class Base(NamedTuple):
 
     @property
     def geoid(self):
-        return self.link.start
+        return self.position.geoid
 
     @classmethod
     def build(cls,
@@ -53,8 +53,9 @@ class Base(NamedTuple):
               membership: Membership = Membership()
               ):
 
-        link = road_network.stationary_location_from_geoid(geoid)
-        return Base(id, link, stall_count, stall_count, station_id, membership)
+        link = road_network.position_from_geoid(geoid)
+        position = EntityPosition(link.link_id, geoid)
+        return Base(id, position, stall_count, stall_count, station_id, membership)
 
     @classmethod
     def from_row(

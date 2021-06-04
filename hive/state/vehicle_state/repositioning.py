@@ -20,7 +20,7 @@ class Repositioning(NamedTuple, VehicleState):
 
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         vehicle = sim.vehicles.get(self.vehicle_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.link) if vehicle else False
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.position) if vehicle else False
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif not is_valid:

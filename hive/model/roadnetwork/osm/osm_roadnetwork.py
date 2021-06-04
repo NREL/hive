@@ -9,7 +9,7 @@ import networkx as nx
 
 from hive.external.miniosmnx.core import graph_from_file
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.roadnetwork.link_id import extract_node_ids
 from hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
 from hive.model.roadnetwork.osm.osm_roadnetwork_ops import route_from_nx_path, resolve_route_src_dst_positions
@@ -91,17 +91,17 @@ class OSMRoadNetwork(RoadNetwork):
             self.graph = graph
             self.link_helper = link_helper
 
-    def route(self, src_link: Link, dst_link: Link) -> Route:
+    def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
         """
         Returns a route containing road network links between the origin and destination geoids.
-        :param src_link: the origin Link
-        :param dst_link: the destination Link
+        :param origin: the origin Link
+        :param destination: the destination Link
         :return: a route between the origin and destination on the OSM road network
         """
 
         # start path search from the end of the origin link, terminate search at the start of the destination link
-        extract_src_err, src_nodes = extract_node_ids(src_link.link_id)
-        extract_dst_err, dst_nodes = extract_node_ids(dst_link.link_id)
+        extract_src_err, src_nodes = extract_node_ids(origin.link_id)
+        extract_dst_err, dst_nodes = extract_node_ids(destination.link_id)
         if extract_src_err:
             log.error(extract_src_err)
             return empty_route()
@@ -117,16 +117,16 @@ class OSMRoadNetwork(RoadNetwork):
             link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)
 
             if link_path_error:
-                log.error(f"unable to build route from {src_link} to {dst_link}")
+                log.error(f"unable to build route from {origin} to {destination}")
                 log.error(link_path_error)
                 log.error(
                     f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}")
                 return empty_route()
             else:
                 # modify the start and end GeoIds based on the positions in the src/dst links
-                resolved_route = resolve_route_src_dst_positions(inner_link_path, src_link, dst_link, self)
+                resolved_route = resolve_route_src_dst_positions(inner_link_path, origin, destination, self)
                 if not resolved_route:
-                    log.error(f"unable to resolve the route from/to/via:\n {src_link}\n{dst_link}\n{inner_link_path}")
+                    log.error(f"unable to resolve the route from/to/via:\n {origin}\n{destination}\n{inner_link_path}")
                     return empty_route()
                 else:
                     return resolved_route

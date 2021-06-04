@@ -124,7 +124,7 @@ def _apply_route_traversal(sim: SimulationState,
             # quick trick here to turn the final traversed link into a Positional Link (where link.start == link.end)
             # used to represent the Vehicle's new position
             vehicle_position = last_link_traversed.update_start(last_link_traversed.end)
-            updated_vehicle = less_energy_vehicle.modify_link(link=vehicle_position).tick_distance_traveled_km(step_distance_km)
+            updated_vehicle = less_energy_vehicle.modify_position(position=vehicle_position).tick_distance_traveled_km(step_distance_km)
             error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
             if error:
                 return error, None

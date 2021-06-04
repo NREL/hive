@@ -11,7 +11,7 @@ import logging
 from hive.model.energy import EnergyType
 from hive.model.energy.charger import Charger
 from hive.model.membership import Membership
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util import DictOps
 from hive.util.exception import SimulationStateError
@@ -51,7 +51,7 @@ class Station(NamedTuple):
     :type balance: :py:obj:`Currency`
     """
     id: StationId
-    link: Link
+    position: EntityPosition
     total_chargers: immutables.Map[ChargerId, int]
     available_chargers: immutables.Map[ChargerId, int]
     on_shift_access_chargers: FrozenSet[ChargerId]
@@ -63,7 +63,7 @@ class Station(NamedTuple):
 
     @property
     def geoid(self) -> GeoId:
-        return self.link.start
+        return self.position.geoid
 
     @classmethod
     def build(cls,
@@ -79,10 +79,11 @@ class Station(NamedTuple):
             chargers.keys(),
             immutables.Map()
         )
-        link = road_network.stationary_location_from_geoid(geoid)
+        link = road_network.position_from_geoid(geoid)
+        position = EntityPosition(link.link_id, geoid)
         return Station(
             id=id,
-            link=link,
+            position=position,
             total_chargers=chargers,
             available_chargers=chargers,
             on_shift_access_chargers=on_shift_access,

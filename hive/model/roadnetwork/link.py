@@ -9,6 +9,15 @@ from hive.util.typealiases import LinkId, GeoId
 from hive.util.units import Kilometers, Kmph, Seconds, Ratio, hours_to_seconds
 
 
+class EntityPosition(NamedTuple):
+    """
+    A pairing of a geoid at the simulation resolution and a link id which yields the position of an entity
+    with the context of a link for directionality.
+    """
+    link_id: LinkId
+    geoid: GeoId
+
+
 class Link(NamedTuple):
     """
     a directed edge on the road network from node a -> node b

@@ -6,12 +6,12 @@ import h3
 
 from hive.model.membership import Membership
 from hive.model.passenger import Passenger, create_passenger_id
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import EntityPosition
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.sim_time import SimTime
 from hive.util.exception import TimeParseError
 from hive.util.typealiases import *
-from hive.util.units import Currency, KM_TO_MILE, Kilometers
+from hive.util.units import Currency, KM_TO_MILE
 
 if TYPE_CHECKING:
     from hive.model.request import RequestRateStructure
@@ -36,8 +36,8 @@ class Request(NamedTuple):
     :param dispatched_vehicle_time: Time time which a vehicle was dispatched for this request.
     """
     id: RequestId
-    origin_link: Link
-    destination_link: Link
+    origin_position: EntityPosition
+    destination_position: EntityPosition
     departure_time: SimTime
     passengers: Tuple[Passenger, ...]
     membership: Membership = Membership()
@@ -47,11 +47,11 @@ class Request(NamedTuple):
 
     @property
     def origin(self):
-        return self.origin_link.start
+        return self.origin_position.geoid
 
     @property
     def destination(self):
-        return self.destination_link.end
+        return self.destination_position.geoid
 
     @classmethod
     def build(cls,
@@ -66,8 +66,8 @@ class Request(NamedTuple):
               ) -> Request:
         assert (departure_time >= 0)
         assert (passengers > 0)
-        origin_link = road_network.stationary_location_from_geoid(origin)
-        destination_link = road_network.stationary_location_from_geoid(destination)
+        origin_position = road_network.position_from_geoid(origin)
+        destination_position = road_network.position_from_geoid(destination)
         if fleet_id:
             membership = Membership.single_membership(fleet_id)
         else:
@@ -76,8 +76,8 @@ class Request(NamedTuple):
         request_as_passengers = [
             Passenger(
                 id=create_passenger_id(request_id, pass_idx),
-                origin=origin_link.start,
-                destination=destination_link.end,
+                origin=origin_position.geoid,
+                destination=destination_position.geoid,
                 departure_time=departure_time,
                 membership=membership
             )
@@ -86,8 +86,8 @@ class Request(NamedTuple):
 
         request = Request(
             id=request_id,
-            origin_link=origin_link,
-            destination_link=destination_link,
+            origin_position=origin_position,
+            destination_position=destination_position,
             departure_time=departure_time,
             passengers=tuple(request_as_passengers),
             membership=membership,

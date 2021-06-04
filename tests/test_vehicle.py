@@ -19,7 +19,7 @@ class TestVehicle(TestCase):
         self.assertEqual(vehicle.id, "v1")
         self.assertEqual(vehicle.geoid, expected_geoid)
         self.assertEqual(vehicle.mechatronics_id, 'bev')
-        self.assertEqual(vehicle.link.start, expected_geoid)
+        self.assertEqual(vehicle.position.start, expected_geoid)
         self.assertIsInstance(vehicle.vehicle_state, Idle)
         self.assertEqual(vehicle.distance_traveled_km, 0)
 

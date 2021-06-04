@@ -6,7 +6,7 @@ from typing import Optional, Callable
 import h3
 
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
 from hive.util.typealiases import GeoId, H3Resolution
@@ -23,7 +23,7 @@ class RoadNetwork(ABC):
     geofence: Optional[GeoFence]
 
     @abstractmethod
-    def route(self, origin: Link, destination: Link) -> Route:
+    def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
         """
         Returns a route between two road network property links
 
@@ -53,13 +53,15 @@ class RoadNetwork(ABC):
         :return: The nearest road network link to the provided GeoId
         """
 
-    def stationary_location_from_geoid(self, geoid: GeoId) -> Optional[Link]:
+    def position_from_geoid(self, geoid: GeoId) -> Optional[EntityPosition]:
         """
         creates a Link which represents a fixed location on the road network for
         stationary entities such as Requests, Stations, and Bases.
         if the provided GeoId does not exist on the line of GeoIds coincident with this Link,
-        then the nearest one is
+        then the nearest one is selected
+
         :param geoid: the location for the stationary entity
+
         :return: the nearest Link to the GeoId, with start/end locations modified to match
         the stationary location
         """
@@ -69,13 +71,13 @@ class RoadNetwork(ABC):
         else:
             hexes_on_link = h3.h3_line(link.start, link.end)
             if geoid in hexes_on_link:
-                updated = link.update_start(geoid).update_end(geoid)
-                return updated
+                position = EntityPosition(link.link_id, geoid)
+                return position
             else:
                 hexes_by_dist = sorted(hexes_on_link, key=lambda h: h3.h3_distance(geoid, h))
                 closest_hex_to_query = hexes_by_dist[0]
-                updated = link.update_start(closest_hex_to_query).update_end(closest_hex_to_query)
-                return updated
+                position = EntityPosition(link.link_id, closest_hex_to_query)
+                return position
 
     @abstractmethod
     def geoid_within_geofence(self, geoid: GeoId) -> bool:

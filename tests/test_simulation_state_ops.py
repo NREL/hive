@@ -166,7 +166,7 @@ class TestSimulationStateOps(TestCase):
         self.assertIsNone(error, "should have no error")
 
         updated_station_in_sim = sim_after_station.stations[station.id]
-        self.assertEqual(updated_station_in_sim.link, updated_station.link, "station should have been updated")
+        self.assertEqual(updated_station_in_sim.position, updated_station.position, "station should have been updated")
 
         at_loc = sim_after_station.s_locations[station.geoid]
         self.assertIn(station.id, at_loc, "the station's id should be found at it's geoid")

@@ -6,7 +6,7 @@ from typing import Union
 import immutables
 from networkx.classes.reportviews import NodeView
 
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.roadnetwork.link_id import *
 from hive.model.roadnetwork.route import Route
 
@@ -67,8 +67,8 @@ def route_from_nx_path(nx_path: Union[list, dict], link_lookup: immutables.Map[L
 
 def resolve_route_src_dst_positions(
         inner_route: Route,
-        src_link_pos: Link,
-        dst_link_pos: Link,
+        src_link_pos: EntityPosition,
+        dst_link_pos: EntityPosition,
         road_network: 'OSMRoadNetwork') -> Optional[Route]:
     """
     our inner_route is a shortest path from the destination of the source link to the start
@@ -85,8 +85,8 @@ def resolve_route_src_dst_positions(
     """
     src_link = road_network.link_helper.links.get(src_link_pos.link_id)
     dst_link = road_network.link_helper.links.get(dst_link_pos.link_id)
-    src_link_updated = src_link.update_start(src_link_pos.start) if src_link else None
-    dst_link_updated = dst_link.update_end(dst_link_pos.end) if dst_link else None
+    src_link_updated = src_link.update_start(src_link_pos.geoid) if src_link else None
+    dst_link_updated = dst_link.update_end(dst_link_pos.geoid) if dst_link else None
     if not src_link_updated or not dst_link_updated:
         return None
     else:
