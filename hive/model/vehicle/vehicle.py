@@ -98,8 +98,7 @@ class Vehicle(NamedTuple):
                 driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                start_link = road_network.position_from_geoid(geoid)
-                start_position = EntityPosition(start_link.link_id, geoid)
+                start_position = road_network.position_from_geoid(geoid)
 
                 return Vehicle(
                     id=vehicle_id,

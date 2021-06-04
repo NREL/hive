@@ -79,8 +79,7 @@ class Station(NamedTuple):
             chargers.keys(),
             immutables.Map()
         )
-        link = road_network.position_from_geoid(geoid)
-        position = EntityPosition(link.link_id, geoid)
+        position = road_network.position_from_geoid(geoid)
         return Station(
             id=id,
             position=position,

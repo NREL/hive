@@ -53,8 +53,7 @@ class Base(NamedTuple):
               membership: Membership = Membership()
               ):
 
-        link = road_network.position_from_geoid(geoid)
-        position = EntityPosition(link.link_id, geoid)
+        position = road_network.position_from_geoid(geoid)
         return Base(id, position, stall_count, stall_count, station_id, membership)
 
     @classmethod
@@ -64,13 +63,11 @@ class Base(NamedTuple):
             road_network: RoadNetwork,
     ) -> Base:
         """
-        takes a csv row and turns it into a Base
+        converts a csv row to a base
 
-
-        :param row: a row as interpreted by csv.DictReader
-        :param sim_h3_resolution: the h3 resolution that events are experienced at
-        :return: a Base
-        :raises IOError if the row was bad
+        :param row:
+        :param road_network:
+        :return:
         """
         if 'base_id' not in row:
             raise IOError("cannot load a base without a 'base_id'")
