@@ -18,7 +18,7 @@ from hive.util import TupleOps
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.util.typealiases import SimTime
+    from hive.util.typealiases import SimTime, VehicleId
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +34,37 @@ def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
 def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_time: SimTime):
     for i in instructions:
         env.reporter.file_report(_instruction_to_report(i, sim_time))
+
+
+def step_vehicle(simulation_state: SimulationState, env: Environment, vehicle_id: VehicleId) -> SimulationState:
+    """
+    steps a single vehicle for a single simulation time step.
+
+    :param simulation_state: the simulation state
+    :param env: the simulation environment
+    :param vehicle_id: the vehicle to step
+
+    :return: the simulation state with the updated vehicle
+    """
+
+    vehicle = simulation_state.vehicles.get(vehicle_id)
+    if not vehicle:
+        log.error(f"attempting to step vehicle {vehicle_id} but doesn't exist in this simulation state")
+        return simulation_state
+
+    driver_error, driver_sim = vehicle.driver_state.update(simulation_state, env)
+
+    if driver_error:
+        log.error(driver_error)
+        return simulation_state
+
+    vehicle_error, vehicle_sim = vehicle.vehicle_state.update(driver_sim, env)
+
+    if vehicle_error:
+        log.error(vehicle_error)
+        return simulation_state
+
+    return vehicle_sim
 
 
 def perform_driver_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
