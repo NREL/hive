@@ -49,7 +49,7 @@ def get_active_pooling_trip(
     else:
         request_id, trip_phase = first_trip
         active_pooling_trip = ActivePoolingTrip(request_id, trip_phase, first_route)
-        return active_pooling_trip
+        return None, active_pooling_trip
 
 
 def complete_trip_phase(

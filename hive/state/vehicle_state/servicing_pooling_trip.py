@@ -10,9 +10,10 @@ from hive.model.roadnetwork import Route
 from hive.model.sim_time import SimTime
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.runner.environment import Environment
+from hive.state.vehicle_state import servicing_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, pick_up_trip, \
-    update_active_pooling_trip
+    update_active_pooling_trip, ActivePoolingTrip
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
@@ -45,15 +46,16 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
 
     def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        transition from DispatchTrip into a pooling trip service leg
+        transition from DispatchTrip into a pooling trip service leg. this first frame of servicing
+        a pooling trip should be happening at the start location of the first request in the pool,
+        which should already be boarded (so, the first trip_phase is not to pick that request up).
 
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an error, or, the sim with state entered
         """
-        # validate the first step of the trip plan for this vehicle
+
         vehicle = sim.vehicles.get(self.vehicle_id)
-        first_trip_phase = TupleOps.head_optional(self.trip_plan)
 
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
@@ -63,35 +65,16 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
             error = SimulationStateError(msg)
             return error, None
-        elif first_trip_phase is None:
+        elif len(self.trip_plan) == 0:
             msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state without any trip plan"
             error = SimulationStateError(msg)
             return error, None
+        elif len(self.boarded_requests) != 1:
+            msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state which hasn't picked up its first request"
+            error = SimulationStateError(msg)
+            return error, None
         else:
-
-            # validate the request for the first step in the trip plan
-            request_id, trip_phase = first_trip_phase
-            request = sim.requests.get(request_id)
-
-            if trip_phase is not TripPhase.PICKUP:
-                msg = f"vehicle {vehicle.id} attempting to enter ServicingPoolingTrip but first request in plan {request_id} expects a DROPOFF phase which is irrational"
-                return SimulationStateError(msg), None
-            elif request is None:
-                msg = f"vehicle {vehicle.id} has ServicingPoolingTrip with request {request_id} stored in trip plan but not in requests collection"
-                return SimulationStateError(msg), None
-            elif not request.membership.grant_access_to_membership(vehicle.membership):
-                msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} with mis-matched memberships/fleets"
-                return SimulationStateError(msg), None
-            else:
-
-                # perform pickup action, removing request from the simulation
-                pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, request_id)
-                if pickup_error:
-                    return pickup_error, None
-                else:
-                    boarded_state = self._replace(boarded_requests=immutables.Map({request.id: request}))
-                    enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, boarded_state)
-                    return enter_result
+            return None, sim
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """

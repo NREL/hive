@@ -27,7 +27,9 @@ log = logging.getLogger(__name__)
 
 class DispatchPoolingTrip(NamedTuple, VehicleState):
     vehicle_id: VehicleId
+    # this trip plan contains all phases, including the initial pickup
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+    # this is the route to the first pickup location
     route: Route
     # if this overrides a ServicingPoolingTrip state, we carry that state here as well
     boarded_requests: immutables.Map[RequestId, Request] = immutables.Map()
@@ -133,25 +135,26 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
                 if pickup_error:
                     return pickup_error, None
                 else:
-
-                    dispatch_ops.begin_or_replan_dispatch_pooling_state(pickup_sim, self.vehicle_id, self.trip_plan)
-                    # create servicing state
+                    # create servicing state, with first request PICKUP event consumed
+                    updated_trip_plan = TupleOps.tail(self.trip_plan)
                     boarded_requests = immutables.Map({first_req_id: first_req})
                     departure_times = immutables.Map({first_req_id: sim.sim_time})
                     num_passengers = len(first_req.passengers)
 
                     servicing_pooling_state = ServicingPoolingTrip(
                         vehicle_id=self.vehicle_id,
-                        trip_plan=self.trip_plan,
+                        trip_plan=updated_trip_plan,
                         boarded_requests=boarded_requests,
                         departure_times=departure_times,
                         routes=routes,
                         num_passengers=num_passengers
                     )
 
-                    enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, servicing_pooling_state)
-
-                    return enter_result
+                    enter_error, enter_sim = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, servicing_pooling_state)
+                    if enter_error:
+                        return enter_error, None
+                    else:
+                        return None, (enter_sim, servicing_pooling_state)
 
     def _perform_update(self,
                         sim: SimulationState,

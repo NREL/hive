@@ -4,7 +4,7 @@ import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.request import Request
-from hive.model.roadnetwork import Route
+from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.model.sim_time import SimTime
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
@@ -63,6 +63,14 @@ class ServicingTrip(NamedTuple, VehicleState):
         elif not self.request.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} with mis-matched memberships/fleets"
             return SimulationStateError(msg), None
+        elif not route_cooresponds_with_entities(self.route, vehicle.link):
+            msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match location of vehicle)"
+            log.warning(msg)
+            return None, None
+        elif not route_cooresponds_with_entities(self.route, request.origin_link, request.destination_link):
+            msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match o/d of request)"
+            log.warning(msg)
+            return None, None
         else:
             pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, self.request.id)
             if pickup_error:

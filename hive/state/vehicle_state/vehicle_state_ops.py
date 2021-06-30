@@ -151,16 +151,19 @@ def _go_out_of_service_on_empty(sim: SimulationState,
     elif not mechatronics:
         return SimulationStateError(f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
     elif mechatronics.is_empty(moved_vehicle):
-        error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
-        if error:
-            return error, None
-        elif not exit_sim:
-            # the previous state does not allow exit to OutOfService
-            return SimulationStateError(
-                f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
-        else:
-            next_state = OutOfService(vehicle_id)
-            return next_state.enter(exit_sim, env)
+        # todo: are we in ServicingTrip or ServicingPoolingTrip? report stranded passengers!!!
+        # error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
+        # if error:
+        #     return error, None
+        # elif not exit_sim:
+        #     # the previous state does not allow exit to OutOfService
+        #     return SimulationStateError(
+        #         f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
+        # else:
+        #     next_state = OutOfService(vehicle_id)
+        #     return next_state.enter(exit_sim, env)
+        next_state = OutOfService(vehicle_id)
+        return next_state.enter(sim, env)
     else:
         return None, None
 

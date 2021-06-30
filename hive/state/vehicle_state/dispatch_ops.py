@@ -141,21 +141,25 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
     else:
         first_req_id, first_phase = first_trip
         first_req_link = get_link_for_phase(sim, first_req_id, first_phase)
-        route = sim.road_network.route(vehicle.link, first_req_link)
-        vehicle_state = vehicle.vehicle_state
-
-        if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
-            # already servicing pooling - copy over passenger state
-            next_state = DispatchPoolingTrip(
-                vehicle_id,
-                trip_plan,
-                route,
-                vehicle_state.boarded_requests,
-                vehicle_state.departure_times,
-                vehicle_state.num_passengers
-            )
-            return None, next_state
+        if first_req_link is None:
+            error = SimulationStateError(f"attempting to dispatch pooling trip to request {first_req_id} that does not exist in the sim")
+            return error, None
         else:
-            # not already servicing pooling - just dispatch, don't carry over passenger state
-            next_state = DispatchPoolingTrip(vehicle_id, trip_plan, route)
-            return None, next_state
+            route = sim.road_network.route(vehicle.link, first_req_link)
+            vehicle_state = vehicle.vehicle_state
+
+            if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+                # already servicing pooling - copy over passenger state
+                next_state = DispatchPoolingTrip(
+                    vehicle_id,
+                    trip_plan,
+                    route,
+                    vehicle_state.boarded_requests,
+                    vehicle_state.departure_times,
+                    vehicle_state.num_passengers
+                )
+                return None, next_state
+            else:
+                # not already servicing pooling - just dispatch, don't carry over passenger state
+                next_state = DispatchPoolingTrip(vehicle_id, trip_plan, route)
+                return None, next_state
