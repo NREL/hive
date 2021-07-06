@@ -1829,6 +1829,65 @@ class TestVehicleState(TestCase):
     # ServicingPoolingTrip #############################################################################################
     ####################################################################################################################
 
+    def test_servicing_trip_enter(self):
+        vehicle = mock_vehicle()
+        request = mock_request()
+        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
+        self.assertIsNone(e1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
+
+        prev_state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        error, disp_sim = prev_state.enter(sim, env)
+        self.assertIsNone(error, "test invariant failed")
+
+        # things constructed when transitioning from DispatchPoolingTrip to ServicingPoolingTrip
+        boarded_trip_plan = ((request.id, TripPhase.DROPOFF),)
+        boarded_reqs = immutables.Map({request.id: request})
+        departure_times = immutables.Map({request.id: SimTime(0)})
+        route = mock_route_from_geoids(request.origin, request.destination)
+        routes = (route, )
+
+        next_state = ServicingPoolingTrip(vehicle.id, boarded_trip_plan, boarded_reqs, departure_times, routes, 1)
+        error, updated_sim = next_state.enter(disp_sim, env)
+
+        self.assertIsNone(error, "should have no errors")
+
+        updated_vehicle = updated_sim.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, ServicingPoolingTrip, "should be in a ServicingPoolingTrip state")
+        self.assertEquals(len(updated_vehicle.vehicle_state.routes), 1, "should have a route")
+
+    def test_servicing_trip_bad_membership(self):
+        pass
+
+    def test_servicing_trip_exit(self):
+        pass
+
+    def test_servicing_trip_exit_when_still_has_passengers(self):
+        pass
+
+    def test_servicing_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
+        pass
+
+    def test_servicing_trip_update(self):
+        pass
+
+    def test_servicing_trip_update_terminal(self):
+        pass
+
+    def test_servicing_trip_enter_no_request(self):
+        pass
+
+    def test_servicing_trip_enter_no_vehicle(self):
+        pass
+
+    def test_servicing_trip_enter_route_with_bad_source(self):
+        pass
+
+    def test_servicing_trip_enter_route_with_bad_destination(self):
+        pass
+
     def test_servicing_pooling_trip_update_reach_destination(self):
         vehicle = mock_vehicle()
         request = mock_request()

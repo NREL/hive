@@ -59,10 +59,10 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
 
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-        elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
+        elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
             # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
-            msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
+            msg = f"ServicingPoolingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
             error = SimulationStateError(msg)
             return error, None
         elif len(self.trip_plan) == 0:
@@ -74,6 +74,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             error = SimulationStateError(msg)
             return error, None
         else:
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            return result
             return None, sim
 
     def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
