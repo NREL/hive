@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Tuple, Optional
 
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route

@@ -6,7 +6,7 @@ from typing import Optional
 import h3
 
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
 from hive.util.typealiases import GeoId, H3Resolution

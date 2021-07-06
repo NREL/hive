@@ -11,7 +11,8 @@ import logging
 from hive.model.energy import EnergyType
 from hive.model.energy.charger import Charger
 from hive.model.membership import Membership
-from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util import DictOps
 from hive.util.exception import SimulationStateError

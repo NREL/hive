@@ -6,7 +6,7 @@ import h3
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.membership import Membership
-from hive.model.roadnetwork.link import EntityPosition
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.runner.environment import Environment
 from hive.state.driver_state.driver_state import DriverState

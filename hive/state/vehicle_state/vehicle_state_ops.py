@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
-from hive.model.roadnetwork.link import EntityPosition
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle.vehicle import Vehicle

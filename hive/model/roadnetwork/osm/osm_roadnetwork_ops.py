@@ -6,7 +6,8 @@ from typing import Union, TYPE_CHECKING
 import immutables
 from networkx.classes.reportviews import NodeView
 
-from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.link_id import *
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.route import Route

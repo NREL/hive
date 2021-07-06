@@ -9,7 +9,8 @@ import networkx as nx
 
 from hive.external.miniosmnx.core import graph_from_file
 from hive.model.roadnetwork.geofence import GeoFence
-from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.link_id import extract_node_ids
 from hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
 from hive.model.roadnetwork.osm.osm_roadnetwork_ops import route_from_nx_path, resolve_route_src_dst_positions

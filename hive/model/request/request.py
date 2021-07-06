@@ -6,7 +6,7 @@ import h3
 
 from hive.model.membership import Membership
 from hive.model.passenger import Passenger, create_passenger_id
-from hive.model.roadnetwork.link import EntityPosition
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.sim_time import SimTime
 from hive.util.exception import TimeParseError

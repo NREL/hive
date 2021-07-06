@@ -3,7 +3,8 @@ from typing import Tuple, Optional
 
 import h3
 
-from hive.model.roadnetwork.link import Link, EntityPosition
+from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.runner import Environment
 from hive.util import TupleOps, wkt

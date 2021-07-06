@@ -4,9 +4,9 @@ from typing import Optional, NamedTuple, Dict
 
 import h3
 
-from hive.model.roadnetwork.link import Link, EntityPosition
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.entity_position import EntityPosition
 from hive.model.membership import Membership
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
