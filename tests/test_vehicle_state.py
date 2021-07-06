@@ -1829,7 +1829,7 @@ class TestVehicleState(TestCase):
     # ServicingPoolingTrip #############################################################################################
     ####################################################################################################################
 
-    def test_servicing_trip_enter(self):
+    def test_servicing_pooling_trip_enter(self):
         vehicle = mock_vehicle()
         request = mock_request()
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
@@ -1858,34 +1858,31 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingPoolingTrip, "should be in a ServicingPoolingTrip state")
         self.assertEquals(len(updated_vehicle.vehicle_state.routes), 1, "should have a route")
 
-    def test_servicing_trip_bad_membership(self):
+    def test_servicing_pooling_trip_exit(self):
         pass
 
-    def test_servicing_trip_exit(self):
+    def test_servicing_pooling_trip_exit_when_still_has_passengers(self):
         pass
 
-    def test_servicing_trip_exit_when_still_has_passengers(self):
+    def test_servicing_pooling_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
         pass
 
-    def test_servicing_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
+    def test_servicing_pooling_trip_update(self):
         pass
 
-    def test_servicing_trip_update(self):
+    def test_servicing_pooling_trip_update_terminal(self):
         pass
 
-    def test_servicing_trip_update_terminal(self):
+    def test_servicing_pooling_trip_enter_no_request(self):
         pass
 
-    def test_servicing_trip_enter_no_request(self):
+    def test_servicing_pooling_trip_enter_no_vehicle(self):
         pass
 
-    def test_servicing_trip_enter_no_vehicle(self):
+    def test_servicing_pooling_trip_enter_route_with_bad_source(self):
         pass
 
-    def test_servicing_trip_enter_route_with_bad_source(self):
-        pass
-
-    def test_servicing_trip_enter_route_with_bad_destination(self):
+    def test_servicing_pooling_trip_enter_route_with_bad_destination(self):
         pass
 
     def test_servicing_pooling_trip_update_reach_destination(self):

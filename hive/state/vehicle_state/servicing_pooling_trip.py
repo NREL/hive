@@ -89,7 +89,11 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: None, None - cannot invoke "exit" on ServicingPoolingTrip
         """
-        # todo: allow transitioning to a DispatchPoolingTrip state
+        # todo: allow transitioning to a DispatchPoolingTrip state? allow DispatchPoolingTripInstruction
+        #  which re-plans to directly modify the currently active ServicingPoolingTrip?
+        #  because we don't know the target destination state, we cannot switch on DispatchPoolingTrip
+        #  transitions here..
+
         return None, None
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
