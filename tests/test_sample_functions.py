@@ -48,7 +48,7 @@ class TestSampleVehicles(TestCase):
             self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
             self.assertEquals(v.energy.get(EnergyType.ELECTRIC),
                               env.mechatronics.get(mechatronics_id).battery_capacity_kwh)
-            self.assertEquals(v.link, base.link)
+            self.assertEquals(v.position, base.position)
 
         self.assertEqual(len(result.unwrap().vehicles), n, f"should have {n} vehicles")
         map(check_vehicle, result.unwrap().vehicles.values())

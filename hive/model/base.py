@@ -4,9 +4,9 @@ from typing import Optional, NamedTuple, Dict
 
 import h3
 
-from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
+from hive.model.entity_position import EntityPosition
 from hive.model.membership import Membership
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
@@ -32,7 +32,7 @@ class Base(NamedTuple):
     :type station_id: Optional[StationId]
     """
     id: BaseId
-    link: Link
+    position: EntityPosition
     total_stalls: int
     available_stalls: int
     station_id: Optional[StationId]
@@ -41,7 +41,7 @@ class Base(NamedTuple):
 
     @property
     def geoid(self):
-        return self.link.start
+        return self.position.geoid
 
     @classmethod
     def build(cls,
@@ -53,8 +53,8 @@ class Base(NamedTuple):
               membership: Membership = Membership()
               ):
 
-        link = road_network.stationary_location_from_geoid(geoid)
-        return Base(id, link, stall_count, stall_count, station_id, membership)
+        position = road_network.position_from_geoid(geoid)
+        return Base(id, position, stall_count, stall_count, station_id, membership)
 
     @classmethod
     def from_row(
@@ -63,13 +63,11 @@ class Base(NamedTuple):
             road_network: RoadNetwork,
     ) -> Base:
         """
-        takes a csv row and turns it into a Base
+        converts a csv row to a base
 
-
-        :param row: a row as interpreted by csv.DictReader
-        :param sim_h3_resolution: the h3 resolution that events are experienced at
-        :return: a Base
-        :raises IOError if the row was bad
+        :param row:
+        :param road_network:
+        :return:
         """
         if 'base_id' not in row:
             raise IOError("cannot load a base without a 'base_id'")

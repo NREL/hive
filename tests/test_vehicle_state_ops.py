@@ -11,8 +11,8 @@ class TestVehicleStateOps(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.7579, -104.978, 15)
         sim = mock_sim(sim_timestep_duration_seconds=10)
-        somewhere_link = sim.road_network.stationary_location_from_geoid(somewhere)
-        somewhere_else_link = sim.road_network.stationary_location_from_geoid(somewhere_else)
+        somewhere_link = sim.road_network.position_from_geoid(somewhere)
+        somewhere_else_link = sim.road_network.position_from_geoid(somewhere_else)
         route = sim.road_network.route(somewhere_link, somewhere_else_link)
         state = Repositioning(DefaultIds.mock_vehicle_id(), route)
         vehicle = mock_vehicle_from_geoid(geoid=somewhere, vehicle_state=state)
@@ -33,7 +33,7 @@ class TestVehicleStateOps(TestCase):
 
         self.assertLess(soc, 1, "should have used 1 unit of mock energy")
         self.assertNotEqual(somewhere, moved_vehicle.geoid, "should not be at the same location")
-        self.assertNotEqual(somewhere, moved_vehicle.link.start, "link start location should not be the same")
+        self.assertNotEqual(somewhere, moved_vehicle.position.geoid, "link start location should not be the same")
 
     def test_charge(self):
 

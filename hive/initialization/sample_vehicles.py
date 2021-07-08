@@ -1,11 +1,11 @@
 import functools as ft
 import logging
 import random
-from typing import Callable, Tuple
+from typing import Callable
 
 from returns.result import Result, Failure, Success
 
-from hive.model.base import Base
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork import Link, OSMRoadNetwork
 from hive.model.vehicle.vehicle import Vehicle
 from hive.runner import Environment
@@ -65,13 +65,14 @@ def sample_vehicles(
                     initial_soc = soc_sampling_function()
                     energy = mechatronics.initial_energy(initial_soc)
                     link = location_sampling_function(s)
+                    position = EntityPosition(link.link_id, link.start)
                     vehicle_state = Idle(vehicle_id)
                     driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
                     vehicle = Vehicle(
                         id=vehicle_id,
                         mechatronics_id=mechatronics_id,
                         energy=energy,
-                        link=link,
+                        position=position,
                         vehicle_state=vehicle_state,
                         driver_state=driver_state
                     )

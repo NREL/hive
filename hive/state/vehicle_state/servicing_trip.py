@@ -39,7 +39,7 @@ class ServicingTrip(NamedTuple, VehicleState):
               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
-        is_valid = route_cooresponds_with_entities(self.route, request.origin_link, request.destination_link) if vehicle and request else False
+        is_valid = route_cooresponds_with_entities(self.route, request.origin_position, request.destination_position) if vehicle and request else False
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         if not request:

@@ -11,7 +11,7 @@ from hive.util.typealiases import *
 from hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
-    from hive.model.roadnetwork.link import Link
+    from hive.model.roadnetwork.linktraversal import LinkTraversal
 
 
 class H3Ops:
@@ -125,7 +125,6 @@ class H3Ops:
 
         :param search_cell: the search-level h3 position we are looking at
         :param entity_search: the upper-level search collection for this entity type
-        :param entity_locations: the lower-level location collection
         :param entities: the actual entities
         :return: any entities which are located at this search-level cell
         """
@@ -194,13 +193,13 @@ class H3Ops:
         return 2 * avg_earth_radius_km * asin(sqrt(d))
 
     @classmethod
-    def point_along_link(cls, link: Link, available_time_seconds: Seconds) -> GeoId:
+    def point_along_link(cls, link: LinkTraversal, available_time_seconds: Seconds) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 
 
         :param available_time_seconds: the amount of time to traverse
-        :param property_link: the link we are finding a mid point along
+        :param link: the link we are finding a mid point along
         :return: a GeoId along the Link
         """
 

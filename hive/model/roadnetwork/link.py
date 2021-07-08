@@ -4,9 +4,19 @@ from typing import NamedTuple, Optional
 
 import h3
 
+from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import LinkId, GeoId
 from hive.util.units import Kilometers, Kmph, Seconds, Ratio, hours_to_seconds
+
+
+class EntityPosition(NamedTuple):
+    """
+    A pairing of a geoid at the simulation resolution and a link id which yields the position of an entity
+    with the context of a link for directionality.
+    """
+    link_id: LinkId
+    geoid: GeoId
 
 
 class Link(NamedTuple):
@@ -37,7 +47,7 @@ class Link(NamedTuple):
 
     @property
     def travel_time_seconds(self) -> Seconds:
-        return hours_to_seconds(self.distance_km/self.speed_kmph)
+        return hours_to_seconds(self.distance_km / self.speed_kmph)
 
     @classmethod
     def build(
@@ -68,31 +78,19 @@ class Link(NamedTuple):
         """
         return self._replace(speed_kmph=speed_kmph)
 
-    def update_start(self, new_start: GeoId) -> Link:
+    def to_link_traversal(self) -> LinkTraversal:
         """
-        changes the start GeoId of the (experienced) Link. used to set trip positions on
-        partially-traversed Links or to set a location of a stationary entity.
-        :param new_start: the new start GeoId (should be a position along the h3_line between
-                          Link.start and Link.end)
-        :return: the link with an updated start GeoId
-        """
-        if new_start == self.start:
-            return self
-        else:
-            return self._replace(start=new_start)
+        convert to a link traversal
 
-    def update_end(self, new_end: GeoId) -> Link:
+        :return: the new link traversal
         """
-        changes the end GeoId of the (experienced) Link. used to set trip positions on
-        partially-traversed Links or to set a location of a stationary entity.
-        :param new_end: the new end GeoId (should be a position along the h3_line between
-                          Link.start and Link.end)
-        :return: the link with an updated end GeoId
-        """
-        if new_end == self.end:
-            return self
-        else:
-            return self._replace(end=new_end)
+        return LinkTraversal(
+            self.link_id,
+            self.start,
+            self.end,
+            self.distance_km,
+            self.speed_kmph,
+        )
 
 
 def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:

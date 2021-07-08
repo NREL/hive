@@ -33,7 +33,7 @@ class DispatchStation(NamedTuple, VehicleState):
     def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         station = sim.stations.get(self.station_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.link, station.link) if vehicle and station else False
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.position, station.position) if vehicle and station else False
         if not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         elif not vehicle:
