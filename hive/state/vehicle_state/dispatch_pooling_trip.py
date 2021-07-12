@@ -61,7 +61,7 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
             reqs_exist_and_match_membership = dispatch_ops.requests_exist_and_match_membership(sim, vehicle, req_ids)
             first_req_id, first_phase = first_stop
             first_req = sim.requests.get(first_req_id)
-            is_valid = route_cooresponds_with_entities(self.route, vehicle.link, first_req.origin_link) if vehicle and first_req else False
+            is_valid = route_cooresponds_with_entities(self.route, vehicle.position, first_req.origin_position) if vehicle and first_req else False
 
             if not vehicle:
                 error = SimulationStateError(f"vehicle {self.vehicle_id} does not exist")

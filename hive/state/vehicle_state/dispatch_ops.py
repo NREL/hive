@@ -109,9 +109,9 @@ def get_link_for_phase(sim: SimulationState, req_id: RequestId, trip_phase: Trip
     if req is None:
         return None
     elif trip_phase == TripPhase.PICKUP:
-        return req.origin_link
+        return req.origin_position
     elif trip_phase == TripPhase.DROPOFF:
-        return req.destination_link
+        return req.destination_position
     else:
         return None
 
