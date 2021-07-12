@@ -48,7 +48,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.link, request.origin_link) if vehicle and request else False
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.position, request.origin_position) if vehicle and request else False
         if not vehicle:
             error = SimulationStateError(f"vehicle {self.vehicle_id} does not exist")
             return error, None
@@ -123,9 +123,11 @@ class DispatchTrip(NamedTuple, VehicleState):
             else:
                 return None, (enter_sim, next_state)
         else:
+            # request exists: pick up the trip and enter a ServicingTrip state
+            route = sim.road_network.route(request.origin_position, request.destination_position)
+            # apply next state
             # generate the data to describe the trip for this request
             # where the pickup phase is currently happening + doesn't need to be added to the trip plan
-            route = sim.road_network.route(request.origin_link, request.destination_link)
             trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
             departure_time = sim.sim_time
 

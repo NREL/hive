@@ -5,13 +5,13 @@ from typing import NamedTuple, Dict, Optional
 import h3
 
 from hive.model.energy.energytype import EnergyType
-from hive.model.roadnetwork.link import Link
-from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.membership import Membership
+from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.runner.environment import Environment
 from hive.state.driver_state.driver_state import DriverState
-from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.idle import Idle
+from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.typealiases import *
 from hive.util.units import Kilometers, Currency
 
@@ -36,8 +36,8 @@ class Vehicle(NamedTuple):
     mechatronics_id: MechatronicsId
     energy: Dict[EnergyType, float]
 
-    # current vehicle location
-    link: Link
+    # location
+    position: EntityPosition
 
     # vehicle planning/operational properties
     vehicle_state: VehicleState
@@ -51,10 +51,9 @@ class Vehicle(NamedTuple):
 
     membership: Membership = Membership()
 
-
     @property
     def geoid(self):
-        return self.link.start
+        return self.position.geoid
 
     @classmethod
     def from_row(cls, row: Dict[str, str], road_network: RoadNetwork, environment: Environment) -> Vehicle:
@@ -88,25 +87,28 @@ class Vehicle(NamedTuple):
                 mechatronics = environment.mechatronics.get(mechatronics_id)
                 if not mechatronics:
                     found = set(environment.mechatronics.keys())
-                    raise IOError(f"was not able to find mechatronics '{mechatronics_id}' for vehicle {vehicle_id} in environment: found {found}")
+                    raise IOError(
+                        f"was not able to find mechatronics '{mechatronics_id}' for vehicle {vehicle_id} in environment: found {found}")
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
-                schedule_id = row.get('schedule_id')  # if None, it signals an autonomous vehicle, otherwise, human with schedule
+                schedule_id = row.get(
+                    'schedule_id')  # if None, it signals an autonomous vehicle, otherwise, human with schedule
                 home_base_id = row.get('home_base_id')
                 if schedule_id and not schedule_id in environment.schedules.keys():
-                    raise IOError(f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
+                    raise IOError(
+                        f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
                 allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
                 available_seats = int(row.get('available_seats', 0))
                 driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id, allows_pooling)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-                start_link = road_network.stationary_location_from_geoid(geoid)
+                start_position = road_network.position_from_geoid(geoid)
 
                 return Vehicle(
                     id=vehicle_id,
                     mechatronics_id=mechatronics_id,
                     energy=energy,
-                    link=start_link,
+                    position=start_position,
                     vehicle_state=Idle(vehicle_id),
                     driver_state=driver_state,
                     total_seats=available_seats,
@@ -146,14 +148,14 @@ class Vehicle(NamedTuple):
         """
         return self._replace(driver_state=driver_state)
 
-    def modify_link(self, link: Link) -> Vehicle:
+    def modify_position(self, position: EntityPosition) -> Vehicle:
         """
         modify the link of the vehicle. should only be used by the road network ops
 
-        :param link:
+        :param position:
         :return:
         """
-        return self._replace(link=link)
+        return self._replace(position=position)
 
     def send_payment(self, amount: Currency) -> Vehicle:
         """
@@ -200,24 +202,3 @@ class Vehicle(NamedTuple):
         """
         updated_membership = self.membership.add_membership(membership_id)
         return self._replace(membership=updated_membership)
-
-    # todo: manage this in the vehicle state instead
-    # def add_passengers(self, n_passengers: int) -> Optional[Vehicle]:
-    #     """
-    #     adds some passengers to the vehicle
-    #
-    #     :param n_passengers: the number of passengers to add
-    #     :returns: the updated vehicle, or None if there are not enough seats available
-    #     """
-    #     if n_passengers > self.available_seats:
-    #         return None
-    #     else:
-    #         updated = self._replace(
-    #             available_seats=self.available_seats - n_passengers
-    #         )
-    #         return updated
-    #
-    # def remove_passengers(self, n_passengers: int) -> Optional[Vehicle]:
-    #     """
-    #     remove some passengers from this vehicle
-    #     """

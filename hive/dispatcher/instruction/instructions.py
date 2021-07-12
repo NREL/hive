@@ -59,8 +59,8 @@ class DispatchTripInstruction(NamedTuple, Instruction):
         elif not request:
             return SimulationStateError(f"request {request} not found"), None
         else:
-            start = vehicle.link
-            end = request.origin_link
+            start = vehicle.position
+            end = request.origin_position
             route = sim_state.road_network.route(start, end)
             prev_state = vehicle.vehicle_state
             next_state = DispatchTrip(self.vehicle_id, self.request_id, route)
@@ -128,8 +128,8 @@ class DispatchStationInstruction(NamedTuple, Instruction):
         elif not station:
             return SimulationStateError(f"station {station} not found"), None
         else:
-            start = vehicle.link
-            end = station.link
+            start = vehicle.position
+            end = station.position
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
@@ -188,8 +188,8 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         else:
-            start = vehicle.link
-            end = base.link
+            start = vehicle.position
+            end = base.position
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
@@ -209,7 +209,7 @@ class RepositionInstruction(NamedTuple, Instruction):
         if not vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
-            start = vehicle.link
+            start = vehicle.position
             route = sim_state.road_network.route(start, self.destination)
 
             prev_state = vehicle.vehicle_state

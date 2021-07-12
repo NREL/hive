@@ -49,6 +49,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request.id)
+        is_valid = route_cooresponds_with_entities(self.route, request.origin_position, request.destination_position) if vehicle and request else False
         if vehicle is None:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         elif request is None:
@@ -63,11 +64,11 @@ class ServicingTrip(NamedTuple, VehicleState):
         elif not self.request.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} with mis-matched memberships/fleets"
             return SimulationStateError(msg), None
-        elif not route_cooresponds_with_entities(self.route, vehicle.link):
+        elif not route_cooresponds_with_entities(self.route, vehicle.position):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match location of vehicle)"
             log.warning(msg)
             return None, None
-        elif not route_cooresponds_with_entities(self.route, request.origin_link, request.destination_link):
+        elif not route_cooresponds_with_entities(self.route, request.origin_position, request.destination_position):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match o/d of request)"
             log.warning(msg)
             return None, None

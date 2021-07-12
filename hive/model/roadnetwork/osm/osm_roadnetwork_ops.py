@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 import immutables
 from networkx.classes.reportviews import NodeView
 
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.link_id import *
+from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.route import Route
+
+if TYPE_CHECKING:
+    from hive.model.roadnetwork import OSMRoadNetwork
 
 
 def safe_get_node_coordinates(node: NodeView, node_id: int) -> Tuple[Optional[Exception], Optional[Tuple[float, float]]]:
@@ -41,9 +46,9 @@ def route_from_nx_path(nx_path: Union[list, dict], link_lookup: immutables.Map[L
         return None, ()
     else:
         def _accumulate_links(
-                acc: Tuple[Optional[Exception], Optional[Tuple[Link, ...]]],
+                acc: Tuple[Optional[Exception], Optional[Tuple[LinkTraversal, ...]]],
                 node_id_pair: Tuple[int, int]
-        ) -> Tuple[Optional[Exception], Optional[Tuple[Link, ...]]]:
+        ) -> Tuple[Optional[Exception], Optional[Tuple[LinkTraversal, ...]]]:
             err, prev_links = acc
             if err:
                 return acc
@@ -56,7 +61,7 @@ def route_from_nx_path(nx_path: Union[list, dict], link_lookup: immutables.Map[L
                     link_err = Exception(f"networkx shortest path traverses link id {link_id} which does not exist")
                     return link_err, None
                 else:
-                    updated_links = prev_links + (link,)
+                    updated_links = prev_links + (link.to_link_traversal(),)
                     return None, updated_links
 
         nx_path_adj_pairs = [(nx_path[i], nx_path[i+1]) for i in range(0, len(nx_path) - 1)]
@@ -67,9 +72,9 @@ def route_from_nx_path(nx_path: Union[list, dict], link_lookup: immutables.Map[L
 
 def resolve_route_src_dst_positions(
         inner_route: Route,
-        src_link_pos: Link,
-        dst_link_pos: Link,
-        road_network: 'OSMRoadNetwork') -> Optional[Route]:
+        src_link_pos: EntityPosition,
+        dst_link_pos: EntityPosition,
+        road_network: OSMRoadNetwork) -> Optional[Route]:
     """
     our inner_route is a shortest path from the destination of the source link to the start
     of the destination link. a 'positional' Link has been provided in the search query, assumed
@@ -85,14 +90,14 @@ def resolve_route_src_dst_positions(
     """
     src_link = road_network.link_helper.links.get(src_link_pos.link_id)
     dst_link = road_network.link_helper.links.get(dst_link_pos.link_id)
-    src_link_updated = src_link.update_start(src_link_pos.start) if src_link else None
-    dst_link_updated = dst_link.update_end(dst_link_pos.end) if dst_link else None
-    if not src_link_updated or not dst_link_updated:
+    if not src_link or not dst_link:
         return None
     else:
         # for any length inner route, form the total route by attaching these
         # start and end links whose start or end values have been modified to
         # align with the search start/end locations
-        updated_route = (src_link_updated,) + inner_route + (dst_link_updated,)
+        src_link_traversal = src_link.to_link_traversal().update_start(src_link_pos.geoid)
+        dst_link_traversal = dst_link.to_link_traversal().update_end(dst_link_pos.geoid)
+        updated_route = (src_link_traversal,) + inner_route + (dst_link_traversal,)
         return updated_route
 

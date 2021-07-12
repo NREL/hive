@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Tuple, Optional
 
 from hive.model.roadnetwork.geofence import GeoFence
+from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
@@ -52,13 +54,13 @@ class HaversineRoadNetwork(RoadNetwork):
 
         return start, end
 
-    def route(self, origin: Link, destination: Link) -> Route:
-        link_id = self._geoids_to_link_id(origin.start, destination.end)
-        link_dist_km = self.distance_by_geoid_km(origin.start, destination.end)
-        link = Link(
+    def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
+        link_id = self._geoids_to_link_id(origin.geoid, destination.geoid)
+        link_dist_km = self.distance_by_geoid_km(origin.geoid, destination.geoid)
+        link = LinkTraversal(
             link_id=link_id,
-            start=origin.start,
-            end=destination.end,
+            start=origin.geoid,
+            end=destination.geoid,
             distance_km=link_dist_km,
             speed_kmph=self._AVG_SPEED_KMPH,
         )
@@ -92,4 +94,3 @@ class HaversineRoadNetwork(RoadNetwork):
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
         raise NotImplementedError("updates are not implemented")
-

@@ -11,7 +11,7 @@ with open(path.join(here, 'NOTICE.md'), encoding='utf-8') as f:
 
 setup(
     name="nrel_hive",
-    version="0.8.1",
+    version="0.8.2",
     description=
     "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.",
     long_description=long_description,
@@ -43,7 +43,10 @@ setup(
         "hive.resources": ["*"]
     },
     entry_points={
-        'console_scripts': ['hive=hive.app.run:run'],
+        'console_scripts': [
+            'hive=hive.app.run:run',
+            'hive-batch=hive.app.run_batch:run',
+        ],
     },
     author="National Renewable Energy Laboratory",
     author_email="Reinicke, Nicholas <Nicholas.Reinicke@nrel.gov>",

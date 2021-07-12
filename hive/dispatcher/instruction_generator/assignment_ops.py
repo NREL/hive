@@ -226,7 +226,7 @@ def shortest_time_to_charge_ranking(
 
     vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     remaining_range = vehicle_mechatronics.range_remaining_km(vehicle) if vehicle_mechatronics else 0.0
-    route = sim.road_network.route(vehicle.link, station.link)
+    route = sim.road_network.route(vehicle.position, station.position)
     distance_km = route_distance_km(route)
 
     if not vehicle_mechatronics or remaining_range < distance_km:

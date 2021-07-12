@@ -1,4 +1,4 @@
-from typing import Dict, FrozenSet, Optional
+from typing import Dict, FrozenSet
 
 from hive.util.typealiases import RequestId, VehicleId, StationId, BaseId
 

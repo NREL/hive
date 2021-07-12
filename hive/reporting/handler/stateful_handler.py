@@ -61,6 +61,7 @@ class StatefulHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()
+        self.log_file = None
 
     @staticmethod
     def driver_asdict(vehicle: Vehicle) -> dict:
@@ -90,7 +91,7 @@ class StatefulHandler(Handler):
         # del (output['energy'])
 
         # deconstruct link
-        for key, val in vehicle.link._asdict().items():
+        for key, val in vehicle.position._asdict().items():
             new_key = 'link_' + key
             output[new_key] = val
         # del (output['link'])
@@ -106,9 +107,9 @@ class StatefulHandler(Handler):
         out_dict["memberships"] = str(station.membership)
 
         # deconstruct origin_link
-        out_dict['link_id'] = station.link.link_id
-        out_dict['geoid'] = station.link.start
-        del (out_dict['link'])
+        out_dict['link_id'] = station.position.link_id
+        out_dict['geoid'] = station.position.geoid
+        del (out_dict['position'])
 
         # deconstruct total_charges
         for key, val in station.total_chargers.items():

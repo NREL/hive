@@ -338,12 +338,12 @@ def mock_vehicle(
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
     d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
-    link = road_network.link_from_geoid(geoid)
+    position = road_network.position_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
-        link=link,
+        position=position,
         vehicle_state=v_state,
         driver_state=d_state,
         membership=membership,
@@ -364,12 +364,12 @@ def mock_vehicle_from_geoid(
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
     d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
-    link = mock_network().link_from_geoid(geoid)
+    position = mock_network().position_from_geoid(geoid)
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
-        link=link,
+        position=position,
         vehicle_state=state,
         driver_state=d_state,
         membership=membership,

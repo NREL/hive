@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from hive.model.roadnetwork.link import EntityPosition
 from tests.mock_lobster import *
 
 
@@ -160,13 +161,13 @@ class TestSimulationStateOps(TestCase):
     def test_update_station(self):
         station = mock_station()
         sim = mock_sim(stations=(station,))
-        new_link = Link("blah", station.geoid, "blip", 1, 70)  # not a realistic test case
-        updated_station = station._replace(link=new_link)
+        new_position = EntityPosition("test", station.geoid)
+        updated_station = station._replace(position=new_position)
         error, sim_after_station = simulation_state_ops.modify_station(sim, updated_station)
         self.assertIsNone(error, "should have no error")
 
         updated_station_in_sim = sim_after_station.stations[station.id]
-        self.assertEqual(updated_station_in_sim.link, updated_station.link, "station should have been updated")
+        self.assertEqual(updated_station_in_sim.position, updated_station.position, "station should have been updated")
 
         at_loc = sim_after_station.s_locations[station.geoid]
         self.assertIn(station.id, at_loc, "the station's id should be found at it's geoid")
