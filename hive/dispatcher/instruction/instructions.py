@@ -80,10 +80,15 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
         req_allow_pooling_error_msg = trip_plan_all_requests_allow_pooling(sim_state, self.trip_plan)
         seating_error = test_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
 
-        if isinstance(v_state, ServicingPoolingTrip) and not trip_plan_covers_previous(v_state, self.trip_plan):
-            msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
+        if isinstance(v_state, ServicingPoolingTrip):
+            msg = "interrupting existing pooling trips is not yet supported (see https://github.com/NREL/hive/issues/27)"
             error = InstructionError(msg)
             return error, None
+        # todo: uncomment this, remove the if statement above (requires fixes to vehicle state FSM)
+        # if isinstance(v_state, ServicingPoolingTrip) and not trip_plan_covers_previous(v_state, self.trip_plan):
+        #     msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
+        #     error = InstructionError(msg)
+        #     return error, None
         elif not trip_plan_ordering_is_valid(self.trip_plan, v_state):
             msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
             error = InstructionError(msg)
