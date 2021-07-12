@@ -19,6 +19,7 @@ from hive.dispatcher.instruction_generator.instruction_generator import Instruct
 from hive.model.base import Base
 from hive.model.energy.charger import Charger
 from hive.model.energy.energytype import EnergyType
+from hive.model.entity_position import EntityPosition
 from hive.model.membership import Membership
 from hive.model.request import Request, RequestRateStructure
 from hive.model.roadnetwork.geofence import GeoFence
@@ -162,6 +163,16 @@ def mock_base_from_geoid(
     return Base.build(base_id, geoid, road_network, station_id, stall_count, membership)
 
 
+def mock_base_from_position(
+        base_id: BaseId = DefaultIds.mock_base_id(),
+        position: EntityPosition = mock_network().position_from_geoid(h3.geo_to_h3(39.7539, -104.9740, 15)),
+        station_id: Optional[StationId] = None,
+        stall_count: int = 1,
+        membership: Membership = Membership(),
+) -> Base:
+    return Base(base_id, position, stall_count, stall_count, station_id, membership)
+
+
 def mock_station(
         station_id: StationId = DefaultIds.mock_station_id(),
         lat: float = 39.7539,
@@ -194,6 +205,27 @@ def mock_station_from_geoid(
     if on_shift_access_chargers is None:
         on_shift_access_chargers = frozenset(chargers.keys())
     return Station.build(station_id, geoid, road_network, chargers, on_shift_access_chargers, membership)
+
+
+def mock_station_from_position(
+        station_id: StationId = DefaultIds.mock_station_id(),
+        position: EntityPosition = mock_network().position_from_geoid(h3.geo_to_h3(39.7539, -104.974, 15)),
+        chargers=None,
+        on_shift_access_chargers=None,
+        membership: Membership = Membership(),
+) -> Station:
+    if chargers is None:
+        chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
+    elif isinstance(chargers, dict):
+        chargers = immutables.Map(chargers)
+    if on_shift_access_chargers is None:
+        on_shift_access_chargers = frozenset(chargers.keys())
+    prices = ft.reduce(
+        lambda prices_builder, charger: prices_builder.set(charger, 0.0),
+        chargers.keys(),
+        immutables.Map()
+    )
+    return Station(station_id, position, chargers, chargers, on_shift_access_chargers, prices, membership)
 
 
 def mock_rate_structure(
