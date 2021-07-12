@@ -1847,7 +1847,7 @@ class TestVehicleState(TestCase):
         boarded_reqs = immutables.Map({request.id: request})
         departure_times = immutables.Map({request.id: SimTime(0)})
         route = mock_route_from_geoids(request.origin, request.destination)
-        routes = (route, )
+        routes = (route,)
 
         next_state = ServicingPoolingTrip(vehicle.id, boarded_trip_plan, boarded_reqs, departure_times, routes, 1)
         error, updated_sim = next_state.enter(disp_sim, env)
@@ -1858,34 +1858,125 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(updated_vehicle.vehicle_state, ServicingPoolingTrip, "should be in a ServicingPoolingTrip state")
         self.assertEquals(len(updated_vehicle.vehicle_state.routes), 1, "should have a route")
 
-    def test_servicing_pooling_trip_exit(self):
-        pass
-
-    def test_servicing_pooling_trip_exit_when_still_has_passengers(self):
-        pass
-
-    def test_servicing_pooling_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
-        pass
-
-    def test_servicing_pooling_trip_update(self):
-        pass
-
     def test_servicing_pooling_trip_update_terminal(self):
-        pass
+        # 3 adjacent h3 cells, total trip distance is ~ 2 meters
+        vehicle = mock_vehicle_from_geoid(geoid='8f268cd9601daa1')
+        request = mock_request_from_geoids(origin='8f268cd9601daac', destination='8f268cd9601da10')
+        sim0 = mock_sim(vehicles=(vehicle,), sim_timestep_duration_seconds=60)
 
-    def test_servicing_pooling_trip_enter_no_request(self):
-        pass
+        # place request and vehicle in a mock simulation
+        err1, sim1 = simulation_state_ops.add_request(sim0, request)
+        self.assertIsNone(err1, "test invariant failed")
+        env = mock_env()
+        route = mock_route_from_geoids(vehicle.geoid, request.geoid)
+        trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
 
-    def test_servicing_pooling_trip_enter_no_vehicle(self):
-        pass
+        # set vehicle to dispatch state
+        prev_state = DispatchPoolingTrip(vehicle.id, trip_plan, route)
+        err2, sim2 = prev_state.enter(sim1, env)
+        self.assertIsNone(err2, "test invariant failed")
 
-    def test_servicing_pooling_trip_enter_route_with_bad_source(self):
-        pass
+        # dispatch to request (move)
+        err3, sim3 = prev_state.update(sim2, env)
+        self.assertIsNone(err3, "test invariant failed")
+        state_at_req = sim3.vehicles.get(vehicle.id).vehicle_state
 
-    def test_servicing_pooling_trip_enter_route_with_bad_destination(self):
-        pass
+        # service the trip (move), should terminate in idle state
+        err4, sim4 = state_at_req.update(sim3, env)
+        self.assertIsNone(err3, "test invariant failed")
 
-    def test_servicing_pooling_trip_update_reach_destination(self):
+        # test final state
+        updated_vehicle = sim4.vehicles.get(vehicle.id)
+        self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should be in an Idle state")
+        self.assertEqual(len(sim4.requests), 0, "request should have been picked up and dropped off fully")
+
+    def test_servicing_pooling_trip_update_picks_up_second_request(self):
+        v0_src, r0_src, r1_src, r0_dst, r1_dst = '8f268cd9601daa1', '8f268cd9601daac', '8f268cd9601da10', '8f268cd9601da1a', '8f268cd9601da88'
+
+        # 3 adjacent h3 cells, total trip distance is ~ 2 meters
+        v0 = mock_vehicle_from_geoid(geoid=v0_src)
+        r0 = mock_request_from_geoids(request_id='r0', origin=r0_src, destination=r0_dst)
+        r1 = mock_request_from_geoids(request_id='r1', origin=r1_src, destination=r1_dst)
+        sim0 = mock_sim(vehicles=(v0,), sim_timestep_duration_seconds=60)
+
+        # place request and vehicle in a mock simulation
+        err1, sim1 = simulation_state_ops.add_request(sim0, r0)
+        err2, sim2 = simulation_state_ops.add_request(sim1, r1)
+        self.assertIsNone(err1, "test invariant failed")
+        self.assertIsNone(err2, "test invariant failed")
+
+        env = mock_env()
+        route = mock_route_from_geoids(v0.geoid, r0.geoid)
+        trip_plan = ((r0.id, TripPhase.PICKUP), (r1.id, TripPhase.PICKUP), (r0.id, TripPhase.DROPOFF), (r1.id, TripPhase.DROPOFF))
+
+        # set vehicle to dispatch state
+        prev_state = DispatchPoolingTrip(v0.id, trip_plan, route)
+        err3, sim3 = prev_state.enter(sim2, env)
+        self.assertIsNone(err3, "test invariant failed")
+
+        # dispatch vehicle to first request (move)
+        err4, sim4 = prev_state.update(sim3, env)
+        self.assertIsNone(err4, "test invariant failed")
+        state_at_req_1 = sim4.vehicles.get(v0.id).vehicle_state
+
+        # service the trip (move), should end up picking up second request
+        err5, sim5 = state_at_req_1.update(sim4, env)
+        self.assertIsNone(err5, "failed to move from r0 to r1")
+
+        veh_pooling = sim5.vehicles.get(v0.id)
+        state_pooling = veh_pooling.vehicle_state
+        self.assertEqual(veh_pooling.geoid, r1_src, "should be at the pickup location for r1")
+        self.assertEqual(len(state_pooling.boarded_requests), 2, "should have 2 requests boarded")
+        self.assertEqual(state_pooling.trip_plan, trip_plan[2:4], "should have the correct remaining plan")
+        # todo: check state of remaining route, should be r1_src -> r0_dst, r0_dst -> r1_dst
+
+    def test_servicing_pooling_trip_update_drops_off_first_request(self):
+        v0_src, r0_src, r1_src, r0_dst, r1_dst = '8f268cd9601daa1', '8f268cd9601daac', '8f268cd9601da10', '8f268cd9601da1a', '8f268cd9601da88'
+
+        # 3 adjacent h3 cells, total trip distance is ~ 2 meters
+        v0 = mock_vehicle_from_geoid(geoid=v0_src)
+        r0 = mock_request_from_geoids(request_id='r0', origin=r0_src, destination=r0_dst)
+        r1 = mock_request_from_geoids(request_id='r1', origin=r1_src, destination=r1_dst)
+        sim0 = mock_sim(vehicles=(v0,), sim_timestep_duration_seconds=60)
+
+        # place request and vehicle in a mock simulation
+        err1, sim1 = simulation_state_ops.add_request(sim0, r0)
+        err2, sim2 = simulation_state_ops.add_request(sim1, r1)
+        self.assertIsNone(err1, "test invariant failed")
+        self.assertIsNone(err2, "test invariant failed")
+
+        env = mock_env()
+        route = mock_route_from_geoids(v0.geoid, r0.geoid)
+        trip_plan = ((r0.id, TripPhase.PICKUP), (r1.id, TripPhase.PICKUP), (r0.id, TripPhase.DROPOFF), (r1.id, TripPhase.DROPOFF))
+
+        # set vehicle to dispatch state
+        prev_state = DispatchPoolingTrip(v0.id, trip_plan, route)
+        err3, sim3 = prev_state.enter(sim2, env)
+        self.assertIsNone(err3, "test invariant failed")
+
+        # dispatch vehicle to first request (move)
+        err4, sim4 = prev_state.update(sim3, env)
+        self.assertIsNone(err4, "test invariant failed")
+        state_at_req_0 = sim4.vehicles.get(v0.id).vehicle_state
+
+        # service the trip (move), should end up picking up second request
+        err5, sim5 = state_at_req_0.update(sim4, env)
+        self.assertIsNone(err5, "failed to move from r0 to r1")
+        state_at_req_1 = sim5.vehicles.get(v0.id).vehicle_state
+
+        # service the trip (move), should end up picking up second request
+        err6, sim6 = state_at_req_1.update(sim5, env)
+        self.assertIsNone(err6, "failed to move to r0 destination")
+
+        veh_pooling = sim6.vehicles.get(v0.id)
+        state_pooling = veh_pooling.vehicle_state
+        self.assertEqual(veh_pooling.geoid, r0_dst, "should be at the dropoff location for r0")
+        self.assertEqual(len(state_pooling.boarded_requests), 1, "should have 1 requests still boarded")
+        self.assertIsNone(sim6.requests.get('r0'), "request 0 should have been dropped off and no longer be in the simulation")
+        self.assertEqual(state_pooling.trip_plan, trip_plan[3:4], "should have the correct remaining plan")
+        # todo: check state of remaining route, should be r0_dst -> r1_dst
+
+    def test_servicing_single_pooling_trip_reaches_destination(self):
         vehicle = mock_vehicle()
         request = mock_request()
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
@@ -1905,14 +1996,27 @@ class TestVehicleState(TestCase):
         self.assertEquals(updated_request.dispatched_vehicle, vehicle.id, "request should be assigned this vehicle")
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
-    def test_servicing_pooling_trip_update_out_of_service(self):
+    def test_servicing_pooling_trip_exit(self):
+        """
+        cannot run until exit is supported, should only be supported under the condition of going to
+        an updated ServicingPoolingTrip (see https://github.com/NREL/hive/issues/27)
+        """
         pass
 
-    def test_servicing_pooling_trip_update_picks_up_second_request(self):
+    def test_servicing_pooling_trip_exit_when_still_has_passengers(self):
+        """
+        see above
+        """
         pass
 
-    def test_servicing_pooling_trip_update_drops_off_first_request(self):
+    def test_servicing_pooling_trip_exit_when_still_has_passengers_but_out_of_fuel(self):
+        """
+        see above
+        """
         pass
 
-    def test_servicing_pooling_trip_update_final_dropoff_goes_to_idle(self):
+    def test_servicing_pooling_trip_update(self):
+        """
+        see above
+        """
         pass

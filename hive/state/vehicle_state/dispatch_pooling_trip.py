@@ -114,7 +114,7 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         """
 
         vehicle = sim.vehicles.get(self.vehicle_id)
-        first_stop, remaining_trip_plan = self.trip_plan
+        first_stop, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
 
         if first_stop is None:
             log.debug(f"DispatchPoolingTrip.enter called with empty trip_plan")
@@ -123,7 +123,7 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
             # confirm we are at the pickup location and first request is still there
             first_req_id, _ = first_stop
             first_req = sim.requests.get(first_req_id)
-            if first_req and first_req.geoid != vehicle.geoid:
+            if first_req and first_req.geoid != vehicle.geoid:  # todo: check this is a PICKUP phase, report state corruption
                 locations = f"{first_req.geoid} != {vehicle.geoid}"
                 message = f"vehicle {self.vehicle_id} ended dispatch trip to request {first_req_id} " + \
                           f"but locations do not match: {locations}. sim_time: {sim.sim_time}"
