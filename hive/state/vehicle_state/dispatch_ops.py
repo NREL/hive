@@ -148,6 +148,8 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
             route = sim.road_network.route(vehicle.link, first_req_link)
             vehicle_state = vehicle.vehicle_state
 
+            # todo: this should become a ServicingPoolingTrip instead
+            #  - maybe we need a TripPhase.REPLANNING for the leg that is the interruption?
             if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
                 # already servicing pooling - copy over passenger state
                 next_state = DispatchPoolingTrip(

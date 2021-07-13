@@ -118,7 +118,7 @@ def trip_plan_all_requests_allow_pooling(sim: 'SimulationState',
     def _test_req(test_errors: Tuple[Tuple[str, ...], Tuple[str, ...]],
                   r_id: RequestId) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
         sim_error_ids, pool_error_ids = test_errors
-        req = sim.boarded_requests.get(r_id)
+        req = sim.requests.get(r_id)
         if req is None:
             updated_sim_error_ids = sim_error_ids + (r_id, )
             return updated_sim_error_ids, pool_error_ids

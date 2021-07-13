@@ -31,10 +31,6 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
     # this is the route to the first pickup location
     route: Route
-    # if this overrides a ServicingPoolingTrip state, we carry that state here as well
-    boarded_requests: immutables.Map[RequestId, Request] = immutables.Map()
-    departure_times: immutables.Map[RequestId, SimTime] = immutables.Map()
-    num_passengers: int = 0
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
