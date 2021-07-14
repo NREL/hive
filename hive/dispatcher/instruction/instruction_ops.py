@@ -18,31 +18,6 @@ from hive.util.exception import InstructionError
 log = logging.getLogger(__name__)
 
 
-def test_vehicle_has_seats(sim: 'SimulationState',
-                           vehicle: Vehicle,
-                           trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]) -> Optional[Tuple[RequestId, TripPhase]]:
-    """
-    reviews the trip plan and confirms that the vehicle never attempts to board
-    more passengers than it has available seats
-
-    :param sim: simulation state
-    :param vehicle: the vehicle
-    :param trip_plan: the proposed trip plan
-    :return: None, or, the trip phase tuple which breaks the seat capacity constraint
-    """
-
-    # todo: if we are already pooling, get the current passenger count
-    currently_boarded = -1
-
-    def _test(acc: Tuple[int, bool], t: Tuple[RequestId, TripPhase]) -> Tuple[int, bool]:
-        pass
-
-    initial = (0, True)
-    final_cnt, has_seats = ft.reduce(_test, trip_plan, initial)
-    correct_final_count = final_cnt - currently_boarded == 0
-    return has_seats and correct_final_count
-
-
 def trip_plan_covers_previous(previous_state: ServicingPoolingTrip,
                               new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]) -> bool:
     """

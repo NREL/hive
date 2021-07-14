@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_ops import trip_plan_ordering_is_valid, trip_plan_covers_previous, \
-    trip_plan_all_requests_allow_pooling, test_vehicle_has_seats
+    trip_plan_all_requests_allow_pooling, check_if_vehicle_has_seats
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
@@ -78,7 +78,7 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
         v_state = vehicle.vehicle_state
 
         req_allow_pooling_error_msg = trip_plan_all_requests_allow_pooling(sim_state, self.trip_plan)
-        seating_error = test_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
+        # seating_error = check_if_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
 
         if isinstance(v_state, ServicingPoolingTrip):
             msg = "interrupting existing pooling trips is not yet supported (see https://github.com/NREL/hive/issues/27)"
@@ -97,10 +97,15 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
             msg = f"attempting to assign a pooling trip to vehicle {self.vehicle_id} which does not allow pooling"
             error = InstructionError(msg)
             return error, None
-        elif seating_error is not None:
-            msg = f"pooling trip plan for vehicle {self.vehicle_id} exceeds seating constraint at step {seating_error}"
-            error = InstructionError(msg)
-            return error, None
+        # todo: check if the vehicle has the seats available
+        #  - this is complicated; we need to walk through the trip plan and add/remove person counts
+        #    for each TripPhase, making sure we never exceed the max seats of the vehicle
+        #  - if the previous vehicle state is a ServicingPoolingTrip, we need to account for the trip plan
+        #    there too
+        # elif seating_error is not None:
+        #     msg = f"pooling trip plan for vehicle {self.vehicle_id} exceeds seating constraint at step {seating_error}"
+        #     error = InstructionError(msg)
+        #     return error, None
         elif req_allow_pooling_error_msg is not None:
             msg = f"errors with requests assigned to pooling trip for vehicle {self.vehicle_id}: {req_allow_pooling_error_msg}"
             error = InstructionError(msg)
