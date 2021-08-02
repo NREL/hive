@@ -4,8 +4,8 @@ import logging
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
 
 from hive.dispatcher.instruction.instruction import Instruction
-from hive.dispatcher.instruction.instruction_ops import trip_plan_ordering_is_valid, trip_plan_covers_previous, \
-    trip_plan_all_requests_allow_pooling, check_if_vehicle_has_seats
+from hive.dispatcher.instruction.instruction_ops import trip_plan_ordering_is_valid, \
+    trip_plan_all_requests_allow_pooling
 from hive.dispatcher.instruction.instruction_result import InstructionResult
 from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
@@ -18,7 +18,6 @@ from hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.repositioning import Repositioning
 from hive.state.vehicle_state.reserve_base import ReserveBase
-from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.util.exception import SimulationStateError, InstructionError
 
@@ -72,7 +71,8 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
 
-    def apply_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+    def apply_instruction(self, sim_state: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[InstructionResult]]:
         # see https://github.com/NREL/hive/issues/9 for implementation plan
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         v_state = vehicle.vehicle_state
@@ -111,7 +111,8 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            error, next_state = dispatch_ops.begin_or_replan_dispatch_pooling_state(sim_state, self.vehicle_id, self.trip_plan)
+            error, next_state = dispatch_ops.begin_or_replan_dispatch_pooling_state(sim_state, self.vehicle_id,
+                                                                                    self.trip_plan)
             if error is not None:
                 return error, None
             else:
