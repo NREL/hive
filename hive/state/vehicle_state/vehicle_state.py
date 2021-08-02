@@ -5,6 +5,7 @@ from typing import Tuple, Optional, NamedTupleMeta, TYPE_CHECKING
 
 from hive.state.entity_state.entity_state import EntityState
 from hive.state.simulation_state import simulation_state_ops
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
 
@@ -23,6 +24,19 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
     an enter or exit can return an exception, a SimulationState, or (None, None) signifying that the
     state cannot be entered/exited under this circumstance.
     """
+
+    @property
+    @abstractmethod
+    def vehicle_state_type(cls) -> VehicleStateType:
+        """
+        unique state type, used for comparison, replaces need to call isinstance on the concrete
+        VehicleState type (which leads to circular dependencies amongst VehicleStates)
+        :return: the VehicleStateType of this VehicleState
+        """
+        pass
+
+    def __repr__(self) -> str:
+        return super().__repr__()
 
     @classmethod
     def default_update(mcs,

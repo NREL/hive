@@ -11,6 +11,7 @@ def default_request_sampler(
         count: int,
         simulation_state: SimulationState,
         environment: Environment,
+        allow_pooling: bool = False,
         random_seed: int = 0
 ) -> Tuple[Request, ...]:
     """
@@ -53,6 +54,7 @@ def default_request_sampler(
             road_network=simulation_state.road_network,
             departure_time=random.choice(possible_timesteps),
             passengers=random.choice([1, 2, 3, 4]),
+            allows_pooling=allow_pooling
         )
 
         requests.append(request)

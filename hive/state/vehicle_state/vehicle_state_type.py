@@ -1,0 +1,22 @@
+from enum import Enum
+
+
+class VehicleStateType(Enum):
+    IDLE = 0
+    REPOSITIONING = 1
+    OUT_OF_SERVICE = 2
+
+    DISPATCH_TRIP = 10
+    SERVICING_TRIP = 11
+    DISPATCH_POOLING_TRIP = 12
+    SERVICING_POOLING_TRIP = 13
+
+    DISPATCH_BASE = 20
+    RESERVE_BASE = 21
+    CHARGING_BASE = 22
+
+    DISPATCH_STATION = 30
+    CHARGING_STATION = 31
+    CHARGE_QUEUEING = 32
+
+

@@ -10,6 +10,7 @@ class HumanDriverAttributes(NamedTuple):
     vehicle_id: VehicleId
     schedule_id: ScheduleId
     home_base_id: BaseId
+    allows_pooling: bool
     # start_time: SimTime ?
     # agency_ids: frozenset[AgencyId] ?
 

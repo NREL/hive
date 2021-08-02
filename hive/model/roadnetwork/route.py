@@ -92,3 +92,21 @@ def to_linestring(route: Route, env: Environment) -> str:
         points = ft.reduce(lambda acc, l: acc + (h3.h3_to_geo(l.start), h3.h3_to_geo(l.end)), route, ())
         linestring = wkt.linestring_2d(points, env.config.global_config.wkt_x_y_ordering)
         return linestring
+
+
+def routes_are_connected(prev_route: Route, next_route: Route) -> bool:
+    """
+    tests the connectivity between two successive routes. if either route is
+    empty, the test is trivially true, since any empty route joined with another
+    route is not disconnected - allowing for edge cases in re-routing, such as
+    calling a re-routings where two trips have the same destination.
+
+    :param prev_route: the previous route
+    :param next_route: the next route
+    :return: true if the routes are connected, or if at least one route is empty
+    """
+
+    prev_link = TupleOps.head_optional(prev_route)
+    next_link = TupleOps.last(next_route)
+    connected = prev_link.end == next_link.start if prev_link and next_link else True
+    return connected

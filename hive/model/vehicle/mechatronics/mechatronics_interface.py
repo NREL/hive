@@ -37,6 +37,14 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         :return: the built Mechatronics object
         """
 
+    @property
+    @abstractmethod
+    def total_number_of_seats(self):
+        """
+        total number of seats in this car for passengers
+        :return: integer count of seats in the car
+        """
+
     @abstractmethod
     def valid_charger(self, charger: Charger) -> bool:
         """

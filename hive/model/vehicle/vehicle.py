@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict
+from typing import NamedTuple, Dict, Optional
 
 import h3
 
@@ -42,6 +42,8 @@ class Vehicle(NamedTuple):
     # vehicle planning/operational properties
     vehicle_state: VehicleState
     driver_state: DriverState
+    total_seats: int
+    # available_seats: int
 
     # vehicle analytical properties
     balance: Currency = 0.0
@@ -95,7 +97,9 @@ class Vehicle(NamedTuple):
                 if schedule_id and not schedule_id in environment.schedules.keys():
                     raise IOError(
                         f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
-                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id)
+                allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+                available_seats = int(row.get('available_seats', 0))
+                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id, allows_pooling)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_position = road_network.position_from_geoid(geoid)
@@ -106,11 +110,13 @@ class Vehicle(NamedTuple):
                     energy=energy,
                     position=start_position,
                     vehicle_state=Idle(vehicle_id),
-                    driver_state=driver_state
+                    driver_state=driver_state,
+                    total_seats=available_seats,
+                    # available_seats=available_seats
                 )
 
-            except ValueError:
-                raise IOError(f"a numeric value could not be parsed from {row}")
+            except ValueError as err:
+                raise IOError(f"failure reading vehicle row {row}") from err
 
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state})"

@@ -219,20 +219,19 @@ class TestSimulationState(TestCase):
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(sim, env, instruction_result.prev_state, instruction_result.next_state)
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
-        # should take about 800 seconds to arrive at trip origin, and
+        # should take about 17 seconds to arrive at trip origin, and
         # 1 more state step of any size to transition state
 
-        sim_at_req = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=800), env)
+        sim_at_req = perform_vehicle_state_updates(sim_updated._replace(sim_timestep_duration_seconds=20), env)
         sim_with_req = perform_vehicle_state_updates(sim_at_req._replace(sim_timestep_duration_seconds=1), env)
 
         tripping_veh = sim_with_req.vehicles[veh.id]
 
         self.assertIsInstance(tripping_veh.vehicle_state, ServicingTrip)
 
-        # should take about 800 seconds to arrive at trip destination, and
-        # 1 more state step of any size to transition state
-        sim_at_dest = perform_vehicle_state_updates(sim_with_req._replace(sim_timestep_duration_seconds=800), env)
-        sim_idle = perform_vehicle_state_updates(sim_at_dest._replace(sim_timestep_duration_seconds=1), env)
+        # should take about 17 seconds to arrive at trip destination, and
+        # we get the transition to Idle for free as a default termination condition
+        sim_idle = perform_vehicle_state_updates(sim_with_req._replace(sim_timestep_duration_seconds=20), env)
 
         idle_veh = sim_idle.vehicles[veh.id]
 

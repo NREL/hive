@@ -1,15 +1,16 @@
 from __future__ import annotations
+
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
 from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.route import Route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle.vehicle import Vehicle
-from hive.reporting.vehicle_event_ops import vehicle_move_event, vehicle_charge_event, report_pickup_request
+from hive.reporting.vehicle_event_ops import vehicle_move_event, vehicle_charge_event
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId, RequestId, ChargerId
+from hive.util.typealiases import StationId, ChargerId
 from hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
@@ -151,16 +152,19 @@ def _go_out_of_service_on_empty(sim: SimulationState,
     elif not mechatronics:
         return SimulationStateError(f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
     elif mechatronics.is_empty(moved_vehicle):
-        error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
-        if error:
-            return error, None
-        elif not exit_sim:
-            # the previous state does not allow exit to OutOfService
-            return SimulationStateError(
-                f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
-        else:
-            next_state = OutOfService(vehicle_id)
-            return next_state.enter(exit_sim, env)
+        # todo: are we in ServicingTrip or ServicingPoolingTrip? report stranded passengers!!!
+        # error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
+        # if error:
+        #     return error, None
+        # elif not exit_sim:
+        #     # the previous state does not allow exit to OutOfService
+        #     return SimulationStateError(
+        #         f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
+        # else:
+        #     next_state = OutOfService(vehicle_id)
+        #     return next_state.enter(exit_sim, env)
+        next_state = OutOfService(vehicle_id)
+        return next_state.enter(sim, env)
     else:
         return None, None
 
@@ -196,35 +200,3 @@ def move(sim: SimulationState,
             return None, move_result
 
 
-def pick_up_trip(sim: SimulationState,
-                 env: Environment,
-                 vehicle_id: VehicleId,
-                 request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-    """
-    has a vehicle pick up a trip and receive payment for it
-
-    :param sim: the sim state
-    :param env: the sim environment
-    :param vehicle_id: the vehicle picking up the request
-    :param request_id: the request to pick up
-    :return: an error, or, the sim with the request picked up by the vehicle
-    """
-    vehicle = sim.vehicles.get(vehicle_id)
-    request = sim.requests.get(request_id)
-    if not vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
-    elif not request:
-        return SimulationStateError(f"request {request_id} not found"), None
-    else:
-        updated_vehicle = vehicle.receive_payment(request.value)
-        mod_error, maybe_sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
-        if mod_error:
-            return mod_error, None
-        else:
-            try:
-                report = report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle)
-                env.reporter.file_report(report)
-            except:
-                # previous state may not be DispatchTrip (may not have expected attributes
-                pass
-            return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)

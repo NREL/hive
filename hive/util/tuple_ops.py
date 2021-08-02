@@ -50,13 +50,23 @@ class TupleOps:
             return xs[-1]
 
     @classmethod
-    def head_tail(cls, tup: Tuple[T, ...]):
+    def head_tail(cls, tup: Tuple[T, ...]) -> Tuple[T, Tuple[T, ...]]:
         if not tup:
             raise IndexError("called head_tail on empty Tuple")
         elif len(tup) == 1:
             return tup[0], ()
         else:
             return tup[0], tup[1:]
+
+    @classmethod
+    def tail(cls, tup: Tuple[T, ...]) -> Tuple[T, ...]:
+        if not tup:
+            return ()
+        elif len(tup) == 1:
+            return ()
+        else:
+            remaining = tup[1:]
+            return remaining
 
     @classmethod
     def partition(cls,

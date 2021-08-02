@@ -219,6 +219,7 @@ def mock_request(
         departure_time: SimTime = 0,
         passengers: int = 1,
         fleet_id: Optional[MembershipId] = None,
+        allows_pooling: bool = False
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -228,6 +229,7 @@ def mock_request(
         departure_time=departure_time,
         passengers=passengers,
         fleet_id=fleet_id,
+        allows_pooling=allows_pooling
     )
 
 
@@ -236,11 +238,11 @@ def mock_request_from_geoids(
         origin: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
         destination: GeoId = h3.geo_to_h3(39.7579, -104.978, 15),
         road_network: RoadNetwork = mock_network(),
-        departure_time: SimTime = 0,
+        departure_time: SimTime = SimTime(0),
         passengers: int = 1,
         value: Currency = 0,
         fleet_id: Optional[MembershipId] = None,
-
+        allows_pooling: bool = False
 ) -> Request:
     return Request.build(
         request_id=request_id,
@@ -251,6 +253,7 @@ def mock_request_from_geoids(
         passengers=passengers,
         value=value,
         fleet_id=fleet_id,
+        allows_pooling=allows_pooling
     )
 
 
@@ -328,6 +331,7 @@ def mock_vehicle(
         soc: Ratio = 1,
         driver_state: Optional[DriverState] = None,
         membership: Membership = Membership(),
+        total_seats: int = 999
 ) -> Vehicle:
     v_state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
@@ -343,6 +347,7 @@ def mock_vehicle(
         vehicle_state=v_state,
         driver_state=d_state,
         membership=membership,
+        total_seats=total_seats
     )
 
 
@@ -354,6 +359,7 @@ def mock_vehicle_from_geoid(
         soc: Ratio = 1,
         driver_state: Optional[DriverState] = None,
         membership: Membership = Membership(),
+        total_seats: int = 999
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
@@ -367,14 +373,16 @@ def mock_vehicle_from_geoid(
         vehicle_state=state,
         driver_state=d_state,
         membership=membership,
+        total_seats=total_seats
     )
 
 
 def mock_human_driver(available: bool = True,
                       schedule_id: ScheduleId = DefaultIds.mock_schedule_id(),
                       home_base_id: BaseId = DefaultIds.mock_base_id(),
+                      allows_pooling: bool = True
                       ):
-    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), schedule_id, home_base_id)
+    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), schedule_id, home_base_id, allows_pooling)
     state = HumanAvailable(attr) if available else HumanUnavailable(attr)
     return state
 

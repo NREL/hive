@@ -35,6 +35,11 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
 
     @property
     @abstractmethod
+    def allows_pooling(cls) -> bool:
+        pass
+
+    @property
+    @abstractmethod
     def home_base_id(cls) -> Optional[BaseId]:
         pass
 
@@ -105,6 +110,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
               vehicle_id: VehicleId,
               schedule_id: Optional[ScheduleId],
               base_id: Optional[BaseId],
+              allows_pooling: bool
               ) -> DriverState:
         """
         constructs a new DriverState based on the provided arguments
@@ -112,6 +118,7 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         :param vehicle_id: the Vehicle associated with this DriverState
         :param schedule_id: if provided, sets the DriverState as a HumanUnavailable driver
         :param base_id: used for HumanAvailable and HumanUnavailable
+        :param allows_pooling: set true if this agent will pick up pooling requests
         :return: the driver state instance created
         """
         from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
@@ -124,5 +131,5 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         else:
             if not base_id:
                 raise Exception("cannot build a vehicle with schedule but not a home base id")
-            driver_state = HumanUnavailable(HumanDriverAttributes(vehicle_id, schedule_id, base_id))
+            driver_state = HumanUnavailable(HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling))
             return driver_state

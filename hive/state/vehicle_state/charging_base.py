@@ -7,6 +7,7 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.reserve_base import ReserveBase
 from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.state.vehicle_state.vehicle_state_ops import charge
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import BaseId, VehicleId, ChargerId
 
@@ -24,6 +25,10 @@ class ChargingBase(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
     charger_id: ChargerId
+
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.CHARGING_BASE
 
     def enter(self,
               sim: SimulationState,

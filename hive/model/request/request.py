@@ -40,6 +40,7 @@ class Request(NamedTuple):
     destination_position: EntityPosition
     departure_time: SimTime
     passengers: Tuple[Passenger, ...]
+    allows_pooling: bool
     membership: Membership = Membership()
     value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
@@ -61,6 +62,7 @@ class Request(NamedTuple):
               road_network: RoadNetwork,
               departure_time: SimTime,
               passengers: int,
+              allows_pooling: bool,
               fleet_id: Optional[MembershipId] = None,
               value: Currency = 0
               ) -> Request:
@@ -90,6 +92,7 @@ class Request(NamedTuple):
             destination_position=destination_position,
             departure_time=departure_time,
             passengers=tuple(request_as_passengers),
+            allows_pooling=allows_pooling,
             membership=membership,
             value=value,
         )
@@ -143,6 +146,8 @@ class Request(NamedTuple):
                     return departure_time_result, None
 
                 passengers = int(row['passengers'])
+                allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+
                 request = Request.build(
                     request_id=request_id,
                     fleet_id=fleet_id,
@@ -150,7 +155,8 @@ class Request(NamedTuple):
                     destination=d_geoid,
                     road_network=road_network,
                     departure_time=departure_time_result,
-                    passengers=passengers
+                    passengers=passengers,
+                    allows_pooling=allows_pooling
                 )
                 return None, request
             except ValueError:
@@ -168,6 +174,14 @@ class Request(NamedTuple):
         :return: the updated Request
         """
         return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
+
+    def unassign_dispatched_vehicle(self) -> Request:
+        """
+        removes any vehicle listed as assigned to this request
+        :return: the updated request
+        """
+        updated = self._replace(dispatched_vehicle=None, dispatched_vehicle_time=None)
+        return updated
 
     def assign_value(self, rate_structure: RequestRateStructure, road_network: RoadNetwork) -> Request:
         """

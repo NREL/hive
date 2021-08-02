@@ -2,11 +2,16 @@ from typing import NamedTuple, Tuple, Optional
 
 from hive.runner.environment import Environment
 from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.typealiases import VehicleId
 
 
 class OutOfService(NamedTuple, VehicleState):
     vehicle_id: VehicleId
+
+    @property
+    def vehicle_state_type(cls) -> VehicleStateType:
+        return VehicleStateType.OUT_OF_SERVICE
 
     def update(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
