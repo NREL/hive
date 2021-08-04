@@ -11,6 +11,7 @@ class DispatcherConfig(NamedTuple):
     default_update_interval_seconds: Seconds
     matching_range_km_threshold: Kilometers
     charging_range_km_threshold: Kilometers
+    charging_range_km_soft_threshold: Kilometers
     base_charging_range_km_threshold: Kilometers
     ideal_fastcharge_soc_limit: Ratio
     max_search_radius_km: Kilometers
