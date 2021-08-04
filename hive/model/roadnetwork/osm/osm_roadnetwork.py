@@ -116,7 +116,7 @@ class OSMRoadNetwork(RoadNetwork):
             destination_node_id, _ = dst_nodes
 
             # node-oriented shortest path from the end of the origin link to the beginning of the destination link
-            # todo: shouldn't A* outperform Dijkstra's
+            # todo: shouldn't A* outperform Dijkstra's?
             # nx_path = nx.astar_path(
             #     G=self.graph,
             #     source=origin_node_id,
