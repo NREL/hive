@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools as ft
 import math
 from typing import Union, TYPE_CHECKING
+import logging
 
 import immutables
 from networkx import MultiDiGraph
@@ -17,6 +18,7 @@ from hive.model.roadnetwork.route import Route
 if TYPE_CHECKING:
     from hive.model.roadnetwork import OSMRoadNetwork
 
+log = logging.getLogger(__name__)
 
 def safe_get_node_coordinates(node: NodeView, node_id: int) -> Tuple[Optional[Exception], Optional[Tuple[float, float]]]:
     """
@@ -130,11 +132,15 @@ def assign_travel_times(graph: MultiDiGraph):
 
 
     if count > 0:
+
         # some edges do not have speed or length entries
         # compute average travel time, assign to rows missing length/speed values
         avg_length = acc_length / count
         avg_speed = acc_speed / count
         avg_travel_time = (avg_length * 0.001) / avg_speed * 3600 # seconds
+
+        log.info(f"assigning mean travel time of {avg_travel_time} seconds to {count} links with missing attributes")
+
         for u, v, w in graph.edges:
             data = graph.get_edge_data(u, v)
             travel_time = data.get('travel_time')
