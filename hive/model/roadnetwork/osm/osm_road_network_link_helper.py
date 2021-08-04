@@ -12,7 +12,7 @@ from hive.model.roadnetwork import Link
 from hive.model.roadnetwork.link_id import create_link_id
 from hive.model.roadnetwork.osm.osm_roadnetwork_ops import safe_get_node_coordinates
 from hive.util.typealiases import GeoId, LinkId
-from hive.util.units import M_TO_KM, Kmph, Kilometers
+from hive.util.units import M_TO_KM, Kmph
 
 
 class OSMRoadNetworkLinkHelper(NamedTuple):
@@ -43,7 +43,8 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             link_id = self.links_linkid_lookup[index] if 0 <= index < self.link_count else None
             link = self.links.get(link_id) if link_id else None
             if not link_id or not link:
-                return Exception(f"internal error on nearest link for geoid {geoid}: resulting spatial index value '{index}' is invalid"), None
+                return Exception(
+                    f"internal error on nearest link for geoid {geoid}: resulting spatial index value '{index}' is invalid"), None
             else:
                 return None, link
 
@@ -56,13 +57,12 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             graph: MultiDiGraph,
             sim_h3_resolution: int,
             default_speed_kmph: Kmph = 40.0,
-            default_distance_km: Kilometers = 0.01) -> Tuple[Optional[Exception], Optional[OSMRoadNetworkLinkHelper]]:
+    ) -> Tuple[Optional[Exception], Optional[OSMRoadNetworkLinkHelper]]:
         """
         reads in the graph links from a networkx graph and builds a table with Links by LinkId
         :param graph: the input graph
         :param sim_h3_resolution: h3 resolution for entities in sim
         :param default_speed_kmph: default link speed for unlabeled links
-        :param default_distance_km: default link length for unlabeled links
         :return: either an error, or, the lookup table
         """
 
@@ -129,10 +129,15 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                         dst_lat, dst_lon = dst_coord
                         src_geoid = h3.geo_to_h3(src_lat, src_lon, resolution=sim_h3_resolution)
                         dst_geoid = h3.geo_to_h3(dst_lat, dst_lon, resolution=sim_h3_resolution)
-                        data = graph.get_edge_data(src, dst, 0, None)  # data index "0" as this uses networkx's multigraph implementation
-                        speed = data.get('speed_kmph', default_speed_kmph) if data else default_speed_kmph
-                        distance_miles = data.get('length', default_distance_km) if data else default_distance_km
-                        distance = distance_miles * M_TO_KM if distance_miles else default_distance_km
+                        data = graph.get_edge_data(src, dst, 0, None)
+                        if not data:
+                            return Exception(f"edge data missing for link {link_id}"), None
+
+                        speed = data.get('speed_kmph', default_speed_kmph)
+                        distance_meters = data.get('length')
+                        if not distance_meters:
+                            return Exception(f"length data missing for link {link_id}"), None
+                        distance = distance_meters * M_TO_KM
                         link = Link.build(link_id, src_geoid, dst_geoid, speed, distance)
                         add_link_error, updated_accumulator = accumulator.add_link(link)
                         if add_link_error:
@@ -151,5 +156,6 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
         else:
             # construct the spatial index
             tree = cKDTree(accumulator.link_centroids)
-            osm_road_network_links = OSMRoadNetworkLinkHelper(accumulator.lookup, tree, accumulator.link_ids, len(accumulator.link_ids))
+            osm_road_network_links = OSMRoadNetworkLinkHelper(accumulator.lookup, tree, accumulator.link_ids,
+                                                              len(accumulator.link_ids))
             return None, osm_road_network_links

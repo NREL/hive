@@ -8,8 +8,8 @@ from typing import Optional, Union
 import networkx as nx
 
 from hive.external.miniosmnx.core import graph_from_file
-from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.entity_position import EntityPosition
+from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.link_id import extract_node_ids
 from hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
@@ -18,7 +18,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route, route_distance_km, empty_route
 from hive.model.sim_time import SimTime
 from hive.util.typealiases import GeoId, H3Resolution
-from hive.util.units import Kmph, Kilometers
+from hive.util.units import Kmph, Kilometers, M_TO_KM
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,6 @@ class OSMRoadNetwork(RoadNetwork):
             geofence: Optional[GeoFence] = None,
             sim_h3_resolution: H3Resolution = 15,
             default_speed_kmph: Kmph = 40.0,
-            default_distance_km: Kilometers = 100
     ):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
@@ -80,11 +79,19 @@ class OSMRoadNetwork(RoadNetwork):
             raise Exception(f"found {missing_length} links in the road network that don't have length information")
         elif missing_speed > 0:
             log.warning(f"found {missing_speed} links in the road network that don't have speed information.\n"
-                        f"hive will automatically set these to {self.default_speed_kmph} kmph.")
+                        f"hive will automatically set these to {default_speed_kmph} kmph.")
 
-        # build tables on the network edges for spatial lookup and LinkId lookup
-        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph,
-                                                                        default_distance_km)
+        # add travel times to raw graph
+        for _, _, d in graph.edges(data=True):
+            km = d['length'] * M_TO_KM
+            kmph = d.get('speed_kmph')
+            if not kmph:
+                kmph = default_speed_kmph
+            hr = km / kmph
+            d['travel_time_hours'] = hr
+
+            # build tables on the network edges for spatial lookup and LinkId lookup
+        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph)
         if link_helper_error:
             raise link_helper_error
         else:
@@ -114,7 +121,7 @@ class OSMRoadNetwork(RoadNetwork):
             destination_node_id, _ = dst_nodes
 
             # node-oriented shortest path from the end of the origin link to the beginning of the destination link
-            nx_path = nx.shortest_path(self.graph, origin_node_id, destination_node_id, weight='length')
+            nx_path = nx.shortest_path(self.graph, origin_node_id, destination_node_id, weight='travel_time_hours')
             link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)
 
             if link_path_error:
