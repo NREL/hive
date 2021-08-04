@@ -148,6 +148,27 @@ def assign_travel_times(graph: MultiDiGraph):
                 data['travel_time'] = avg_travel_time
 
 
+def assign_lat_lon_entries_if_missing(graph: MultiDiGraph):
+    """
+    ensures that our graph has attributes 'lat' and 'lon' which are
+    expected by the A* Euclidean distance heuristic and possibly
+    other ops.
+
+    :param graph: the graph to update
+    """
+    for id, data in graph.nodes(data=True):
+        error, (lat, lon) = safe_get_node_coordinates(data, id)
+        if error:
+            raise error
+        else:
+            lon_attr = data.get('lon')
+            lat_attr = data.get('lat')
+            if lon_attr is None:
+                data['lon'] = lon
+            if lat_attr is None:
+                data['lat'] = lat
+
+
 def euclidean_distance_heuristic(graph):
     """
     A* Search heuristic
@@ -160,7 +181,7 @@ def euclidean_distance_heuristic(graph):
     def _inner(a, b):
         a_data = graph.nodes.get(a)
         b_data = graph.nodes.get(b)
-        dist = math.sqrt(math.pow(a_data['x'] - b_data['x'], 2) + math.pow(a_data['y'] - b_data['y'], 2))
+        dist = math.sqrt(math.pow(a_data['lon'] - b_data['lon'], 2) + math.pow(a_data['lat'] - b_data['lat'], 2))
         return dist
 
     return _inner

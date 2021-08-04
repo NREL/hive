@@ -84,6 +84,7 @@ class OSMRoadNetwork(RoadNetwork):
                         f"hive will automatically set these to {self.default_speed_kmph} kmph.")
 
         osm_roadnetwork_ops.assign_travel_times(graph)
+        osm_roadnetwork_ops.assign_lat_lon_entries_if_missing(graph)
 
         # build tables on the network edges for spatial lookup and LinkId lookup
         link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph,
