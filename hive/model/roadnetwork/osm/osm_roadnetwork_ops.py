@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import functools as ft
+import math
 from typing import Union, TYPE_CHECKING
 
 import immutables
+from networkx import MultiDiGraph
 from networkx.classes.reportviews import NodeView
 
 from hive.model.entity_position import EntityPosition
@@ -101,3 +103,58 @@ def resolve_route_src_dst_positions(
         updated_route = (src_link_traversal,) + inner_route + (dst_link_traversal,)
         return updated_route
 
+
+def assign_travel_times(graph: MultiDiGraph):
+    """
+    adds a travel time to each link on the network with 'length' and 'speed_kmph'
+    fills missing data with the average observed link travel time
+
+    :param graph: the graph, updated in-place as a side effect
+    """
+
+    # set travel_time attributes, collect all observed lengths + speeds
+    acc_length = 0.0
+    acc_speed = 0.0
+    count = 0
+    for u, v, w in graph.edges:
+
+        data = graph.get_edge_data(u, v)
+        length = data.get('length') # meters
+        speed = data.get('speed_kmph') #kmph
+        if length is not None and speed is not None:
+            travel_time = (length * 0.001) / speed * 3600 # seconds
+            data['travel_time'] = travel_time
+            acc_length += length
+            acc_speed += speed
+            count += 1
+
+
+    if count > 0:
+        # some edges do not have speed or length entries
+        # compute average travel time, assign to rows missing length/speed values
+        avg_length = acc_length / count
+        avg_speed = acc_speed / count
+        avg_travel_time = (avg_length * 0.001) / avg_speed * 3600 # seconds
+        for u, v, w in graph.edges:
+            data = graph.get_edge_data(u, v)
+            travel_time = data.get('travel_time')
+            if travel_time is None:
+                data['travel_time'] = avg_travel_time
+
+
+def euclidean_distance_heuristic(graph):
+    """
+    A* Search heuristic
+
+    :param graph: road network graph
+    :param a: a node id
+    :param b: another node id
+    :return: the Euclidean distance function between a and b using their lat/lon coordinates in this graph
+    """
+    def _inner(a, b):
+        a_data = graph.nodes.get(a)
+        b_data = graph.nodes.get(b)
+        dist = math.sqrt(math.pow(a_data['x'] - b_data['x'], 2) + math.pow(a_data['y'] - b_data['y'], 2))
+        return dist
+
+    return _inner
