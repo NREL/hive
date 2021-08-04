@@ -35,8 +35,7 @@ class OSMRoadNetwork(RoadNetwork):
             road_network_file: Path,
             geofence: Optional[GeoFence] = None,
             sim_h3_resolution: H3Resolution = 15,
-            default_speed_kmph: Kmph = 40.0,
-            default_distance_km: Kilometers = 0.01
+            default_speed_kmph: Kmph = 40.0
     ):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
@@ -81,14 +80,13 @@ class OSMRoadNetwork(RoadNetwork):
             raise Exception(f"found {missing_length} links in the road network that don't have length information")
         elif missing_speed > 0:
             log.warning(f"found {missing_speed} links in the road network that don't have speed information.\n"
-                        f"hive will automatically set these to {self.default_speed_kmph} kmph.")
+                        f"hive will automatically set these to {default_speed_kmph} kmph.")
 
         osm_roadnetwork_ops.assign_travel_times(graph)
         osm_roadnetwork_ops.assign_lat_lon_entries_if_missing(graph)
 
         # build tables on the network edges for spatial lookup and LinkId lookup
-        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph,
-                                                                        default_distance_km)
+        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph)
         if link_helper_error:
             raise link_helper_error
         else:
@@ -118,11 +116,18 @@ class OSMRoadNetwork(RoadNetwork):
             destination_node_id, _ = dst_nodes
 
             # node-oriented shortest path from the end of the origin link to the beginning of the destination link
-            nx_path = nx.astar_path(
+            # todo: shouldn't A* outperform Dijkstra's
+            # nx_path = nx.astar_path(
+            #     G=self.graph,
+            #     source=origin_node_id,
+            #     target=destination_node_id,
+            #     heuristic=osm_roadnetwork_ops.euclidean_distance_heuristic(self.graph),
+            #     weight='travel_time'
+            # )
+            nx_path = nx.shortest_path(
                 G=self.graph,
                 source=origin_node_id,
                 target=destination_node_id,
-                heuristic=osm_roadnetwork_ops.euclidean_distance_heuristic(self.graph),
                 weight='travel_time'
             )
             link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)

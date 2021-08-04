@@ -55,14 +55,12 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             cls,
             graph: MultiDiGraph,
             sim_h3_resolution: int,
-            default_speed_kmph: Kmph = 40.0,
-            default_distance_km: Kilometers = 0.01) -> Tuple[Optional[Exception], Optional[OSMRoadNetworkLinkHelper]]:
+            default_speed_kmph: Kmph = 40.0) -> Tuple[Optional[Exception], Optional[OSMRoadNetworkLinkHelper]]:
         """
         reads in the graph links from a networkx graph and builds a table with Links by LinkId
         :param graph: the input graph
         :param sim_h3_resolution: h3 resolution for entities in sim
         :param default_speed_kmph: default link speed for unlabeled links
-        :param default_distance_km: default link length for unlabeled links
         :return: either an error, or, the lookup table
         """
 
@@ -130,9 +128,13 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                         src_geoid = h3.geo_to_h3(src_lat, src_lon, resolution=sim_h3_resolution)
                         dst_geoid = h3.geo_to_h3(dst_lat, dst_lon, resolution=sim_h3_resolution)
                         data = graph.get_edge_data(src, dst, 0, None)  # data index "0" as this uses networkx's multigraph implementation
+
                         speed = data.get('speed_kmph', default_speed_kmph) if data else default_speed_kmph
-                        distance_miles = data.get('length', default_distance_km) if data else default_distance_km
-                        distance = distance_miles * M_TO_KM if distance_miles else default_distance_km
+
+                        # length attribute already confirmed on each link before we reach here
+                        distance_miles = data.get('length') # if data else default_distance_km
+                        distance = distance_miles * M_TO_KM # if distance_miles else default_distance_km
+
                         link = Link.build(link_id, src_geoid, dst_geoid, speed, distance)
                         add_link_error, updated_accumulator = accumulator.add_link(link)
                         if add_link_error:
