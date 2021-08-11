@@ -42,7 +42,8 @@ class SimulationState(NamedTuple):
     vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
-    instructions: immutables.Map[VehicleId, Instruction] = immutables.Map()
+    # the instructions applied in the most recent state transition
+    applied_instructions: immutables.Map[VehicleId, Instruction] = immutables.Map()
 
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, FrozenSet[VehicleId]] = immutables.Map()

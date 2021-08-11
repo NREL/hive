@@ -140,6 +140,9 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
     return next_state
 
 
+InstructionApplicationResult = Tuple[Optional[Exception], Optional[InstructionResult]]
+
+
 def apply_instructions(sim: SimulationState,
                        env: Environment,
                        instructions: Tuple[Instruction]) -> SimulationState:
@@ -160,12 +163,24 @@ def apply_instructions(sim: SimulationState,
         # todo: inject some means for parallel execution of the apply instruction operation
         #   requires shared memory access to SimulationState and Environment,
         #   and a serialization codec to ship Instructions and Instruction.apply_instruction remotely
-        result = ((NotImplementedError, None),)
+        instruction_results_and_errors, updated_sim = ((NotImplementedError, None),), sim
     else:
         # run in a synchronous loop
-        result = ft.reduce(lambda acc, i: acc + (i.apply_instruction(sim, env),), instructions, ())
+        def apply_instructions(acc: Tuple[Tuple[InstructionApplicationResult, ...], SimulationState],
+                               i: Instruction) -> Tuple[Tuple[InstructionApplicationResult, ...], SimulationState]:
+            results, inner_sim = acc
+            err, instruction_result = i.apply_instruction(inner_sim, env)
+            if err is not None:
+                log.error(err)
+                return acc
+            else:
+                updated_instructions = inner_sim.applied_instructions.update({i.vehicle_id: i})
+                updated_sim = inner_sim._replace(applied_instructions=updated_instructions)
+                return results + ((None, instruction_result),), updated_sim
 
-    has_errors, no_errors = TupleOps.partition(lambda t: t[0] is not None, result)
+        instruction_results_and_errors, updated_sim = ft.reduce(apply_instructions, instructions, ((), sim))
+
+    has_errors, no_errors = TupleOps.partition(lambda t: t[0] is not None, instruction_results_and_errors)
     valid_instruction_results = map(lambda t: t[1], no_errors)
     # report any errors from applying instructions
     if len(has_errors) > 0:
@@ -187,11 +202,13 @@ def apply_instructions(sim: SimulationState,
         else:
             return updated_sim
 
-    return ft.reduce(
+    result = ft.reduce(
         _add_instruction,
         valid_instruction_results,
-        sim
+        updated_sim
     )
+
+    return result
 
 
 class UserProvidedUpdateAccumulator(NamedTuple):
