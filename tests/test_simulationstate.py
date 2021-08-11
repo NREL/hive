@@ -307,7 +307,7 @@ class TestSimulationState(TestCase):
         env = mock_env()
         somewhere_else_link = sim.road_network.position_from_geoid(somewhere_else)
 
-        instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else_link)
+        instruction = RepositionInstruction(vehicle_id=veh.id, destination=somewhere_else_link.link_id)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
@@ -391,7 +391,7 @@ class TestSimulationState(TestCase):
 
         inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
         dst_link = sim.road_network.position_from_geoid(inbox_cafe_in_torvet_julianehab_greenland)
-        instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), dst_link)
+        instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), dst_link.link_id)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)

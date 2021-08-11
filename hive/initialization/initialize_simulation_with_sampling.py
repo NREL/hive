@@ -17,7 +17,7 @@ from hive.initialization.sample_vehicles import (
 )
 from hive.model.base import Base
 from hive.model.energy.charger import build_chargers_table
-from hive.model.roadnetwork import Link
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork

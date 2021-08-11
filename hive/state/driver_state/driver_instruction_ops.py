@@ -159,7 +159,7 @@ def human_look_for_requests(
 
     dest = _get_reposition_location()
     if dest:
-        return RepositionInstruction(veh.id, dest)
+        return RepositionInstruction(veh.id, dest.link_id)
     else:
         return None
 

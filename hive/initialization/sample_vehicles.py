@@ -6,7 +6,8 @@ from typing import Callable
 from returns.result import Result, Failure, Success
 
 from hive.model.entity_position import EntityPosition
-from hive.model.roadnetwork import Link, OSMRoadNetwork
+from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from hive.model.vehicle.vehicle import Vehicle
 from hive.runner import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple
+from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple, Union
 
 from hive.dispatcher.instruction.instruction import Instruction
 from hive.dispatcher.instruction.instruction_ops import trip_plan_ordering_is_valid, \
     trip_plan_all_requests_allow_pooling
 from hive.dispatcher.instruction.instruction_result import InstructionResult
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.state.vehicle_state import dispatch_ops
 from hive.state.vehicle_state.charging_base import ChargingBase
@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
-    from hive.util.typealiases import StationId, VehicleId, RequestId, BaseId, ChargerId
+    from hive.util.typealiases import StationId, VehicleId, RequestId, BaseId, ChargerId, LinkId, GeoId
     from hive.runner.environment import Environment
 
 
@@ -206,7 +206,7 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
 
 class RepositionInstruction(NamedTuple, Instruction):
     vehicle_id: VehicleId
-    destination: Link
+    destination: LinkId
 
     def apply_instruction(self,
                           sim_state: SimulationState,
@@ -216,12 +216,18 @@ class RepositionInstruction(NamedTuple, Instruction):
             return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
         else:
             start = vehicle.position
-            route = sim_state.road_network.route(start, self.destination)
 
-            prev_state = vehicle.vehicle_state
-            next_state = Repositioning(self.vehicle_id, route)
+            link = sim_state.road_network.link_from_link_id(self.destination)
+            if not link:
+                return SimulationStateError(f"link {self.destination} not found"), None
+            else:
+                destination_position = EntityPosition(link.link_id, link.end)
+                route = sim_state.road_network.route(start, destination_position)
 
-            return None, InstructionResult(prev_state, next_state)
+                prev_state = vehicle.vehicle_state
+                next_state = Repositioning(self.vehicle_id, route)
+
+                return None, InstructionResult(prev_state, next_state)
 
 
 class ReserveBaseInstruction(NamedTuple, Instruction):

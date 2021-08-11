@@ -1,7 +1,8 @@
 import functools as ft
 from typing import Tuple, Optional
 
-from hive.model.roadnetwork import Route, Link
+from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.model.vehicle.vehicle import Vehicle
 from hive.state.simulation_state import simulation_state_ops

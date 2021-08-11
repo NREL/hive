@@ -7,7 +7,7 @@ import h3
 import immutables
 
 from hive.model.energy import Charger
-from hive.model.roadnetwork import route
+import hive.model.roadnetwork.route as route
 from hive.model.station import Station
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Report, ReportType
