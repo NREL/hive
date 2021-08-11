@@ -13,7 +13,7 @@ from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.route import Route
 
 if TYPE_CHECKING:
-    from hive.model.roadnetwork import OSMRoadNetwork
+    from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 
 
 def safe_get_node_coordinates(node: NodeView, node_id: int) -> Tuple[Optional[Exception], Optional[Tuple[float, float]]]:
@@ -88,8 +88,8 @@ def resolve_route_src_dst_positions(
     :param road_network: the underlying OSM road network state
     :return: a route if it is valid, otherwise None
     """
-    src_link = road_network.link_helper.links.get(src_link_pos.link_id)
-    dst_link = road_network.link_helper.links.get(dst_link_pos.link_id)
+    src_link = road_network.link_from_link_id(src_link_pos.link_id)
+    dst_link = road_network.link_from_link_id(dst_link_pos.link_id)
     if not src_link or not dst_link:
         return None
     else:

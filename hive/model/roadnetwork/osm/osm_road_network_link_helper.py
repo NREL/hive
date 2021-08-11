@@ -8,7 +8,7 @@ import immutables
 from networkx import MultiDiGraph
 from scipy.spatial.ckdtree import cKDTree
 
-from hive.model.roadnetwork import Link
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.link_id import create_link_id
 from hive.model.roadnetwork.osm.osm_roadnetwork_ops import safe_get_node_coordinates
 from hive.util.typealiases import GeoId, LinkId
