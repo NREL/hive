@@ -5,11 +5,12 @@ from typing import Optional
 
 import h3
 
+from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
-from hive.util.typealiases import GeoId, H3Resolution
+from hive.util.typealiases import GeoId, H3Resolution, LinkId
 from hive.util.units import Kilometers
 
 
@@ -42,6 +43,14 @@ class RoadNetwork(ABC):
         :param origin: Link of the origin
         :param destination: Link of the destination
         :return: the distance in kilometers.
+        """
+
+    @abstractmethod
+    def link_from_link_id(self, link_id: LinkId) -> Optional[Link]:
+        """
+        returns the Link with the corresponding LinkId
+        :param link_id: the LinkId to look up
+        :return: the Link with matching LinkId, or None if not valid/found
         """
 
     @abstractmethod

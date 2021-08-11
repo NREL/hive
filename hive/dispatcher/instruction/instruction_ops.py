@@ -8,7 +8,8 @@ import logging
 import immutables
 
 from hive.model.request import Request
-from hive.model.roadnetwork import Route, Link
+from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.link import Link
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.model.vehicle.vehicle import Vehicle, RequestId
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip

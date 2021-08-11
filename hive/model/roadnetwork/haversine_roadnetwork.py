@@ -13,6 +13,8 @@ from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
 from hive.util.units import Kilometers
 
+import hive.model.roadnetwork.haversine_link_id_ops as h_ops
+
 
 class HaversineRoadNetwork(RoadNetwork):
     """
@@ -41,21 +43,8 @@ class HaversineRoadNetwork(RoadNetwork):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
 
-    def _geoids_to_link_id(self, origin: GeoId, destination: GeoId) -> LinkId:
-        link_id = origin + "-" + destination
-        return link_id
-
-    def _link_id_to_geodis(self, link_id: LinkId) -> Tuple[GeoId, GeoId]:
-        ids = link_id.split("-")
-        if len(ids) != 2:
-            raise (TypeError("LinkId not in expected format of [GeoId]-[GeoId]"))
-        start = ids[0]
-        end = ids[1]
-
-        return start, end
-
     def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
-        link_id = self._geoids_to_link_id(origin.geoid, destination.geoid)
+        link_id = h_ops.geoids_to_link_id(origin.geoid, destination.geoid)
         link_dist_km = self.distance_by_geoid_km(origin.geoid, destination.geoid)
         link = LinkTraversal(
             link_id=link_id,
@@ -72,8 +61,14 @@ class HaversineRoadNetwork(RoadNetwork):
     def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         return H3Ops.great_circle_distance(origin, destination)
 
+    def link_from_link_id(self, link_id: LinkId) -> Optional[Link]:
+        src, dst = h_ops.link_id_to_geodis(link_id)
+        dist = self.distance_by_geoid_km(src, dst)
+        link = Link(link_id, src, dst, dist, self._AVG_SPEED_KMPH)
+        return link
+
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
-        link_id = self._geoids_to_link_id(geoid, geoid)
+        link_id = h_ops.geoids_to_link_id(geoid, geoid)
         return Link(
             link_id=link_id,
             start=geoid,

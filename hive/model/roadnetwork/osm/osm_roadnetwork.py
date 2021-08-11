@@ -17,6 +17,7 @@ from hive.model.roadnetwork.osm.osm_roadnetwork_ops import route_from_nx_path, r
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route, route_distance_km, empty_route
 from hive.model.sim_time import SimTime
+from hive.util import LinkId
 from hive.util.typealiases import GeoId, H3Resolution
 from hive.util.units import Kmph, Kilometers
 
@@ -163,6 +164,15 @@ class OSMRoadNetwork(RoadNetwork):
             return None
         else:
             return link
+
+    def link_from_link_id(self, link_id: LinkId) -> Optional[Link]:
+        """
+        look up the provided LinkId in the LinkHelper table
+        :param link_id: the LinkId to look up
+        :return: the Link if it exists, otherwise None
+        """
+        link = self.link_helper.links.get(link_id)
+        return link
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         """

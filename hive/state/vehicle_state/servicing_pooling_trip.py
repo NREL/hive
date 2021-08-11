@@ -6,7 +6,7 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
 import immutables
 
 from hive.model.request import Request
-from hive.model.roadnetwork import Route
+from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.runner.environment import Environment
