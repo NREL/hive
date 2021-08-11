@@ -218,13 +218,16 @@ class RepositionInstruction(NamedTuple, Instruction):
             start = vehicle.position
 
             link = sim_state.road_network.link_from_link_id(self.destination)
-            destination_position = EntityPosition(link.link_id, link.end)
-            route = sim_state.road_network.route(start, destination_position)
+            if not link:
+                return SimulationStateError(f"link {self.destination} not found"), None
+            else:
+                destination_position = EntityPosition(link.link_id, link.end)
+                route = sim_state.road_network.route(start, destination_position)
 
-            prev_state = vehicle.vehicle_state
-            next_state = Repositioning(self.vehicle_id, route)
+                prev_state = vehicle.vehicle_state
+                next_state = Repositioning(self.vehicle_id, route)
 
-            return None, InstructionResult(prev_state, next_state)
+                return None, InstructionResult(prev_state, next_state)
 
 
 class ReserveBaseInstruction(NamedTuple, Instruction):
