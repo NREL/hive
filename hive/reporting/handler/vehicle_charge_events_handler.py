@@ -15,16 +15,16 @@ class VehicleChargeEventsHandler(Handler):
 
 
     def __init__(self) -> None:
-        self.prototype = {'vehicle_id': [], 'sim_time': [], 'energy': [], 'units': []}
+        self.prototype = {'vehicle_id': [], 'sim_time_start': [], 'sim_time_end': [], 'energy': [], 'units': []}
         self.events = self.prototype.copy()
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
-        current_time = runner_payload.s.sim_time
         for report in reports:
             if report.report_type == ReportType.VEHICLE_CHARGE_EVENT:
                 try:
                     self.events['vehicle_id'].append(report.report['vehicle_id'])
-                    self.events['sim_time'].append(current_time)
+                    self.events['sim_time_start'].append(report.report['sim_time_start'])
+                    self.events['sim_time_end'].append(report.report['sim_time_end'])
                     self.events['energy'].append(report.report['energy'])
                     self.events['units'].append(report.report['energy_units'])
                 except KeyError as e:
