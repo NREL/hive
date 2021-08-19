@@ -3,6 +3,8 @@ from __future__ import annotations
 import functools as ft
 from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 
+import immutables
+
 from hive.config import HiveConfig
 from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.state.simulation_state.simulation_state import SimulationState
@@ -72,11 +74,15 @@ class Update(NamedTuple):
         :param runner_payload: the current SimulationState and assets at the current simtime
         :return: the updated payload after one SimTime step
         """
+
+        # clear the cache of applied instructions from the SimulationState
+        init_rp = runner_payload._replace(s=runner_payload.s._replace(applied_instructions=immutables.Map()))
+
         # run each pre_step_update
         pre_step_result = ft.reduce(
             _apply_fn,
             self.pre_step_update,
-            UpdatePayload(runner_payload)
+            UpdatePayload(init_rp)
         )
 
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
