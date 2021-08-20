@@ -129,3 +129,12 @@ class HiveConfig(NamedTuple):
     def set_scenario_output_directory(self, output_directory: Path) -> HiveConfig:
         return self._replace(scenario_output_directory=output_directory)
 
+    def to_yaml(self):
+        """
+        writes this configuration as a file in the scenario output directory
+        """
+        config_dump = self.asdict()
+        dump_name = self.sim.sim_name + ".yaml"
+        dump_path = os.path.join(self.scenario_output_directory, dump_name)
+        with open(dump_path, 'w') as f:
+            yaml.dump(config_dump, f, sort_keys=False)

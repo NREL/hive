@@ -87,11 +87,7 @@ def run_sim(scenario_file, position=0):
     env.reporter.close(sim_result)
 
     if env.config.global_config.write_outputs:
-        config_dump = env.config.asdict()
-        dump_name = env.config.sim.sim_name + ".yaml"
-        dump_path = os.path.join(env.config.scenario_output_directory, dump_name)
-        with open(dump_path, 'w') as f:
-            yaml.dump(config_dump, f, sort_keys=False)
+        env.config.to_yaml()
 
     return 0
 
