@@ -3,7 +3,6 @@ from unittest import TestCase
 from hive.config.network import Network
 from hive.initialization.initialize_simulation import initialize_simulation
 from hive.initialization.initialize_simulation_with_sampling import initialize_simulation_with_sampling
-from hive.runner import LocalSimulationRunner
 from tests.mock_lobster import *
 
 
@@ -13,7 +12,8 @@ class TestInitializeSimulation(TestCase):
         conf = mock_config()
 
         # deactivate logging to avoid writing log outputs from the test
-        updated_global_config = conf.global_config._replace(log_states=False, log_run=False, log_events=False, log_instructions=False, log_stats=False)
+        updated_global_config = conf.global_config._replace(log_states=False, log_run=False, log_events=False,
+                                                            log_instructions=False, log_stats=False)
 
         updated_conf = conf._replace(global_config=updated_global_config)
 
@@ -29,13 +29,15 @@ class TestInitializeSimulation(TestCase):
         ))
 
         new_input = conf.input_config._replace(
-            road_network_file=Path(resource_filename("hive.resources.scenarios.denver_downtown.road_network", "downtown_denver_network.json"))
+            road_network_file=Path(resource_filename("hive.resources.scenarios.denver_downtown.road_network",
+                                                     "downtown_denver_network.json"))
         )
 
         conf = conf._replace(input_config=new_input)
 
         # deactivate logging to avoid writing log outputs from the test
-        updated_global_config = conf.global_config._replace(log_states=False, log_run=False, log_events=False, log_instructions=False, log_stats=False)
+        updated_global_config = conf.global_config._replace(log_states=False, log_run=False, log_events=False,
+                                                            log_instructions=False, log_stats=False)
 
         updated_conf = conf._replace(global_config=updated_global_config)
 
@@ -46,4 +48,3 @@ class TestInitializeSimulation(TestCase):
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
         self.assertEqual(len(sim.bases), 2, "should have loaded 2 bases")
-
