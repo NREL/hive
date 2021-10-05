@@ -1,8 +1,7 @@
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
-from hive.state.simulation_state.update.step_simulation_ops import perform_vehicle_state_updates
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestChargingPriceUpdate(TestCase):

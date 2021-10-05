@@ -1,7 +1,7 @@
 from csv import DictReader
 from unittest import TestCase
 
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestBase(TestCase):

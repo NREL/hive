@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_string
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestSchedules(TestCase):

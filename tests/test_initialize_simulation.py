@@ -3,7 +3,7 @@ from unittest import TestCase
 from hive.config.network import Network
 from hive.initialization.initialize_simulation import initialize_simulation
 from hive.initialization.initialize_simulation_with_sampling import initialize_simulation_with_sampling
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestInitializeSimulation(TestCase):

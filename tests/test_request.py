@@ -1,7 +1,7 @@
 from unittest import TestCase
 from csv import DictReader
 
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 from hive.util.exception import TimeParseError
 

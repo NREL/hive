@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from hive.state.simulation_state.update.update_requests_sampling import UpdateRequestsSampling
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestUpdateRequestsSampling(TestCase):

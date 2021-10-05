@@ -4,9 +4,8 @@ from hive.state.entity_state import entity_state_ops
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
-from hive.model.passenger import board_vehicle
 from hive.state.vehicle_state.out_of_service import OutOfService
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestVehicleState(TestCase):
