@@ -2,7 +2,7 @@
 from unittest import TestCase
 
 from hive.state.driver_state.driver_instruction_ops import human_go_home
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestDriverInstructionOps(TestCase):

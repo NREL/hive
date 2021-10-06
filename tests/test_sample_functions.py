@@ -6,7 +6,7 @@ from returns.result import Result
 from hive.initialization.sample_requests import default_request_sampler
 from hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, \
     build_default_soc_sampling_fn
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestSampleVehicles(TestCase):

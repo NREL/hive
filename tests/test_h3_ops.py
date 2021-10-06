@@ -1,7 +1,6 @@
 from unittest import TestCase
 
-from hive.util.units import hours_to_seconds
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestH3Ops(TestCase):

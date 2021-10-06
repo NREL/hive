@@ -2,7 +2,7 @@ import functools as ft
 import math
 import tempfile
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict
 
 import h3
 import immutables
@@ -176,7 +176,8 @@ def mock_station(
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     if on_shift_access_chargers is None:
         on_shift_access_chargers = frozenset(chargers.keys())
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, on_shift_access_chargers, membership)
+    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, on_shift_access_chargers,
+                         membership)
 
 
 def mock_station_from_geoid(

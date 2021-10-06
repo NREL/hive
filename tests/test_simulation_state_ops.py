@@ -1,7 +1,6 @@
 from unittest import TestCase
 
-from hive.model.roadnetwork.link import EntityPosition
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestSimulationStateOps(TestCase):

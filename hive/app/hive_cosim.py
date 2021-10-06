@@ -105,4 +105,5 @@ def close(runner_payload: RunnerPayload):
     :param runner_payload: the final HIVE state to commit to logging
     """
     runner_payload.e.reporter.close(runner_payload)
-    runner_payload.e.config.to_yaml()
+    if runner_payload.e.config.global_config.write_outputs:
+        runner_payload.e.config.to_yaml()

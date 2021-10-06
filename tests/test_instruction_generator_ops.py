@@ -4,7 +4,7 @@ from hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_dispatch_to_station,
 )
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestInstructionGenerators(TestCase):

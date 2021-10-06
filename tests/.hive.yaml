@@ -1,0 +1,8 @@
+output_base_directory: ""
+log_run: False
+log_states: False
+log_events: False
+log_instructions: False
+log_stats: False
+log_station_capacities: False
+log_level: DEBUG

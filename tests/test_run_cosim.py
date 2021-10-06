@@ -11,6 +11,7 @@ class TestRunCosim(TestCase):
         # read scenario
         scenario_file = Path(resource_filename('hive.resources.scenarios.denver_downtown',
                                                'denver_demo.yaml'))
+
         rp0 = hive_cosim.load_scenario(scenario_file)
         time_steps = 5
 

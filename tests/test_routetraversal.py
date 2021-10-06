@@ -2,8 +2,7 @@ from unittest import TestCase
 
 from hive.model.roadnetwork.linktraversal import traverse_up_to
 from hive.model.roadnetwork.routetraversal import traverse
-from hive.util.units import hours_to_seconds
-from tests.mock_lobster import *
+from hive.resources.mock_lobster import *
 
 
 class TestRouteTraversal(TestCase):
