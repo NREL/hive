@@ -20,6 +20,7 @@ class GlobalConfig(NamedTuple):
     log_level: str
     log_sim_config: Set[ReportType]
     log_station_capacities: bool
+    time_step_stats: bool
     lazy_file_reading: bool
     wkt_x_y_ordering: bool
 
@@ -41,6 +42,7 @@ class GlobalConfig(NamedTuple):
             'log_stats',
             'log_level',
             'log_sim_config',
+            'time_step_stats',
             'lazy_file_reading',
             'wkt_x_y_ordering',
         )

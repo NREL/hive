@@ -10,6 +10,7 @@ from hive.reporting.handler.eventful_handler import EventfulHandler
 from hive.reporting.handler.instruction_handler import InstructionHandler
 from hive.reporting.handler.stateful_handler import StatefulHandler
 from hive.reporting.handler.stats_handler import StatsHandler
+from hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
 from hive.initialization.initialize_simulation import initialize_simulation
@@ -51,6 +52,8 @@ def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environm
         reporter.add_handler(InstructionHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
+    if config.global_config.time_step_stats:
+        reporter.add_handler(TimeStepStatsHandler(config, config.scenario_output_directory))
 
     environment_w_reporter = environment.set_reporter(reporter)
 
