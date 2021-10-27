@@ -88,7 +88,6 @@ class TimeStepStatsHandler(Handler):
                 sim_state.get_vehicles()
             )
         )
-        sim_state.get_vehicles()
         for state in self.vehicle_state_names:
             stats_dict[f'vehicles_{state.lower()}'] = vehicle_state_counts[state]
 
@@ -100,7 +99,21 @@ class TimeStepStatsHandler(Handler):
             pooling_request_count += len(veh.vehicle_state.boarded_requests)
         stats_dict['servicing_requests'] = vehicle_state_counts[VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
-        # Todo: add columns for for each charger type counting the number of each charger in use
+        # count number of chargers in use by type
+        charge_event_reports = list(
+            filter(
+                lambda r: r.report_type == ReportType.VEHICLE_CHARGE_EVENT,
+                reports
+            )
+        )
+        charger_counts = Counter(
+            map(
+                lambda r: r.report['charger_id'],
+                charge_event_reports
+            )
+        )
+        for charger in env.chargers.keys():
+            stats_dict[f'charger_{charger.lower()}'] = charger_counts[charger]
 
         # add the statistics to the dataframe
         self.frame = self.frame.append(stats_dict, ignore_index=True)
