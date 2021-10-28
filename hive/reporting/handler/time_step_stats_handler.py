@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+
 class TimeStepStatsHandler(Handler):
 
     def __init__(self, config: HiveConfig, scenario_output_directory: Path):
@@ -91,7 +92,8 @@ class TimeStepStatsHandler(Handler):
 
         # get count of requests currently being serviced by a vehicle
         pooling_request_count = sum([len(v.vehicle_state.boarded_requests) for v in vehicles_pooling])
-        stats_row['servicing_requests'] = vehicle_state_counts[VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
+        stats_row['servicing_requests'] = vehicle_state_counts[
+                                              VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
         # count the number of vehicles in each vehicle state
         for state in self.vehicle_state_names:
