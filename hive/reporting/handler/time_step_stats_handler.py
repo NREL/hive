@@ -30,7 +30,7 @@ class TimeStepStatsHandler(Handler):
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
         """
-        called at each log step. aggregates various statistics to the time bin level in a dataframe
+        called at each log step. aggregates various statistics to the time bin level
 
         :param reports: reports for gathering statistics
 
