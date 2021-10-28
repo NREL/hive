@@ -32,7 +32,7 @@ class TimeStepStatsHandler(Handler):
         """
         called at each log step. aggregates various statistics to the time bin level in a dataframe
 
-        :param reports:
+        :param reports: reports for gathering statistics
 
         :param runner_payload
         :return:
