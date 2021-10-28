@@ -43,6 +43,12 @@ class TimeStepStatsHandler(Handler):
         sim_state = runner_payload.s
         env = runner_payload.e
 
+        reports_by_type = {}
+        for report in reports:
+            if report.report_type not in reports_by_type.keys():
+                reports_by_type[report.report_type] = []
+            reports_by_type[report.report_type].append(report)
+
         # get the time step
         sim_time = sim_state.sim_time
         stats_row['time_step'] = int((sim_time.as_epoch_time() - self.start_time.as_epoch_time()) /
@@ -54,13 +60,10 @@ class TimeStepStatsHandler(Handler):
         ]), 2)
 
         # get the total vkt
-        move_event_reports = list(
-            filter(
-                lambda r: r.report_type == ReportType.VEHICLE_MOVE_EVENT,
-                reports
-            )
-        )
-        stats_row['vkt'] = sum([me.report['distance_km'] for me in move_event_reports])
+        if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
+            stats_row['vkt'] = sum([me.report['distance_km'] for me in reports_by_type[ReportType.VEHICLE_MOVE_EVENT]])
+        else:
+            stats_row['vkt'] = 0
 
         # get number of assigned requests in this time step
         assigned_requests = sim_state.get_requests(filter_function=lambda r: r.dispatched_vehicle is not None)
@@ -70,14 +73,10 @@ class TimeStepStatsHandler(Handler):
         stats_row['active_requests'] = len(sim_state.get_requests()) - len(assigned_requests)
 
         # get number of canceled requests in this time step
-        stats_row['canceled_requests'] = len(
-            list(
-                filter(
-                    lambda r: r.report_type == ReportType.CANCEL_REQUEST_EVENT,
-                    reports
-                )
-            )
-        )
+        if ReportType.CANCEL_REQUEST_EVENT in reports_by_type.keys():
+            stats_row['canceled_requests'] = len(reports_by_type[ReportType.CANCEL_REQUEST_EVENT])
+        else:
+            stats_row['canceled_requests'] = 0
 
         vehicle_state_counts = Counter(
             map(
@@ -97,20 +96,18 @@ class TimeStepStatsHandler(Handler):
             stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts[state]
 
         # count number of chargers in use by type
-        charge_event_reports = list(
-            filter(
-                lambda r: r.report_type == ReportType.VEHICLE_CHARGE_EVENT,
-                reports
+        if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
+            charger_counts = Counter(
+                map(
+                    lambda r: r.report['charger_id'],
+                    reports_by_type[ReportType.VEHICLE_CHARGE_EVENT]
+                )
             )
-        )
-        charger_counts = Counter(
-            map(
-                lambda r: r.report['charger_id'],
-                charge_event_reports
-            )
-        )
-        for charger in env.chargers.keys():
-            stats_row[f'charger_{charger.lower()}'] = charger_counts[charger]
+            for charger in env.chargers.keys():
+                stats_row[f'charger_{charger.lower()}'] = charger_counts[charger]
+        else:
+            for charger in env.chargers.keys():
+                stats_row[f'charger_{charger.lower()}'] = 0
 
         # append the statistics row to the data list
         self.data.append(stats_row)
