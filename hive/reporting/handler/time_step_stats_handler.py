@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import logging
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
     from hive.runner.runner_payload import RunnerPayload
     from hive.reporting.reporter import Report
 
+log = logging.getLogger(__name__)
 
 class TimeStepStatsHandler(Handler):
 
@@ -119,3 +121,4 @@ class TimeStepStatsHandler(Handler):
         :return:
         """
         pd.DataFrame.to_csv(pd.DataFrame(self.data), self.csv_path, index=False)
+        log.info(f"time step stats written to {self.csv_path}")
