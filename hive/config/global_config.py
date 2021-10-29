@@ -77,4 +77,5 @@ class GlobalConfig(NamedTuple):
 
     @property
     def write_outputs(self):
-        return self.log_run or self.log_states or self.log_events or self.log_stats
+        return self.log_run or self.log_states or self.log_events or self.log_stats or self.log_station_capacities or \
+               self.log_instructions or self.log_time_step_stats
