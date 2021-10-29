@@ -21,6 +21,7 @@ class GlobalConfig(NamedTuple):
     log_sim_config: Set[ReportType]
     log_station_capacities: bool
     log_time_step_stats: bool
+    log_fleet_time_step_stats: bool
     lazy_file_reading: bool
     wkt_x_y_ordering: bool
 
@@ -43,6 +44,7 @@ class GlobalConfig(NamedTuple):
             'log_level',
             'log_sim_config',
             'log_time_step_stats',
+            'log_fleet_time_step_stats',
             'lazy_file_reading',
             'wkt_x_y_ordering',
         )
@@ -78,4 +80,4 @@ class GlobalConfig(NamedTuple):
     @property
     def write_outputs(self):
         return self.log_run or self.log_states or self.log_events or self.log_stats or self.log_station_capacities or \
-               self.log_instructions or self.log_time_step_stats
+               self.log_instructions or self.log_time_step_stats or self.log_fleet_time_step_stats

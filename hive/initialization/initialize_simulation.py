@@ -74,14 +74,6 @@ def initialize_simulation(
 
     # create simulation environment
     fleet_ids = read_fleet_ids_from_file(config.input_config.fleets_file) if config.input_config.fleets_file else []
-    env_initial = Environment(config=config,
-                              mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
-                                                                    config.input_config.scenario_directory),
-                              chargers=build_chargers_table(config.input_config.chargers_file),
-                              schedules=build_schedules_table(config.sim.schedule_type,
-                                                              config.input_config.schedules_file),
-                              fleet_ids=fleet_ids
-                              )
 
     # read in fleet memberships for vehicles/stations/bases
     vehicle_member_ids = process_fleet_file(config.input_config.fleets_file,
@@ -90,6 +82,18 @@ def initialize_simulation(
                                          'bases') if config.input_config.fleets_file else None
     station_member_ids = process_fleet_file(config.input_config.fleets_file,
                                             'stations') if config.input_config.fleets_file else None
+
+    env_initial = Environment(config=config,
+                              mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
+                                                                    config.input_config.scenario_directory),
+                              chargers=build_chargers_table(config.input_config.chargers_file),
+                              schedules=build_schedules_table(config.sim.schedule_type,
+                                                              config.input_config.schedules_file),
+                              fleet_ids=fleet_ids,
+                              vehicle_fleet_ids=vehicle_member_ids,
+                              base_fleet_ids=base_member_ids,
+                              station_fleet_ids=station_member_ids
+                              )
 
     # populate simulation with entities
     sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, sim_initial,
