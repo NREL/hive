@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from collections import Counter
+import immutables
 import logging
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, FrozenSet, List
 
 from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType
@@ -13,6 +14,8 @@ from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 
 if TYPE_CHECKING:
     from hive.config import HiveConfig
+    from hive.model.membership import MembershipId
+    from hive.state.simulation_state.simulation_state import SimulationState
     from hive.runner.runner_payload import RunnerPayload
     from hive.reporting.reporter import Report
 
@@ -21,8 +24,9 @@ log = logging.getLogger(__name__)
 
 class TimeStepStatsHandler(Handler):
 
-    def __init__(self, config: HiveConfig, scenario_output_directory: Path):
-        self.csv_path = scenario_output_directory / 'time_step_stats.csv'
+    def __init__(self, config: HiveConfig, scenario_output_directory: Path, fleet_ids: FrozenSet[MembershipId]):
+        self.timestep_stats_outpath = scenario_output_directory / 'time_step_stats.csv'
+        self.global_config = config.global_config
 
         self.start_time = config.sim.start_time
         self.timestep_duration_seconds = config.sim.timestep_duration_seconds
@@ -30,6 +34,12 @@ class TimeStepStatsHandler(Handler):
         self.vehicle_state_names = tuple(vs.name for vs in VehicleStateType)
 
         self.data = []
+
+        if self.global_config.log_fleet_time_step_stats:
+            self.fleets_timestep_stats_outpath = scenario_output_directory / 'fleets_time_step_stats/'
+            self.fleets_data = {}
+            for fleet_id in fleet_ids:
+                self.fleets_data[fleet_id] = []
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
         """
@@ -116,11 +126,74 @@ class TimeStepStatsHandler(Handler):
         # append the statistics row to the data list
         self.data.append(stats_row)
 
+        if self.fleets_data:
+            for fleet_id in self.fleets_data.keys():
+
+                # create stats row with the time step
+                fleet_stats_row = {'time_step': stats_row['time_step']}
+
+                # get vehicles in this fleet
+                veh_in_fleet = sim_state.get_vehicles(filter_function=lambda v: fleet_id in v.membership.memberships)
+
+                # get average SOC of vehicles in this fleet
+                fleet_stats_row['avg_soc_percent'] = round(100 * np.mean([
+                    env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]), 2)
+
+                # get the total vkt of vehicles in this fleet
+                if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
+                    move_events_in_fleet = list(
+                        filter(
+                            lambda r: fleet_id in env.vehicle_fleet_ids[r.report['vehicle_id']],
+                            reports_by_type[ReportType.VEHICLE_MOVE_EVENT]
+                        )
+                    )
+                    fleet_stats_row['vkt'] = sum([me.report['distance_km'] for me in move_events_in_fleet])
+                else:
+                    fleet_stats_row['vkt'] = 0
+
+                # count the number of vehicles in each vehicle state in this fleet
+                vehicle_state_counts_in_fleet = Counter(
+                    map(
+                        lambda v: v.vehicle_state.vehicle_state_type.name,
+                        veh_in_fleet
+                    )
+                )
+                for state in self.vehicle_state_names:
+                    fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
+
+                # count number of chargers in use by type
+                if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
+                    charge_events_in_fleet = list(
+                        filter(
+                            lambda r: fleet_id in env.vehicle_fleet_ids[r.report['vehicle_id']],
+                            reports_by_type[ReportType.VEHICLE_CHARGE_EVENT]
+                        )
+                    )
+                    charger_counts_in_fleet = Counter(
+                        map(
+                            lambda r: r.report['charger_id'],
+                            charge_events_in_fleet
+                        )
+                    )
+                    for charger in env.chargers.keys():
+                        fleet_stats_row[f'charger_{charger.lower()}'] = charger_counts_in_fleet[charger]
+                else:
+                    for charger in env.chargers.keys():
+                        fleet_stats_row[f'charger_{charger.lower()}'] = 0
+
+                # append the statistics row to the fleet's data list
+                self.fleets_data[fleet_id].append(fleet_stats_row)
+
     def close(self, runner_payload: RunnerPayload):
         """
         saves the time step stats dataframe as a csv file to the scenario output directory
 
         :return:
         """
-        pd.DataFrame.to_csv(pd.DataFrame(self.data), self.csv_path, index=False)
-        log.info(f"time step stats written to {self.csv_path}")
+        pd.DataFrame.to_csv(pd.DataFrame(self.data), self.timestep_stats_outpath, index=False)
+        log.info(f"time step stats written to {self.timestep_stats_outpath / 'time_step_stats.csv'}")
+
+        self.fleets_timestep_stats_outpath.mkdir(parents=True)
+        for fleet_id, fleet_data in self.fleets_data.items():
+            pd.DataFrame.to_csv(pd.DataFrame(fleet_data),
+                                self.fleets_timestep_stats_outpath / f'time_step_stats_{fleet_id}.csv', index=False)
