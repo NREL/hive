@@ -35,7 +35,7 @@ class TimeStepStatsHandler(Handler):
             self.timestep_stats_outpath = scenario_output_directory.joinpath("time_step_stats.csv")
 
         if self.global_config.log_fleet_time_step_stats:
-            self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath('fleets_time_step_stats/')
+            self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath('fleet_time_step_stats/')
             self.fleets_data = {}
             for fleet_id in fleet_ids:
                 self.fleets_data[fleet_id] = []
@@ -63,6 +63,14 @@ class TimeStepStatsHandler(Handler):
                 reports_by_type[report.report_type] = []
             reports_by_type[report.report_type].append(report)
 
+        # get number of assigned requests in this time step
+        assigned_requests = sim_state.get_requests(filter_function=lambda r: r.dispatched_vehicle is not None)
+
+        # grab all vehicles that are pooling
+        vehicles_pooling = sim_state.get_vehicles(
+            filter_function=lambda
+                v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
+
         if self.global_config.log_time_step_stats:
             stats_row = {'time_step': time_step}
 
@@ -77,8 +85,7 @@ class TimeStepStatsHandler(Handler):
             else:
                 stats_row['vkt'] = 0
 
-            # get number of assigned requests in this time step
-            assigned_requests = sim_state.get_requests(filter_function=lambda r: r.dispatched_vehicle is not None)
+            # add assigned request count
             stats_row['assigned_requests'] = len(assigned_requests)
 
             # get number of active requests in this time step (unassigned)
@@ -96,8 +103,6 @@ class TimeStepStatsHandler(Handler):
                     sim_state.get_vehicles()
                 )
             )
-            vehicles_pooling = sim_state.get_vehicles(
-                filter_function=lambda v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
 
             # get count of requests currently being serviced by a vehicle
             pooling_request_count = sum([len(v.vehicle_state.boarded_requests) for v in vehicles_pooling])
@@ -150,13 +155,42 @@ class TimeStepStatsHandler(Handler):
                 else:
                     fleet_stats_row['vkt'] = 0
 
-                # count the number of vehicles in each vehicle state in this fleet
+                # get number of assigned requests in this fleet
+                fleet_stats_row['assigned_requests'] = len(list(
+                        filter(
+                            lambda r: fleet_id in env.vehicle_fleet_ids[r.dispatched_vehicle],
+                            assigned_requests
+                        )
+                    ))
+                # Todo: should these be based on the request membership or the vehicle membership
+                # get number of active requests in this time step (unassigned)
+                fleet_stats_row['active_requests'] = len(sim_state.get_requests()) - len(assigned_requests)
+
+                # get number of canceled requests in this time step
+                if ReportType.CANCEL_REQUEST_EVENT in reports_by_type.keys():
+                    fleet_stats_row['canceled_requests'] = len(reports_by_type[ReportType.CANCEL_REQUEST_EVENT])
+                else:
+                    fleet_stats_row['canceled_requests'] = 0
+
                 vehicle_state_counts_in_fleet = Counter(
                     map(
                         lambda v: v.vehicle_state.vehicle_state_type.name,
                         veh_in_fleet
                     )
                 )
+                vehicles_pooling_in_fleet = list(
+                    filter(
+                        lambda v: fleet_id in env.vehicle_fleet_ids[v.id],
+                        vehicles_pooling
+                    )
+                )
+
+                # get count of requests currently being serviced by a vehicle
+                pooling_request_count = sum([len(v.vehicle_state.boarded_requests) for v in vehicles_pooling_in_fleet])
+                fleet_stats_row['servicing_requests'] = vehicle_state_counts_in_fleet[
+                                                            VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
+
+                # count the number of vehicles in each vehicle state in this fleet
                 for state in self.vehicle_state_names:
                     fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
 
