@@ -90,9 +90,6 @@ def initialize_simulation(
                               schedules=build_schedules_table(config.sim.schedule_type,
                                                               config.input_config.schedules_file),
                               fleet_ids=fleet_ids,
-                              vehicle_fleet_ids=vehicle_member_ids,
-                              base_fleet_ids=base_member_ids,
-                              station_fleet_ids=station_member_ids
                               )
 
     # populate simulation with entities
