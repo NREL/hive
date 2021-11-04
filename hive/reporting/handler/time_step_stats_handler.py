@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections import Counter
+from immutables import Map
 import logging
 import numpy as np
+import os
 import pandas as pd
 from pandas import DataFrame
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, FrozenSet, List
+from typing import TYPE_CHECKING, FrozenSet, List, Optional
 
 from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType
@@ -30,28 +32,31 @@ class TimeStepStatsHandler(Handler):
         self.timestep_duration_seconds = config.sim.timestep_duration_seconds
 
         self.vehicle_state_names = tuple(vs.name for vs in VehicleStateType)
+        self.vehicle_membership_map = Map().mutate()
 
         if self.global_config.log_time_step_stats:
             self.data = []
             self.timestep_stats_outpath = scenario_output_directory.joinpath("time_step_stats_all.csv")
 
-        if self.global_config.log_fleet_time_step_stats:
+        if self.global_config.log_fleet_time_step_stats and len(fleet_ids) > 0:
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath('fleet_time_step_stats/')
             self.fleets_data = {}
             for fleet_id in fleet_ids:
                 self.fleets_data[fleet_id] = []
             self.fleets_data['none'] = []
 
-        self.vehicle_membership_map = {}
+    def get_time_step_stats(self) -> Optional[DataFrame]:
+        if not self.global_config.log_time_step_stats:
+            return None
 
-    def get_time_step_stats(self) -> DataFrame:
         return DataFrame(self.data)
 
-    def get_fleet_time_step_stats(self) -> Dict[MembershipId, DataFrame]:
-        result = {}
-        for fleet_id, data in self.fleets_data.items():
-            if len(data) > 0:
-                result[fleet_id] = DataFrame(data)
+    def get_fleet_time_step_stats(self) -> Optional[Map[MembershipId, DataFrame]]:
+        if not self.global_config.log_fleet_time_step_stats:
+            return None
+        result = Map(
+            {fleet_id: DataFrame(data) if len(data) > 0 else None for fleet_id, data in self.fleets_data.items()}
+        )
         return result
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
@@ -71,9 +76,10 @@ class TimeStepStatsHandler(Handler):
         if not self.vehicle_membership_map:
             for veh in sim_state.vehicles.values():
                 if any(m in self.fleets_data.keys() for m in veh.membership.memberships):
-                    self.vehicle_membership_map[veh.id] = veh.membership.memberships
+                    self.vehicle_membership_map.set(veh.id, veh.membership.memberships)
                 else:
-                    self.vehicle_membership_map[veh.id] = frozenset(['none'])
+                    self.vehicle_membership_map.set(veh.id, frozenset(['none']))
+            self.vehicle_membership_map.finish()
 
         # get the time step
         sim_time = sim_state.sim_time
@@ -100,8 +106,7 @@ class TimeStepStatsHandler(Handler):
 
         # grab all vehicles that are pooling
         vehicles_pooling = sim_state.get_vehicles(
-            filter_function=lambda
-                v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
+            filter_function=lambda v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
 
         if self.global_config.log_time_step_stats:
             stats_row = {'time_step': time_step}
@@ -112,7 +117,8 @@ class TimeStepStatsHandler(Handler):
 
             # get the total vkt
             if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
-                stats_row['vkt'] = sum([me.report['distance_km'] for me in reports_by_type[ReportType.VEHICLE_MOVE_EVENT]])
+                stats_row['vkt'] = sum(
+                    [me.report['distance_km'] for me in reports_by_type[ReportType.VEHICLE_MOVE_EVENT]])
             else:
                 stats_row['vkt'] = 0
 
@@ -136,7 +142,7 @@ class TimeStepStatsHandler(Handler):
             # get count of requests currently being serviced by a vehicle
             pooling_request_count = sum([len(v.vehicle_state.boarded_requests) for v in vehicles_pooling])
             stats_row['servicing_requests'] = vehicle_state_counts[
-                                                VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
+                                                  VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
             # add the number of vehicles in each vehicle state
             for state in self.vehicle_state_names:
@@ -159,7 +165,7 @@ class TimeStepStatsHandler(Handler):
             # append the statistics row to the data list
             self.data.append(stats_row)
 
-        if self.global_config.log_fleet_time_step_stats:
+        if self.global_config.log_fleet_time_step_stats and len(env.fleet_ids) > 0:
             for fleet_id in self.fleets_data.keys():
 
                 # get vehicles in this fleet
@@ -192,11 +198,11 @@ class TimeStepStatsHandler(Handler):
 
                 # get number of assigned requests in this fleet
                 fleet_stats_row['assigned_requests'] = len(list(
-                        filter(
-                            lambda r: fleet_id in self.vehicle_membership_map[r.dispatched_vehicle],
-                            assigned_requests
-                        )
-                    ))
+                    filter(
+                        lambda r: fleet_id in self.vehicle_membership_map[r.dispatched_vehicle],
+                        assigned_requests
+                    )
+                ))
 
                 # add number of active requests in this time step (unassigned)
                 fleet_stats_row['active_requests'] = active_requests_count
@@ -261,10 +267,11 @@ class TimeStepStatsHandler(Handler):
             log.info(f"time step stats written to {self.timestep_stats_outpath}")
 
         if self.global_config.log_fleet_time_step_stats:
-            self.fleets_timestep_stats_outpath.mkdir(parents=True)
+            os.mkdir(self.fleets_timestep_stats_outpath)
             for fleet_id, fleet_df in self.get_fleet_time_step_stats().items():
-                outpath = self.fleets_timestep_stats_outpath.joinpath(f'time_step_stats_{fleet_id}.csv')
-                pd.DataFrame.to_csv(fleet_df,
-                                    outpath,
-                                    index=False)
-                log.info(f"{fleet_id} time step stats written to {outpath}")
+                if fleet_df is not None:
+                    outpath = self.fleets_timestep_stats_outpath.joinpath(f'time_step_stats_{fleet_id}.csv')
+                    pd.DataFrame.to_csv(fleet_df,
+                                        outpath,
+                                        index=False)
+                    log.info(f"{fleet_id} time step stats written to {outpath}")
