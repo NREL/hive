@@ -189,7 +189,7 @@ class TimeStepStatsHandler(Handler):
 
                 # if there are no vehicles in this fleet, we skip it
                 if len(veh_in_fleet) == 0:
-                    break
+                    continue
 
                 # create stats row with the time step
                 fleet_stats_row = {'time_step': time_step}
