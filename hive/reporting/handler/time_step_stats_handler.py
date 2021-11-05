@@ -50,12 +50,22 @@ class TimeStepStatsHandler(Handler):
             self.log_fleet_time_step_stats = False
 
     def get_time_step_stats(self) -> Optional[DataFrame]:
+        """
+        return a DataFrame of the time step level statistics.
+
+        :return: the time step stats DataFrame
+        """
         if not self.log_time_step_stats:
             return None
 
         return DataFrame(self.data)
 
     def get_fleet_time_step_stats(self) -> Optional[Map[MembershipId, DataFrame]]:
+        """
+        return an immutable map of time step stat DataFrames by membership id.
+
+        :return: the immutable map containing time step stats DataFrames by membership id
+        """
         if not self.log_fleet_time_step_stats:
             return None
         result = Map(
