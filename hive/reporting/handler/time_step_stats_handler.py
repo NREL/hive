@@ -272,7 +272,7 @@ class TimeStepStatsHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         """
-        saves the time step stats dataframe as a csv file to the scenario output directory
+        saves all time step stat DataFrames as csv files to the scenario output directory.
 
         :return:
         """
