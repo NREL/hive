@@ -52,8 +52,8 @@ def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environm
         reporter.add_handler(InstructionHandler(config.global_config, config.scenario_output_directory))
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
-    if config.global_config.log_time_step_stats:
-        reporter.add_handler(TimeStepStatsHandler(config, config.scenario_output_directory))
+    if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:
+        reporter.add_handler(TimeStepStatsHandler(config, config.scenario_output_directory, environment.fleet_ids))
 
     environment_w_reporter = environment.set_reporter(reporter)
 
