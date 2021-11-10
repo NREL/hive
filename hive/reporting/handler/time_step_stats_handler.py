@@ -126,8 +126,9 @@ class TimeStepStatsHandler(Handler):
             stats_row = {'time_step': time_step}
 
             # get average SOC of vehicles
-            stats_row['avg_soc_percent'] = round(100 * np.mean([
-                env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.get_vehicles()]), 2)
+            stats_row['avg_soc_percent'] = np.mean(
+                [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.get_vehicles()]
+            )
 
             # get the total vkt
             if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
@@ -188,16 +189,13 @@ class TimeStepStatsHandler(Handler):
                     filter_function=lambda v: fleet_id in self.vehicle_membership_map[v.id]
                 )
 
-                # if there are no vehicles in this fleet, we skip it
-                if len(veh_in_fleet) == 0:
-                    continue
-
                 # create stats row with the time step
                 fleet_stats_row = {'time_step': time_step}
 
                 # get average SOC of vehicles in this fleet
-                fleet_stats_row['avg_soc_percent'] = round(100 * np.mean([
-                    env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]), 2)
+                fleet_stats_row['avg_soc_percent'] = 100 * np.mean(
+                    [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]
+                )
 
                 # get the total vkt of vehicles in this fleet
                 if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
