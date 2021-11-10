@@ -245,6 +245,7 @@ class TimeStepStatsHandler(Handler):
                                                             VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
                 # add the number of vehicles in each vehicle state in this fleet
+                fleet_stats_row['vehicles'] = veh_in_fleet
                 for state in self.vehicle_state_names:
                     fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
 
