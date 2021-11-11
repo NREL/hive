@@ -24,8 +24,6 @@ def same_simulation_location(a: GeoId,
     if override_resolution is None:
         return a == b
     elif override_resolution > sim_h3_resolution:
-        error = SimulationStateError(
-            f"cannot override geoid resolution {sim_h3_resolution} to smaller hex {override_resolution}")
         return False
     elif override_resolution == sim_h3_resolution:
         return a == b

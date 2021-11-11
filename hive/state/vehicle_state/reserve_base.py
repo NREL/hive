@@ -73,7 +73,9 @@ class ReserveBase(NamedTuple, VehicleState):
         if not base:
             return SimulationStateError(f"base {self.base_id} not found"), None
         else:
-            updated_base = base.return_stall()
+            error, updated_base = base.return_stall()
+            if error:
+                return error, None
             return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:

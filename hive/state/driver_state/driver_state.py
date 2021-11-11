@@ -100,7 +100,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         vehicle = sim.vehicles.get(vehicle_id)
         if not vehicle:
-            return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+            state_name = new_state.__class__.__name__
+            return SimulationStateError(f"vehicle {vehicle_id} not found; context: applying new {state_name} driver state"), None
         else:
             updated_vehicle = vehicle.modify_driver_state(new_state)
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)

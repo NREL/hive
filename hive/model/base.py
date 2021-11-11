@@ -121,7 +121,7 @@ class Base(NamedTuple):
         else:
             return self._replace(available_stalls=stalls - 1)
 
-    def return_stall(self) -> Base:
+    def return_stall(self) -> Tuple[Optional[Exception], Optional[Base]]:
         """
         Checks out a stall and returns the updated base.
 
@@ -129,9 +129,9 @@ class Base(NamedTuple):
         """
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
-            raise SimulationStateError('Base already has maximum stalls')
+            return SimulationStateError(f'base {self.id} already has max ({self.total_stalls}) stalls'), None
         else:
-            return self._replace(available_stalls=stalls + 1)
+            return None, self._replace(available_stalls=stalls + 1)
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Base:
         """
