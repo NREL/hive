@@ -90,7 +90,7 @@ class TestStation(TestCase):
             mock_l2_charger_id(),
         )
 
-        station_w_l2 = updated_station.return_charger(mock_l2_charger_id())
+        error, station_w_l2 = updated_station.return_charger(mock_l2_charger_id())
 
         self.assertEqual(station_w_l2.available_chargers[mock_l2_charger_id()], 1)
 
