@@ -104,7 +104,7 @@ class ChargingBase(NamedTuple, VehicleState):
         base = sim.bases.get(self.base_id)
         station = sim.stations.get(base.station_id) if base.station_id else None
 
-        context = f"vehicle {self.vehicle_id} exiting charging base state at base {self.base_id} and station {self.station_id}"
+        context = f"vehicle {self.vehicle_id} exiting charging base state at base {self.base_id}"
         if not vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
@@ -166,7 +166,7 @@ class ChargingBase(NamedTuple, VehicleState):
         base = sim.bases.get(self.base_id)
         station_id = base.station_id if base else None
 
-        context = f"vehicle {self.vehicle_id} performing update for charging base state at base {self.base_id} and station {self.station_id}"
+        context = f"vehicle {self.vehicle_id} performing update for charging base state at base {self.base_id}"
         if not station_id:
             return (
                 SimulationStateError(
