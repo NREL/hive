@@ -142,8 +142,9 @@ def update_active_pooling_trip(
     :return:
     """
     vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
+    context = f"updating active pooling trip for vehicle {vehicle_state.vehicle_id}"
     if vehicle is None:
-        return SimulationStateError(f"vehicle {vehicle_state.vehicle_id} not found"), None
+        return SimulationStateError(f"vehicle not found; context: {context}"), None
     elif len(updated_route) > 0:
         # all we need to do is replace the route at the head of the route plan
         tail = TupleOps.tail(vehicle_state.routes)
@@ -178,10 +179,11 @@ def pick_up_trip(sim: SimulationState,
     """
     vehicle = sim.vehicles.get(vehicle_id)
     request = sim.requests.get(request_id)
+    context = f"vehicle {vehicle_id} pickup trip for request {request_id}"
     if not vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+        return SimulationStateError(f"vehicle not found; context: {context}"), None
     elif not request:
-        return SimulationStateError(f"request {request_id} not found"), None
+        return SimulationStateError(f"request not found; context: {context}"), None
     else:
         updated_vehicle = vehicle.receive_payment(request.value)
         mod_error, maybe_sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
@@ -214,8 +216,9 @@ def drop_off_trip(sim: SimulationState,
     """
 
     vehicle = sim.vehicles.get(vehicle_id)
+    context = f"vehicle {vehicle_id} dropoff trip for request {request.id}"
     if not vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+        return SimulationStateError(f"vehicle not found; context: {context}"), None
     else:
         # confirm each passenger has reached their destination
         for passenger in request.passengers:
@@ -245,14 +248,15 @@ def remove_completed_trip(sim: SimulationState,
     """
     vehicle = sim.vehicles.get(vehicle_id)
     state = vehicle.vehicle_state if vehicle else None
+    context = f"remove completed trip for vehicle {vehicle_id}"
     if state is None:
-        error = SimulationStateError(f"vehicle {vehicle_id} not found in simulation state")
+        error = SimulationStateError(f"vehicle not found in simulation state; context: {context}")
         return error, None
     elif not state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
         error = SimulationStateError(f"vehicle {vehicle_id} state not pooling but attempting to remove it's oldest pooling trip")
         return error, None
     elif len(state.trips) == 0:
-        error = SimulationStateError("remove first trip called on vehicle with no trips")
+        error = SimulationStateError(f"remove first trip called on vehicle with no trips; context: {context}")
         return error, None
     else:
         vehicle = sim.vehicles.get(state.vehicle_id)

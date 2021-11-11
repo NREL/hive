@@ -22,6 +22,7 @@ class ChargingBase(NamedTuple, VehicleState):
     """
     a vehicle is charging at a base with a specific charger_id type
     """
+
     vehicle_id: VehicleId
     base_id: BaseId
     charger_id: ChargerId
@@ -30,9 +31,9 @@ class ChargingBase(NamedTuple, VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.CHARGING_BASE
 
-    def enter(self,
-              sim: SimulationState,
-              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         entering a charge event requires attaining a charger_id from the station situated at the base
 
@@ -42,51 +43,56 @@ class ChargingBase(NamedTuple, VehicleState):
         """
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
+        context = f"vehicle {self.vehicle_id} entering charging base state at base {self.base_id} with charger {self.charger_id}"
         if not base:
-            msg = f"base {self.base_id} not found"
+            msg = f"base not found; context: {context}"
             return SimulationStateError(msg), None
         elif not vehicle:
-            msg = f"vehicle {self.vehicle_id} not found"
+            msg = f"vehicle not found; context {context}"
             return SimulationStateError(msg), None
 
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         charger = env.chargers.get(self.charger_id)
         if not base.station_id:
-            msg = f"base {self.base_id} is not co-located with a station"
+            msg = f"base is not co-located with a station; context: {context}"
             return SimulationStateError(msg), None
         elif not base.membership.grant_access_to_membership(vehicle.membership):
-            msg = f"vehicle {vehicle.id} doesn't have access to base {base.id}"
+            msg = f"vehicle doesn't have access to base; context: {context}"
             return SimulationStateError(msg), None
         elif not mechatronics.valid_charger(charger):
-            msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
-            log.warning(msg)
+            msg = f"vehicle of type {vehicle.mechatronics_id} can't use charger; context: {context}"
             return SimulationStateError(msg), None
         else:
             station = sim.stations.get(base.station_id) if base.station_id else None
             if not station:
-                msg = f"station {base.station_id} not found for vehicle {self.vehicle_id}"
-                log.warning(msg)
+                msg = f"station {base.station_id} not found for vehicle; context: {context}"
                 return SimulationStateError(msg), None
             else:
                 updated_station = station.checkout_charger(self.charger_id)
                 if not updated_station:
-                    log.warning(f"vehicle {self.vehicle_id} can't checkout {self.charger_id} from {station.id}")
+                    log.warning(
+                        f"vehicle {self.vehicle_id} can't checkout {self.charger_id} from {station.id}"
+                    )
                     return None, None
                 else:
-                    error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+                    error, updated_sim = simulation_state_ops.modify_station(
+                        sim, updated_station
+                    )
                     if error:
-                        log.warning(f"unable to update station {station.id}")
                         return error, None
                     else:
-                        return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                        return VehicleState.apply_new_vehicle_state(
+                            updated_sim, self.vehicle_id, self
+                        )
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def exit(self,
-             sim: SimulationState,
-             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         exiting a charge event requires returning the charger_id to the station at the base
 
@@ -98,19 +104,23 @@ class ChargingBase(NamedTuple, VehicleState):
         base = sim.bases.get(self.base_id)
         station = sim.stations.get(base.station_id) if base.station_id else None
 
+        context = f"vehicle {self.vehicle_id} exiting charging base state at base {self.base_id} and station {self.station_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
-            return SimulationStateError(f"station for base {self.base_id} not found"), None
+            return (
+                SimulationStateError(f"station for base not found; context: {context}"),
+                None,
+            )
         else:
             error, updated_station = station.return_charger(self.charger_id)
             if error:
                 return error, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
-    def _has_reached_terminal_state_condition(self,
-                                              sim: SimulationState,
-                                              env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(
+        self, sim: SimulationState, env: Environment
+    ) -> bool:
         """
         test if charging is finished
 
@@ -125,10 +135,9 @@ class ChargingBase(NamedTuple, VehicleState):
         else:
             return mechatronics.is_full(vehicle)
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _enter_default_terminal_state(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
         """
         we default to idle, or reserve base if there is a base with stalls at the location
 
@@ -143,9 +152,9 @@ class ChargingBase(NamedTuple, VehicleState):
         else:
             return None, (enter_sim, next_state)
 
-    def _perform_update(self,
-                        sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
 
@@ -156,7 +165,14 @@ class ChargingBase(NamedTuple, VehicleState):
         """
         base = sim.bases.get(self.base_id)
         station_id = base.station_id if base else None
+
+        context = f"vehicle {self.vehicle_id} performing update for charging base state at base {self.base_id} and station {self.station_id}"
         if not station_id:
-            return SimulationStateError(f"attempting to charge at base {base.id} which has no assoc. station_id"), None
+            return (
+                SimulationStateError(
+                    f"attempting to charge at base which has no assoc. station_id; context: {context}"
+                ),
+                None,
+            )
         else:
             return charge(sim, env, self.vehicle_id, station_id, self.charger_id)

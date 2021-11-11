@@ -25,8 +25,9 @@ class Repositioning(NamedTuple, VehicleState):
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         vehicle = sim.vehicles.get(self.vehicle_id)
         is_valid = route_cooresponds_with_entities(self.route, vehicle.position) if vehicle else False
+        context = f"vehicle {self.vehicle_id} entering repositioning state"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not is_valid:
             return None, None
         else:
@@ -78,10 +79,11 @@ class Repositioning(NamedTuple, VehicleState):
         move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
+        context = f"vehicle {self.vehicle_id} performing update in repositioning state"
         if move_error:
             return move_error, None
         elif not moved_vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:

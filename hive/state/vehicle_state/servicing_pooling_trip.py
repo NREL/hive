@@ -57,8 +57,9 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
 
         vehicle = sim.vehicles.get(self.vehicle_id)
 
+        context = f"vehicle {self.vehicle_id} entering servicing pooling trip state"
         if vehicle is None:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle note found; context: {context}"), None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
             # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__

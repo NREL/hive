@@ -35,10 +35,13 @@ class DispatchBase(NamedTuple, VehicleState):
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         is_valid = route_cooresponds_with_entities(self.route, vehicle.position, base.position) if vehicle and base else False
+        context = f"vehicle {self.vehicle_id} entering dispatch base state at base {self.base_id}"
         if not base:
-            return SimulationStateError(f"base {self.base_id} not found"), None
+            msg = f"base not found; context: {context}"
+            return SimulationStateError(msg), None
         elif not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            msg = f"vehicle not found; context {context}"
+            return SimulationStateError(msg), None
         elif not is_valid:
             return None, None
         elif not base.membership.grant_access_to_membership(vehicle.membership):
@@ -74,8 +77,10 @@ class DispatchBase(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
+        context = f"vehicle {self.vehicle_id} entering terminal state for dispatch base at {self.base_id}"
         if not base:
-            return SimulationStateError(f"base {self.base_id} not found"), None
+            msg = f"base not found; context: {context}"
+            return SimulationStateError(msg), None
         elif base.geoid != vehicle.geoid:
             locations = f"{base.geoid} != {vehicle.geoid}"
             message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
@@ -105,10 +110,11 @@ class DispatchBase(NamedTuple, VehicleState):
         move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
+        context = f"vehicle {self.vehicle_id} moving to base {self.base_id} in dispatch base state"
         if move_error:
             return move_error, None
         elif not moved_vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:
