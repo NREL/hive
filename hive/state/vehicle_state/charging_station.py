@@ -88,7 +88,9 @@ class ChargingStation(NamedTuple, VehicleState):
         elif not station:
             return SimulationStateError(f"station {self.station_id} not found"), None
         else:
-            updated_station = station.return_charger(self.charger_id)
+            error, updated_station = station.return_charger(self.charger_id)
+            if error:
+                return error, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,

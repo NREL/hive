@@ -1,14 +1,17 @@
+from __future__ import annotations
 from typing import Tuple, Optional
 
 from hive.runner.environment import Environment
 from hive.state.entity_state.entity_state import EntityState
+from hive.util.exception import StateTransitionError
 
 
-def transition_previous_to_next(sim: 'SimulationState',
-                                env: Environment,
-                                prev_state: EntityState,
-                                next_state: EntityState
-                                ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+def transition_previous_to_next(
+    sim: "SimulationState",
+    env: Environment,
+    prev_state: EntityState,
+    next_state: EntityState,
+) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
     """
     exits the previous state and enters the next state
 
@@ -20,13 +23,21 @@ def transition_previous_to_next(sim: 'SimulationState',
     """
     exit_error, exit_sim = prev_state.exit(sim, env)
     if exit_error:
-        return exit_error, None
+        prev_state_name = prev_state.__class__.__name__
+        next_state_name = next_state.__class__.__name__
+        error = StateTransitionError(prev_state_name, next_state_name, repr(exit_error))
+        return error, None
     elif not exit_sim:
         return None, None
     else:
         enter_error, enter_sim = next_state.enter(exit_sim, env)
         if enter_error:
-            return enter_error, None
+            prev_state_name = prev_state.__class__.__name__
+            next_state_name = next_state.__class__.__name__
+            error = StateTransitionError(
+                prev_state_name, next_state_name, repr(enter_error)
+            )
+            return error, None
         elif not enter_sim:
             return None, None
         else:

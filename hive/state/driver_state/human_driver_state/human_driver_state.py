@@ -105,7 +105,8 @@ class HumanAvailable(NamedTuple, DriverState):
             # stay available
             return None, sim
         elif not vehicle:
-            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found")
+            state_name = self.__class__.__name__
+            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state")
             return error, None
         else:
             # log transition
@@ -217,7 +218,8 @@ class HumanUnavailable(NamedTuple, DriverState):
         vehicle = sim.vehicles.get(self.attributes.vehicle_id)
 
         if not vehicle:
-            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found")
+            state_name = self.__class__.__name__
+            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state")
             return error, None
         elif schedule_function and schedule_function(sim, self.attributes.vehicle_id):
             # log transition

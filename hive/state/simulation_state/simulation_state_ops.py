@@ -194,7 +194,8 @@ def modify_vehicle(sim: SimulationState,
         error = SimulationStateError(f"cannot update vehicle {vehicle.id}, it was not already in the sim")
         return error, None
     elif not sim.road_network.geoid_within_geofence(updated_vehicle.geoid):
-        raise SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
+        error = SimulationStateError(f"cannot add vehicle {updated_vehicle.id} to sim: not within road network")
+        return error, None
     else:
         updated_dictionaries = DictOps.update_entity_dictionaries(updated_vehicle,
                                                                   sim.vehicles,
