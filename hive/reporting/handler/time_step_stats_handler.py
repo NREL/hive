@@ -126,9 +126,12 @@ class TimeStepStatsHandler(Handler):
             stats_row = {'time_step': time_step}
 
             # get average SOC of vehicles
-            stats_row['avg_soc_percent'] = np.mean(
-                [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.get_vehicles()]
-            )
+            if len(sim_state.get_vehicles()) > 0:
+                stats_row['avg_soc_percent'] = 100 * np.mean(
+                    [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.get_vehicles()]
+                )
+            else:
+                stats_row['avg_soc_percent'] = None
 
             # get the total vkt
             if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
@@ -193,9 +196,12 @@ class TimeStepStatsHandler(Handler):
                 fleet_stats_row = {'time_step': time_step}
 
                 # get average SOC of vehicles in this fleet
-                fleet_stats_row['avg_soc_percent'] = 100 * np.mean(
-                    [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]
-                )
+                if len(veh_in_fleet) > 0:
+                    fleet_stats_row['avg_soc_percent'] = 100 * np.mean(
+                        [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]
+                    )
+                else:
+                    fleet_stats_row['avg_soc_percent'] = None
 
                 # get the total vkt of vehicles in this fleet
                 if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
@@ -243,7 +249,7 @@ class TimeStepStatsHandler(Handler):
                                                             VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
                 # add the number of vehicles in each vehicle state in this fleet
-                fleet_stats_row['vehicles'] = veh_in_fleet
+                fleet_stats_row['vehicles'] = len(veh_in_fleet)
                 for state in self.vehicle_state_names:
                     fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
 
