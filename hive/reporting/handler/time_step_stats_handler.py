@@ -25,7 +25,13 @@ log = logging.getLogger(__name__)
 
 class TimeStepStatsHandler(Handler):
 
-    def __init__(self, config: HiveConfig, scenario_output_directory: Path, fleet_ids: FrozenSet[MembershipId]):
+    def __init__(self,
+                 config: HiveConfig,
+                 scenario_output_directory: Path,
+                 fleet_ids: FrozenSet[MembershipId],
+                 file_name: Optional[str] = "time_step_stats"):
+        self.file_name = file_name
+
         self.start_time = config.sim.start_time
         self.timestep_duration_seconds = config.sim.timestep_duration_seconds
 
@@ -35,7 +41,7 @@ class TimeStepStatsHandler(Handler):
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
             self.data = []
-            self.time_step_stats_outpath = scenario_output_directory.joinpath("time_step_stats_all.csv")
+            self.time_step_stats_outpath = scenario_output_directory.joinpath(f"{file_name}_all.csv")
         else:
             self.log_time_step_stats = False
 
@@ -290,8 +296,6 @@ class TimeStepStatsHandler(Handler):
             os.mkdir(self.fleets_timestep_stats_outpath)
             for fleet_id, fleet_df in self.get_fleet_time_step_stats().items():
                 if fleet_df is not None:
-                    outpath = self.fleets_timestep_stats_outpath.joinpath(f'time_step_stats_{fleet_id}.csv')
-                    pd.DataFrame.to_csv(fleet_df,
-                                        outpath,
-                                        index=False)
+                    outpath = self.fleets_timestep_stats_outpath.joinpath(f'{self.file_name}_{fleet_id}.csv')
+                    pd.DataFrame.to_csv(fleet_df, outpath, index=False)
                     log.info(f"fleet id: {fleet_id} time step stats written to {outpath}")
