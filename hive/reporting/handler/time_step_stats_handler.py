@@ -25,7 +25,13 @@ log = logging.getLogger(__name__)
 
 class TimeStepStatsHandler(Handler):
 
-    def __init__(self, config: HiveConfig, scenario_output_directory: Path, fleet_ids: FrozenSet[MembershipId]):
+    def __init__(self,
+                 config: HiveConfig,
+                 scenario_output_directory: Path,
+                 fleet_ids: FrozenSet[MembershipId],
+                 file_name: Optional[str] = "time_step_stats"):
+        self.file_name = file_name
+
         self.start_time = config.sim.start_time
         self.timestep_duration_seconds = config.sim.timestep_duration_seconds
 
@@ -35,7 +41,7 @@ class TimeStepStatsHandler(Handler):
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
             self.data = []
-            self.time_step_stats_outpath = scenario_output_directory.joinpath("time_step_stats_all.csv")
+            self.time_step_stats_outpath = scenario_output_directory.joinpath(f"{file_name}_all.csv")
         else:
             self.log_time_step_stats = False
 
@@ -126,9 +132,12 @@ class TimeStepStatsHandler(Handler):
             stats_row = {'time_step': time_step}
 
             # get average SOC of vehicles
-            stats_row['avg_soc_percent'] = np.mean(
-                [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.get_vehicles()]
-            )
+            if len(sim_state.get_vehicles()) > 0:
+                stats_row['avg_soc_percent'] = 100 * np.mean(
+                    [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.get_vehicles()]
+                )
+            else:
+                stats_row['avg_soc_percent'] = None
 
             # get the total vkt
             if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
@@ -193,9 +202,12 @@ class TimeStepStatsHandler(Handler):
                 fleet_stats_row = {'time_step': time_step}
 
                 # get average SOC of vehicles in this fleet
-                fleet_stats_row['avg_soc_percent'] = 100 * np.mean(
-                    [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]
-                )
+                if len(veh_in_fleet) > 0:
+                    fleet_stats_row['avg_soc_percent'] = 100 * np.mean(
+                        [env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in veh_in_fleet]
+                    )
+                else:
+                    fleet_stats_row['avg_soc_percent'] = None
 
                 # get the total vkt of vehicles in this fleet
                 if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
@@ -243,7 +255,7 @@ class TimeStepStatsHandler(Handler):
                                                             VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
                 # add the number of vehicles in each vehicle state in this fleet
-                fleet_stats_row['vehicles'] = veh_in_fleet
+                fleet_stats_row['vehicles'] = len(veh_in_fleet)
                 for state in self.vehicle_state_names:
                     fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
 
@@ -284,8 +296,6 @@ class TimeStepStatsHandler(Handler):
             os.mkdir(self.fleets_timestep_stats_outpath)
             for fleet_id, fleet_df in self.get_fleet_time_step_stats().items():
                 if fleet_df is not None:
-                    outpath = self.fleets_timestep_stats_outpath.joinpath(f'time_step_stats_{fleet_id}.csv')
-                    pd.DataFrame.to_csv(fleet_df,
-                                        outpath,
-                                        index=False)
+                    outpath = self.fleets_timestep_stats_outpath.joinpath(f'{self.file_name}_{fleet_id}.csv')
+                    pd.DataFrame.to_csv(fleet_df, outpath, index=False)
                     log.info(f"fleet id: {fleet_id} time step stats written to {outpath}")

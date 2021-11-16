@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional
+from immutables import Map
+from pandas import DataFrame
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Tuple
 
 from hive.reporting.report_type import ReportType
 from hive.reporting.handler.stats_handler import StatsHandler
+from hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 
 if TYPE_CHECKING:
+    from hive.model.membership import MembershipId
     from hive.runner.runner_payload import RunnerPayload
     from hive.reporting.handler import Handler
     from hive.config.global_config import GlobalConfig
@@ -66,6 +70,18 @@ class Reporter:
             if isinstance(handler, StatsHandler):
                 final_report = handler.get_stats(rp)
         return final_report
+
+    def get_time_step_stats(self) -> Tuple[Optional[DataFrame], Optional[Map[MembershipId, DataFrame]]]:
+        """
+        if a TimeStepStatsHandler exists, return the time step stats DataFrame and the fleet time step stats DataFrames
+        :return: the time step stats DataFrame and the fleet time step stats collection of DataFrames if they exist
+        """
+        time_step_stats, fleet_time_step_stats = None, None
+        for handler in self.handlers:
+            if isinstance(handler, TimeStepStatsHandler):
+                time_step_stats = handler.get_time_step_stats()
+                fleet_time_step_stats = handler.get_fleet_time_step_stats()
+        return time_step_stats, fleet_time_step_stats
 
     def close(self, runner_payload: RunnerPayload):
         """
