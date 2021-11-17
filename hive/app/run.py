@@ -117,7 +117,7 @@ def run() -> int:
         try:
             scenario_file = fs.find_scenario(args.scenario_file)
         except FileNotFoundError as fe:
-            log.error(fe)
+            log.error(f"{repr(fe)}; please specify a path to a hive scenario file like denver_demo.yaml")
             return 1
 
 

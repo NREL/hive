@@ -49,9 +49,9 @@ class DispatchTrip(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
         is_valid = route_cooresponds_with_entities(self.route, vehicle.position, request.origin_position) if vehicle and request else False
+        context = f"vehicle {self.vehicle_id} entering dispatch trip for request {self.request_id}"
         if not vehicle:
-            error = SimulationStateError(f"vehicle {self.vehicle_id} does not exist")
-            return error, None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not request:
             # not an error - may have been picked up. fail silently
             return None, None
@@ -177,10 +177,11 @@ class DispatchTrip(NamedTuple, VehicleState):
         move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
+        context = f"vehicle {self.vehicle_id} on the way to request {self.request_id}"
         if move_error:
             return move_error, None
         elif not moved_vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:

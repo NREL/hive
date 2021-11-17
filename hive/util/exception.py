@@ -34,21 +34,22 @@ class StateTransitionError(Exception):
     a state transition's invariants are not met.
     """
 
-    def __init__(self, state_type, this_state_name, next_state_name):
+    def __init__(
+        self, 
+        this_state_name, 
+        next_state_name,
+        context: str = "",
+        ):
         """
-
-
-        :param state_type: the kind of state object that failed (i.e, "vehicle", "charger_id", "request")
         :param this_state_name: state at beginning of transition
         :param next_state_name: attempted new state
+        :param context: any addition context information 
         """
         self.this_state = this_state_name
         self.next_state = next_state_name
-        self.message = "Illegal {} state transition from {} to {}".format(
-            state_type,
-            this_state_name,
-            next_state_name,
-        )
+        self.message = f"Illegal state transition from {this_state_name} to {next_state_name};"
+        if context:
+            self.message += f" context: {context}"
 
     def __init__(self, msg):
         self.message = msg

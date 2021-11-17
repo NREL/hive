@@ -50,8 +50,9 @@ class ServicingTrip(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request.id)
         is_valid = route_cooresponds_with_entities(self.route, request.origin_position, request.destination_position) if vehicle and request else False
+        context = f"vehicle {self.vehicle_id} entering servicing trip state for request {self.request.id}"
         if vehicle is None:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif request is None:
             # request moved on to greener pastures
             return None, None
@@ -136,10 +137,11 @@ class ServicingTrip(NamedTuple, VehicleState):
         move_error, move_result = move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
+        context = f"vehicle {self.vehicle_id} serving trip for request {self.request.id}"
         if move_error:
             return move_error, None
         elif not moved_vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:

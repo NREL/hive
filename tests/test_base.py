@@ -69,7 +69,7 @@ class TestBase(TestCase):
     def test_return_stall(self):
         updated_base = mock_base(stall_count=1).checkout_stall()
 
-        base_w_stall = updated_base.return_stall()
+        error, base_w_stall = updated_base.return_stall()
 
         self.assertEqual(base_w_stall.available_stalls, 1)
 

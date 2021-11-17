@@ -40,17 +40,18 @@ class ChargeQueueing(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
         has_available_charger = station.available_chargers.get(self.charger_id, 0) > 0 if station else False
+        context = f"vehicle {self.vehicle_id} entering queueing at station {self.station_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
-            return SimulationStateError(f"station {self.station_id} not found"), None
+            return SimulationStateError(f"station not found; context: {context}"), None
         elif vehicle.geoid != station.geoid:
             return None, None
         elif has_available_charger:
             # maybe here instead, re-directed to ChargingStation?
             return None, None
         elif not station.membership.grant_access_to_membership(vehicle.membership):
-            msg = f"vehicle {vehicle.id} doesn't have access to {station.id}"
+            msg = f"vehicle doesn't have access to station; context: {context}"
             return SimulationStateError(msg), None
         else:
             updated_station = station.enqueue_for_charger(self.charger_id)
@@ -74,8 +75,9 @@ class ChargeQueueing(NamedTuple, VehicleState):
         :return:
         """
         station = sim.stations.get(self.station_id)
+        context = f"vehicle {self.vehicle_id} exiting queueing at station {self.station_id}"
         if not station:
-            return SimulationStateError(f"station {self.station_id} not found"), None
+            return SimulationStateError(f"station not found; context: {context}"), None
         else:
 
             updated_station = station.dequeue_for_charger(self.charger_id)
@@ -113,12 +115,13 @@ class ChargeQueueing(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
         has_no_charger = station.available_chargers.get(self.charger_id, 0) == 0 if station else False
+        context = f"vehicle {self.vehicle_id} entering default terminal state for charge queueing at station {self.station_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
-            return SimulationStateError(f"station {self.station_id} not found"), None
+            return SimulationStateError(f"station not found; context: {context}"), None
         elif has_no_charger:
-            return SimulationStateError(f"transitioning from queued to charging but no charger_id found"), None
+            return SimulationStateError(f"no charger_id found; context: {context}"), None
         else:
             next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
             enter_error, enter_sim = next_state.enter(sim, env)
@@ -137,12 +140,13 @@ class ChargeQueueing(NamedTuple, VehicleState):
         :return:
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        context = f"vehicle {self.vehicle_id} performing update for charge queueing at station {self.station_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle {self.vehicle_id} not found; context: {context}"), None
         else:
             mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
             if not mechatronics:
-                return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
+                return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment; context: {context}"), None
             less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             return simulation_state_ops.modify_vehicle(sim, less_energy_vehicle)

@@ -206,7 +206,7 @@ class Station(NamedTuple):
         else:
             return None
 
-    def return_charger(self, charger_id: ChargerId) -> Station:
+    def return_charger(self, charger_id: ChargerId) -> Tuple[Optional[Exception], Optional[Station]]:
         """
         Returns a charger_id of type `charger_id` to the station.
         Raises exception if available chargers exceeds total chargers
@@ -217,12 +217,15 @@ class Station(NamedTuple):
         """
         if charger_id in self.available_chargers:
             previous_charger_count = self.available_chargers.get(charger_id)
-            if previous_charger_count > self.total_chargers.get(charger_id):
-                raise SimulationStateError("Station already has max chargers of this type")
+            total_chargers = self.total_chargers.get(charger_id)
+            if not total_chargers:
+                return SimulationStateError(f"Station {self.id} has no chargers of type {charger_id}"), None
+            elif previous_charger_count > total_chargers:
+                return SimulationStateError(f"station {self.id} already has max ({total_chargers}) {charger_id} chargers"), None
             updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count + 1)
-            return self._replace(available_chargers=updated_avail_chargers)
+            return None, self._replace(available_chargers=updated_avail_chargers)
         else:
-            return self
+            return None, self
 
     def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> Station:
         return self._replace(

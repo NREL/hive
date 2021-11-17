@@ -59,8 +59,9 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
             first_req = sim.requests.get(first_req_id)
             is_valid = route_cooresponds_with_entities(self.route, vehicle.position, first_req.origin_position) if vehicle and first_req else False
 
+            context = f"vehicle {self.vehicle_id} entering dispatch pooling state"
             if not vehicle:
-                error = SimulationStateError(f"vehicle {self.vehicle_id} does not exist")
+                error = SimulationStateError(f"vehicle does not exist; context: {context}")
                 return error, None
             elif not reqs_exist_and_match_membership:
                 # not an error - may have been picked up; or, bad dispatcher.. fail silently
@@ -166,10 +167,11 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
         moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
+        context = f"vehicle {self.vehicle_id} performing update in dispatch pooling state"
         if move_error:
             return move_error, None
         elif not moved_vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_result.sim
         else:

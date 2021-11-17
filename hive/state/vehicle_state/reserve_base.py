@@ -39,10 +39,11 @@ class ReserveBase(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
+        context = f"vehicle {self.vehicle_id} entering reserve base at base {self.base_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"{context}; vehicle not found"), None
         elif not base:
-            return SimulationStateError(f"base {self.base_id} not found"), None
+            return SimulationStateError(f"{context}; base not found"), None
         elif base.geoid != vehicle.geoid:
             log.warning(f"ReserveBase.enter(): vehicle {vehicle.id} not at same location as {base.id}")
             return None, None
@@ -70,10 +71,13 @@ class ReserveBase(NamedTuple, VehicleState):
         :return: an exception, or an updated sim
         """
         base = sim.bases.get(self.base_id)
+        context = f"vehicle {self.vehicle_id} exiting reserve base at base {self.base_id}"
         if not base:
-            return SimulationStateError(f"base {self.base_id} not found"), None
+            return SimulationStateError(f"{context}; base not found"), None
         else:
-            updated_base = base.return_stall()
+            error, updated_base = base.return_stall()
+            if error:
+                return error, None
             return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:

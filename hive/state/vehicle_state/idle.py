@@ -69,8 +69,9 @@ class Idle(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        context = f"vehicle {self.vehicle_id} idling"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not mechatronics:
             return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
         else:

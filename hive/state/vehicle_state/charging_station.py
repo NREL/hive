@@ -40,10 +40,11 @@ class ChargingStation(NamedTuple, VehicleState):
         # what if we can't? is that an Exception, or, is that simply rejected?
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
+        context = f"vehicle {self.vehicle_id} entering charging station state at station {self.station_id} with charger {self.charger_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
-            return SimulationStateError(f"station {self.station_id} not found"), None
+            return SimulationStateError(f"station not found; context: {context}"), None
 
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         charger = env.chargers.get(self.charger_id)
@@ -83,12 +84,15 @@ class ChargingStation(NamedTuple, VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
 
+        context = f"vehicle {self.vehicle_id} exiting charging station state at station {self.station_id} with charger {self.charger_id}"
         if not vehicle:
-            return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+            return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
-            return SimulationStateError(f"station {self.station_id} not found"), None
+            return SimulationStateError(f"station not found; context: {context}"), None
         else:
-            updated_station = station.return_charger(self.charger_id)
+            error, updated_station = station.return_charger(self.charger_id)
+            if error:
+                return error, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,

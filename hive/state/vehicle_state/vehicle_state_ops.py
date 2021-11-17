@@ -39,16 +39,18 @@ def charge(sim: SimulationState,
     charger = env.chargers.get(charger_id)
     station = sim.stations.get(station_id)
 
+    context = f"vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
+
     if not vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+        return SimulationStateError(f"vehicle not found; context: {context}"), None
     elif not mechatronics:
-        return SimulationStateError(f"invalid mechatronics_id {vehicle.mechatronics_id}"), None
+        return SimulationStateError(f"invalid mechatronics_id {vehicle.mechatronics_id}; context: {context}"), None
     elif not charger:
-        return SimulationStateError(f"invalid charger_id {charger_id}"), None
+        return SimulationStateError(f"invalid charger_id; context: {context}"), None
     elif not station:
-        return SimulationStateError(f"station {station_id} not found"), None
+        return SimulationStateError(f"station not found; context {context}"), None
     elif mechatronics.is_full(vehicle):
-        return SimulationStateError(f"vehicle {vehicle_id} is full but still attempting to charge"), None
+        return SimulationStateError(f"vehicle is full but still attempting to charge; context {context}"), None
     else:
         charged_vehicle, _ = mechatronics.add_energy(vehicle, charger, sim.sim_timestep_duration_seconds)
 
@@ -98,8 +100,9 @@ def _apply_route_traversal(sim: SimulationState,
         route_estimate=route,
         duration_seconds=sim.sim_timestep_duration_seconds,
     )
+    context = f"vehicle {vehicle_id} attempting to move"
     if not vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+        return SimulationStateError(f"vehicle not found; context {context}"), None
     elif not mechatronics:
         return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
     elif error:
@@ -148,7 +151,7 @@ def _go_out_of_service_on_empty(sim: SimulationState,
     moved_vehicle = sim.vehicles.get(vehicle_id)
     mechatronics = env.mechatronics.get(moved_vehicle.mechatronics_id)
     if not moved_vehicle:
-        return SimulationStateError(f"vehicle {vehicle_id} not found"), None
+        return SimulationStateError(f"vehicle not found; context: vehicle {vehicle_id} going out of service"), None
     elif not mechatronics:
         return SimulationStateError(f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
     elif mechatronics.is_empty(moved_vehicle):
