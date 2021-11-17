@@ -5,7 +5,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import NamedTuple, Dict, Union, Tuple
+from typing import NamedTuple, Dict, Union, Tuple, Optional
 
 import pkg_resources
 import yaml
@@ -31,16 +31,28 @@ class HiveConfig(NamedTuple):
     scenario_output_directory: Path = Path("")
 
     @classmethod
-    def build(cls, scenario_file_path: Path, config: Dict = None) -> Union[Exception, HiveConfig]:
+    def build(cls,
+              scenario_file_path: Path,
+              config: Dict = None,
+              output_suffix: Optional[str] = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+              ) -> Union[Exception, HiveConfig]:
+        """
+        builds a hive config by reading from a scenario file. optionally append additional key/value
+        pairs and modify the datetime convention for naming output directories.
+        :param scenario_file_path: path to the file to load as a HiveConfig
+        :param config: optional overrides to the default config values (Default: None)
+        :param output_suffix: directory name suffix to append to sim_name (by default, timestamp for now)
+        :return: a hive config or an error
+        """
         return ConfigBuilder.build(
             default_config={},
             required_config=(),
-            config_constructor=lambda c: HiveConfig.from_dict(c, scenario_file_path),
+            config_constructor=lambda c: HiveConfig.from_dict(c, scenario_file_path, output_suffix),
             config=config
         )
 
     @classmethod
-    def from_dict(cls, d: Dict, scenario_file_path: Path) -> Union[Exception, HiveConfig]:
+    def from_dict(cls, d: Dict, scenario_file_path: Path, output_suffix: Optional[str]) -> Union[Exception, HiveConfig]:
         # collect the global hive configuration
         global_config = fs.global_hive_config_search()
 
@@ -81,7 +93,7 @@ class HiveConfig(NamedTuple):
             nconfig = Network.build(conf.get('network'))
             dconfig = DispatcherConfig.build(conf.get('dispatcher'))
 
-            scenario_name = sconfig.sim_name + "_" + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            scenario_name = sconfig.sim_name + "_" + output_suffix if output_suffix is not None else sconfig.sim_name
             scenario_output_directory = Path(global_config.output_base_directory) / Path(scenario_name)
 
             hive_config = HiveConfig(
