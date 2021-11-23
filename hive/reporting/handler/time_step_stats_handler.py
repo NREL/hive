@@ -16,9 +16,9 @@ from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 
 if TYPE_CHECKING:
     from hive.config import HiveConfig
-    from hive.model.membership import MembershipId
     from hive.runner.runner_payload import RunnerPayload
     from hive.reporting.reporter import Report
+    from hive.util.typealiases import MembershipId
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,6 @@ class TimeStepStatsHandler(Handler):
         self.timestep_duration_seconds = config.sim.timestep_duration_seconds
 
         self.vehicle_state_names = tuple(vs.name for vs in VehicleStateType)
-        self.vehicle_membership_map = Map().mutate()
 
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
@@ -91,15 +90,6 @@ class TimeStepStatsHandler(Handler):
 
         sim_state = runner_payload.s
         env = runner_payload.e
-
-        # if a vehicle id map does not exist, create one
-        if not self.vehicle_membership_map and self.log_fleet_time_step_stats:
-            for veh in sim_state.vehicles.values():
-                if any(m in self.fleets_data.keys() for m in veh.membership.memberships):
-                    self.vehicle_membership_map.set(veh.id, veh.membership.memberships)
-                else:
-                    self.vehicle_membership_map.set(veh.id, frozenset(['none']))
-            self.vehicle_membership_map.finish()
 
         # get the time step
         sim_time = sim_state.sim_time
@@ -195,7 +185,7 @@ class TimeStepStatsHandler(Handler):
 
                 # get vehicles in this fleet
                 veh_in_fleet = sim_state.get_vehicles(
-                    filter_function=lambda v: fleet_id in self.vehicle_membership_map[v.id]
+                    filter_function=lambda v: fleet_id in env.vehicle_membership_map[v.id]
                 )
 
                 # create stats row with the time step
@@ -213,7 +203,7 @@ class TimeStepStatsHandler(Handler):
                 if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
                     move_events_in_fleet = list(
                         filter(
-                            lambda r: fleet_id in self.vehicle_membership_map[r.report['vehicle_id']],
+                            lambda r: fleet_id in env.vehicle_membership_map[r.report['vehicle_id']],
                             reports_by_type[ReportType.VEHICLE_MOVE_EVENT]
                         )
                     )
@@ -224,7 +214,7 @@ class TimeStepStatsHandler(Handler):
                 # get number of assigned requests in this fleet
                 fleet_stats_row['assigned_requests'] = len(list(
                     filter(
-                        lambda r: fleet_id in self.vehicle_membership_map[r.dispatched_vehicle],
+                        lambda r: fleet_id in env.vehicle_membership_map[r.dispatched_vehicle],
                         assigned_requests
                     )
                 ))
@@ -244,7 +234,7 @@ class TimeStepStatsHandler(Handler):
                 )
                 vehicles_pooling_in_fleet = list(
                     filter(
-                        lambda v: fleet_id in self.vehicle_membership_map[v.id],
+                        lambda v: fleet_id in env.vehicle_membership_map[v.id],
                         vehicles_pooling
                     )
                 )
@@ -263,7 +253,7 @@ class TimeStepStatsHandler(Handler):
                 if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
                     charge_events_in_fleet = list(
                         filter(
-                            lambda r: fleet_id in self.vehicle_membership_map[r.report['vehicle_id']],
+                            lambda r: fleet_id in env.vehicle_membership_map[r.report['vehicle_id']],
                             reports_by_type[ReportType.VEHICLE_CHARGE_EVENT]
                         )
                     )
