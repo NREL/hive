@@ -1,5 +1,5 @@
 import functools as ft
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional
 
 
 def report_error(error: Exception) -> Dict:
@@ -35,24 +35,23 @@ class StateTransitionError(Exception):
     """
 
     def __init__(
-        self, 
-        this_state_name, 
-        next_state_name,
-        context: str = "",
-        ):
+            self,
+            msg: str,
+            this_state_name: Optional[str] = None,
+            next_state_name: Optional[str] = None,
+    ):
         """
+        :param msg: any addition context information
         :param this_state_name: state at beginning of transition
         :param next_state_name: attempted new state
-        :param context: any addition context information 
         """
-        self.this_state = this_state_name
-        self.next_state = next_state_name
-        self.message = f"Illegal state transition from {this_state_name} to {next_state_name};"
-        if context:
-            self.message += f" context: {context}"
-
-    def __init__(self, msg):
-        self.message = msg
+        if this_state_name and next_state_name:
+            self.this_state = this_state_name
+            self.next_state = next_state_name
+            self.message = f"Illegal state transition from {this_state_name} to {next_state_name};"
+            self.message += f" context: {msg}"
+        else:
+            self.message = f"{msg}"
 
     def __str__(self):
         return repr(self.message)
