@@ -170,8 +170,8 @@ class TimeStepStatsHandler(Handler):
                     sim_state.get_vehicles()
                 )
             )
-            stats_row['available_vehicles'] = available_driver_counts[True]
-            stats_row['unavailable_vehicles'] = available_driver_counts[False]
+            stats_row['drivers_available'] = available_driver_counts[True]
+            stats_row['drivers_unavailable'] = available_driver_counts[False]
 
             # count number of chargers in use by type
             if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
@@ -266,8 +266,8 @@ class TimeStepStatsHandler(Handler):
                         veh_in_fleet
                     )
                 )
-                fleet_stats_row['available_vehicles'] = available_driver_counts_in_fleet[True]
-                fleet_stats_row['unavailable_vehicles'] = available_driver_counts_in_fleet[False]
+                fleet_stats_row['drivers_available'] = available_driver_counts_in_fleet[True]
+                fleet_stats_row['drivers_unavailable'] = available_driver_counts_in_fleet[False]
 
                 # count number of chargers in use by type
                 if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
