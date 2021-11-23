@@ -1,11 +1,14 @@
-from typing import Tuple
+from __future__ import annotations
 
 import yaml
 import immutables
-from typing import FrozenSet
+from typing import TYPE_CHECKING, FrozenSet
+
+if TYPE_CHECKING:
+    from hive.util.typealiases import EntityId, MembershipMap
 
 
-def process_fleet_file(fleet_file: str, entity_type: str) -> immutables.Map[str, Tuple[str, ...]]:
+def process_fleet_file(fleet_file: str, entity_type: str) -> MembershipMap:
     """
     creates an immutable map that contains all of the fleet ids associated with the appropriate entity ids
 
@@ -30,7 +33,7 @@ def process_fleet_file(fleet_file: str, entity_type: str) -> immutables.Map[str,
     return fleet_id_map
 
 
-def read_fleet_ids_from_file(fleet_file: str) -> FrozenSet[str]:
+def read_fleet_ids_from_file(fleet_file: str) -> FrozenSet[EntityId]:
     """
 
     :param fleet_file: the file containing fleet information
