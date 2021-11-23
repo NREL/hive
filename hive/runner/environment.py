@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     from hive.model.energy.charger import Charger
     from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
     from hive.config import HiveConfig
-    from hive.util.typealiases import MechatronicsId, ChargerId, ScheduleId, ScheduleFunction, MembershipId
+    from hive.util.typealiases import ChargerId, MechatronicsId, MembershipId, MembershipMap, ScheduleFunction, \
+        ScheduleId
 
 
 class Environment(NamedTuple):
@@ -23,6 +24,7 @@ class Environment(NamedTuple):
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
     schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
     fleet_ids: FrozenSet[MembershipId] = frozenset()
+    vehicle_membership_map: MembershipMap = None
 
     reporter: Reporter = Reporter()
 
@@ -35,3 +37,13 @@ class Environment(NamedTuple):
         :return: the updated environment
         """
         return self._replace(reporter=reporter)
+
+    def set_vehicle_membership_map(self, membership_map: MembershipMap):
+        """
+        allows the vehicle membership map to be updated after the environment is built.
+
+        :param membership_map: the membership map to be used
+
+        :return: the updated environment
+        """
+        return self._replace(vehicle_membership_map=membership_map)
