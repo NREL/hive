@@ -119,7 +119,8 @@ class TimeStepStatsHandler(Handler):
             filter_function=lambda v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
 
         if self.log_time_step_stats:
-            stats_row = {'time_step': time_step}
+            stats_row = {'time_step': time_step,
+                         'sim_time': sim_time.as_iso_time()}
 
             # get average SOC of vehicles
             if len(sim_state.get_vehicles()) > 0:
@@ -163,6 +164,15 @@ class TimeStepStatsHandler(Handler):
             for state in self.vehicle_state_names:
                 stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts[state]
 
+            available_driver_counts = Counter(
+                map(
+                    lambda v: v.driver_state.available,
+                    sim_state.get_vehicles()
+                )
+            )
+            stats_row['available_vehicles'] = available_driver_counts[True]
+            stats_row['unavailable_vehicles'] = available_driver_counts[False]
+
             # count number of chargers in use by type
             if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
                 charger_counts = Counter(
@@ -189,7 +199,8 @@ class TimeStepStatsHandler(Handler):
                 )
 
                 # create stats row with the time step
-                fleet_stats_row = {'time_step': time_step}
+                fleet_stats_row = {'time_step': time_step,
+                                   'sim_time': sim_time.as_iso_time()}
 
                 # get average SOC of vehicles in this fleet
                 if len(veh_in_fleet) > 0:
@@ -248,6 +259,15 @@ class TimeStepStatsHandler(Handler):
                 fleet_stats_row['vehicles'] = len(veh_in_fleet)
                 for state in self.vehicle_state_names:
                     fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
+
+                available_driver_counts_in_fleet = Counter(
+                    map(
+                        lambda v: v.driver_state.available,
+                        veh_in_fleet
+                    )
+                )
+                fleet_stats_row['available_vehicles'] = available_driver_counts_in_fleet[True]
+                fleet_stats_row['unavailable_vehicles'] = available_driver_counts_in_fleet[False]
 
                 # count number of chargers in use by type
                 if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
