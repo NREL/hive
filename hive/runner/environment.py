@@ -37,13 +37,3 @@ class Environment(NamedTuple):
         :return: the updated environment
         """
         return self._replace(reporter=reporter)
-
-    def set_vehicle_membership_map(self, membership_map: MembershipMap):
-        """
-        allows the vehicle membership map to be updated after the environment is built.
-
-        :param membership_map: the membership map to be used
-
-        :return: the updated environment
-        """
-        return self._replace(vehicle_membership_map=membership_map)

@@ -121,20 +121,20 @@ def _build_vehicles(
 
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
+        updated_env = None
         if env.vehicle_membership_map is not None:
             if veh.id in env.vehicle_membership_map:
                 veh = veh.set_membership(env.vehicle_membership_map[veh.id])
             else:
-                updated_membership_map = env.vehicle_membership_map.mutate()
-                updated_membership_map.set(veh.id, ('none',))
-                env = env.set_vehicle_membership_map(updated_membership_map.finish())
+                updated_membership_map = env.vehicle_membership_map.update({veh.id: ('none',)})
+                updated_env = env._replace(vehicle_membership_map=updated_membership_map)
 
         error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
         if error:
             log.error(error)
             return sim, env
         else:
-            return updated_sim, env
+            return updated_sim, updated_env if updated_env else env
 
     # open vehicles file and add each row
     with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:
