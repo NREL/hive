@@ -20,7 +20,7 @@ Entity = TypeVar('Entity')
 EntityId = TypeVar('EntityId')
 
 # Collections
-MembershipMap = Map[MembershipId, Tuple[EntityId, ...]]
+MembershipMap = Map[EntityId, Tuple[MembershipId, ...]]
 
 # POSITIONAL
 GeoId = str  # h3 geohash
