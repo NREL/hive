@@ -33,9 +33,9 @@ log = logging.getLogger(__name__)
 
 def initialize_simulation(
     config: HiveConfig,
-    vehicle_filter: Callable[[Vehicle], bool] = lambda v: False,
-    base_filter: Callable[[Base], bool] = lambda b: False,
-    station_filter: Callable[[Station], bool] = lambda s: False,
+    vehicle_filter: Callable[[Vehicle], bool] = lambda v: True,
+    base_filter: Callable[[Base], bool] = lambda b: True,
+    station_filter: Callable[[Station], bool] = lambda s: True,
 ) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
@@ -136,7 +136,7 @@ def _build_vehicles(
 
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
-        if vehicle_filter(veh):
+        if not vehicle_filter(veh):
             return sim, env
 
         updated_env = None
@@ -181,7 +181,7 @@ def _build_bases(
     """
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
         base = Base.from_row(row, simulation_state.road_network)
-        if base_filter(base):
+        if not base_filter(base):
             return sim
 
         if base_member_ids is not None:
@@ -274,7 +274,7 @@ def _build_stations(
     def _add_row_unsafe(builder: immutables.Map[str, Station],
                         row: Dict[str, str]) -> immutables.Map[str, Station]:
         station = Station.from_row(row, builder, simulation_state.road_network)
-        if station_filter(station):
+        if not station_filter(station):
             return builder
 
         updated_builder = DictOps.add_to_dict(builder, station.id, station)

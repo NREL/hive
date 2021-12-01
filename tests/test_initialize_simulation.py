@@ -20,15 +20,15 @@ class TestInitializeSimulation(TestCase):
 
         def filter_veh(v: Vehicle) -> bool:
             if v.id == 'v1':
-                return True
+                return False 
 
         def filter_base(b: Base) -> bool:
             if b.id == 'b1':
-                return True
+                return False 
 
         def filter_station(s: Station) -> bool:
             if s.id == 's1':
-                return True
+                return False 
 
         sim, env = initialize_simulation(
             conf,
