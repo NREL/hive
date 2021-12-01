@@ -31,11 +31,12 @@ class HiveConfig(NamedTuple):
     scenario_output_directory: Path = Path("")
 
     @classmethod
-    def build(cls,
-              scenario_file_path: Path,
-              config: Dict = None,
-              output_suffix: Optional[str] = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-              ) -> Union[Exception, HiveConfig]:
+    def build(
+        cls,
+        scenario_file_path: Path,
+        config: Dict = None,
+        output_suffix: Optional[str] = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    ) -> Union[Exception, HiveConfig]:
         """
         builds a hive config by reading from a scenario file. optionally append additional key/value
         pairs and modify the datetime convention for naming output directories.
@@ -48,11 +49,11 @@ class HiveConfig(NamedTuple):
             default_config={},
             required_config=(),
             config_constructor=lambda c: HiveConfig.from_dict(c, scenario_file_path, output_suffix),
-            config=config
-        )
+            config=config)
 
     @classmethod
-    def from_dict(cls, d: Dict, scenario_file_path: Path, output_suffix: Optional[str]) -> Union[Exception, HiveConfig]:
+    def from_dict(cls, d: Dict, scenario_file_path: Path,
+                  output_suffix: Optional[str]) -> Union[Exception, HiveConfig]:
         # collect the global hive configuration
         global_config = fs.global_hive_config_search()
 
@@ -70,7 +71,8 @@ class HiveConfig(NamedTuple):
             log.info(f"  {k}: {v}")
 
         # start build using the Hive config defaults file
-        defaults_file_str = pkg_resources.resource_filename("hive.resources.defaults", "hive_config.yaml")
+        defaults_file_str = pkg_resources.resource_filename("hive.resources.defaults",
+                                                            "hive_config.yaml")
         defaults_file = Path(defaults_file_str)
 
         with defaults_file.open('r') as f:
@@ -94,7 +96,8 @@ class HiveConfig(NamedTuple):
             dconfig = DispatcherConfig.build(conf.get('dispatcher'))
 
             scenario_name = sconfig.sim_name + "_" + output_suffix if output_suffix is not None else sconfig.sim_name
-            scenario_output_directory = Path(global_config.output_base_directory) / Path(scenario_name)
+            scenario_output_directory = Path(
+                global_config.output_base_directory) / Path(scenario_name)
 
             hive_config = HiveConfig(
                 global_config=global_config,
@@ -140,6 +143,19 @@ class HiveConfig(NamedTuple):
 
     def set_scenario_output_directory(self, output_directory: Path) -> HiveConfig:
         return self._replace(scenario_output_directory=output_directory)
+
+    def suppress_logging(self) -> HiveConfig:
+        updated_gconfig = self.global_config._replace(
+            log_run=False,
+            log_states=False,
+            log_events=False,
+            log_stats=False,
+            log_station_capacities=False,
+            log_instructions=False,
+            log_time_step_stats=False,
+            log_fleet_time_step_stats=False,
+        )
+        return self._replace(global_config=updated_gconfig)
 
     def to_yaml(self):
         """

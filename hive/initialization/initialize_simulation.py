@@ -33,9 +33,9 @@ log = logging.getLogger(__name__)
 
 def initialize_simulation(
     config: HiveConfig,
-    vehicle_filter: Callable[[Vehicle], bool] = lambda v: True,
-    base_filter: Callable[[Base], bool] = lambda b: True,
-    station_filter: Callable[[Station], bool] = lambda s: True,
+    vehicle_filter: Callable[[Vehicle], bool] = lambda v: False,
+    base_filter: Callable[[Base], bool] = lambda b: False,
+    station_filter: Callable[[Station], bool] = lambda s: False,
 ) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
@@ -103,11 +103,11 @@ def initialize_simulation(
 
     # populate simulation with entities
     sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, sim_initial,
-                                                     env_initial)
+                                                     env_initial, vehicle_filter)
     sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids,
-                                  sim_with_vehicles)
+                                  sim_with_vehicles, base_filter)
     sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids,
-                                        sim_with_bases)
+                                        sim_with_bases, station_filter)
     sim_with_home_bases = _assign_private_memberships(sim_with_stations)
 
     return sim_with_home_bases, env_updated
@@ -117,7 +117,7 @@ def _build_vehicles(
     vehicles_file: str,
     simulation_state: SimulationState,
     environment: Environment,
-    vehicle_filter: Callable[[Vehicle], bool] = lambda v: False,
+    vehicle_filter: Callable[[Vehicle], bool],
 ) -> Tuple[SimulationState, Environment]:
     """
     adds all vehicles from the provided vehicles file
@@ -166,7 +166,7 @@ def _build_bases(
     bases_file: str,
     base_member_ids: MembershipMap,
     simulation_state: SimulationState,
-    base_filter: Callable[[Base], bool] = lambda b: False,
+    base_filter: Callable[[Base], bool],
 ) -> SimulationState:
     """
     all your base are belong to us
@@ -258,7 +258,7 @@ def _build_stations(
     stations_file: str,
     station_member_ids: MembershipMap,
     simulation_state: SimulationState,
-    station_filter: Callable[[Station], bool] = lambda s: False,
+    station_filter: Callable[[Station], bool],
 ) -> SimulationState:
     """
     all your station are belong to us
