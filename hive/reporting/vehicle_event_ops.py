@@ -33,6 +33,7 @@ def vehicle_move_event(move_result: MoveResult, env: Environment) -> Report:
     sim_time_end = move_result.sim.sim_time
     vehicle_id = move_result.next_vehicle.id
     vehicle_state = move_result.prev_vehicle.vehicle_state.__class__.__name__
+    vehicle_memberships = move_result.prev_vehicle.membership.memberships
     delta_distance: float = move_result.next_vehicle.distance_traveled_km - move_result.prev_vehicle.distance_traveled_km
     delta_energy = ft.reduce(
         lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.prev_vehicle.energy.get(
@@ -53,6 +54,7 @@ def vehicle_move_event(move_result: MoveResult, env: Environment) -> Report:
         'sim_time_end': sim_time_end,
         'vehicle_id': vehicle_id,
         'vehicle_state': vehicle_state,
+        'vehicle_memberships': vehicle_memberships,
         'distance_km': delta_distance,
         'energy': delta_energy,
         'energy_units': energy_units,
@@ -87,6 +89,7 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
     vehicle_id = next_vehicle.id
     station_id = station.id
     vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
+    vehicle_memberships = prev_vehicle.membership.memberships
     energy_transacted = next_vehicle.energy[charger.energy_type] - prev_vehicle.energy[charger.energy_type]  # kwh
     charger_price = station.charger_prices_per_kwh.get(charger.id)  # Currency
     charging_price = energy_transacted * charger_price if charger_price else 0.0
@@ -100,6 +103,7 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
         'vehicle_id': vehicle_id,
         'station_id': station_id,
         'vehicle_state': vehicle_state,
+        'vehicle_memberships': vehicle_memberships,
         'energy': energy_transacted,
         'energy_units': charger.energy_type.units,
         'price': charging_price,
@@ -139,6 +143,7 @@ def report_pickup_request(vehicle: Vehicle,
         'vehicle_id': vehicle.id,
         'request_id': request.id,
         'fleet_id': request.membership,
+        'vehicle_memberships': vehicle.membership.memberships,
         'price': request.value,
         'geoid': geoid,
         'lat': lat,
@@ -175,6 +180,7 @@ def report_dropoff_request(vehicle: Vehicle,
         'vehicle_id': vehicle.id,
         'request_id': request.id,
         'fleet_id': str(membership),
+        'vehicle_memberships': vehicle.membership.memberships,
         'geoid': geoid,
         'lat': lat,
         'lon': lon

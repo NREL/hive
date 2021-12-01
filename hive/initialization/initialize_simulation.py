@@ -91,7 +91,8 @@ def initialize_simulation(
                               )
 
     # populate simulation with entities
-    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, sim_initial, env_initial)
+    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids,
+                                                     sim_initial, env_initial)
     sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids, sim_with_vehicles)
     sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids, sim_with_bases)
     sim_with_home_bases = _assign_private_memberships(sim_with_stations)
