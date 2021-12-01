@@ -88,7 +88,6 @@ def initialize_simulation(
                               schedules=build_schedules_table(config.sim.schedule_type,
                                                               config.input_config.schedules_file),
                               fleet_ids=fleet_ids,
-                              vehicle_membership_map=vehicle_member_ids
                               )
 
     # populate simulation with entities
@@ -102,6 +101,7 @@ def initialize_simulation(
 
 def _build_vehicles(
         vehicles_file: str,
+        vehicle_member_ids: MembershipMap,
         simulation_state: SimulationState,
         environment: Environment) -> Tuple[SimulationState, Environment]:
     """
@@ -121,20 +121,16 @@ def _build_vehicles(
 
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
-        updated_env = None
-        if env.vehicle_membership_map is not None:
-            if veh.id in env.vehicle_membership_map:
-                veh = veh.set_membership(env.vehicle_membership_map[veh.id])
-            else:
-                updated_membership_map = env.vehicle_membership_map.update({veh.id: ('none',)})
-                updated_env = env._replace(vehicle_membership_map=updated_membership_map)
+        if vehicle_member_ids is not None:
+            if veh.id in vehicle_member_ids:
+                veh = veh.set_membership(vehicle_member_ids[veh.id])
 
         error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
         if error:
             log.error(error)
             return sim, env
         else:
-            return updated_sim, updated_env if updated_env else env
+            return updated_sim, env
 
     # open vehicles file and add each row
     with open(vehicles_file, 'r', encoding='utf-8-sig') as vf:

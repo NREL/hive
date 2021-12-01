@@ -24,7 +24,6 @@ class Environment(NamedTuple):
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
     schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
     fleet_ids: FrozenSet[MembershipId] = frozenset()
-    vehicle_membership_map: MembershipMap = None
 
     reporter: Reporter = Reporter()
 
