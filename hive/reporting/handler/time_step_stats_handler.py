@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from pandas import DataFrame
 from pathlib import Path
-from typing import TYPE_CHECKING, FrozenSet, List, Optional
+from typing import TYPE_CHECKING, Callable, FrozenSet, List, Optional
 
 from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType
@@ -16,6 +16,7 @@ from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 
 if TYPE_CHECKING:
     from hive.config import HiveConfig
+    from hive.model.vehicle.vehicle import Vehicle
     from hive.runner.runner_payload import RunnerPayload
     from hive.reporting.reporter import Report
     from hive.util.typealiases import MembershipId
@@ -114,7 +115,6 @@ class TimeStepStatsHandler(Handler):
         else:
             canceled_requests_count = 0
 
-        # TODO: move this into time step stats block?
         # grab all vehicles that are pooling
         vehicles_pooling = sim_state.get_vehicles(
             filter_function=lambda v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
@@ -192,14 +192,36 @@ class TimeStepStatsHandler(Handler):
             # append the statistics row to the data list
             self.data.append(stats_row)
 
-        # Todo: Handle the 'none' fleet with new reports
         if self.log_fleet_time_step_stats:
             for fleet_id in self.fleets_data.keys():
 
+                def _get_veh_filter_func(membership_id: MembershipId) -> Callable[[Vehicle], bool]:
+                    if membership_id == 'none':
+                        return lambda v: not any(set(env.fleet_ids) & set(v.membership.memberships))
+                    else:
+                        return lambda v: fleet_id in v.membership.memberships
+
+                def _get_report_filter_func(membership_id: MembershipId) -> Callable[[Report], bool]:
+                    if membership_id == 'none':
+                        return lambda r: not any(set(env.fleet_ids) & set(r.report['vehicle_memberships']))
+                    else:
+                        return lambda r: fleet_id in r.report['vehicle_memberships']
+
                 # get vehicles in this fleet
                 veh_in_fleet = sim_state.get_vehicles(
-                    filter_function=lambda v: fleet_id in v.membership.memberships
+                    filter_function=_get_veh_filter_func(fleet_id)
                 )
+
+                # get vehicle reports in this fleet
+                requests_in_fleet = {}
+                for report_type in reports_by_type:
+                    if report_type in (ReportType.VEHICLE_MOVE_EVENT, ReportType.VEHICLE_CHARGE_EVENT):
+                        requests_in_fleet[report_type] = list(
+                            filter(
+                                _get_report_filter_func(fleet_id),
+                                reports_by_type[report_type]
+                            )
+                        )
 
                 # get vehicles pooling in this fleet
                 veh_pooling_in_fleet = list(
@@ -218,17 +240,6 @@ class TimeStepStatsHandler(Handler):
                         veh_in_fleet
                     )
                 )
-
-                # get vehicle reports in this fleet
-                requests_in_fleet = {}
-                for report_type in reports_by_type:
-                    if report_type in (ReportType.VEHICLE_MOVE_EVENT, ReportType.VEHICLE_CHARGE_EVENT):
-                        requests_in_fleet[report_type] = list(
-                            filter(
-                                lambda r: fleet_id in r.report['vehicle_memberships'],
-                                reports_by_type[report_type]
-                            )
-                        )
 
                 # count the number of vehicles in each vehicle state in this fleet
                 veh_state_counts_in_fleet = Counter(
