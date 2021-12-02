@@ -98,7 +98,8 @@ def initialize_simulation(
                               chargers=build_chargers_table(config.input_config.chargers_file),
                               schedules=build_schedules_table(config.sim.schedule_type,
                                                               config.input_config.schedules_file),
-                              fleet_ids=fleet_ids,
+                              fleet_ids=fleet_ids
+                              )
 
     # populate simulation with entities
     sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, 
