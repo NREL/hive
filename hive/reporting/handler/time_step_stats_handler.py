@@ -114,6 +114,7 @@ class TimeStepStatsHandler(Handler):
         else:
             canceled_requests_count = 0
 
+        # TODO: move this into time step stats block?
         # grab all vehicles that are pooling
         vehicles_pooling = sim_state.get_vehicles(
             filter_function=lambda v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
@@ -155,7 +156,8 @@ class TimeStepStatsHandler(Handler):
             )
 
             # get count of requests currently being serviced by a vehicle
-            pooling_request_count = sum([len(v.vehicle_state.boarded_requests) for v in vehicles_pooling])
+            pooling_request_count = sum([len(v.vehicle_state.boarded_requests)
+                                         for v in vehicles_pooling])
             stats_row['servicing_requests'] = vehicle_state_counts[
                                                   VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
@@ -190,12 +192,50 @@ class TimeStepStatsHandler(Handler):
             # append the statistics row to the data list
             self.data.append(stats_row)
 
+        # Todo: Handle the 'none' fleet with new reports
         if self.log_fleet_time_step_stats:
             for fleet_id in self.fleets_data.keys():
 
                 # get vehicles in this fleet
                 veh_in_fleet = sim_state.get_vehicles(
-                    filter_function=lambda v: fleet_id in env.vehicle_membership_map[v.id]
+                    filter_function=lambda v: fleet_id in v.membership.memberships
+                )
+
+                # get vehicles pooling in this fleet
+                veh_pooling_in_fleet = list(
+                    filter(
+                        lambda
+                            v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP,
+                        veh_in_fleet
+                    )
+                )
+
+                # get vehicles dispatched to service pooling trips in this fleet
+                veh_dispatch_pooling_in_fleet = list(
+                    filter(
+                        lambda
+                            v: v.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP,
+                        veh_in_fleet
+                    )
+                )
+
+                # get vehicle reports in this fleet
+                requests_in_fleet = {}
+                for report_type in reports_by_type:
+                    if report_type in (ReportType.VEHICLE_MOVE_EVENT, ReportType.VEHICLE_CHARGE_EVENT):
+                        requests_in_fleet[report_type] = list(
+                            filter(
+                                lambda r: fleet_id in r.report['vehicle_memberships'],
+                                reports_by_type[report_type]
+                            )
+                        )
+
+                # count the number of vehicles in each vehicle state in this fleet
+                veh_state_counts_in_fleet = Counter(
+                    map(
+                        lambda v: v.vehicle_state.vehicle_state_type.name,
+                        veh_in_fleet
+                    )
                 )
 
                 # create stats row with the time step
@@ -211,24 +251,15 @@ class TimeStepStatsHandler(Handler):
                     fleet_stats_row['avg_soc_percent'] = None
 
                 # get the total vkt of vehicles in this fleet
-                if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
-                    move_events_in_fleet = list(
-                        filter(
-                            lambda r: fleet_id in env.vehicle_membership_map[r.report['vehicle_id']],
-                            reports_by_type[ReportType.VEHICLE_MOVE_EVENT]
-                        )
-                    )
-                    fleet_stats_row['vkt'] = sum([me.report['distance_km'] for me in move_events_in_fleet])
+                if ReportType.VEHICLE_MOVE_EVENT in requests_in_fleet.keys():
+                    fleet_stats_row['vkt'] = sum([me.report['distance_km'] for me in requests_in_fleet[ReportType.VEHICLE_MOVE_EVENT]])
                 else:
                     fleet_stats_row['vkt'] = 0
 
                 # get number of assigned requests in this fleet
-                fleet_stats_row['assigned_requests'] = len(list(
-                    filter(
-                        lambda r: fleet_id in env.vehicle_membership_map[r.dispatched_vehicle],
-                        assigned_requests
-                    )
-                ))
+                assigned_requests = veh_state_counts_in_fleet[VehicleStateType.DISPATCH_TRIP.name]
+                assigned_pooling_requests = sum([len(v.vehicle_state.trip_plan) for v in veh_dispatch_pooling_in_fleet])
+                fleet_stats_row['assigned_requests'] = assigned_requests + assigned_pooling_requests
 
                 # add number of active requests in this time step (unassigned)
                 fleet_stats_row['active_requests'] = active_requests_count
@@ -236,29 +267,15 @@ class TimeStepStatsHandler(Handler):
                 # add number of canceled requests in this time step
                 fleet_stats_row['canceled_requests'] = canceled_requests_count
 
-                # count the number of vehicles in each vehicle state in this fleet
-                vehicle_state_counts_in_fleet = Counter(
-                    map(
-                        lambda v: v.vehicle_state.vehicle_state_type.name,
-                        veh_in_fleet
-                    )
-                )
-                vehicles_pooling_in_fleet = list(
-                    filter(
-                        lambda v: fleet_id in env.vehicle_membership_map[v.id],
-                        vehicles_pooling
-                    )
-                )
-
                 # get count of requests currently being serviced by a vehicle
-                pooling_request_count = sum([len(v.vehicle_state.boarded_requests) for v in vehicles_pooling_in_fleet])
-                fleet_stats_row['servicing_requests'] = vehicle_state_counts_in_fleet[
-                                                            VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
+                servicing_requests = veh_state_counts_in_fleet[VehicleStateType.SERVICING_TRIP.name]
+                servicing_pooling_requests = sum([len(v.vehicle_state.boarded_requests) for v in veh_pooling_in_fleet])
+                fleet_stats_row['servicing_requests'] = servicing_requests + servicing_pooling_requests
 
                 # add the number of vehicles in each vehicle state in this fleet
                 fleet_stats_row['vehicles'] = len(veh_in_fleet)
                 for state in self.vehicle_state_names:
-                    fleet_stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts_in_fleet[state]
+                    fleet_stats_row[f'vehicles_{state.lower()}'] = veh_state_counts_in_fleet[state]
 
                 available_driver_counts_in_fleet = Counter(
                     map(
@@ -270,17 +287,11 @@ class TimeStepStatsHandler(Handler):
                 fleet_stats_row['drivers_unavailable'] = available_driver_counts_in_fleet[False]
 
                 # count number of chargers in use by type
-                if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
-                    charge_events_in_fleet = list(
-                        filter(
-                            lambda r: fleet_id in env.vehicle_membership_map[r.report['vehicle_id']],
-                            reports_by_type[ReportType.VEHICLE_CHARGE_EVENT]
-                        )
-                    )
+                if ReportType.VEHICLE_CHARGE_EVENT in requests_in_fleet.keys():
                     charger_counts_in_fleet = Counter(
                         map(
                             lambda r: r.report['charger_id'],
-                            charge_events_in_fleet
+                            requests_in_fleet[ReportType.VEHICLE_CHARGE_EVENT]
                         )
                     )
                     for charger in env.chargers.keys():
