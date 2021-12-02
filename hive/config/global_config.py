@@ -76,7 +76,7 @@ class GlobalConfig(NamedTuple):
 
     def asdict(self) -> Dict:
         return self._asdict()
-
+    
     @property
     def write_outputs(self):
         return self.log_run or self.log_states or self.log_events or self.log_stats or self.log_station_capacities or \
