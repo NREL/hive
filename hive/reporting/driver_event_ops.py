@@ -24,6 +24,7 @@ def driver_schedule_event(sim: 'SimulationState',
     report_data = {
         'vehicle_id': vehicle.id,
         'vehicle_state': vehicle.vehicle_state.__class__.__name__,
+        'vehicle_memberships': vehicle.membership.to_json(),
         'sim_time_start': sim.sim_time,
         'sim_time_end': next_sim_time,
         'lat': lat,
