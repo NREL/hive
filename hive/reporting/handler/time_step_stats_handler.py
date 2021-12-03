@@ -104,10 +104,10 @@ class TimeStepStatsHandler(Handler):
             reports_by_type[report.report_type].append(report)
 
         # get number of assigned requests in this time step
-        assigned_requests = sim_state.get_requests(filter_function=lambda r: r.dispatched_vehicle is not None)
+        assigned_requests_count = len(sim_state.get_requests(filter_function=lambda r: r.dispatched_vehicle is not None))
 
         # get number of active requests in this time step (unassigned)
-        active_requests_count = len(sim_state.get_requests()) - len(assigned_requests)
+        active_requests_count = len(sim_state.get_requests()) - assigned_requests_count
 
         # get number of canceled requests in this time step
         if ReportType.CANCEL_REQUEST_EVENT in reports_by_type.keys():
@@ -115,11 +115,21 @@ class TimeStepStatsHandler(Handler):
         else:
             canceled_requests_count = 0
 
-        # grab all vehicles that are pooling
-        vehicles_pooling = sim_state.get_vehicles(
-            filter_function=lambda v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
-
         if self.log_time_step_stats:
+
+            # grab all vehicles that are pooling
+            veh_pooling = sim_state.get_vehicles(
+                filter_function=lambda
+                    v: v.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP)
+
+            # count the number of vehicles in each vehicle state
+            veh_state_counts = Counter(
+                map(
+                    lambda v: v.vehicle_state.vehicle_state_type.name,
+                    sim_state.get_vehicles()
+                )
+            )
+
             stats_row = {'time_step': time_step,
                          'sim_time': sim_time.as_iso_time()}
 
@@ -139,7 +149,7 @@ class TimeStepStatsHandler(Handler):
                 stats_row['vkt'] = 0
 
             # add assigned request count
-            stats_row['assigned_requests'] = len(assigned_requests)
+            stats_row['assigned_requests'] = assigned_requests_count
 
             # get number of active requests in this time step (unassigned)
             stats_row['active_requests'] = active_requests_count
@@ -147,24 +157,16 @@ class TimeStepStatsHandler(Handler):
             # get number of canceled requests in this time step
             stats_row['canceled_requests'] = canceled_requests_count
 
-            # count the number of vehicles in each vehicle state
-            vehicle_state_counts = Counter(
-                map(
-                    lambda v: v.vehicle_state.vehicle_state_type.name,
-                    sim_state.get_vehicles()
-                )
-            )
-
             # get count of requests currently being serviced by a vehicle
             pooling_request_count = sum([len(v.vehicle_state.boarded_requests)
-                                         for v in vehicles_pooling])
-            stats_row['servicing_requests'] = vehicle_state_counts[
+                                         for v in veh_pooling])
+            stats_row['servicing_requests'] = veh_state_counts[
                                                   VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
 
             # add the number of vehicles in each vehicle state
             stats_row['vehicles'] = len(sim_state.vehicles)
             for state in self.vehicle_state_names:
-                stats_row[f'vehicles_{state.lower()}'] = vehicle_state_counts[state]
+                stats_row[f'vehicles_{state.lower()}'] = veh_state_counts[state]
 
             available_driver_counts = Counter(
                 map(
