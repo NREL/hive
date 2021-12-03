@@ -30,7 +30,7 @@ def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment
         report={
             'vehicle_id': vehicle.id,
             'vehicle_state': vehicle.vehicle_state.__class__.__name__,
-            'vehicle_memberships': vehicle.membership.memberships,
+            'vehicle_memberships': vehicle.membership.to_json(),
             'sim_time_start': sim.sim_time,
             'sim_time_end': next_sim_time,
             'lat': lat,

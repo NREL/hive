@@ -97,3 +97,9 @@ class Membership(NamedTuple):
         :return: a comma-delimited string of the membership ids
         """
         return ",".join(self.memberships)
+
+    def to_json(self):
+        if len(self.memberships) > 0:
+            return list(self.memberships)
+        else:
+            return None
