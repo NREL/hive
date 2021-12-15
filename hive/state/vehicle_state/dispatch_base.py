@@ -51,7 +51,11 @@ class DispatchBase(NamedTuple, VehicleState):
             result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
@@ -63,6 +67,33 @@ class DispatchBase(NamedTuple, VehicleState):
         :return: True if we have reached the base
         """
         return len(self.route) == 0
+
+    def _default_terminal_state(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+        """
+        give the default state to transition to after having met a terminal condition
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or the next_state after finishing a task
+        """
+        vehicle = sim.vehicles.get(self.vehicle_id)
+        base = sim.bases.get(self.base_id)
+        context = f"vehicle {self.vehicle_id} entering terminal state for dispatch base at {self.base_id}"
+        if not base:
+            msg = f"base not found; context: {context}"
+            return SimulationStateError(msg), None
+        elif base.geoid != vehicle.geoid:
+            locations = f"{base.geoid} != {vehicle.geoid}"
+            message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
+            return SimulationStateError(message), None
+        else:
+            if base.available_stalls > 0:
+                next_state = ReserveBase(self.vehicle_id, self.base_id)
+            else:
+                next_state = Idle(self.vehicle_id)
+            return None, next_state
 
     def _enter_default_terminal_state(self,
                                       sim: SimulationState,

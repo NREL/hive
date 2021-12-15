@@ -81,7 +81,11 @@ class ServicingTrip(NamedTuple, VehicleState):
                 enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, self)
                 return enter_result
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         cannot call "exit" on ServicingTrip, must be exited via it's update method.
         the state is modeling a trip. exiting would mean dropping off passengers prematurely.
@@ -104,24 +108,18 @@ class ServicingTrip(NamedTuple, VehicleState):
         """
         return False
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(self,
+                                sim: SimulationState,
+                                env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        by default, Idle when we are in the terminal state
-
+        gets the default terminal state for this state which should be transitioned to
+        once it reaches the end of the current task.
         :param sim: the sim state
         :param env: the sim environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception or the default VehicleState
         """
-
         next_state = Idle(self.vehicle_id)
-        enter_error, enter_sim = next_state.enter(sim, env)
-        if enter_error:
-            return enter_error, None
-        else:
-            return None, (enter_sim, next_state)
+        return None, next_state
 
     def _perform_update(self,
                         sim: SimulationState,

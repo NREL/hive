@@ -77,9 +77,12 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         else:
             result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
-            return None, sim
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         cannot call "exit" on ServicingPoolingTrip, must be exited via it's update method.
         the state is modeling a trip. exiting would mean dropping off passengers prematurely.
@@ -107,23 +110,18 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         """
         return False
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        after dropping off the last passenger, we default to an idle state. this
-        behavior is more likely to have occurred during an update.
+        give the default state to transition to after having met a terminal condition
 
         :param sim: the simulation state
         :param env: the simulation environment
-        :return: this vehicle in an idle state
+        :return: an exception due to failure or the next_state after finishing a task
         """
         next_state = Idle(self.vehicle_id)
-        enter_error, enter_sim = next_state.enter(sim, env)
-        if enter_error:
-            return enter_error, None
-        else:
-            return None, (enter_sim, next_state)
+        return None, next_state
 
     def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """

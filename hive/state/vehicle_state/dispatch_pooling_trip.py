@@ -77,7 +77,11 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
                     result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                     return result
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         release the vehicle from the requests it was dispatched to
 
@@ -99,17 +103,16 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         """
         return len(self.route) == 0
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        by default, transition to a ServicingPoolingTrip state (if possible), else Idle if the conditions are not correct.
+        give the default state to transition to after having met a terminal condition
 
-        :param sim: the sim state
-        :param env: the sim environment
-        :return:  an exception due to failure or an optional updated simulation
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or the next_state after finishing a task
         """
-
         vehicle = sim.vehicles.get(self.vehicle_id)
         first_stop, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
 
@@ -146,12 +149,7 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
                         routes=routes,
                         num_passengers=num_passengers
                     )
-
-                    enter_error, enter_sim = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, servicing_pooling_state)
-                    if enter_error:
-                        return enter_error, None
-                    else:
-                        return None, (enter_sim, servicing_pooling_state)
+                    return None, servicing_pooling_state
 
     def _perform_update(self,
                         sim: SimulationState,

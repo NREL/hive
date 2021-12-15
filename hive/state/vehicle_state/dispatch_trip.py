@@ -69,7 +69,11 @@ class DispatchTrip(NamedTuple, VehicleState):
                 result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                 return result
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         release the vehicle from the request it was dispatched to
 
@@ -97,16 +101,15 @@ class DispatchTrip(NamedTuple, VehicleState):
         """
         return len(self.route) == 0
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        by default, transition to a Servicing state (if possible), else Idle if the conditions are not correct.
+        give the default state to transition to after having met a terminal condition
 
-        :param sim: the sim state
-        :param env: the sim environment
-        :return:  an exception due to failure or an optional updated simulation
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or the next_state after finishing a task
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
@@ -117,11 +120,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         elif not request:
             # request already got picked up or was cancelled; go an Idle state
             next_state = Idle(self.vehicle_id)
-            enter_error, enter_sim = next_state.enter(sim, env)
-            if enter_error:
-                return enter_error, None
-            else:
-                return None, (enter_sim, next_state)
+            return None, next_state
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
             route = sim.road_network.route(request.origin_position, request.destination_position)
@@ -146,22 +145,7 @@ class DispatchTrip(NamedTuple, VehicleState):
                 departure_time=departure_time,
                 route=route
             )
-            # return next_state
-
-            # enter the servicing state
-            enter_error, enter_sim = next_state.enter(sim, env)
-            if enter_error:
-                return enter_error, None
-            elif not enter_sim:
-                # can't enter ServicingTrip - request no longer exists! move to Idle
-                idle_state = Idle(self.vehicle_id)
-                idle_error, idle_sim = idle_state.enter(sim, env)
-                if idle_error:
-                    return idle_error, None
-                else:
-                    return None, (idle_sim, idle_state)
-            else:
-                return None, (enter_sim, next_state)
+            return None, next_state
 
     def _perform_update(self,
                         sim: SimulationState,

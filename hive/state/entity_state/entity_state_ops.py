@@ -21,7 +21,7 @@ def transition_previous_to_next(
     :param next_state: the next state
     :return: error, or updated sim, or (None, None) if either exit or enter was invalid
     """
-    exit_error, exit_sim = prev_state.exit(sim, env)
+    exit_error, exit_sim = prev_state.exit(next_state, sim, env)
     if exit_error:
         prev_state_name = prev_state.__class__.__name__
         next_state_name = next_state.__class__.__name__

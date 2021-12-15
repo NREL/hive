@@ -24,7 +24,11 @@ class Idle(NamedTuple, VehicleState):
     def enter(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
 
-    def exit(self, sim: 'SimulationState', env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: 'SimulationState',
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return None, sim
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:
@@ -39,23 +43,18 @@ class Idle(NamedTuple, VehicleState):
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         return not vehicle or mechatronics.is_empty(vehicle)
 
-    def _enter_default_terminal_state(self,
-                                      sim: 'SimulationState',
-                                      env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+    def _default_terminal_state(
+        self, sim: 'SimulationState', env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        Idle is the global terminal state - NOOP
+        give the default state to transition to after having met a terminal condition
 
-        :param sim: the sim state
-        :param env: the sim environment
-        :return:  an exception due to failure or an optional updated simulation
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or the next_state after finishing a task
         """
         next_state = OutOfService(self.vehicle_id)
-        error, updated_sim = next_state.enter(sim, env)
-        if error:
-            return error, None
-        else:
-            return None, (updated_sim, next_state)
+        return None, next_state
 
     def _perform_update(self,
                         sim: 'SimulationState',

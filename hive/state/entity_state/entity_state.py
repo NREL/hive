@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import abstractmethod
 from typing import Tuple, Optional
 
@@ -41,11 +42,13 @@ class EntityState:
 
     @abstractmethod
     def exit(self,
+             next_state: EntityState,
              sim: 'SimulationState',
              env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         apply any effects due to an entity transitioning out of this state
 
+        :param next_state the EntityState to transition to
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if invalid

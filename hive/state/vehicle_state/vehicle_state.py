@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABCMeta, abstractproperty
 from typing import Tuple, Optional, NamedTupleMeta, TYPE_CHECKING
 
+from hive.state.entity_state import entity_state_ops
 from hive.state.entity_state.entity_state import EntityState
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
@@ -59,32 +60,26 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         :param state: the vehicle state we are updating
         :return: an exception due to failure or an optional updated simulation
         """
-        terminal_state_condition_met = state._has_reached_terminal_state_condition(
-            sim, env
-        )
+        terminal_state_condition_met = state._has_reached_terminal_state_condition(sim, env)
         if terminal_state_condition_met:
-            exit_error, exited_sim = state.exit(sim, env)
-            if exit_error:
-                state_name = state.__class__.__name__
-                error = StateTransitionError(
-                    f"vehicle {state.vehicle_id} failed to exit state {state_name}; context: {repr(exit_error)}"
-                )
-                return error, None
+            # get the default terminal state to transition into
+            err1, next_state = state._default_terminal_state(sim, env)
+            if err1 is not None:
+                state_type = state.vehicle_state_type
+                err_res = SimulationStateError(f"failure during default update of {state_type} state")
+                err_res.__cause__ = err1
+                return err_res, None
             else:
-                next_error, result = state._enter_default_terminal_state(
-                    exited_sim, env
-                )
-                if next_error:
-                    state_name = state.__class__.__name__
-                    error = StateTransitionError(
-                        f"vehicle {state.vehicle_id} failed to exit state {state_name}; context: {repr(exit_error)}"
-                    )
-                    return next_error, None
+                # perform default state transition
+                err2, updated_sim = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
+                if err1 is not None:
+                    state_type = state.vehicle_state_type
+                    err_res = SimulationStateError(f"failure during default update of {state_type} state")
+                    err_res.__cause__ = err1
+                    return err_res, None
                 else:
-                    # apply the update of the next state
-                    next_sim, next_state = result
-                    return next_state.update(next_sim, env)
-
+                    # perform regular update function for subsequent state
+                    return next_state._perform_update(updated_sim, env)
         else:
             return state._perform_update(sim, env)
 
@@ -125,15 +120,15 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         pass
 
     @abstractmethod
-    def _enter_default_terminal_state(
+    def _default_terminal_state(
         self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        apply a transition to a default state after having met a terminal condition
+        give the default state to transition to after having met a terminal condition
 
         :param sim: the simulation state
         :param env: the simulation environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception due to failure or the next_state after finishing a task
         """
         pass
 
