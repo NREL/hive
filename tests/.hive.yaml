@@ -5,4 +5,6 @@ log_events: False
 log_instructions: False
 log_stats: False
 log_station_capacities: False
+log_time_step_stats: False
+log_fleet_time_step_stats: False
 log_level: DEBUG
