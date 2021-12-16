@@ -178,23 +178,6 @@ class ChargingBase(NamedTuple, VehicleState):
         next_state = ReserveBase(self.vehicle_id, self.base_id)
         return None, next_state
 
-    def _enter_default_terminal_state(
-            self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
-        """
-        we default to idle, or reserve base if there is a base with stalls at the location
-
-        :param sim: the simulation state
-        :param env: the simulation environment
-        :return: an exception due to failure or an optional updated simulation
-        """
-        next_state = ReserveBase(self.vehicle_id, self.base_id)
-        enter_error, enter_sim = next_state.enter(sim, env)
-        if enter_error:
-            return enter_error, None
-        else:
-            return None, (enter_sim, next_state)
-
     def _perform_update(
             self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:

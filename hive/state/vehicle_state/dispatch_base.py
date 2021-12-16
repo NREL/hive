@@ -95,38 +95,6 @@ class DispatchBase(NamedTuple, VehicleState):
                 next_state = Idle(self.vehicle_id)
             return None, next_state
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
-        """
-        by default, transition to ReserveBase if there are stalls, otherwise, Idle
-
-        :param sim: the sim state
-        :param env: the sim environment
-        :return:  an exception due to failure or an optional updated simulation
-        """
-        vehicle = sim.vehicles.get(self.vehicle_id)
-        base = sim.bases.get(self.base_id)
-        context = f"vehicle {self.vehicle_id} entering terminal state for dispatch base at {self.base_id}"
-        if not base:
-            msg = f"base not found; context: {context}"
-            return SimulationStateError(msg), None
-        elif base.geoid != vehicle.geoid:
-            locations = f"{base.geoid} != {vehicle.geoid}"
-            message = f"vehicle {self.vehicle_id} ended trip to base {self.base_id} but locations do not match: {locations}"
-            return SimulationStateError(message), None
-        else:
-            if base.available_stalls > 0:
-                next_state = ReserveBase(self.vehicle_id, self.base_id)
-            else:
-                next_state = Idle(self.vehicle_id)
-            enter_error, enter_sim = next_state.enter(sim, env)
-            if enter_error:
-                return enter_error, None
-            else:
-                return None, (enter_sim, next_state)
-
     def _perform_update(self,
                         sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
