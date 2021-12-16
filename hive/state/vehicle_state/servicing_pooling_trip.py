@@ -56,10 +56,15 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         """
 
         vehicle = sim.vehicles.get(self.vehicle_id)
+        first_trip_plan_step, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
+        first_req_id, first_trip_phase = first_trip_plan_step
+        first_req = sim.requests.get(first_req_id)
 
         context = f"vehicle {self.vehicle_id} entering servicing pooling trip state"
         if vehicle is None:
             return SimulationStateError(f"vehicle note found; context: {context}"), None
+        if first_req is None:
+            return SimulationStateError(f"request {first_req_id} not found; context: {context}"), None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
             # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
@@ -70,19 +75,29 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state without any trip plan"
             error = SimulationStateError(msg)
             return error, None
-        elif len(self.boarded_requests) != 1:
-            msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state which hasn't picked up its first request"
-            error = SimulationStateError(msg)
-            return error, None
+        # elif len(self.boarded_requests) != 1:
+        #     msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state which hasn't picked up its first request"
+        #     error = SimulationStateError(msg)
+        #     return error, None
         else:
+
+            # pick up first request
             pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id, first_req_id)
             if pickup_error:
-                return pickup_error, None
+                result = SimulationStateError(f"failed to pick up first trip in ServicingPoolingTrip {self}")
+                result.__cause__ = pickup_error
+                return result, None
             else:
-
-                result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
-                # result = update_active_pooling_trip(sim, env, self, updated_route)
-                # return result
+                # enter ServicingPoolingTrip state with first request boarded
+                vehicle_state_with_first_trip = self._replace(
+                    boarded_requests=immutables.Map({first_req_id: first_req}),
+                    departure_times=immutables.Map({first_req_id: sim.sim_time}),
+                    num_passengers=len(first_req.passengers),
+                    trip_plan=remaining_trip_plan
+                )
+                result = VehicleState.apply_new_vehicle_state(pickup_sim,
+                                                              self.vehicle_id,
+                                                              vehicle_state_with_first_trip)
                 return result
 
     def exit(self,
@@ -119,7 +134,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         return len(self.trip_plan) == 0
 
     def _default_terminal_state(
-        self, sim: SimulationState, env: Environment
+            self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
@@ -131,7 +146,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         next_state = Idle(self.vehicle_id)
         return None, next_state
 
-    def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         move forward on our trip, making pickups and dropoffs as needed
 

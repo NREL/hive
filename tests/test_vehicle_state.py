@@ -877,7 +877,13 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_trip_update_terminal(self):
         vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
-        request = mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac70e2d3")
+        request = mock_request_from_geoids(
+            origin="8f268cdac30e2d3",
+            destination="8f268cdac70e2d3",
+        )._replace(  # a hack so we can test equality on this request later
+            dispatched_vehicle=vehicle.id,
+            dispatched_vehicle_time=mock_sim().sim_time
+        )
         e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle,)), request)
         self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
@@ -1501,8 +1507,7 @@ class TestVehicleState(TestCase):
         state = ServicingTrip(vehicle.id, request, sim.sim_time, route)
         enter_error, enter_sim = state.enter(sim, env)
 
-        self.assertIsNone(enter_error, "should be no error")
-        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+        self.assertIsNotNone(enter_error, "an invalid route should return an error")
 
     def test_servicing_trip_enter_route_with_bad_destination(self):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
@@ -1516,8 +1521,7 @@ class TestVehicleState(TestCase):
 
         state = ServicingTrip(vehicle.id, request, sim.sim_time, route)
         enter_error, enter_sim = state.enter(sim, env)
-        self.assertIsNone(enter_error, "should be no error")
-        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
+        self.assertIsNotNone(enter_error, "bad destination is a good reason to bork this sim")
 
     ####################################################################################################################
     # ChargeQueueing ###################################################################################################
@@ -1878,16 +1882,21 @@ class TestVehicleState(TestCase):
         # dispatch to request (move)
         err3, sim3 = prev_state.update(sim2, env)
         self.assertIsNone(err3, "test invariant failed")
-        state_at_req = sim3.vehicles.get(vehicle.id).vehicle_state
+        state3 = sim3.vehicles.get(vehicle.id).vehicle_state
 
-        # service the trip (move), should terminate in idle state
-        err4, sim4 = state_at_req.update(sim3, env)
-        self.assertIsNone(err3, "test invariant failed")
+        # service the trip (move)
+        err4, sim4 = state3.update(sim3, env)
+        self.assertIsNone(err4, "test invariant failed")
+        state4 = sim4.vehicles.get(vehicle.id).vehicle_state
+
+        # drop off the trip
+        err5, sim5 = state4.update(sim4, env)
+        self.assertIsNone(err5, "test invariant failed")
 
         # test final state
-        updated_vehicle = sim4.vehicles.get(vehicle.id)
+        updated_vehicle = sim5.vehicles.get(vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should be in an Idle state")
-        self.assertEqual(len(sim4.requests), 0, "request should have been picked up and dropped off fully")
+        self.assertEqual(len(sim5.requests), 0, "request should have been picked up and dropped off fully")
 
     def test_servicing_pooling_trip_update_picks_up_second_request(self):
         v0_src, r0_src, r1_src, r0_dst, r1_dst = '8f268cd9601daa1', '8f268cd9601daac', '8f268cd9601da10', '8f268cd9601da1a', '8f268cd9601da88'
