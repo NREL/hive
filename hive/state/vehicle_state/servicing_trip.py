@@ -56,6 +56,9 @@ class ServicingTrip(NamedTuple, VehicleState):
         elif request is None:
             # request moved on to greener pastures
             return None, None
+        elif not is_valid:
+            msg = "ServicingTrip route does not correspond to request"
+            return SimulationStateError(msg), None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
             # the only supported transition into ServicingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
@@ -96,7 +99,10 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: None, None - cannot invoke "exit" on ServicingTrip
         """
-        return None, None
+        if len(self.route) == 0:
+            return None, sim
+        else:
+            return None, None
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
@@ -106,7 +112,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: True if we have reached the base
         """
-        return False
+        return len(self.route) == 0
 
     def _default_terminal_state(self,
                                 sim: SimulationState,
@@ -152,13 +158,15 @@ class ServicingTrip(NamedTuple, VehicleState):
             if error2:
                 return error2, None
             elif len(updated_route) == 0:
-                # let's drop the passengers off during this time step and go Idle
-                error3, sim3 = drop_off_trip(sim2, env, self.vehicle_id, self.request)
-                if error3:
-                    return error3, None
-                else:
-                    err, term_result = self._enter_default_terminal_state(sim3, env)
-                    term_sim, _ = term_result
-                    return err, term_sim
+                # reached destination.
+                # let's drop the passengers off during this time step
+                result = drop_off_trip(sim2, env, self.vehicle_id, self.request)
+                return result
+                # if error3:
+                #     return error3, None
+                # else:
+                #     err, term_result = self._enter_default_terminal_state(sim3, env)
+                #     term_sim, _ = term_result
+                #     return err, term_sim
             else:
                 return None, sim2

@@ -65,7 +65,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, updated_sim = state.exit(updated_sim, env)
+        error, updated_sim = state.exit(Idle(vehicle.id), updated_sim, env)
 
         self.assertIsNone(error, "should have no errors")
 
@@ -270,7 +270,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, updated_sim = state.exit(updated_sim, env)
+        error, updated_sim = state.exit(Idle(vehicle.id), updated_sim, env)
 
         self.assertIsNone(error, "should have no errors")
 
@@ -472,7 +472,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
@@ -664,7 +664,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
@@ -843,7 +843,7 @@ class TestVehicleState(TestCase):
         self.assertTrue(entered_sim.requests.get(request.id).dispatched_vehicle == vehicle.id, "test precondition not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNone(exited_sim.requests.get(request.id).dispatched_vehicle, "should have unset the dispatched vehicle")
@@ -981,7 +981,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
@@ -1060,7 +1060,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
@@ -1123,7 +1123,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
@@ -1243,7 +1243,7 @@ class TestVehicleState(TestCase):
         self.assertEqual(entered_base.available_stalls, 0, "test precondition (stall in use) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         exited_base = exited_sim.bases.get(base.id)
         self.assertIsNone(error, "should have no errors")
@@ -1358,7 +1358,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
 
@@ -1378,7 +1378,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")  # errors due to passengers not being at destination
         self.assertIsNone(exited_sim, "should not have allowed exit of ServicingTrip")
@@ -1551,7 +1551,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(err1, "test invariant failed")
         self.assertIsNotNone(sim1, "test invariant failed")
 
-        err2, sim2 = state.exit(sim1, env)
+        err2, sim2 = state.exit(Idle(vehicle.id), sim1, env)
 
         updated_station = sim2.stations.get(station.id)
         enqueued_count = updated_station.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
@@ -1713,7 +1713,7 @@ class TestVehicleState(TestCase):
         self.assertTrue(entered_sim.requests.get(request.id).dispatched_vehicle == vehicle.id, "test precondition not met")
 
         # begin test
-        error, exited_sim = state.exit(entered_sim, env)
+        error, exited_sim = state.exit(Idle(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNone(exited_sim.requests.get(request.id).dispatched_vehicle, "should have unset the dispatched vehicle")

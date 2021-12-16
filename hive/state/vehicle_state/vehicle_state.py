@@ -77,6 +77,8 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                     err_res = SimulationStateError(f"failure during default update of {state_type} state")
                     err_res.__cause__ = err1
                     return err_res, None
+                elif updated_sim is None:
+                    return None, None
                 else:
                     # perform regular update function for subsequent state
                     return next_state._perform_update(updated_sim, env)

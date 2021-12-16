@@ -75,8 +75,15 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             error = SimulationStateError(msg)
             return error, None
         else:
-            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
-            return result
+            pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id, first_req_id)
+            if pickup_error:
+                return pickup_error, None
+            else:
+
+                result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+                # result = update_active_pooling_trip(sim, env, self, updated_route)
+                # return result
+                return result
 
     def exit(self,
              next_state: VehicleState,
@@ -93,12 +100,13 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: None, None - cannot invoke "exit" on ServicingPoolingTrip
         """
-        # todo: allow transitioning to a DispatchPoolingTrip state? allow DispatchPoolingTripInstruction
-        #  which re-plans to directly modify the currently active ServicingPoolingTrip?
-        #  because we don't know the target destination state, we cannot switch on DispatchPoolingTrip
-        #  transitions here..
-
-        return None, None
+        if len(self.trip_plan) == 0:
+            return None, sim
+        elif next_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
+            # todo: confirm the next state's trip_plan is a superset of this state's trip plan
+            return SimulationStateError("not yet implemented"), None
+        else:
+            return None, None
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
@@ -108,7 +116,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: true if our trip is done
         """
-        return False
+        return len(self.trip_plan) == 0
 
     def _default_terminal_state(
         self, sim: SimulationState, env: Environment
@@ -150,22 +158,24 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             else:
                 # update moved vehicle's state
                 updated_route = move_result.route_traversal.remaining_route
-                err2, sim2 = update_active_pooling_trip(move_result.sim, env, self, updated_route)
-                updated_vehicle = sim2.vehicles.get(self.vehicle_id)
-                if updated_vehicle is None:
-                    return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-                elif updated_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
-                    # if we finished all trip plans, we can terminate this ServicingPoolingTrip state
-                    if len(updated_vehicle.vehicle_state.trip_plan) == 0:
-                        # todo: generate "end of pooling trip" report, calculate all request travel times
-                        #  using ServicingPoolingTrip.departure_times
-                        err, term_result = self._enter_default_terminal_state(sim2, env)
-                        term_sim, _ = term_result
-                        return err, term_sim
-                    else:
-                        return None, sim2
-                else:
-                    # somehow our vehicle fell off it's ServicingPoolingTrip horse during this update
-                    state_name = updated_vehicle.vehicle_state.__class__.__name__
-                    err3 = SimulationStateError(f"vehicle {self.vehicle_id} had invalid state change from ServicingPoolingTrip to {state_name}")
-                    return err3, None
+                result = update_active_pooling_trip(move_result.sim, env, self, updated_route)
+                return result
+                # err2, sim2 = update_active_pooling_trip(move_result.sim, env, self, updated_route)
+                # updated_vehicle = sim2.vehicles.get(self.vehicle_id)
+                # if updated_vehicle is None:
+                #     return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
+                # elif updated_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+                #     # if we finished all trip plans, we can terminate this ServicingPoolingTrip state
+                #     if len(updated_vehicle.vehicle_state.trip_plan) == 0:
+                #         # todo: generate "end of pooling trip" report, calculate all request travel times
+                #         #  using ServicingPoolingTrip.departure_times
+                #         err, term_result = self._enter_default_terminal_state(sim2, env)
+                #         term_sim, _ = term_result
+                #         return err, term_sim
+                #     else:
+                #         return None, sim2
+                # else:
+                #     # somehow our vehicle fell off it's ServicingPoolingTrip horse during this update
+                #     state_name = updated_vehicle.vehicle_state.__class__.__name__
+                #     err3 = SimulationStateError(f"vehicle {self.vehicle_id} had invalid state change from ServicingPoolingTrip to {state_name}")
+                #     return err3, None
