@@ -90,10 +90,7 @@ class ServicingTrip(NamedTuple, VehicleState):
              env: Environment
              ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        cannot call "exit" on ServicingTrip, must be exited via it's update method.
-        the state is modeling a trip. exiting would mean dropping off passengers prematurely.
-        this is only valid when falling OutOfService or when reaching the destination.
-        both of these transitions occur during the update step of ServicingTrip.
+        leave this state when the route is completed
 
         :param sim: the sim state
         :param env: the sim environment
@@ -106,7 +103,7 @@ class ServicingTrip(NamedTuple, VehicleState):
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
-        ignored: this should be handled in the update phase when the length of the route is zero.
+        if the route is complete we are finished
 
         :param sim: the sim state
         :param env: the sim environment
@@ -162,11 +159,5 @@ class ServicingTrip(NamedTuple, VehicleState):
                 # let's drop the passengers off during this time step
                 result = drop_off_trip(sim2, env, self.vehicle_id, self.request)
                 return result
-                # if error3:
-                #     return error3, None
-                # else:
-                #     err, term_result = self._enter_default_terminal_state(sim3, env)
-                #     term_sim, _ = term_result
-                #     return err, term_sim
             else:
                 return None, sim2

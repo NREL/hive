@@ -32,6 +32,11 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     # this is the route to the first pickup location
     route: Route
 
+    # if we are re-planning a current ServicingPoolingTrip, we include this state
+    boarded_requests: immutables.Map[RequestId, Request] = immutables.Map()
+    departure_times: immutables.Map[RequestId, SimTime] = immutables.Map()
+    num_passengers: int = 0
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_POOLING_TRIP
@@ -120,10 +125,10 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         servicing_pooling_state = ServicingPoolingTrip(
             vehicle_id=self.vehicle_id,
             trip_plan=self.trip_plan,
-            boarded_requests=immutables.Map(),
-            departure_times=immutables.Map(),
             routes=routes,
-            num_passengers=0
+            boarded_requests=self.boarded_requests,
+            departure_times=self.departure_times,
+            num_passengers=self.num_passengers
         )
         return None, servicing_pooling_state
 
