@@ -41,6 +41,14 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.SERVICING_POOLING_TRIP
 
+    @property
+    def route(cls) -> Route:
+        """
+        makes this uniform with other "move" states to have a "route" property
+        :return:
+        """
+        return cls.routes[0] if len(cls.routes) > 0 else ()
+
     def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
@@ -56,10 +64,15 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         """
 
         vehicle = sim.vehicles.get(self.vehicle_id)
+        first_trip_plan_step, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
+        first_req_id, first_trip_phase = first_trip_plan_step
+        first_req = sim.requests.get(first_req_id)
 
         context = f"vehicle {self.vehicle_id} entering servicing pooling trip state"
         if vehicle is None:
             return SimulationStateError(f"vehicle note found; context: {context}"), None
+        if first_req is None:
+            return SimulationStateError(f"request {first_req_id} not found; context: {context}"), None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
             # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
@@ -70,32 +83,46 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state without any trip plan"
             error = SimulationStateError(msg)
             return error, None
-        elif len(self.boarded_requests) != 1:
-            msg = f"vehicle {self.vehicle_id} attempting to enter a ServicingPoolingTrip state which hasn't picked up its first request"
-            error = SimulationStateError(msg)
-            return error, None
         else:
-            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
-            return result
-            return None, sim
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+            # pick up first request
+            pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id, first_req_id)
+            if pickup_error:
+                result = SimulationStateError(f"failed to pick up first trip in ServicingPoolingTrip {self}")
+                result.__cause__ = pickup_error
+                return result, None
+            else:
+                # enter ServicingPoolingTrip state with first request boarded
+                vehicle_state_with_first_trip = self._replace(
+                    boarded_requests=immutables.Map({first_req_id: first_req}),
+                    departure_times=immutables.Map({first_req_id: sim.sim_time}),
+                    num_passengers=len(first_req.passengers),
+                    trip_plan=remaining_trip_plan
+                )
+                result = VehicleState.apply_new_vehicle_state(pickup_sim,
+                                                              self.vehicle_id,
+                                                              vehicle_state_with_first_trip)
+                return result
+
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        cannot call "exit" on ServicingPoolingTrip, must be exited via it's update method.
-        the state is modeling a trip. exiting would mean dropping off passengers prematurely.
-        this is only valid when falling OutOfService or when reaching the destination.
-        both of these transitions occur during the update step of ServicingPoolingTrip.
+        exit when there is no remaining trip_phase to complete
 
         :param sim: the sim state
         :param env: the sim environment
         :return: None, None - cannot invoke "exit" on ServicingPoolingTrip
         """
-        # todo: allow transitioning to a DispatchPoolingTrip state? allow DispatchPoolingTripInstruction
-        #  which re-plans to directly modify the currently active ServicingPoolingTrip?
-        #  because we don't know the target destination state, we cannot switch on DispatchPoolingTrip
-        #  transitions here..
-
-        return None, None
+        if len(self.trip_plan) == 0:
+            return None, sim
+        elif next_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
+            # a pooling replanning can interrupt a ServicingPoolingTrip in process
+            return None, sim
+        else:
+            return None, None
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
@@ -105,27 +132,23 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: true if our trip is done
         """
-        return False
+        return len(self.trip_plan) == 0
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(
+            self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        after dropping off the last passenger, we default to an idle state. this
-        behavior is more likely to have occurred during an update.
+        give the default state to transition to after having met a terminal condition
 
         :param sim: the simulation state
         :param env: the simulation environment
-        :return: this vehicle in an idle state
+        :return: an exception due to failure or the next_state after finishing a task
         """
         next_state = Idle(self.vehicle_id)
-        enter_error, enter_sim = next_state.enter(sim, env)
-        if enter_error:
-            return enter_error, None
-        else:
-            return None, (enter_sim, next_state)
+        return None, next_state
 
-    def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[SimulationState]]:
         """
         move forward on our trip, making pickups and dropoffs as needed
 
@@ -152,22 +175,5 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             else:
                 # update moved vehicle's state
                 updated_route = move_result.route_traversal.remaining_route
-                err2, sim2 = update_active_pooling_trip(move_result.sim, env, self, updated_route)
-                updated_vehicle = sim2.vehicles.get(self.vehicle_id)
-                if updated_vehicle is None:
-                    return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
-                elif updated_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
-                    # if we finished all trip plans, we can terminate this ServicingPoolingTrip state
-                    if len(updated_vehicle.vehicle_state.trip_plan) == 0:
-                        # todo: generate "end of pooling trip" report, calculate all request travel times
-                        #  using ServicingPoolingTrip.departure_times
-                        err, term_result = self._enter_default_terminal_state(sim2, env)
-                        term_sim, _ = term_result
-                        return err, term_sim
-                    else:
-                        return None, sim2
-                else:
-                    # somehow our vehicle fell off it's ServicingPoolingTrip horse during this update
-                    state_name = updated_vehicle.vehicle_state.__class__.__name__
-                    err3 = SimulationStateError(f"vehicle {self.vehicle_id} had invalid state change from ServicingPoolingTrip to {state_name}")
-                    return err3, None
+                result = update_active_pooling_trip(move_result.sim, env, self, updated_route)
+                return result

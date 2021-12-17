@@ -229,9 +229,10 @@ class TestSimulationState(TestCase):
 
         self.assertIsInstance(tripping_veh.vehicle_state, ServicingTrip)
 
-        # should take about 17 seconds to arrive at trip destination, and
-        # we get the transition to Idle for free as a default termination condition
-        sim_idle = perform_vehicle_state_updates(sim_with_req._replace(sim_timestep_duration_seconds=20), env)
+        # should take about 17 seconds to arrive at trip destination
+        # we take 1 small time step crank afterward to find we are in our terminal condition -> Idle
+        sim_dropoff = perform_vehicle_state_updates(sim_with_req._replace(sim_timestep_duration_seconds=20), env)
+        sim_idle = perform_vehicle_state_updates(sim_dropoff._replace(sim_timestep_duration_seconds=1), env)
 
         idle_veh = sim_idle.vehicles[veh.id]
 

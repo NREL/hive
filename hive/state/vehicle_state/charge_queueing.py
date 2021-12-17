@@ -65,8 +65,11 @@ class ChargeQueueing(NamedTuple, VehicleState):
         Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: 'SimulationState',
+             env: 'Environment'
+             ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         remove agent from queue before exiting this state
 
@@ -101,16 +104,15 @@ class ChargeQueueing(NamedTuple, VehicleState):
         else:
             return station.available_chargers.get(self.charger_id, 0) > 0
 
-    def _enter_default_terminal_state(self,
-                                      sim: 'SimulationState',
-                                      env: Environment) -> Tuple[
-        Optional[Exception], Optional[Tuple['SimulationState', VehicleState]]]:
+    def _default_terminal_state(self,
+                                sim: 'SimulationState',
+                                env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        go idle if the station disappeared, otherwise begin charging
-
-        :param sim:
-        :param env:
-        :return:
+        gets the default terminal state for this state which should be transitioned to
+        once it reaches the end of the current task.
+        :param sim: the sim state
+        :param env: the sim environment
+        :return: an exception or the default VehicleState
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
@@ -124,11 +126,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
             return SimulationStateError(f"no charger_id found; context: {context}"), None
         else:
             next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
-            enter_error, enter_sim = next_state.enter(sim, env)
-            if enter_error:
-                return enter_error, None
-            else:
-                return None, (enter_sim, next_state)
+            return next_state
 
     def _perform_update(self, sim: 'SimulationState', env: Environment) -> Tuple[
         Optional[Exception], Optional['SimulationState']]:

@@ -2,7 +2,7 @@ import functools as ft
 from typing import Tuple, Optional
 
 from hive.model.roadnetwork.route import Route
-from hive.model.roadnetwork.link import Link
+from hive.model.roadnetwork.link import Link, EntityPosition
 from hive.model.vehicle.trip_phase import TripPhase
 from hive.model.vehicle.vehicle import Vehicle
 from hive.state.simulation_state import simulation_state_ops
@@ -88,8 +88,8 @@ def create_routes(sim: SimulationState,
             src_tuple, dst_tuple = pair
             src_req, src_phase = src_tuple
             dst_req, dst_phase = dst_tuple
-            src_link = get_link_for_phase(sim, src_req, src_phase)
-            dst_link = get_link_for_phase(sim, dst_req, dst_phase)
+            src_link = get_position_for_phase(sim, src_req, src_phase)
+            dst_link = get_position_for_phase(sim, dst_req, dst_phase)
             route = sim.road_network.route(src_link, dst_link)
             return route
 
@@ -97,14 +97,14 @@ def create_routes(sim: SimulationState,
         return routes
 
 
-def get_link_for_phase(sim: SimulationState, req_id: RequestId, trip_phase: TripPhase) -> Optional[Link]:
+def get_position_for_phase(sim: SimulationState, req_id: RequestId, trip_phase: TripPhase) -> Optional[EntityPosition]:
     """
-    gets the link for the request based on the trip phase
+    gets the EntityPosition for the request based on the trip phase
 
     :param sim: the simulation state
     :param req_id: the request id
     :param trip_phase: pickup or dropoff phase of a trip
-    :return: the Link for the Request at the specified TripPhase
+    :return: the EntityPosition for the Request at the specified TripPhase
     """
     req = sim.requests.get(req_id)
     if req is None:
@@ -141,12 +141,12 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
         return error, None
     else:
         first_req_id, first_phase = first_trip
-        first_req_link = get_link_for_phase(sim, first_req_id, first_phase)
-        if first_req_link is None:
+        first_req_pos = get_position_for_phase(sim, first_req_id, first_phase)
+        if first_req_pos is None:
             error = SimulationStateError(f"attempting to dispatch pooling trip to request {first_req_id} that does not exist in the sim")
             return error, None
         else:
-            route = sim.road_network.route(vehicle.link, first_req_link)
+            route = sim.road_network.route(vehicle.position, first_req_pos)
             vehicle_state = vehicle.vehicle_state
 
             # todo: this should become a ServicingPoolingTrip instead

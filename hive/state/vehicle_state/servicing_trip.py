@@ -56,6 +56,9 @@ class ServicingTrip(NamedTuple, VehicleState):
         elif request is None:
             # request moved on to greener pastures
             return None, None
+        elif not is_valid:
+            msg = "ServicingTrip route does not correspond to request"
+            return SimulationStateError(msg), None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
             # the only supported transition into ServicingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
@@ -81,47 +84,45 @@ class ServicingTrip(NamedTuple, VehicleState):
                 enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, self)
                 return enter_result
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        cannot call "exit" on ServicingTrip, must be exited via it's update method.
-        the state is modeling a trip. exiting would mean dropping off passengers prematurely.
-        this is only valid when falling OutOfService or when reaching the destination.
-        both of these transitions occur during the update step of ServicingTrip.
+        leave this state when the route is completed
 
         :param sim: the sim state
         :param env: the sim environment
         :return: None, None - cannot invoke "exit" on ServicingTrip
         """
-        return None, None
+        if len(self.route) == 0:
+            return None, sim
+        else:
+            return None, None
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
-        ignored: this should be handled in the update phase when the length of the route is zero.
+        if the route is complete we are finished
 
         :param sim: the sim state
         :param env: the sim environment
         :return: True if we have reached the base
         """
-        return False
+        return len(self.route) == 0
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment
-                                      ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(self,
+                                sim: SimulationState,
+                                env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        by default, Idle when we are in the terminal state
-
+        gets the default terminal state for this state which should be transitioned to
+        once it reaches the end of the current task.
         :param sim: the sim state
         :param env: the sim environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception or the default VehicleState
         """
-
         next_state = Idle(self.vehicle_id)
-        enter_error, enter_sim = next_state.enter(sim, env)
-        if enter_error:
-            return enter_error, None
-        else:
-            return None, (enter_sim, next_state)
+        return None, next_state
 
     def _perform_update(self,
                         sim: SimulationState,
@@ -154,13 +155,9 @@ class ServicingTrip(NamedTuple, VehicleState):
             if error2:
                 return error2, None
             elif len(updated_route) == 0:
-                # let's drop the passengers off during this time step and go Idle
-                error3, sim3 = drop_off_trip(sim2, env, self.vehicle_id, self.request)
-                if error3:
-                    return error3, None
-                else:
-                    err, term_result = self._enter_default_terminal_state(sim3, env)
-                    term_sim, _ = term_result
-                    return err, term_sim
+                # reached destination.
+                # let's drop the passengers off during this time step
+                result = drop_off_trip(sim2, env, self.vehicle_id, self.request)
+                return result
             else:
                 return None, sim2

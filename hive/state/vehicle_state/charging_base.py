@@ -104,9 +104,11 @@ class ChargingBase(NamedTuple, VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def exit(
-            self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         exiting a charge event requires returning the charger_id to the station at the base
 
@@ -164,22 +166,17 @@ class ChargingBase(NamedTuple, VehicleState):
         else:
             return mechatronics.is_full(vehicle)
 
-    def _enter_default_terminal_state(
-            self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(self, sim: SimulationState, env: Environment) -> Tuple[
+        Optional[Exception], Optional[VehicleState]]:
         """
-        we default to idle, or reserve base if there is a base with stalls at the location
+        give the default state to transition to after having met a terminal condition
 
         :param sim: the simulation state
         :param env: the simulation environment
-        :return: an exception due to failure or an optional updated simulation
+        :return: an exception due to failure or the next_state after finishing a task
         """
         next_state = ReserveBase(self.vehicle_id, self.base_id)
-        enter_error, enter_sim = next_state.enter(sim, env)
-        if enter_error:
-            return enter_error, None
-        else:
-            return None, (enter_sim, next_state)
+        return None, next_state
 
     def _perform_update(
             self, sim: SimulationState, env: Environment

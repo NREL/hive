@@ -32,6 +32,11 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     # this is the route to the first pickup location
     route: Route
 
+    # if we are re-planning a current ServicingPoolingTrip, we include this state
+    boarded_requests: immutables.Map[RequestId, Request] = immutables.Map()
+    departure_times: immutables.Map[RequestId, SimTime] = immutables.Map()
+    num_passengers: int = 0
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_POOLING_TRIP
@@ -77,7 +82,11 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
                     result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                     return result
 
-    def exit(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self,
+             next_state: VehicleState,
+             sim: SimulationState,
+             env: Environment
+             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         release the vehicle from the requests it was dispatched to
 
@@ -99,59 +108,29 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         """
         return len(self.route) == 0
 
-    def _enter_default_terminal_state(self,
-                                      sim: SimulationState,
-                                      env: Environment) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, VehicleState]]]:
+    def _default_terminal_state(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
-        by default, transition to a ServicingPoolingTrip state (if possible), else Idle if the conditions are not correct.
+        give the default state to transition to after having met a terminal condition
 
-        :param sim: the sim state
-        :param env: the sim environment
-        :return:  an exception due to failure or an optional updated simulation
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or the next_state after finishing a task
         """
 
-        vehicle = sim.vehicles.get(self.vehicle_id)
-        first_stop, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
+        # create servicing state, with first request PICKUP event consumed
+        routes = dispatch_ops.create_routes(sim, self.trip_plan)
 
-        if first_stop is None:
-            log.debug(f"DispatchPoolingTrip.enter called with empty trip_plan")
-            return None, None
-        else:
-            # confirm we are at the pickup location and first request is still there
-            first_req_id, _ = first_stop
-            first_req = sim.requests.get(first_req_id)
-            if first_req and first_req.geoid != vehicle.geoid:  # todo: check this is a PICKUP phase, report state corruption
-                locations = f"{first_req.geoid} != {vehicle.geoid}"
-                message = f"vehicle {self.vehicle_id} ended dispatch trip to request {first_req_id} " + \
-                          f"but locations do not match: {locations}. sim_time: {sim.sim_time}"
-                return SimulationStateError(message), None
-            else:
-                # perform pickup action, removing request from the simulation. compute routes first!
-                routes = dispatch_ops.create_routes(sim, self.trip_plan)
-                pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id, first_req_id)
-                if pickup_error:
-                    return pickup_error, None
-                else:
-                    # create servicing state, with first request PICKUP event consumed
-                    updated_trip_plan = TupleOps.tail(self.trip_plan)
-                    boarded_requests = immutables.Map({first_req_id: first_req})
-                    departure_times = immutables.Map({first_req_id: sim.sim_time})
-                    num_passengers = len(first_req.passengers)
-
-                    servicing_pooling_state = ServicingPoolingTrip(
-                        vehicle_id=self.vehicle_id,
-                        trip_plan=updated_trip_plan,
-                        boarded_requests=boarded_requests,
-                        departure_times=departure_times,
-                        routes=routes,
-                        num_passengers=num_passengers
-                    )
-
-                    enter_error, enter_sim = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, servicing_pooling_state)
-                    if enter_error:
-                        return enter_error, None
-                    else:
-                        return None, (enter_sim, servicing_pooling_state)
+        servicing_pooling_state = ServicingPoolingTrip(
+            vehicle_id=self.vehicle_id,
+            trip_plan=self.trip_plan,
+            routes=routes,
+            boarded_requests=self.boarded_requests,
+            departure_times=self.departure_times,
+            num_passengers=self.num_passengers
+        )
+        return None, servicing_pooling_state
 
     def _perform_update(self,
                         sim: SimulationState,
