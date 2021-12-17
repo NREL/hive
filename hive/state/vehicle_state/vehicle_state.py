@@ -72,10 +72,10 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             else:
                 # perform default state transition
                 err2, updated_sim = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
-                if err1 is not None:
+                if err2 is not None:
                     state_type = state.vehicle_state_type
                     err_res = SimulationStateError(f"failure during default update of {state_type} state")
-                    err_res.__cause__ = err1
+                    err_res.__cause__ = err2
                     return err_res, None
                 elif updated_sim is None:
                     return None, None
