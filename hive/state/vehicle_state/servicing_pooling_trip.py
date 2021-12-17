@@ -41,6 +41,14 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.SERVICING_POOLING_TRIP
 
+    @property
+    def route(cls) -> Route:
+        """
+        makes this uniform with other "move" states to have a "route" property
+        :return:
+        """
+        return cls.routes[0] if len(cls.routes) > 0 else ()
+
     def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
