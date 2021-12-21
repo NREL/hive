@@ -57,7 +57,10 @@ class ChargeQueueing(NamedTuple, VehicleState):
             updated_station = station.enqueue_for_charger(self.charger_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
             if error:
-                return error, None
+                response = SimulationStateError(
+                    f"failure during ChargeQueueing.enter for vehicle {self.vehicle_id}")
+                response.__cause__ = error
+                return response, None
             else:
                 return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
@@ -86,7 +89,10 @@ class ChargeQueueing(NamedTuple, VehicleState):
             updated_station = station.dequeue_for_charger(self.charger_id)
             error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
             if error:
-                return error, None
+                response = SimulationStateError(
+                    f"failure during ChargeQueueing.exit for vehicle {self.vehicle_id}")
+                response.__cause__ = error
+                return response, None
             return None, updated_sim
 
     def _has_reached_terminal_state_condition(self, sim: 'SimulationState', env: Environment) -> bool:

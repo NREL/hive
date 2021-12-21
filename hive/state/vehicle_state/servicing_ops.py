@@ -81,7 +81,10 @@ def complete_trip_phase(
         else:
             err2, sim2 = pick_up_trip(sim, env, vehicle.id, request.id)
             if err2 is not None:
-                return err2, None
+                response = SimulationStateError(
+                    f"failure completing trip phase for vehicle {vehicle.id} during TripPhase.PICKUP")
+                response.__cause__ = err2
+                return response, None
             else:
                 # add this request to the boarded vehicles
                 updated_boarded_requests = vehicle_state.boarded_requests.set(request.id, request)
@@ -111,7 +114,10 @@ def complete_trip_phase(
             # return result
             err2, sim2 = drop_off_trip(sim, env, vehicle.id, request)
             if err2 is not None:
-                return err2, None
+                response = SimulationStateError(
+                    f"failure completing trip phase for vehicle {vehicle.id} during TripPhase.DROPOFF")
+                response.__cause__ = err2
+                return response, None
             else:
                 # remove this request from the boarded vehicles
                 updated_boarded_requests = vehicle_state.boarded_requests.delete(request.id)
@@ -158,7 +164,10 @@ def update_active_pooling_trip(
         # action is required and then update the vehicle state accordingly
         err1, active_trip = get_active_pooling_trip(vehicle_state)
         if err1 is not None:
-            return err1, None
+            response = SimulationStateError(
+                f"failure during update_active_pooling_trip for vehicle {vehicle.id}")
+            response.__cause__ = err1
+            return response, None
         else:
             result = complete_trip_phase(sim, env, vehicle, active_trip)
             return result
@@ -188,7 +197,10 @@ def pick_up_trip(sim: SimulationState,
         updated_vehicle = vehicle.receive_payment(request.value)
         mod_error, maybe_sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         if mod_error:
-            return mod_error, None
+            response = SimulationStateError(
+                f"failure during pick_up_trip for vehicle {vehicle.id}")
+            response.__cause__ = mod_error
+            return response, None
         else:
             try:
                 report = report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle)

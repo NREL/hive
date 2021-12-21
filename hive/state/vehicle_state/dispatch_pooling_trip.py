@@ -77,7 +77,10 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
             else:
                 error, updated_sim = dispatch_ops.modify_vehicle_assignment(sim, self.vehicle_id, req_ids)
                 if error:
-                    return error, None
+                    response = SimulationStateError(
+                        f"failure during DispatchPoolingTrip.enter for vehicle {self.vehicle_id}")
+                    response.__cause__ = error
+                    return response, None
                 else:
                     result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                     return result
@@ -148,7 +151,10 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
 
         context = f"vehicle {self.vehicle_id} performing update in dispatch pooling state"
         if move_error:
-            return move_error, None
+            response = SimulationStateError(
+                f"failure during DispatchPoolingTrip._perform_update for vehicle {self.vehicle_id}")
+            response.__cause__ = move_error
+            return response, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:

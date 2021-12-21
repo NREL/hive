@@ -80,7 +80,10 @@ class Repositioning(NamedTuple, VehicleState):
 
         context = f"vehicle {self.vehicle_id} performing update in repositioning state"
         if move_error:
-            return move_error, None
+            response = SimulationStateError(
+                f"failure during Repositioning._perform_update for vehicle {self.vehicle_id}")
+            response.__cause__ = move_error
+            return response, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle {self.vehicle_id} not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:

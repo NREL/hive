@@ -160,14 +160,20 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         # grab the current trip
         err1, active_trip = get_active_pooling_trip(self)
         if err1 is not None:
-            return err1, None
+            response = SimulationStateError(
+                f"failure during ServicingPoolingTrip._perform_update for vehicle {self.vehicle_id}")
+            response.__cause__ = err1
+            return response, None
         else:
             # move forward in current trip plan
             move_error, move_result = move(sim, env, self.vehicle_id, active_trip.route)
             moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
 
             if move_error:
-                return move_error, None
+                response = SimulationStateError(
+                    f"failure during ServicingPoolingTrip._perform_update for vehicle {self.vehicle_id}")
+                response.__cause__ = move_error
+                return response, None
             elif not moved_vehicle:
                 return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
             elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:

@@ -58,7 +58,10 @@ class ReserveBase(NamedTuple, VehicleState):
             else:
                 error, updated_sim = simulation_state_ops.modify_base(sim, updated_base)
                 if error:
-                    return error, None
+                    response = SimulationStateError(
+                        f"failure during ReserveBase.enter for vehicle {self.vehicle_id}")
+                    response.__cause__ = error
+                    return response, None
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
@@ -81,7 +84,10 @@ class ReserveBase(NamedTuple, VehicleState):
         else:
             error, updated_base = base.return_stall()
             if error:
-                return error, None
+                response = SimulationStateError(
+                    f"failure during ReserveBase.exit for vehicle {self.vehicle_id}")
+                response.__cause__ = error
+                return response, None
             return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
