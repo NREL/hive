@@ -45,7 +45,9 @@ def reverse_link_id(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Link
     """
     error, node_ids = extract_node_ids(link_id)
     if error:
-        return error, None
+        response = Exception(f"failure during link reversal for link {link_id}")
+        response.__cause__ = error
+        return response, None
     else:
         src, dst = node_ids
         result = create_link_id(dst, src)

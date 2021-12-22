@@ -257,7 +257,10 @@ def pop_vehicle(sim: SimulationState,
     else:
         remove_error, remove_result = remove_vehicle(sim, vehicle_id)
         if remove_error:
-            return remove_error, None
+            response = SimulationStateError(
+                f"failure in pop_vehicle for vehicle {vehicle_id}")
+            response.__cause__ = remove_error
+            return response, None
         else:
             return None, (remove_result, vehicle)
 

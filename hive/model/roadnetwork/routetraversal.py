@@ -108,7 +108,9 @@ def traverse(route_estimate: Route,
             # traverse this link as far as we can go
             error, traverse_result = traverse_up_to(link, acc_traversal.remaining_time_seconds)
             if error:
-                return error, None
+                response = Exception(f"failure during traverse")
+                response.__cause__ = error
+                return response, None
             else:
                 updated_experienced_route = acc_traversal.add_traversal(traverse_result)
                 return acc_failures, updated_experienced_route
