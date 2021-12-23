@@ -111,7 +111,10 @@ class DispatchBase(NamedTuple, VehicleState):
 
         context = f"vehicle {self.vehicle_id} moving to base {self.base_id} in dispatch base state"
         if move_error:
-            return move_error, None
+            response = SimulationStateError(
+                f"failure during DispatchBase._perform_update for vehicle {self.vehicle_id}")
+            response.__cause__ = move_error
+            return response, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:

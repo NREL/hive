@@ -121,9 +121,13 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                     src_coord_err, src_coord = safe_get_node_coordinates(src_node, src)
                     dst_coord_err, dst_coord = safe_get_node_coordinates(dst_node, dst)
                     if src_coord_err:
-                        return src_coord_err, None
+                        response = Exception(f"failure getting node coordinates while building OSMRoadNetworkLinkHelper")
+                        response.__cause__ = src_coord_err
+                        return response, None
                     elif dst_coord_err:
-                        return dst_coord_err, None
+                        response = Exception(f"failure getting node coordinates while building OSMRoadNetworkLinkHelper")
+                        response.__cause__ = dst_coord_err
+                        return response, None
                     else:
                         src_lat, src_lon = src_coord
                         dst_lat, dst_lon = dst_coord
@@ -136,7 +140,9 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                         link = Link.build(link_id, src_geoid, dst_geoid, speed, distance)
                         add_link_error, updated_accumulator = accumulator.add_link(link)
                         if add_link_error:
-                            return add_link_error, None
+                            response = Exception(f"failure adding link while building OSMRoadNetworkLinkHelper")
+                            response.__cause__ = add_link_error
+                            return response, None
                         else:
                             return None, updated_accumulator
                 except Exception as e:
@@ -147,7 +153,9 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
         initial = None, Accumulator()
         error, accumulator = ft.reduce(create_link_entry, graph.edges, initial)
         if error:
-            return error, None
+            response = Exception(f"failure building OSMRoadNetworkLinkHelper")
+            response.__cause__ = error
+            return response, None
         else:
             # construct the spatial index
             tree = cKDTree(accumulator.link_centroids)

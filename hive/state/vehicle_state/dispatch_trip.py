@@ -64,7 +64,10 @@ class DispatchTrip(NamedTuple, VehicleState):
             updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
             error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
             if error:
-                return error, None
+                response = SimulationStateError(
+                    f"failure during DispatchTrip.enter for vehicle {self.vehicle_id}")
+                response.__cause__ = error
+                return response, None
             else:
                 result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                 return result
@@ -163,7 +166,10 @@ class DispatchTrip(NamedTuple, VehicleState):
 
         context = f"vehicle {self.vehicle_id} on the way to request {self.request_id}"
         if move_error:
-            return move_error, None
+            response = SimulationStateError(
+                f"failure during DispatchTrip._perform_update for vehicle {self.vehicle_id}")
+            response.__cause__ = move_error
+            return response, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:

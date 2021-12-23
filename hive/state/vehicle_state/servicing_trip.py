@@ -79,7 +79,10 @@ class ServicingTrip(NamedTuple, VehicleState):
         else:
             pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, self.request.id)
             if pickup_error:
-                return pickup_error, None
+                response = SimulationStateError(
+                    f"failure during ServicingTrip.enter for vehicle {self.vehicle_id}")
+                response.__cause__ = pickup_error
+                return response, None
             else:
                 enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id, self)
                 return enter_result
@@ -140,7 +143,10 @@ class ServicingTrip(NamedTuple, VehicleState):
 
         context = f"vehicle {self.vehicle_id} serving trip for request {self.request.id}"
         if move_error:
-            return move_error, None
+            response = SimulationStateError(
+                f"failure during ServicingTrip._perform_update for vehicle {self.vehicle_id}")
+            response.__cause__ = move_error
+            return response, None
         elif not moved_vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
@@ -153,7 +159,10 @@ class ServicingTrip(NamedTuple, VehicleState):
             error2, sim2 = simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)
 
             if error2:
-                return error2, None
+                response = SimulationStateError(
+                    f"failure during ServicingTrip._perform_update for vehicle {self.vehicle_id}")
+                response.__cause__ = error2
+                return response, None
             elif len(updated_route) == 0:
                 # reached destination.
                 # let's drop the passengers off during this time step

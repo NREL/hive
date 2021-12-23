@@ -65,7 +65,9 @@ def charge(sim: SimulationState,
 
         veh_error, sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         if veh_error:
-            return veh_error, None
+            response = SimulationStateError(f"failure during charge for vehicle {vehicle.id}")
+            response.__cause__ = veh_error
+            return response, None
         else:
             report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, updated_station, charger)
             env.reporter.file_report(report)
@@ -132,7 +134,10 @@ def _apply_route_traversal(sim: SimulationState,
             updated_vehicle = less_energy_vehicle.modify_position(position=vehicle_position).tick_distance_traveled_km(step_distance_km)
             error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
             if error:
-                return error, None
+                response = SimulationStateError(
+                    f"failure during _apply_route_traversal for vehicle {vehicle.id}")
+                response.__cause__ = error
+                return response, None
             else:
                 return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
 
@@ -194,7 +199,10 @@ def move(sim: SimulationState,
     else:
         empty_check_error, empty_vehicle_sim = _go_out_of_service_on_empty(move_result.sim, env, vehicle_id)
         if empty_check_error:
-            return empty_check_error, None
+            response = SimulationStateError(
+                f"failure during move for vehicle {vehicle_id}")
+            response.__cause__ = empty_check_error
+            return response, None
         elif empty_vehicle_sim:
             return None, MoveResult(empty_vehicle_sim)
         else:

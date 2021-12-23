@@ -63,7 +63,10 @@ class ChargingStation(NamedTuple, VehicleState):
             else:
                 error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                 if error:
-                    return error, None
+                    response = SimulationStateError(
+                        f"failure during ChargingStation.enter for vehicle {self.vehicle_id}")
+                    response.__cause__ = error
+                    return response, None
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
@@ -94,7 +97,10 @@ class ChargingStation(NamedTuple, VehicleState):
         else:
             error, updated_station = station.return_charger(self.charger_id)
             if error:
-                return error, None
+                response = SimulationStateError(
+                    f"failure during ChargingStation.exit for vehicle {self.vehicle_id}")
+                response.__cause__ = error
+                return response, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(self,
