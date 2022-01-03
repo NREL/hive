@@ -41,10 +41,12 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_POOLING_TRIP
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState', env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: 'SimulationState',
+              env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         checks that all requests exist. updates all requests to know that this vehicle is on it's way
 
@@ -59,10 +61,13 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         else:
             req_ids, _ = tuple(zip(*self.trip_plan))
             vehicle = sim.vehicles.get(self.vehicle_id)
-            reqs_exist_and_match_membership = dispatch_ops.requests_exist_and_match_membership(sim, vehicle, req_ids)
+            reqs_exist_and_match_membership = dispatch_ops.requests_exist_and_match_membership(
+                sim, vehicle, req_ids)
             first_req_id, first_phase = first_stop
             first_req = sim.requests.get(first_req_id)
-            is_valid = route_cooresponds_with_entities(self.route, vehicle.position, first_req.origin_position) if vehicle and first_req else False
+            is_valid = route_cooresponds_with_entities(
+                self.route, vehicle.position,
+                first_req.origin_position) if vehicle and first_req else False
 
             context = f"vehicle {self.vehicle_id} entering dispatch pooling state"
             if not vehicle:
@@ -75,21 +80,20 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
                 log.debug(f"bad route to connect vehicle {vehicle.id} to request {first_req.id}")
                 return None, None
             else:
-                error, updated_sim = dispatch_ops.modify_vehicle_assignment(sim, self.vehicle_id, req_ids)
+                error, updated_sim = dispatch_ops.modify_vehicle_assignment(
+                    sim, self.vehicle_id, req_ids)
                 if error:
                     response = SimulationStateError(
                         f"failure during DispatchPoolingTrip.enter for vehicle {self.vehicle_id}")
                     response.__cause__ = error
                     return response, None
                 else:
-                    result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+                    result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id,
+                                                                  self)
                     return result
 
-    def exit(self,
-             next_state: VehicleState,
-             sim: SimulationState,
-             env: Environment
-             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         release the vehicle from the requests it was dispatched to
 
@@ -98,7 +102,10 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         :return: an error, or, the updated simulation state, where the requests are no longer awaiting this vehicle
         """
         req_ids, _ = tuple(zip(*self.trip_plan))
-        result = dispatch_ops.modify_vehicle_assignment(sim, self.vehicle_id, req_ids, unassign=True)
+        result = dispatch_ops.modify_vehicle_assignment(sim,
+                                                        self.vehicle_id,
+                                                        req_ids,
+                                                        unassign=True)
         return result
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
@@ -112,8 +119,8 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _default_terminal_state(
-        self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+            self, sim: SimulationState,
+            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -125,18 +132,15 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         # create servicing state, with first request PICKUP event consumed
         routes = dispatch_ops.create_routes(sim, self.trip_plan)
 
-        servicing_pooling_state = ServicingPoolingTrip(
-            vehicle_id=self.vehicle_id,
-            trip_plan=self.trip_plan,
-            routes=routes,
-            boarded_requests=self.boarded_requests,
-            departure_times=self.departure_times,
-            num_passengers=self.num_passengers
-        )
+        servicing_pooling_state = ServicingPoolingTrip(vehicle_id=self.vehicle_id,
+                                                       trip_plan=self.trip_plan,
+                                                       routes=routes,
+                                                       boarded_requests=self.boarded_requests,
+                                                       departure_times=self.departure_times,
+                                                       num_passengers=self.num_passengers)
         return None, servicing_pooling_state
 
-    def _perform_update(self,
-                        sim: SimulationState,
+    def _perform_update(self, sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the first request
@@ -145,22 +149,12 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
-        move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
-        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
-
-        context = f"vehicle {self.vehicle_id} performing update in dispatch pooling state"
         if move_error:
             response = SimulationStateError(
                 f"failure during DispatchPoolingTrip._perform_update for vehicle {self.vehicle_id}")
             response.__cause__ = move_error
             return response, None
-        elif not moved_vehicle:
-            return SimulationStateError(f"vehicle not found; context: {context}"), None
-        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
-            return None, move_result.sim
         else:
-            # update moved vehicle's state (holding the route)
-            updated_state = self._replace(route=move_result.route_traversal.remaining_route)
-            updated_vehicle = moved_vehicle.modify_vehicle_state(updated_state)
-            return simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)
+            return None, move_sim

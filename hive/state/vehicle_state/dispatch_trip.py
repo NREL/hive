@@ -34,11 +34,12 @@ class DispatchTrip(NamedTuple, VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_TRIP
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def enter(self, sim: SimulationState,
+              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         checks that the request exists and if so, updates the request to know that this vehicle is on it's way
 
@@ -48,7 +49,8 @@ class DispatchTrip(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.position, request.origin_position) if vehicle and request else False
+        is_valid = route_cooresponds_with_entities(
+            self.route, vehicle.position, request.origin_position) if vehicle and request else False
         context = f"vehicle {self.vehicle_id} entering dispatch trip for request {self.request_id}"
         if not vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
@@ -72,11 +74,8 @@ class DispatchTrip(NamedTuple, VehicleState):
                 result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                 return result
 
-    def exit(self,
-             next_state: VehicleState,
-             sim: SimulationState,
-             env: Environment
-             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         release the vehicle from the request it was dispatched to
 
@@ -105,8 +104,8 @@ class DispatchTrip(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _default_terminal_state(
-        self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+            self, sim: SimulationState,
+            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -130,7 +129,7 @@ class DispatchTrip(NamedTuple, VehicleState):
             # apply next state
             # generate the data to describe the trip for this request
             # where the pickup phase is currently happening + doesn't need to be added to the trip plan
-            trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
+            trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF), )
             departure_time = sim.sim_time
 
             # create the state (pooling, or, standard servicing trip, depending on the sitch)
@@ -140,18 +139,15 @@ class DispatchTrip(NamedTuple, VehicleState):
                 trip_plan=trip_plan,
                 boarded_requests=immutables.Map({request.id: request}),
                 departure_times=immutables.Map({request.id, departure_time}),
-                routes=(route,),
-                num_passengers=len(request.passengers)
-            ) if pooling_trip else ServicingTrip(
-                vehicle_id=vehicle.id,
-                request=request,
-                departure_time=departure_time,
-                route=route
-            )
+                routes=(route, ),
+                num_passengers=len(request.passengers)) if pooling_trip else ServicingTrip(
+                    vehicle_id=vehicle.id,
+                    request=request,
+                    departure_time=departure_time,
+                    route=route)
             return None, next_state
 
-    def _perform_update(self,
-                        sim: SimulationState,
+    def _perform_update(self, sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the request
@@ -160,22 +156,12 @@ class DispatchTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
-        move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
-        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
-
-        context = f"vehicle {self.vehicle_id} on the way to request {self.request_id}"
         if move_error:
             response = SimulationStateError(
                 f"failure during DispatchTrip._perform_update for vehicle {self.vehicle_id}")
             response.__cause__ = move_error
             return response, None
-        elif not moved_vehicle:
-            return SimulationStateError(f"vehicle not found; context: {context}"), None
-        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
-            return None, move_result.sim
         else:
-            # update moved vehicle's state (holding the route)
-            updated_state = self._replace(route=move_result.route_traversal.remaining_route)
-            updated_vehicle = moved_vehicle.modify_vehicle_state(updated_state)
-            return simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)
+            return None, move_sim
