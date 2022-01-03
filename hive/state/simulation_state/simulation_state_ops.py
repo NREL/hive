@@ -222,7 +222,7 @@ def remove_vehicle(sim: SimulationState, vehicle_id: VehicleId) -> Tuple[
     :return: the updated simulation state
     """
     if not isinstance(vehicle_id, VehicleId):
-        error = SimulationStateError(f"remove_request() takes a VehicleId (str), not a {type(vehicle_id)}")
+        error = SimulationStateError(f"remove_vehicle() takes a VehicleId (str), not a {type(vehicle_id)}")
         return error, None
     elif vehicle_id not in sim.vehicles:
         error = SimulationStateError(f"attempting to remove vehicle {vehicle_id} which is not in simulation")
