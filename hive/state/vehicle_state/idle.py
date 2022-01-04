@@ -1,4 +1,6 @@
-from typing import NamedTuple, Tuple, Optional
+from __future__ import annotations
+
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from hive.runner.environment import Environment
@@ -10,34 +12,39 @@ from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
 from hive.util.units import Seconds
 
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+
 
 class Idle(NamedTuple, VehicleState):
     vehicle_id: VehicleId
+    instance_id: VehicleStateInstanceId
+
     idle_duration: Seconds = 0
 
-    instance_id: Optional[VehicleStateInstanceId] = None
+    @classmethod
+    def build(cls, vehicle_id: VehicleId) -> Idle:
+        return Idle(vehicle_id=vehicle_id, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.IDLE
 
-    def update(self, sim: 'SimulationState',
-               env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: 'SimulationState',
-              env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
-        # initialize the instance id
-        self = self._replace(instance_id=uuid4())
+    def enter(self, sim: SimulationState,
+              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+
         new_state = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
         return new_state
 
-    def exit(self, next_state: VehicleState, sim: 'SimulationState',
-             env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState',
-                                              env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         If energy has run out, we will move to OutOfService
 
@@ -50,7 +57,7 @@ class Idle(NamedTuple, VehicleState):
         return not vehicle or mechatronics.is_empty(vehicle)
 
     def _default_terminal_state(
-            self, sim: 'SimulationState',
+            self, sim: SimulationState,
             env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
@@ -59,12 +66,11 @@ class Idle(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or the next_state after finishing a task
         """
-        next_state = OutOfService(self.vehicle_id)
+        next_state = OutOfService.build(self.vehicle_id)
         return None, next_state
 
-    def _perform_update(
-            self, sim: 'SimulationState',
-            env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def _perform_update(self, sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         incur an idling cost
 

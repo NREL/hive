@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import NamedTuple, Tuple, Optional
+from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from hive.model.sim_time import SimTime
@@ -10,6 +12,9 @@ from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateIns
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId, StationId, ChargerId
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -25,14 +30,23 @@ class ChargeQueueing(NamedTuple, VehicleState):
     charger_id: ChargerId
     enqueue_time: SimTime
 
-    instance_id: Optional[VehicleStateInstanceId] = None
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, station_id: StationId, charger_id: ChargerId,
+              enqueue_time: SimTime) -> ChargeQueueing:
+        return ChargeQueueing(vehicle_id=vehicle_id,
+                              station_id=station_id,
+                              charger_id=charger_id,
+                              enqueue_time=enqueue_time,
+                              instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.CHARGE_QUEUEING
 
-    def enter(self, sim: 'SimulationState',
-              env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(self, sim: SimulationState,
+              env: 'Environment') -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         entering a charge queueing state requires being at that station
 
@@ -40,8 +54,6 @@ class ChargeQueueing(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
-        # initialize the instance id
-        self = self._replace(instance_id=uuid4())
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
@@ -71,12 +83,12 @@ class ChargeQueueing(NamedTuple, VehicleState):
             else:
                 return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState',
-               env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: SimulationState,
+               env: 'Environment') -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def exit(self, next_state: VehicleState, sim: 'SimulationState',
-             env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: 'Environment') -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         remove agent from queue before exiting this state
 
@@ -99,8 +111,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
                 return response, None
             return None, updated_sim
 
-    def _has_reached_terminal_state_condition(self, sim: 'SimulationState',
-                                              env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         vehicle has reached a terminal state if the station disappeared
         or if it has at least one charger_id of the correct type
@@ -116,7 +127,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
             return station.available_chargers.get(self.charger_id, 0) > 0
 
     def _default_terminal_state(
-            self, sim: 'SimulationState',
+            self, sim: SimulationState,
             env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         gets the default terminal state for this state which should be transitioned to
@@ -137,12 +148,11 @@ class ChargeQueueing(NamedTuple, VehicleState):
         elif has_no_charger:
             return SimulationStateError(f"no charger_id found; context: {context}"), None
         else:
-            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
+            next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
             return next_state
 
-    def _perform_update(
-            self, sim: 'SimulationState',
-            env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def _perform_update(self, sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         similarly to the idle state, we incur an idling penalty here
 

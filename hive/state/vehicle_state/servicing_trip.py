@@ -29,7 +29,25 @@ class ServicingTrip(NamedTuple, VehicleState):
     departure_time: SimTime
     route: Route
 
-    instance_id: Optional[VehicleStateInstanceId] = None
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, request: Request, departure_time: SimTime,
+              route: Route) -> ServicingTrip:
+        """
+        build a servicing trip state
+
+        :param vehicle_id: the vehicle id
+        :param request: the request
+        :param departure_time: the departure time
+        :param route: the route
+        :return: the servicing trip state
+        """
+        return cls(vehicle_id=vehicle_id,
+                   request=request,
+                   departure_time=departure_time,
+                   route=route,
+                   instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -48,8 +66,6 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an error, or, the sim with state entered
         """
-        # initialize the instance id
-        self = self._replace(instance_id=uuid4())
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request.id)
@@ -129,7 +145,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: an exception or the default VehicleState
         """
-        next_state = Idle(self.vehicle_id)
+        next_state = Idle.build(self.vehicle_id)
         return None, next_state
 
     def _perform_update(self, sim: SimulationState,

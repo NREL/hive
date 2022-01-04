@@ -5,7 +5,6 @@ from hive.resources.mock_lobster import *
 
 
 class TestStationLoadHandler(TestCase):
-
     def test_correctly_reads_one_vehicle_charge_event(self):
         """
         this test is mostly here just to make sure we don't mess with
@@ -13,14 +12,12 @@ class TestStationLoadHandler(TestCase):
         break station load reporting
         :return:
         """
-        state = ChargingStation(
-            vehicle_id=DefaultIds.mock_vehicle_id(),
-            station_id=DefaultIds.mock_station_id(),
-            charger_id=mock_dcfc_charger_id()
-        )
+        state = ChargingStation.build(vehicle_id=DefaultIds.mock_vehicle_id(),
+                                      station_id=DefaultIds.mock_station_id(),
+                                      charger_id=mock_dcfc_charger_id())
         veh = mock_vehicle(soc=0.1)
         sta = mock_station()
-        sim = mock_sim(vehicles=(veh,), stations=(sta,))
+        sim = mock_sim(vehicles=(veh, ), stations=(sta, ))
         env = mock_env()
 
         err, sim_charging = state.enter(sim, env)

@@ -27,7 +27,16 @@ class DispatchStation(NamedTuple, VehicleState):
     route: Route
     charger_id: ChargerId
 
-    instance_id: Optional[VehicleStateInstanceId] = None
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, station_id: StationId, route: Route,
+              charger_id: ChargerId) -> DispatchStation:
+        return DispatchStation(vehicle_id=vehicle_id,
+                               station_id=station_id,
+                               charger_id=charger_id,
+                               route=route,
+                               instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -39,8 +48,6 @@ class DispatchStation(NamedTuple, VehicleState):
 
     def enter(self, sim: SimulationState,
               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        # initialize the instance id
-        self = self._replace(instance_id=uuid4())
 
         station = sim.stations.get(self.station_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
@@ -53,7 +60,7 @@ class DispatchStation(NamedTuple, VehicleState):
             return SimulationStateError(f"station not found; context: {context}"), None
         elif station.geoid == vehicle.geoid:
             # already there!
-            next_state = ChargingStation(self.vehicle_id, self.station_id, self.charger_id)
+            next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
             return next_state.enter(sim, env)
         elif not is_valid:
             return None, None
@@ -102,10 +109,10 @@ class DispatchStation(NamedTuple, VehicleState):
             return SimulationStateError(message), None
         else:
             has_chargers = available_chargers > 0
-            next_state = ChargingStation(self.vehicle_id, self.station_id,
-                                         self.charger_id) if has_chargers else ChargeQueueing(
-                                             self.vehicle_id, self.station_id, self.charger_id,
-                                             sim.sim_time)
+            next_state = ChargingStation.build(
+                self.vehicle_id, self.station_id,
+                self.charger_id) if has_chargers else ChargeQueueing.build(
+                    self.vehicle_id, self.station_id, self.charger_id, sim.sim_time)
             return None, next_state
 
     def _perform_update(self, sim: SimulationState,

@@ -25,7 +25,11 @@ class DispatchBase(NamedTuple, VehicleState):
     base_id: BaseId
     route: Route
 
-    instance_id: Optional[VehicleStateInstanceId] = None
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
+        return cls(vehicle_id=vehicle_id, base_id=base_id, route=route, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -37,8 +41,6 @@ class DispatchBase(NamedTuple, VehicleState):
 
     def enter(self, sim: SimulationState,
               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-        # initialize the instance id
-        self = self._replace(instance_id=uuid4())
 
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
@@ -96,9 +98,9 @@ class DispatchBase(NamedTuple, VehicleState):
             return SimulationStateError(message), None
         else:
             if base.available_stalls > 0:
-                next_state = ReserveBase(self.vehicle_id, self.base_id)
+                next_state = ReserveBase.build(self.vehicle_id, self.base_id)
             else:
-                next_state = Idle(self.vehicle_id)
+                next_state = Idle.build(self.vehicle_id)
             return None, next_state
 
     def _perform_update(self, sim: SimulationState,

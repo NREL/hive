@@ -56,7 +56,8 @@ class Vehicle(NamedTuple):
         return self.position.geoid
 
     @classmethod
-    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork, environment: Environment) -> Vehicle:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork,
+                 environment: Environment) -> Vehicle:
         """
         reads a csv row from file to generate a Vehicle
 
@@ -88,18 +89,23 @@ class Vehicle(NamedTuple):
                 if not mechatronics:
                     found = set(environment.mechatronics.keys())
                     raise IOError(
-                        f"was not able to find mechatronics '{mechatronics_id}' for vehicle {vehicle_id} in environment: found {found}")
+                        f"was not able to find mechatronics '{mechatronics_id}' for vehicle {vehicle_id} in environment: found {found}"
+                    )
                 energy = mechatronics.initial_energy(float(row['initial_soc']))
 
                 schedule_id = row.get(
-                    'schedule_id')  # if None, it signals an autonomous vehicle, otherwise, human with schedule
+                    'schedule_id'
+                )  # if None, it signals an autonomous vehicle, otherwise, human with schedule
                 home_base_id = row.get('home_base_id')
                 if schedule_id and not schedule_id in environment.schedules.keys():
                     raise IOError(
-                        f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}")
-                allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+                        f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}"
+                    )
+                allows_pooling = bool(
+                    row['allows_pooling']) if row.get('allows_pooling') is not None else False
                 available_seats = int(row.get('available_seats', 0))
-                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id, allows_pooling)
+                driver_state = DriverState.build(vehicle_id, schedule_id, home_base_id,
+                                                 allows_pooling)
 
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_position = road_network.position_from_geoid(geoid)
@@ -109,7 +115,7 @@ class Vehicle(NamedTuple):
                     mechatronics_id=mechatronics_id,
                     energy=energy,
                     position=start_position,
-                    vehicle_state=Idle(vehicle_id),
+                    vehicle_state=Idle.build(vehicle_id),
                     driver_state=driver_state,
                     total_seats=available_seats,
                     # available_seats=available_seats

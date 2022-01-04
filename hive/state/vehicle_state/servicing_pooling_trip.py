@@ -38,7 +38,25 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
     routes: Tuple[Route, ...]
     num_passengers: int
 
-    instance_id: Optional[VehicleStateInstanceId] = None
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(
+        cls,
+        vehicle_id: VehicleId,
+        trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+        boarded_requests: immutables.Map[RequestId, Request],
+        departure_times: immutables.Map[RequestId, SimTime],
+        routes: Tuple[Route, ...],
+        num_passengers: int,
+    ) -> ServicingPoolingTrip:
+        return ServicingPoolingTrip(vehicle_id=vehicle_id,
+                                    trip_plan=trip_plan,
+                                    boarded_requests=boarded_requests,
+                                    departure_times=departure_times,
+                                    routes=routes,
+                                    num_passengers=num_passengers,
+                                    instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -67,8 +85,6 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an error, or, the sim with state entered
         """
-        # initialize the instance id
-        self = self._replace(instance_id=uuid4())
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         first_trip_plan_step, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
@@ -149,7 +165,7 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or the next_state after finishing a task
         """
-        next_state = Idle(self.vehicle_id)
+        next_state = Idle.build(self.vehicle_id)
         return None, next_state
 
     def _perform_update(self, sim: SimulationState,
