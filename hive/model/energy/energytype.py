@@ -13,10 +13,7 @@ class EnergyType(Enum):
 
     @classmethod
     def from_string(cls, s: str) -> Optional[EnergyType]:
-        values = {
-            "electric": cls.ELECTRIC,
-            "gasoline": cls.GASOLINE
-        }
+        values = {"electric": cls.ELECTRIC, "gasoline": cls.GASOLINE}
         if s in values.keys():
             return values[s]
         else:

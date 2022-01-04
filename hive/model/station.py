@@ -67,35 +67,33 @@ class Station(NamedTuple):
         return self.position.geoid
 
     @classmethod
-    def build(cls,
-              id: StationId,
-              geoid: GeoId,
-              road_network: RoadNetwork,
-              chargers: immutables.Map[Charger, int],
-              on_shift_access: FrozenSet[ChargerId],
-              membership: Membership = Membership(),
-              ):
-        prices = ft.reduce(
-            lambda prices_builder, charger: prices_builder.set(charger, 0.0),
-            chargers.keys(),
-            immutables.Map()
-        )
+    def build(
+            cls,
+            id: StationId,
+            geoid: GeoId,
+            road_network: RoadNetwork,
+            chargers: immutables.Map[Charger, int],
+            on_shift_access: FrozenSet[ChargerId],
+            membership: Membership = Membership(),
+    ):
+        prices = ft.reduce(lambda prices_builder, charger: prices_builder.set(charger, 0.0),
+                           chargers.keys(), immutables.Map())
         position = road_network.position_from_geoid(geoid)
-        return Station(
-            id=id,
-            position=position,
-            total_chargers=chargers,
-            available_chargers=chargers,
-            on_shift_access_chargers=on_shift_access,
-            charger_prices_per_kwh=prices,
-            membership=membership
-        )
+        return Station(id=id,
+                       position=position,
+                       total_chargers=chargers,
+                       available_chargers=chargers,
+                       on_shift_access_chargers=on_shift_access,
+                       charger_prices_per_kwh=prices,
+                       membership=membership)
 
     @classmethod
-    def from_row(cls, row: Dict[str, str],
-                 builder: Dict[StationId, Station],
-                 road_network: RoadNetwork,
-                 ) -> Station:
+    def from_row(
+        cls,
+        row: Dict[str, str],
+        builder: Dict[StationId, Station],
+        road_network: RoadNetwork,
+    ) -> Station:
         """
         takes a csv row and turns it into a Station
 
@@ -129,7 +127,8 @@ class Station(NamedTuple):
                 on_shift_access = bool(strtobool(row['on_shift_access'].lower()))
 
                 if charger_id is None:
-                    raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
+                    raise IOError(
+                        f"invalid charger_id type {row['charger_id']} for station {station_id}")
                 elif station_id not in builder:
                     # create this station
 
@@ -138,8 +137,7 @@ class Station(NamedTuple):
                         geoid=geoid,
                         road_network=road_network,
                         chargers=immutables.Map({charger_id: charger_count}),
-                        on_shift_access=frozenset([charger_id]) if on_shift_access else frozenset()
-                    )
+                        on_shift_access=frozenset([charger_id]) if on_shift_access else frozenset())
                 elif charger_id in builder[station_id].total_chargers:
                     # combine counts from multiple rows which refer to this charger_id
                     charger_already_loaded = builder[station_id].total_chargers[charger_id]
@@ -151,26 +149,28 @@ class Station(NamedTuple):
                         id=station_id,
                         geoid=geoid,
                         road_network=road_network,
-                        chargers=immutables.Map({charger_id: charger_count + charger_already_loaded}),
-                        on_shift_access=builder[station_id].on_shift_access_chargers
-                    )
+                        chargers=immutables.Map(
+                            {charger_id: charger_count + charger_already_loaded}),
+                        on_shift_access=builder[station_id].on_shift_access_chargers)
                 else:
                     # update this station
                     prev_station = builder[station_id]
                     charger_already_loaded = prev_station.total_chargers
-                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_id, charger_count)
-                    updated_on_shift_access_chargers = prev_station.on_shift_access_chargers.union([charger_id]) if on_shift_access else prev_station.on_shift_access_chargers
+                    updated_chargers = DictOps.add_to_dict(charger_already_loaded, charger_id,
+                                                           charger_count)
+                    updated_on_shift_access_chargers = prev_station.on_shift_access_chargers.union(
+                        [charger_id]) if on_shift_access else prev_station.on_shift_access_chargers
 
-                    return Station.build(
-                        id=station_id,
-                        geoid=geoid,
-                        road_network=road_network,
-                        chargers=updated_chargers,
-                        on_shift_access=updated_on_shift_access_chargers
-                    )
+                    return Station.build(id=station_id,
+                                         geoid=geoid,
+                                         road_network=road_network,
+                                         chargers=updated_chargers,
+                                         on_shift_access=updated_on_shift_access_chargers)
 
             except ValueError as v:
-                raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
+                raise IOError(
+                    f"unable to parse station {station_id} from row due to invalid value(s): {row}"
+                ) from v
 
     def has_available_charger(self, charger_id: ChargerId) -> bool:
         """
@@ -201,12 +201,14 @@ class Station(NamedTuple):
 
         if self.has_available_charger(charger_id):
             previous_charger_count = self.available_chargers.get(charger_id)
-            updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count - 1)
+            updated_avail_chargers = self.available_chargers.set(charger_id,
+                                                                 previous_charger_count - 1)
             return self._replace(available_chargers=updated_avail_chargers)
         else:
             return None
 
-    def return_charger(self, charger_id: ChargerId) -> Tuple[Optional[Exception], Optional[Station]]:
+    def return_charger(self,
+                       charger_id: ChargerId) -> Tuple[Optional[Exception], Optional[Station]]:
         """
         Returns a charger_id of type `charger_id` to the station.
         Raises exception if available chargers exceeds total chargers
@@ -219,18 +221,21 @@ class Station(NamedTuple):
             previous_charger_count = self.available_chargers.get(charger_id)
             total_chargers = self.total_chargers.get(charger_id)
             if not total_chargers:
-                return SimulationStateError(f"Station {self.id} has no chargers of type {charger_id}"), None
+                return SimulationStateError(
+                    f"Station {self.id} has no chargers of type {charger_id}"), None
             elif previous_charger_count > total_chargers:
-                return SimulationStateError(f"station {self.id} already has max ({total_chargers}) {charger_id} chargers"), None
-            updated_avail_chargers = self.available_chargers.set(charger_id, previous_charger_count + 1)
+                return SimulationStateError(
+                    f"station {self.id} already has max ({total_chargers}) {charger_id} chargers"
+                ), None
+            updated_avail_chargers = self.available_chargers.set(charger_id,
+                                                                 previous_charger_count + 1)
             return None, self._replace(available_chargers=updated_avail_chargers)
         else:
             return None, self
 
     def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> Station:
         return self._replace(
-            charger_prices_per_kwh=DictOps.merge_dicts(self.charger_prices_per_kwh, new_prices)
-        )
+            charger_prices_per_kwh=DictOps.merge_dicts(self.charger_prices_per_kwh, new_prices))
 
     def receive_payment(self, currency_received: Currency) -> Station:
         """
@@ -269,7 +274,8 @@ class Station(NamedTuple):
                 updated_enqueued_vehicles = self.enqueued_vehicles.delete(charger_id)
                 return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
             else:
-                updated_enqueued_vehicles = self.enqueued_vehicles.set(charger_id, updated_enqueued_count)
+                updated_enqueued_vehicles = self.enqueued_vehicles.set(
+                    charger_id, updated_enqueued_count)
                 return self._replace(enqueued_vehicles=updated_enqueued_vehicles)
 
     def enqueued_vehicle_count_for_charger(self, charger_id: ChargerId) -> int:

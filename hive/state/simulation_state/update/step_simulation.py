@@ -27,13 +27,13 @@ log = logging.getLogger(__name__)
 
 class StepSimulation(NamedTuple, SimulationUpdateFunction):
     instruction_generators: Tuple[InstructionGenerator, ...]
-    instruction_generator_update_fn: Callable[
-        [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None
+    instruction_generator_update_fn: Callable[[InstructionGenerator, SimulationState],
+                                              Optional[InstructionGenerator]] = lambda a, b: None
 
     def update(
-            self,
-            simulation_state: SimulationState,
-            env: Environment,
+        self,
+        simulation_state: SimulationState,
+        env: Environment,
     ) -> Tuple[SimulationState, Optional[StepSimulation]]:
         """
         generates all instructions for this time step and then attempts to apply them to the SimulationState
@@ -53,16 +53,12 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         #  was failing silently. Once we decide on our error handling strategy we should revisit this. -NR
         user_update_result = ft.reduce(
             instruction_generator_update_fn(self.instruction_generator_update_fn, simulation_state),
-            self.instruction_generators,
-            UserProvidedUpdateAccumulator()
-        )
+            self.instruction_generators, UserProvidedUpdateAccumulator())
 
         sim_with_drivers_updated = perform_driver_state_updates(simulation_state, env)
 
-        i_stack, updated_i_gens = generate_instructions(
-            user_update_result.updated_fns,
-            sim_with_drivers_updated,
-            env)
+        i_stack, updated_i_gens = generate_instructions(user_update_result.updated_fns,
+                                                        sim_with_drivers_updated, env)
 
         # pops the top instruction from the stack. this could be replaced with something like a priority queue
         final_instructions = ()
@@ -71,13 +67,15 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
             if not i:
                 continue
             else:
-                final_instructions = (i,) + final_instructions
+                final_instructions = (i, ) + final_instructions
 
         log_instructions(final_instructions, env, simulation_state.sim_time)
 
         # update drivers, update vehicles
-        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env, final_instructions)
-        sim_vehicles_updated = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
+        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env,
+                                                   final_instructions)
+        sim_vehicles_updated = perform_vehicle_state_updates(simulation_state=sim_with_instructions,
+                                                             env=env)
 
         # advance the simulation one time step
         sim_next_time_step = simulation_state_ops.tick(sim_vehicles_updated)

@@ -5,6 +5,7 @@ import re
 
 NodeId = TypeVar('NodeId')
 
+
 def create_link_id(src: int, dst: int) -> LinkId:
     """
     creates a LinkId from its source and destination node ids
@@ -15,7 +16,8 @@ def create_link_id(src: int, dst: int) -> LinkId:
     return f"{src}-{dst}"
 
 
-def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[NodeId, NodeId]]]:
+def extract_node_ids(
+        link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[NodeId, NodeId]]]:
     """
     expects the provided string is of the form {src_node_id}-{dst_node_id}
     :param link_id: a string that is a LinkId
@@ -25,7 +27,9 @@ def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tup
     if len(result) < 2:
         return Exception(f"LinkId {link_id} does not take the form src_node_id-dst_node_id"), None
     elif len(result) > 2:
-        return Exception(f"LinkId {link_id} can only have one dash (-) character in the form src_node_id-dst_node_id"), None
+        return Exception(
+            f"LinkId {link_id} can only have one dash (-) character in the form src_node_id-dst_node_id"
+        ), None
     else:
         try:
             src = literal_eval(result[0])

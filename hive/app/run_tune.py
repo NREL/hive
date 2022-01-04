@@ -19,8 +19,7 @@ from hive.util import fs
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
     'scenario_file',
-    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")'
-)
+    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")')
 
 log = logging.getLogger("hive")
 
@@ -29,7 +28,6 @@ class DummyReporter(Reporter):
     """
     dummy reporter that does nothing
     """
-
     def log_sim_state(self, sim_state):
         pass
 
@@ -44,7 +42,6 @@ class OptimizationWrapper(tune.Trainable):
     """
     wrapper for a tune optimization.
     """
-
     @staticmethod
     def _scoring_function(payload: RunnerPayload) -> float:
         score = sum([v.balance for v in payload.s.vehicles.values()])
@@ -52,7 +49,7 @@ class OptimizationWrapper(tune.Trainable):
         print("VEHICLES ", payload.s.vehicles.values())
         return score
 
-    def _setup(self, config: Dict[str: int]):
+    def _setup(self, config: Dict[str:int]):
         scenarios = {
             1: 'denver_demo.yaml',
             2: 'denver_demo_constrained_charging.yaml',
@@ -89,11 +86,9 @@ def run() -> int:
 
     log.info('running tune experiments')
 
-    result = tune.run(
-        OptimizationWrapper,
-        stop={"training_iteration": 1},
-        config={'scenario': tune.grid_search([1, 2])}
-    )
+    result = tune.run(OptimizationWrapper,
+                      stop={"training_iteration": 1},
+                      config={'scenario': tune.grid_search([1, 2])})
 
     df = result.dataframe()
     df = df[['config/scenario', 'score']]

@@ -11,10 +11,8 @@ if TYPE_CHECKING:
 
 
 class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
-
     @abstractmethod
-    def update(self,
-               simulation_state: SimulationState,
+    def update(self, simulation_state: SimulationState,
                env: Environment) -> Tuple[SimulationState, Optional[SimulationUpdateFunction]]:
         """
         takes a simulation state and modifies it, returning the updated simulation state
@@ -25,4 +23,3 @@ class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
         :return: the updated sim state, along with any reporting;
         as well, an Optionally-updated SimulationUpdate function
         """
-

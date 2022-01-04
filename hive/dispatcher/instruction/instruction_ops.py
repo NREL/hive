@@ -37,8 +37,7 @@ def trip_plan_covers_previous(previous_state: ServicingPoolingTrip,
 
 
 def trip_plan_ordering_is_valid(new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
-                                previous_state: Optional[ServicingPoolingTrip] = None
-                                ) -> bool:
+                                previous_state: Optional[ServicingPoolingTrip] = None) -> bool:
     """
     checks that the incoming trip plan has a logical pickup and dropoff ordering and that
     no passengers are left on the vehicle after all steps in the trip plan.
@@ -82,8 +81,9 @@ def trip_plan_ordering_is_valid(new_trip_plan: Tuple[Tuple[RequestId, TripPhase]
     return has_valid_order and no_passengers_at_end_of_trip_plan
 
 
-def trip_plan_all_requests_allow_pooling(sim: 'SimulationState',
-                                         trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]) -> Optional[str]:
+def trip_plan_all_requests_allow_pooling(
+        sim: 'SimulationState', trip_plan: Tuple[Tuple[RequestId, TripPhase],
+                                                 ...]) -> Optional[str]:
     """
     confirm that each request in the trip plan allows pooling
 
@@ -99,7 +99,7 @@ def trip_plan_all_requests_allow_pooling(sim: 'SimulationState',
             updated_sim_error_ids = sim_error_ids + (r_id, )
             return updated_sim_error_ids, pool_error_ids
         elif not req.allows_pooling:
-            updated_pool_error_ids = sim_error_ids + (r_id,)
+            updated_pool_error_ids = sim_error_ids + (r_id, )
             return sim_error_ids, updated_pool_error_ids
         else:
             return test_errors

@@ -19,10 +19,7 @@ class HumanUnavailableChargeParameters(NamedTuple):
     remaining_range_target: Optional[Kilometers] = None
 
     @classmethod
-    def build(cls,
-              vehicle: Vehicle,
-              home_base_id: BaseId,
-              sim: SimulationState,
+    def build(cls, vehicle: Vehicle, home_base_id: BaseId, sim: SimulationState,
               env: Environment) -> HumanUnavailableChargeParameters:
         """
         builds the parameters used to track our vehicle's need for charging. captures
@@ -61,6 +58,7 @@ class HumanUnavailableChargeParameters(NamedTuple):
             # determine if we have a charge target
             total_range_required = range_to_get_home + range_to_charger_tomorrow + buffer
             charge_target = total_range_required if total_range_required > remaining_range else None
-            charge_params = HumanUnavailableChargeParameters() if charge_target is None else HumanUnavailableChargeParameters(charge_target)
+            charge_params = HumanUnavailableChargeParameters(
+            ) if charge_target is None else HumanUnavailableChargeParameters(charge_target)
 
             return charge_params

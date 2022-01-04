@@ -18,12 +18,12 @@ class LocalSimulationRunner(NamedTuple):
     """
     The local simulation runner.
     """
-
     @classmethod
-    def run(cls,
-            runner_payload: RunnerPayload,
-            position: int = 0,
-            ) -> RunnerPayload:
+    def run(
+        cls,
+        runner_payload: RunnerPayload,
+        position: int = 0,
+    ) -> RunnerPayload:
         """
         steps through time, running a simulation, and producing a simulation result
 
@@ -36,13 +36,11 @@ class LocalSimulationRunner(NamedTuple):
             int(runner_payload.e.config.sim.start_time),
             int(runner_payload.e.config.sim.end_time),
             runner_payload.e.config.sim.timestep_duration_seconds,
-        ), position=position)
+        ),
+                          position=position)
 
-        final_payload = ft.reduce(
-            _run_step_in_context(runner_payload.e),
-            time_steps,
-            runner_payload
-        )
+        final_payload = ft.reduce(_run_step_in_context(runner_payload.e), time_steps,
+                                  runner_payload)
 
         return final_payload
 

@@ -10,7 +10,6 @@ from hive.resources.mock_lobster import *
 
 
 class TestSampleVehicles(TestCase):
-
     def test_sample_n_requests_default(self):
         n = 100
         sim = mock_sim(road_network=mock_osm_network())
@@ -21,7 +20,8 @@ class TestSampleVehicles(TestCase):
         self.assertEquals(len(sample_requests), n, f"should have sampled {n} requests")
 
         for r in sample_requests:
-            self.assertNotEqual(r.origin, r.destination, f"request should not have equal origin and destination")
+            self.assertNotEqual(r.origin, r.destination,
+                                f"request should not have equal origin and destination")
 
     def test_sample_n_vehicles_default(self):
         """
@@ -29,20 +29,18 @@ class TestSampleVehicles(TestCase):
         """
         n = 10
         base = mock_base()
-        bases = (base,)
+        bases = (base, )
         sim = mock_sim(bases=bases, road_network=mock_osm_network())
         env = mock_env()
         mechatronics_id = DefaultIds.mock_mechatronics_bev_id()
         loc_fn = build_default_location_sampling_fn()
         soc_fn = build_default_soc_sampling_fn()
 
-        result: Result = sample_vehicles(
-            count=n,
-            sim=sim,
-            env=env,
-            location_sampling_function=loc_fn,
-            soc_sampling_function=soc_fn
-        )
+        result: Result = sample_vehicles(count=n,
+                                         sim=sim,
+                                         env=env,
+                                         location_sampling_function=loc_fn,
+                                         soc_sampling_function=soc_fn)
 
         def check_vehicle(v: Vehicle):
             self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
@@ -64,7 +62,7 @@ class TestSampleVehicles(TestCase):
         fail_at_vehicle_n = 4
         failure_msg = f"fails after {fail_at_vehicle_n} attempts"
         base = mock_base()
-        bases = (base,)
+        bases = (base, )
         sim = mock_sim(bases=bases, road_network=mock_osm_network())
         env = mock_env()
 
@@ -79,13 +77,11 @@ class TestSampleVehicles(TestCase):
 
         soc_fn = build_default_soc_sampling_fn()
 
-        result: Result = sample_vehicles(
-            count=n,
-            sim=sim,
-            env=env,
-            location_sampling_function=wonky_loc_fn,
-            soc_sampling_function=soc_fn
-        )
+        result: Result = sample_vehicles(count=n,
+                                         sim=sim,
+                                         env=env,
+                                         location_sampling_function=wonky_loc_fn,
+                                         soc_sampling_function=soc_fn)
 
         with self.assertRaises(UnwrapFailedError):
             result.unwrap()

@@ -28,13 +28,16 @@ class BasicForecaster(NamedTuple, ForecasterInterface):
         if not Path(demand_forecast_file).is_file():
             raise IOError(f"{demand_forecast_file} is not a valid path to a request file")
 
-        error, reader = DictReaderStepper.build(demand_forecast_file, "sim_time", parser=SimTime.build)
+        error, reader = DictReaderStepper.build(demand_forecast_file,
+                                                "sim_time",
+                                                parser=SimTime.build)
         if error:
             raise error
         else:
             return BasicForecaster(reader)
 
-    def generate_forecast(self, simulation_state: 'SimulationState') -> Tuple[BasicForecaster, Forecast]:
+    def generate_forecast(self,
+                          simulation_state: 'SimulationState') -> Tuple[BasicForecaster, Forecast]:
         """
         Generate fleet targets to be consumed by the dispatcher.
 

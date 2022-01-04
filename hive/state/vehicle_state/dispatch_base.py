@@ -28,13 +28,16 @@ class DispatchBase(NamedTuple, VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_BASE
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(self, sim: SimulationState,
+              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.position, base.position) if vehicle and base else False
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.position,
+                                                   base.position) if vehicle and base else False
         context = f"vehicle {self.vehicle_id} entering dispatch base state at base {self.base_id}"
         if not base:
             msg = f"base not found; context: {context}"
@@ -51,11 +54,8 @@ class DispatchBase(NamedTuple, VehicleState):
             result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
 
-    def exit(self,
-             next_state: VehicleState,
-             sim: SimulationState,
-             env: Environment
-             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
@@ -69,8 +69,8 @@ class DispatchBase(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _default_terminal_state(
-        self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+            self, sim: SimulationState,
+            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -95,8 +95,7 @@ class DispatchBase(NamedTuple, VehicleState):
                 next_state = Idle(self.vehicle_id)
             return None, next_state
 
-    def _perform_update(self,
-                        sim: SimulationState,
+    def _perform_update(self, sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the base

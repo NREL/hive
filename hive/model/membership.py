@@ -36,7 +36,7 @@ class Membership(NamedTuple):
         """
         if membership_id == PUBLIC_MEMBERSHIP_ID:
             raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
-        return Membership(frozenset((membership_id,)))
+        return Membership(frozenset((membership_id, )))
 
     @property
     def public(self) -> bool:

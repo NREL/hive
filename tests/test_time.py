@@ -11,7 +11,7 @@ class TestUpdateRequests(TestCase):
         t3 = read_time_string("7:00:00")
         t4 = read_time_string("13:00:00")
 
-        self.assertEqual(t1, time(hour=0, minute=0 ,second=0))
+        self.assertEqual(t1, time(hour=0, minute=0, second=0))
         self.assertEqual(t2, time(hour=23, minute=59, second=59))
         self.assertEqual(t3, time(hour=7, minute=0, second=0))
         self.assertEqual(t4, time(hour=13, minute=0, second=0))

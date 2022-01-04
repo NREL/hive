@@ -16,14 +16,15 @@ if TYPE_CHECKING:
 
 class H3Ops:
     @classmethod
-    def nearest_entity_by_great_circle_distance(cls,
-                                                geoid: GeoId,
-                                                entities: immutables.Map[EntityId, Entity],
-                                                entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                                                sim_h3_search_resolution: int,
-                                                is_valid: Callable[[Entity], bool] = lambda x: True,
-                                                max_search_distance_km: Kilometers = 10  # kilometers
-                                                ) -> Optional[Entity]:
+    def nearest_entity_by_great_circle_distance(
+            cls,
+            geoid: GeoId,
+            entities: immutables.Map[EntityId, Entity],
+            entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+            sim_h3_search_resolution: int,
+            is_valid: Callable[[Entity], bool] = lambda x: True,
+            max_search_distance_km: Kilometers = 10  # kilometers
+    ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -45,19 +46,19 @@ class H3Ops:
             sim_h3_search_resolution=sim_h3_search_resolution,
             is_valid=is_valid,
             distance_function=lambda e: cls.great_circle_distance(geoid, e.geoid),
-            max_search_distance_km=max_search_distance_km
-        )
+            max_search_distance_km=max_search_distance_km)
 
     @classmethod
-    def nearest_entity(cls,
-                       geoid: GeoId,
-                       entities: Tuple[Entity, ...],
-                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                       sim_h3_search_resolution: int,
-                       distance_function: Callable[[Entity], float],
-                       is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_search_distance_km: Kilometers = 10  # kilometers
-                       ) -> Optional[Entity]:
+    def nearest_entity(
+            cls,
+            geoid: GeoId,
+            entities: Tuple[Entity, ...],
+            entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+            sim_h3_search_resolution: int,
+            distance_function: Callable[[Entity], float],
+            is_valid: Callable[[Entity], bool] = lambda x: True,
+            max_search_distance_km: Kilometers = 10  # kilometers
+    ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -115,8 +116,7 @@ class H3Ops:
         return _search()
 
     @classmethod
-    def get_entities_at_cell(cls,
-                             search_cell: GeoId,
+    def get_entities_at_cell(cls, search_cell: GeoId,
                              entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
                              entities: Tuple[Entity, ...]) -> Tuple[Entity, ...]:
         """
@@ -136,12 +136,13 @@ class H3Ops:
             return found
 
     @classmethod
-    def nearest_entity_point_to_point(cls,
-                                      geoid: GeoId,
-                                      entities: Dict[EntityId, Entity],
-                                      entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
-                                      is_valid: Callable = lambda x: True,
-                                      ) -> Optional[Entity]:
+    def nearest_entity_point_to_point(
+        cls,
+        geoid: GeoId,
+        entities: Dict[EntityId, Entity],
+        entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+        is_valid: Callable = lambda x: True,
+    ) -> Optional[Entity]:
         """
         A nearest neighbor search that scans all entities and returns the one with the lowest distance to the geoid.
 
@@ -188,7 +189,7 @@ class H3Ops:
         # calculate haversine
         lat = lat2 - lat1
         lon = lon2 - lon1
-        d = sin(lat * 0.5) ** 2 + cos(lat1) * cos(lat2) * sin(lon * 0.5) ** 2
+        d = sin(lat * 0.5)**2 + cos(lat1) * cos(lat2) * sin(lon * 0.5)**2
 
         return 2 * avg_earth_radius_km * asin(sqrt(d))
 

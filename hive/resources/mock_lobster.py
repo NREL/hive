@@ -53,7 +53,6 @@ from hive.util.units import *
 
 
 class DefaultIds:
-
     @classmethod
     def mock_request_id(cls) -> RequestId:
         return "r0"
@@ -96,19 +95,26 @@ def somewhere_else() -> GeoId:
 
 
 def mock_geojson() -> Dict:
-    return {'type': 'Feature',
-            'properties': {'id': None},
-            'geometry': {'type': 'Polygon',
-                         'coordinates': [[[-105.00029227609865, 39.74962517224048],
-                                          [-104.98738065320869, 39.73994639686878],
-                                          [-104.97341667234025, 39.74000864414065],
-                                          [-104.97337619703339, 39.767951988786585],
-                                          [-104.97511663522859, 39.769196417473],
-                                          [-105.00029227609865, 39.74962517224048]]]}}
+    return {
+        'type': 'Feature',
+        'properties': {
+            'id': None
+        },
+        'geometry': {
+            'type':
+            'Polygon',
+            'coordinates': [[[-105.00029227609865, 39.74962517224048],
+                             [-104.98738065320869, 39.73994639686878],
+                             [-104.97341667234025, 39.74000864414065],
+                             [-104.97337619703339, 39.767951988786585],
+                             [-104.97511663522859, 39.769196417473],
+                             [-105.00029227609865, 39.74962517224048]]]
+        }
+    }
 
 
 def mock_membership():
-    return Membership().from_tuple((DefaultIds.mock_membership_id(),))
+    return Membership().from_tuple((DefaultIds.mock_membership_id(), ))
 
 
 def mock_geofence(geojson: Dict = mock_geojson(), resolution: H3Resolution = 10) -> GeoFence:
@@ -142,13 +148,14 @@ def mock_base(
         road_network: RoadNetwork = mock_network(),
         membership: Membership = Membership(),
 ) -> Base:
-    return Base.build(base_id,
-                      h3.geo_to_h3(lat, lon, h3_res),
-                      road_network,
-                      station_id,
-                      stall_count,
-                      membership,
-                      )
+    return Base.build(
+        base_id,
+        h3.geo_to_h3(lat, lon, h3_res),
+        road_network,
+        station_id,
+        stall_count,
+        membership,
+    )
 
 
 def mock_base_from_geoid(
@@ -176,8 +183,8 @@ def mock_station(
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     if on_shift_access_chargers is None:
         on_shift_access_chargers = frozenset(chargers.keys())
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers, on_shift_access_chargers,
-                         membership)
+    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers,
+                         on_shift_access_chargers, membership)
 
 
 def mock_station_from_geoid(
@@ -194,14 +201,13 @@ def mock_station_from_geoid(
         chargers = immutables.Map(chargers)
     if on_shift_access_chargers is None:
         on_shift_access_chargers = frozenset(chargers.keys())
-    return Station.build(station_id, geoid, road_network, chargers, on_shift_access_chargers, membership)
+    return Station.build(station_id, geoid, road_network, chargers, on_shift_access_chargers,
+                         membership)
 
 
-def mock_rate_structure(
-        base_price: Currency = 2.2,
-        price_per_mile: Currency = 1.6,
-        minimum_price: Currency = 5
-) -> RequestRateStructure:
+def mock_rate_structure(base_price: Currency = 2.2,
+                        price_per_mile: Currency = 1.6,
+                        minimum_price: Currency = 5) -> RequestRateStructure:
     return RequestRateStructure(
         base_price=base_price,
         price_per_mile=price_per_mile,
@@ -209,53 +215,45 @@ def mock_rate_structure(
     )
 
 
-def mock_request(
-        request_id: RequestId = DefaultIds.mock_request_id(),
-        o_lat: float = 39.7539,
-        o_lon: float = -104.974,
-        d_lat: float = 39.7579,
-        d_lon: float = -104.978,
-        h3_res: int = 15,
-        road_network: RoadNetwork = mock_network(),
-        departure_time: SimTime = 0,
-        passengers: int = 1,
-        fleet_id: Optional[MembershipId] = None,
-        allows_pooling: bool = False
-) -> Request:
-    return Request.build(
-        request_id=request_id,
-        origin=h3.geo_to_h3(o_lat, o_lon, h3_res),
-        destination=h3.geo_to_h3(d_lat, d_lon, h3_res),
-        road_network=road_network,
-        departure_time=departure_time,
-        passengers=passengers,
-        fleet_id=fleet_id,
-        allows_pooling=allows_pooling
-    )
+def mock_request(request_id: RequestId = DefaultIds.mock_request_id(),
+                 o_lat: float = 39.7539,
+                 o_lon: float = -104.974,
+                 d_lat: float = 39.7579,
+                 d_lon: float = -104.978,
+                 h3_res: int = 15,
+                 road_network: RoadNetwork = mock_network(),
+                 departure_time: SimTime = 0,
+                 passengers: int = 1,
+                 fleet_id: Optional[MembershipId] = None,
+                 allows_pooling: bool = False) -> Request:
+    return Request.build(request_id=request_id,
+                         origin=h3.geo_to_h3(o_lat, o_lon, h3_res),
+                         destination=h3.geo_to_h3(d_lat, d_lon, h3_res),
+                         road_network=road_network,
+                         departure_time=departure_time,
+                         passengers=passengers,
+                         fleet_id=fleet_id,
+                         allows_pooling=allows_pooling)
 
 
-def mock_request_from_geoids(
-        request_id: RequestId = DefaultIds.mock_request_id(),
-        origin: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
-        destination: GeoId = h3.geo_to_h3(39.7579, -104.978, 15),
-        road_network: RoadNetwork = mock_network(),
-        departure_time: SimTime = SimTime(0),
-        passengers: int = 1,
-        value: Currency = 0,
-        fleet_id: Optional[MembershipId] = None,
-        allows_pooling: bool = False
-) -> Request:
-    return Request.build(
-        request_id=request_id,
-        origin=origin,
-        destination=destination,
-        road_network=road_network,
-        departure_time=departure_time,
-        passengers=passengers,
-        value=value,
-        fleet_id=fleet_id,
-        allows_pooling=allows_pooling
-    )
+def mock_request_from_geoids(request_id: RequestId = DefaultIds.mock_request_id(),
+                             origin: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
+                             destination: GeoId = h3.geo_to_h3(39.7579, -104.978, 15),
+                             road_network: RoadNetwork = mock_network(),
+                             departure_time: SimTime = SimTime(0),
+                             passengers: int = 1,
+                             value: Currency = 0,
+                             fleet_id: Optional[MembershipId] = None,
+                             allows_pooling: bool = False) -> Request:
+    return Request.build(request_id=request_id,
+                         origin=origin,
+                         destination=destination,
+                         road_network=road_network,
+                         departure_time=departure_time,
+                         passengers=passengers,
+                         value=value,
+                         fleet_id=fleet_id,
+                         allows_pooling=allows_pooling)
 
 
 def mock_ev_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
@@ -267,8 +265,8 @@ def mock_ev_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
 
 
 def mock_powercurve(
-        nominal_max_charge_kw=50,
-        battery_capacity_kwh=50,
+    nominal_max_charge_kw=50,
+    battery_capacity_kwh=50,
 ) -> TabularPowercurve:
     powercurve_file = resource_filename("hive.resources.powercurve", "normalized.yaml")
     with Path(powercurve_file).open() as f:
@@ -281,11 +279,11 @@ def mock_powercurve(
 
 
 def mock_bev(
-        battery_capacity_kwh=50,
-        idle_kwh_per_hour=0.8,
-        nominal_watt_hour_per_mile=225,
-        nominal_max_charge_kw=50,
-        charge_taper_cutoff_kw=10,
+    battery_capacity_kwh=50,
+    idle_kwh_per_hour=0.8,
+    nominal_watt_hour_per_mile=225,
+    nominal_max_charge_kw=50,
+    charge_taper_cutoff_kw=10,
 ) -> BEV:
     return BEV(
         mechatronics_id='bev',
@@ -307,9 +305,9 @@ def mock_ice_powertrain(nominal_miles_per_gallon) -> TabularPowertrain:
 
 
 def mock_ice(
-        tank_capacity_gallons=15,
-        idle_gallons_per_hour=0.2,
-        nominal_miles_per_gallon=30,
+    tank_capacity_gallons=15,
+    idle_gallons_per_hour=0.2,
+    nominal_miles_per_gallon=30,
 ) -> ICE:
     # source: https://www.energy.gov/eere/vehicles/
     #   fact-861-february-23-2015-idle-fuel-consumption-selected-gasoline-and-diesel-vehicles
@@ -322,68 +320,62 @@ def mock_ice(
     )
 
 
-def mock_vehicle(
-        vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
-        lat: float = 39.7539,
-        lon: float = -104.974,
-        h3_res: int = 15,
-        mechatronics: MechatronicsInterface = mock_bev(),
-        vehicle_state: Optional[VehicleState] = None,
-        soc: Ratio = 1,
-        driver_state: Optional[DriverState] = None,
-        membership: Membership = Membership(),
-        total_seats: int = 999
-) -> Vehicle:
+def mock_vehicle(vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
+                 lat: float = 39.7539,
+                 lon: float = -104.974,
+                 h3_res: int = 15,
+                 mechatronics: MechatronicsInterface = mock_bev(),
+                 vehicle_state: Optional[VehicleState] = None,
+                 soc: Ratio = 1,
+                 driver_state: Optional[DriverState] = None,
+                 membership: Membership = Membership(),
+                 total_seats: int = 999) -> Vehicle:
     v_state = vehicle_state if vehicle_state else Idle(vehicle_id)
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
+    d_state = driver_state if driver_state else AutonomousAvailable(
+        AutonomousDriverAttributes(vehicle_id))
     position = road_network.position_from_geoid(geoid)
-    return Vehicle(
-        id=vehicle_id,
-        mechatronics_id=mechatronics.mechatronics_id,
-        energy=initial_energy,
-        position=position,
-        vehicle_state=v_state,
-        driver_state=d_state,
-        membership=membership,
-        total_seats=total_seats
-    )
+    return Vehicle(id=vehicle_id,
+                   mechatronics_id=mechatronics.mechatronics_id,
+                   energy=initial_energy,
+                   position=position,
+                   vehicle_state=v_state,
+                   driver_state=d_state,
+                   membership=membership,
+                   total_seats=total_seats)
 
 
-def mock_vehicle_from_geoid(
-        vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
-        geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
-        mechatronics: MechatronicsInterface = mock_bev(),
-        vehicle_state: Optional[VehicleState] = None,
-        soc: Ratio = 1,
-        driver_state: Optional[DriverState] = None,
-        membership: Membership = Membership(),
-        total_seats: int = 999
-) -> Vehicle:
+def mock_vehicle_from_geoid(vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
+                            geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
+                            mechatronics: MechatronicsInterface = mock_bev(),
+                            vehicle_state: Optional[VehicleState] = None,
+                            soc: Ratio = 1,
+                            driver_state: Optional[DriverState] = None,
+                            membership: Membership = Membership(),
+                            total_seats: int = 999) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
-    d_state = driver_state if driver_state else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
+    d_state = driver_state if driver_state else AutonomousAvailable(
+        AutonomousDriverAttributes(vehicle_id))
     position = mock_network().position_from_geoid(geoid)
-    return Vehicle(
-        id=vehicle_id,
-        mechatronics_id=mechatronics.mechatronics_id,
-        energy=initial_energy,
-        position=position,
-        vehicle_state=state,
-        driver_state=d_state,
-        membership=membership,
-        total_seats=total_seats
-    )
+    return Vehicle(id=vehicle_id,
+                   mechatronics_id=mechatronics.mechatronics_id,
+                   energy=initial_energy,
+                   position=position,
+                   vehicle_state=state,
+                   driver_state=d_state,
+                   membership=membership,
+                   total_seats=total_seats)
 
 
 def mock_human_driver(available: bool = True,
                       schedule_id: ScheduleId = DefaultIds.mock_schedule_id(),
                       home_base_id: BaseId = DefaultIds.mock_base_id(),
-                      allows_pooling: bool = True
-                      ):
-    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), schedule_id, home_base_id, allows_pooling)
+                      allows_pooling: bool = True):
+    attr = HumanDriverAttributes(DefaultIds.mock_vehicle_id(), schedule_id, home_base_id,
+                                 allows_pooling)
     state = HumanAvailable(attr) if available else HumanUnavailable(attr)
     return state
 
@@ -414,7 +406,6 @@ def mock_sim(
         :return: the updated sim
         ;raises: Exception when an add fails
         """
-
         def _inner(s: SimulationState, to_add):
             error, result = fn(s, to_add)
             if error:
@@ -424,20 +415,22 @@ def mock_sim(
 
         return _inner
 
-    sim_v = ft.reduce(add_or_throw(simulation_state_ops.add_vehicle), vehicles, sim) if vehicles else sim
-    sim_s = ft.reduce(add_or_throw(simulation_state_ops.add_station), stations, sim_v) if stations else sim_v
+    sim_v = ft.reduce(add_or_throw(simulation_state_ops.add_vehicle), vehicles,
+                      sim) if vehicles else sim
+    sim_s = ft.reduce(add_or_throw(simulation_state_ops.add_station), stations,
+                      sim_v) if stations else sim_v
     sim_b = ft.reduce(add_or_throw(simulation_state_ops.add_base), bases, sim_s) if bases else sim_s
 
     return sim_b
 
 
 def mock_config(
-        start_time: Union[str, int] = 0,
-        end_time: Union[str, int] = 100,
-        timestep_duration_seconds: Seconds = 1,
-        sim_h3_location_resolution: int = 15,
-        sim_h3_search_resolution: int = 9,
-        input: Dict = None,
+    start_time: Union[str, int] = 0,
+    end_time: Union[str, int] = 100,
+    timestep_duration_seconds: Seconds = 1,
+    sim_h3_location_resolution: int = 15,
+    sim_h3_search_resolution: int = 9,
+    input: Dict = None,
 ) -> HiveConfig:
     if not input:
         input = {
@@ -467,17 +460,18 @@ def mock_config(
             "network": {},
             "dispatcher": {}
         })
-    updated_global = conf_without_temp_dir.global_config._replace(output_base_directory=test_output_directory.name)
+    updated_global = conf_without_temp_dir.global_config._replace(
+        output_base_directory=test_output_directory.name)
 
     return conf_without_temp_dir._replace(global_config=updated_global)
 
 
 def mock_env(
-        config: HiveConfig = mock_config(),
-        mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
-        chargers: Optional[Dict[ChargerId, Charger]] = None,
-        schedules: Optional[Dict[ScheduleId, Callable[['SimulationState', VehicleId], bool]]] = None,
-        fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()])
+    config: HiveConfig = mock_config(),
+    mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
+    chargers: Optional[Dict[ChargerId, Charger]] = None,
+    schedules: Optional[Dict[ScheduleId, Callable[['SimulationState', VehicleId], bool]]] = None,
+    fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()])
 ) -> Environment:
     if mechatronics is None:
         mechatronics = {
@@ -492,21 +486,18 @@ def mock_env(
         }
 
     if schedules is None:
+
         def always_on_schedule(a, b):
             return True
 
-        schedules = {
-            DefaultIds.mock_schedule_id(): always_on_schedule
-        }
+        schedules = {DefaultIds.mock_schedule_id(): always_on_schedule}
 
-    initial_env = Environment(
-        config=config,
-        reporter=mock_reporter(),
-        mechatronics=immutables.Map(mechatronics),
-        chargers=immutables.Map(chargers),
-        schedules=immutables.Map(schedules),
-        fleet_ids=fleet_ids
-    )
+    initial_env = Environment(config=config,
+                              reporter=mock_reporter(),
+                              mechatronics=immutables.Map(mechatronics),
+                              chargers=immutables.Map(chargers),
+                              schedules=immutables.Map(schedules),
+                              fleet_ids=fleet_ids)
 
     return initial_env
 
@@ -528,13 +519,11 @@ def mock_reporter() -> Reporter:
     return MockReporter()
 
 
-def mock_haversine_zigzag_route(
-        n: int = 3,
-        lat_step_size: int = 5,
-        lon_step_size: int = 5,
-        speed_kmph: Kmph = 40,
-        h3_res: int = 15
-) -> Route:
+def mock_haversine_zigzag_route(n: int = 3,
+                                lat_step_size: int = 5,
+                                lon_step_size: int = 5,
+                                speed_kmph: Kmph = 40,
+                                h3_res: int = 15) -> Route:
     """
     "zigs" lat steps and "zags" lon steps. all your base belong to us.
 
@@ -549,7 +538,6 @@ def mock_haversine_zigzag_route(
     :param h3_res: h3 resolution
     :return: a route
     """
-
     def step(acc: Tuple[Link, ...], i: int) -> Tuple[Link, ...]:
         """
         constructs the next Link
@@ -559,8 +547,10 @@ def mock_haversine_zigzag_route(
         :param i: what link we are making
         :return: the route with another link added
         """
-        lat_pos, lon_pos = math.floor(i / 2.0) * lat_step_size, math.floor((i + 1) / 2.0) * lon_step_size
-        lat_dest, lon_dest = math.floor((i + 1) / 2.0) * lat_step_size, math.floor((i + 2) / 2.0) * lon_step_size
+        lat_pos, lon_pos = math.floor(i / 2.0) * lat_step_size, math.floor(
+            (i + 1) / 2.0) * lon_step_size
+        lat_dest, lon_dest = math.floor((i + 1) / 2.0) * lat_step_size, math.floor(
+            (i + 2) / 2.0) * lon_step_size
         start = h3.geo_to_h3(lat_pos, lon_pos, h3_res)
         end = h3.geo_to_h3(lat_dest, lon_dest, h3_res)
         distance_km = H3Ops.great_circle_distance(start, end)
@@ -571,15 +561,12 @@ def mock_haversine_zigzag_route(
             distance_km=distance_km,
             speed_kmph=speed_kmph,
         )
-        return acc + (link,)
+        return acc + (link, )
 
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_route_from_geoids(
-        src: GeoId,
-        dst: GeoId,
-        speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
+def mock_route_from_geoids(src: GeoId, dst: GeoId, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
     link = Link.build("1", src, dst, speed_kmph=speed_kmph)
     return link,
 
@@ -591,19 +578,23 @@ def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
 
     links = {
-        "1": Link.build("1",
-                        h3.geo_to_h3(37, 122, h3_res),
-                        h3.geo_to_h3(37.008994, 122, h3_res),
-                        speed_kmph=speed_kmph,
-                        ),
-        "2": Link.build("2",
-                        h3.geo_to_h3(37.008994, 122, h3_res),
-                        h3.geo_to_h3(37.017998, 122, h3_res),
-                        speed_kmph=speed_kmph),
-        "3": Link.build("3",
-                        h3.geo_to_h3(37.017998, 122, h3_res),
-                        h3.geo_to_h3(37.026992, 122, h3_res),
-                        speed_kmph=speed_kmph),
+        "1":
+        Link.build(
+            "1",
+            h3.geo_to_h3(37, 122, h3_res),
+            h3.geo_to_h3(37.008994, 122, h3_res),
+            speed_kmph=speed_kmph,
+        ),
+        "2":
+        Link.build("2",
+                   h3.geo_to_h3(37.008994, 122, h3_res),
+                   h3.geo_to_h3(37.017998, 122, h3_res),
+                   speed_kmph=speed_kmph),
+        "3":
+        Link.build("3",
+                   h3.geo_to_h3(37.017998, 122, h3_res),
+                   h3.geo_to_h3(37.026992, 122, h3_res),
+                   speed_kmph=speed_kmph),
     }
 
     return links
@@ -616,9 +607,7 @@ def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
 def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
     class MockForecaster(NamedTuple, ForecasterInterface):
         def generate_forecast(
-                self,
-                simulation_state: SimulationState
-        ) -> Tuple[ForecasterInterface, Forecast]:
+                self, simulation_state: SimulationState) -> Tuple[ForecasterInterface, Forecast]:
             f = Forecast(type=ForecastType.DEMAND, value=forecast)
             return self, f
 
@@ -626,16 +615,16 @@ def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
 
 
 def mock_instruction_generators(
-        config: HiveConfig = mock_config(),
-) -> Tuple[InstructionGenerator, ...]:
+        config: HiveConfig = mock_config(), ) -> Tuple[InstructionGenerator, ...]:
     return (
         ChargingFleetManager(config.dispatcher),
         Dispatcher(config.dispatcher),
     )
 
 
-def mock_update(config: Optional[HiveConfig] = None,
-                instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None) -> Update:
+def mock_update(
+        config: Optional[HiveConfig] = None,
+        instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None) -> Update:
     if config and instruction_generators:
         return Update.build(config, instruction_generators)
     elif config:
@@ -663,19 +652,31 @@ def mock_dcfc_charger_id():
 
 
 def mock_l1_charger():
-    return Charger(mock_l1_charger_id(), energy_type=EnergyType.ELECTRIC, rate=3.3, units='kilowatts')
+    return Charger(mock_l1_charger_id(),
+                   energy_type=EnergyType.ELECTRIC,
+                   rate=3.3,
+                   units='kilowatts')
 
 
 def mock_l2_charger():
-    return Charger(mock_l2_charger_id(), energy_type=EnergyType.ELECTRIC, rate=7.2, units='kilowatts')
+    return Charger(mock_l2_charger_id(),
+                   energy_type=EnergyType.ELECTRIC,
+                   rate=7.2,
+                   units='kilowatts')
 
 
 def mock_dcfc_charger():
-    return Charger(mock_dcfc_charger_id(), energy_type=EnergyType.ELECTRIC, rate=50.0, units='kilowatts')
+    return Charger(mock_dcfc_charger_id(),
+                   energy_type=EnergyType.ELECTRIC,
+                   rate=50.0,
+                   units='kilowatts')
 
 
 def mock_gasoline_pump():
     gal_per_minute = 10  # source: https://en.wikipedia.org/wiki/Gasoline_pump
     gal_per_second = gal_per_minute / 60
 
-    return Charger("gas_pump", energy_type=EnergyType.GASOLINE, rate=gal_per_second, units='gal_gasoline')
+    return Charger("gas_pump",
+                   energy_type=EnergyType.GASOLINE,
+                   rate=gal_per_second,
+                   units='gal_gasoline')

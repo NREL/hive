@@ -9,7 +9,3 @@ class AutonomousDriverAttributes(NamedTuple):
     """
     vehicle_id: VehicleId
     # agencies we can use?
-
-
-
-

@@ -17,7 +17,6 @@ class StatefulHandler(Handler):
     """
     prints the state of entities in the simulation to the state.log output file based on global logging settings
     """
-
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
         log_path = scenario_output_directory / 'state.log'
@@ -68,7 +67,8 @@ class StatefulHandler(Handler):
         output = {
             'vehicle_id': vehicle.id,
             'driver_state': vehicle.driver_state.__class__.__name__,
-            'schedule_id': vehicle.driver_state.schedule_id if vehicle.driver_state.schedule_id else "",
+            'schedule_id':
+            vehicle.driver_state.schedule_id if vehicle.driver_state.schedule_id else "",
             'available': vehicle.driver_state.available,
         }
 
@@ -101,7 +101,7 @@ class StatefulHandler(Handler):
     @staticmethod
     def station_asdict(station: Station) -> dict:
         out_dict = station._asdict()
-        del(out_dict["id"])
+        del (out_dict["id"])
 
         out_dict["station_id"] = station.id
         out_dict["memberships"] = str(station.membership)

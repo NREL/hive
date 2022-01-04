@@ -84,9 +84,10 @@ def crank(runner_payload: RunnerPayload,
                 handler.clear()
 
         if new_events is None:
-            raise SimulationStateError(f'VehicleChargeEventsHandler missing from reporter in env {rp1.e}')
+            raise SimulationStateError(
+                f'VehicleChargeEventsHandler missing from reporter in env {rp1.e}')
 
-        updated_events = events + (new_events,)
+        updated_events = events + (new_events, )
 
         return rp1, updated_events
 

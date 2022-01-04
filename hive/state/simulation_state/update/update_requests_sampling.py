@@ -27,9 +27,9 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
 
     @classmethod
     def build(
-            cls,
-            sampled_requests: Tuple[Request, ...],
-            rate_structure_file: Optional[str] = None,
+        cls,
+        sampled_requests: Tuple[Request, ...],
+        rate_structure_file: Optional[str] = None,
     ):
         """
         reads an optional rate_structure_file and builds a UpdateRequestsFromFile SimulationUpdateFunction
@@ -59,8 +59,7 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
 
         return UpdateRequestsSampling(stepper, rate_structure)
 
-    def update(self,
-               sim_state: SimulationState,
+    def update(self, sim_state: SimulationState,
                env: Environment) -> Tuple[SimulationState, Optional[UpdateRequestsSampling]]:
         """
         add requests based on a sampling function
@@ -80,7 +79,8 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
         self.request_iterator.update_stop_condition(stop_condition)
 
         priced_requests = tuple(
-            r.assign_value(self.rate_structure, sim_state.road_network) for r in self.request_iterator)
+            r.assign_value(self.rate_structure, sim_state.road_network)
+            for r in self.request_iterator)
 
         def _add_request(sim: SimulationState, request: Request) -> SimulationState:
             # add request and handle any errors
@@ -98,10 +98,6 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
                 env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
             return new_sim
 
-        updated_sim = ft.reduce(
-            _add_request,
-            priced_requests,
-            sim_state
-        )
+        updated_sim = ft.reduce(_add_request, priced_requests, sim_state)
 
         return updated_sim, self

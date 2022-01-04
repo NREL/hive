@@ -22,14 +22,14 @@ class FleetTarget:
             self.base_target = self.base_target.sort_index().interpolate(method="index")
 
         return self.base_target[sim_time]
-    
+
     def get_station_target(self, sim_time: SimTime) -> int:
         if sim_time not in self.station_target:
             self.station_target.at[sim_time] = np.nan
             self.station_target = self.station_target.sort_index().interpolate(method="index")
 
         return self.station_target[sim_time]
-    
+
     def get_active_target(self, sim_time: SimTime) -> int:
         if sim_time not in self.active_target:
             self.active_target.at[sim_time] = np.nan

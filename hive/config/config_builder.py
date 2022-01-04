@@ -23,7 +23,8 @@ class ConfigBuilder:
         :return: a Config, or, an error
         """
 
-        c = default_config if config is None else dict(list(default_config.items()) + list(config.items()))
+        c = default_config if config is None else dict(
+            list(default_config.items()) + list(config.items()))
         for key in required_config:
             value = c.get(key)
             if value is None:

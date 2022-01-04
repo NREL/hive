@@ -5,9 +5,7 @@ import yaml
 from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 
-powertrain_models = {
-    'tabular': TabularPowertrain
-}
+powertrain_models = {'tabular': TabularPowertrain}
 
 
 def build_powertrain(config: dict) -> Powertrain:
@@ -26,6 +24,8 @@ def build_powertrain(config: dict) -> Powertrain:
         if not powertrain_type:
             raise KeyError(f"powertrain file {file} missing required 'type' field")
         elif powertrain_type not in powertrain_models:
-            raise IOError(f"PowerCurve with type {powertrain_type} is not recognized, must be one of {powertrain_models.keys()}")
+            raise IOError(
+                f"PowerCurve with type {powertrain_type} is not recognized, must be one of {powertrain_models.keys()}"
+            )
         else:
             return powertrain_models[powertrain_type](data=config)

@@ -32,10 +32,10 @@ log = logging.getLogger(__name__)
 
 
 def human_charge_at_home(
-        veh: Vehicle,
-        home_base: Base,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    home_base: Base,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[ChargeBaseInstruction]:
     """
     Attempts to charge at home using the lowest power charger
@@ -56,10 +56,9 @@ def human_charge_at_home(
     elif my_mechatronics.is_full(veh):
         return None
 
-    chargers = tuple(filter(
-        lambda c: my_mechatronics.valid_charger(c),
-        [env.chargers[cid] for cid in my_station.total_chargers.keys()]
-    ))
+    chargers = tuple(
+        filter(lambda c: my_mechatronics.valid_charger(c),
+               [env.chargers[cid] for cid in my_station.total_chargers.keys()]))
     if not chargers:
         return None
     else:
@@ -69,10 +68,10 @@ def human_charge_at_home(
 
 
 def human_go_home(
-        veh: Vehicle,
-        home_base: Base,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    home_base: Base,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[Instruction]:
     """
     human drivers go home at the end of their shift.
@@ -100,11 +99,10 @@ def human_go_home(
                 simulation_state=sim,
                 environment=env,
                 target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
-                charging_search_type=env.config.dispatcher.charging_search_type
-            )
+                charging_search_type=env.config.dispatcher.charging_search_type)
 
-            target_soc = mechatronics.calc_required_soc(required_range +
-                                                        env.config.dispatcher.charging_range_km_threshold)
+            target_soc = mechatronics.calc_required_soc(
+                required_range + env.config.dispatcher.charging_range_km_threshold)
         else:
             target_soc = env.config.dispatcher.ideal_fastcharge_soc_limit
 
@@ -117,19 +115,18 @@ def human_go_home(
             charge_instructions = instruct_vehicles_to_dispatch_to_station(
                 n=1,
                 max_search_radius_km=env.config.dispatcher.max_search_radius_km,
-                vehicles=(veh,),
+                vehicles=(veh, ),
                 simulation_state=sim,
                 environment=env,
                 target_soc=target_soc,
-                charging_search_type=env.config.dispatcher.charging_search_type
-            )
+                charging_search_type=env.config.dispatcher.charging_search_type)
 
             return TupleOps.head_optional(charge_instructions)
 
 
 def human_look_for_requests(
-        veh: Vehicle,
-        sim: SimulationState,
+    veh: Vehicle,
+    sim: SimulationState,
 ) -> Optional[RepositionInstruction]:
     """
     Human driver relocates in search of greener request pastures.
@@ -138,7 +135,6 @@ def human_look_for_requests(
     :param sim:
     :return:
     """
-
     def _get_reposition_location() -> Optional[Link]:
         """
         takes the most dense request search hex as a proxy for high demand areas
@@ -149,10 +145,9 @@ def human_look_for_requests(
             return None
         else:
             # find the most dense request search hex and sends vehicles to the center
-            best_search_hex = sorted(
-                [(k, len(v)) for k, v in sim.r_search.items()], key=lambda t: t[1],
-                reverse=True
-            )[0][0]
+            best_search_hex = sorted([(k, len(v)) for k, v in sim.r_search.items()],
+                                     key=lambda t: t[1],
+                                     reverse=True)[0][0]
         destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
         destination_link = sim.road_network.position_from_geoid(destination)
         return destination_link
@@ -165,8 +160,8 @@ def human_look_for_requests(
 
 
 def idle_if_at_soc_limit(
-        veh: Vehicle,
-        env: Environment,
+    veh: Vehicle,
+    env: Environment,
 ) -> Optional[IdleInstruction]:
     """
     Generates an IdleInstruction if the vehicle soc is above the limit set by 
@@ -183,9 +178,9 @@ def idle_if_at_soc_limit(
 
 
 def av_charge_base_instruction(
-        veh: Vehicle,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[ChargeBaseInstruction]:
     """
     Autonomous vehicles will attempt to charge at the base until they reach full energy capacity
@@ -209,10 +204,9 @@ def av_charge_base_instruction(
         return None
     my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
 
-    chargers = tuple(filter(
-        lambda c: my_mechatronics.valid_charger(c),
-        [env.chargers[cid] for cid in my_station.total_chargers.keys()]
-    ))
+    chargers = tuple(
+        filter(lambda c: my_mechatronics.valid_charger(c),
+               [env.chargers[cid] for cid in my_station.total_chargers.keys()]))
 
     if not chargers:
         return None
@@ -223,9 +217,9 @@ def av_charge_base_instruction(
 
 
 def av_dispatch_base_instruction(
-        veh: Vehicle,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[DispatchBaseInstruction]:
     """
     Autonomous vehicles will return to a base after 10 minutes of being idle;

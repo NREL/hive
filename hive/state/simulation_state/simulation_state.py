@@ -58,11 +58,11 @@ class SimulationState(NamedTuple):
     b_search: immutables.Map[GeoId, FrozenSet[BaseId]] = immutables.Map()
 
     def get_stations(
-            self,
-            filter_function: Optional[Callable[[Station], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Station], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Station, ...]:
         """
         returns a tuple of stations.
@@ -77,7 +77,8 @@ class SimulationState(NamedTuple):
         """
         stations = self.stations.values()
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(stations, key=sort_key, reverse=sort_reversed)))
+            return tuple(
+                filter(filter_function, sorted(stations, key=sort_key, reverse=sort_reversed)))
         elif filter_function:
             return tuple(filter(filter_function, stations))
         elif sort:
@@ -86,11 +87,11 @@ class SimulationState(NamedTuple):
             return tuple(stations)
 
     def get_bases(
-            self,
-            filter_function: Optional[Callable[[Base], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Base], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Base, ...]:
         """
         returns a tuple of bases.
@@ -106,7 +107,8 @@ class SimulationState(NamedTuple):
         bases = self.bases.values()
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(bases, key=sort_key, reverse=sort_reversed)))
+            return tuple(filter(filter_function, sorted(bases, key=sort_key,
+                                                        reverse=sort_reversed)))
         elif filter_function:
             return tuple(filter(filter_function, bases))
         elif sort:
@@ -115,11 +117,11 @@ class SimulationState(NamedTuple):
             return tuple(bases)
 
     def get_vehicles(
-            self,
-            filter_function: Optional[Callable[[Vehicle], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Vehicle], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Vehicle, ...]:
         """
         returns a tuple of vehicles.
@@ -135,7 +137,8 @@ class SimulationState(NamedTuple):
         vehicles = self.vehicles.values()
 
         if filter_function and sort:
-            return tuple(sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))
+            return tuple(
+                sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))
         elif filter_function:
             return tuple(filter(filter_function, vehicles))
         elif sort:
@@ -144,11 +147,11 @@ class SimulationState(NamedTuple):
             return tuple(vehicles)
 
     def get_requests(
-            self,
-            filter_function: Optional[Callable[[Request], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Request], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Request, ...]:
         """
         returns a tuple of requests.
@@ -163,7 +166,8 @@ class SimulationState(NamedTuple):
         """
         requests = self.requests.values()
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(requests, key=sort_key, reverse=sort_reversed)))
+            return tuple(
+                filter(filter_function, sorted(requests, key=sort_key, reverse=sort_reversed)))
         elif filter_function:
             return tuple(filter(filter_function, requests))
         elif sort:
@@ -209,8 +213,7 @@ class SimulationState(NamedTuple):
         if not vehicle or not request:
             return False
         else:
-            return geo.same_simulation_location(vehicle.geoid,
-                                                request.origin,
+            return geo.same_simulation_location(vehicle.geoid, request.origin,
                                                 self.sim_h3_location_resolution,
                                                 override_resolution)
 
@@ -232,8 +235,7 @@ class SimulationState(NamedTuple):
         if not vehicle or not station:
             return False
         else:
-            return geo.same_simulation_location(vehicle.geoid,
-                                                station.geoid,
+            return geo.same_simulation_location(vehicle.geoid, station.geoid,
                                                 self.sim_h3_location_resolution,
                                                 override_resolution)
 
@@ -255,7 +257,6 @@ class SimulationState(NamedTuple):
         if not vehicle or not base:
             return False
         else:
-            return geo.same_simulation_location(vehicle.geoid,
-                                                base.geoid,
+            return geo.same_simulation_location(vehicle.geoid, base.geoid,
                                                 self.sim_h3_location_resolution,
                                                 override_resolution)

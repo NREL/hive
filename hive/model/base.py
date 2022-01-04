@@ -50,17 +50,16 @@ class Base(NamedTuple):
               road_network: RoadNetwork,
               station_id: Optional[StationId],
               stall_count: int,
-              membership: Membership = Membership()
-              ):
+              membership: Membership = Membership()):
 
         position = road_network.position_from_geoid(geoid)
         return Base(id, position, stall_count, stall_count, station_id, membership)
 
     @classmethod
     def from_row(
-            cls,
-            row: Dict[str, str],
-            road_network: RoadNetwork,
+        cls,
+        row: Dict[str, str],
+        road_network: RoadNetwork,
     ) -> Base:
         """
         converts a csv row to a base
@@ -99,7 +98,8 @@ class Base(NamedTuple):
                 )
 
             except ValueError:
-                raise IOError(f"unable to parse request {base_id} from row due to invalid value(s): {row}")
+                raise IOError(
+                    f"unable to parse request {base_id} from row due to invalid value(s): {row}")
 
     def has_available_stall(self, membership: Membership) -> bool:
         """
@@ -107,7 +107,8 @@ class Base(NamedTuple):
 
         :return: Boolean
         """
-        return bool(self.available_stalls > 0) and self.membership.grant_access_to_membership(membership)
+        return bool(
+            self.available_stalls > 0) and self.membership.grant_access_to_membership(membership)
 
     def checkout_stall(self) -> Optional[Base]:
         """
@@ -129,7 +130,8 @@ class Base(NamedTuple):
         """
         stalls = self.available_stalls
         if (stalls + 1) > self.total_stalls:
-            return SimulationStateError(f'base {self.id} already has max ({self.total_stalls}) stalls'), None
+            return SimulationStateError(
+                f'base {self.id} already has max ({self.total_stalls}) stalls'), None
         else:
             return None, self._replace(available_stalls=stalls + 1)
 

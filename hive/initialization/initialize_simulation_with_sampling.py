@@ -38,11 +38,11 @@ log = logging.getLogger(__name__)
 
 
 def initialize_simulation_with_sampling(
-        config: HiveConfig,
-        vehicle_count: int,
-        vehicle_location_sampling_function: Optional[Callable[..., Link]] = None,
-        vehicle_soc_sampling_function: Optional[Callable[..., Ratio]] = None,
-        random_seed: int = 0,
+    config: HiveConfig,
+    vehicle_count: int,
+    vehicle_location_sampling_function: Optional[Callable[..., Link]] = None,
+    vehicle_soc_sampling_function: Optional[Callable[..., Ratio]] = None,
+    random_seed: int = 0,
 ) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState and Environment with sampled vehicles.
@@ -66,7 +66,8 @@ def initialize_simulation_with_sampling(
 
     # set up road network based on user-configured road network type
     if config.network.network_type == 'euclidean':
-        road_network = HaversineRoadNetwork(geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution)
+        road_network = HaversineRoadNetwork(geofence=geofence,
+                                            sim_h3_resolution=config.sim.sim_h3_resolution)
     elif config.network.network_type == 'osm_network':
         road_network = OSMRoadNetwork(
             geofence=geofence,
@@ -76,7 +77,8 @@ def initialize_simulation_with_sampling(
         )
     else:
         raise IOError(
-            f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}")
+            f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}"
+        )
 
     # initial sim state with road network and no entities
     sim_initial = SimulationState(
@@ -84,21 +86,21 @@ def initialize_simulation_with_sampling(
         sim_time=config.sim.start_time,
         sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
         sim_h3_location_resolution=config.sim.sim_h3_resolution,
-        sim_h3_search_resolution=config.sim.sim_h3_search_resolution
-    )
+        sim_h3_search_resolution=config.sim.sim_h3_search_resolution)
 
     # create simulation environment
     if config.input_config.fleets_file:
         log.warning("the simulation is using sampling which doesn't support a fleet file input;\n"
                     "this input will be ignored and entities will not have any fleet information.")
 
-    env = Environment(config=config,
-                      mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
-                                                            config.input_config.scenario_directory),
-                      chargers=build_chargers_table(config.input_config.chargers_file),
-                      schedules=build_schedules_table(config.sim.schedule_type,
-                                                      config.input_config.schedules_file),
-                      )
+    env = Environment(
+        config=config,
+        mechatronics=build_mechatronics_table(config.input_config.mechatronics_file,
+                                              config.input_config.scenario_directory),
+        chargers=build_chargers_table(config.input_config.chargers_file),
+        schedules=build_schedules_table(config.sim.schedule_type,
+                                        config.input_config.schedules_file),
+    )
 
     # populate simulation with static entities
     sim_with_bases = _build_bases(config.input_config.bases_file, sim_initial)
@@ -126,9 +128,10 @@ def initialize_simulation_with_sampling(
     return sim_w_vehicles, env
 
 
-def _build_bases(bases_file: str,
-                 simulation_state: SimulationState,
-                 ) -> SimulationState:
+def _build_bases(
+    bases_file: str,
+    simulation_state: SimulationState,
+) -> SimulationState:
     """
     all your base are belong to us
 
@@ -137,7 +140,6 @@ def _build_bases(bases_file: str,
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
     """
-
     def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
         base = Base.from_row(row, simulation_state.road_network)
         error, updated_sim = simulation_state_ops.add_base(sim, base)
@@ -155,9 +157,10 @@ def _build_bases(bases_file: str,
     return sim_with_bases
 
 
-def _build_stations(stations_file: str,
-                    simulation_state: SimulationState,
-                    ) -> SimulationState:
+def _build_stations(
+    stations_file: str,
+    simulation_state: SimulationState,
+) -> SimulationState:
     """
     all your station are belong to us
 
@@ -166,8 +169,8 @@ def _build_stations(stations_file: str,
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """
-
-    def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) -> immutables.Map[str, Station]:
+    def _add_row_unsafe(builder: immutables.Map[str, Station],
+                        row: Dict[str, str]) -> immutables.Map[str, Station]:
         station = Station.from_row(row, builder, simulation_state.road_network)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder

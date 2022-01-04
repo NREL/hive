@@ -20,7 +20,6 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
     :param env: the environment with a Reporter instance
     :return: nothing, or, any exception
     """
-
     def _station_energy(station: Station) -> dict:
         """
         get the Kw capacity of a given station
@@ -31,19 +30,14 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
         # TODO: now that we've introduced other energy types, we should return a summary of charger rate by
         #  energy time with corresponding units - ndr
         rate: float = ft.reduce(
-            lambda acc, charger_id: acc + station.total_chargers.get(charger_id) * env.chargers.get(charger_id).rate,
-            station.available_chargers.keys(),
-            0.0
-        )
+            lambda acc, charger_id: acc + station.total_chargers.get(charger_id) * env.chargers.get(
+                charger_id).rate, station.available_chargers.keys(), 0.0)
 
         return {'station_id': station.id, 'rate': rate}
 
     try:
-        result: Tuple[immutables.Map, ...] = ft.reduce(
-            lambda acc, s: acc + (_station_energy(s),),
-            sim.stations.values(),
-            ()
-        )
+        result: Tuple[immutables.Map, ...] = ft.reduce(lambda acc, s: acc + (_station_energy(s), ),
+                                                       sim.stations.values(), ())
 
         output_file = Path(env.config.scenario_output_directory).joinpath("station_capacities.csv")
         with output_file.open('w') as f:

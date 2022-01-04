@@ -18,11 +18,10 @@ class Instruction(metaclass=ABCNamedTupleMeta):
     """
     an abstract base class for instructions.
     """
-
     @abstractmethod
-    def apply_instruction(self,
-                          sim_state: SimulationState,
-                          env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+    def apply_instruction(
+            self, sim_state: SimulationState,
+            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         """
         attempts to apply an instruction to a vehicle
 

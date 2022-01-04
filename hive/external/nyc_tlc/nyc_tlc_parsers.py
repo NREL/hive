@@ -63,23 +63,16 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
         passengers = int(row['passengers']) if 'passengers' in row else default_passengers
 
         request_as_passengers = [
-            Passenger(
-                create_passenger_id(agent_id, pass_idx),
-                origin_link.start,
-                destination_link.end,
-                departure_time
-            )
-            for pass_idx in range(0, passengers)
+            Passenger(create_passenger_id(agent_id, pass_idx), origin_link.start,
+                      destination_link.end, departure_time) for pass_idx in range(0, passengers)
         ]
 
-        return Request(
-            id=agent_id,
-            origin_link=origin_link,
-            destination_link=destination_link,
-            departure_time=departure_time,
-            cancel_time=cancel_time,
-            passengers=tuple(request_as_passengers)
-        )
+        return Request(id=agent_id,
+                       origin_link=origin_link,
+                       destination_link=destination_link,
+                       departure_time=departure_time,
+                       cancel_time=cancel_time,
+                       passengers=tuple(request_as_passengers))
 
     except Exception as e:
         return e

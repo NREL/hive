@@ -12,10 +12,9 @@ class TabularPowertrain(Powertrain):
     """
     builds a tabular, interpolated lookup model for energy consumption
     """
-
     def __init__(
-            self,
-            data: Dict[str, str],
+        self,
+        data: Dict[str, str],
     ):
         try:
             scale_factor = float(data['scale_factor'])
@@ -60,8 +59,7 @@ class TabularPowertrain(Powertrain):
         # convert kilometers per hour to whatever units are used by this powertrain
         link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
 
-        energy_per_distance = np.interp(link_speed,
-                                        self._consumption_speed,
+        energy_per_distance = np.interp(link_speed, self._consumption_speed,
                                         self._consumption_energy_per_distance)
         # link distance is in kilometers
         link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)

@@ -59,7 +59,8 @@ def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId
     return f"{request_id}-{passenger_id}"
 
 
-def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> Tuple[Passenger, ...]:
+def board_vehicle(passengers: Tuple[Passenger, ...],
+                  vehicle_id: VehicleId) -> Tuple[Passenger, ...]:
     """
     updates each passenger with a vehicle_id
 
@@ -67,4 +68,4 @@ def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> T
     :param vehicle_id: the vehicle they are boarding
     :return: the passengers with their vehicle_id updated
     """
-    return ft.reduce(lambda acc, p: acc + (p.add_vehicle_id(vehicle_id),), passengers, ())
+    return ft.reduce(lambda acc, p: acc + (p.add_vehicle_id(vehicle_id), ), passengers, ())

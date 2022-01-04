@@ -98,12 +98,12 @@ def initialize_simulation(
                               chargers=build_chargers_table(config.input_config.chargers_file),
                               schedules=build_schedules_table(config.sim.schedule_type,
                                                               config.input_config.schedules_file),
-                              fleet_ids=fleet_ids
-                              )
+                              fleet_ids=fleet_ids)
 
     # populate simulation with entities
-    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file, vehicle_member_ids, 
-                                                     sim_initial, env_initial, vehicle_filter)
+    sim_with_vehicles, env_updated = _build_vehicles(config.input_config.vehicles_file,
+                                                     vehicle_member_ids, sim_initial, env_initial,
+                                                     vehicle_filter)
     sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids,
                                   sim_with_vehicles, base_filter)
     sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids,
@@ -137,7 +137,7 @@ def _build_vehicles(
 
         sim, env = payload
         veh = Vehicle.from_row(row, sim.road_network, env)
-                              
+
         if not vehicle_filter(veh):
             return sim, env
 

@@ -11,12 +11,10 @@ class TestConfigBuilder(TestCase):
             'b': "string",
         }
 
-        test_class = ConfigBuilder.build(
-            default_config=defaults,
-            required_config=(),
-            config_constructor=TestConfigBuilderAssets.constructor,
-            config=None
-        )
+        test_class = ConfigBuilder.build(default_config=defaults,
+                                         required_config=(),
+                                         config_constructor=TestConfigBuilderAssets.constructor,
+                                         config=None)
 
         self.assertIsInstance(test_class, TestConfigBuilderAssets.TestClass)
         self.assertEqual(test_class.a, defaults['a'])
@@ -33,12 +31,10 @@ class TestConfigBuilder(TestCase):
             'b': 'foo',
         }
 
-        test_class = ConfigBuilder.build(
-            default_config={},
-            required_config=required,
-            config_constructor=TestConfigBuilderAssets.constructor,
-            config=config
-        )
+        test_class = ConfigBuilder.build(default_config={},
+                                         required_config=required,
+                                         config_constructor=TestConfigBuilderAssets.constructor,
+                                         config=config)
 
         self.assertIsInstance(test_class, TestConfigBuilderAssets.TestClass)
         self.assertEqual(test_class.a, config['a'])
@@ -55,29 +51,18 @@ class TestConfigBuilder(TestCase):
         }
 
         with self.assertRaises(AttributeError):
-            test_class = ConfigBuilder.build(
-                default_config={},
-                required_config=required,
-                config_constructor=TestConfigBuilderAssets.constructor,
-                config=config
-            )
+            test_class = ConfigBuilder.build(default_config={},
+                                             required_config=required,
+                                             config_constructor=TestConfigBuilderAssets.constructor,
+                                             config=config)
 
     def test_build_ignores_extra_fields(self):
-        config = {
-            'a': 6,
-            'b': 'foo',
-            'extra': "will be ignored",
-            'd': {
-                'e': 'bar'
-            }
-        }
+        config = {'a': 6, 'b': 'foo', 'extra': "will be ignored", 'd': {'e': 'bar'}}
 
-        test_class = ConfigBuilder.build(
-            default_config={},
-            required_config=(),
-            config_constructor=TestConfigBuilderAssets.constructor,
-            config=config
-        )
+        test_class = ConfigBuilder.build(default_config={},
+                                         required_config=(),
+                                         config_constructor=TestConfigBuilderAssets.constructor,
+                                         config=config)
 
         self.assertIsInstance(test_class, TestConfigBuilderAssets.TestClass)
         self.assertEqual(test_class.a, config['a'])

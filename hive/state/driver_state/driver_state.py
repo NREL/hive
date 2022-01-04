@@ -18,7 +18,6 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
     """
     superclass for all driver state instances
     """
-
     @property
     @abstractmethod
     def schedule_id(cls) -> Optional[ScheduleId]:
@@ -45,10 +44,10 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def generate_instruction(
-            self,
-            sim: SimulationState,
-            env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
+        self,
+        sim: SimulationState,
+        env: Environment,
+        previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
         """
         allows the driver state to issue an optional instruction for the vehicle considering all the
@@ -62,8 +61,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def enter(self, sim: SimulationState,
+              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         there are no operations associated with entering a DriverState
 
@@ -73,8 +72,8 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None, sim
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def exit(self, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         there are no operations associated with exiting a DriverState
 
@@ -85,11 +84,9 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         return None, sim
 
     @classmethod
-    def apply_new_driver_state(mcs,
-                               sim: SimulationState,
-                               vehicle_id: VehicleId,
-                               new_state: DriverState
-                               ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def apply_new_driver_state(
+            mcs, sim: SimulationState, vehicle_id: VehicleId,
+            new_state: DriverState) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         helper for updating a Vehicle with a new DriverState
 
@@ -101,18 +98,16 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         vehicle = sim.vehicles.get(vehicle_id)
         if not vehicle:
             state_name = new_state.__class__.__name__
-            return SimulationStateError(f"vehicle {vehicle_id} not found; context: applying new {state_name} driver state"), None
+            return SimulationStateError(
+                f"vehicle {vehicle_id} not found; context: applying new {state_name} driver state"
+            ), None
         else:
             updated_vehicle = vehicle.modify_driver_state(new_state)
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @classmethod
-    def build(mcs,
-              vehicle_id: VehicleId,
-              schedule_id: Optional[ScheduleId],
-              base_id: Optional[BaseId],
-              allows_pooling: bool
-              ) -> DriverState:
+    def build(mcs, vehicle_id: VehicleId, schedule_id: Optional[ScheduleId],
+              base_id: Optional[BaseId], allows_pooling: bool) -> DriverState:
         """
         constructs a new DriverState based on the provided arguments
 
@@ -132,5 +127,6 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         else:
             if not base_id:
                 raise Exception("cannot build a vehicle with schedule but not a home base id")
-            driver_state = HumanUnavailable(HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling))
+            driver_state = HumanUnavailable(
+                HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling))
             return driver_state

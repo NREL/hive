@@ -27,10 +27,10 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
 
     @classmethod
     def build(
-            cls,
-            request_file: str,
-            rate_structure_file: Optional[str] = None,
-            lazy_file_reading: bool = False,
+        cls,
+        request_file: str,
+        rate_structure_file: Optional[str] = None,
+        lazy_file_reading: bool = False,
     ):
         """
         reads a requests file and builds a UpdateRequestsFromFile SimulationUpdateFunction
@@ -56,7 +56,9 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
             raise IOError(f"{request_file} is not a valid path to a request file")
 
         if lazy_file_reading:
-            error, stepper = DictReaderStepper.build(request_file, "departure_time", parser=SimTime.build)
+            error, stepper = DictReaderStepper.build(request_file,
+                                                     "departure_time",
+                                                     parser=SimTime.build)
             if error:
                 raise error
         else:
@@ -64,12 +66,13 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
                 # converting to tuple then back to iterator should bring the whole file into memory
                 reader = iter(tuple(DictReader(f)))
 
-            stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=SimTime.build)
+            stepper = DictReaderStepper.from_iterator(reader,
+                                                      "departure_time",
+                                                      parser=SimTime.build)
 
         return UpdateRequestsFromFile(stepper, rate_structure)
 
-    def update(self,
-               sim_state: SimulationState,
+    def update(self, sim_state: SimulationState,
                env: Environment) -> Tuple[SimulationState, Optional[UpdateRequestsFromFile]]:
         """
         add requests from file when the simulation reaches the request's time
@@ -96,11 +99,12 @@ class UpdateRequestsFromFile(NamedTuple, SimulationUpdateFunction):
         return result, None
 
 
-def update_requests_from_iterator(it: Iterator[Dict[str, str]],
-                                  initial_sim_state: SimulationState,
-                                  env: Environment,
-                                  rate_structure: RequestRateStructure,
-                                  ) -> SimulationState:
+def update_requests_from_iterator(
+    it: Iterator[Dict[str, str]],
+    initial_sim_state: SimulationState,
+    env: Environment,
+    rate_structure: RequestRateStructure,
+) -> SimulationState:
     """
     add requests from file when the simulation reaches the request's time
 
@@ -111,12 +115,12 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
     :param env:
     :return: sim state plus new requests
     """
-
-    def _update(sim: SimulationState,
-                row: Dict[str, str],
-                env: Environment,
-                rate_structure: RequestRateStructure,
-                ) -> SimulationState:
+    def _update(
+        sim: SimulationState,
+        row: Dict[str, str],
+        env: Environment,
+        rate_structure: RequestRateStructure,
+    ) -> SimulationState:
         """
         takes one row, attempts to parse it as a Request, and attempts to add it to the simulation
 
@@ -173,10 +177,7 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
                     return sim_updated
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
-    updated_sim = ft.reduce(
-        ft.partial(_update, env=env, rate_structure=rate_structure),
-        it,
-        initial_sim_state
-    )
+    updated_sim = ft.reduce(ft.partial(_update, env=env, rate_structure=rate_structure), it,
+                            initial_sim_state)
 
     return updated_sim

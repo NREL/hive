@@ -16,11 +16,8 @@ log = logging.getLogger(__name__)
 
 
 class CancelRequests(NamedTuple, SimulationUpdateFunction):
-
-    def update(
-            self,
-            simulation_state: SimulationState,
-            env: Environment) -> Tuple[SimulationState, Optional[CancelRequests]]:
+    def update(self, simulation_state: SimulationState,
+               env: Environment) -> Tuple[SimulationState, Optional[CancelRequests]]:
         """
         cancels requests whose cancel time has been exceeded
 
@@ -29,9 +26,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
         :param env: the scenario environment
         :return: state without cancelled requests, along with this update function
         """
-
-        def _remove_from_sim(sim: SimulationState,
-                             request_id: RequestId) -> SimulationState:
+        def _remove_from_sim(sim: SimulationState, request_id: RequestId) -> SimulationState:
             """
             inner function that removes each canceled request from the sim
 
@@ -40,7 +35,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
             :return: the sim without the request
             """
             this_request_cancel_time = sim.requests[
-                                           request_id].departure_time + env.config.sim.request_cancel_time_seconds
+                request_id].departure_time + env.config.sim.request_cancel_time_seconds
             if sim.sim_time < this_request_cancel_time:
                 return sim
             else:
@@ -55,11 +50,7 @@ class CancelRequests(NamedTuple, SimulationUpdateFunction):
                     env.reporter.file_report(_gen_report(request_id, sim))
                     return updated_sim
 
-        updated = ft.reduce(
-            _remove_from_sim,
-            simulation_state.requests.keys(),
-            simulation_state
-        )
+        updated = ft.reduce(_remove_from_sim, simulation_state.requests.keys(), simulation_state)
 
         return updated, None
 

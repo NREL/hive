@@ -12,6 +12,7 @@ def global_hive_config_search() -> GlobalConfig:
     searches for the global hive config, and if found, loads it. if not, loads the default from hive.resources
     :return: global hive config
     """
+
     # this searches up the path to the root of the file system
     def _backprop_search(search_path: Path) -> Optional[Path]:
         search_file = search_path.joinpath(".hive.yaml")
@@ -25,7 +26,8 @@ def global_hive_config_search() -> GlobalConfig:
                 return _backprop_search(updated_search_path)
 
     # load the default file to be merged with any found files
-    default_global_config_file_path = pkg_resources.resource_filename("hive.resources.defaults", ".hive.yaml")
+    default_global_config_file_path = pkg_resources.resource_filename("hive.resources.defaults",
+                                                                      ".hive.yaml")
     with Path(default_global_config_file_path).open() as df:
         default = yaml.safe_load(df)
 
@@ -52,7 +54,8 @@ def global_hive_config_search() -> GlobalConfig:
         return GlobalConfig.from_dict(default, default_global_config_file_path)
 
 
-def construct_asset_path(file: str, scenario_directory: str, default_directory_name: str, resources_subdirectory: str) -> str:
+def construct_asset_path(file: str, scenario_directory: str, default_directory_name: str,
+                         resources_subdirectory: str) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both
     the user-provided relative path, and if that fails, attempts to load at the default directory; finally, checks
@@ -87,7 +90,8 @@ def construct_asset_path(file: str, scenario_directory: str, default_directory_n
             raise FileNotFoundError(msg)
 
 
-def construct_scenario_asset_path(file: str, scenario_directory: str, default_directory_name: str) -> str:
+def construct_scenario_asset_path(file: str, scenario_directory: str,
+                                  default_directory_name: str) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both
     the user-provided relative path, and if that fails, attempts to load at the default directory.
@@ -104,7 +108,8 @@ def construct_scenario_asset_path(file: str, scenario_directory: str, default_di
     :raises: FileNotFoundError if asset is not found
     """
     file_at_scenario_directory = Path(scenario_directory).joinpath(file)
-    file_at_default_directory = Path(scenario_directory).joinpath(default_directory_name).joinpath(file)
+    file_at_default_directory = Path(scenario_directory).joinpath(default_directory_name).joinpath(
+        file)
     if file_at_scenario_directory.is_file():
         return str(file_at_scenario_directory)
     elif file_at_default_directory.is_file():
@@ -125,8 +130,12 @@ def find_scenario(user_provided_scenario: str) -> Path:
     """
     absolute_path = Path(user_provided_scenario).absolute()
     relative_path = Path.cwd().joinpath(user_provided_scenario)
-    den_path = Path(pkg_resources.resource_filename("hive.resources.scenarios.denver_downtown", user_provided_scenario))
-    nyc_path = Path(pkg_resources.resource_filename("hive.resources.scenarios.manhattan", user_provided_scenario))
+    den_path = Path(
+        pkg_resources.resource_filename("hive.resources.scenarios.denver_downtown",
+                                        user_provided_scenario))
+    nyc_path = Path(
+        pkg_resources.resource_filename("hive.resources.scenarios.manhattan",
+                                        user_provided_scenario))
 
     if absolute_path.is_file():
         return absolute_path

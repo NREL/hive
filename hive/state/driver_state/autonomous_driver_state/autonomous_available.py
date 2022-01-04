@@ -47,10 +47,10 @@ class AutonomousAvailable(NamedTuple, DriverState):
         return None
 
     def generate_instruction(
-            self,
-            sim: SimulationState,
-            env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
+        self,
+        sim: SimulationState,
+        env: Environment,
+        previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
@@ -64,6 +64,7 @@ class AutonomousAvailable(NamedTuple, DriverState):
         else:
             return None
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         # there is no other state for an autonomous driver, so, this is a noop
         return None, sim

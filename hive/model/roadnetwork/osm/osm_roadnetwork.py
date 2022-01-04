@@ -29,27 +29,27 @@ class OSMRoadNetwork(RoadNetwork):
     Implements an open street maps road network utilizing the osmnx and networkx libraries
 
     """
-
-    def __init__(
-            self,
-            road_network_file: Path,
-            geofence: Optional[GeoFence] = None,
-            sim_h3_resolution: H3Resolution = 15,
-            default_speed_kmph: Kmph = 40.0,
-            default_distance_km: Kilometers = 100
-    ):
+    def __init__(self,
+                 road_network_file: Path,
+                 geofence: Optional[GeoFence] = None,
+                 sim_h3_resolution: H3Resolution = 15,
+                 default_speed_kmph: Kmph = 40.0,
+                 default_distance_km: Kilometers = 100):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
 
         # read in the network file
         if road_network_file.suffix == ".xml":
-            log.warning(".xml files have been deprecated in hive. please switch to using .json formats")
+            log.warning(
+                ".xml files have been deprecated in hive. please switch to using .json formats")
             graph = graph_from_file(str(road_network_file))
         elif road_network_file.suffix == ".json":
             with road_network_file.open('r') as f:
                 graph = nx.node_link_graph(json.load(f))
         else:
-            raise TypeError(f"road network file of type {road_network_file.suffix} not supported by OSMRoadNetwork.")
+            raise TypeError(
+                f"road network file of type {road_network_file.suffix} not supported by OSMRoadNetwork."
+            )
 
         # validate network
 
@@ -78,14 +78,17 @@ class OSMRoadNetwork(RoadNetwork):
             if 'speed_kmph' not in d:
                 missing_speed += 1
         if missing_length > 0:
-            raise Exception(f"found {missing_length} links in the road network that don't have length information")
+            raise Exception(
+                f"found {missing_length} links in the road network that don't have length information"
+            )
         elif missing_speed > 0:
-            log.warning(f"found {missing_speed} links in the road network that don't have speed information.\n"
-                        f"hive will automatically set these to {self.default_speed_kmph} kmph.")
+            log.warning(
+                f"found {missing_speed} links in the road network that don't have speed information.\n"
+                f"hive will automatically set these to {self.default_speed_kmph} kmph.")
 
         # build tables on the network edges for spatial lookup and LinkId lookup
-        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(graph, sim_h3_resolution, default_speed_kmph,
-                                                                        default_distance_km)
+        link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(
+            graph, sim_h3_resolution, default_speed_kmph, default_distance_km)
         if link_helper_error:
             raise link_helper_error
         else:
@@ -122,13 +125,17 @@ class OSMRoadNetwork(RoadNetwork):
                 log.error(f"unable to build route from {origin} to {destination}")
                 log.error(link_path_error)
                 log.error(
-                    f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}")
+                    f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}"
+                )
                 return empty_route()
             else:
                 # modify the start and end GeoIds based on the positions in the src/dst links
-                resolved_route = resolve_route_src_dst_positions(inner_link_path, origin, destination, self)
+                resolved_route = resolve_route_src_dst_positions(inner_link_path, origin,
+                                                                 destination, self)
                 if not resolved_route:
-                    log.error(f"unable to resolve the route from/to/via:\n {origin}\n{destination}\n{inner_link_path}")
+                    log.error(
+                        f"unable to resolve the route from/to/via:\n {origin}\n{destination}\n{inner_link_path}"
+                    )
                     return empty_route()
                 else:
                     return resolved_route
@@ -144,7 +151,9 @@ class OSMRoadNetwork(RoadNetwork):
         o = self.position_from_geoid(origin)
         d = self.position_from_geoid(destination)
         if not o or not d:
-            log.error(f"failed finding nearest links to distance query between GeoIds {origin}, {destination}")
+            log.error(
+                f"failed finding nearest links to distance query between GeoIds {origin}, {destination}"
+            )
             return 0.0
         else:
             distance = route_distance_km(self.route(o, d))

@@ -69,8 +69,7 @@ class TupleOps:
             return remaining
 
     @classmethod
-    def partition(cls,
-                  predicate: Callable[[T], bool],
+    def partition(cls, predicate: Callable[[T], bool],
                   t: Tuple[T, ...]) -> Tuple[Tuple[T, ...], Tuple[T, ...]]:
         """
         partitions a tuple into two tuples where members of the first tuple

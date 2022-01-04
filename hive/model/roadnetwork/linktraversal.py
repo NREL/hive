@@ -22,12 +22,12 @@ class LinkTraversal(NamedTuple):
 
     @classmethod
     def build(
-            cls,
-            link_id: LinkId,
-            start: GeoId,
-            end: GeoId,
-            speed_kmph: Kmph,
-            distance_km: Optional[Kilometers] = None,
+        cls,
+        link_id: LinkId,
+        start: GeoId,
+        end: GeoId,
+        speed_kmph: Kmph,
+        distance_km: Optional[Kilometers] = None,
     ) -> LinkTraversal:
         if not distance_km:
             distance_km = H3Ops.great_circle_distance(start, end)
@@ -88,8 +88,9 @@ class LinkTraversalResult(NamedTuple):
     remaining_time_seconds: Seconds
 
 
-def traverse_up_to(link: LinkTraversal,
-                   available_time_seconds: Seconds) -> Tuple[Optional[Exception], Optional[LinkTraversalResult]]:
+def traverse_up_to(
+        link: LinkTraversal, available_time_seconds: Seconds
+) -> Tuple[Optional[Exception], Optional[LinkTraversalResult]]:
     """
     using the ground truth road network, and some agent Link traversal, attempt to traverse
     the link, based on travel time calculations from the Link's PropertyLink attributes.
@@ -108,21 +109,18 @@ def traverse_up_to(link: LinkTraversal,
         return AttributeError(f"attempting to traverse link which does not exist"), None
     elif link.start == link.end:
         # already done!
-        result = LinkTraversalResult(
-            traversed=None,
-            remaining=None,
-            remaining_time_seconds=available_time_seconds
-        )
+        result = LinkTraversalResult(traversed=None,
+                                     remaining=None,
+                                     remaining_time_seconds=available_time_seconds)
         return None, result
     else:
         # traverse up to available_time_hours across this link
         if link.travel_time_seconds <= available_time_seconds:
             # we can complete this link, so we return (remaining) Link = None
-            result = LinkTraversalResult(
-                traversed=link,
-                remaining=None,
-                remaining_time_seconds=(available_time_seconds - link.travel_time_seconds)
-            )
+            result = LinkTraversalResult(traversed=link,
+                                         remaining=None,
+                                         remaining_time_seconds=(available_time_seconds -
+                                                                 link.travel_time_seconds))
             return None, result
         else:
             # we do not have enough time to finish traversing this link, so, just traverse part of it,
@@ -132,8 +130,14 @@ def traverse_up_to(link: LinkTraversal,
             mid_geoid = H3Ops.point_along_link(link, available_time_seconds)
 
             # create two sub-links, one for the part that was traversed, and one for the remaining part
-            traversed = LinkTraversal.build(link.link_id, link.start, mid_geoid, speed_kmph=link.speed_kmph)
-            remaining = LinkTraversal.build(link.link_id, mid_geoid, link.end, speed_kmph=link.speed_kmph)
+            traversed = LinkTraversal.build(link.link_id,
+                                            link.start,
+                                            mid_geoid,
+                                            speed_kmph=link.speed_kmph)
+            remaining = LinkTraversal.build(link.link_id,
+                                            mid_geoid,
+                                            link.end,
+                                            speed_kmph=link.speed_kmph)
 
             result = LinkTraversalResult(
                 traversed=traversed,

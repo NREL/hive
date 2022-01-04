@@ -39,23 +39,15 @@ def down_sample_nyc_tlc_data(in_file: str,
         # needs to be a Polygon, not a MultiPolygon feature
         # used for ETL to confirm that requests sampled are in fact within the study area (some are not)
         geojson = json.load(f)
-        hexes = h3.polyfill(
-            geojson=geojson['geometry'],
-            res=boundary_h3_resolution,
-            geo_json_conformant=True
-        )
+        hexes = h3.polyfill(geojson=geojson['geometry'],
+                            res=boundary_h3_resolution,
+                            geo_json_conformant=True)
 
         with open(in_file) as f:
             with open(out_file, 'w', newline='') as w:
                 reader = DictReader(f)
                 header = [
-                    'request_id',
-                    'o_lat',
-                    'o_lon',
-                    'd_lat',
-                    'd_lon',
-                    'departure_time',
-                    'passengers'
+                    'request_id', 'o_lat', 'o_lon', 'd_lat', 'd_lon', 'departure_time', 'passengers'
                 ]
 
                 writer = DictWriter(w, header)
@@ -69,14 +61,11 @@ def down_sample_nyc_tlc_data(in_file: str,
                 while recorded_count < sample_size and attempted_count < absolute_cutoff:
                     # parse the next row of data
                     row = next(reader)
-                    req = parse_yellow_tripdata_row(
-                        row,
-                        recorded_count,
-                        request_cancel_time_buffer,
-                        sim_h3_location_resolution
-                    )
+                    req = parse_yellow_tripdata_row(row, recorded_count, request_cancel_time_buffer,
+                                                    sim_h3_location_resolution)
 
-                    if not isinstance(req, Exception) and h3.h3_to_parent(req.geoid, boundary_h3_resolution) in hexes:
+                    if not isinstance(req, Exception) and h3.h3_to_parent(
+                            req.geoid, boundary_h3_resolution) in hexes:
                         # request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
                         out_row = {
                             'request_id': req.id,
@@ -93,16 +82,13 @@ def down_sample_nyc_tlc_data(in_file: str,
                         print(f"row for id {recorded_count} failed: {row}")
 
     if attempted_count == absolute_cutoff:
-        raise IOError(f"too many errors, input_config file {in_file} (and corresponding file {out_file}) may be corrupt")
+        raise IOError(
+            f"too many errors, input_config file {in_file} (and corresponding file {out_file}) may be corrupt"
+        )
 
 
-def sample_vehicles_in_geofence(num: int,
-                                out_file: str,
-                                powertrain_id: str,
-                                powercurve_id: str,
-                                capacity: KwH,
-                                initial_soc: float,
-                                ideal_energy_limit: KwH,
+def sample_vehicles_in_geofence(num: int, out_file: str, powertrain_id: str, powercurve_id: str,
+                                capacity: KwH, initial_soc: float, ideal_energy_limit: KwH,
                                 max_charge_acceptance_kw: Kw):
     """
     samples points in the NYC polygon and creates Vehicles from them, writing to an output file
@@ -129,15 +115,13 @@ def sample_vehicles_in_geofence(num: int,
 
         # needs to be a Polygon, not a MultiPolygon feature
         geojson = json.load(f)
-        hexes = list(h3.polyfill(
-            geojson=geojson['geometry'],
-            res=10,
-            geo_json_conformant=True)
-        )
+        hexes = list(h3.polyfill(geojson=geojson['geometry'], res=10, geo_json_conformant=True))
 
         with open(out_file, 'w', newline='') as w:
-            header = ["vehicle_id", "lat", "lon", "powertrain_id", "powercurve_id", "capacity", "ideal_energy_limit",
-                      "max_charge_acceptance", "initial_soc"]
+            header = [
+                "vehicle_id", "lat", "lon", "powertrain_id", "powercurve_id", "capacity",
+                "ideal_energy_limit", "max_charge_acceptance", "initial_soc"
+            ]
 
             writer = DictWriter(w, header)
             writer.writeheader()

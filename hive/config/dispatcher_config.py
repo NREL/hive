@@ -31,12 +31,10 @@ class DispatcherConfig(NamedTuple):
 
     @classmethod
     def build(cls, config: Optional[Dict] = None) -> DispatcherConfig:
-        return ConfigBuilder.build(
-            default_config=cls.default_config(),
-            required_config=cls.required_config(),
-            config_constructor=lambda c: DispatcherConfig.from_dict(c),
-            config=config
-        )
+        return ConfigBuilder.build(default_config=cls.default_config(),
+                                   required_config=cls.required_config(),
+                                   config_constructor=lambda c: DispatcherConfig.from_dict(c),
+                                   config=config)
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:

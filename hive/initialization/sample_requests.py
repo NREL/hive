@@ -7,13 +7,11 @@ from hive.state.simulation_state.simulation_state import SimulationState
 from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 
 
-def default_request_sampler(
-        count: int,
-        simulation_state: SimulationState,
-        environment: Environment,
-        allow_pooling: bool = False,
-        random_seed: int = 0
-) -> Tuple[Request, ...]:
+def default_request_sampler(count: int,
+                            simulation_state: SimulationState,
+                            environment: Environment,
+                            allow_pooling: bool = False,
+                            random_seed: int = 0) -> Tuple[Request, ...]:
     """
     samples `count` requests uniformly across time and space
 
@@ -31,11 +29,12 @@ def default_request_sampler(
 
     requests = []
 
-    possible_timesteps = list(range(
-        int(environment.config.sim.start_time),
-        int(environment.config.sim.end_time),
-        environment.config.sim.timestep_duration_seconds,
-    ))
+    possible_timesteps = list(
+        range(
+            int(environment.config.sim.start_time),
+            int(environment.config.sim.end_time),
+            environment.config.sim.timestep_duration_seconds,
+        ))
     possible_links = list(simulation_state.road_network.link_helper.links.values())
 
     id_counter = 0
@@ -47,15 +46,13 @@ def default_request_sampler(
             # skip if the request starts and ends at the same location
             continue
 
-        request = Request.build(
-            request_id="r" + str(id_counter),
-            origin=random_source_link.start,
-            destination=random_destination_link.end,
-            road_network=simulation_state.road_network,
-            departure_time=random.choice(possible_timesteps),
-            passengers=random.choice([1, 2, 3, 4]),
-            allows_pooling=allow_pooling
-        )
+        request = Request.build(request_id="r" + str(id_counter),
+                                origin=random_source_link.start,
+                                destination=random_destination_link.end,
+                                road_network=simulation_state.road_network,
+                                departure_time=random.choice(possible_timesteps),
+                                passengers=random.choice([1, 2, 3, 4]),
+                                allows_pooling=allow_pooling)
 
         requests.append(request)
 

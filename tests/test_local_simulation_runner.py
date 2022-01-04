@@ -7,19 +7,14 @@ from hive.resources.mock_lobster import *
 
 
 class TestLocalSimulationRunner(TestCase):
-
     def test_run(self):
         config = mock_config(end_time=600, timestep_duration_seconds=60)
         env = mock_env(config)
-        req = mock_request(
-            request_id='1',
-            departure_time=SimTime.build(0),
-            passengers=2
-        )
+        req = mock_request(request_id='1', departure_time=SimTime.build(0), passengers=2)
         initial_sim = mock_sim(
             vehicles=(mock_vehicle(), ),
-            stations=(mock_station(),),
-            bases=(mock_base(stall_count=5),),
+            stations=(mock_station(), ),
+            bases=(mock_base(stall_count=5), ),
         )
 
         _, initial_sim = simulation_state_ops.add_request(initial_sim, req)
@@ -37,7 +32,9 @@ class TestLocalSimulationRunner(TestCase):
 
         self.assertEqual(vehicle.geoid, req.destination, "Vehicle should be at request destination")
 
-        self.assertAlmostEqual(0.56, result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km, places=1)
+        self.assertAlmostEqual(0.56,
+                               result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km,
+                               places=1)
 
     def test_step(self):
         config = mock_config()
@@ -59,4 +56,5 @@ class TestLocalSimulationRunner(TestCase):
 
         stepped = LocalSimulationRunner.step(runner_payload)
 
-        self.assertEqual(stepped, None, "we should not be able to step a simulation that has exceeded end_time")
+        self.assertEqual(stepped, None,
+                         "we should not be able to step a simulation that has exceeded end_time")

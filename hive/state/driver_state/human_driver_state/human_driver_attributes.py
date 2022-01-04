@@ -13,7 +13,3 @@ class HumanDriverAttributes(NamedTuple):
     allows_pooling: bool
     # start_time: SimTime ?
     # agency_ids: frozenset[AgencyId] ?
-
-
-
-

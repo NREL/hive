@@ -74,9 +74,7 @@ class RouteTraversal(NamedTuple):
         :param link: a link traversal for the remaining route
         :return: the updated RouteTraversal
         """
-        return self._replace(
-            remaining_route=self.remaining_route + (link,)
-        )
+        return self._replace(remaining_route=self.remaining_route + (link, ))
 
 
 def traverse(route_estimate: Route,

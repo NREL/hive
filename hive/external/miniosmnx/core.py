@@ -11,9 +11,10 @@ from .geo_utils import overpass_json_from_file
 # useful osm tags - note that load_graphml expects a consistent set of tag names
 # for parsing
 USEFUL_TAGS_NODE = ['ref', 'highway']
-USEFUL_TAGS_PATH = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
-                    'highway', 'maxspeed', 'service', 'access', 'area',
-                    'landuse', 'width', 'est_width', 'junction']
+USEFUL_TAGS_PATH = [
+    'bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service',
+    'access', 'area', 'landuse', 'width', 'est_width', 'junction'
+]
 # all one-way mode to maintain original OSM node order
 # when constructing graphs specifically to save to .osm xml file
 ALL_ONEWAY = True
@@ -139,8 +140,9 @@ def add_edge_lengths(G):
 
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
-    coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in
-                       G.edges(keys=True)])
+    coords = np.array(
+        [[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']]
+         for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
     df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
     df_coords = df_coords.set_index(['u', 'v', 'k'])
@@ -219,7 +221,7 @@ def add_paths(G, paths, bidirectional=False):
     """
 
     # the list of values OSM uses in its 'oneway' tag to denote True
-    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf 
+    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
     osm_oneway_values = ['yes', 'true', '1', '-1', 'T', 'F']
 
     for data in paths.values():
@@ -231,7 +233,7 @@ def add_paths(G, paths, bidirectional=False):
         elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
             if data['oneway'] == '-1' or data['oneway'] == 'T':
                 # paths with a one-way value of -1 or T are one-way, but in the
-                # reverse direction of the nodes' order, see osm documentation 
+                # reverse direction of the nodes' order, see osm documentation
                 data['nodes'] = list(reversed(data['nodes']))
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
@@ -312,8 +314,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
     return G
 
 
-def graph_from_file(filename, bidirectional=False,
-                    retain_all=False, name='unnamed'):
+def graph_from_file(filename, bidirectional=False, retain_all=False, name='unnamed'):
     """
     Create a networkx graph from OSM data in an XML file.
 
@@ -338,7 +339,6 @@ def graph_from_file(filename, bidirectional=False,
     response_jsons = [overpass_json_from_file(filename)]
 
     # create graph using this response JSON
-    G = create_graph(response_jsons, bidirectional=bidirectional,
-                     retain_all=retain_all, name=name)
+    G = create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all, name=name)
 
     return G

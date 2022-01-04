@@ -5,7 +5,6 @@ from hive.resources.mock_lobster import *
 
 
 class TestUpdateRequestsSampling(TestCase):
-
     def test_update(self):
         sim = mock_sim(
             sim_time=SimTime.build(180),
@@ -20,5 +19,5 @@ class TestUpdateRequestsSampling(TestCase):
         self.assertEqual(len(result.requests), 5, "should have added 5 requests")
 
         for r in result.requests.values():
-            self.assertNotEqual(r.origin, r.destination, "origin and destination should not be equal")
-
+            self.assertNotEqual(r.origin, r.destination,
+                                "origin and destination should not be equal")

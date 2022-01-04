@@ -50,7 +50,8 @@ def linestring_2d(points: Tuple[Tuple[float, float], ...], x_y_ordering: bool) -
     elif len(points) == 1:
         return point_2d(points[0], x_y_ordering)
     else:
-        pts_strings = ft.reduce(lambda acc, pair: acc + (f"{_point_to_string(pair, x_y_ordering)}",), points, ())
+        pts_strings = ft.reduce(
+            lambda acc, pair: acc + (f"{_point_to_string(pair, x_y_ordering)}", ), points, ())
         inner_content = ", ".join(pts_strings)
         linestring = f"LINESTRING ({inner_content})"
         return linestring

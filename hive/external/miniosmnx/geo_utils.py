@@ -35,7 +35,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     theta2 = np.deg2rad(lng2)
     d_theta = theta2 - theta1
 
-    h = np.sin(d_phi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2
+    h = np.sin(d_phi / 2)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2)**2
     h = np.minimum(1.0, h)  # protect against floating point errors
 
     arc = 2 * np.arcsin(np.sqrt(h))
@@ -53,22 +53,21 @@ class OSMContentHandler(xml.sax.handler.ContentHandler):
     notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
     and http://overpass-api.de/output_formats.html#json
     """
-
     def __init__(self):
         self._element = None
         self.object = {'elements': []}
 
     def startElement(self, name, attrs):
         if name == 'osm':
-            self.object.update({k: attrs[k] for k in attrs.keys()
-                                if k in ('version', 'generator')})
+            self.object.update({k: attrs[k] for k in attrs.keys() if k in ('version', 'generator')})
 
         elif name in ('node', 'way'):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys()
-                                  if k in ('lat', 'lon')})
-            self._element.update({k: int(attrs[k]) for k in attrs.keys()
-                                  if k in ('id', 'uid', 'version', 'changeset')})
+            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ('lat', 'lon')})
+            self._element.update({
+                k: int(attrs[k])
+                for k in attrs.keys() if k in ('id', 'uid', 'version', 'changeset')
+            })
 
         elif name == 'tag':
             self._element['tags'].update({attrs['k']: attrs['v']})
@@ -110,13 +109,11 @@ def induce_subgraph(G, node_subset):
 
     # copy edges to new graph, including parallel edges
     if G2.is_multigraph:
-        G2.add_edges_from((n, nbr, key, d)
-                          for n, nbrs in G.adj.items() if n in node_subset
+        G2.add_edges_from((n, nbr, key, d) for n, nbrs in G.adj.items() if n in node_subset
                           for nbr, keydict in nbrs.items() if nbr in node_subset
                           for key, d in keydict.items())
     else:
-        G2.add_edges_from((n, nbr, d)
-                          for n, nbrs in G.adj.items() if n in node_subset
+        G2.add_edges_from((n, nbr, d) for n, nbrs in G.adj.items() if n in node_subset
                           for nbr, d in nbrs.items() if nbr in node_subset)
 
     # update graph attribute dict, and return graph
@@ -149,7 +146,6 @@ def get_largest_component(G, strongly=False):
             sccs = nx.strongly_connected_components(G)
             largest_scc = max(sccs, key=len)
             G = induce_subgraph(G, largest_scc)
-
 
     else:
         # if the graph is not connected retain only the largest weakly connected component

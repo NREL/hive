@@ -36,11 +36,8 @@ def vehicle_move_event(move_result: MoveResult, env: Environment) -> Report:
     vehicle_memberships = move_result.prev_vehicle.membership.to_json()
     delta_distance: float = move_result.next_vehicle.distance_traveled_km - move_result.prev_vehicle.distance_traveled_km
     delta_energy = ft.reduce(
-        lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.prev_vehicle.energy.get(
-            e_type),
-        move_result.next_vehicle.energy.keys(),
-        0
-    )
+        lambda acc, e_type: acc + move_result.next_vehicle.energy.get(e_type) - move_result.
+        prev_vehicle.energy.get(e_type), move_result.next_vehicle.energy.keys(), 0)
     if len(move_result.next_vehicle.energy.keys()) > 1:
         raise NotImplemented("hive doesn't currently support multiple energy types")
     else:
@@ -67,12 +64,13 @@ def vehicle_move_event(move_result: MoveResult, env: Environment) -> Report:
     return report
 
 
-def vehicle_charge_event(prev_vehicle: Vehicle,
-                         next_vehicle: Vehicle,
-                         next_sim: SimulationState,
-                         station: Station,
-                         charger: Charger,
-                         ) -> Report:
+def vehicle_charge_event(
+    prev_vehicle: Vehicle,
+    next_vehicle: Vehicle,
+    next_sim: SimulationState,
+    station: Station,
+    charger: Charger,
+) -> Report:
     """
     reports information about the marginal effect of a charge event
 
@@ -90,7 +88,8 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
     station_id = station.id
     vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
     vehicle_memberships = prev_vehicle.membership.to_json()
-    energy_transacted = next_vehicle.energy[charger.energy_type] - prev_vehicle.energy[charger.energy_type]  # kwh
+    energy_transacted = next_vehicle.energy[charger.energy_type] - prev_vehicle.energy[
+        charger.energy_type]  # kwh
     charger_price = station.charger_prices_per_kwh.get(charger.id)  # Currency
     charging_price = energy_transacted * charger_price if charger_price else 0.0
 
@@ -117,10 +116,11 @@ def vehicle_charge_event(prev_vehicle: Vehicle,
     return report
 
 
-def report_pickup_request(vehicle: Vehicle,
-                          request: Request,
-                          next_sim: SimulationState,
-                          ) -> Report:
+def report_pickup_request(
+    vehicle: Vehicle,
+    request: Request,
+    next_sim: SimulationState,
+) -> Report:
     """
     reports information about the marginal effect of a request pickup
 
@@ -134,7 +134,8 @@ def report_pickup_request(vehicle: Vehicle,
 
     geoid = vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
-    wait_time = time_diff(request.departure_time.as_datetime_time(), event_sim_time.as_datetime_time())
+    wait_time = time_diff(request.departure_time.as_datetime_time(),
+                          event_sim_time.as_datetime_time())
 
     report_data = {
         'pickup_time': event_sim_time,
@@ -154,10 +155,7 @@ def report_pickup_request(vehicle: Vehicle,
     return report
 
 
-def report_dropoff_request(vehicle: Vehicle,
-                           sim: SimulationState,
-                           request: Request
-                           ) -> Report:
+def report_dropoff_request(vehicle: Vehicle, sim: SimulationState, request: Request) -> Report:
     """
     reports information about the marginal effect of a request dropoff from a ServicingTrip state
     which allows us to assume some ServicingTrip vehicle state properties.
@@ -172,7 +170,8 @@ def report_dropoff_request(vehicle: Vehicle,
     lat, lon = h3.h3_to_geo(geoid)
     # somewhat a hack, we just grab the membership from the first passenger
     membership = TupleOps.head(request.passengers).membership
-    travel_time = time_diff(request.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time())
+    travel_time = time_diff(request.departure_time.as_datetime_time(),
+                            sim.sim_time.as_datetime_time())
 
     report_data = {
         'dropoff_time': sim.sim_time,
@@ -190,7 +189,8 @@ def report_dropoff_request(vehicle: Vehicle,
     return report
 
 
-def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) -> Tuple[Report, ...]:
+def construct_station_load_events(reports: Tuple[Report],
+                                  sim: SimulationState) -> Tuple[Report, ...]:
     """
     a station load report takes any vehicle charge events and attributes them to a
     station, so that, for each time step, we report the load of energy use at the station
@@ -229,19 +229,16 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
         transforms the accumulated values into Reports
         :return: a collection of STATION_LOAD_EVENT reports
         """
-
         def _cast_as_report(station_id: StationId):
             energy, energy_units = acc.get(station_id)
-            report = Report(
-                report_type=ReportType.STATION_LOAD_EVENT,
-                report={
-                    "station_id": station_id,
-                    "sim_time_start": sim_time_start,
-                    "sim_time_end": sim_time_end,
-                    "energy": energy,
-                    "energy_units": energy_units,
-                }
-            )
+            report = Report(report_type=ReportType.STATION_LOAD_EVENT,
+                            report={
+                                "station_id": station_id,
+                                "sim_time_start": sim_time_start,
+                                "sim_time_end": sim_time_end,
+                                "energy": energy,
+                                "energy_units": energy_units,
+                            })
             return report
 
         these_reports: Tuple[Report, ...] = tuple(map(_cast_as_report, acc.keys()))
@@ -253,11 +250,8 @@ def construct_station_load_events(reports: Tuple[Report], sim: SimulationState) 
     # create entries for stations with no charge events reported
     reported_stations: Set[StationId] = set(reported_charge_events_accumulator.keys())
     unreported_station_ids: Set[StationId] = set(sim.stations.keys()).difference(reported_stations)
-    all_stations_accumulator = ft.reduce(
-        lambda acc, id: acc.update({id: (0.0, "")}),
-        unreported_station_ids,
-        reported_charge_events_accumulator
-    )
+    all_stations_accumulator = ft.reduce(lambda acc, id: acc.update({id: (0.0, "")}),
+                                         unreported_station_ids, reported_charge_events_accumulator)
 
     result = _to_reports(all_stations_accumulator)
 

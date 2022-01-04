@@ -21,10 +21,11 @@ class GeoFence(NamedTuple):
 
     @classmethod
     def from_geojson(cls, geojson: Dict, h3_resolution: H3Resolution = 10) -> GeoFence:
-        geofence_set = frozenset(h3.polyfill(
-            geojson=geojson['features'][0]['geometry'] if 'features' in geojson else geojson['geometry'],
-            res=h3_resolution,
-            geo_json_conformant=True))
+        geofence_set = frozenset(
+            h3.polyfill(geojson=geojson['features'][0]['geometry']
+                        if 'features' in geojson else geojson['geometry'],
+                        res=h3_resolution,
+                        geo_json_conformant=True))
 
         return GeoFence(
             geofence_set=geofence_set,

@@ -26,14 +26,11 @@ if TYPE_CHECKING:
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
     'scenario_file',
-    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")'
-)
-parser.add_argument(
-    '--defaults',
-    dest='defaults',
-    action='store_true',
-    help='prints the default hive configuration values'
-)
+    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")')
+parser.add_argument('--defaults',
+                    dest='defaults',
+                    action='store_true',
+                    help='prints the default hive configuration values')
 
 log = logging.getLogger("hive")
 
@@ -59,7 +56,8 @@ def run_sim(scenario_file, position=0):
         log_fh.setFormatter(formatter)
         log.addHandler(log_fh)
         log.info(
-            f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}")
+            f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}"
+        )
 
     if env.config.global_config.log_station_capacities:
         result = reporter_ops.log_station_capacities(sim, env)
@@ -76,8 +74,9 @@ def run_sim(scenario_file, position=0):
     update = Update.build(env.config, instruction_generators)
     initial_payload = RunnerPayload(sim, env, update)
 
-    log.info(f"running {env.config.sim.sim_name} for time {initial_payload.e.config.sim.start_time} "
-             f"to {initial_payload.e.config.sim.end_time}:")
+    log.info(
+        f"running {env.config.sim.sim_name} for time {initial_payload.e.config.sim.start_time} "
+        f"to {initial_payload.e.config.sim.end_time}:")
     start = time.time()
     sim_result = LocalSimulationRunner.run(initial_payload, position)
     end = time.time()
@@ -117,9 +116,9 @@ def run() -> int:
         try:
             scenario_file = fs.find_scenario(args.scenario_file)
         except FileNotFoundError as fe:
-            log.error(f"{repr(fe)}; please specify a path to a hive scenario file like denver_demo.yaml")
+            log.error(
+                f"{repr(fe)}; please specify a path to a hive scenario file like denver_demo.yaml")
             return 1
-
 
         run_sim(scenario_file)
 
@@ -149,7 +148,8 @@ def _welcome_to_hive():
 
 def print_defaults():
     print()
-    defaults_file_str = pkg_resources.resource_filename("hive.resources.defaults", "hive_config.yaml")
+    defaults_file_str = pkg_resources.resource_filename("hive.resources.defaults",
+                                                        "hive_config.yaml")
     log.info(f"printing the default scenario configuration stored at {defaults_file_str}:\n")
     # start build using the Hive config defaults file
     defaults_file = Path(defaults_file_str)

@@ -31,7 +31,10 @@ class TestH3Ops(TestCase):
         close_to_somewhere = h3.geo_to_h3(39.753600, -104.993369, 15)
         far_from_somewhere = h3.geo_to_h3(39.728882, -105.002792, 15)
         entities = immutables.Map({'1': 1, '2': 2, '3': 3, '4': 4})
-        entity_locations = immutables.Map({close_to_somewhere: ('1', '2'), far_from_somewhere: ('3', '4')})
+        entity_locations = immutables.Map({
+            close_to_somewhere: ('1', '2'),
+            far_from_somewhere: ('3', '4')
+        })
 
         nearest_entity = H3Ops.nearest_entity_point_to_point(somewhere, entities, entity_locations)
 
@@ -57,10 +60,11 @@ class TestH3Ops(TestCase):
         self.assertIsNone(e1, "test invariant failed")
         self.assertIsNone(e2, "test invariant failed")
 
-        nearest = H3Ops.nearest_entity_by_great_circle_distance(geoid=somewhere,
-                                                                entities=tuple(sim_with_reqs.requests.values()),
-                                                                entity_search=sim_with_reqs.r_search,
-                                                                sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
+        nearest = H3Ops.nearest_entity_by_great_circle_distance(
+            geoid=somewhere,
+            entities=tuple(sim_with_reqs.requests.values()),
+            entity_search=sim_with_reqs.r_search,
+            sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
 
         self.assertEqual(nearest.geoid, req_near.geoid)
 

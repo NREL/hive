@@ -29,7 +29,6 @@ class Reporter:
     """
     A class that generates reports for the simulation.
     """
-
     def __init__(self):
         self.reports: List[Report] = []
         self.handlers: List[Handler] = []
@@ -71,7 +70,8 @@ class Reporter:
                 final_report = handler.get_stats(rp)
         return final_report
 
-    def get_time_step_stats(self) -> Tuple[Optional[DataFrame], Optional[Map[MembershipId, DataFrame]]]:
+    def get_time_step_stats(
+            self) -> Tuple[Optional[DataFrame], Optional[Map[MembershipId, DataFrame]]]:
         """
         if a TimeStepStatsHandler exists, return the time step stats DataFrame and the fleet time step stats DataFrames
         :return: the time step stats DataFrame and the fleet time step stats collection of DataFrames if they exist

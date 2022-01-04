@@ -5,7 +5,6 @@ from typing import Dict
 
 from hive.util.typealiases import *
 
-
 Key = TypeVar('Key')
 """
 the type used to switch off of
@@ -23,7 +22,6 @@ the type returned from the SwitchCase (can be "Any")
 
 
 class SwitchCase(ABC):
-
     @abstractmethod
     def _default(self, arguments: Arguments) -> Result:
         """

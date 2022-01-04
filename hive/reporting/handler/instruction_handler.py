@@ -22,7 +22,6 @@ class InstructionHandler(Handler):
     """
     handles events and appends them to the event.log output file based on global logging settings
     """
-
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
         log_path = scenario_output_directory / 'instruction.log'

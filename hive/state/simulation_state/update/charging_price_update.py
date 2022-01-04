@@ -31,11 +31,12 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
     use_defaults: bool
 
     @classmethod
-    def build(cls,
-              charging_price_file: Optional[str],
-              chargers_file: str,
-              lazy_file_reading: bool = False,
-              ) -> ChargingPriceUpdate:
+    def build(
+        cls,
+        charging_price_file: Optional[str],
+        chargers_file: str,
+        lazy_file_reading: bool = False,
+    ) -> ChargingPriceUpdate:
         """
         reads a requests file and builds a ChargingPriceUpdate SimulationUpdateFunction
         if no charging_file is specified, builds a price update which sets all
@@ -53,17 +54,20 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             # assign default price of $0.00 for any charger types
             table = build_chargers_table(chargers_file)
 
-            def create_default_price(acc: Tuple[Dict, ...], charger_id: ChargerId) -> Tuple[Dict, ...]:
+            def create_default_price(acc: Tuple[Dict, ...],
+                                     charger_id: ChargerId) -> Tuple[Dict, ...]:
                 default_price = {
                     "time": "0",
                     "station_id": "default",
                     "charger_id": charger_id,
                     "price_kwh": "0.0"
                 }
-                return acc + (default_price,)
+                return acc + (default_price, )
 
             fallback_values = ft.reduce(create_default_price, table.keys(), ())
-            stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=SimTime.build)
+            stepper = DictReaderStepper.from_iterator(iter(fallback_values),
+                                                      "time",
+                                                      parser=SimTime.build)
             return ChargingPriceUpdate(stepper, True)
         else:
             charging_path = Path(charging_price_file)
@@ -71,7 +75,9 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
                 raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
-                    error, stepper = DictReaderStepper.build(charging_path, "time", parser=SimTime.build)
+                    error, stepper = DictReaderStepper.build(charging_path,
+                                                             "time",
+                                                             parser=SimTime.build)
                     if error:
                         raise error
                 else:
@@ -81,8 +87,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
                 return ChargingPriceUpdate(stepper, False)
 
-    def update(self,
-               sim_state: SimulationState,
+    def update(self, sim_state: SimulationState,
                env: Environment) -> Tuple[SimulationState, Optional[ChargingPriceUpdate]]:
         """
         update charging price when the simulation reaches the update's time
@@ -99,11 +104,9 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             return value < current_sim_time
 
         # parse the most recently available charger_id price data up to the current sim time
-        charger_update = ft.reduce(
-            _add_row_to_this_update,
-            self.reader.read_until_stop_condition(stop_condition),
-            immutables.Map()
-        )
+        charger_update = ft.reduce(_add_row_to_this_update,
+                                   self.reader.read_until_stop_condition(stop_condition),
+                                   immutables.Map())
 
         if len(charger_update) == 0:
             # no update
@@ -115,9 +118,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             # apply it to every station here.
             result = ft.reduce(
                 lambda sim, s_id: _update_station_prices(sim, s_id, charger_update['default']),
-                sim_state.stations.keys(),
-                sim_state
-            )
+                sim_state.stations.keys(), sim_state)
             return result, self
 
         else:
@@ -129,15 +130,13 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             # we are applying only the updates related to valid StationIds with updates
             result = ft.reduce(
                 lambda sim, s_id: _update_station_prices(sim, s_id, as_station_updates[s_id]),
-                station_ids_to_update,
-                sim_state
-            )
+                station_ids_to_update, sim_state)
             return result, self
 
 
-def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[Charger, Currency]],
-                            row: Dict[str, str]
-                            ) -> immutables.Map[str, immutables.Map[Charger, Currency]]:
+def _add_row_to_this_update(
+        acc: immutables.Map[str, immutables.Map[Charger, Currency]],
+        row: Dict[str, str]) -> immutables.Map[str, immutables.Map[Charger, Currency]]:
     """
     adds a single row to an accumulator that is storing only the most recently
     observed {StationId|GeoId}/charger_id/currency combinations
@@ -170,8 +169,7 @@ def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[Charger, Cur
         return rows
 
 
-def _update_station_prices(simulation_state: SimulationState,
-                           station_id: StationId,
+def _update_station_prices(simulation_state: SimulationState, station_id: StationId,
                            prices_update: immutables.Map[Charger, Currency]) -> SimulationState:
     """
     updates a simulation state with prices for a station by station id
@@ -194,8 +192,9 @@ def _update_station_prices(simulation_state: SimulationState,
             return updated_sim
 
 
-def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
-                        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
+def _map_to_station_ids(
+        this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
+        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds
 
@@ -215,13 +214,14 @@ def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger,
 
                 # find the set of all station search geoids corresponding with the
                 # provided station charge price geoid
-                search_geoids = (k,)
+                search_geoids = (k, )
                 if res > sim.sim_h3_search_resolution:
-                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution),)
+                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution), )
                 elif res < sim.sim_h3_search_resolution:
                     search_geoids = tuple(h3.h3_to_children(k, sim.sim_h3_search_resolution))
 
-                station_ids = (station_id for search_geoid in search_geoids if sim.s_search.get(search_geoid)
+                station_ids = (station_id for search_geoid in search_geoids
+                               if sim.s_search.get(search_geoid)
                                for station_id in sim.s_search.get(search_geoid))
 
                 # all of these station ids should get entries managers the provided geoid

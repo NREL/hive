@@ -19,12 +19,10 @@ class Network(NamedTuple):
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[Exception, Network]:
-        return ConfigBuilder.build(
-            default_config=cls.default_config(),
-            required_config=cls.required_config(),
-            config_constructor=lambda c: Network.from_dict(c),
-            config=config
-        )
+        return ConfigBuilder.build(default_config=cls.default_config(),
+                                   required_config=cls.required_config(),
+                                   config_constructor=lambda c: Network.from_dict(c),
+                                   config=config)
 
     @classmethod
     def from_dict(cls, d: Dict) -> Network:

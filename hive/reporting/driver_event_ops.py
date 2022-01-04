@@ -12,9 +12,7 @@ class ScheduleEventType(Enum):
     ON = "on"
 
 
-def driver_schedule_event(sim: 'SimulationState',
-                          env: Environment,
-                          vehicle: Vehicle,
+def driver_schedule_event(sim: 'SimulationState', env: Environment, vehicle: Vehicle,
                           schedule_event: ScheduleEventType) -> Report:
 
     lat, lon = h3.h3_to_geo(vehicle.geoid)

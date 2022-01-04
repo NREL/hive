@@ -31,7 +31,12 @@ class TestOSMRoadNetwork(TestCase):
         destination_position = network.position_from_geoid(destination)
         route = network.route(origin_position, destination_position)
 
-        self.assertEqual(origin_position.link_id, route[0].link_id, "origin link id should be first route link id")
-        self.assertEqual(destination_position.link_id, route[-1].link_id, "destination link id should be the last route link id")
-        self.assertEqual(origin_position.geoid, route[0].start, "route should start at origin GeoId (stationary road network location)")
-        self.assertEqual(destination_position.geoid, route[-1].end, "route should end at destination GeoId (stationary road network location)")
+        self.assertEqual(origin_position.link_id, route[0].link_id,
+                         "origin link id should be first route link id")
+        self.assertEqual(destination_position.link_id, route[-1].link_id,
+                         "destination link id should be the last route link id")
+        self.assertEqual(origin_position.geoid, route[0].start,
+                         "route should start at origin GeoId (stationary road network location)")
+        self.assertEqual(
+            destination_position.geoid, route[-1].end,
+            "route should end at destination GeoId (stationary road network location)")

@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+
 class ICE(NamedTuple, MechatronicsInterface):
     """
     Mechatronics for an internal combustion engine (ICE)
@@ -128,7 +129,8 @@ class ICE(NamedTuple, MechatronicsInterface):
         :return:
         """
         energy_used = self.powertrain.energy_cost(route)
-        energy_used_gal_gas = energy_used * get_unit_conversion(self.powertrain.energy_units, "gal_gas")
+        energy_used_gal_gas = energy_used * get_unit_conversion(self.powertrain.energy_units,
+                                                                "gal_gas")
 
         vehicle_energy_gal_gas = vehicle.energy[EnergyType.GASOLINE]
         new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - energy_used_gal_gas)
@@ -153,7 +155,8 @@ class ICE(NamedTuple, MechatronicsInterface):
 
         return updated_vehicle
 
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
+    def add_energy(self, vehicle: Vehicle, charger: Charger,
+                   time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system. units for the charger are gallons per second
 
@@ -166,7 +169,9 @@ class ICE(NamedTuple, MechatronicsInterface):
         :return: the updated vehicle, along with the time spent charging
         """
         if not self.valid_charger(charger):
-            log.warning(f"ICE vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging.")
+            log.warning(
+                f"ICE vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging."
+            )
             return vehicle, 0
         start_gal_gas = vehicle.energy[EnergyType.GASOLINE]
 

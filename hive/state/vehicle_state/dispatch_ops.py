@@ -12,7 +12,8 @@ from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import VehicleId, RequestId, iterators, SimulationStateError, TupleOps
 
 
-def requests_exist_and_match_membership(sim: SimulationState, vehicle: Vehicle, requests: Tuple[RequestId, ...]) -> bool:
+def requests_exist_and_match_membership(sim: SimulationState, vehicle: Vehicle,
+                                        requests: Tuple[RequestId, ...]) -> bool:
     """
     confirm that all requests currently exist in the system
 
@@ -20,23 +21,24 @@ def requests_exist_and_match_membership(sim: SimulationState, vehicle: Vehicle, 
     :param requests: the requests
     :return: True if all requests currently exist
     """
-
     def exists_and_match_membership(req_id):
         req = sim.requests.get(req_id)
         if req is None:
             return False
         else:
-            membership_ok = req.membership.grant_access_to_membership(vehicle.membership) if req else False
+            membership_ok = req.membership.grant_access_to_membership(
+                vehicle.membership) if req else False
             return membership_ok
 
     all_exist = all(map(exists_and_match_membership, requests))
     return all_exist
 
 
-def modify_vehicle_assignment(sim: SimulationState,
-                              vehicle_id: VehicleId,
-                              requests: Tuple[RequestId, ...],
-                              unassign: bool = False) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+def modify_vehicle_assignment(
+        sim: SimulationState,
+        vehicle_id: VehicleId,
+        requests: Tuple[RequestId, ...],
+        unassign: bool = False) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     assign/un-assign this vehicle to each request. if a request does not exist, it is ignored.
 
@@ -46,7 +48,6 @@ def modify_vehicle_assignment(sim: SimulationState,
     :param assign if true, un-assign the request, otherwise, assign
     :return: either an error, or, the updated simulation
     """
-
     def _modify(acc, req_id):
         err, sim = acc
         req = sim.requests.get(req_id) if sim is not None else None
@@ -65,8 +66,8 @@ def modify_vehicle_assignment(sim: SimulationState,
     return result
 
 
-def create_routes(sim: SimulationState,
-                  trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]) -> Tuple[Route, ...]:
+def create_routes(sim: SimulationState, trip_plan: Tuple[Tuple[RequestId, TripPhase],
+                                                         ...]) -> Tuple[Route, ...]:
     """
     creates routes between each phase of a trip plan. requires at least 2
     entries in the trip plan, which in the base case, would be a PICKUP followed
@@ -97,7 +98,8 @@ def create_routes(sim: SimulationState,
         return routes
 
 
-def get_position_for_phase(sim: SimulationState, req_id: RequestId, trip_phase: TripPhase) -> Optional[EntityPosition]:
+def get_position_for_phase(sim: SimulationState, req_id: RequestId,
+                           trip_phase: TripPhase) -> Optional[EntityPosition]:
     """
     gets the EntityPosition for the request based on the trip phase
 
@@ -117,10 +119,9 @@ def get_position_for_phase(sim: SimulationState, req_id: RequestId, trip_phase: 
         return None
 
 
-def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
-                                            vehicle_id: VehicleId,
-                                            trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
-                                            ) -> Tuple[Optional[Exception], Optional[DispatchPoolingTrip]]:
+def begin_or_replan_dispatch_pooling_state(
+    sim: SimulationState, vehicle_id: VehicleId, trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+) -> Tuple[Optional[Exception], Optional[DispatchPoolingTrip]]:
     """
     create a DispatchPoolingTrip state. if the vehicle is currently in a ServicingPoolingTrip
     state, then carry over that state information here as well in the construction of the new state.
@@ -134,7 +135,8 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
     first_trip = TupleOps.head_optional(trip_plan)
 
     if vehicle is None:
-        error = SimulationStateError(f"attempting to dispatch vehicle {vehicle_id} that does not exist")
+        error = SimulationStateError(
+            f"attempting to dispatch vehicle {vehicle_id} that does not exist")
         return error, None
     elif first_trip is None:
         error = SimulationStateError(f"attempting to dispatch pooling trip with empty trip plan")
@@ -143,7 +145,9 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
         first_req_id, first_phase = first_trip
         first_req_pos = get_position_for_phase(sim, first_req_id, first_phase)
         if first_req_pos is None:
-            error = SimulationStateError(f"attempting to dispatch pooling trip to request {first_req_id} that does not exist in the sim")
+            error = SimulationStateError(
+                f"attempting to dispatch pooling trip to request {first_req_id} that does not exist in the sim"
+            )
             return error, None
         else:
             route = sim.road_network.route(vehicle.position, first_req_pos)
@@ -153,14 +157,10 @@ def begin_or_replan_dispatch_pooling_state(sim: SimulationState,
             #  - maybe we need a TripPhase.REPLANNING for the leg that is the interruption?
             if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
                 # already servicing pooling - copy over passenger state
-                next_state = DispatchPoolingTrip(
-                    vehicle_id,
-                    trip_plan,
-                    route,
-                    vehicle_state.boarded_requests,
-                    vehicle_state.departure_times,
-                    vehicle_state.num_passengers
-                )
+                next_state = DispatchPoolingTrip(vehicle_id, trip_plan, route,
+                                                 vehicle_state.boarded_requests,
+                                                 vehicle_state.departure_times,
+                                                 vehicle_state.num_passengers)
                 return None, next_state
             else:
                 # not already servicing pooling - just dispatch, don't carry over passenger state

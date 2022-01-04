@@ -1,8 +1,7 @@
 from unittest import TestCase
 
 from hive.dispatcher.instruction_generator.instruction_generator_ops import (
-    instruct_vehicles_to_dispatch_to_station,
-)
+    instruct_vehicles_to_dispatch_to_station, )
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from hive.resources.mock_lobster import *
 
@@ -24,15 +23,15 @@ class TestInstructionGenerators(TestCase):
         )
 
         sim = mock_sim(
-            vehicles=(vehicle,),
-            stations=(station,),
+            vehicles=(vehicle, ),
+            stations=(station, ),
         )
         env = mock_env(mechatronics={ice_mechatronics.mechatronics_id: ice_mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(
             n=1,
             max_search_radius_km=10,
-            vehicles=(vehicle,),
+            vehicles=(vehicle, ),
             simulation_state=sim,
             environment=env,
             target_soc=0.2,
@@ -57,15 +56,15 @@ class TestInstructionGenerators(TestCase):
         )
 
         sim = mock_sim(
-            vehicles=(vehicle,),
-            stations=(station,),
+            vehicles=(vehicle, ),
+            stations=(station, ),
         )
         env = mock_env(mechatronics={mechatronics.mechatronics_id: mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(
             n=1,
             max_search_radius_km=10,
-            vehicles=(vehicle,),
+            vehicles=(vehicle, ),
             simulation_state=sim,
             environment=env,
             target_soc=0.2,

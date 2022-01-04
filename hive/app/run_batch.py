@@ -17,10 +17,7 @@ if TYPE_CHECKING:
     pass
 
 parser = argparse.ArgumentParser(description="run hive")
-parser.add_argument(
-    'batch_config',
-    help='which batch config file to use?'
-)
+parser.add_argument('batch_config', help='which batch config file to use?')
 
 log = logging.getLogger("hive")
 

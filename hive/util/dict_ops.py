@@ -53,7 +53,8 @@ class DictOps:
         return xs.delete(obj_id)
 
     @classmethod
-    def merge_dicts(cls, old: immutables.Map[K, V], new: immutables.Map[K, V]) -> immutables.Map[K, V]:
+    def merge_dicts(cls, old: immutables.Map[K, V], new: immutables.Map[K,
+                                                                        V]) -> immutables.Map[K, V]:
         """
         merges two Dictionaries, replacing old kv pairs with new ones
 
@@ -68,9 +69,7 @@ class DictOps:
         return tmp
 
     @classmethod
-    def add_to_collection_dict(cls,
-                               xs: immutables.Map[str, FrozenSet[V]],
-                               collection_id: str,
+    def add_to_collection_dict(cls, xs: immutables.Map[str, FrozenSet[V]], collection_id: str,
                                obj_id: str) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
@@ -87,9 +86,7 @@ class DictOps:
         return xs.set(collection_id, updated_ids)
 
     @classmethod
-    def add_to_stack_dict(cls,
-                          xs: immutables.Map[str, Tuple[V]],
-                          collection_id: str,
+    def add_to_stack_dict(cls, xs: immutables.Map[str, Tuple[V]], collection_id: str,
                           obj: V) -> immutables.Map[str, Tuple[V]]:
         """
         updates Dicts that hold a stack of entities;
@@ -103,14 +100,15 @@ class DictOps:
         :return:
         """
         stack = xs.get(collection_id, tuple())
-        updated_stack = (obj,) + stack
+        updated_stack = (obj, ) + stack
         return xs.set(collection_id, updated_stack)
 
     @classmethod
-    def pop_from_stack_dict(cls,
-                            xs: immutables.Map[str, Tuple[V]],
-                            collection_id: str,
-                            ) -> Tuple[Optional[V], immutables.Map[str, Tuple[V]]]:
+    def pop_from_stack_dict(
+        cls,
+        xs: immutables.Map[str, Tuple[V]],
+        collection_id: str,
+    ) -> Tuple[Optional[V], immutables.Map[str, Tuple[V]]]:
         """
         pops an element from the stack and returns it;
         note that the head of the tuple represents the top of the stack; popped elements come from the tuple head;
@@ -130,9 +128,7 @@ class DictOps:
         return obj, xs.set(collection_id, updated_stack)
 
     @classmethod
-    def remove_from_collection_dict(cls,
-                                    xs: immutables.Map[str, FrozenSet[V]],
-                                    collection_id: str,
+    def remove_from_collection_dict(cls, xs: immutables.Map[str, FrozenSet[V]], collection_id: str,
                                     obj_id: str) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
@@ -147,12 +143,12 @@ class DictOps:
         """
         ids_at_loc = xs.get(collection_id, frozenset())
         updated_ids = ids_at_loc.difference([obj_id])
-        return xs.delete(collection_id) if len(updated_ids) == 0 else xs.set(collection_id, updated_ids)
+        return xs.delete(collection_id) if len(updated_ids) == 0 else xs.set(
+            collection_id, updated_ids)
 
     @classmethod
-    def update_entity_dictionaries(cls,
-                                   updated_entity: V,
-                                   entities: immutables.Map[K, Tuple[V, ...]],
+    def update_entity_dictionaries(cls, updated_entity: V, entities: immutables.Map[K, Tuple[V,
+                                                                                             ...]],
                                    locations: immutables.Map[GeoId, Tuple[K, ...]],
                                    search: immutables.Map[GeoId, Tuple[K, ...]],
                                    sim_h3_search_resolution: int) -> EntityUpdateResult:
@@ -170,15 +166,11 @@ class DictOps:
         entities_updated = DictOps.add_to_dict(entities, updated_entity.id, updated_entity)
 
         if old_entity.geoid == updated_entity.geoid:
-            return EntityUpdateResult(
-                entities=entities_updated
-            )
+            return EntityUpdateResult(entities=entities_updated)
         # unset from old geoid add add to new one
-        locations_removed = DictOps.remove_from_collection_dict(locations,
-                                                                old_entity.geoid,
+        locations_removed = DictOps.remove_from_collection_dict(locations, old_entity.geoid,
                                                                 old_entity.id)
-        locations_updated = DictOps.add_to_collection_dict(locations_removed,
-                                                           updated_entity.geoid,
+        locations_updated = DictOps.add_to_collection_dict(locations_removed, updated_entity.geoid,
                                                            updated_entity.id)
 
         old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
@@ -186,21 +178,14 @@ class DictOps:
 
         if old_search_geoid == updated_search_geoid:
             # no update to search location
-            return EntityUpdateResult(
-                entities=entities_updated,
-                locations=locations_updated
-            )
+            return EntityUpdateResult(entities=entities_updated, locations=locations_updated)
 
         # update request search dict location
-        search_removed = DictOps.remove_from_collection_dict(search,
-                                                             old_search_geoid,
+        search_removed = DictOps.remove_from_collection_dict(search, old_search_geoid,
                                                              old_entity.id)
-        search_updated = DictOps.add_to_collection_dict(search_removed,
-                                                        updated_search_geoid,
+        search_updated = DictOps.add_to_collection_dict(search_removed, updated_search_geoid,
                                                         updated_entity.id)
 
-        return EntityUpdateResult(
-            entities=entities_updated,
-            locations=locations_updated,
-            search=search_updated
-        )
+        return EntityUpdateResult(entities=entities_updated,
+                                  locations=locations_updated,
+                                  search=search_updated)

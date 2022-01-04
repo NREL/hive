@@ -13,7 +13,6 @@ class Handler(ABC):
     """
     A reporting.Handler handles simulation reports in varying ways.
     """
-
     @abstractmethod
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
         """

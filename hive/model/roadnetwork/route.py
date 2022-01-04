@@ -89,7 +89,8 @@ def to_linestring(route: Route, env: Environment) -> str:
         linestring = wkt.linestring_2d((src, dst), env.config.global_config.wkt_x_y_ordering)
         return linestring
     else:
-        points = ft.reduce(lambda acc, l: acc + (h3.h3_to_geo(l.start), h3.h3_to_geo(l.end)), route, ())
+        points = ft.reduce(lambda acc, l: acc + (h3.h3_to_geo(l.start), h3.h3_to_geo(l.end)), route,
+                           ())
         linestring = wkt.linestring_2d(points, env.config.global_config.wkt_x_y_ordering)
         return linestring
 

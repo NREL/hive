@@ -5,7 +5,6 @@ from hive.resources.mock_lobster import *
 
 
 class TestBase(TestCase):
-
     def test_from_row(self):
         source = """base_id,lat,lon,stall_count,station_id
                     b1,37,122,10,s1"""

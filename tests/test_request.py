@@ -13,16 +13,14 @@ class TestRequest(TestCase):
     departure_time = 28800
     passengers = 2
 
-    request = mock_request(
-        request_id=request_id,
-        o_lat=0,
-        o_lon=0,
-        d_lat=3,
-        d_lon=4,
-        h3_res=11,
-        departure_time=28800,
-        passengers=2
-    )
+    request = mock_request(request_id=request_id,
+                           o_lat=0,
+                           o_lon=0,
+                           d_lat=3,
+                           d_lon=4,
+                           h3_res=11,
+                           departure_time=28800,
+                           passengers=2)
 
     def test_request_constructor(self):
         """
@@ -43,8 +41,10 @@ class TestRequest(TestCase):
         network = mock_network()
         _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
-        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
-        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
+        self.assertEqual(req.origin,
+                         h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
+        self.assertEqual(req.destination,
+                         h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
         self.assertTrue(req.membership.public)
@@ -58,8 +58,10 @@ class TestRequest(TestCase):
         network = mock_network()
         _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
-        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
-        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
+        self.assertEqual(req.origin,
+                         h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
+        self.assertEqual(req.destination,
+                         h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
         self.assertTrue('uber' in req.membership.memberships)

@@ -5,11 +5,11 @@ from hive.util import Seconds, Ratio
 
 
 def time_to_full(
-        vehicle: Vehicle,
-        mechatronics: MechatronicsInterface,
-        charger: Charger,
-        target_soc: Ratio,
-        sim_timestep_duration_seconds: Seconds,
+    vehicle: Vehicle,
+    mechatronics: MechatronicsInterface,
+    charger: Charger,
+    target_soc: Ratio,
+    sim_timestep_duration_seconds: Seconds,
 ) -> Seconds:
     """
     fills an imaginary vehicle in order to determine the estimated time to charge
@@ -25,8 +25,7 @@ def time_to_full(
         if mechatronics.fuel_source_soc(charging_vehicle) >= target_soc:
             return time_charged_accumulator
         else:
-            updated_veh, time_delta = mechatronics.add_energy(charging_vehicle,
-                                                              charger,
+            updated_veh, time_delta = mechatronics.add_energy(charging_vehicle, charger,
                                                               sim_timestep_duration_seconds)
             updated_time_charged_acc = time_charged_accumulator + time_delta
             return _fill(updated_veh, updated_time_charged_acc)
@@ -34,4 +33,3 @@ def time_to_full(
     time_charged = _fill(vehicle)
 
     return time_charged
-

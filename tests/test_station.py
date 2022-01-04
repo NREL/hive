@@ -5,7 +5,6 @@ from hive.resources.mock_lobster import *
 
 
 class TestStation(TestCase):
-
     def test_from_row(self):
         source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
                  s1,37,122,DCFC,10,true
@@ -72,9 +71,9 @@ class TestStation(TestCase):
         self.assertEqual(station2.total_chargers[mock_dcfc_charger_id()], 15)
 
     def test_checkout_charger(self):
-        updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 1})).checkout_charger(
-            mock_dcfc_charger_id(),
-        )
+        updated_station = mock_station(
+            chargers=immutables.Map({mock_dcfc_charger_id(): 1})).checkout_charger(
+                                         mock_dcfc_charger_id(), )
 
         self.assertEqual(updated_station.available_chargers[mock_dcfc_charger_id()], 0)
 
@@ -86,9 +85,9 @@ class TestStation(TestCase):
         self.assertIsNone(no_dcfc_station)
 
     def test_return_charger(self):
-        updated_station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1})).checkout_charger(
-            mock_l2_charger_id(),
-        )
+        updated_station = mock_station(
+            chargers=immutables.Map({mock_l2_charger_id(): 1})).checkout_charger(
+                                         mock_l2_charger_id(), )
 
         error, station_w_l2 = updated_station.return_charger(mock_l2_charger_id())
 
@@ -106,13 +105,8 @@ class TestStation(TestCase):
     def test_enqueue_for_charger(self):
         station = mock_station()
 
-        has_queues = station.enqueue_for_charger(
-            mock_dcfc_charger_id(),
-        ).enqueue_for_charger(
-            mock_dcfc_charger_id(),
-        ).enqueue_for_charger(
-            mock_l1_charger_id(),
-        )
+        has_queues = station.enqueue_for_charger(mock_dcfc_charger_id(), ).enqueue_for_charger(
+            mock_dcfc_charger_id(), ).enqueue_for_charger(mock_l1_charger_id(), )
         dc_count = has_queues.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
         l1_count = has_queues.enqueued_vehicle_count_for_charger(mock_l1_charger_id())
         l2_count = has_queues.enqueued_vehicle_count_for_charger(mock_l2_charger_id())

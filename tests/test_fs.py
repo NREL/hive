@@ -10,7 +10,6 @@ from hive.util.fs import global_hive_config_search
 
 
 class TestDictReaderStepper(TestCase):
-
     def test_global_hive_config_search_finds_default(self):
         result = global_hive_config_search()
         self.assertIsInstance(result, GlobalConfig, "should be a GlobalConfig class instance")
@@ -24,6 +23,9 @@ class TestDictReaderStepper(TestCase):
             with tempfile.TemporaryDirectory(dir=parent) as child:
                 os.chdir(child)
                 result = global_hive_config_search()
-                self.assertIsInstance(result, GlobalConfig, "should be a GlobalConfig class instance")
-                self.assertFalse(result.log_states, "should have found the modified config in the parent directory")  # default is "True"
+                self.assertIsInstance(result, GlobalConfig,
+                                      "should be a GlobalConfig class instance")
+                self.assertFalse(result.log_states,
+                                 "should have found the modified config in the parent directory"
+                                 )  # default is "True"
                 self.assertTrue(result.log_run, "should also contain keys from the default config")

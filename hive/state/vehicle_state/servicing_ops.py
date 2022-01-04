@@ -53,11 +53,8 @@ def get_active_pooling_trip(
 
 
 def complete_trip_phase(
-        sim: SimulationState,
-        env: Environment,
-        vehicle: Vehicle,
-        active_trip: ActivePoolingTrip
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        sim: SimulationState, env: Environment, vehicle: Vehicle,
+        active_trip: ActivePoolingTrip) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     performs the action associated with closing out a trip phase.
 
@@ -82,21 +79,22 @@ def complete_trip_phase(
             err2, sim2 = pick_up_trip(sim, env, vehicle.id, request.id)
             if err2 is not None:
                 response = SimulationStateError(
-                    f"failure completing trip phase for vehicle {vehicle.id} during TripPhase.PICKUP")
+                    f"failure completing trip phase for vehicle {vehicle.id} during TripPhase.PICKUP"
+                )
                 response.__cause__ = err2
                 return response, None
             else:
                 # add this request to the boarded vehicles
                 updated_boarded_requests = vehicle_state.boarded_requests.set(request.id, request)
                 updated_num_passengers = vehicle_state.num_passengers + len(request.passengers)
-                updated_departure_times = vehicle_state.departure_times.set(request.id, sim.sim_time)
+                updated_departure_times = vehicle_state.departure_times.set(
+                    request.id, sim.sim_time)
                 updated_vehicle_state = vehicle_state._replace(
                     trip_plan=updated_trip_plan,
                     routes=updated_routes,
                     boarded_requests=updated_boarded_requests,
                     num_passengers=updated_num_passengers,
-                    departure_times=updated_departure_times
-                )
+                    departure_times=updated_departure_times)
                 updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
                 result = modify_vehicle(sim2, updated_vehicle)
                 return result
@@ -115,7 +113,8 @@ def complete_trip_phase(
             err2, sim2 = drop_off_trip(sim, env, vehicle.id, request)
             if err2 is not None:
                 response = SimulationStateError(
-                    f"failure completing trip phase for vehicle {vehicle.id} during TripPhase.DROPOFF")
+                    f"failure completing trip phase for vehicle {vehicle.id} during TripPhase.DROPOFF"
+                )
                 response.__cause__ = err2
                 return response, None
             else:
@@ -126,8 +125,7 @@ def complete_trip_phase(
                     trip_plan=updated_trip_plan,
                     routes=updated_routes,
                     boarded_requests=updated_boarded_requests,
-                    num_passengers=updated_num_passengers
-                )
+                    num_passengers=updated_num_passengers)
                 updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
                 result = modify_vehicle(sim2, updated_vehicle)
                 return result
@@ -136,11 +134,8 @@ def complete_trip_phase(
 
 
 def update_active_pooling_trip(
-        sim: SimulationState,
-        env: Environment,
-        vehicle_state: ServicingPoolingTrip,
-        updated_route: Route
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        sim: SimulationState, env: Environment, vehicle_state: ServicingPoolingTrip,
+        updated_route: Route) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     helper to update the route of the leading trip when no route changes are required
 
@@ -154,7 +149,7 @@ def update_active_pooling_trip(
     elif len(updated_route) > 0:
         # all we need to do is replace the route at the head of the route plan
         tail = TupleOps.tail(vehicle_state.routes)
-        updated_routes = (updated_route,) + tail
+        updated_routes = (updated_route, ) + tail
         updated_state = vehicle_state._replace(routes=updated_routes)
         updated_vehicle = vehicle.modify_vehicle_state(updated_state)
         result = modify_vehicle(sim, updated_vehicle)
@@ -173,9 +168,7 @@ def update_active_pooling_trip(
             return result
 
 
-def pick_up_trip(sim: SimulationState,
-                 env: Environment,
-                 vehicle_id: VehicleId,
+def pick_up_trip(sim: SimulationState, env: Environment, vehicle_id: VehicleId,
                  request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     has a vehicle pick up a trip and receive payment for it.
@@ -195,10 +188,10 @@ def pick_up_trip(sim: SimulationState,
         return SimulationStateError(f"request not found; context: {context}"), None
     else:
         updated_vehicle = vehicle.receive_payment(request.value)
-        mod_error, maybe_sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+        mod_error, maybe_sim_with_vehicle = simulation_state_ops.modify_vehicle(
+            sim, updated_vehicle)
         if mod_error:
-            response = SimulationStateError(
-                f"failure during pick_up_trip for vehicle {vehicle.id}")
+            response = SimulationStateError(f"failure during pick_up_trip for vehicle {vehicle.id}")
             response.__cause__ = mod_error
             return response, None
         else:
@@ -211,11 +204,8 @@ def pick_up_trip(sim: SimulationState,
             return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)
 
 
-def drop_off_trip(sim: SimulationState,
-                  env: Environment,
-                  vehicle_id: VehicleId,
-                  request: Request
-                  ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+def drop_off_trip(sim: SimulationState, env: Environment, vehicle_id: VehicleId,
+                  request: Request) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     handles the dropping off of passengers, which is really mostly a validation
     step followed by a logging step.
@@ -245,10 +235,11 @@ def drop_off_trip(sim: SimulationState,
         return None, sim
 
 
-def remove_completed_trip(sim: SimulationState,
-                          env: Environment,
-                          vehicle_id: VehicleId,
-                          ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, int]]]:
+def remove_completed_trip(
+    sim: SimulationState,
+    env: Environment,
+    vehicle_id: VehicleId,
+) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, int]]]:
     """
     removes the first trip from a ServicingPoolingTrip state, because
     it has reached its destination.
@@ -265,20 +256,19 @@ def remove_completed_trip(sim: SimulationState,
         error = SimulationStateError(f"vehicle not found in simulation state; context: {context}")
         return error, None
     elif not state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
-        error = SimulationStateError(f"vehicle {vehicle_id} state not pooling but attempting to remove it's oldest pooling trip")
+        error = SimulationStateError(
+            f"vehicle {vehicle_id} state not pooling but attempting to remove it's oldest pooling trip"
+        )
         return error, None
     elif len(state.trips) == 0:
-        error = SimulationStateError(f"remove first trip called on vehicle with no trips; context: {context}")
+        error = SimulationStateError(
+            f"remove first trip called on vehicle with no trips; context: {context}")
         return error, None
     else:
         vehicle = sim.vehicles.get(state.vehicle_id)
         removed_trip_request_id, updated_trip_order = TupleOps.head_tail(state.trip_order)
         updated_trips = state.trips.delete(removed_trip_request_id)
-        updated_state = state._replace(
-            trip_order=updated_trip_order,
-            trips=updated_trips
-        )
+        updated_state = state._replace(trip_order=updated_trip_order, trips=updated_trips)
         updated_vehicle = vehicle.modify_vehicle_state(updated_state)
         error, result = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         return error, (result, len(updated_trips))
-

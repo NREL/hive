@@ -37,33 +37,27 @@ class SummaryStats:
         env = rp.e
 
         self.mean_final_soc = np.mean([
-            env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v) for v in sim_state.vehicles.values()
+            env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v)
+            for v in sim_state.vehicles.values()
         ])
 
-        self.station_revenue = reduce(
-            lambda income, station: income + station.balance,
-            sim_state.stations.values(),
-            0.0
-        )
+        self.station_revenue = reduce(lambda income, station: income + station.balance,
+                                      sim_state.stations.values(), 0.0)
 
-        self.fleet_revenue = reduce(
-            lambda income, vehicle: income + vehicle.balance,
-            sim_state.vehicles.values(),
-            0.0
-        )
+        self.fleet_revenue = reduce(lambda income, vehicle: income + vehicle.balance,
+                                    sim_state.vehicles.values(), 0.0)
 
-        requests_served_percent = 1 - (self.cancelled_requests / self.requests) if self.requests > 0 else 0
+        requests_served_percent = 1 - (self.cancelled_requests /
+                                       self.requests) if self.requests > 0 else 0
         total_state_count = sum(self.state_count.values())
         total_vkt = sum(self.vkt.values())
         vehicle_state_output = {}
         vehicle_states_observed = set(self.state_count.keys()).union(self.vkt.keys())
         for v in vehicle_states_observed:
-            observed_pct = self.state_count.get(v) / total_state_count if self.state_count.get(v) else 0
+            observed_pct = self.state_count.get(v) / total_state_count if self.state_count.get(
+                v) else 0
             vkt = self.vkt.get(v, 0)
-            data = {
-                "observed_percent": observed_pct,
-                "vkt": vkt
-            }
+            data = {"observed_percent": observed_pct, "vkt": vkt}
             vehicle_state_output.update({v: data})
 
         output = {
@@ -80,15 +74,14 @@ class SummaryStats:
 
     def log(self):
         log.info(f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(15))
-        requests_served_percent = (1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
-        log.info(
-            f"{requests_served_percent:.2f} % \t Requests Served"
-                .expandtabs(15)
-        )
+        requests_served_percent = (
+            1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
+        log.info(f"{requests_served_percent:.2f} % \t Requests Served".expandtabs(15))
 
         total_state_count = sum(self.state_count.values())
         for s, v in self.state_count.items():
-            log.info(f"{round(v / total_state_count * 100, 2)} % \t Time in State {s}".expandtabs(15))
+            log.info(
+                f"{round(v / total_state_count * 100, 2)} % \t Time in State {s}".expandtabs(15))
 
         total_vkt = sum(self.vkt.values())
         log.info(f"{total_vkt:.2f} km \t Total Kilometers Traveled".expandtabs(15))

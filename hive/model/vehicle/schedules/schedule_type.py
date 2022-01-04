@@ -21,5 +21,5 @@ class ScheduleType(Enum):
         else:
             valid_names_list = list(ScheduleType)
             valid_names = ", ".join(list(map(lambda x: x.name, valid_names_list)))
-            raise NameError(f"schedule type '{string}' is not known, must be one of {{{valid_names}}}")
-
+            raise NameError(
+                f"schedule type '{string}' is not known, must be one of {{{valid_names}}}")

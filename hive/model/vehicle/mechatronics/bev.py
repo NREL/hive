@@ -60,15 +60,13 @@ class BEV(NamedTuple, MechatronicsInterface):
         powercurve = build_powercurve(d)
         idle_kwh_per_hour = float(d['idle_kwh_per_hour'])
         charge_taper_cutoff_kw = float(d['charge_taper_cutoff_kw'])
-        return BEV(
-            mechatronics_id=d['mechatronics_id'],
-            battery_capacity_kwh=battery_capacity_kwh,
-            idle_kwh_per_hour=idle_kwh_per_hour,
-            powertrain=powertrain,
-            powercurve=powercurve,
-            nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
-            charge_taper_cutoff_kw=charge_taper_cutoff_kw
-        )
+        return BEV(mechatronics_id=d['mechatronics_id'],
+                   battery_capacity_kwh=battery_capacity_kwh,
+                   idle_kwh_per_hour=idle_kwh_per_hour,
+                   powertrain=powertrain,
+                   powercurve=powercurve,
+                   nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
+                   charge_taper_cutoff_kw=charge_taper_cutoff_kw)
 
     def valid_charger(self, charger: Charger) -> bool:
         """
@@ -102,7 +100,8 @@ class BEV(NamedTuple, MechatronicsInterface):
         :param required_range: the distance the vehicle needs to travel
         :return:
         """
-        required_energy_kwh = (required_range / MILE_TO_KM) * (self.nominal_watt_hour_per_mile * WH_TO_KWH)
+        required_energy_kwh = (required_range / MILE_TO_KM) * (self.nominal_watt_hour_per_mile *
+                                                               WH_TO_KWH)
         return required_energy_kwh / self.battery_capacity_kwh
 
     def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
@@ -143,7 +142,8 @@ class BEV(NamedTuple, MechatronicsInterface):
         :return:
         """
         energy_used = self.powertrain.energy_cost(route)
-        energy_used_kwh = energy_used * get_unit_conversion(self.powertrain.energy_units, "kilowatthour")
+        energy_used_kwh = energy_used * get_unit_conversion(self.powertrain.energy_units,
+                                                            "kilowatthour")
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
@@ -167,7 +167,8 @@ class BEV(NamedTuple, MechatronicsInterface):
 
         return updated_vehicle
 
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
+    def add_energy(self, vehicle: Vehicle, charger: Charger,
+                   time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
@@ -180,7 +181,9 @@ class BEV(NamedTuple, MechatronicsInterface):
         :return: the updated vehicle, along with the time spent charging
         """
         if not self.valid_charger(charger):
-            log.warning(f"BEV vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging.")
+            log.warning(
+                f"BEV vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging."
+            )
             return vehicle, 0
 
         start_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
@@ -199,7 +202,6 @@ class BEV(NamedTuple, MechatronicsInterface):
                 duration_seconds=time_seconds,
             )
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
-
 
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
 

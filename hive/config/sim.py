@@ -32,12 +32,10 @@ class Sim(NamedTuple):
 
     @classmethod
     def build(cls, config: Dict = None) -> Union[IOError, Sim]:
-        return ConfigBuilder.build(
-            default_config=cls.default_config(),
-            required_config=cls.required_config(),
-            config_constructor=lambda c: Sim.from_dict(c),
-            config=config
-        )
+        return ConfigBuilder.build(default_config=cls.default_config(),
+                                   required_config=cls.required_config(),
+                                   config_constructor=lambda c: Sim.from_dict(c),
+                                   config=config)
 
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, Sim]:
@@ -51,16 +49,14 @@ class Sim(NamedTuple):
 
         schedule_type = ScheduleType.from_string(d['schedule_type'])
 
-        return Sim(
-            sim_name=d['sim_name'],
-            timestep_duration_seconds=int(d['timestep_duration_seconds']),
-            start_time=start_time,
-            end_time=end_time,
-            sim_h3_resolution=d['sim_h3_resolution'],
-            sim_h3_search_resolution=d['sim_h3_search_resolution'],
-            request_cancel_time_seconds=int(d['request_cancel_time_seconds']),
-            schedule_type=schedule_type
-        )
+        return Sim(sim_name=d['sim_name'],
+                   timestep_duration_seconds=int(d['timestep_duration_seconds']),
+                   start_time=start_time,
+                   end_time=end_time,
+                   sim_h3_resolution=d['sim_h3_resolution'],
+                   sim_h3_search_resolution=d['sim_h3_search_resolution'],
+                   request_cancel_time_seconds=int(d['request_cancel_time_seconds']),
+                   schedule_type=schedule_type)
 
     def asdict(self) -> Dict:
         return self._asdict()

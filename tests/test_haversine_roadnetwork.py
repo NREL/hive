@@ -33,4 +33,7 @@ class TestHaversineRoadNetwork(TestCase):
         self.assertEqual(len(route), 1, "Route should have only one link")
         self.assertEqual(route[0].start, origin, "Route should start from origin")
         self.assertEqual(route[0].end, destination, "Route should end at destination")
-        self.assertAlmostEqual(route[0].distance_km, 1.1, places=1, msg="Route should be approx. 1.1km")
+        self.assertAlmostEqual(route[0].distance_km,
+                               1.1,
+                               places=1,
+                               msg="Route should be approx. 1.1km")

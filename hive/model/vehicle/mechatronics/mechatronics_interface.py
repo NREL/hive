@@ -18,7 +18,6 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     """
     Interface for creating energy sources
     """
-
     @property
     @abstractmethod
     def mechatronics_id(self) -> MechatronicsId:
@@ -114,7 +113,8 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
+    def add_energy(self, vehicle: Vehicle, charger: Charger,
+                   time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 

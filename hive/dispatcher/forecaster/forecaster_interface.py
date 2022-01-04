@@ -14,9 +14,9 @@ class ForecasterInterface(metaclass=ABCNamedTupleMeta):
     """
     A class that computes an optimal fleet state.
     """
-
     @abstractmethod
-    def generate_forecast(self, simulation_state: SimulationState) -> Tuple[ForecasterInterface, Forecast]:
+    def generate_forecast(
+            self, simulation_state: SimulationState) -> Tuple[ForecasterInterface, Forecast]:
         """
         Generate forecast of some future state.
 

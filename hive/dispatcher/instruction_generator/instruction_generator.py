@@ -15,12 +15,11 @@ class InstructionGenerator(metaclass=ABCNamedTupleMeta):
     """
     A module that produces a set of vehicle instructions based on the state of the simulation
     """
-
     @abstractmethod
     def generate_instructions(
-            self,
-            simulation_state: SimulationState,
-            environment: Environment,
+        self,
+        simulation_state: SimulationState,
+        environment: Environment,
     ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...]]:
         """
         generates vehicle instructions which can perform vehicle state transitions

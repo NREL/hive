@@ -18,12 +18,9 @@ setup(
     long_description_content_type='text/markdown',
     url="https://github.nrel.gov/MBAP/hive",
     classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Science/Research",
-        "License :: Other/Proprietary License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
-        "Topic :: Scientific/Engineering"
+        "Development Status :: 3 - Alpha", "Intended Audience :: Science/Research",
+        "License :: Other/Proprietary License", "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.7", "Topic :: Scientific/Engineering"
     ],
     packages=find_packages(),
     python_requires=">=3.7",
@@ -39,9 +36,7 @@ setup(
         "returns",
     ],
     include_package_data=True,
-    package_data={
-        "hive.resources": ["*"]
-    },
+    package_data={"hive.resources": ["*"]},
     entry_points={
         'console_scripts': [
             'hive=hive.app.run:run',
@@ -51,5 +46,4 @@ setup(
     author="National Renewable Energy Laboratory",
     author_email="Reinicke, Nicholas <Nicholas.Reinicke@nrel.gov>",
     license=notice,
-    keywords="transportation simulation ride-hail data-driven agent-based model ABM"
-)
+    keywords="transportation simulation ride-hail data-driven agent-based model ABM")
