@@ -46,7 +46,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         pass
 
     @abstractproperty
-    def vehicle_state_instance_id(self) -> VehicleStateInstanceId:
+    def instance_id(self) -> VehicleStateInstanceId:
         """
         a unique id for this state instance
         """
