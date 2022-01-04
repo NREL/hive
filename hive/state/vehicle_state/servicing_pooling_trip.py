@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
+from uuid import uuid4
 
 import immutables
 
@@ -14,7 +15,7 @@ from hive.state.vehicle_state import servicing_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.servicing_ops import get_active_pooling_trip, pick_up_trip, \
     update_active_pooling_trip, ActivePoolingTrip
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import SimulationStateError, TupleOps
@@ -37,6 +38,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
     routes: Tuple[Route, ...]
     num_passengers: int
 
+    instance_id: Optional[VehicleStateInstanceId] = None
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.SERVICING_POOLING_TRIP
@@ -49,10 +52,12 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         """
         return cls.routes[0] if len(cls.routes) > 0 else ()
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(self, sim: SimulationState,
+              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         transition from DispatchTrip into a pooling trip service leg. this first frame of servicing
         a pooling trip should be happening at the start location of the first request in the pool,
@@ -62,6 +67,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an error, or, the sim with state entered
         """
+        # initialize the instance id
+        self = self._replace(instance_id=uuid4())
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         first_trip_plan_step, remaining_trip_plan = TupleOps.head_tail(self.trip_plan)
@@ -72,7 +79,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         if vehicle is None:
             return SimulationStateError(f"vehicle note found; context: {context}"), None
         if first_req is None:
-            return SimulationStateError(f"request {first_req_id} not found; context: {context}"), None
+            return SimulationStateError(
+                f"request {first_req_id} not found; context: {context}"), None
         elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_POOLING_TRIP:
             # the only supported transition into ServicingPoolingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
@@ -86,9 +94,11 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         else:
 
             # pick up first request
-            pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id, first_req_id)
+            pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id,
+                                                                  first_req_id)
             if pickup_error:
-                result = SimulationStateError(f"failed to pick up first trip in ServicingPoolingTrip {self}")
+                result = SimulationStateError(
+                    f"failed to pick up first trip in ServicingPoolingTrip {self}")
                 result.__cause__ = pickup_error
                 return result, None
             else:
@@ -97,18 +107,13 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
                     boarded_requests=immutables.Map({first_req_id: first_req}),
                     departure_times=immutables.Map({first_req_id: sim.sim_time}),
                     num_passengers=len(first_req.passengers),
-                    trip_plan=remaining_trip_plan
-                )
-                result = VehicleState.apply_new_vehicle_state(pickup_sim,
-                                                              self.vehicle_id,
+                    trip_plan=remaining_trip_plan)
+                result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id,
                                                               vehicle_state_with_first_trip)
                 return result
 
-    def exit(self,
-             next_state: VehicleState,
-             sim: SimulationState,
-             env: Environment
-             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         exit when there is no remaining trip_phase to complete
 
@@ -135,8 +140,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         return len(self.trip_plan) == 0
 
     def _default_terminal_state(
-            self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+            self, sim: SimulationState,
+            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -147,8 +152,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         next_state = Idle(self.vehicle_id)
         return None, next_state
 
-    def _perform_update(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(self, sim: SimulationState,
+                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         move forward on our trip, making pickups and dropoffs as needed
 
@@ -161,7 +166,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         err1, active_trip = get_active_pooling_trip(self)
         if err1 is not None:
             response = SimulationStateError(
-                f"failure during ServicingPoolingTrip._perform_update for vehicle {self.vehicle_id}")
+                f"failure during ServicingPoolingTrip._perform_update for vehicle {self.vehicle_id}"
+            )
             response.__cause__ = err1
             return response, None
         else:
@@ -171,7 +177,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
 
             if move_error:
                 response = SimulationStateError(
-                    f"failure during ServicingPoolingTrip._perform_update for vehicle {self.vehicle_id}")
+                    f"failure during ServicingPoolingTrip._perform_update for vehicle {self.vehicle_id}"
+                )
                 response.__cause__ = move_error
                 return response, None
             elif not moved_vehicle:

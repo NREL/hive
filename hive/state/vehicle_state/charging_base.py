@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
+from uuid import uuid4
 
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.reserve_base import ReserveBase
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
@@ -27,6 +28,8 @@ class ChargingBase(NamedTuple, VehicleState):
     base_id: BaseId
     charger_id: ChargerId
 
+    instance_id: Optional[VehicleStateInstanceId] = None 
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.CHARGING_BASE
@@ -41,6 +44,9 @@ class ChargingBase(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation, or (None, None) if not possible
         """
+        # initialize the instance id
+        self = self._replace(instance_id=uuid4())
+
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         context = f"vehicle {self.vehicle_id} entering charging base state at base {self.base_id} with charger {self.charger_id}"

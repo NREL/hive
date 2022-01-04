@@ -1,10 +1,11 @@
 import logging
 from typing import Tuple, Optional, NamedTuple
+import uuid
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
@@ -21,6 +22,8 @@ class ChargingStation(NamedTuple, VehicleState):
     station_id: StationId
     charger_id: ChargerId
 
+    instance_id: Optional[VehicleStateInstanceId] = None
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.CHARGING_STATION
@@ -35,6 +38,9 @@ class ChargingStation(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
+        # initialize the instance id
+        self = self._replace(instance_id=uuid.uuid4())
+
         # ok, we want to enter a charging state.
         # we attempt to claim a charger_id from the station of this self.charger_id type
         # what if we can't? is that an Exception, or, is that simply rejected?
