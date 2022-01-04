@@ -80,7 +80,7 @@ class RouteTraversal(NamedTuple):
 
 
 def traverse(route_estimate: Route,
-             duration_seconds: Seconds) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
+             duration_seconds: Seconds) -> Tuple[Optional[Exception], RouteTraversal]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
@@ -89,14 +89,14 @@ def traverse(route_estimate: Route,
 
     :param duration_seconds: size of the time step for this traversal, in seconds
     :return: a route experience and updated route estimate;
-             or, nothing (None, None) if the route is consumed.
+             or, nothing (None, Empty RouteTraversal) if the route is consumed.
              an exception is possible if the current step is not found on the link or
              the route is malformed.
     """
     if len(route_estimate) == 0:
-        return None, None
+        return None, RouteTraversal() 
     elif TupleOps.head(route_estimate).start == TupleOps.last(route_estimate).end:
-        return None, None
+        return None, RouteTraversal() 
     else:
 
         # function that steps through the route

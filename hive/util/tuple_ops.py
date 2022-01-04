@@ -97,3 +97,10 @@ class TupleOps:
         """
 
         return tuple(sum(nested_tuple, ()))
+    
+    @classmethod
+    def prepend(cls, x: T, xs: Tuple[T, ...]) -> Tuple[T, ...]:
+        """
+        prepends an element to a tuple
+        """
+        return (x,) + xs

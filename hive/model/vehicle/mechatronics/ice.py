@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
+from typing import Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -117,10 +117,9 @@ class ICE(NamedTuple, MechatronicsInterface):
         """
         return vehicle.energy[EnergyType.GASOLINE] >= self.tank_capacity_gallons
 
-    def move(self, vehicle: Vehicle, route: Route) -> Vehicle:
+    def consume_energy(self, vehicle: Vehicle, route: Route) -> Optional[Vehicle]:
         """
-        move over a set distance
-
+        consume energy over a route
 
         :param vehicle:
 
@@ -134,7 +133,11 @@ class ICE(NamedTuple, MechatronicsInterface):
         new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - energy_used_gal_gas)
         updated_vehicle = vehicle.modify_energy({EnergyType.GASOLINE: new_energy_gal_gas})
 
-        return updated_vehicle
+        if self.is_empty(updated_vehicle):
+            return None
+        else:
+            return updated_vehicle
+
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
         """

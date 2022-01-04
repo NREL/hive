@@ -40,6 +40,9 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_POOLING_TRIP
+    
+    def update_route(self, route: Route) -> DispatchPoolingTrip:
+        return self._replace(route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

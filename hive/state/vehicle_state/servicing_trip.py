@@ -31,6 +31,9 @@ class ServicingTrip(NamedTuple, VehicleState):
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.SERVICING_TRIP
+    
+    def update_route(self, route: Route) -> ServicingTrip:
+        return self._replace(route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

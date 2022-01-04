@@ -92,14 +92,13 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def move(self, vehicle: Vehicle, route: Route) -> Vehicle:
+    def consume_energy(self, vehicle: Vehicle, route: Route) -> Optional[Vehicle]:
         """
-        move over a set distance
-
+        consume energy over a route 
 
         :param vehicle:
         :param route:
-        :return:
+        :return: the vehicle after moving; or, None if the vehicle cannot move / has run out of energy
         """
 
     @abstractmethod

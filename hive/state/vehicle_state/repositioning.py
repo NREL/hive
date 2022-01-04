@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
@@ -21,6 +23,9 @@ class Repositioning(NamedTuple, VehicleState):
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.REPOSITIONING
+    
+    def update_route(self, route: Route) -> Repositioning:
+        return self._replace(route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

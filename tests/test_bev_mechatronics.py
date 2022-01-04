@@ -34,7 +34,7 @@ class TestBEV(TestCase):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=1)
 
-        moved_vehicle = bev.move(vehicle, route=())
+        moved_vehicle = bev.consume_energy(vehicle, route=())
         self.assertEqual(moved_vehicle.energy[EnergyType.ELECTRIC], 50, "empty route should yield zero energy cost")
 
     def test_leaf_energy_cost_real_route(self):
@@ -46,7 +46,7 @@ class TestBEV(TestCase):
 
         expected_energy_kwh = vehicle.energy[EnergyType.ELECTRIC] - 1 * (3 * KM_TO_MILE)
 
-        moved_vehicle = bev.move(vehicle, route=test_route)
+        moved_vehicle = bev.consume_energy(vehicle, route=test_route)
         self.assertAlmostEqual(
             moved_vehicle.energy[EnergyType.ELECTRIC],
             expected_energy_kwh,
