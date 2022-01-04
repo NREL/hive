@@ -100,6 +100,8 @@ class OSMRoadNetwork(RoadNetwork):
         :param destination: the destination Link
         :return: a route between the origin and destination on the OSM road network
         """
+        if origin == destination:
+            return empty_route()
 
         # start path search from the end of the origin link, terminate search at the start of the destination link
         extract_src_err, src_nodes = extract_node_ids(origin.link_id)

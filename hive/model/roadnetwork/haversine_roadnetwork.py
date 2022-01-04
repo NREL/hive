@@ -7,7 +7,7 @@ from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.linktraversal import LinkTraversal
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.route import Route, empty_route
 from hive.model.sim_time import SimTime
 from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import GeoId, LinkId, H3Resolution
@@ -44,6 +44,9 @@ class HaversineRoadNetwork(RoadNetwork):
         self.geofence = geofence
 
     def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
+        if origin == destination:
+            return empty_route() 
+            
         link_id = h_ops.geoids_to_link_id(origin.geoid, destination.geoid)
         link_dist_km = self.distance_by_geoid_km(origin.geoid, destination.geoid)
         link = LinkTraversal(
