@@ -18,10 +18,7 @@ if TYPE_CHECKING:
     from hive.runner.environment import Environment
 
 
-def charge(sim: SimulationState,
-           env: Environment,
-           vehicle_id: VehicleId,
-           station_id: StationId,
+def charge(sim: SimulationState, env: Environment, vehicle_id: VehicleId, station_id: StationId,
            charger_id: ChargerId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
@@ -44,18 +41,22 @@ def charge(sim: SimulationState,
     if not vehicle:
         return SimulationStateError(f"vehicle not found; context: {context}"), None
     elif not mechatronics:
-        return SimulationStateError(f"invalid mechatronics_id {vehicle.mechatronics_id}; context: {context}"), None
+        return SimulationStateError(
+            f"invalid mechatronics_id {vehicle.mechatronics_id}; context: {context}"), None
     elif not charger:
         return SimulationStateError(f"invalid charger_id; context: {context}"), None
     elif not station:
         return SimulationStateError(f"station not found; context {context}"), None
     elif mechatronics.is_full(vehicle):
-        return SimulationStateError(f"vehicle is full but still attempting to charge; context {context}"), None
+        return SimulationStateError(
+            f"vehicle is full but still attempting to charge; context {context}"), None
     else:
-        charged_vehicle, _ = mechatronics.add_energy(vehicle, charger, sim.sim_timestep_duration_seconds)
+        charged_vehicle, _ = mechatronics.add_energy(vehicle, charger,
+                                                     sim.sim_timestep_duration_seconds)
 
         # determine price of charge event
-        kwh_transacted = charged_vehicle.energy[charger.energy_type] - vehicle.energy[charger.energy_type]  # kwh
+        kwh_transacted = charged_vehicle.energy[charger.energy_type] - vehicle.energy[
+            charger.energy_type]  # kwh
         charger_price = station.charger_prices_per_kwh.get(charger_id)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
@@ -69,7 +70,8 @@ def charge(sim: SimulationState,
             response.__cause__ = veh_error
             return response, None
         else:
-            report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle, updated_station, charger)
+            report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle,
+                                          updated_station, charger)
             env.reporter.file_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
@@ -82,9 +84,7 @@ class MoveResult(NamedTuple):
     route_traversal: RouteTraversal = RouteTraversal()
 
 
-def _apply_route_traversal(sim: SimulationState,
-                           env: Environment,
-                           vehicle_id: VehicleId,
+def _apply_route_traversal(sim: SimulationState, env: Environment, vehicle_id: VehicleId,
                            route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
     """
     Moves the vehicle and consumes energy.
@@ -125,13 +125,16 @@ def _apply_route_traversal(sim: SimulationState,
         step_distance_km = traverse_result.traversal_distance_km
 
         if not experienced_route:
-            return SimulationStateError(f"after traversal, no route was experienced for vehicle {vehicle_id} at time {sim.sim_time}"), None
+            return SimulationStateError(
+                f"after traversal, no route was experienced for vehicle {vehicle_id} at time {sim.sim_time}"
+            ), None
         else:
             last_link_traversed = experienced_route[-1]
             # quick trick here to turn the final traversed link into a Positional Link (where link.start == link.end)
             # used to represent the Vehicle's new position
             vehicle_position = EntityPosition(last_link_traversed.link_id, last_link_traversed.end)
-            updated_vehicle = less_energy_vehicle.modify_position(position=vehicle_position).tick_distance_traveled_km(step_distance_km)
+            updated_vehicle = less_energy_vehicle.modify_position(
+                position=vehicle_position).tick_distance_traveled_km(step_distance_km)
             error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
             if error:
                 response = SimulationStateError(
@@ -142,9 +145,9 @@ def _apply_route_traversal(sim: SimulationState,
                 return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
 
 
-def _go_out_of_service_on_empty(sim: SimulationState,
-                                env: Environment,
-                                vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+def _go_out_of_service_on_empty(
+        sim: SimulationState, env: Environment,
+        vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     sets a vehicle to OutOfService if it is out of energy after a move event
 
@@ -156,9 +159,11 @@ def _go_out_of_service_on_empty(sim: SimulationState,
     moved_vehicle = sim.vehicles.get(vehicle_id)
     mechatronics = env.mechatronics.get(moved_vehicle.mechatronics_id)
     if not moved_vehicle:
-        return SimulationStateError(f"vehicle not found; context: vehicle {vehicle_id} going out of service"), None
+        return SimulationStateError(
+            f"vehicle not found; context: vehicle {vehicle_id} going out of service"), None
     elif not mechatronics:
-        return SimulationStateError(f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
+        return SimulationStateError(
+            f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
     elif mechatronics.is_empty(moved_vehicle):
         # todo: are we in ServicingTrip or ServicingPoolingTrip? report stranded passengers!!!
         # error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
@@ -169,17 +174,15 @@ def _go_out_of_service_on_empty(sim: SimulationState,
         #     return SimulationStateError(
         #         f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
         # else:
-        #     next_state = OutOfService(vehicle_id)
+        #     next_state = OutOfService.build(vehicle_id)
         #     return next_state.enter(exit_sim, env)
-        next_state = OutOfService(vehicle_id)
+        next_state = OutOfService.build(vehicle_id)
         return next_state.enter(sim, env)
     else:
         return None, None
 
 
-def move(sim: SimulationState,
-         env: Environment,
-         vehicle_id: VehicleId,
+def move(sim: SimulationState, env: Environment, vehicle_id: VehicleId,
          route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
     """
     moves the vehicle, and moves to OutOfService if resulting vehicle energy is empty
@@ -197,10 +200,10 @@ def move(sim: SimulationState,
     elif not move_result:
         return None, MoveResult(sim)
     else:
-        empty_check_error, empty_vehicle_sim = _go_out_of_service_on_empty(move_result.sim, env, vehicle_id)
+        empty_check_error, empty_vehicle_sim = _go_out_of_service_on_empty(
+            move_result.sim, env, vehicle_id)
         if empty_check_error:
-            response = SimulationStateError(
-                f"failure during move for vehicle {vehicle_id}")
+            response = SimulationStateError(f"failure during move for vehicle {vehicle_id}")
             response.__cause__ = empty_check_error
             return response, None
         elif empty_vehicle_sim:
@@ -209,5 +212,3 @@ def move(sim: SimulationState,
             report = vehicle_move_event(move_result, env)
             env.reporter.file_report(report)
             return None, move_result
-
-

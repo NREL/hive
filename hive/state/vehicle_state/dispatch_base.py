@@ -1,11 +1,12 @@
 from __future__ import annotations
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from uuid import uuid4
 
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.reserve_base import ReserveBase
@@ -24,17 +25,27 @@ class DispatchBase(NamedTuple, VehicleState):
     base_id: BaseId
     route: Route
 
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
+        return cls(vehicle_id=vehicle_id, base_id=base_id, route=route, instance_id=uuid4())
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_BASE
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(self, sim: SimulationState,
+               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(self, sim: SimulationState,
+              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.position, base.position) if vehicle and base else False
+        is_valid = route_cooresponds_with_entities(self.route, vehicle.position,
+                                                   base.position) if vehicle and base else False
         context = f"vehicle {self.vehicle_id} entering dispatch base state at base {self.base_id}"
         if not base:
             msg = f"base not found; context: {context}"
@@ -51,11 +62,8 @@ class DispatchBase(NamedTuple, VehicleState):
             result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
 
-    def exit(self,
-             next_state: VehicleState,
-             sim: SimulationState,
-             env: Environment
-             ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(self, next_state: VehicleState, sim: SimulationState,
+             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
@@ -69,8 +77,8 @@ class DispatchBase(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _default_terminal_state(
-        self, sim: SimulationState, env: Environment
-    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+            self, sim: SimulationState,
+            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -90,13 +98,12 @@ class DispatchBase(NamedTuple, VehicleState):
             return SimulationStateError(message), None
         else:
             if base.available_stalls > 0:
-                next_state = ReserveBase(self.vehicle_id, self.base_id)
+                next_state = ReserveBase.build(self.vehicle_id, self.base_id)
             else:
-                next_state = Idle(self.vehicle_id)
+                next_state = Idle.build(self.vehicle_id)
             return None, next_state
 
-    def _perform_update(self,
-                        sim: SimulationState,
+    def _perform_update(self, sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the base
