@@ -110,7 +110,7 @@ def _go_out_of_service_on_empty(
         return SimulationStateError(
             f"cannot find {pre_moved_vehicle.mechatronics_id} in environment"), None
     else:
-        next_state = OutOfService(vehicle_id)
+        next_state = OutOfService.build(vehicle_id)
         return next_state.enter(sim, env)
 
 
