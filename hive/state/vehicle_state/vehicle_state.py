@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from uuid import UUID, uuid4
+
 from abc import abstractmethod, ABCMeta, abstractproperty
 from typing import Tuple, Optional, NamedTupleMeta, TYPE_CHECKING
+import uuid
 
 from hive.state.entity_state import entity_state_ops
 from hive.state.entity_state.entity_state import EntityState
@@ -14,6 +17,7 @@ if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.state.simulation_state.simulation_state import SimulationState
 
+VehicleStateInstanceId = UUID
 
 class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
     """
@@ -25,7 +29,6 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
     an enter or exit can return an exception, a SimulationState, or (None, None) signifying that the
     state cannot be entered/exited under this circumstance.
     """
-
     @abstractproperty
     def vehicle_id(self) -> VehicleId:
         """
@@ -33,8 +36,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         """
         pass
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def vehicle_state_type(cls) -> VehicleStateType:
         """
         unique state type, used for comparison, replaces need to call isinstance on the concrete
@@ -43,6 +45,13 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         """
         pass
 
+    @abstractproperty
+    def instance_id(self) -> VehicleStateInstanceId:
+        """
+        a unique id for this state instance
+        """
+        pass
+    
     def __repr__(self) -> str:
         return super().__repr__()
 
@@ -154,3 +163,4 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         :return: an exception due to failure or an optional updated simulation
         """
         pass
+

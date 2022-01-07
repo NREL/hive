@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from uuid import uuid4
 
 import immutables
 
@@ -14,7 +15,7 @@ from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from hive.state.vehicle_state.servicing_trip import ServicingTrip
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import RequestId, VehicleId
@@ -29,6 +30,12 @@ class DispatchTrip(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     request_id: RequestId
     route: Route
+
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, request_id: RequestId, route: Route) -> DispatchTrip:
+        return cls(vehicle_id=vehicle_id, request_id=request_id, route=route, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -50,6 +57,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: an exception, or a sim state, or (None, None) if the request isn't there anymore
         """
+
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
         is_valid = route_cooresponds_with_entities(
@@ -124,7 +132,7 @@ class DispatchTrip(NamedTuple, VehicleState):
             return SimulationStateError(message), None
         elif not request:
             # request already got picked up or was cancelled; go an Idle state
-            next_state = Idle(self.vehicle_id)
+            next_state = Idle.build(self.vehicle_id)
             return None, next_state
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
@@ -137,13 +145,13 @@ class DispatchTrip(NamedTuple, VehicleState):
 
             # create the state (pooling, or, standard servicing trip, depending on the sitch)
             pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
-            next_state = ServicingPoolingTrip(
+            next_state = ServicingPoolingTrip.build(
                 vehicle_id=vehicle.id,
                 trip_plan=trip_plan,
                 boarded_requests=immutables.Map({request.id: request}),
                 departure_times=immutables.Map({request.id, departure_time}),
                 routes=(route, ),
-                num_passengers=len(request.passengers)) if pooling_trip else ServicingTrip(
+                num_passengers=len(request.passengers)) if pooling_trip else ServicingTrip.build(
                     vehicle_id=vehicle.id,
                     request=request,
                     departure_time=departure_time,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from uuid import uuid4
 
 import immutables
 
@@ -13,7 +14,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import vehicle_state_ops, dispatch_ops, servicing_ops
 from hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util import TupleOps
 from hive.util.exception import SimulationStateError
@@ -33,9 +34,27 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
     route: Route
 
     # if we are re-planning a current ServicingPoolingTrip, we include this state
-    boarded_requests: immutables.Map[RequestId, Request] = immutables.Map()
-    departure_times: immutables.Map[RequestId, SimTime] = immutables.Map()
-    num_passengers: int = 0
+    boarded_requests: immutables.Map[RequestId, Request]
+    departure_times: immutables.Map[RequestId, SimTime]
+    num_passengers: int
+
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls,
+              vehicle_id: VehicleId,
+              trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+              route: Route,
+              boarded_requests: immutables.Map[RequestId, Request] = immutables.Map(),
+              departure_times: immutables.Map[RequestId, SimTime] = immutables.Map(),
+              num_passengers: int = 0) -> DispatchPoolingTrip:
+        return cls(vehicle_id=vehicle_id,
+                   trip_plan=trip_plan,
+                   route=route,
+                   boarded_requests=boarded_requests,
+                   departure_times=departure_times,
+                   num_passengers=num_passengers,
+                   instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -57,6 +76,7 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: an exception, or a sim state, or (None, None) if the request isn't there anymore
         """
+
         first_stop = TupleOps.head_optional(self.trip_plan)
         if first_stop is None:
             log.debug(f"DispatchPoolingTrip.enter called with empty trip_plan")
@@ -135,12 +155,12 @@ class DispatchPoolingTrip(NamedTuple, VehicleState):
         # create servicing state, with first request PICKUP event consumed
         routes = dispatch_ops.create_routes(sim, self.trip_plan)
 
-        servicing_pooling_state = ServicingPoolingTrip(vehicle_id=self.vehicle_id,
-                                                       trip_plan=self.trip_plan,
-                                                       routes=routes,
-                                                       boarded_requests=self.boarded_requests,
-                                                       departure_times=self.departure_times,
-                                                       num_passengers=self.num_passengers)
+        servicing_pooling_state = ServicingPoolingTrip.build(vehicle_id=self.vehicle_id,
+                                                             trip_plan=self.trip_plan,
+                                                             routes=routes,
+                                                             boarded_requests=self.boarded_requests,
+                                                             departure_times=self.departure_times,
+                                                             num_passengers=self.num_passengers)
         return None, servicing_pooling_state
 
     def _perform_update(self, sim: SimulationState,

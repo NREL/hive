@@ -1,14 +1,21 @@
+from __future__ import annotations
+
 import logging
-from typing import Tuple, Optional, NamedTuple
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
+import uuid
 
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, VehicleId, ChargerId
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
+    from hive.runner.environment import Environment
 
 log = logging.getLogger(__name__)
 
@@ -21,12 +28,30 @@ class ChargingStation(NamedTuple, VehicleState):
     station_id: StationId
     charger_id: ChargerId
 
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, station_id: StationId,
+              charger_id: ChargerId) -> ChargingStation:
+        """
+        build a charging station state
+
+        :param vehicle_id: the vehicle id
+        :param station_id: the station id
+        :param charger_id: the charger id
+
+        :return: a charging station state 
+        """
+        return cls(vehicle_id=vehicle_id,
+                   station_id=station_id,
+                   charger_id=charger_id,
+                   instance_id=uuid.uuid4())
+
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.CHARGING_STATION
 
-    def enter(self,
-              sim: 'SimulationState',
+    def enter(self, sim: 'SimulationState',
               env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         entering a charge event requires attaining a charger_id from the station
@@ -35,6 +60,9 @@ class ChargingStation(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
+
+        self = self._replace(instance_id=uuid.uuid4())
+
         # ok, we want to enter a charging state.
         # we attempt to claim a charger_id from the station of this self.charger_id type
         # what if we can't? is that an Exception, or, is that simply rejected?
@@ -70,15 +98,12 @@ class ChargingStation(NamedTuple, VehicleState):
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def update(self, sim: 'SimulationState', env: Environment) -> Tuple[
-        Optional[Exception], Optional['SimulationState']]:
+    def update(self, sim: 'SimulationState',
+               env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         return VehicleState.default_update(sim, env, self)
 
-    def exit(self,
-             next_state: VehicleState,
-             sim: 'SimulationState',
-             env: 'Environment'
-             ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(self, next_state: VehicleState, sim: 'SimulationState',
+             env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         exiting a charge event requires returning the charger_id to the station
 
@@ -103,8 +128,7 @@ class ChargingStation(NamedTuple, VehicleState):
                 return response, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
-    def _has_reached_terminal_state_condition(self,
-                                              sim: 'SimulationState',
+    def _has_reached_terminal_state_condition(self, sim: 'SimulationState',
                                               env: Environment) -> bool:
         """
         test if charging is finished
@@ -121,8 +145,8 @@ class ChargingStation(NamedTuple, VehicleState):
             return mechatronics.is_full(vehicle)
 
     def _default_terminal_state(
-        self, sim: 'SimulationState', env: Environment
-    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+            self, sim: 'SimulationState',
+            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -130,12 +154,12 @@ class ChargingStation(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or the next_state after finishing a task
         """
-        next_state = Idle(self.vehicle_id)
+        next_state = Idle.build(self.vehicle_id)
         return None, next_state
 
-    def _perform_update(self,
-                        sim: 'SimulationState',
-                        env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def _perform_update(
+            self, sim: 'SimulationState',
+            env: Environment) -> Tuple[Optional[Exception], Optional['SimulationState']]:
         """
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
 

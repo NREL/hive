@@ -1,10 +1,11 @@
 from __future__ import annotations
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from uuid import uuid4
 
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.reserve_base import ReserveBase
@@ -22,6 +23,12 @@ class DispatchBase(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
     route: Route
+
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
+        return cls(vehicle_id=vehicle_id, base_id=base_id, route=route, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -92,9 +99,9 @@ class DispatchBase(NamedTuple, VehicleState):
             return SimulationStateError(message), None
         else:
             if base.available_stalls > 0:
-                next_state = ReserveBase(self.vehicle_id, self.base_id)
+                next_state = ReserveBase.build(self.vehicle_id, self.base_id)
             else:
-                next_state = Idle(self.vehicle_id)
+                next_state = Idle.build(self.vehicle_id)
             return None, next_state
 
     def _perform_update(self, sim: SimulationState,

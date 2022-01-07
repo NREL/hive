@@ -1,13 +1,13 @@
 from __future__ import annotations
-
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from uuid import uuid4
 
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
 from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state import vehicle_state_ops
 from hive.state.vehicle_state.idle import Idle
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import VehicleId
@@ -19,6 +19,19 @@ if TYPE_CHECKING:
 class Repositioning(NamedTuple, VehicleState):
     vehicle_id: VehicleId
     route: Route
+
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, route: Route) -> Repositioning:
+        """
+        build a repositioning state
+
+        :param vehicle_id: the vehicle id
+        :param route: the route to the new location 
+        :return: a repositioning state
+        """
+        return cls(vehicle_id=vehicle_id, route=route, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -69,7 +82,7 @@ class Repositioning(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or the next_state after finishing a task
         """
-        next_state = Idle(self.vehicle_id)
+        next_state = Idle.build(self.vehicle_id)
         return None, next_state
 
     def _perform_update(self, sim: SimulationState,

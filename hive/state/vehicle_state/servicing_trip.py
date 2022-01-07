@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from uuid import uuid4
 
 from hive.model.request import Request
 from hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
@@ -10,7 +11,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.idle import Idle
 from hive.state.vehicle_state.servicing_ops import drop_off_trip, pick_up_trip
-from hive.state.vehicle_state.vehicle_state import VehicleState
+from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
 from hive.state.vehicle_state.vehicle_state_ops import move
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
@@ -27,6 +28,26 @@ class ServicingTrip(NamedTuple, VehicleState):
     request: Request
     departure_time: SimTime
     route: Route
+
+    instance_id: VehicleStateInstanceId
+
+    @classmethod
+    def build(cls, vehicle_id: VehicleId, request: Request, departure_time: SimTime,
+              route: Route) -> ServicingTrip:
+        """
+        build a servicing trip state
+
+        :param vehicle_id: the vehicle id
+        :param request: the request
+        :param departure_time: the departure time
+        :param route: the route
+        :return: the servicing trip state
+        """
+        return cls(vehicle_id=vehicle_id,
+                   request=request,
+                   departure_time=departure_time,
+                   route=route,
+                   instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -48,6 +69,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: an error, or, the sim with state entered
         """
+
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request.id)
         is_valid = route_cooresponds_with_entities(
@@ -126,7 +148,7 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param env: the sim environment
         :return: an exception or the default VehicleState
         """
-        next_state = Idle(self.vehicle_id)
+        next_state = Idle.build(self.vehicle_id)
         return None, next_state
 
     def _perform_update(self, sim: SimulationState,
