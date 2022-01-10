@@ -37,13 +37,18 @@ def vehicle_move_event(sim: SimulationState, prev_vehicle: Vehicle, next_vehicle
     vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
     vehicle_memberships = prev_vehicle.membership.to_json()
     delta_distance: float = next_vehicle.distance_traveled_km - prev_vehicle.distance_traveled_km
-    delta_energy = ft.reduce(
-        lambda acc, e_type: acc + next_vehicle.energy.get(e_type) - prev_vehicle.energy.get(e_type),
-        next_vehicle.energy.keys(), 0)
-    if len(next_vehicle.energy.keys()) > 1:
+
+    if prev_vehicle.energy.keys() != next_vehicle.energy.keys():
+        raise ValueError(f"Energy types do not match: {prev_vehicle.energy.keys()} != {next_vehicle.energy.keys()}")
+    elif len(next_vehicle.energy.keys()) > 1:
         raise NotImplemented("hive doesn't currently support multiple energy types")
     else:
         energy_units = list(next_vehicle.energy.keys())[0].units
+    
+    delta_energy = ft.reduce(
+        lambda acc, e_type: acc + next_vehicle.energy.get(e_type) - prev_vehicle.energy.get(e_type),
+        next_vehicle.energy.keys(), 0)
+
 
     geoid = next_vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
@@ -83,6 +88,9 @@ def vehicle_charge_event(
     :param charger: the charger used
     :return: a charge event report
     """
+    energy_type = next_vehicle.energy.get(charger.energy_type)
+    if not energy_type:
+        raise ValueError(f"Energy type mismatch: vehicle {next_vehicle.id} does not use energy type {charger.energy_type}")
 
     sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
     sim_time_end = next_sim.sim_time

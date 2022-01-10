@@ -117,7 +117,7 @@ class ICE(NamedTuple, MechatronicsInterface):
         """
         return vehicle.energy[EnergyType.GASOLINE] >= self.tank_capacity_gallons
 
-    def consume_energy(self, vehicle: Vehicle, route: Route) -> Optional[Vehicle]:
+    def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
         consume energy over a route
 
@@ -132,12 +132,7 @@ class ICE(NamedTuple, MechatronicsInterface):
         vehicle_energy_gal_gas = vehicle.energy[EnergyType.GASOLINE]
         new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - energy_used_gal_gas)
         updated_vehicle = vehicle.modify_energy({EnergyType.GASOLINE: new_energy_gal_gas})
-
-        if self.is_empty(updated_vehicle):
-            return None
-        else:
-            return updated_vehicle
-
+        return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
         """

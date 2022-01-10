@@ -132,7 +132,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         full_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
         return vehicle.energy[EnergyType.ELECTRIC] >= full_kwh
 
-    def consume_energy(self, vehicle: Vehicle, route: Route) -> Optional[Vehicle]:
+    def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
         consume_energy over a route 
 
@@ -147,11 +147,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
-
-        if self.is_empty(updated_vehicle):
-            return None
-        else:
-            return updated_vehicle
+        return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
         """

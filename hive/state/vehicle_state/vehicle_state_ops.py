@@ -97,21 +97,12 @@ def _go_out_of_service_on_empty(
     :param vehicle_id: the vehicle that moved and ran out of energy
     :return: an optional error, or an optional sim with the out of service vehicle
     """
-    #todo: ways we can improve this:
+    # TODO: ways we can improve this:
     # - find the exact point in the route where a vehicle runs out of energy and move it there before transitioning
     #   to out of service.
-    # - report stranded passesgers if we're servicing a trip when this happens.
-    pre_moved_vehicle = sim.vehicles.get(vehicle_id)
-    mechatronics = env.mechatronics.get(pre_moved_vehicle.mechatronics_id)
-    if not pre_moved_vehicle:
-        return SimulationStateError(
-            f"vehicle not found; context: vehicle {vehicle_id} going out of service"), None
-    elif not mechatronics:
-        return SimulationStateError(
-            f"cannot find {pre_moved_vehicle.mechatronics_id} in environment"), None
-    else:
-        next_state = OutOfService.build(vehicle_id)
-        return next_state.enter(sim, env)
+    # - report stranded passengers if we're servicing a trip when this happens.
+    next_state = OutOfService.build(vehicle_id)
+    return next_state.enter(sim, env)
 
 
 def move(sim: SimulationState, env: Environment,
@@ -155,7 +146,7 @@ def move(sim: SimulationState, env: Environment,
         experienced_route = traverse_result.experienced_route
         remaining_route = traverse_result.remaining_route
         less_energy_vehicle = mechatronics.consume_energy(vehicle, experienced_route)
-        if not less_energy_vehicle:
+        if mechatronics.is_empty(less_energy_vehicle):
             # impossible to move, let's transition to OutOfService
             return _go_out_of_service_on_empty(sim, env, vehicle_id)
 
