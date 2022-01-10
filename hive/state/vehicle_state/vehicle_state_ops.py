@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 
 from hive.model.entity_position import EntityPosition
-from hive.model.roadnetwork.route import Route
+from hive.model.roadnetwork.route import Route, empty_route
 from hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.vehicle_event_ops import vehicle_move_event, vehicle_charge_event
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
+from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
 from hive.util.typealiases import StationId, ChargerId
 from hive.util.typealiases import VehicleId
@@ -84,131 +85,90 @@ class MoveResult(NamedTuple):
     route_traversal: RouteTraversal = RouteTraversal()
 
 
-def _apply_route_traversal(sim: SimulationState, env: Environment, vehicle_id: VehicleId,
-                           route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
-    """
-    Moves the vehicle and consumes energy.
-
-
-    :param sim: the simulation state
-    :param env: the simulation environment
-    :param vehicle_id: the vehicle moving
-    :param route: the route for the vehicle
-    :return: an error, or a traverse result, or (None, None) if no traversal occurred
-    """
-    vehicle = sim.vehicles.get(vehicle_id)
-    mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
-    error, traverse_result = traverse(
-        route_estimate=route,
-        duration_seconds=sim.sim_timestep_duration_seconds,
-    )
-    context = f"vehicle {vehicle_id} attempting to move"
-    if not vehicle:
-        return SimulationStateError(f"vehicle not found; context {context}"), None
-    elif not mechatronics:
-        return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
-    elif error:
-        return error, None
-    elif not traverse_result:
-        return traverse_result, None
-    elif isinstance(traverse_result, Exception):
-        return traverse_result, None
-    else:
-        # todo: we allow the agent to traverse only bounded by time, not energy;
-        #   so, it is possible for the vehicle to travel farther in a time step than
-        #   they have fuel to travel. this can create an error on the location of
-        #   any agents at the time step where they run out of fuel. feels like an
-        #   acceptable edge case but we could improve. rjf 20200309
-
-        experienced_route = traverse_result.experienced_route
-        less_energy_vehicle = mechatronics.move(vehicle, experienced_route)
-        step_distance_km = traverse_result.traversal_distance_km
-
-        if not experienced_route:
-            return SimulationStateError(
-                f"after traversal, no route was experienced for vehicle {vehicle_id} at time {sim.sim_time}"
-            ), None
-        else:
-            last_link_traversed = experienced_route[-1]
-            # quick trick here to turn the final traversed link into a Positional Link (where link.start == link.end)
-            # used to represent the Vehicle's new position
-            vehicle_position = EntityPosition(last_link_traversed.link_id, last_link_traversed.end)
-            updated_vehicle = less_energy_vehicle.modify_position(
-                position=vehicle_position).tick_distance_traveled_km(step_distance_km)
-            error, updated_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
-            if error:
-                response = SimulationStateError(
-                    f"failure during _apply_route_traversal for vehicle {vehicle.id}")
-                response.__cause__ = error
-                return response, None
-            else:
-                return None, MoveResult(updated_sim, vehicle, updated_vehicle, traverse_result)
-
-
 def _go_out_of_service_on_empty(
         sim: SimulationState, env: Environment,
         vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
-    sets a vehicle to OutOfService if it is out of energy after a move event
+    sets a vehicle to OutOfService if it is out of energy after a move event.
+    this assumes we've already confirmed a vehicle is out of energy.
 
-    :param sim: the sim after a move event
+    :param sim: the sim before the move event
     :param env: the sim environment
-    :param vehicle_id: the vehicle that moved
-    :return: an optional error, or an optional sim with the out of service vehicle, or (None, None) if no changes
+    :param vehicle_id: the vehicle that moved and ran out of energy
+    :return: an optional error, or an optional sim with the out of service vehicle
     """
-    moved_vehicle = sim.vehicles.get(vehicle_id)
-    mechatronics = env.mechatronics.get(moved_vehicle.mechatronics_id)
-    if not moved_vehicle:
-        return SimulationStateError(
-            f"vehicle not found; context: vehicle {vehicle_id} going out of service"), None
-    elif not mechatronics:
-        return SimulationStateError(
-            f"cannot find {moved_vehicle.mechatronics_id} in environment"), None
-    elif mechatronics.is_empty(moved_vehicle):
-        # todo: are we in ServicingTrip or ServicingPoolingTrip? report stranded passengers!!!
-        # error, exit_sim = moved_vehicle.vehicle_state.exit(sim, env)
-        # if error:
-        #     return error, None
-        # elif not exit_sim:
-        #     # the previous state does not allow exit to OutOfService
-        #     return SimulationStateError(
-        #         f"vehicle {moved_vehicle.id} cannot exit state {moved_vehicle.vehicle_state.__class__.__name__}"), None
-        # else:
-        #     next_state = OutOfService.build(vehicle_id)
-        #     return next_state.enter(exit_sim, env)
-        next_state = OutOfService.build(vehicle_id)
-        return next_state.enter(sim, env)
+    # TODO: ways we can improve this:
+    # - find the exact point in the route where a vehicle runs out of energy and move it there before transitioning
+    #   to out of service.
+    # - report stranded passengers if we're servicing a trip when this happens.
+    next_state = OutOfService.build(vehicle_id)
+    return next_state.enter(sim, env)
+
+
+def move(sim: SimulationState, env: Environment,
+         vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    Moves the vehicles.
+    Transitions to OutOfService if the vehicle is empty
+
+    :param sim: the simulation state
+    :param env: the simulation environment
+    :param vehicle_id: the vehicle moving
+    :return: an error, or a sim with the moved vehicle, or (None, None) if no changes
+    """
+    context = f"vehicle {vehicle_id} attempting to move"
+
+    vehicle = sim.vehicles.get(vehicle_id)
+    if not vehicle:
+        return SimulationStateError(f"vehicle not found; context {context}"), None
+
+    mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+    if not mechatronics:
+        return SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"), None
+
+    if not hasattr(vehicle.vehicle_state, 'route'):
+        return SimulationStateError(f"vehicle state does not have route; context {context}"), None
     else:
-        return None, None
+        route = vehicle.vehicle_state.route
 
+    error, traverse_result = traverse(
+        route_estimate=route,
+        duration_seconds=sim.sim_timestep_duration_seconds,
+    )
+    if error:
+        return error, None
 
-def move(sim: SimulationState, env: Environment, vehicle_id: VehicleId,
-         route: Route) -> Tuple[Optional[Exception], Optional[MoveResult]]:
-    """
-    moves the vehicle, and moves to OutOfService if resulting vehicle energy is empty
-
-    :param sim: the sim state
-    :param env: the sim environment
-    :param vehicle_id: the vehicle to move
-    :param route: the route for the vehicle
-    :return: an optional error,
-             or an optional sim with moved/OutOfService vehicle (or no change if no traversal occurred)
-    """
-    move_error, move_result = _apply_route_traversal(sim, env, vehicle_id, route)
-    if move_error:
-        return move_error, None
-    elif not move_result:
-        return None, MoveResult(sim)
+    if not traverse_result.experienced_route:
+        # vehicle did not traverse so we set an empty route
+        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route())
+        updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
     else:
-        empty_check_error, empty_vehicle_sim = _go_out_of_service_on_empty(
-            move_result.sim, env, vehicle_id)
-        if empty_check_error:
-            response = SimulationStateError(f"failure during move for vehicle {vehicle_id}")
-            response.__cause__ = empty_check_error
-            return response, None
-        elif empty_vehicle_sim:
-            return None, MoveResult(empty_vehicle_sim)
-        else:
-            report = vehicle_move_event(move_result, env)
-            env.reporter.file_report(report)
-            return None, move_result
+        experienced_route = traverse_result.experienced_route
+        remaining_route = traverse_result.remaining_route
+        less_energy_vehicle = mechatronics.consume_energy(vehicle, experienced_route)
+        if mechatronics.is_empty(less_energy_vehicle):
+            # impossible to move, let's transition to OutOfService
+            return _go_out_of_service_on_empty(sim, env, vehicle_id)
+
+        step_distance_km = traverse_result.traversal_distance_km
+        last_link_traversed = experienced_route[-1]
+
+        vehicle_position = EntityPosition(last_link_traversed.link_id, last_link_traversed.end)
+        new_position_vehicle = less_energy_vehicle.modify_position(
+            position=vehicle_position).tick_distance_traveled_km(step_distance_km)
+
+        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)
+        updated_vehicle = new_position_vehicle.modify_vehicle_state(new_route_state)
+
+        report = vehicle_move_event(sim, vehicle, updated_vehicle, traverse_result, env)
+        env.reporter.file_report(report)
+
+    error, moved_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+    if error:
+        response = SimulationStateError(
+            f"failure during _apply_route_traversal for vehicle {vehicle.id}")
+        response.__cause__ = error
+        return response, None
+    else:
+        return None, moved_sim
+

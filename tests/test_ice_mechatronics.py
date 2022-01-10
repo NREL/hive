@@ -28,7 +28,7 @@ class TestICE(TestCase):
         ice = mock_ice(tank_capacity_gallons=10)
         vehicle = mock_vehicle(soc=1, mechatronics=ice)
 
-        moved_vehicle = ice.move(vehicle, route=())
+        moved_vehicle = ice.consume_energy(vehicle, route=())
         self.assertEqual(moved_vehicle.energy[EnergyType.GASOLINE], 10, "empty route should yield zero energy cost")
 
     def test_energy_cost_real_route(self):
@@ -40,7 +40,7 @@ class TestICE(TestCase):
 
         expected_gal_gas = 3 * KM_TO_MILE / 10
 
-        moved_vehicle = ice.move(vehicle, route=test_route)
+        moved_vehicle = ice.consume_energy(vehicle, route=test_route)
         self.assertAlmostEqual(
             10 - moved_vehicle.energy[EnergyType.GASOLINE],
             expected_gal_gas,

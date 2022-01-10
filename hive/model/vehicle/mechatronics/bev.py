@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
+from typing import Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -132,9 +132,9 @@ class BEV(NamedTuple, MechatronicsInterface):
         full_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
         return vehicle.energy[EnergyType.ELECTRIC] >= full_kwh
 
-    def move(self, vehicle: Vehicle, route: Route) -> Vehicle:
+    def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
-        move over a set distance
+        consume_energy over a route 
 
 
         :param vehicle:
@@ -147,7 +147,6 @@ class BEV(NamedTuple, MechatronicsInterface):
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
         updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
-
         return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:

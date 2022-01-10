@@ -94,7 +94,7 @@ class H3Ops:
                 # get all entities in this ring
                 found = (entity for cell in ring
                          for entity in cls.get_entities_at_cell(cell, entity_search, entities))
-
+                
                 best_dist_km = 1000000
                 best_entity = None
 

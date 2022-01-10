@@ -139,7 +139,6 @@ def update_active_pooling_trip(
         sim: SimulationState,
         env: Environment,
         vehicle_state: ServicingPoolingTrip,
-        updated_route: Route
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     helper to update the route of the leading trip when no route changes are required
@@ -147,18 +146,14 @@ def update_active_pooling_trip(
     :param vehicle_state:
     :return:
     """
-    vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
     context = f"updating active pooling trip for vehicle {vehicle_state.vehicle_id}"
+    vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
     if vehicle is None:
         return SimulationStateError(f"vehicle not found; context: {context}"), None
-    elif len(updated_route) > 0:
-        # all we need to do is replace the route at the head of the route plan
-        tail = TupleOps.tail(vehicle_state.routes)
-        updated_routes = (updated_route,) + tail
-        updated_state = vehicle_state._replace(routes=updated_routes)
-        updated_vehicle = vehicle.modify_vehicle_state(updated_state)
-        result = modify_vehicle(sim, updated_vehicle)
-        return result
+    current_route = vehicle.vehicle_state.route
+    if len(current_route) > 0:
+        # vehicle still on current route, noop
+        return None, sim
     else:
         # we reached the end of a route, so, we need to perform whatever trip phase
         # action is required and then update the vehicle state accordingly

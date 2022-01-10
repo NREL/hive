@@ -52,6 +52,9 @@ class ServicingTrip(NamedTuple, VehicleState):
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.SERVICING_TRIP
+    
+    def update_route(self, route: Route) -> ServicingTrip:
+        return self._replace(route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
@@ -151,42 +154,32 @@ class ServicingTrip(NamedTuple, VehicleState):
     def _perform_update(self, sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        take a step along the route to the base
+        take a step along the route to a trip destination  
 
         :param sim: the simulation state
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-
-        move_error, move_result = move(sim, env, self.vehicle_id, self.route)
-        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
-
         context = f"vehicle {self.vehicle_id} serving trip for request {self.request.id}"
+
+        move_error, move_sim = move(sim, env, self.vehicle_id)
+
         if move_error:
             response = SimulationStateError(
                 f"failure during ServicingTrip._perform_update for vehicle {self.vehicle_id}")
             response.__cause__ = move_error
             return response, None
-        elif not moved_vehicle:
+
+        moved_vehicle = move_sim.vehicles.get(self.vehicle_id)
+
+        if not moved_vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
-            return None, move_result.sim
+            return None, move_sim
+        elif len(moved_vehicle.vehicle_state.route) == 0:
+            # reached destination.
+            # let's drop the passengers off during this time step
+            result = drop_off_trip(move_sim, env, self.vehicle_id, self.request)
+            return result
         else:
-            # update moved vehicle's state
-            updated_route = move_result.route_traversal.remaining_route
-            updated_state = self._replace(route=updated_route)
-            updated_vehicle = moved_vehicle.modify_vehicle_state(updated_state)
-            error2, sim2 = simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)
-
-            if error2:
-                response = SimulationStateError(
-                    f"failure during ServicingTrip._perform_update for vehicle {self.vehicle_id}")
-                response.__cause__ = error2
-                return response, None
-            elif len(updated_route) == 0:
-                # reached destination.
-                # let's drop the passengers off during this time step
-                result = drop_off_trip(sim2, env, self.vehicle_id, self.request)
-                return result
-            else:
-                return None, sim2
+            return None, move_sim

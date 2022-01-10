@@ -20,13 +20,11 @@ class TestVehicleStateOps(TestCase):
 
         self.assertIsNotNone(sim_with_veh, "test invariant failed")
 
-        error, mr1 = vehicle_state_ops.move(sim_with_veh, env, vehicle.id, route)
+        error, move_sim = vehicle_state_ops.move(sim_with_veh, env, vehicle.id)
         if error:
             self.fail(error)
 
-        result_sim = mr1.sim
-
-        moved_vehicle = result_sim.vehicles.get(vehicle.id)
+        moved_vehicle = move_sim.vehicles.get(vehicle.id)
         soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(moved_vehicle)
 
         self.assertLess(soc, 1, "should have used 1 unit of mock energy")

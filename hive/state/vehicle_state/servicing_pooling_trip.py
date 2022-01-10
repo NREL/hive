@@ -69,6 +69,11 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
         :return:
         """
         return cls.routes[0] if len(cls.routes) > 0 else ()
+    
+    def update_route(self, route: Route) -> ServicingPoolingTrip:
+        tail = TupleOps.tail(self.routes)
+        updated_routes = TupleOps.prepend(route, tail)
+        return self._replace(routes=updated_routes)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
@@ -108,7 +113,6 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             error = SimulationStateError(msg)
             return error, None
         else:
-
             # pick up first request
             pickup_error, pickup_sim = servicing_ops.pick_up_trip(sim, env, self.vehicle_id,
                                                                   first_req_id)
@@ -188,8 +192,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             return response, None
         else:
             # move forward in current trip plan
-            move_error, move_result = move(sim, env, self.vehicle_id, active_trip.route)
-            moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
+            move_error, move_sim = move(sim, env, self.vehicle_id)
+            moved_vehicle = move_sim.vehicles.get(self.vehicle_id) if move_sim else None
 
             if move_error:
                 response = SimulationStateError(
@@ -200,9 +204,8 @@ class ServicingPoolingTrip(NamedTuple, VehicleState):
             elif not moved_vehicle:
                 return SimulationStateError(f"vehicle {self.vehicle_id} not found"), None
             elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
-                return None, move_result.sim
+                return None, move_sim 
             else:
-                # update moved vehicle's state
-                updated_route = move_result.route_traversal.remaining_route
-                result = update_active_pooling_trip(move_result.sim, env, self, updated_route)
+                # update the state of the pooling trip 
+                result = update_active_pooling_trip(move_sim, env, self)
                 return result

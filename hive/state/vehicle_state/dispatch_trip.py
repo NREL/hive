@@ -40,6 +40,9 @@ class DispatchTrip(NamedTuple, VehicleState):
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_TRIP
+    
+    def update_route(self, route: Route) -> DispatchTrip:
+        return self._replace(route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
@@ -164,22 +167,12 @@ class DispatchTrip(NamedTuple, VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
-        move_error, move_result = vehicle_state_ops.move(sim, env, self.vehicle_id, self.route)
-        moved_vehicle = move_result.sim.vehicles.get(self.vehicle_id) if move_result else None
-
-        context = f"vehicle {self.vehicle_id} on the way to request {self.request_id}"
         if move_error:
             response = SimulationStateError(
                 f"failure during DispatchTrip._perform_update for vehicle {self.vehicle_id}")
             response.__cause__ = move_error
             return response, None
-        elif not moved_vehicle:
-            return SimulationStateError(f"vehicle not found; context: {context}"), None
-        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
-            return None, move_result.sim
         else:
-            # update moved vehicle's state (holding the route)
-            updated_state = self._replace(route=move_result.route_traversal.remaining_route)
-            updated_vehicle = moved_vehicle.modify_vehicle_state(updated_state)
-            return simulation_state_ops.modify_vehicle(move_result.sim, updated_vehicle)
+            return None, move_sim
