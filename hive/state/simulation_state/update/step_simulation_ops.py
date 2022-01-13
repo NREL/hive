@@ -12,6 +12,7 @@ from hive.reporting.report_type import ReportType
 from hive.reporting.reporter import Report
 from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
+from hive.state.simulation_state.simulation_state_ops import tick
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from hive.util import TupleOps
 
@@ -63,8 +64,10 @@ def step_vehicle(simulation_state: SimulationState, env: Environment, vehicle_id
     if vehicle_error:
         log.error(vehicle_error)
         return simulation_state
+    
+    next_time_sim = tick(vehicle_sim)
 
-    return vehicle_sim
+    return next_time_sim 
 
 
 def perform_driver_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
