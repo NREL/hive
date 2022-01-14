@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import logging
 
-from typing import Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
+from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
+
+import immutables
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -79,14 +81,14 @@ class BEV(NamedTuple, MechatronicsInterface):
         """
         return charger.energy_type == EnergyType.ELECTRIC
 
-    def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
 
         :param percent_full:
         :return:
         """
-        return {EnergyType.ELECTRIC: self.battery_capacity_kwh * percent_full}
+        return immutables.Map({EnergyType.ELECTRIC: self.battery_capacity_kwh * percent_full})
 
     def range_remaining_km(self, vehicle: Vehicle) -> Kilometers:
         """
@@ -146,7 +148,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         energy_used_kwh = energy_used * get_unit_conversion(self.powertrain.energy_units, "kilowatthour")
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
-        updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
+        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.ELECTRIC: new_energy_kwh}))
         return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
@@ -162,7 +164,7 @@ class BEV(NamedTuple, MechatronicsInterface):
         idle_energy_kwh = self.idle_kwh_per_hour * time_seconds * SECONDS_TO_HOURS
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - idle_energy_kwh)
-        updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
+        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.ELECTRIC: new_energy_kwh}))
 
         return updated_vehicle
 
@@ -200,6 +202,6 @@ class BEV(NamedTuple, MechatronicsInterface):
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
 
 
-        updated_vehicle = vehicle.modify_energy({EnergyType.ELECTRIC: new_energy_kwh})
+        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.ELECTRIC: new_energy_kwh}))
 
         return updated_vehicle, time_charging_seconds
