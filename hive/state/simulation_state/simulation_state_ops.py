@@ -11,11 +11,11 @@ from hive.util.exception import SimulationStateError
 from hive.util.typealiases import *
 
 if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
     from hive.model.base import Base
     from hive.model.request import Request
     from hive.model.station import Station
     from hive.model.vehicle import Vehicle
-    from hive.state.simulation_state.simulation_state import SimulationState
 
 """
 a collection of operations to modify the SimulationState which are not
@@ -58,6 +58,25 @@ def add_request(sim: SimulationState, request: Request) -> Tuple[Optional[Except
         )
         return None, updated_sim
 
+def add_entity(sim: SimulationState, entity: Entity) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    """
+    helper for adding a general entity to the simulation
+
+    :param sim: the simulation state
+    :param entity: the entity to add
+
+    :return: the updated simulation state or an error
+    """
+    if entity.__class__.__name__ == "Vehicle":
+        return add_vehicle(sim, entity)
+    elif entity.__class__.__name__ == "Station":
+        return add_station(sim, entity)
+    elif entity.__class__.__name__ == "Base":
+        return add_base(sim, entity)
+    elif entity.__class__.__name__ == "Request":
+        return add_request(sim, entity)
+    else:
+        return SimulationStateError(f"cannot add entity {entity} to simulation"), None
 
 def remove_request(sim: SimulationState,
                    request_id: RequestId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
