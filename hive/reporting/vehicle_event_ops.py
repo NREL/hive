@@ -19,6 +19,7 @@ from hive.util.time_helpers import time_diff
 
 if TYPE_CHECKING:
     from hive.model.request.request import Request
+    from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
     from hive.state.vehicle_state.vehicle_state_ops import MoveResult
 
 
@@ -77,6 +78,7 @@ def vehicle_charge_event(
     next_sim: SimulationState,
     station: Station,
     charger: Charger,
+    mechatronics: MechatronicsInterface,
 ) -> Report:
     """
     reports information about the marginal effect of a charge event
@@ -86,6 +88,8 @@ def vehicle_charge_event(
     :param next_sim: the next simulation state after the charge event
     :param station: the station involved with the charge event (either before or after update)
     :param charger: the charger used
+    :param mechatronics: the vehicle mechatronics
+
     :return: a charge event report
     """
     energy_type = next_vehicle.energy.get(charger.energy_type)
@@ -94,12 +98,20 @@ def vehicle_charge_event(
 
     sim_time_start = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
     sim_time_end = next_sim.sim_time
+
     vehicle_id = next_vehicle.id
     station_id = station.id
+    session_id = prev_vehicle.vehicle_state.instance_id
+
     vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
     vehicle_memberships = prev_vehicle.membership.to_json()
+
     energy_transacted = next_vehicle.energy[charger.energy_type] - prev_vehicle.energy[
         charger.energy_type]  # kwh
+    
+    start_soc = mechatronics.fuel_source_soc(prev_vehicle)
+    end_soc = mechatronics.fuel_source_soc(next_vehicle)
+
     charger_price = station.charger_prices_per_kwh.get(charger.id)  # Currency
     charging_price = energy_transacted * charger_price if charger_price else 0.0
 
@@ -107,6 +119,7 @@ def vehicle_charge_event(
     lat, lon = h3.h3_to_geo(geoid)
 
     report_data = {
+        'session_id': session_id,
         'sim_time_start': sim_time_start,
         'sim_time_end': sim_time_end,
         'vehicle_id': vehicle_id,
@@ -115,6 +128,8 @@ def vehicle_charge_event(
         'vehicle_memberships': vehicle_memberships,
         'energy': energy_transacted,
         'energy_units': charger.energy_type.units,
+        'vehicle_start_soc': start_soc,
+        'vehicle_end_soc': end_soc,
         'price': charging_price,
         'charger_id': charger.id,
         'geoid': geoid,
@@ -207,6 +222,7 @@ def construct_station_load_events(reports: Tuple[Report],
 
     :param reports: the reports in this time step
     :param sim: the simulation state
+    
     :return: a collection with one STATION_LOAD_EVENT per StationId
     """
     sim_time_start = sim.sim_time - sim.sim_timestep_duration_seconds

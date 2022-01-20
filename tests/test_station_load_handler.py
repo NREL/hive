@@ -19,6 +19,7 @@ class TestStationLoadHandler(TestCase):
         sta = mock_station()
         sim = mock_sim(vehicles=(veh, ), stations=(sta, ))
         env = mock_env()
+        mech = mock_bev()
 
         err, sim_charging = state.enter(sim, env)
 
@@ -35,6 +36,7 @@ class TestStationLoadHandler(TestCase):
             sim_charged,
             updated_station,
             env.chargers.get(mock_dcfc_charger_id()),
+            mech,
         )
 
         # perhaps in the future, add tests with multiple events

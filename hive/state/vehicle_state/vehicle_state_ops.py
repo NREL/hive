@@ -72,7 +72,7 @@ def charge(sim: SimulationState, env: Environment, vehicle_id: VehicleId, statio
             return response, None
         else:
             report = vehicle_charge_event(vehicle, updated_vehicle, sim_with_vehicle,
-                                          updated_station, charger)
+                                          updated_station, charger, mechatronics)
             env.reporter.file_report(report)
 
             return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
