@@ -3,6 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Dict, TYPE_CHECKING, Tuple
 
+import immutables
+
 from hive.model.energy import EnergyType, Charger
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
@@ -55,7 +57,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
         """
         construct an initial energy state for a Vehicle
 

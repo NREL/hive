@@ -38,8 +38,8 @@ def vehicle_move_event(sim: SimulationState, prev_vehicle: Vehicle, next_vehicle
     vehicle_memberships = prev_vehicle.membership.to_json()
     delta_distance: float = next_vehicle.distance_traveled_km - prev_vehicle.distance_traveled_km
 
-    if prev_vehicle.energy.keys() != next_vehicle.energy.keys():
-        raise ValueError(f"Energy types do not match: {prev_vehicle.energy.keys()} != {next_vehicle.energy.keys()}")
+    if set(prev_vehicle.energy.keys()) != set(next_vehicle.energy.keys()):
+        raise ValueError(f"Energy types do not match: {set(prev_vehicle.energy.keys())} != {set(next_vehicle.energy.keys())}")
     elif len(next_vehicle.energy.keys()) > 1:
         raise NotImplemented("hive doesn't currently support multiple energy types")
     else:

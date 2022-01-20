@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Dict
 
 import h3
+import immutables
 
 from hive.model.energy.energytype import EnergyType
 from hive.model.membership import Membership
@@ -34,7 +35,7 @@ class Vehicle(NamedTuple):
 
     # mechatronic properties
     mechatronics_id: MechatronicsId
-    energy: Dict[EnergyType, float]
+    energy: immutables.Map[EnergyType, float]
 
     # location
     position: EntityPosition
@@ -127,7 +128,7 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state})"
 
-    def modify_energy(self, energy: Dict[EnergyType, float]) -> Vehicle:
+    def modify_energy(self, energy: immutables.Map[EnergyType, float]) -> Vehicle:
         """
         modify the energy level of the vehicle. should only be used by the mechatronics ops
 
