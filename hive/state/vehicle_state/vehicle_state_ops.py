@@ -133,7 +133,7 @@ def move(sim: SimulationState, env: Environment,
 
     error, traverse_result = traverse(
         route_estimate=route,
-        duration_seconds=sim.sim_timestep_duration_seconds,
+        duration_seconds=int(sim.sim_timestep_duration_seconds),
     )
     if error:
         return error, None
