@@ -17,7 +17,9 @@ class TestStepSimulationOps(TestCase):
         env = mock_env()
 
         for _ in range(10):
-            sim = step_vehicle(sim, env, vehicle_id="2")
+            err, sim = step_vehicle(sim, env, vehicle_id="2")
+            if err is not None:
+                self.fail(err)
 
         vehicle1: Vehicle = sim.vehicles.get("1")
         vehicle2: Vehicle = sim.vehicles.get("2")
@@ -48,7 +50,9 @@ class TestStepSimulationOps(TestCase):
         env = mock_env()
 
         for _ in range(10):
-            sim = step_vehicle(sim, env, vehicle_id="2")
+            err, sim = step_vehicle(sim, env, vehicle_id="2")
+            if err is not None:
+                self.fail(err)
 
         vehicle1: Vehicle = sim.vehicles.get("1")
         vehicle2: Vehicle = sim.vehicles.get("2")
