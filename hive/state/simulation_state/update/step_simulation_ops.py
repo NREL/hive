@@ -14,7 +14,7 @@ from hive.state.entity_state import entity_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.simulation_state_ops import tick
 from hive.state.vehicle_state.charge_queueing import ChargeQueueing
-from hive.util import TupleOps
+from hive.util import TupleOps, SimulationStateError
 
 if TYPE_CHECKING:
     from hive.runner.environment import Environment
@@ -37,7 +37,9 @@ def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_tim
         env.reporter.file_report(_instruction_to_report(i, sim_time))
 
 
-def step_vehicle(simulation_state: SimulationState, env: Environment, vehicle_id: VehicleId) -> SimulationState:
+def step_vehicle(simulation_state: SimulationState,
+                 env: Environment,
+                 vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     steps a single vehicle for a single simulation time step.
 
@@ -50,24 +52,22 @@ def step_vehicle(simulation_state: SimulationState, env: Environment, vehicle_id
 
     vehicle = simulation_state.vehicles.get(vehicle_id)
     if not vehicle:
-        log.error(f"attempting to step vehicle {vehicle_id} but doesn't exist in this simulation state")
-        return simulation_state
+        err = SimulationStateError(f"attempting to step vehicle {vehicle_id} but doesn't exist in this simulation state")
+        return err, None
 
     driver_error, driver_sim = vehicle.driver_state.update(simulation_state, env)
 
     if driver_error:
-        log.error(driver_error)
-        return simulation_state
+        return driver_error, None
 
     vehicle_error, vehicle_sim = vehicle.vehicle_state.update(driver_sim, env)
 
     if vehicle_error:
-        log.error(vehicle_error)
-        return simulation_state
+        return vehicle_error, None
     
     next_time_sim = tick(vehicle_sim)
 
-    return next_time_sim 
+    return None, next_time_sim
 
 
 def perform_driver_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
