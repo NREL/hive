@@ -37,6 +37,7 @@ from hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import Tabula
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.reporter import Reporter
 from hive.runner.environment import Environment
+from hive.runner.runner_payload import RunnerPayload
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
 from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.driver_state.driver_state import DriverState
@@ -379,6 +380,8 @@ def mock_human_driver(available: bool = True,
     state = HumanAvailable(attr) if available else HumanUnavailable(attr)
     return state
 
+def mock_runner_payload() -> RunnerPayload:
+    return RunnerPayload(mock_sim(), mock_env(), mock_update())
 
 def mock_sim(
         sim_time: int = 0,
@@ -505,7 +508,7 @@ def mock_env(
 def mock_reporter() -> Reporter:
     class MockReporter(Reporter):
         def __init__(self):
-            pass
+            super().__init__()
 
         def flush(self, sim_state: SimulationState):
             pass
@@ -513,7 +516,7 @@ def mock_reporter() -> Reporter:
         def file_report(self, report: dict):
             pass
 
-        def close(self):
+        def close(self, runner_payload: RunnerPayload):
             pass
 
     return MockReporter()

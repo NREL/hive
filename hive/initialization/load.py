@@ -38,7 +38,7 @@ def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environm
         raise e
 
     if config.global_config.write_outputs:
-        os.makedirs(config.scenario_output_directory)
+        config.scenario_output_directory.mkdir()
 
     simulation_state, environment = initialize_simulation(config)
 

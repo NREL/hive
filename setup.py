@@ -38,6 +38,9 @@ setup(
         "scipy",
         "returns",
     ],
+    extras_require={
+        "dev": ["pytest", "black"]
+    },
     include_package_data=True,
     package_data={
         "hive.resources": ["*"]
