@@ -57,8 +57,8 @@ class ChargeQueueing(NamedTuple, VehicleState):
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        has_available_charger = station.available_chargers.get(self.charger_id,
-                                                               0) > 0 if station else False
+        has_available_charger = station.has_available_charger(self.charger_id) \
+            if station is not None else False
         context = f"vehicle {self.vehicle_id} entering queueing at station {self.station_id}"
         if not vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
@@ -102,14 +102,17 @@ class ChargeQueueing(NamedTuple, VehicleState):
             return SimulationStateError(f"station not found; context: {context}"), None
         else:
 
-            updated_station = station.dequeue_for_charger(self.charger_id)
-            error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
-            if error:
-                response = SimulationStateError(
-                    f"failure during ChargeQueueing.exit for vehicle {self.vehicle_id}")
-                response.__cause__ = error
-                return response, None
-            return None, updated_sim
+            error, updated_station = station.dequeue_for_charger(self.charger_id)
+            if error is not None:
+                return error, None
+            else:
+                error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+                if error:
+                    response = SimulationStateError(
+                        f"failure during ChargeQueueing.exit for vehicle {self.vehicle_id}")
+                    response.__cause__ = error
+                    return response, None
+                return None, updated_sim
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
@@ -124,7 +127,7 @@ class ChargeQueueing(NamedTuple, VehicleState):
         if not station:
             return True
         else:
-            return station.available_chargers.get(self.charger_id, 0) > 0
+            return station.has_available_charger(self.charger_id)
 
     def _default_terminal_state(
             self, sim: SimulationState,
@@ -138,18 +141,18 @@ class ChargeQueueing(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        has_no_charger = station.available_chargers.get(self.charger_id,
-                                                        0) == 0 if station else False
+        has_available_charger = station.has_available_charger(self.charger_id) \
+            if station is not None else False
         context = f"vehicle {self.vehicle_id} entering default terminal state for charge queueing at station {self.station_id}"
         if not vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
         elif not station:
             return SimulationStateError(f"station not found; context: {context}"), None
-        elif has_no_charger:
-            return SimulationStateError(f"no charger_id found; context: {context}"), None
+        elif not has_available_charger:
+            return SimulationStateError(f"no charger is available; context: {context}"), None
         else:
             next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
-            return next_state
+            return None, next_state
 
     def _perform_update(self, sim: SimulationState,
                         env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

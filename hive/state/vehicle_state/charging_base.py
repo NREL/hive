@@ -10,7 +10,7 @@ from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateIns
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import BaseId, VehicleId, ChargerId
+from hive.util.typealiases import BaseId, VehicleId, Charger
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -26,12 +26,12 @@ class ChargingBase(NamedTuple, VehicleState):
 
     vehicle_id: VehicleId
     base_id: BaseId
-    charger_id: ChargerId
+    charger_id: Charger
 
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId) -> ChargingBase:
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: Charger) -> ChargingBase:
         return ChargingBase(vehicle_id, base_id, charger_id, instance_id=uuid4())
 
     @property
@@ -87,8 +87,10 @@ class ChargingBase(NamedTuple, VehicleState):
                         msg = f"station {base.station_id} not found for vehicle; context: {context}"
                         return SimulationStateError(msg), None
                     else:
-                        updated_station = station.checkout_charger(self.charger_id)
-                        if not updated_station:
+                        error, updated_station = station.checkout_charger(self.charger_id)
+                        if error is not None:
+                            return error, None
+                        elif not updated_station:
                             log.warning(
                                 f"vehicle {self.vehicle_id} can't checkout {self.charger_id} from {station.id}"
                             )

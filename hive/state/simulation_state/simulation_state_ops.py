@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
     from hive.model.base import Base
     from hive.model.request import Request
-    from hive.model.station import Station
+    from hive.model.station.station import Station
     from hive.model.vehicle import Vehicle
 
 """

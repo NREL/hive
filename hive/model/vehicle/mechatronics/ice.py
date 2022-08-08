@@ -13,7 +13,7 @@ from hive.util.typealiases import MechatronicsId
 from hive.util.units import *
 
 if TYPE_CHECKING:
-    from hive.model.energy.charger import Charger
+    from hive.model.energy.charger.charger import Charger
     from hive.model.vehicle.vehicle import Vehicle
     from hive.model.roadnetwork.route import Route
     from hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
@@ -32,7 +32,7 @@ class ICE(NamedTuple, MechatronicsInterface):
     nominal_miles_per_gallon: MilesPerGallon
 
     @classmethod
-    def from_dict(cls, d: Dict[str, str]) -> ICE:
+    def from_dict(cls, d: Dict) -> ICE:
         """
         build from a dictionary
 
@@ -44,13 +44,14 @@ class ICE(NamedTuple, MechatronicsInterface):
         nominal_miles_per_gallon = float(d['nominal_miles_per_gallon'])
 
         # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
-        d['scale_factor'] = 1 / nominal_miles_per_gallon
+        updated_d = d.copy()
+        updated_d['scale_factor'] = 1 / nominal_miles_per_gallon
 
         return ICE(
-            mechatronics_id=d['mechatronics_id'],
+            mechatronics_id=updated_d['mechatronics_id'],
             tank_capacity_gallons=tank_capacity_gallons,
             idle_gallons_per_hour=idle_gallons_per_hour,
-            powertrain=build_powertrain(d),
+            powertrain=build_powertrain(updated_d),
             nominal_miles_per_gallon=nominal_miles_per_gallon,
         )
 

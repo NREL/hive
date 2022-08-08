@@ -28,7 +28,7 @@ from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.roadnetwork.route import Route
 from hive.model.sim_time import SimTime
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.mechatronics.bev import BEV
 from hive.model.vehicle.mechatronics.ice import ICE
 from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
@@ -51,6 +51,7 @@ from hive.state.vehicle_state.vehicle_state import VehicleState
 from hive.util.h3_ops import H3Ops
 from hive.util.typealiases import *
 from hive.util.units import *
+from hive.util.tuple_ops import TupleOps
 
 
 class DefaultIds:
@@ -180,12 +181,24 @@ def mock_station(
         road_network: RoadNetwork = mock_network(),
         membership: Membership = Membership(),
 ) -> Station:
-    if chargers is None:
-        chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
-    if on_shift_access_chargers is None:
-        on_shift_access_chargers = frozenset(chargers.keys())
-    return Station.build(station_id, h3.geo_to_h3(lat, lon, h3_res), road_network, chargers,
-                         on_shift_access_chargers, membership)
+    hex = h3.geo_to_h3(lat, lon, h3_res)
+    return mock_station_from_geoid(
+        station_id,
+        geoid=hex,
+        chargers=chargers,
+        on_shift_access_chargers=on_shift_access_chargers,
+        road_network=road_network,
+        membership=membership
+    )
+    return Station.build(
+        id=station_id, 
+        geoid=h3.geo_to_h3(lat, lon, h3_res), 
+        road_network=road_network, 
+        charger=mock_l2_charger(),
+        charger_count=1,
+        on_shift_access=on_shift_access_chargers, 
+        membership=membership
+    ).add_charger(mock_dcfc_charger())
 
 
 def mock_station_from_geoid(
@@ -195,6 +208,7 @@ def mock_station_from_geoid(
         on_shift_access_chargers=None,
         road_network: RoadNetwork = mock_network(),
         membership: Membership = Membership(),
+        env: Environment = mock_env()
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
@@ -202,7 +216,23 @@ def mock_station_from_geoid(
         chargers = immutables.Map(chargers)
     if on_shift_access_chargers is None:
         on_shift_access_chargers = frozenset(chargers.keys())
-    return Station.build(station_id, geoid, road_network, chargers, on_shift_access_chargers,
+    
+    chargers = list(chargers)
+    charger_id, count = TupleOps.head_tail(chargers)
+    charger = env.chargers.get(charger_id)
+    initial = Station.build(
+        id=station_id,
+        geoid=geoid,
+        road_network=road_network,
+        charger=charger,
+        charger_count=count,
+        on_shift_access=on_shift_access_chargers,
+        membership=membership,
+    )
+
+
+    return Station.build(
+        station_id, geoid, road_network, chargers, on_shift_access_chargers,
                          membership)
 
 
@@ -472,7 +502,7 @@ def mock_config(
 def mock_env(
     config: HiveConfig = mock_config(),
     mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
-    chargers: Optional[Dict[ChargerId, Charger]] = None,
+    chargers: Optional[Dict[Charger, Charger]] = None,
     schedules: Optional[Dict[ScheduleId, Callable[['SimulationState', VehicleId], bool]]] = None,
     fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()])
 ) -> Environment:

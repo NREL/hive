@@ -9,7 +9,7 @@ import immutables
 from hive.dispatcher.instruction.instructions import *
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.util.typealiases import GeoId
 from hive.util import Ratio, DictOps
 from hive.util.h3_ops import H3Ops

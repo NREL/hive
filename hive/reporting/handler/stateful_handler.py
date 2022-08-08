@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from hive.config.global_config import GlobalConfig
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.vehicle import Vehicle
 from hive.reporting.handler.handler import Handler
 from hive.reporting.report_type import ReportType

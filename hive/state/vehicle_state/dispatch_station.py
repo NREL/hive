@@ -99,7 +99,7 @@ class DispatchStation(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        available_chargers = station.available_chargers.get(self.charger_id, 0) if station else 0
+        available_chargers = station.get_available_chargers(self.charger_id, 0) if station else 0
         context = f"vehicle {self.vehicle_id} entering default terminal state for dispatch station state for station {self.station_id} with charger {self.charger_id}"
         if not vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None

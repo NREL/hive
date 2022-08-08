@@ -3,12 +3,14 @@ from __future__ import annotations
 import functools as ft
 from typing import Tuple, Callable, NamedTuple, Dict, Optional
 
+import math
+import logging
 import h3
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from hive.model.roadnetwork.route import route_distance_km, route_travel_time_seconds
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.mechatronics.powercurve import powercurve_ops
 from hive.model.vehicle.vehicle import Vehicle
 from hive.runner import Environment
@@ -18,7 +20,10 @@ from hive.state.vehicle_state.charging_station import ChargingStation
 from hive.util import H3Ops, GeoId, Seconds, Ratio, TupleOps
 from hive.util.typealiases import ChargerId
 
+log = logging.getLogger(__name__)
+
 EntityId = str
+MAX_DIST = 999999999.0
 
 
 class Entity:
@@ -127,11 +132,13 @@ def nearest_shortest_queue_distance(vehicle: Vehicle, env: Environment) -> Calla
     :return: a station distance function
     """
 
-    max_dist = 999999999.0
-
     def fn(station: Station) -> float:
-        _, rank = nearest_shortest_queue_ranking(vehicle, station, env, max_dist)
-        return rank
+        result = nearest_shortest_queue_ranking(vehicle, station, env, MAX_DIST)
+        if result is None:
+            return MAX_DIST  # 
+        else:
+            _, rank = result
+            return rank
 
     return fn
 
@@ -157,8 +164,10 @@ def nearest_shortest_queue_ranking(
 
     def _inner(acc: Tuple[Optional[ChargerId], float], charger_id: ChargerId) -> Tuple[ChargerId, float]:
         charger = env.chargers.get(charger_id)
-        total_chargers = station.total_chargers.get(charger_id)
-        if not vehicle_mechatronics.valid_charger(charger) or total_chargers is None:
+        total_chargers = station.get_total_chargers(charger_id)
+        if not vehicle_mechatronics.valid_charger(charger) \
+            or total_chargers is None \
+            or total_chargers == 0:
             # vehicle can't use this charger so we skip it, or,
             # station doesn't actually have this charger (an error condition really)
             return acc
@@ -277,7 +286,7 @@ def shortest_time_to_charge_ranking(
             """
             if len(_charging) == len(_enqueued) == 0:
                 return time_passed
-            elif len(_charging) < station.total_chargers.get(charger_id):
+            elif len(_charging) < station.get_total_chargers(charger_id):
                 return time_passed
             else:
                 # advance time
@@ -289,7 +298,7 @@ def shortest_time_to_charge_ranking(
                 _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
                 _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
 
-                vacancies = station.total_chargers.get(_charger_id) - len(_charging_vacated)
+                vacancies = station.get_total_chargers(_charger_id) - len(_charging_vacated)
                 if vacancies <= 0:
                     # no space for any changes from enqueued -> charging
                     return _greedy_assignment(
@@ -316,12 +325,14 @@ def shortest_time_to_charge_ranking(
         vehicles_enqueued = sim.get_vehicles(filter_function=_veh_enqueued, sort=True, sort_key=_sort_enqueue_time)
 
         estimates = {}
-        for charger_id in station.total_chargers.keys():
-            charger = env.chargers.get(charger_id)
-            if not vehicle_mechatronics.valid_charger(charger):
+        for charger_id in station.state.keys():
+            charger_state = station.state.get(charger_id)
+            charger = charger_state.charger if charger_state is not None else None
+            
+            if charger is None or not vehicle_mechatronics.valid_charger(charger):
                 # vehicle can't use this charger so we skip it
                 continue
-
+            
             # compute the charge time for the vehicle we are ranking
             this_vehicle_charge_time = powercurve_ops.time_to_full(vehicle,
                                                                    vehicle_mechatronics,

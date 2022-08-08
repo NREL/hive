@@ -21,7 +21,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.model.vehicle.schedules import build_schedules_table
 from hive.reporting.handler.eventful_handler import EventfulHandler

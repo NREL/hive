@@ -6,7 +6,7 @@ from typing import Tuple
 import immutables
 from returns.io import IOResult, IOResultE
 
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 

@@ -7,7 +7,7 @@ from hive.reporting.reporter import Reporter
 import immutables
 
 if TYPE_CHECKING:
-    from hive.model.energy.charger import Charger
+    from hive.model.energy.charger.charger import Charger
     from hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
     from hive.config import HiveConfig
     from hive.util.typealiases import ChargerId, MechatronicsId, MembershipId, MembershipMap, ScheduleFunction, \

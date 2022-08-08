@@ -8,11 +8,11 @@ import immutables
 
 from hive.model.energy import Charger
 import hive.model.roadnetwork.route as route
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.vehicle import Vehicle
 from hive.model.roadnetwork.routetraversal import RouteTraversal
 from hive.reporting.reporter import Report, ReportType
-from hive.runner import Environment
+from hive.runner.environment import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util import StationId, TupleOps
 from hive.util.time_helpers import time_diff
@@ -112,8 +112,8 @@ def vehicle_charge_event(
     start_soc = mechatronics.fuel_source_soc(prev_vehicle)
     end_soc = mechatronics.fuel_source_soc(next_vehicle)
 
-    charger_price = station.charger_prices_per_kwh.get(charger.id)  # Currency
-    charging_price = energy_transacted * charger_price if charger_price else 0.0
+    charger_price = station.get_price(charger.id)  # Currency
+    charging_price = energy_transacted * charger_price if charger_price is not None else 0.0
 
     geoid = next_vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
