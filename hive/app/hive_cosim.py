@@ -20,7 +20,7 @@ from hive.util.fp import throw_on_failure
 
 
 def load_scenario(
-    scenario_file: Path,
+    scenario_file: Path, 
     custom_instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None
     ) -> RunnerPayload:
     """

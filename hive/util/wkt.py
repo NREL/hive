@@ -29,7 +29,7 @@ def point_2d(point: Tuple[float, float], x_y_ordering: bool) -> str:
     :param x_y_ordering: if the output should be reversed into (x, y) ordering
     :return: a wkt point, tuple order preserved
     """
-    if not isinstance(point, Tuple) or len(point) != 2:
+    if not isinstance(point, tuple) or len(point) != 2:
         return polygon_empty()
     else:
         point_str = f"POINT ({_point_to_string(point, x_y_ordering)})"
