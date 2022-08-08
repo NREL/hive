@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
+InstructionGeneratorId = str
 
 class InstructionGenerator(metaclass=ABCNamedTupleMeta):
     """

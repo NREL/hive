@@ -1,20 +1,28 @@
 from __future__ import annotations
 
-import functools as ft
 import logging
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Callable
+from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Type, Union
 
-from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from hive.dispatcher.instruction_generator.instruction_generator_ops import generate_instructions
+import immutables
+
+from returns.result import Result, Failure, Success
+
+from hive.dispatcher.instruction_generator.instruction_generator import (
+    InstructionGenerator,
+    InstructionGeneratorId,
+)
+from hive.dispatcher.instruction_generator.instruction_generator_ops import (
+    generate_instructions,
+)
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from hive.state.simulation_state.update.simulation_update import (
+    SimulationUpdateFunction,
+)
 from hive.state.simulation_state.update.step_simulation_ops import (
     perform_vehicle_state_updates,
     apply_instructions,
     log_instructions,
-    instruction_generator_update_fn,
-    UserProvidedUpdateAccumulator,
     perform_driver_state_updates,
 )
 from hive.util.dict_ops import DictOps
@@ -26,14 +34,44 @@ log = logging.getLogger(__name__)
 
 
 class StepSimulation(NamedTuple, SimulationUpdateFunction):
-    instruction_generators: Tuple[InstructionGenerator, ...]
-    instruction_generator_update_fn: Callable[
-        [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None
+    instruction_generators: immutables.Map[InstructionGeneratorId, InstructionGenerator]
+    instruction_generator_order: Tuple[InstructionGeneratorId, ...]
+
+    @classmethod
+    def from_tuple(
+        cls, instruction_generators: Tuple[InstructionGenerator, ...]
+    ) -> StepSimulation:
+        """
+        Create a StepSimulation from a tuple of instruction generators.
+        """
+        return StepSimulation(
+            instruction_generators=immutables.Map(
+                {i_gen.__class__.__name__: i_gen for i_gen in instruction_generators}
+            ),
+            instruction_generator_order=tuple(
+                i_gen.__class__.__name__ for i_gen in instruction_generators
+            ),
+        )
+
+    def update_instruction_generators(
+        self, updated_i_gens: Tuple[InstructionGenerator, ...]
+    ) -> StepSimulation:
+        """
+        Update the set of instruction generators.
+        """
+        return self._replace(
+            instruction_generators=immutables.Map(
+                {i_gen.__class__.__name__: i_gen for i_gen in updated_i_gens}
+            ),
+            instruction_generator_order=tuple(
+                i_gen.__class__.__name__ for i_gen in updated_i_gens
+            ),
+        )
 
     def update(
-            self,
-            simulation_state: SimulationState,
-            env: Environment,
+        self,
+        simulation_state: SimulationState,
+        env: Environment,
     ) -> Tuple[SimulationState, Optional[StepSimulation]]:
         """
         generates all instructions for this time step and then attempts to apply them to the SimulationState
@@ -48,21 +86,16 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         :param env: the sim environment
         :return: updated simulation state, with reports, along with the (optionally) updated StepSimulation
         """
-        # allow the user to inject changes to the InstructionGenerators
-        # TODO: I refactored the UserProvidedUpdateAccumulator to raise any errors due to a problem I had where it
-        #  was failing silently. Once we decide on our error handling strategy we should revisit this. -NR
-        user_update_result = ft.reduce(
-            instruction_generator_update_fn(self.instruction_generator_update_fn, simulation_state),
-            self.instruction_generators,
-            UserProvidedUpdateAccumulator()
-        )
-
         sim_with_drivers_updated = perform_driver_state_updates(simulation_state, env)
 
+        instruction_generators = tuple(
+            self.instruction_generators[ig_id]
+            for ig_id in self.instruction_generator_order
+        )
+
         i_stack, updated_i_gens = generate_instructions(
-            user_update_result.updated_fns,
-            sim_with_drivers_updated,
-            env)
+            instruction_generators, sim_with_drivers_updated, env
+        )
 
         # pops the top instruction from the stack. this could be replaced with something like a priority queue
         final_instructions = ()
@@ -76,11 +109,34 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         log_instructions(final_instructions, env, simulation_state.sim_time)
 
         # update drivers, update vehicles
-        sim_with_instructions = apply_instructions(sim_with_drivers_updated, env, final_instructions)
-        sim_vehicles_updated = perform_vehicle_state_updates(simulation_state=sim_with_instructions, env=env)
+        sim_with_instructions = apply_instructions(
+            sim_with_drivers_updated, env, final_instructions
+        )
+        sim_vehicles_updated = perform_vehicle_state_updates(
+            simulation_state=sim_with_instructions, env=env
+        )
 
         # advance the simulation one time step
         sim_next_time_step = simulation_state_ops.tick(sim_vehicles_updated)
 
-        updated_step_simulation = self._replace(instruction_generators=updated_i_gens)
+        updated_step_simulation = self.update_instruction_generators(updated_i_gens)
         return sim_next_time_step, updated_step_simulation
+
+    def get_instruction_generator(
+        self, identifier: Union[InstructionGeneratorId, Type[InstructionGenerator]]
+    ) -> Result[InstructionGenerator]:
+        """
+        Get the instance of an interal instruction generator either by an id or the actual class type.
+        """
+        if isinstance(identifier, InstructionGeneratorId):
+            i_gen = self.instruction_generators.get(identifier)
+            if not i_gen:
+                return Failure(f"No instruction generator found with name {identifier}")
+            return Success(i_gen)
+        elif isinstance(identifier, Type):
+            for i_gen in self.instruction_generators.values():
+                if isinstance(i_gen, identifier):
+                    return Success(i_gen)
+            return Failure(f"No instruction generator found with type {identifier}")
+        else:
+            return Failure(f"Invalid identifier type {type(identifier)}")
