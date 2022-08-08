@@ -1,12 +1,13 @@
 import functools as ft
 from pathlib import Path
-from typing import Tuple, NamedTuple
+from typing import Tuple, NamedTuple, Optional
 
 import pandas as pd
 from pandas import DataFrame
 from tqdm import tqdm
 
 from hive import Update
+from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from hive.initialization.load import load_simulation
@@ -18,7 +19,10 @@ from hive.util import SimulationStateError
 from hive.util.fp import throw_on_failure
 
 
-def load_scenario(scenario_file: Path) -> RunnerPayload:
+def load_scenario(
+    scenario_file: Path,
+    custom_instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None
+    ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state
     :param scenario_file: the HIVE scenario file to read
@@ -34,10 +38,14 @@ def load_scenario(scenario_file: Path) -> RunnerPayload:
     # build the set of instruction generators which compose the control system for this hive run
     # this ordering is important as the later managers will override any instructions from the previous
     # instruction generator for a specific vehicle id.
-    instruction_generators = (
-        ChargingFleetManager(env.config.dispatcher),
-        Dispatcher(env.config.dispatcher),
-    )
+    if custom_instruction_generators is None:
+        instruction_generators = (
+            ChargingFleetManager(env.config.dispatcher),
+            Dispatcher(env.config.dispatcher),
+        )
+    else:
+        instruction_generators = custom_instruction_generators
+
 
     # add a specialized Reporter handler that catches vehicle charge events
     env.reporter.add_handler(VehicleChargeEventsHandler())
