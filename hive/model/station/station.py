@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from distutils.util import strtobool
 import functools as ft
-from sre_parse import State
 from typing import NamedTuple, Dict, Optional
 
 import h3
@@ -20,6 +19,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.station.station_ops import station_state_update, station_state_updates
 from hive.util.error_or_result import ErrorOr
 from hive.util.typealiases import *
+from hive.util.exception import H3Error
 from hive.util.units import Currency
 from hive.util.validation import validate_fields
 
@@ -62,9 +62,10 @@ class Station(NamedTuple):
               id: StationId,
               geoid: GeoId,
               road_network: RoadNetwork,
-              chargers: immutables.Map[Charger, int],
+              chargers: immutables.Map[ChargerId, int],
               on_shift_access: FrozenSet[ChargerId],
-              membership: Membership = Membership(),
+              membership: Membership,
+              env: Environment
               ):
         
         # TODO
@@ -75,18 +76,51 @@ class Station(NamedTuple):
         # - if we make it a map from ChargerId to int, we need to pass in the environment
         #   so we can instantiate the Charger here.
 
-        charger_state = ChargerState.build(charger, charger_count)
+        def _chargers(acc, charger_data):
+            """
+            an inner function that attempts to build a charger state for the chargers argument
+            which provies charger ids and counts. builds on a Map which may also have an error
+            when the provided charger id doesn't exist.
+            """
+            err, builder = acc
+            if err is not None:
+                return acc
+            else:
+                charger_id, charger_count = charger_data
+                charger = env.chargers.get(charger_id)
+                if charger is None:
+                    msg = (
+                        f"attempting to create station {id} with charger type {charger_id} "
+                        f"but that charger type has not been defined for this scenario"
+                    )
+                    return TypeError(msg), None
+                else:
+                    charger_state = ChargerState.build(charger, charger_count)
+                    updated_builder = builder.set(charger_id, charger_state)
+                    return None, updated_builder
+
+        initial = None, immutables.Map[ChargerId, ChargerState]()
+        error, charger_states = ft.reduce(_chargers, chargers.items(), initial)
+        if error is not None:
+            raise error
+        if charger_states is None:
+            msg = f"internal error after building station chargers for station {id}"
+            raise Exception(msg)
+
         position = road_network.position_from_geoid(geoid)
         if position is None:
-            raise Exception(f"attempting to build station {id} with invalid position")
-        else:
-            return Station(
-                id=id,
-                position=position,
-                state=immutables.Map({ charger.id: charger_state }),
-                on_shift_access_chargers=on_shift_access,
-                membership=membership
+            msg = (
+                "could not find a road network position matching the position "
+                f"provided for station {id}"
             )
+            raise H3Error(msg)
+        return Station(
+            id=id,
+            position=position,
+            state=charger_states,
+            on_shift_access_chargers=on_shift_access,
+            membership=membership
+        )
 
     def add_charger(self,
                charger: Charger,
