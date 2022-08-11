@@ -135,7 +135,7 @@ def valid_station_for_vehicle(vehicle: Vehicle, env: Environment) -> Callable[[S
             return False
         else:
             station_has_valid_charger = any([
-                mechatronics.valid_charger(env.chargers.get(cid)) for cid in station.total_chargers.keys()
+                mechatronics.valid_charger(env.chargers.get(cid)) for cid in station.state.keys()
             ])
             return station_has_valid_charger
     return _inner

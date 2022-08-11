@@ -11,7 +11,7 @@ from hive.state.simulation_state import simulation_state_ops
 from hive.state.vehicle_state.out_of_service import OutOfService
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import StationId, Charger
+from hive.util.typealiases import StationId, ChargerId
 from hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def charge(sim: SimulationState, env: Environment, vehicle_id: VehicleId, station_id: StationId,
-           charger_id: Charger) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+           charger_id: ChargerId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState
 

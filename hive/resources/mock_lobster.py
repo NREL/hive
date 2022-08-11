@@ -190,15 +190,15 @@ def mock_station(
         road_network=road_network,
         membership=membership
     )
-    return Station.build(
-        id=station_id, 
-        geoid=h3.geo_to_h3(lat, lon, h3_res), 
-        road_network=road_network, 
-        charger=mock_l2_charger(),
-        charger_count=1,
-        on_shift_access=on_shift_access_chargers, 
-        membership=membership
-    ).add_charger(mock_dcfc_charger())
+    # return Station.build(
+    #     id=station_id, 
+    #     geoid=h3.geo_to_h3(lat, lon, h3_res), 
+    #     road_network=road_network, 
+    #     charger=mock_l2_charger(),
+    #     charger_count=1,
+    #     on_shift_access=on_shift_access_chargers, 
+    #     membership=membership
+    # ).add_charger(mock_dcfc_charger())
 
 
 def mock_station_from_geoid(
@@ -208,7 +208,7 @@ def mock_station_from_geoid(
         on_shift_access_chargers=None,
         road_network: RoadNetwork = mock_network(),
         membership: Membership = Membership(),
-        env: Environment = mock_env()
+        env: Optional[Environment] = None
 ) -> Station:
     if chargers is None:
         chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
@@ -216,24 +216,18 @@ def mock_station_from_geoid(
         chargers = immutables.Map(chargers)
     if on_shift_access_chargers is None:
         on_shift_access_chargers = frozenset(chargers.keys())
-    
-    chargers = list(chargers)
-    charger_id, count = TupleOps.head_tail(chargers)
-    charger = env.chargers.get(charger_id)
-    initial = Station.build(
+    if env is None:
+        env = mock_env()
+
+    return Station.build(
         id=station_id,
         geoid=geoid,
         road_network=road_network,
-        charger=charger,
-        charger_count=count,
+        chargers = chargers,
         on_shift_access=on_shift_access_chargers,
         membership=membership,
+        env=env
     )
-
-
-    return Station.build(
-        station_id, geoid, road_network, chargers, on_shift_access_chargers,
-                         membership)
 
 
 def mock_rate_structure(base_price: Currency = 2.2,

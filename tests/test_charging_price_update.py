@@ -19,9 +19,9 @@ class TestChargingPriceUpdate(TestCase):
         file = resource_filename("hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_station_id.csv")
         fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
-        s1_prices = result.stations[s1].charger_prices_per_kwh
-        s2_prices = result.stations[s2].charger_prices_per_kwh
-        bs1_prices = result.stations[bs1].charger_prices_per_kwh
+        s1_prices = [cs.price_per_kwh for _, cs in result.stations[s1].state]
+        s2_prices = [cs.price_per_kwh for _, cs in result.stations[s2].state]
+        bs1_prices = [cs.price_per_kwh for _, cs in result.stations[bs1].state]
         self.assertEqual(s1_prices.get(mock_dcfc_charger_id()), 0.5, "station s1 has a DCFC price of 0.5 per kwh")
         self.assertEqual(s2_prices.get(mock_dcfc_charger_id()), 0.5, "station s1 has a DCFC price of 0.5 per kwh")
         self.assertEqual(bs1_prices.get(mock_l2_charger_id()), 0.05, "station s1 has a LEVEL_2 price of 0.05 per kwh")
@@ -40,9 +40,9 @@ class TestChargingPriceUpdate(TestCase):
         file = resource_filename("hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_geoid.csv")
         fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
-        s1_prices = result.stations[s1].charger_prices_per_kwh
-        s2_prices = result.stations[s2].charger_prices_per_kwh
-        bs1_prices = result.stations[bs1].charger_prices_per_kwh
+        s1_prices = [cs.price_per_kwh for _, cs in result.stations[s1].state]
+        s2_prices = [cs.price_per_kwh for _, cs in result.stations[s2].state]
+        bs1_prices = [cs.price_per_kwh for _, cs in result.stations[bs1].state]
         self.assertEqual(s1_prices.get(mock_dcfc_charger_id()), 0.3, "station s1 has a DCFC price of 0.3 per kwh")
         self.assertEqual(s2_prices.get(mock_dcfc_charger_id()), 0.3, "station s1 has a DCFC price of 0.3 per kwh")
         self.assertEqual(bs1_prices.get(mock_l2_charger_id()), 0.03, "station s1 has a LEVEL_2 price of 0.03 per kwh")

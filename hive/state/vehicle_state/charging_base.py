@@ -10,7 +10,7 @@ from hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateIns
 from hive.state.vehicle_state.vehicle_state_ops import charge
 from hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from hive.util.exception import SimulationStateError
-from hive.util.typealiases import BaseId, VehicleId, Charger
+from hive.util.typealiases import BaseId, VehicleId, ChargerId
 
 if TYPE_CHECKING:
     from hive.state.simulation_state.simulation_state import SimulationState
@@ -26,12 +26,12 @@ class ChargingBase(NamedTuple, VehicleState):
 
     vehicle_id: VehicleId
     base_id: BaseId
-    charger_id: Charger
+    charger_id: ChargerId
 
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: Charger) -> ChargingBase:
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId) -> ChargingBase:
         return ChargingBase(vehicle_id, base_id, charger_id, instance_id=uuid4())
 
     @property
