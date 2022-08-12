@@ -6,13 +6,19 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 import immutables
 
 from hive.config import HiveConfig
-from hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from hive.dispatcher.instruction_generator.instruction_generator import (
+    InstructionGenerator,
+)
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.state.simulation_state.update.cancel_requests import CancelRequests
 from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
-from hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from hive.state.simulation_state.update.simulation_update import (
+    SimulationUpdateFunction,
+)
 from hive.state.simulation_state.update.step_simulation import StepSimulation
-from hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
+from hive.state.simulation_state.update.update_requests_from_file import (
+    UpdateRequestsFromFile,
+)
 
 if TYPE_CHECKING:
     from hive.runner import RunnerPayload
@@ -26,22 +32,18 @@ class UpdatePayload(NamedTuple):
 class Update(NamedTuple):
     pre_step_update: Tuple[SimulationUpdateFunction, ...]
     step_update: StepSimulation
-    instruction_generator_update_fn: Callable[
-        [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a, b: None
 
     @classmethod
-    def build(cls,
-              config: HiveConfig,
-              instruction_generators: Tuple[InstructionGenerator, ...],
-              instruction_generator_update_fn: Callable[
-                  [InstructionGenerator, SimulationState], Optional[InstructionGenerator]] = lambda a,
-                                                                                                    b: None) -> Update:
+    def build(
+        cls,
+        config: HiveConfig,
+        instruction_generators: Tuple[InstructionGenerator, ...],
+    ) -> Update:
         """
         constructs the functionality to update the simulation each time step
 
         :param config:
         :param instruction_generators: any overriding dispatcher functionality
-        :param instruction_generator_update_fn: user API for modifying InstructionGenerator models at each time step
         :return: the Update that will be applied at each time step
         """
 
@@ -57,11 +59,11 @@ class Update(NamedTuple):
                 config.input_config.rate_structure_file,
                 lazy_file_reading=config.global_config.lazy_file_reading,
             ),
-            CancelRequests()
+            CancelRequests(),
         )
 
         # add the dispatcher as a parameter of stepping the simulation state
-        step_update = StepSimulation(instruction_generators, instruction_generator_update_fn)
+        step_update = StepSimulation.from_tuple(instruction_generators)
 
         # maybe in the future we also add a post_step_update set here too
 
@@ -76,26 +78,24 @@ class Update(NamedTuple):
         """
 
         # clear the cache of applied instructions from the SimulationState
-        init_rp = runner_payload._replace(s=runner_payload.s._replace(applied_instructions=immutables.Map()))
+        init_rp = runner_payload._replace(
+            s=runner_payload.s._replace(applied_instructions=immutables.Map())
+        )
 
         # run each pre_step_update
         pre_step_result = ft.reduce(
-            _apply_fn,
-            self.pre_step_update,
-            UpdatePayload(init_rp)
+            _apply_fn, self.pre_step_update, UpdatePayload(init_rp)
         )
 
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
-        updated_sim, updated_step_fn = self.step_update.update(pre_step_result.runner_payload.s,
-                                                               pre_step_result.runner_payload.e)
+        updated_sim, updated_step_fn = self.step_update.update(
+            pre_step_result.runner_payload.s, pre_step_result.runner_payload.e
+        )
 
         # resolve changes to Update
         next_update = Update(pre_step_result.updated_step_fns, updated_step_fn)
 
-        updated_payload = runner_payload._replace(
-            s=updated_sim,
-            u=next_update
-        )
+        updated_payload = runner_payload._replace(s=updated_sim, u=next_update)
 
         return updated_payload
 
@@ -116,7 +116,9 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
     result, updated_fn = fn.update(p.runner_payload.s, p.runner_payload.e)
 
     # if we received an updated version of this SimulationUpdateFunction, store it
-    next_update_fns = p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)
+    next_update_fns = (
+        p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)
+    )
     updated_payload = p.runner_payload._replace(s=result)
 
     return p._replace(

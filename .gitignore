@@ -1,3 +1,6 @@
+py-notebooks/
+*.ipynb
+
 # Config
 config.py
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import functools as ft
-from typing import Tuple, NamedTuple, TYPE_CHECKING, Optional
+from typing import Tuple, TYPE_CHECKING, Optional
 
 from hive.dispatcher.instruction_generator import assignment_ops
 from hive.state.vehicle_state.charging_base import ChargingBase
@@ -19,7 +20,8 @@ from hive.dispatcher.instruction_generator.instruction_generator import Instruct
 from hive.dispatcher.instruction.instructions import DispatchTripInstruction
 
 
-class Dispatcher(NamedTuple, InstructionGenerator):
+@dataclass(frozen=True)
+class Dispatcher(InstructionGenerator):
     """
     A managers algorithm that assigns vehicles greedily to most expensive request.
     """

@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from hive.runner import RunnerPayload
 from hive.resources.mock_lobster import *
@@ -6,6 +6,7 @@ from hive.resources.mock_lobster import *
 
 class TestUpdate(TestCase):
 
+    @skip("")
     def test_apply_update_with_user_provided_generator_update_function(self):
         """
         tests that a user can inject a function like `user_provided_update_fn` below and that it will

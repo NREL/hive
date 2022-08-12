@@ -1,5 +1,4 @@
 from __future__ import annotations
-from returns.result import ResultE, Failure, Success
 
 from enum import Enum
 
