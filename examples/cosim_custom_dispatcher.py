@@ -1,6 +1,8 @@
 import random
 from typing import NamedTuple, Tuple
 
+from dataclasses import dataclass, replace
+
 from tqdm import tqdm
 
 from hive import package_root
@@ -16,7 +18,8 @@ from hive.dispatcher.instruction.instruction import Instruction
 import hive.app.hive_cosim as hc 
 
 
-class CustomDispatcher(NamedTuple, InstructionGenerator):
+@dataclass(frozen=True)
+class CustomDispatcher(InstructionGenerator):
     random_instructions: int
 
     @classmethod
@@ -36,7 +39,7 @@ class CustomDispatcher(NamedTuple, InstructionGenerator):
     
     def new_random_state(self):
         new_r = random.choice(range(10))
-        return self._replace(random_instructions=new_r)
+        return replace(self, random_instructions=new_r)
 
 
 
@@ -60,13 +63,13 @@ def run():
         crank_result = hc.crank(rp, 10)
 
         # get dispatcher to update it
-        dispatcher: CustomDispatcher = get_instruction_generator(crank_result.runner_payload, CustomDispatcher).unwrap()
+        dispatcher: CustomDispatcher = get_instruction_generator(crank_result.runner_payload, CustomDispatcher)
 
         # apply some change to the state of the dispatcher
         updated_dispatcher = dispatcher.new_random_state()
 
         # inject the dispatcher back into the simulation
-        rp = update_instruction_generator(crank_result.runner_payload, updated_dispatcher).unwrap()
+        rp = update_instruction_generator(crank_result.runner_payload, updated_dispatcher)
     
     hc.close(rp)
 

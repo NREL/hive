@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -8,20 +8,27 @@ if TYPE_CHECKING:
     from hive.runner.environment import Environment
     from hive.dispatcher.instruction.instruction import Instruction
 
-from hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 InstructionGeneratorId = str
 
-class InstructionGenerator(metaclass=ABCNamedTupleMeta):
+
+class InstructionGenerator(ABC):
     """
     A module that produces a set of vehicle instructions based on the state of the simulation
     """
 
+    @property
+    def name(self) -> str:
+        """
+        Defacto ID for any instruction generator is the class name
+        """
+        return self.__class__.__name__
+
     @abstractmethod
     def generate_instructions(
-            self,
-            simulation_state: SimulationState,
-            environment: Environment,
+        self,
+        simulation_state: SimulationState,
+        environment: Environment,
     ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...]]:
         """
         generates vehicle instructions which can perform vehicle state transitions

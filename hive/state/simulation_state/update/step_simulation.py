@@ -6,7 +6,7 @@ from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Type, Union
 
 import immutables
 
-from returns.result import Result, Failure, Success
+from returns.result import ResultE, Failure, Success
 from hive.dispatcher.instruction.instruction import Instruction
 
 from hive.dispatcher.instruction_generator.instruction_generator import (
@@ -56,10 +56,10 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         """
         return StepSimulation(
             instruction_generators=immutables.Map(
-                {i_gen.__class__.__name__: i_gen for i_gen in instruction_generators}
+                {i_gen.name: i_gen for i_gen in instruction_generators}
             ),
             instruction_generator_order=tuple(
-                i_gen.__class__.__name__ for i_gen in instruction_generators
+                i_gen.name for i_gen in instruction_generators
             ),
         )
 
@@ -71,10 +71,10 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         """
         return self._replace(
             instruction_generators=immutables.Map(
-                {i_gen.__class__.__name__: i_gen for i_gen in updated_i_gens}
+                {i_gen.name: i_gen for i_gen in updated_i_gens}
             ),
             instruction_generator_order=tuple(
-                i_gen.__class__.__name__ for i_gen in updated_i_gens
+                i_gen.name for i_gen in updated_i_gens
             ),
         )
 
@@ -129,7 +129,7 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
 
     def get_instruction_generator(
         self, identifier: Union[InstructionGeneratorId, Type[InstructionGenerator]]
-    ) -> Result[InstructionGenerator, Exception]:
+    ) -> ResultE[InstructionGenerator]:
         """
         Get the instance of an internal instruction generator either by an id or the actual class type.
         """
@@ -152,7 +152,7 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
 
     def update_instruction_generator(
         self, i_gen: InstructionGenerator
-    ) -> Result[StepSimulation, Exception]:
+    ) -> ResultE[StepSimulation]:
         """
         Update a single instruction generator.
         """
