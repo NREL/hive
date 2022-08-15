@@ -22,7 +22,7 @@ _EXPECTED_FIELDS = [
 def station_state_update(
     station: 'Station',
     charger_id: ChargerId,
-    op: Callable[['ChargerState'], ErrorOr[Optional['ChargerState']]]
+    op: Callable[['ChargerState'], ErrorOr['ChargerState']]
     ) -> ErrorOr['Station']:
     """
     helper function for code where we want to perform an operation on a 
@@ -32,23 +32,25 @@ def station_state_update(
     :param station: station to update
     :param charger_id: charger id for charger state to update
     :param op: a function to update a ChargerState, which can fail with an error,
-               return None which will cancel the update, or, return an updated
-               ChargerState to replace the state in the Station
+               or return an updated ChargerState to replace the state in the Station
     :return: the updated Station or an error
     """
     charger_state = station.state.get(charger_id)
-    err, updated = op(charger_state) if charger_state is not None else None
     if charger_state is None:
-        err = SimulationStateError(f"no charger state found for charger id {charger_id}")
-        return err, None
-    elif err is not None:
-        return err, None
-    elif updated is None:
-        return None, None
+        # the provided charger type isn't found at this station
+        return None, station
     else:
-        updated_s = station.state.set(charger_id, updated)
-        result = station._replace(state=updated_s)
-        return None, result
+        # apply the operation to this charger state
+        err, updated = op(charger_state)
+        if err is not None:
+            return err, None
+        elif updated is None:
+            msg = f'update function failed for station {station.id} charger {charger_id}'
+            return SimulationStateError(msg), None
+        else:
+            updated_s = station.state.set(charger_id, updated)
+            result = station._replace(state=updated_s)
+            return None, result
 
 T = TypeVar("T")
 
