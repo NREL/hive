@@ -11,17 +11,18 @@ class TestStation(TestCase):
                  s1,37,122,DCFC,10,true
                  """
         network = mock_network()
+        env = mock_env()
 
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row, {}, network)
+        station = Station.from_row(row, {}, network, env)
 
         self.assertEqual(station.id, "s1")
         self.assertEqual(station.geoid, expected_geoid)
-        self.assertIn(mock_dcfc_charger_id(), station.total_chargers)
-        self.assertEqual(station.total_chargers[mock_dcfc_charger_id()], 10)
+        self.assertIsNotNone(station.get_total_chargers(mock_dcfc_charger_id()))
+        self.assertEqual(station.get_total_chargers(mock_dcfc_charger_id()), 10)
 
     def test_from_multiple_rows(self):
         source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
@@ -30,6 +31,7 @@ class TestStation(TestCase):
                   """
 
         network = mock_network()
+        env = mock_env()
 
         reader = DictReader(source.split())
         row1 = next(reader)
@@ -37,16 +39,16 @@ class TestStation(TestCase):
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row1, {}, network)
+        station = Station.from_row(row1, {}, network, env)
         builder = {station.id: station}
-        station2 = Station.from_row(row2, builder, network)
+        station2 = Station.from_row(row2, builder, network, env)
 
         self.assertEqual(station2.id, "s1")
         self.assertEqual(station2.geoid, expected_geoid)
-        self.assertIn(mock_dcfc_charger_id(), station.total_chargers)
-        self.assertEqual(station2.total_chargers[mock_dcfc_charger_id()], 10)
-        self.assertIn(mock_l2_charger_id(), station2.total_chargers)
-        self.assertEqual(station2.total_chargers[mock_l2_charger_id()], 5)
+        self.assertIsNotNone(station.get_total_chargers(mock_dcfc_charger_id()))
+        self.assertEqual(station2.get_total_chargers(mock_dcfc_charger_id()), 10)
+        self.assertIsNotNone(station2.get_total_chargers(mock_l2_charger_id()))
+        self.assertEqual(station2.get_total_chargers(mock_l2_charger_id()), 5)
 
     def test_repeated_charger_id_entry(self):
         source = """station_id,lat,lon,charger_id,charger_count,on_shift_access
@@ -55,6 +57,7 @@ class TestStation(TestCase):
                   """
 
         network = mock_network()
+        env = mock_env()
 
         reader = DictReader(source.split())
         row1 = next(reader)
@@ -62,21 +65,22 @@ class TestStation(TestCase):
         sim_h3_resolution = 15
         expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
 
-        station = Station.from_row(row1, {}, network)
+        station = Station.from_row(row1, {}, network, env)
         builder = {station.id: station}
-        station2 = Station.from_row(row2, builder, network)
+        station2 = Station.from_row(row2, builder, network, env)
 
         self.assertEqual(station2.id, "s1")
         self.assertEqual(station2.geoid, expected_geoid)
-        self.assertIn(mock_dcfc_charger_id(), station.total_chargers)
-        self.assertEqual(station2.total_chargers[mock_dcfc_charger_id()], 15)
+        self.assertIsNotNone(station.get_total_chargers(mock_dcfc_charger_id()))
+        self.assertEqual(station2.get_total_chargers(mock_dcfc_charger_id()), 15)
 
     def test_checkout_charger(self):
-        updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 1})).checkout_charger(
+        error, updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 1})).checkout_charger(
             mock_dcfc_charger_id(),
         )
+        self.assertIsNone(error, f'should be no error, found {error}')
 
-        self.assertEqual(updated_station.available_chargers[mock_dcfc_charger_id()], 0)
+        self.assertEqual(updated_station.get_available_chargers(mock_dcfc_charger_id()), 0)
 
     def test_checkout_charger_none_avail(self):
         updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 0}))
