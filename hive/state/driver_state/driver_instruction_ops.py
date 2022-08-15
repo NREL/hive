@@ -58,7 +58,7 @@ def human_charge_at_home(
 
     chargers = tuple(filter(
         lambda c: my_mechatronics.valid_charger(c),
-        [env.chargers[cid] for cid in my_station.total_chargers.keys()]
+        [env.chargers[cid] for cid in my_station.state.keys()]
     ))
     if not chargers:
         return None
