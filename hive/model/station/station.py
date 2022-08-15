@@ -123,16 +123,25 @@ class Station(NamedTuple):
         )
 
     def add_charger(self,
-               charger: Charger,
-               charger_count: int = 1):
+               charger_id: ChargerId,
+               charger_count: int,
+               env: Environment) -> ErrorOr[Station]:
         """
         adds another charger type to this station along with a count of that charger
 
-        :param charger: the charger to add
+        :param charger_id: the type of charger to add
         :param charger_count: number of plugs to add, defaults to 1
+        :param env: simulation environment
         :return: the updated Station
         """
         # add this charger to the existing station
+        charger = env.chargers.get(charger_id)
+        if charger is None:
+            msg = (
+                f"attempting to create station {id} with charger type {charger_id} "
+                f"but that charger type has not been defined for this scenario"
+            )
+            return TypeError(msg), None
         charger_state = ChargerState.build(charger, charger_count)
         updated_station_state = self.state.update({charger.id: charger_state})
         updated_on_shift = self.on_shift_access_chargers.union([charger.id])
@@ -140,7 +149,7 @@ class Station(NamedTuple):
             state=updated_station_state,
             on_shift_access_chargers=updated_on_shift
         )
-        return updated_station
+        return None, updated_station
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
@@ -175,7 +184,6 @@ class Station(NamedTuple):
             lat, lon = float(row['lat']), float(row['lon'])
             geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
             charger_id: ChargerId = row['charger_id']
-            charger = env.chargers.get(charger_id)
             charger_count = int(float(row['charger_count']))
             on_shift_access = bool(strtobool(row['on_shift_access'].lower()))
         except ValueError as v:
@@ -184,9 +192,6 @@ class Station(NamedTuple):
         # handle erroneous input state
         if charger_id is None:
             raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
-        elif charger is None:
-            found = ",".join(env.chargers.keys())
-            raise IOError(f"charger with id {charger_id} was not provided, found {{{found}}}")
         elif station_id in builder and charger_id in builder[station_id].state.keys():
             msg = (
                 f"station id {station_id} has more than one row that references "
@@ -203,14 +208,17 @@ class Station(NamedTuple):
                 id=station_id,
                 geoid=geoid,
                 road_network=road_network,
-                charger=charger,
-                charger_count=charger_count,
-                on_shift_access=frozenset([charger_id]) if on_shift_access else frozenset()
+                chargers=immutables.Map({charger_id: charger_count}),
+                on_shift_access=frozenset([charger_id]) if on_shift_access else frozenset(),
+                membership=Membership(),
+                env=env
             )
         else:
             # add this charger to the existing station
             prev_station = builder[station_id]
-            updated_station = prev_station.add_charger(charger_id, charger, charger_count)
+            error, updated_station = prev_station.add_charger(charger_id, charger_count, env)
+            if error is not None:
+                raise error
             return updated_station
 
     def get_price(self, charger_id: ChargerId) -> Optional[Currency]:
