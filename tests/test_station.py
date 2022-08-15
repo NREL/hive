@@ -106,13 +106,16 @@ class TestStation(TestCase):
     def test_enqueue_for_charger(self):
         station = mock_station()
 
-        has_queues = station.enqueue_for_charger(
+        error, has_queues = station.enqueue_for_charger(
             mock_dcfc_charger_id(),
         ).enqueue_for_charger(
             mock_dcfc_charger_id(),
         ).enqueue_for_charger(
             mock_l1_charger_id(),
         )
+
+        self.assertIsNone(error, f"error during enqueue: {error}")
+
         dc_count = has_queues.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
         l1_count = has_queues.enqueued_vehicle_count_for_charger(mock_l1_charger_id())
         l2_count = has_queues.enqueued_vehicle_count_for_charger(mock_l2_charger_id())

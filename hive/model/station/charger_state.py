@@ -64,7 +64,7 @@ class ChargerState(NamedTuple):
         decrements the number of chargers of this type that are available
         :return: updated charger state or an error
         """
-        if self.enqueued_vehicles == 0:
+        if self.available_chargers == 0:
             msg = (
                 "decrement called on charger where the available charger count "
                 "would drop below zero"
@@ -72,7 +72,7 @@ class ChargerState(NamedTuple):
             return ValueError(msg), None
         else:
             updated = self._replace(
-                enqueued_vehicles=self.enqueued_vehicles - 1
+                available_chargers=self.available_chargers - 1
             )
             return None, updated
 
@@ -92,7 +92,7 @@ class ChargerState(NamedTuple):
         station with this charger type
         :return: updated charger state or an error
         """
-        if self.available_chargers == 0:
+        if self.enqueued_vehicles == 0:
             msg = (
                 "decrement enqueued vehicles called on charger state "
                 "where enqueued vehicles would become negative"
@@ -100,7 +100,7 @@ class ChargerState(NamedTuple):
             return ValueError(msg), None
         else:
             updated = self._replace(
-                available_chargers=self.available_chargers - 1
+                enqueued_vehicles=self.enqueued_vehicles - 1
             )
             return None, updated
 

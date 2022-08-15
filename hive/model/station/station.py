@@ -331,7 +331,7 @@ class Station(NamedTuple):
         """
         return self._replace(balance=self.balance + currency_received)
 
-    def enqueue_for_charger(self, charger_id: ChargerId) -> Station:
+    def enqueue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
         increment the count of vehicles enqueued for a specific charger_id type - no limit
 
@@ -341,12 +341,12 @@ class Station(NamedTuple):
         def _enqueue(cs: ChargerState) -> ErrorOr[ChargerState]:
             return None, cs.increment_enqueued_vehicles()
 
-        _, updated = station_state_update(
+        update_result = station_state_update(
             station=self, 
             charger_id=charger_id, 
             op=_enqueue
         )
-        return updated
+        return update_result
 
     def dequeue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """

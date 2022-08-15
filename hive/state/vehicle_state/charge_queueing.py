@@ -73,15 +73,18 @@ class ChargeQueueing(NamedTuple, VehicleState):
             msg = f"vehicle doesn't have access to station; context: {context}"
             return SimulationStateError(msg), None
         else:
-            updated_station = station.enqueue_for_charger(self.charger_id)
-            error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
-            if error:
-                response = SimulationStateError(
-                    f"failure during ChargeQueueing.enter for vehicle {self.vehicle_id}")
-                response.__cause__ = error
-                return response, None
-            else:
-                return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
+            err1, updated_station = station.enqueue_for_charger(self.charger_id)
+            if err1 is not None:
+                return err1, None
+            else:                
+                err2, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
+                if err2 is not None:
+                    response = SimulationStateError(
+                        f"failure during ChargeQueueing.enter for vehicle {self.vehicle_id}")
+                    response.__cause__ = err2
+                    return response, None
+                else:
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(self, sim: SimulationState,
                env: 'Environment') -> Tuple[Optional[Exception], Optional[SimulationState]]:

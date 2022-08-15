@@ -71,10 +71,12 @@ class TestInstructionGenerators(TestCase):
         s1_geoid = h3.geo_to_h3(39.01, -104.0, 15)
         s2_geoid = h3.geo_to_h3(39.015, -104.0, 15)  # slightly further away
 
-        # invariant: a queue can be created even if plugs are available and
-        # our dispatcher only considers the queue size in the distance metric
+        # prepare the scenario where the closer station has no available chargers and one enqueued vehicle
         s1 = mock_station_from_geoid(station_id="s1", geoid=s1_geoid, chargers={mock_dcfc_charger_id(): 1})
-        s1 = s1.enqueue_for_charger(mock_dcfc_charger_id()).checkout_charger(mock_dcfc_charger_id())
+        e, s1 = s1.checkout_charger(mock_dcfc_charger_id())
+        self.assertIsNone(e, "test invariant failed (unable to check out charger at station")
+        e, s1 = s1.enqueue_for_charger(mock_dcfc_charger_id())
+        self.assertIsNone(e, "test invariant failed (unable to enqueue for charger at station")
         s2 = mock_station_from_geoid(station_id="s2", geoid=s2_geoid, chargers={mock_dcfc_charger_id(): 1})
 
         self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger)")

@@ -266,8 +266,8 @@ class TestSimulationState(TestCase):
                               ChargingStation,
                               "Vehicle should have transitioned to charging.")
         self.assertEqual(charging_veh.geoid, sta.geoid, "Vehicle should be at station.")
-        self.assertLess(station_w_veh.available_chargers[mock_dcfc_charger_id()],
-                        station_w_veh.total_chargers[mock_dcfc_charger_id()],
+        self.assertLess(station_w_veh.get_available_chargers(mock_dcfc_charger_id()),
+                        station_w_veh.get_total_chargers(mock_dcfc_charger_id()),
                         "Station should have charger_id in use.")
 
     def test_terminal_state_dispatch_base(self):
