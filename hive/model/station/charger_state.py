@@ -35,6 +35,18 @@ class ChargerState(NamedTuple):
             enqueued_vehicles=0
         )
 
+    def add_chargers(self, charger_count: int) -> ChargerState:
+        """adds chargers to this ChargerState, updating the 
+        total and available charger counts
+
+        :param charger_count: count to add
+        :return: updated ChargerState
+        """
+        return self._replace(
+            total_chargers=self.total_chargers + charger_count,
+            available_chargers=self.available_chargers + charger_count
+        )
+
     def has_available_charger(self) -> bool:
         """
         whether there are chargers of this type available
@@ -149,7 +161,7 @@ class ChargerState(NamedTuple):
         else:
             updated = self._replace(
                 charger=self.charger._replace(
-                    rate=self.charger.rate * factor
+                    rate=ref_charger.rate * factor
                 )
             )
             return None, updated
