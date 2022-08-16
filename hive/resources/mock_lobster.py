@@ -663,7 +663,7 @@ def mock_update(
     else:
         conf = mock_config()
         instruction_generators = mock_instruction_generators(conf)
-        return Update((), StepSimulation(instruction_generators))
+        return Update((), StepSimulation.from_tuple(instruction_generators))
 
 
 def mock_l1_charger_id():

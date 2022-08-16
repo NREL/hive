@@ -21,6 +21,8 @@ agent-based model that simulates MaaS operations over real world trip data.
 
 import logging
 
+from pathlib import Path
+
 from tqdm import tqdm
 
 from hive.app import run
@@ -28,6 +30,9 @@ from hive.config import HiveConfig
 from hive.dispatcher import *
 from hive.state.simulation_state.update.update import Update
 from hive.state.simulation_state.update.step_simulation import StepSimulation
+
+def package_root() -> Path:
+  return Path(__file__).parent
 
 
 class TqdmHandler(logging.StreamHandler):
@@ -47,3 +52,5 @@ sh.setLevel(logging.INFO)
 sh.setFormatter(formatter)
 
 log.addHandler(sh)
+
+

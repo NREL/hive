@@ -1,7 +1,8 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
-from typing import Tuple, NamedTuple, TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 
 from hive.reporting import instruction_generator_event_ops
 from hive.state.vehicle_state.idle import Idle
@@ -21,7 +22,8 @@ from hive.dispatcher.instruction_generator.instruction_generator_ops import inst
 log = logging.getLogger(__name__)
 
 
-class ChargingFleetManager(NamedTuple, InstructionGenerator):
+@dataclass(frozen=True)
+class ChargingFleetManager(InstructionGenerator):
     """
     A manager that instructs vehicles to charge if they fall below an SOC threshold.
     """
