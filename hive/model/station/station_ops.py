@@ -22,8 +22,8 @@ _EXPECTED_FIELDS = [
 def station_state_update(
     station: 'Station',
     charger_id: ChargerId,
-    op: Callable[['ChargerState'], ErrorOr['ChargerState']]
-    ) -> ErrorOr['Station']:
+    op: Callable[['ChargerState'], ErrorOr[Optional['ChargerState']]]
+    ) -> ErrorOr[Optional['Station']]:
     """
     helper function for code where we want to perform an operation on a 
     ChargerState and if it does not fail, update the Station with the state
@@ -45,8 +45,8 @@ def station_state_update(
         if err is not None:
             return err, None
         elif updated is None:
-            msg = f'update function failed for station {station.id} charger {charger_id}'
-            return SimulationStateError(msg), None
+            # noop
+            return None, None
         else:
             updated_s = station.state.set(charger_id, updated)
             result = station._replace(state=updated_s)

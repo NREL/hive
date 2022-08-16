@@ -19,7 +19,7 @@ from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.station.station_ops import station_state_update, station_state_updates
 from hive.util.error_or_result import ErrorOr
 from hive.util.typealiases import *
-from hive.util.exception import H3Error
+from hive.util.exception import H3Error, SimulationStateError
 from hive.util.units import Currency
 from hive.util.validation import validate_fields
 
@@ -122,29 +122,37 @@ class Station(NamedTuple):
             membership=membership
         )
 
-    def add_charger(self,
+    def append_chargers(self,
                charger_id: ChargerId,
                charger_count: int,
                env: Environment) -> ErrorOr[Station]:
         """
-        adds another charger type to this station along with a count of that charger
+        adds chargers to existing station along with amount of chargers to add.
+        this method has "append" semantics: if this charger_id already exists at
+        this station, we simply add more charger_counts to it.
 
         :param charger_id: the type of charger to add
-        :param charger_count: number of plugs to add, defaults to 1
+        :param charger_count: number of plugs to add
         :param env: simulation environment
         :return: the updated Station
         """
-        # add this charger to the existing station
-        charger = env.chargers.get(charger_id)
-        if charger is None:
-            msg = (
-                f"attempting to create station {id} with charger type {charger_id} "
-                f"but that charger type has not been defined for this scenario"
-            )
-            return TypeError(msg), None
-        charger_state = ChargerState.build(charger, charger_count)
-        updated_station_state = self.state.update({charger.id: charger_state})
-        updated_on_shift = self.on_shift_access_chargers.union([charger.id])
+        cs = self.state.get(charger_id)
+        if cs is not None:
+            # this charger type is already defined on this station: APPEND
+            append_cs = cs.add_chargers(charger_count)
+        else:
+            # add this charger to the existing station
+            charger = env.chargers.get(charger_id)
+            if charger is None:
+                msg = (
+                    f"attempting to create station {id} with charger type {charger_id} "
+                    f"but that charger type has not been defined for this scenario"
+                )
+                return TypeError(msg), None
+            append_cs = ChargerState.build(charger, charger_count)
+        
+        updated_station_state = self.state.update({charger_id: append_cs})
+        updated_on_shift = self.on_shift_access_chargers.union([charger_id])
         updated_station = self._replace(
             state=updated_station_state,
             on_shift_access_chargers=updated_on_shift
@@ -189,19 +197,11 @@ class Station(NamedTuple):
         except ValueError as v:
             raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
         
-        # handle erroneous input state
-        if charger_id is None:
-            raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
-        elif station_id in builder and charger_id in builder[station_id].state.keys():
-            msg = (
-                f"station id {station_id} has more than one row that references "
-                f"charger id {charger_id}"
-            )
-            raise IOError(msg)
-
         # add this station to the simulation. this can happen one of two ways:
         # 1. the provided station id has not yet been seen -> create a new station
         # 2. the provided station id has already been seen -> append to existing
+        if charger_id is None:
+            raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
         elif station_id not in builder:
             # create this station
             return Station.build(
@@ -216,7 +216,7 @@ class Station(NamedTuple):
         else:
             # add this charger to the existing station
             prev_station = builder[station_id]
-            error, updated_station = prev_station.add_charger(charger_id, charger_count, env)
+            error, updated_station = prev_station.append_chargers(charger_id, charger_count, env)
             if error is not None:
                 raise error
             return updated_station
@@ -231,6 +231,25 @@ class Station(NamedTuple):
         cs = self.state.get(charger_id)
         price = cs.price_per_kwh if cs is not None else None
         return price
+
+    def get_charger_instance(self, charger_id: ChargerId) -> ErrorOr[Charger]:
+        """
+        gets a Charger with a specific charger id from this station. this 
+        returns a Charger from the Station.state collection, which allows for
+        modifications to the charging rate local to this station.
+
+        :param charger_id: id of the charger
+        :return: the Charger instance, or, an error
+        """
+        cs = self.state.get(charger_id)
+        if cs is None:
+            msg = (
+                f"attempting to get charger {charger_id} at station {self.id} "
+                f"but this station does not have that kind of charger"
+            )
+            return SimulationStateError(msg), None
+        else:
+            return None, cs.charger
 
     def get_available_chargers(self, charger_id: ChargerId) -> Optional[int]:
         """
@@ -302,7 +321,7 @@ class Station(NamedTuple):
         :param charger_id: Charger to be returned
         :return: The updated station with returned charger_id
         """
-        def _return(cs: ChargerState):
+        def _return(cs: ChargerState) -> Optional[ChargerState]:
             return cs.increment_available_chargers()
 
         return station_state_update(
