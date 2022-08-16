@@ -102,6 +102,7 @@ class StatefulHandler(Handler):
     def station_asdict(station: Station) -> dict:
         out_dict = station._asdict()
         del(out_dict["id"])
+        del(out_dict["state"])
 
         out_dict["station_id"] = station.id
         out_dict["memberships"] = str(station.membership)
@@ -111,23 +112,11 @@ class StatefulHandler(Handler):
         out_dict['geoid'] = station.position.geoid
         del (out_dict['position'])
 
-        # deconstruct total_charges
-        for key, val in station.total_chargers.items():
-            new_key = 'total_chargers_' + key
-            out_dict[new_key] = val
-        del (out_dict['total_chargers'])
-
-        # deconstruct available_charges
-        for key, val in station.available_chargers.items():
-            new_key = 'available_chargers_' + key
-            out_dict[new_key] = val
-        del (out_dict['available_chargers'])
-
-        # deconstruct charger_prices
-        for key, val in station.charger_prices_per_kwh.items():
-            new_key = 'charger_prices_' + key
-            out_dict[new_key] = val
-        del (out_dict['charger_prices_per_kwh'])
+        # deconstruct charger states
+        for key, cs in station.state.items():
+            out_dict[f'total_chargers_{key}'] = cs.total_chargers
+            out_dict[f'available_chargers_{key}'] = cs.available_chargers
+            out_dict[f'charger_prices_{key}'] = cs.price_per_kwh
 
         return out_dict
 

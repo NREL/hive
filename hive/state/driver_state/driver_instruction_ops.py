@@ -198,7 +198,11 @@ def av_charge_base_instruction(
 
     my_base = sim.bases.get(veh.vehicle_state.base_id)
     my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
-    if not my_base.station_id:
+    if not my_base:
+        return None
+    elif not my_base.station_id:
+        return None
+    elif not my_mechatronics:
         return None
     elif my_mechatronics.is_full(veh):
         return None
@@ -207,11 +211,10 @@ def av_charge_base_instruction(
     if not my_station:
         log.error(f"could not find station {my_base.station_id} for base {my_base.base_id}")
         return None
-    my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
 
     chargers = tuple(filter(
         lambda c: my_mechatronics.valid_charger(c),
-        [env.chargers[cid] for cid in my_station.total_chargers.keys()]
+        [cs.charger for cs in my_station.state.values()]
     ))
 
     if not chargers:
