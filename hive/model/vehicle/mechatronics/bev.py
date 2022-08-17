@@ -49,21 +49,22 @@ class BEV(NamedTuple, MechatronicsInterface):
         nominal_watt_hour_per_mile = float(d['nominal_watt_hour_per_mile'])
 
         # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
-        d['scale_factor'] = nominal_watt_hour_per_mile
+        updated_d = d.copy()
+        updated_d['scale_factor'] = nominal_watt_hour_per_mile
 
         battery_capacity_kwh = float(d['battery_capacity_kwh'])
 
-        if not d.get('powertrain_file'):
+        if not updated_d.get('powertrain_file'):
             raise FileNotFoundError("missing powertrain file in mechatronics config")
-        elif not d.get('powercurve_file'):
+        elif not updated_d.get('powercurve_file'):
             raise FileNotFoundError("missing powercurve file in mechatronics config")
 
-        powertrain = build_powertrain(d)
-        powercurve = build_powercurve(d)
-        idle_kwh_per_hour = float(d['idle_kwh_per_hour'])
-        charge_taper_cutoff_kw = float(d['charge_taper_cutoff_kw'])
+        powertrain = build_powertrain(updated_d)
+        powercurve = build_powercurve(updated_d)
+        idle_kwh_per_hour = float(updated_d['idle_kwh_per_hour'])
+        charge_taper_cutoff_kw = float(updated_d['charge_taper_cutoff_kw'])
         return BEV(
-            mechatronics_id=d['mechatronics_id'],
+            mechatronics_id=updated_d['mechatronics_id'],
             battery_capacity_kwh=battery_capacity_kwh,
             idle_kwh_per_hour=idle_kwh_per_hour,
             powertrain=powertrain,

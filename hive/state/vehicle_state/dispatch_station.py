@@ -99,7 +99,7 @@ class DispatchStation(NamedTuple, VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        available_chargers = station.available_chargers.get(self.charger_id, 0) if station else 0
+        available_chargers = station.get_available_chargers(self.charger_id) if station else None
         context = f"vehicle {self.vehicle_id} entering default terminal state for dispatch station state for station {self.station_id} with charger {self.charger_id}"
         if not vehicle:
             return SimulationStateError(f"vehicle not found; context: {context}"), None
@@ -110,10 +110,9 @@ class DispatchStation(NamedTuple, VehicleState):
             message = f"vehicle {self.vehicle_id} ended trip to station {self.station_id} but locations do not match: {locations}"
             return SimulationStateError(message), None
         else:
-            has_chargers = available_chargers > 0
             next_state = ChargingStation.build(
                 self.vehicle_id, self.station_id,
-                self.charger_id) if has_chargers else ChargeQueueing.build(
+                self.charger_id) if available_chargers is not None else ChargeQueueing.build(
                     self.vehicle_id, self.station_id, self.charger_id, sim.sim_time)
             return None, next_state
 

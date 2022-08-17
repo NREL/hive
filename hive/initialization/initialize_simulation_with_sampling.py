@@ -21,7 +21,7 @@ from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.model.vehicle.schedules import build_schedules_table
 from hive.reporting.handler.eventful_handler import EventfulHandler
@@ -102,7 +102,7 @@ def initialize_simulation_with_sampling(
 
     # populate simulation with static entities
     sim_with_bases = _build_bases(config.input_config.bases_file, sim_initial)
-    sim_with_stations = _build_stations(config.input_config.stations_file, sim_with_bases)
+    sim_with_stations = _build_stations(config.input_config.stations_file, sim_with_bases, env)
 
     # sample vehicles
     if not vehicle_location_sampling_function:
@@ -157,6 +157,7 @@ def _build_bases(bases_file: str,
 
 def _build_stations(stations_file: str,
                     simulation_state: SimulationState,
+                    env: Environment
                     ) -> SimulationState:
     """
     all your station are belong to us
@@ -168,7 +169,7 @@ def _build_stations(stations_file: str,
     """
 
     def _add_row_unsafe(builder: immutables.Map[str, Station], row: Dict[str, str]) -> immutables.Map[str, Station]:
-        station = Station.from_row(row, builder, simulation_state.road_network)
+        station = Station.from_row(row, builder, simulation_state.road_network, env)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
 

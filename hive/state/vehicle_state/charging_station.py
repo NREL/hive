@@ -75,18 +75,24 @@ class ChargingStation(NamedTuple, VehicleState):
             return SimulationStateError(f"station not found; context: {context}"), None
 
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
-        charger = env.chargers.get(self.charger_id)
+        charger_err, charger = station.get_charger_instance(self.charger_id)
+        if mechatronics is None:
+            return SimulationStateError(f"unknown mechatronics id {vehicle.mechatronics_id}"), None
         if vehicle.geoid != station.geoid:
             return None, None
         elif not station.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} doesn't have access to station {station.id}"
             return SimulationStateError(msg), None
+        elif charger_err is not None:
+            return charger_err, None
         elif not mechatronics.valid_charger(charger):
             msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
             return SimulationStateError(msg), None
         else:
-            updated_station = station.checkout_charger(self.charger_id)
-            if not updated_station:
+            error, updated_station = station.checkout_charger(self.charger_id)
+            if error is not None:
+                return error, None
+            elif updated_station is None:
                 return None, None
             else:
                 error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
@@ -123,7 +129,7 @@ class ChargingStation(NamedTuple, VehicleState):
             error, updated_station = station.return_charger(self.charger_id)
             if error:
                 response = SimulationStateError(
-                    f"failure during ChargingStation.exit for vehicle {self.vehicle_id}")
+                    f"failure returning charger during ChargingStation.exit for vehicle {self.vehicle_id} at station {self.station_id}")
                 response.__cause__ = error
                 return response, None
             return simulation_state_ops.modify_station(sim, updated_station)

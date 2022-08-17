@@ -66,8 +66,13 @@ HIVE is currently available at two different repository locations:
 Hive depends on python version 3.7. One way to satisfy this is to use conda to create a dedicated 'hive' Python environment: 
 
     > conda create -n hive python=3.7 
+    > conda activate hive
 
-to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded:
+to run tests, also install `pytest`:
+
+    > pip install pytest
+
+to load hive as a command line application via pip, tell pip to install hive by pointing to the directory that git downloaded. this also installs HIVE's python dependencies:
 
     > pip install -e <path/to/hive>
 

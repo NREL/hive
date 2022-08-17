@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from hive.state.simulation_state.update.step_simulation_ops import step_vehicle
 from hive.resources.mock_lobster import *
 
@@ -31,12 +30,19 @@ class TestStepSimulationOps(TestCase):
         self.assertEqual(veh2_idle_time, 600,
                          "vehicle 2 should have idled for 10 time steps (600 s)")
 
+    # @unittest.skip("refactor so that we aren't injecting VehicleState into vehicles which bypasses VehicleState.enter op")
     def test_step_vehicle_state_change(self):
         """
         build a sim with two charging vehicles and only step one of them until done charging.
 
         check to make sure only one vehicle transitioned from the charging state to the idle state.
         """
+        self.skipTest(
+            "refactor so that we aren't injecting VehicleState into vehicles. doing so " 
+            "bypasses the VehicleState.enter method, which in this case will lead to an "
+            "unexpected behavior when these vehicles return chargers that they never checked "
+            "out in the first place."
+        )
         station = mock_station("s1")
         vehicle1 = mock_vehicle(
             vehicle_id="1",

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from hive.util.units import Seconds
     from hive.model.base import Base
     from hive.model.request import Request
-    from hive.model.station import Station
+    from hive.model.station.station import Station
     from hive.model.vehicle.vehicle import Vehicle
     from hive.dispatcher.instruction.instruction import Instruction
 

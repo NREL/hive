@@ -15,7 +15,7 @@ from hive.model.energy.charger import build_chargers_table
 from hive.model.roadnetwork.geofence import GeoFence
 from hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.model.vehicle.mechatronics import build_mechatronics_table
 from hive.model.vehicle.schedules import build_schedules_table
 from hive.model.vehicle.vehicle import Vehicle
@@ -107,7 +107,7 @@ def initialize_simulation(
     sim_with_bases = _build_bases(config.input_config.bases_file, base_member_ids,
                                   sim_with_vehicles, base_filter)
     sim_with_stations = _build_stations(config.input_config.stations_file, station_member_ids,
-                                        sim_with_bases, station_filter)
+                                        sim_with_bases, station_filter, env_initial)
     sim_with_home_bases = _assign_private_memberships(sim_with_stations)
 
     return sim_with_home_bases, env_updated
@@ -257,6 +257,7 @@ def _build_stations(
     station_member_ids: MembershipMap,
     simulation_state: SimulationState,
     station_filter: Callable[[Station], bool],
+    env: Environment
 ) -> SimulationState:
     """
     all your station are belong to us
@@ -271,7 +272,7 @@ def _build_stations(
     """
     def _add_row_unsafe(builder: immutables.Map[str, Station],
                         row: Dict[str, str]) -> immutables.Map[str, Station]:
-        station = Station.from_row(row, builder, simulation_state.road_network)
+        station = Station.from_row(row, builder, simulation_state.road_network, env)
         if not station_filter(station):
             return builder
 

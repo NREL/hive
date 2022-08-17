@@ -135,9 +135,9 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
             return result, self
 
 
-def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[Charger, Currency]],
+def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[ChargerId, Currency]],
                             row: Dict[str, str]
-                            ) -> immutables.Map[str, immutables.Map[Charger, Currency]]:
+                            ) -> immutables.Map[str, immutables.Map[ChargerId, Currency]]:
     """
     adds a single row to an accumulator that is storing only the most recently
     observed {StationId|GeoId}/charger_id/currency combinations
@@ -172,7 +172,7 @@ def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[Charger, Cur
 
 def _update_station_prices(simulation_state: SimulationState,
                            station_id: StationId,
-                           prices_update: immutables.Map[Charger, Currency]) -> SimulationState:
+                           prices_update: immutables.Map[ChargerId, Currency]) -> SimulationState:
     """
     updates a simulation state with prices for a station by station id
 
@@ -185,17 +185,21 @@ def _update_station_prices(simulation_state: SimulationState,
     if not station:
         return simulation_state
     else:
-        updated_station = station.update_prices(prices_update)
-        error, updated_sim = simulation_state_ops.modify_station(simulation_state, updated_station)
-        if error:
+        error, updated_station = station.update_prices(prices_update)
+        if error is not None:
             log.error(error)
             return simulation_state
         else:
-            return updated_sim
+            error, updated_sim = simulation_state_ops.modify_station(simulation_state, updated_station)
+            if error:
+                log.error(error)
+                return simulation_state
+            else:
+                return updated_sim
 
 
-def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[Charger, Currency]],
-                        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[Charger, Currency]]:
+def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[ChargerId, Currency]],
+                        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[ChargerId, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds
 

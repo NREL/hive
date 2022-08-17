@@ -8,7 +8,7 @@ from hive.util.typealiases import ChargerId
 
 class Charger(NamedTuple):
     """
-    Represents a charger_id in the simulation.
+    Represents a charger in the simulation.
     """
     id: ChargerId
     energy_type: EnergyType

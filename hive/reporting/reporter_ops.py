@@ -6,7 +6,7 @@ from typing import Tuple
 import immutables
 from returns.io import IOResult, IOResultE
 
-from hive.model.station import Station
+from hive.model.station.station import Station
 from hive.runner import Environment
 from hive.state.simulation_state.simulation_state import SimulationState
 
@@ -31,8 +31,8 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
         # TODO: now that we've introduced other energy types, we should return a summary of charger rate by
         #  energy time with corresponding units - ndr
         rate: float = ft.reduce(
-            lambda acc, charger_id: acc + station.total_chargers.get(charger_id) * env.chargers.get(charger_id).rate,
-            station.available_chargers.keys(),
+            lambda acc, cs: acc + cs.total_chargers * cs.charger.rate,
+            station.state.values(),
             0.0
         )
 

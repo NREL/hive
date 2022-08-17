@@ -48,51 +48,63 @@ class ChargingBase(NamedTuple, VehicleState):
         :return: an exception due to failure or an optional updated simulation, or (None, None) if not possible
         """
 
-        base = sim.bases.get(self.base_id)
+        
         vehicle = sim.vehicles.get(self.vehicle_id)
+        base = sim.bases.get(self.base_id)
+        station_id = base.station_id if base is not None and base.station_id is not None else None
+        station = sim.stations.get(station_id) if station_id is not None else None
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle is not None else None
         context = f"vehicle {self.vehicle_id} entering charging base state at base {self.base_id} with charger {self.charger_id}"
-        if not base:
-            msg = f"base not found; context: {context}"
-            return SimulationStateError(msg), None
-        elif not vehicle:
+        if not vehicle:
             msg = f"vehicle not found; context {context}"
             return SimulationStateError(msg), None
-
-        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
-        charger = env.chargers.get(self.charger_id)
-        if not base.station_id:
-            msg = f"base is not co-located with a station; context: {context}"
+        elif not base:
+            msg = f"base not found; context: {context}"
             return SimulationStateError(msg), None
+        elif not base.station_id:
+            msg = f"base does not have attached station; context: {context}"
+            return SimulationStateError(msg), None
+        elif not station:
+            msg = f"station {base.station_id} at base not found; context: {context}"
+            return SimulationStateError(msg), None  
+        elif not mechatronics:
+            msg = f"vehicle {vehicle.id} has invalid mechatronics id; context: {context}"
+            return SimulationStateError(msg), None  
         elif not base.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle doesn't have access to base; context: {context}"
             return SimulationStateError(msg), None
-        elif not mechatronics.valid_charger(charger):
-            msg = f"vehicle of type {vehicle.mechatronics_id} can't use charger; context: {context}"
-            return SimulationStateError(msg), None
         else:
+            # actually claim the parking stall
             updated_base = base.checkout_stall()
             if not updated_base:
                 # no stall available for charging
                 return None, None
             else:
-                err1, sim2 = simulation_state_ops.modify_base(sim, updated_base)
-                if err1:
-                    response = SimulationStateError(
-                        f"failure during ChargingBase.enter for vehicle {self.vehicle_id}")
-                    response.__cause__ = err1
-                    return response, None
+                # grab the charger from the station
+                charger_err, charger = station.get_charger_instance(self.charger_id)
+                if charger_err is not None:
+                    return charger_err, None  
+                elif not mechatronics.valid_charger(charger):
+                    msg = f"vehicle of type {vehicle.mechatronics_id} can't use charger; context: {context}"
+                    return SimulationStateError(msg), None
                 else:
-                    station = sim2.stations.get(base.station_id) if base.station_id else None
-                    if not station:
-                        msg = f"station {base.station_id} not found for vehicle; context: {context}"
-                        return SimulationStateError(msg), None
+                    # check out this charger from the station
+                    error, updated_station = station.checkout_charger(self.charger_id)
+                    if error is not None:
+                        return error, None
+                    elif not updated_station:
+                        log.warning(
+                            f"vehicle {self.vehicle_id} can't checkout {self.charger_id} from {station.id}"
+                        )
+                        return None, None                    
                     else:
-                        updated_station = station.checkout_charger(self.charger_id)
-                        if not updated_station:
-                            log.warning(
-                                f"vehicle {self.vehicle_id} can't checkout {self.charger_id} from {station.id}"
-                            )
-                            return None, None
+                        # update the base + station state
+                        err1, sim2 = simulation_state_ops.modify_base(sim, updated_base)
+                        if err1:
+                            response = SimulationStateError(
+                                f"failure during ChargingBase.enter for vehicle {self.vehicle_id}")
+                            response.__cause__ = err1
+                            return response, None
                         else:
                             err2, sim3 = simulation_state_ops.modify_station(sim2, updated_station)
                             if err2:
@@ -102,8 +114,7 @@ class ChargingBase(NamedTuple, VehicleState):
                                 response.__cause__ = err2
                                 return response, None
                             else:
-                                return VehicleState.apply_new_vehicle_state(
-                                    sim3, self.vehicle_id, self)
+                                return VehicleState.apply_new_vehicle_state(sim3, self.vehicle_id, self)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

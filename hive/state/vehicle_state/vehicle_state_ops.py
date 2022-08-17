@@ -34,8 +34,8 @@ def charge(sim: SimulationState, env: Environment, vehicle_id: VehicleId, statio
 
     vehicle = sim.vehicles.get(vehicle_id)
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
-    charger = env.chargers.get(charger_id)
     station = sim.stations.get(station_id)
+    charger_err, charger = station.get_charger_instance(charger_id) if station is not None else None
 
     context = f"vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
 
@@ -44,10 +44,12 @@ def charge(sim: SimulationState, env: Environment, vehicle_id: VehicleId, statio
     elif not mechatronics:
         return SimulationStateError(
             f"invalid mechatronics_id {vehicle.mechatronics_id}; context: {context}"), None
-    elif not charger:
-        return SimulationStateError(f"invalid charger_id; context: {context}"), None
     elif not station:
         return SimulationStateError(f"station not found; context {context}"), None
+    elif charger_err is not None:
+        return charger_err, None
+    elif not charger:
+        return SimulationStateError(f"invalid charger_id; context: {context}"), None
     elif mechatronics.is_full(vehicle):
         return SimulationStateError(
             f"vehicle is full but still attempting to charge; context {context}"), None
@@ -58,7 +60,7 @@ def charge(sim: SimulationState, env: Environment, vehicle_id: VehicleId, statio
         # determine price of charge event
         kwh_transacted = charged_vehicle.energy[charger.energy_type] - vehicle.energy[
             charger.energy_type]  # kwh
-        charger_price = station.charger_prices_per_kwh.get(charger_id)  # Currency
+        charger_price = station.get_price(charger_id)  # Currency
         charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
         # perform updates
