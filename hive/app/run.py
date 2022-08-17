@@ -97,7 +97,7 @@ def run() -> int:
     entry point for a hive application run
     :return: 0 if success, 1 if error
     """
-
+    
     _welcome_to_hive()
 
     # parse arguments

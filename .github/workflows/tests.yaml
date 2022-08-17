@@ -30,3 +30,8 @@ jobs:
           pip install pytest
           pip install . 
           pytest tests/ -v 
+      
+      - name: HIVE Denver Demo test
+        run: |
+          pip install -e .
+          hive denver_demo.yaml
