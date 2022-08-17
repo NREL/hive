@@ -16,7 +16,10 @@ from hive.model.membership import Membership
 from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
-from hive.model.station.station_ops import station_state_update, station_state_updates
+from hive.model.station.station_ops import (
+    station_state_update, 
+    station_state_optional_update, 
+    station_state_updates)
 from hive.util.error_or_result import ErrorOr
 from hive.util.typealiases import *
 from hive.util.exception import H3Error, SimulationStateError
@@ -310,7 +313,7 @@ class Station(NamedTuple):
             else:
                 return cs.decrement_available_chargers()
 
-        return station_state_update(self, charger_id, _checkout)
+        return station_state_optional_update(self, charger_id, _checkout)
 
     def return_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
@@ -321,25 +324,17 @@ class Station(NamedTuple):
         :param charger_id: Charger to be returned
         :return: The updated station with returned charger_id
         """
-        def _return(cs: ChargerState) -> ChargerState:
+        def _return(cs: ChargerState) -> ErrorOr[ChargerState]:
             return cs.increment_available_chargers()
 
-        return station_state_update(
-            station=self, 
-            charger_id=charger_id, 
-            op=_return
-        )
+        return station_state_update(station=self, charger_id=charger_id, op=_return)
 
     def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> ErrorOr[Station]:
         
         def _update(cs: ChargerState, price: Currency) -> ErrorOr[ChargerState]:
             return None, cs._replace(price_per_kwh=price)
 
-        return station_state_updates(
-            station=self,
-            it=new_prices.items(),
-            op=_update
-        )
+        return station_state_updates(station=self, it=new_prices.items(), op=_update)
 
     def receive_payment(self, currency_received: Currency) -> Station:
         """
@@ -360,12 +355,7 @@ class Station(NamedTuple):
         def _enqueue(cs: ChargerState) -> ErrorOr[ChargerState]:
             return None, cs.increment_enqueued_vehicles()
 
-        update_result = station_state_update(
-            station=self, 
-            charger_id=charger_id, 
-            op=_enqueue
-        )
-        return update_result
+        return station_state_update(station=self, charger_id=charger_id, op=_enqueue)
 
     def dequeue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
@@ -379,11 +369,7 @@ class Station(NamedTuple):
         def _dequeue(cs: ChargerState) -> ErrorOr[ChargerState]:
             return cs.decrement_enqueued_vehicles()
 
-        return station_state_update(
-            station=self, 
-            charger_id=charger_id, 
-            op=_dequeue
-        )
+        return station_state_update(station=self, charger_id=charger_id, op=_dequeue)
 
     def enqueued_vehicle_count_for_charger(self, charger_id: ChargerId) -> Optional[int]:
         """

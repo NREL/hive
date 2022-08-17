@@ -1,13 +1,12 @@
 from typing import Iterable, Optional, TypeVar, Callable, TYPE_CHECKING
 from hive.util.error_or_result import ErrorOr
 from hive.util.typealiases import *
-from hive.util.exception import SimulationStateError
 
 import functools as ft
 
-# if TYPE_CHECKING:
-#     from hive.model.station.charger_state import ChargerState
-#     from hive.model.station.station import Station
+if TYPE_CHECKING:
+    from hive.model.station.charger_state import ChargerState
+    from hive.model.station.station import Station
 
 
 _EXPECTED_FIELDS = [
@@ -20,6 +19,36 @@ _EXPECTED_FIELDS = [
 ]
 
 def station_state_update(
+    station: 'Station',
+    charger_id: ChargerId,
+    op: Callable[['ChargerState'], ErrorOr['ChargerState']]
+    ) -> ErrorOr['Station']:
+    """
+    helper function for code where we want to perform an operation on a 
+    ChargerState and if it does not fail, update the Station with the state
+    change.
+
+    :param station: station to update
+    :param charger_id: charger id for charger state to update
+    :param op: a function to update a ChargerState, which can fail with an error,
+               or return an updated ChargerState to replace the state in the Station
+    :return: the updated Station or an error
+    """
+    charger_state = station.state.get(charger_id)
+    if charger_state is None:
+        # the provided charger type isn't found at this station
+        return None, station
+    else:
+        # apply the operation to this charger state
+        err, updated = op(charger_state)
+        if err is not None:
+            return err, None
+        else:
+            updated_s = station.state.set(charger_id, updated)
+            result = station._replace(state=updated_s)
+            return None, result
+
+def station_state_optional_update(
     station: 'Station',
     charger_id: ChargerId,
     op: Callable[['ChargerState'], ErrorOr[Optional['ChargerState']]]
@@ -57,7 +86,7 @@ T = TypeVar("T")
 def station_state_updates(
     station: 'Station',
     it: Iterable[Tuple[ChargerId, T]],
-    op: Callable[['ChargerState', T], ErrorOr[Optional['ChargerState']]]
+    op: Callable[['ChargerState', T], ErrorOr['ChargerState']]
     ) -> ErrorOr['Station']:
     """
     runs a batch update on a station's charger states
@@ -75,7 +104,7 @@ def station_state_updates(
             return acc
         else:
             charger_id, t = update_tuple
-            return station_state_update(
+            return station_state_optional_update(
                 station, 
                 charger_id, 
                 lambda cs: op(cs, t)
