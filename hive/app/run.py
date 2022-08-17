@@ -97,7 +97,7 @@ def run() -> int:
     entry point for a hive application run
     :return: 0 if success, 1 if error
     """
-
+    raise Exception("testing whether github action will see this as a failure")
     _welcome_to_hive()
 
     # parse arguments
