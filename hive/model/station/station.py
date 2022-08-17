@@ -321,13 +321,13 @@ class Station(NamedTuple):
         :param charger_id: Charger to be returned
         :return: The updated station with returned charger_id
         """
-        def _return(cs: ChargerState) -> Optional[ChargerState]:
+        def _return(cs: ChargerState) -> ChargerState:
             return cs.increment_available_chargers()
 
         return station_state_update(
             station=self, 
             charger_id=charger_id, 
-            op=lambda cs: cs.increment_available_chargers()
+            op=_return
         )
 
     def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> ErrorOr[Station]:
