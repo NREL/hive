@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, TypeVar
 from returns.io import IOResult
 from returns.result import ResultE, Success, Failure
 from returns.unsafe import unsafe_perform_io
@@ -19,6 +19,19 @@ def throw_on_failure(io_result: IOResult):
     inner_result = unsafe_perform_io(io_result)
     if isinstance(inner_result._inner_value, Exception):
         raise inner_result._inner_value
+
+T = TypeVar("T")
+
+def throw_or_return(result: ResultE[T]) -> T:
+    """
+    helper to throw or return the inner value of a ResultE type
+
+    :param result: The result to check
+    """
+    if isinstance(result, Failure):
+        raise result.failure()
+    else:
+        return result.unwrap()
 
 
 Accumulator = Any

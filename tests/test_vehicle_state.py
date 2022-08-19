@@ -747,8 +747,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_trip_enter(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
@@ -769,8 +768,7 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
         request = mock_request(fleet_id="lyft")
 
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
@@ -782,8 +780,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_trip_exit(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
 
@@ -807,8 +804,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request_from_geoids(origin=omf_brewing)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(near, omf_brewing)
 
@@ -840,8 +836,7 @@ class TestVehicleState(TestCase):
         )._replace(  # a hack so we can test equality on this request later
             dispatched_vehicle=vehicle.id,
             dispatched_vehicle_time=mock_sim().sim_time)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = ()  # vehicle is at the request
 
@@ -890,8 +885,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, request.geoid)
 
@@ -905,8 +899,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
 
@@ -1295,8 +1288,7 @@ class TestVehicleState(TestCase):
                                         ())
         vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=vehicle.geoid)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.destination)
 
@@ -1314,8 +1306,7 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
         request = mock_request(fleet_id="lyft")
 
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.destination)
 
@@ -1329,8 +1320,7 @@ class TestVehicleState(TestCase):
                                         ())
         vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids(destination=vehicle.geoid)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
@@ -1350,9 +1340,8 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids()
         self.assertNotEqual(request.origin, request.destination, "test invariant failed")
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
 
-        self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
@@ -1373,9 +1362,8 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle(soc=0, vehicle_state=prev_state)
         request = mock_request_from_geoids()
         self.assertNotEqual(request.origin, request.destination, "test invariant failed")
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
 
-        self.assertIsNone(e1, "test invariant failed")
         env = mock_env()
         route = mock_route_from_geoids(request.origin, request.destination)
 
@@ -1401,8 +1389,7 @@ class TestVehicleState(TestCase):
                                         ())
         vehicle = mock_vehicle_from_geoid(geoid=near, vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=near, destination=omf_brewing)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(near, omf_brewing)
 
@@ -1432,8 +1419,7 @@ class TestVehicleState(TestCase):
                                         ())
         vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=vehicle.geoid, destination=vehicle.geoid)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = ()  # end of route
 
@@ -1451,8 +1437,7 @@ class TestVehicleState(TestCase):
     def test_servicing_trip_enter_no_request(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e0, sim_with_req = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e0, "test invariant failed")
+        sim_with_req = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
 
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
@@ -1488,8 +1473,7 @@ class TestVehicleState(TestCase):
                                         ())
         vehicle = mock_vehicle(vehicle_state=prev_state)
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, request.destination)
 
@@ -1504,8 +1488,7 @@ class TestVehicleState(TestCase):
                                         ())
         vehicle = mock_vehicle_from_geoid(vehicle_state=prev_state)
         request = mock_request_from_geoids(origin=vehicle.geoid)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(
             vehicle.geoid, omf_brewing)  # request.destination should not be omf brewing co
@@ -1657,8 +1640,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_pooling_trip_enter(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1682,11 +1664,8 @@ class TestVehicleState(TestCase):
         r2 = mock_request('r2', 39.75, -104.97, 39.80, -104.97)  # pickup 2, dropoff 1
         s0 = mock_sim(vehicles=(vehicle, ))
         env = mock_env()
-        e1, s1 = simulation_state_ops.add_request(s0, r1)
-        e2, s2 = simulation_state_ops.add_request(s1, r2)
-
-        self.assertIsNone(e1, "test invariant failed")
-        self.assertIsNone(e2, "test invariant failed")
+        s1 = simulation_state_ops.add_request_safe(s0, r1).unwrap()
+        s2 = simulation_state_ops.add_request_safe(s1, r2).unwrap()
 
         route = mock_route_from_geoids(vehicle.geoid, r1.geoid)
         trip_plan = ((r1.id, TripPhase.PICKUP), (r2.id, TripPhase.PICKUP),
@@ -1711,8 +1690,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_pooling_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
         request = mock_request(fleet_id="lyft")
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1725,8 +1703,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_pooling_trip_exit(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1751,8 +1728,7 @@ class TestVehicleState(TestCase):
         far = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle_from_geoid(geoid=near)
         request = mock_request_from_geoids(origin=far)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(near, far)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1780,8 +1756,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_pooling_trip_update_terminal(self):
         vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
         request = mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac70e2d3")
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = ()  # vehicle is at the request
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1836,8 +1811,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, request.geoid)
 
@@ -1851,8 +1825,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
 
@@ -1868,8 +1841,7 @@ class TestVehicleState(TestCase):
     def test_servicing_pooling_trip_enter(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1903,8 +1875,7 @@ class TestVehicleState(TestCase):
         sim0 = mock_sim(vehicles=(vehicle, ), sim_timestep_duration_seconds=60)
 
         # place request and vehicle in a mock simulation
-        err1, sim1 = simulation_state_ops.add_request(sim0, request)
-        self.assertIsNone(err1, "test invariant failed")
+        sim1 = simulation_state_ops.add_request_safe(sim0, request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))
@@ -1944,10 +1915,8 @@ class TestVehicleState(TestCase):
         sim0 = mock_sim(vehicles=(v0, ), sim_timestep_duration_seconds=60)
 
         # place request and vehicle in a mock simulation
-        err1, sim1 = simulation_state_ops.add_request(sim0, r0)
-        err2, sim2 = simulation_state_ops.add_request(sim1, r1)
-        self.assertIsNone(err1, "test invariant failed")
-        self.assertIsNone(err2, "test invariant failed")
+        sim1 = simulation_state_ops.add_request_safe(sim0, r0).unwrap()
+        sim2 = simulation_state_ops.add_request_safe(sim1, r1).unwrap()
 
         env = mock_env()
         route = mock_route_from_geoids(v0.geoid, r0.geoid)
@@ -1986,10 +1955,8 @@ class TestVehicleState(TestCase):
         sim0 = mock_sim(vehicles=(v0, ), sim_timestep_duration_seconds=60)
 
         # place request and vehicle in a mock simulation
-        err1, sim1 = simulation_state_ops.add_request(sim0, r0)
-        err2, sim2 = simulation_state_ops.add_request(sim1, r1)
-        self.assertIsNone(err1, "test invariant failed")
-        self.assertIsNone(err2, "test invariant failed")
+        sim1 = simulation_state_ops.add_request_safe(sim0, r0).unwrap()
+        sim2 = simulation_state_ops.add_request_safe(sim1, r1).unwrap()
 
         env = mock_env()
         route = mock_route_from_geoids(v0.geoid, r0.geoid)
@@ -2030,8 +1997,7 @@ class TestVehicleState(TestCase):
     def test_servicing_single_pooling_trip_reaches_destination(self):
         vehicle = mock_vehicle()
         request = mock_request()
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(vehicle, )), request)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle, )), request).unwrap()
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, request.geoid)
         trip_plan = ((request.id, TripPhase.PICKUP), (request.id, TripPhase.DROPOFF))

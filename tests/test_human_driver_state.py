@@ -163,7 +163,7 @@ class TestHumanDriverState(TestCase):
                            ))
         req = mock_request_from_geoids(origin=somewhere_else(), destination=somewhere())
         sim = mock_sim(vehicles=(veh, ))
-        _, sim_w_req = simulation_state_ops.add_request(sim, req)
+        sim_w_req = throw_or_return(simulation_state_ops.add_request_safe(sim, req))
         env = mock_env()
 
         i = veh.driver_state.generate_instruction(sim_w_req, env)

@@ -4,7 +4,7 @@ import csv
 import functools as ft
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Tuple, Dict
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Dict
 
 import immutables
 
@@ -28,6 +28,7 @@ from hive.runner.environment import Environment
 from hive.state.simulation_state import simulation_state_ops
 from hive.state.simulation_state.simulation_state import SimulationState
 from hive.util import DictOps
+from hive.util.fp import throw_or_return
 
 if TYPE_CHECKING:
     from hive.util.typealiases import MembershipMap
@@ -123,7 +124,7 @@ def initialize_simulation(
     )
 
     # populate simulation with entities
-    sim_with_vehicles, env_updated = _build_vehicles(
+    sim_with_vehicles = _build_vehicles(
         config.input_config.vehicles_file,
         vehicle_member_ids,
         sim_initial,
@@ -142,7 +143,7 @@ def initialize_simulation(
     )
     sim_with_home_bases = _assign_private_memberships(sim_with_stations)
 
-    return sim_with_home_bases, env_updated
+    return sim_with_home_bases, env_initial
 
 
 def _build_vehicles(
@@ -151,7 +152,7 @@ def _build_vehicles(
     simulation_state: SimulationState,
     environment: Environment,
     vehicle_filter: Callable[[Vehicle], bool],
-) -> Tuple[SimulationState, Environment]:
+) -> SimulationState:
     """
     adds all vehicles from the provided vehicles file
 
@@ -165,32 +166,29 @@ def _build_vehicles(
     :raises Exception: from IOErrors parsing the vehicle, powertrain, or powercurve files
     """
 
-    def _add_row_unsafe(
-        payload: Tuple[SimulationState, Environment], row: Dict[str, str]
-    ) -> Tuple[SimulationState, Environment]:
+    def _collect_vehicle(row: Dict[str, str]) -> Optional[Vehicle]:
 
-        sim, env = payload
-        veh = Vehicle.from_row(row, sim.road_network, env)
+        veh = Vehicle.from_row(row, simulation_state.road_network, environment)
 
         if not vehicle_filter(veh):
-            return sim, env
+            return None
 
         if vehicle_member_ids is not None:
             if veh.id in vehicle_member_ids:
                 veh = veh.set_membership(vehicle_member_ids[veh.id])
 
-        error, updated_sim = simulation_state_ops.add_vehicle(sim, veh)
-        if error:
-            log.error(error)
-            return sim, env
-        else:
-            return updated_sim, env
+        return veh
 
     # open vehicles file and add each row
     with open(vehicles_file, "r", encoding="utf-8-sig") as vf:
         reader = csv.DictReader(vf)
-        initial_payload = simulation_state, environment
-        sim_with_vehicles = ft.reduce(_add_row_unsafe, reader, initial_payload)
+        vehicles = list(
+            filter(lambda v: v is not None, [_collect_vehicle(row) for row in reader])
+        )
+        sim_with_vehicles = throw_or_return(
+            simulation_state_ops.add_vehicles_safe(simulation_state, vehicles)
+        )
+
     return sim_with_vehicles
 
 
@@ -212,27 +210,28 @@ def _build_bases(
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
     """
 
-    def _add_row_unsafe(sim: SimulationState, row: Dict[str, str]) -> SimulationState:
+    def _collect_base(row: Dict[str, str]) -> Optional[Base]:
         base = Base.from_row(row, simulation_state.road_network)
         if not base_filter(base):
-            return sim
+            return None
 
         if base_member_ids is not None:
             if base.id in base_member_ids:
                 base = base.set_membership(base_member_ids[base.id])
-        error, updated_sim = simulation_state_ops.add_base(sim, base)
-        if error:
-            log.error(error)
-            return sim
-        else:
-            return updated_sim
+        return base
 
     # add all bases from the base file
     with open(bases_file, "r", encoding="utf-8-sig") as bf:
         reader = csv.DictReader(bf)
-        sim_with_bases = ft.reduce(_add_row_unsafe, reader, simulation_state)
+        bases = list(
+            filter(lambda b: b is not None, [_collect_base(row) for row in reader])
+        )
 
-    return sim_with_bases
+    sim_w_bases = throw_or_return(
+        simulation_state_ops.add_bases_safe(simulation_state, bases)
+    )
+
+    return sim_w_bases
 
 
 def _assign_private_memberships(sim: SimulationState) -> SimulationState:
@@ -339,8 +338,4 @@ def _build_stations(
         simulation_state, stations_builder.values()
     )
 
-    if isinstance(sim_or_error, Failure):
-        raise sim_or_error.failure()
-    else:
-        sim_with_stations = sim_or_error.unwrap()
-        return sim_with_stations
+    return throw_or_return(sim_or_error)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from distutils.util import strtobool
 import functools as ft
-from typing import NamedTuple, Dict, Optional
+from typing import NamedTuple, Dict, Optional, Union
 
 import h3
 import immutables
@@ -164,7 +164,7 @@ class Station(NamedTuple):
 
     @classmethod
     def from_row(cls, row: Dict[str, str],
-                 builder: Dict[StationId, Station],
+                 builder: Union[immutables.Map[StationId, Station], Dict[StationId, Station]],
                  road_network: RoadNetwork,
                  env: Environment
                  ) -> Station:

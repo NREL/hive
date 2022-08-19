@@ -1,6 +1,9 @@
 from unittest import TestCase
 
+from returns.result import Success 
+
 from hive.resources.mock_lobster import *
+
 
 
 class TestSimulationStateOps(TestCase):
@@ -8,8 +11,7 @@ class TestSimulationStateOps(TestCase):
     def test_add_request(self):
         req = mock_request()
         sim = mock_sim()
-        error, sim_with_req = simulation_state_ops.add_request(sim, req)
-        self.assertIsNone(error, "should be no error")
+        sim_with_req = simulation_state_ops.add_request_safe(sim, req).unwrap()
         self.assertEqual(len(sim.requests), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_req.requests[req.id], req, "request contents should be idempotent")
 
@@ -21,8 +23,7 @@ class TestSimulationStateOps(TestCase):
     def test_remove_request(self):
         req = mock_request()
         sim = mock_sim()
-        e1, sim_with_req = simulation_state_ops.add_request(sim, req)
-        self.assertIsNone(e1, "test invariant did not hold")
+        sim_with_req = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
         e2, sim_after_remove = simulation_state_ops.remove_request(sim_with_req, req.id)
 
@@ -36,8 +37,7 @@ class TestSimulationStateOps(TestCase):
         req = mock_request()
         veh = mock_vehicle()
         sim = mock_sim(vehicles=(veh,))
-        e1, sim_with_req = simulation_state_ops.add_request(sim, req)
-        self.assertIsNone(e1, "test invariant did not hold")
+        sim_with_req = simulation_state_ops.add_request_safe(sim, req).unwrap()
         current_time = sim.sim_time
 
         updated_req_to_set = req.assign_dispatched_vehicle(veh.id, current_time)
@@ -66,8 +66,8 @@ class TestSimulationStateOps(TestCase):
         req1 = mock_request(request_id="1")
         req2 = mock_request(request_id="2")
         sim = mock_sim()
-        _, sim_with_req1 = simulation_state_ops.add_request(sim, req1)
-        _, sim_with_reqs = simulation_state_ops.add_request(sim_with_req1, req2)
+        sim_with_req1 = simulation_state_ops.add_request_safe(sim, req1).unwrap()
+        sim_with_reqs = simulation_state_ops.add_request_safe(sim_with_req1, req2).unwrap()
         error, sim_remove_req1 = simulation_state_ops.remove_request(sim_with_reqs, req1.id)
 
         self.assertIsNone(error, "should be no error")
@@ -81,9 +81,11 @@ class TestSimulationStateOps(TestCase):
     def test_add_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        error, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
+        sim_or_error = simulation_state_ops.add_vehicle_safe(sim, veh)
 
-        self.assertIsNone(error, "should be no error")
+        self.assertIsInstance(sim_or_error, Success)
+        sim_with_veh = sim_or_error.unwrap()
+
         self.assertEqual(len(sim.vehicles), 0, "the original sim object should not have been mutated")
         self.assertEqual(sim_with_veh.vehicles[veh.id], veh, "the vehicle should not have been mutated")
 
@@ -95,8 +97,10 @@ class TestSimulationStateOps(TestCase):
     def test_update_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
-        self.assertIsNone(e1, "test invariant failed")
+
+        sim_or_error = simulation_state_ops.add_vehicle_safe(sim, veh)
+        self.assertIsInstance(sim_or_error, Success)
+        sim_with_veh = sim_or_error.unwrap()
 
         # modify some value on the vehicle
         updated_vehicle = veh._replace(mechatronics_id="test_update")
@@ -112,8 +116,9 @@ class TestSimulationStateOps(TestCase):
     def test_remove_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
-        self.assertIsNone(e1, "test invariant failed")
+        sim_or_error = simulation_state_ops.add_vehicle_safe(sim, veh)
+        self.assertIsInstance(sim_or_error, Success)
+        sim_with_veh = sim_or_error.unwrap()
 
         error, sim_after_remove = simulation_state_ops.remove_vehicle(sim_with_veh, veh.id)
 
@@ -126,8 +131,10 @@ class TestSimulationStateOps(TestCase):
     def test_pop_vehicle(self):
         veh = mock_vehicle()
         sim = mock_sim()
-        e1, sim_with_veh = simulation_state_ops.add_vehicle(sim, veh)
-        self.assertIsNone(e1, "test invariant failed")
+        sim_or_error = simulation_state_ops.add_vehicle_safe(sim, veh)
+        self.assertIsInstance(sim_or_error, Success)
+        sim_with_veh = sim_or_error.unwrap()
+
         e2, (sim_after_pop, veh_after_pop) = simulation_state_ops.pop_vehicle(sim_with_veh, veh.id)
 
         self.assertIsNone(e2, "should have no error")
@@ -138,9 +145,10 @@ class TestSimulationStateOps(TestCase):
     def test_add_station(self):
         station = mock_station()
         sim = mock_sim()
-        error, sim_after_station = simulation_state_ops.add_station(sim, station)
+        sim_or_error = simulation_state_ops.add_station_safe(sim, station)
 
-        self.assertIsNone(error, "should have no error")
+        self.assertIsInstance(sim_or_error, Success)
+        sim_after_station = sim_or_error.unwrap()
         self.assertEqual(len(sim_after_station.stations), 1, "the sim should have one station added")
         self.assertEqual(sim_after_station.stations[station.id], station, "the station should not have been mutated")
 
@@ -174,9 +182,10 @@ class TestSimulationStateOps(TestCase):
     def test_add_base(self):
         base = mock_base()
         sim = mock_sim()
-        error, sim_after_base = simulation_state_ops.add_base(sim, base)
+        sim_or_error = simulation_state_ops.add_base_safe(sim, base)
 
-        self.assertIsNone(error, "should have no error")
+        self.assertIsInstance(sim_or_error, Success)
+        sim_after_base = sim_or_error.unwrap()
         self.assertEqual(len(sim_after_base.bases), 1, "the sim should have one base added")
         self.assertEqual(sim_after_base.bases[base.id], base, "the base should not have been mutated")
 
