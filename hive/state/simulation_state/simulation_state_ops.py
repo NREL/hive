@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING
 
 import h3
-from returns.result import Result, Success, Failure
+from returns.result import Result, Success, Failure, ResultE
 
 from hive.model.sim_time import SimTime
 from hive.util import DictOps
 from hive.util.exception import SimulationStateError
+from hive.util.fp import apply_op_to_accumulator
 from hive.util.typealiases import *
 
 if TYPE_CHECKING:
@@ -283,6 +284,39 @@ def pop_vehicle(sim: SimulationState,
         else:
             return None, (remove_result, vehicle)
 
+def add_station_safe(sim: SimulationState, station: Station) -> ResultE[SimulationState]:
+    """
+    adds a station to the simulation
+
+
+    :param sim: the simulation state
+    :param station: the station to add
+    :return: the updated SimulationState, or a error = SimulationStateError
+    """
+    if not sim.road_network.geoid_within_geofence(station.geoid):
+        error = SimulationStateError(f"cannot add station {station.id} to sim: not within road network geofence")
+        return Failure(error) 
+    else:
+        search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
+        updated_s_locations = DictOps.add_to_collection_dict(sim.s_locations, station.geoid, station.id)
+        updated_s_search = DictOps.add_to_collection_dict(sim.s_search, search_geoid, station.id)
+        updated_sim = sim._replace(
+            stations=DictOps.add_to_dict(sim.stations, station.id, station),
+            s_locations=updated_s_locations,
+            s_search=updated_s_search,
+        )
+        return Success(updated_sim)
+
+def add_stations_safe(sim: SimulationState, stations: Iterable[Station]) -> ResultE[SimulationState]:
+    """
+    adds a collection of stations to the simulation
+    """
+    def _add(station: Station):
+        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
+            return add_station_safe(sim, station)
+        return _inner
+    
+    return apply_op_to_accumulator(_add, stations, sim)
 
 def add_station(sim: SimulationState, station: Station) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
