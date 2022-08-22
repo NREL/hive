@@ -4,8 +4,9 @@ from returns.result import ResultE, Success, Failure
 
 from hive.runner.runner_payload import RunnerPayload
 from hive.state.simulation_state.simulation_state_ops import (
-    modify_entities_safe,
+    modify_entities_safe as _modify_entities_safe,
 )
+
 from hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
 )
@@ -67,7 +68,7 @@ def modify_entities_safe(
     """
     Modify entities in a runner payload
     """
-    new_s_or_error = modify_entities_safe(rp.s, entities)
+    new_s_or_error = _modify_entities_safe(rp.s, entities)
 
     if isinstance(new_s_or_error, Failure):
         return new_s_or_error
