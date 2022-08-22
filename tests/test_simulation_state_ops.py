@@ -1,13 +1,11 @@
 from unittest import TestCase
 
-from returns.result import Success 
+from returns.result import Success
 
 from hive.resources.mock_lobster import *
 
 
-
 class TestSimulationStateOps(TestCase):
-
     def test_add_entity(self):
         sim = mock_sim()
         req = mock_request()
@@ -26,32 +24,78 @@ class TestSimulationStateOps(TestCase):
 
         sim_w_vehicle = simulation_state_ops.add_entity_safe(sim, vehicle).unwrap()
         self.assertEqual(sim_w_vehicle.vehicles[vehicle.id], vehicle)
-    
+
     def test_add_entities(self):
         sim = mock_sim()
 
         reqs = [mock_request(i) for i in range(10)]
-        sim_with_reqs = simulation_state_ops.add_entities_safe(sim, reqs).unwrap() 
+        sim_with_reqs = simulation_state_ops.add_entities_safe(sim, reqs).unwrap()
         self.assertEqual(len(sim_with_reqs.requests.values()), 10)
 
         vehicles = [mock_vehicle(i) for i in range(10)]
-        sim_with_vehicles = simulation_state_ops.add_entities_safe(sim, vehicles).unwrap() 
+        sim_with_vehicles = simulation_state_ops.add_entities_safe(
+            sim, vehicles
+        ).unwrap()
         self.assertEqual(len(sim_with_vehicles.vehicles.values()), 10)
 
         stations = [mock_station(i) for i in range(10)]
-        sim_with_stations = simulation_state_ops.add_entities_safe(sim, stations).unwrap() 
+        sim_with_stations = simulation_state_ops.add_entities_safe(
+            sim, stations
+        ).unwrap()
         self.assertEqual(len(sim_with_stations.stations.values()), 10)
 
         bases = [mock_base(i) for i in range(10)]
-        sim_with_bases = simulation_state_ops.add_entities_safe(sim, bases).unwrap() 
+        sim_with_bases = simulation_state_ops.add_entities_safe(sim, bases).unwrap()
         self.assertEqual(len(sim_with_bases.bases.values()), 10)
+
+    def test_modify_entity(self):
+        sim = mock_sim()
+        station = mock_station()
+        sim_w_station = simulation_state_ops.add_entity(sim, station)
+
+        station2 = sim_w_station.stations.get(station.id)
+        updated_station = station2.add_membership("test!")
+
+        sim_w_new_station = simulation_state_ops.modify_entity(
+            sim_w_station, updated_station
+        )
+
+        updated_station2 = sim_w_new_station.stations.get(station.id)
+
+        self.assertTrue("test!" in updated_station2.membership.memberships)
+
+    def test_modify_entities(self):
+        sim = mock_sim()
+        stations = [mock_station(i) for i in range(10)]
+        sim_w_stations = simulation_state_ops.add_entities(sim, stations)
+
+        updated_stations = [
+            s.add_membership("test!") for s in sim_w_stations.stations.values()
+        ]
+
+        sim_w_new_stations = simulation_state_ops.modify_entities(
+            sim_w_stations, updated_stations
+        )
+
+        self.assertTrue(
+            all(
+                [
+                    "test!" in s.membership.memberships
+                    for s in sim_w_new_stations.stations.values()
+                ]
+            )
+        )
 
     def test_add_request(self):
         req = mock_request()
         sim = mock_sim()
         sim_with_req = simulation_state_ops.add_request_safe(sim, req).unwrap()
-        self.assertEqual(len(sim.requests), 0, "the original sim object should not have been mutated")
-        self.assertEqual(sim_with_req.requests[req.id], req, "request contents should be idempotent")
+        self.assertEqual(
+            len(sim.requests), 0, "the original sim object should not have been mutated"
+        )
+        self.assertEqual(
+            sim_with_req.requests[req.id], req, "request contents should be idempotent"
+        )
 
         at_loc = sim_with_req.r_locations[req.origin]
 
@@ -66,10 +110,20 @@ class TestSimulationStateOps(TestCase):
         e2, sim_after_remove = simulation_state_ops.remove_request(sim_with_req, req.id)
 
         self.assertIsNone(e2, "should be no error")
-        self.assertEqual(len(sim_with_req.requests), 1, "the sim with req added should not have been mutated")
-        self.assertEqual(len(sim_after_remove.requests), 0, "the request should have been removed")
+        self.assertEqual(
+            len(sim_with_req.requests),
+            1,
+            "the sim with req added should not have been mutated",
+        )
+        self.assertEqual(
+            len(sim_after_remove.requests), 0, "the request should have been removed"
+        )
 
-        self.assertNotIn(req.origin, sim_after_remove.r_locations, "there should be no key for this geoid")
+        self.assertNotIn(
+            req.origin,
+            sim_after_remove.r_locations,
+            "there should be no key for this geoid",
+        )
 
     def test_modify_request(self):
         req = mock_request()
@@ -79,11 +133,17 @@ class TestSimulationStateOps(TestCase):
         current_time = sim.sim_time
 
         updated_req_to_set = req.assign_dispatched_vehicle(veh.id, current_time)
-        e2, sim_after_modify = simulation_state_ops.modify_request(sim_with_req, updated_req_to_set)
+        e2, sim_after_modify = simulation_state_ops.modify_request(
+            sim_with_req, updated_req_to_set
+        )
 
         updated_req = sim_after_modify.requests.get(req.id)
         self.assertIsNone(e2, "should be no error")
-        self.assertEqual(updated_req.dispatched_vehicle, veh.id, "the request in the sim should have been modified")
+        self.assertEqual(
+            updated_req.dispatched_vehicle,
+            veh.id,
+            "the request in the sim should have been modified",
+        )
 
     def test_modify_request_no_previous_request(self):
         req = mock_request()
@@ -92,7 +152,9 @@ class TestSimulationStateOps(TestCase):
         current_time = sim.sim_time
 
         updated_req_to_set = req.assign_dispatched_vehicle(veh.id, current_time)
-        e2, sim_after_modify = simulation_state_ops.modify_request(sim, updated_req_to_set)
+        e2, sim_after_modify = simulation_state_ops.modify_request(
+            sim, updated_req_to_set
+        )
 
         self.assertIsNotNone(e2, "should be an error")
         self.assertIsNone(sim_after_modify)
@@ -105,16 +167,24 @@ class TestSimulationStateOps(TestCase):
         req2 = mock_request(request_id="2")
         sim = mock_sim()
         sim_with_req1 = simulation_state_ops.add_request_safe(sim, req1).unwrap()
-        sim_with_reqs = simulation_state_ops.add_request_safe(sim_with_req1, req2).unwrap()
-        error, sim_remove_req1 = simulation_state_ops.remove_request(sim_with_reqs, req1.id)
+        sim_with_reqs = simulation_state_ops.add_request_safe(
+            sim_with_req1, req2
+        ).unwrap()
+        error, sim_remove_req1 = simulation_state_ops.remove_request(
+            sim_with_reqs, req1.id
+        )
 
         self.assertIsNone(error, "should be no error")
-        self.assertIn(req2.origin,
-                      sim_remove_req1.r_locations,
-                      "geoid related to both reqs should still exist")
-        self.assertIn(req2.id,
-                      sim_remove_req1.r_locations[req2.origin],
-                      "req2.id should still be found in r_locations")
+        self.assertIn(
+            req2.origin,
+            sim_remove_req1.r_locations,
+            "geoid related to both reqs should still exist",
+        )
+        self.assertIn(
+            req2.id,
+            sim_remove_req1.r_locations[req2.origin],
+            "req2.id should still be found in r_locations",
+        )
 
     def test_add_vehicle(self):
         veh = mock_vehicle()
@@ -124,8 +194,14 @@ class TestSimulationStateOps(TestCase):
         self.assertIsInstance(sim_or_error, Success)
         sim_with_veh = sim_or_error.unwrap()
 
-        self.assertEqual(len(sim.vehicles), 0, "the original sim object should not have been mutated")
-        self.assertEqual(sim_with_veh.vehicles[veh.id], veh, "the vehicle should not have been mutated")
+        self.assertEqual(
+            len(sim.vehicles), 0, "the original sim object should not have been mutated"
+        )
+        self.assertEqual(
+            sim_with_veh.vehicles[veh.id],
+            veh,
+            "the vehicle should not have been mutated",
+        )
 
         at_loc = sim_with_veh.v_locations[veh.geoid]
 
@@ -143,13 +219,17 @@ class TestSimulationStateOps(TestCase):
         # modify some value on the vehicle
         updated_vehicle = veh._replace(mechatronics_id="test_update")
 
-        e2, sim_after_update = simulation_state_ops.modify_vehicle(sim_with_veh, updated_vehicle)
+        e2, sim_after_update = simulation_state_ops.modify_vehicle(
+            sim_with_veh, updated_vehicle
+        )
 
         self.assertIsNone(e2, "should not have an error")
         # confirm sim reflects changes to vehicle
-        self.assertEqual(sim_after_update.vehicles[veh.id].mechatronics_id,
-                         "test_update",
-                         "new vehicle was not updated correctly")
+        self.assertEqual(
+            sim_after_update.vehicles[veh.id].mechatronics_id,
+            "test_update",
+            "new vehicle was not updated correctly",
+        )
 
     def test_remove_vehicle(self):
         veh = mock_vehicle()
@@ -158,13 +238,25 @@ class TestSimulationStateOps(TestCase):
         self.assertIsInstance(sim_or_error, Success)
         sim_with_veh = sim_or_error.unwrap()
 
-        error, sim_after_remove = simulation_state_ops.remove_vehicle(sim_with_veh, veh.id)
+        error, sim_after_remove = simulation_state_ops.remove_vehicle(
+            sim_with_veh, veh.id
+        )
 
         self.assertIsNone(error, "should have no error")
-        self.assertEqual(len(sim_with_veh.vehicles), 1, "the sim with vehicle added should not have been mutated")
-        self.assertEqual(len(sim_after_remove.vehicles), 0, "the vehicle should have been removed")
+        self.assertEqual(
+            len(sim_with_veh.vehicles),
+            1,
+            "the sim with vehicle added should not have been mutated",
+        )
+        self.assertEqual(
+            len(sim_after_remove.vehicles), 0, "the vehicle should have been removed"
+        )
 
-        self.assertNotIn(veh.geoid, sim_after_remove.v_locations, "there should be no key for this geoid")
+        self.assertNotIn(
+            veh.geoid,
+            sim_after_remove.v_locations,
+            "there should be no key for this geoid",
+        )
 
     def test_pop_vehicle(self):
         veh = mock_vehicle()
@@ -173,12 +265,22 @@ class TestSimulationStateOps(TestCase):
         self.assertIsInstance(sim_or_error, Success)
         sim_with_veh = sim_or_error.unwrap()
 
-        e2, (sim_after_pop, veh_after_pop) = simulation_state_ops.pop_vehicle(sim_with_veh, veh.id)
+        e2, (sim_after_pop, veh_after_pop) = simulation_state_ops.pop_vehicle(
+            sim_with_veh, veh.id
+        )
 
         self.assertIsNone(e2, "should have no error")
-        self.assertEqual(len(sim_with_veh.vehicles), 1, "the sim with vehicle added should not have been mutated")
-        self.assertEqual(len(sim_after_pop.vehicles), 0, "the vehicle should have been removed")
-        self.assertEqual(veh, veh_after_pop, "should be the same vehicle that gets popped")
+        self.assertEqual(
+            len(sim_with_veh.vehicles),
+            1,
+            "the sim with vehicle added should not have been mutated",
+        )
+        self.assertEqual(
+            len(sim_after_pop.vehicles), 0, "the vehicle should have been removed"
+        )
+        self.assertEqual(
+            veh, veh_after_pop, "should be the same vehicle that gets popped"
+        )
 
     def test_add_station(self):
         station = mock_station()
@@ -187,35 +289,57 @@ class TestSimulationStateOps(TestCase):
 
         self.assertIsInstance(sim_or_error, Success)
         sim_after_station = sim_or_error.unwrap()
-        self.assertEqual(len(sim_after_station.stations), 1, "the sim should have one station added")
-        self.assertEqual(sim_after_station.stations[station.id], station, "the station should not have been mutated")
+        self.assertEqual(
+            len(sim_after_station.stations), 1, "the sim should have one station added"
+        )
+        self.assertEqual(
+            sim_after_station.stations[station.id],
+            station,
+            "the station should not have been mutated",
+        )
 
         at_loc = sim_after_station.s_locations[station.geoid]
 
-        self.assertIn(station.id, at_loc, "the station's id should be found at it's geoid")
+        self.assertIn(
+            station.id, at_loc, "the station's id should be found at it's geoid"
+        )
 
     def test_remove_station(self):
         station = mock_station()
-        sim = mock_sim(stations=(station, ))
+        sim = mock_sim(stations=(station,))
         error, sim_after_remove = simulation_state_ops.remove_station(sim, station.id)
 
         self.assertIsNone(error, "should have no error")
-        self.assertNotIn(station.id, sim_after_remove.stations, "station should be removed")
-        self.assertNotIn(station.geoid, sim_after_remove.s_locations, "nothing should be left at geoid")
+        self.assertNotIn(
+            station.id, sim_after_remove.stations, "station should be removed"
+        )
+        self.assertNotIn(
+            station.geoid,
+            sim_after_remove.s_locations,
+            "nothing should be left at geoid",
+        )
 
     def test_update_station(self):
         station = mock_station()
         sim = mock_sim(stations=(station,))
         new_position = EntityPosition("test", station.geoid)
         updated_station = station._replace(position=new_position)
-        error, sim_after_station = simulation_state_ops.modify_station(sim, updated_station)
+        error, sim_after_station = simulation_state_ops.modify_station(
+            sim, updated_station
+        )
         self.assertIsNone(error, "should have no error")
 
         updated_station_in_sim = sim_after_station.stations[station.id]
-        self.assertEqual(updated_station_in_sim.position, updated_station.position, "station should have been updated")
+        self.assertEqual(
+            updated_station_in_sim.position,
+            updated_station.position,
+            "station should have been updated",
+        )
 
         at_loc = sim_after_station.s_locations[station.geoid]
-        self.assertIn(station.id, at_loc, "the station's id should be found at it's geoid")
+        self.assertIn(
+            station.id, at_loc, "the station's id should be found at it's geoid"
+        )
 
     def test_add_base(self):
         base = mock_base()
@@ -224,8 +348,12 @@ class TestSimulationStateOps(TestCase):
 
         self.assertIsInstance(sim_or_error, Success)
         sim_after_base = sim_or_error.unwrap()
-        self.assertEqual(len(sim_after_base.bases), 1, "the sim should have one base added")
-        self.assertEqual(sim_after_base.bases[base.id], base, "the base should not have been mutated")
+        self.assertEqual(
+            len(sim_after_base.bases), 1, "the sim should have one base added"
+        )
+        self.assertEqual(
+            sim_after_base.bases[base.id], base, "the base should not have been mutated"
+        )
 
         at_loc = sim_after_base.b_locations[base.geoid]
 
@@ -238,4 +366,6 @@ class TestSimulationStateOps(TestCase):
 
         self.assertIsNone(error, "should have no error")
         self.assertNotIn(base.id, sim_after_remove.bases, "base should be removed")
-        self.assertNotIn(base.geoid, sim_after_remove.b_locations, "nothing should be left at geoid")
+        self.assertNotIn(
+            base.geoid, sim_after_remove.b_locations, "nothing should be left at geoid"
+        )

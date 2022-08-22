@@ -49,6 +49,19 @@ def add_entity(sim: SimulationState, entity: Entity) -> SimulationState:
     return throw_or_return(add_entity_safe(sim, entity))
 
 
+def modify_entity(sim: SimulationState, entity: Entity) -> SimulationState:
+    """
+    helper for modifying an entity in the simulation
+
+    :param sim: the simulation state
+    :param entity: the entity to modify
+
+    :return: the updated simulation state
+    :raises: an error if the entity cannot be modified
+    """
+    return throw_or_return(modify_entity_safe(sim, entity))
+
+
 def add_entities(sim: SimulationState, entities: Iterable[Entity]) -> SimulationState:
     """
     helper for adding multiple entities to the simulation
@@ -60,6 +73,21 @@ def add_entities(sim: SimulationState, entities: Iterable[Entity]) -> Simulation
     :raises: an error if any of the entities cannot be added
     """
     return throw_or_return(add_entities_safe(sim, entities))
+
+
+def modify_entities(
+    sim: SimulationState, entities: Iterable[Entity]
+) -> SimulationState:
+    """
+    helper for modifying multiple entities in the simulation
+
+    :param sim: the simulation state
+    :param entities: the entities to modify
+
+    :return: the updated simulation state
+    :raises: an error if any of the entities cannot be modified
+    """
+    return throw_or_return(modify_entities_safe(sim, entities))
 
 
 def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
@@ -103,6 +131,51 @@ def add_entities_safe(
         return _inner
 
     return apply_op_to_accumulator(_add, entities, sim)
+
+
+def modify_entity_safe(
+    sim: SimulationState, entity: Entity
+) -> ResultE[SimulationState]:
+    """
+    helper for modifying a general entity in the simulation
+
+    :param sim: the simulation state
+    :param entity: the entity to modify
+
+    :return: the updated simulation state or an error
+    """
+    if entity.__class__.__name__ == "Vehicle":
+        return modify_vehicle_safe(sim, entity)
+    if entity.__class__.__name__ == "Station":
+        return modify_station_safe(sim, entity)
+    if entity.__class__.__name__ == "Base":
+        return modify_base_safe(sim, entity)
+    if entity.__class__.__name__ == "Request":
+        return modify_request_safe(sim, entity)
+    else:
+        err = SimulationStateError(f"cannot modify entity {entity} to simulation")
+        return Failure(err)
+
+
+def modify_entities_safe(
+    sim: SimulationState, entities: Iterable[Entity]
+) -> ResultE[SimulationState]:
+    """
+    helper for moidfying multiple general entities in the simulation
+
+    :param sim: the simulation state
+    :param entities: the entities to modify
+
+    :return: the updated simulation state or an error
+    """
+
+    def _mod(entity: Entity):
+        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
+            return modify_entity_safe(sim, entity)
+
+        return _inner
+
+    return apply_op_to_accumulator(_mod, entities, sim)
 
 
 def add_request_safe(
