@@ -1,10 +1,16 @@
-from typing import Type, Union
+from typing import Iterable, Type, Union
 from returns.result import ResultE, Success, Failure
 
+
 from hive.runner.runner_payload import RunnerPayload
+from hive.state.simulation_state.simulation_state_ops import (
+    modify_entities_safe,
+)
 from hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
 )
+from hive.util.fp import throw_or_return
+from hive.util.typealiases import Entity
 
 
 def update_instruction_generator_safe(
@@ -16,18 +22,12 @@ def update_instruction_generator_safe(
     Safe method
     """
     new_step_fn_or_error = rp.u.step_update.update_instruction_generator(ig)
-    if isinstance(new_step_fn_or_error, Success):
+    if isinstance(new_step_fn_or_error, Failure):
+        return new_step_fn_or_error
+    else:
         new_update = rp.u._replace(step_update=new_step_fn_or_error.unwrap())
         new_rp = rp._replace(u=new_update)
         return Success(new_rp)
-    elif isinstance(new_step_fn_or_error, Failure):
-        return new_step_fn_or_error
-    else:
-        return Failure(
-            Exception(
-                "StepUpdate.update_instruction_generator failed to return a Result"
-            )
-        )
 
 
 def update_instruction_generator(
@@ -39,14 +39,7 @@ def update_instruction_generator(
     Unsafe method
     """
     rp_or_error = update_instruction_generator_safe(rp, ig)
-    if isinstance(rp_or_error, Success):
-        rp = rp_or_error.unwrap()
-        return rp
-    elif isinstance(rp_or_error, Failure):
-        err = rp_or_error.failure()
-        raise err
-    else:
-        raise Exception("update_instruction_generator_safe failed to produce a result")
+    return throw_or_return(rp_or_error)
 
 
 def get_instruction_generator_safe(
@@ -65,12 +58,26 @@ def get_instruction_generator(
     Extract an instruction generator from a runner payload
     """
     new_ig_or_error = rp.u.step_update.get_instruction_generator(ig)
+    return throw_or_return(new_ig_or_error)
 
-    if isinstance(new_ig_or_error, Success):
-        ig = new_ig_or_error.unwrap()
-        return ig
-    elif isinstance(new_ig_or_error, Failure):
-        err = new_ig_or_error.failure()
-        raise err
+
+def modify_entities_safe(
+    rp: RunnerPayload, entities: Iterable[Entity]
+) -> ResultE[RunnerPayload]:
+    """
+    Modify entities in a runner payload
+    """
+    new_s_or_error = modify_entities_safe(rp.s, entities)
+
+    if isinstance(new_s_or_error, Failure):
+        return new_s_or_error
     else:
-        raise Exception("get_instruction_generator_safe failed to produce a result")
+        new_rp = rp._replace(s=new_s_or_error.unwrap())
+        return Success(new_rp)
+
+
+def modify_entities(rp: RunnerPayload, entities: Iterable[Entity]) -> RunnerPayload:
+    """
+    Modify entities in a runner payload
+    """
+    return throw_or_return(modify_entities_safe(rp, entities))
