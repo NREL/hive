@@ -484,9 +484,9 @@ def mock_sim(
         sim_h3_search_resolution=h3_search_res,
     )
 
-    sim_v = throw_or_return(simulation_state_ops.add_vehicles_safe(sim, vehicles))
-    sim_s = throw_or_return(simulation_state_ops.add_stations_safe(sim_v, stations))
-    sim_b = throw_or_return(simulation_state_ops.add_bases_safe(sim_s, bases))
+    sim_v = simulation_state_ops.add_entities(sim, vehicles)
+    sim_s = simulation_state_ops.add_entities(sim_v, stations)
+    sim_b = simulation_state_ops.add_entities(sim_s, bases)
 
     return sim_b
 

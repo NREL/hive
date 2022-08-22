@@ -71,13 +71,13 @@ def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationS
 
     :return: the updated simulation state or an error
     """
-    if entity.__class__.__name__ ==  "Vehicle":
+    if entity.__class__.__name__ == "Vehicle":
         return add_vehicle_safe(sim, entity)
-    if entity.__class__.__name__ ==  "Station":
+    if entity.__class__.__name__ == "Station":
         return add_station_safe(sim, entity)
-    if entity.__class__.__name__ ==  "Base":
+    if entity.__class__.__name__ == "Base":
         return add_base_safe(sim, entity)
-    if entity.__class__.__name__ ==  "Request":
+    if entity.__class__.__name__ == "Request":
         return add_request_safe(sim, entity)
     else:
         err = SimulationStateError(f"cannot add entity {entity} to simulation")
@@ -138,25 +138,9 @@ def add_request_safe(
         return Success(updated_sim)
 
 
-def add_requests_safe(
-    sim: SimulationState, requests: Iterable[Request]
-) -> ResultE[SimulationState]:
-    """
-    adds a collection of requests to the simulation
-    """
-
-    def _add(request: Request):
-        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
-            return add_request_safe(sim, request)
-
-        return _inner
-
-    return apply_op_to_accumulator(_add, requests, sim)
-
-
-def remove_request(
+def remove_request_safe(
     sim: SimulationState, request_id: RequestId
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+) -> ResultE[SimulationState]:
     """
     removes a request from this simulation.
     called once a Request has been fully serviced and is no longer
@@ -172,7 +156,7 @@ def remove_request(
         error = SimulationStateError(
             f"attempting to remove request {request_id} which is not in simulation"
         )
-        return error, None
+        return Failure(error)
     else:
         request = sim.requests[request_id]
         search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
@@ -190,15 +174,25 @@ def remove_request(
             r_search=updated_r_search,
         )
 
-        return None, updated_sim
+        return Success(updated_sim)
 
 
-def modify_request(
-    sim: SimulationState, updated_request: Request
+def remove_request(
+    sim: SimulationState, request_id: RequestId
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = remove_request_safe(sim, request_id)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
+
+
+def modify_request_safe(
+    sim: SimulationState, updated_request: Request
+) -> ResultE[SimulationState]:
     """
     given an updated request, update the SimulationState with that request
-
 
     :param sim: the simulation state
     :param updated_request:
@@ -209,17 +203,17 @@ def modify_request(
         error = SimulationStateError(
             f"cannot update request {updated_request.id}, it was not already in the sim"
         )
-        return error, None
+        return Failure(error)
     elif not sim.road_network.geoid_within_geofence(updated_request.origin):
         error = SimulationStateError(
             f"cannot modify request {updated_request.id}: origin not within road network"
         )
-        return error, None
+        return Failure(error)
     elif not sim.road_network.geoid_within_geofence(updated_request.destination):
         error = SimulationStateError(
             f"cannot modify request {updated_request.id}: destination not within road network"
         )
-        return error, None
+        return Failure(error)
     else:
         result = DictOps.update_entity_dictionaries(
             updated_request,
@@ -234,7 +228,18 @@ def modify_request(
             r_locations=result.locations if result.locations else sim.r_locations,
             r_search=result.search if result.search else sim.r_search,
         )
-        return None, updated_sim
+        return Success(updated_sim)
+
+
+def modify_request(
+    sim: SimulationState, updated_request: Request
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = modify_request_safe(sim, updated_request)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
 
 
 def add_vehicle_safe(
@@ -269,28 +274,11 @@ def add_vehicle_safe(
         return Success(updated_sim)
 
 
-def add_vehicles_safe(
-    sim: SimulationState, vehicles: Iterable[Vehicle]
+def modify_vehicle_safe(
+    sim: SimulationState, updated_vehicle: Vehicle
 ) -> ResultE[SimulationState]:
     """
-    adds a collection of vehicles to the simulation
-    """
-
-    def _add(vehicle: Vehicle):
-        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
-            return add_vehicle_safe(sim, vehicle)
-
-        return _inner
-
-    return apply_op_to_accumulator(_add, vehicles, sim)
-
-
-def modify_vehicle(
-    sim: SimulationState, updated_vehicle: Vehicle
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-    """
     given an updated vehicle, update the SimulationState with that vehicle
-
 
     :param sim: the simulation state
     :param updated_vehicle: the vehicle after calling a transition function and .step()
@@ -305,12 +293,12 @@ def modify_vehicle(
         error = SimulationStateError(
             f"cannot update vehicle {vehicle.id}, it was not already in the sim"
         )
-        return error, None
+        return Failure(error)
     elif not sim.road_network.geoid_within_geofence(updated_vehicle.geoid):
         error = SimulationStateError(
             f"cannot add vehicle {updated_vehicle.id} to sim: not within road network"
         )
-        return error, None
+        return Failure(error)
     else:
         updated_dictionaries = DictOps.update_entity_dictionaries(
             updated_vehicle,
@@ -331,12 +319,23 @@ def modify_vehicle(
             if updated_dictionaries.search
             else sim.v_search,
         )
-        return None, updated_sim
+        return Success(updated_sim)
 
 
-def remove_vehicle(
-    sim: SimulationState, vehicle_id: VehicleId
+def modify_vehicle(
+    sim: SimulationState, updated_vehicle: Vehicle
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = modify_vehicle_safe(sim, updated_vehicle)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
+
+
+def remove_vehicle_safe(
+    sim: SimulationState, vehicle_id: VehicleId
+) -> ResultE[SimulationState]:
     """
     removes the vehicle from play (perhaps to simulate a broken vehicle or end of a shift)
 
@@ -349,12 +348,12 @@ def remove_vehicle(
         error = SimulationStateError(
             f"remove_vehicle() takes a VehicleId (str), not a {type(vehicle_id)}"
         )
-        return error, None
+        return Failure(error)
     elif vehicle_id not in sim.vehicles:
         error = SimulationStateError(
             f"attempting to remove vehicle {vehicle_id} which is not in simulation"
         )
-        return error, None
+        return Failure(error)
     else:
         vehicle = sim.vehicles[vehicle_id]
         search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
@@ -368,12 +367,23 @@ def remove_vehicle(
                 sim.v_search, search_geoid, vehicle_id
             ),
         )
-        return None, updated_sim
+        return Success(updated_sim)
 
 
-def pop_vehicle(
+def remove_vehicle(
     sim: SimulationState, vehicle_id: VehicleId
-) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, Vehicle]]]:
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = remove_vehicle_safe(sim, vehicle_id)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
+
+
+def pop_vehicle_safe(
+    sim: SimulationState, vehicle_id: VehicleId
+) -> ResultE[Tuple[SimulationState, Vehicle]]:
     """
     removes a vehicle from this SimulationState, which updates the state and also returns the vehicle.
     supports shipping this vehicle to another cluster node.
@@ -388,17 +398,28 @@ def pop_vehicle(
         error = SimulationStateError(
             f"attempting to pop vehicle {vehicle_id} which is not in simulation"
         )
-        return error, None
+        return Failure(error)
     else:
-        remove_error, remove_result = remove_vehicle(sim, vehicle_id)
-        if remove_error:
+        remove_result = remove_vehicle_safe(sim, vehicle_id)
+        if isinstance(remove_result, Failure):
             response = SimulationStateError(
                 f"failure in pop_vehicle for vehicle {vehicle_id}"
             )
-            response.__cause__ = remove_error
-            return response, None
+            response.__cause__ = remove_result.failure()
+            return Failure(error)
         else:
-            return None, (remove_result, vehicle)
+            return Success((remove_result.unwrap(), vehicle))
+
+
+def pop_vehicle(
+    sim: SimulationState, vehicle_id: VehicleId
+) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, Vehicle]]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = pop_vehicle_safe(sim, vehicle_id)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
 
 
 def add_station_safe(
@@ -433,25 +454,9 @@ def add_station_safe(
         return Success(updated_sim)
 
 
-def add_stations_safe(
-    sim: SimulationState, stations: Iterable[Station]
-) -> ResultE[SimulationState]:
-    """
-    adds a collection of stations to the simulation
-    """
-
-    def _add(station: Station):
-        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
-            return add_station_safe(sim, station)
-
-        return _inner
-
-    return apply_op_to_accumulator(_add, stations, sim)
-
-
-def remove_station(
+def remove_station_safe(
     sim: SimulationState, station_id: StationId
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+) -> ResultE[SimulationState]:
     """
     remove a station from the simulation. maybe they closed due to inclement weather.
 
@@ -465,7 +470,7 @@ def remove_station(
         error = SimulationStateError(
             f"cannot remove station {station_id}, it does not exist"
         )
-        return error, None
+        return Failure(error)
     else:
         search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
         updated_s_locations = DictOps.remove_from_collection_dict(
@@ -480,12 +485,23 @@ def remove_station(
             s_locations=updated_s_locations,
             s_search=updated_s_search,
         )
-        return None, updated_sim
+        return Success(updated_sim)
 
 
-def modify_station(
-    sim: SimulationState, updated_station: Station
+def remove_station(
+    sim: SimulationState, station_id: StationId
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = remove_station_safe(sim, station_id)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
+
+
+def modify_station_safe(
+    sim: SimulationState, updated_station: Station
+) -> ResultE[SimulationState]:
     """
     given an updated station, update the SimulationState with that station
 
@@ -497,25 +513,36 @@ def modify_station(
     station = sim.stations.get(updated_station.id)
     if not station:
         error = SimulationStateError(
-            f"cannot update station {station.id}, it was not already in the sim"
+            f"cannot update station {updated_station.id}, it was not already in the sim"
         )
-        return error, None
+        return Failure(error)
     elif station.geoid != updated_station.geoid:
         msg = f"station {station.id} attempting to move from {station.geoid} to {updated_station.geoid}, which is not permitted"
         error = SimulationStateError(msg)
-        return error, None
+        return Failure(error)
     elif not sim.road_network.geoid_within_geofence(updated_station.geoid):
         error = SimulationStateError(
             f"cannot add station {station.id} to sim: not within road network geofence"
         )
-        return error, None
+        return Failure(error)
     else:
         updated_sim = sim._replace(
             stations=DictOps.add_to_dict(
                 sim.stations, updated_station.id, updated_station
             )
         )
-        return None, updated_sim
+        return Success(updated_sim)
+
+
+def modify_station(
+    sim: SimulationState, updated_station: Station
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = modify_station_safe(sim, updated_station)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
 
 
 def add_base_safe(sim: SimulationState, base: Base) -> ResultE[SimulationState]:
@@ -549,25 +576,7 @@ def add_base_safe(sim: SimulationState, base: Base) -> ResultE[SimulationState]:
         return Success(updated_sim)
 
 
-def add_bases_safe(
-    sim: SimulationState, bases: Iterable[Base]
-) -> ResultE[SimulationState]:
-    """
-    adds a collection of bases to the simulation
-    """
-
-    def _add(base: Base):
-        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
-            return add_base_safe(sim, base)
-
-        return _inner
-
-    return apply_op_to_accumulator(_add, bases, sim)
-
-
-def remove_base(
-    sim: SimulationState, base_id: BaseId
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+def remove_base_safe(sim: SimulationState, base_id: BaseId) -> ResultE[SimulationState]:
     """
     remove a base from the simulation. all your base belong to us.
 
@@ -579,7 +588,7 @@ def remove_base(
     base = sim.bases.get(base_id)
     if not base:
         error = SimulationStateError(f"cannot remove base {base_id}, it does not exist")
-        return error, None
+        return Failure(error)
     else:
         search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
         updated_b_locations = DictOps.remove_from_collection_dict(
@@ -593,12 +602,23 @@ def remove_base(
             b_locations=updated_b_locations,
             b_search=updated_b_search,
         )
-        return None, updated_sim
+        return Success(updated_sim)
 
 
-def modify_base(
-    sim: SimulationState, updated_base: Base
+def remove_base(
+    sim: SimulationState, base_id: BaseId
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = remove_base_safe(sim, base_id)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
+
+
+def modify_base_safe(
+    sim: SimulationState, updated_base: Base
+) -> ResultE[SimulationState]:
     """
     given an updated base, update the SimulationState with that base
     invariant: base locations will not be changed!
@@ -613,21 +633,32 @@ def modify_base(
         error = SimulationStateError(
             f"cannot update base {updated_base.id}, it was not already in the sim"
         )
-        return error, None
+        return Failure(error)
     elif base.geoid != updated_base.geoid:
         msg = f"base {base.id} attempting to move from {base.geoid} to {updated_base.geoid}, which is not permitted"
         error = SimulationStateError(msg)
-        return error, None
+        return Failure(error)
     elif not sim.road_network.geoid_within_geofence(updated_base.geoid):
         error = SimulationStateError(
             f"cannot add base {updated_base.id} to sim: not within road network geofence"
         )
-        return error, None
+        return Failure(error)
     else:
         updated_sim = sim._replace(
             bases=DictOps.add_to_dict(sim.bases, updated_base.id, updated_base)
         )
-        return None, updated_sim
+        return Success(updated_sim)
+
+
+def modify_base(
+    sim: SimulationState, updated_base: Base
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    # TODO: refactor usage of this function to be the safe version
+    result = modify_base_safe(sim, updated_base)
+    if isinstance(result, Failure):
+        return result.failure(), None
+    else:
+        return None, result.unwrap()
 
 
 def update_road_network(sim: SimulationState, sim_time: SimTime) -> SimulationState:

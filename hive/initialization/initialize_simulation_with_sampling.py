@@ -153,9 +153,7 @@ def _build_bases(
         reader = csv.DictReader(bf)
         bases = [_collect_base(row) for row in reader]
 
-    sim_with_bases = throw_or_return(
-        simulation_state_ops.add_bases_safe(simulation_state, bases)
-    )
+    sim_with_bases = simulation_state_ops.add_entities(simulation_state, bases)
 
     return sim_with_bases
 
@@ -187,10 +185,8 @@ def _build_stations(
         )
 
     # add all stations to the simulation once we know they are complete
-    sim_with_stations = throw_or_return(
-        simulation_state_ops.add_stations_safe(
+    sim_with_stations = simulation_state_ops.add_entities(
             simulation_state, stations_builder.values()
         )
-    )
 
     return sim_with_stations

@@ -185,8 +185,8 @@ def _build_vehicles(
         vehicles = list(
             filter(lambda v: v is not None, [_collect_vehicle(row) for row in reader])
         )
-        sim_with_vehicles = throw_or_return(
-            simulation_state_ops.add_vehicles_safe(simulation_state, vehicles)
+        sim_with_vehicles = simulation_state_ops.add_entities(
+            simulation_state, vehicles
         )
 
     return sim_with_vehicles
@@ -227,9 +227,7 @@ def _build_bases(
             filter(lambda b: b is not None, [_collect_base(row) for row in reader])
         )
 
-    sim_w_bases = throw_or_return(
-        simulation_state_ops.add_bases_safe(simulation_state, bases)
-    )
+    sim_w_bases = simulation_state_ops.add_entities(simulation_state, bases)
 
     return sim_w_bases
 
@@ -334,8 +332,6 @@ def _build_stations(
         )
 
     # add all stations to the simulation once we know they are complete
-    sim_or_error = simulation_state_ops.add_stations_safe(
+    return simulation_state_ops.add_entities(
         simulation_state, stations_builder.values()
     )
-
-    return throw_or_return(sim_or_error)
