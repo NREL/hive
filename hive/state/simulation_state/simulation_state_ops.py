@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Iterable, Optional, TYPE_CHECKING
 
 import h3
-from returns.result import Result, Success, Failure, ResultE
+from returns.result import Success, Failure, ResultE
 
 from hive.model.sim_time import SimTime
 from hive.util import DictOps
 from hive.util.exception import SimulationStateError
-from hive.util.fp import apply_op_to_accumulator
+from hive.util.fp import apply_op_to_accumulator, throw_or_return
 from hive.util.typealiases import *
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from hive.model.base import Base
     from hive.model.request import Request
     from hive.model.station.station import Station
-    from hive.model.vehicle import Vehicle
+    from hive.model.vehicle.vehicle import Vehicle
 
 """
 a collection of operations to modify the SimulationState which are not
@@ -34,6 +34,75 @@ def tick(sim: SimulationState) -> SimulationState:
     """
 
     return sim._replace(sim_time=sim.sim_time + sim.sim_timestep_duration_seconds)
+
+
+def add_entity(sim: SimulationState, entity: Entity) -> SimulationState:
+    """
+    helper for adding an entity to the simulation
+
+    :param sim: the simulation state
+    :param entity: the entity to add
+
+    :return: the updated simulation state
+    :raises: an error if the entity cannot be added
+    """
+    return throw_or_return(add_entity_safe(sim, entity))
+
+
+def add_entities(sim: SimulationState, entities: Iterable[Entity]) -> SimulationState:
+    """
+    helper for adding multiple entities to the simulation
+
+    :param sim: the simulation state
+    :param entities: the entities to add
+
+    :return: the updated simulation state
+    :raises: an error if any of the entities cannot be added
+    """
+    return throw_or_return(add_entities_safe(sim, entities))
+
+
+def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
+    """
+    helper for adding a general entity to the simulation
+
+    :param sim: the simulation state
+    :param entity: the entity to add
+
+    :return: the updated simulation state or an error
+    """
+    if entity.__class__.__name__ ==  "Vehicle":
+        return add_vehicle_safe(sim, entity)
+    if entity.__class__.__name__ ==  "Station":
+        return add_station_safe(sim, entity)
+    if entity.__class__.__name__ ==  "Base":
+        return add_base_safe(sim, entity)
+    if entity.__class__.__name__ ==  "Request":
+        return add_request_safe(sim, entity)
+    else:
+        err = SimulationStateError(f"cannot add entity {entity} to simulation")
+        return Failure(err)
+
+
+def add_entities_safe(
+    sim: SimulationState, entities: Iterable[Entity]
+) -> ResultE[SimulationState]:
+    """
+    helper for adding multiple general entities to the simulation
+
+    :param sim: the simulation state
+    :param entities: the entities to add
+
+    :return: the updated simulation state or an error
+    """
+
+    def _add(entity: Entity):
+        def _inner(sim: SimulationState) -> ResultE[SimulationState]:
+            return add_entity_safe(sim, entity)
+
+        return _inner
+
+    return apply_op_to_accumulator(_add, entities, sim)
 
 
 def add_request_safe(
@@ -83,28 +152,6 @@ def add_requests_safe(
         return _inner
 
     return apply_op_to_accumulator(_add, requests, sim)
-
-
-def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
-    """
-    helper for adding a general entity to the simulation
-
-    :param sim: the simulation state
-    :param entity: the entity to add
-
-    :return: the updated simulation state or an error
-    """
-    if isinstance(entity, Vehicle):
-        return add_vehicle_safe(sim, entity)
-    elif isinstance(entity, Station):
-        return add_station_safe(sim, entity)
-    elif isinstance(entity, Base):
-        return add_base_safe(sim, entity)
-    elif isinstance(entity, Request):
-        return add_request_safe(sim, entity)
-    else:
-        err = SimulationStateError(f"cannot add entity {entity} to simulation")
-        return Failure(err)
 
 
 def remove_request(

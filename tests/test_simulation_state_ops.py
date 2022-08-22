@@ -8,6 +8,44 @@ from hive.resources.mock_lobster import *
 
 class TestSimulationStateOps(TestCase):
 
+    def test_add_entity(self):
+        sim = mock_sim()
+        req = mock_request()
+        station = mock_station()
+        base = mock_base()
+        vehicle = mock_vehicle()
+
+        sim_w_req = simulation_state_ops.add_entity_safe(sim, req).unwrap()
+        self.assertEqual(sim_w_req.requests[req.id], req)
+
+        sim_w_station = simulation_state_ops.add_entity_safe(sim, station).unwrap()
+        self.assertEqual(sim_w_station.stations[station.id], station)
+
+        sim_w_base = simulation_state_ops.add_entity_safe(sim, base).unwrap()
+        self.assertEqual(sim_w_base.bases[base.id], base)
+
+        sim_w_vehicle = simulation_state_ops.add_entity_safe(sim, vehicle).unwrap()
+        self.assertEqual(sim_w_vehicle.vehicles[vehicle.id], vehicle)
+    
+    def test_add_entities(self):
+        sim = mock_sim()
+
+        reqs = [mock_request(i) for i in range(10)]
+        sim_with_reqs = simulation_state_ops.add_entities_safe(sim, reqs).unwrap() 
+        self.assertEqual(len(sim_with_reqs.requests.values()), 10)
+
+        vehicles = [mock_vehicle(i) for i in range(10)]
+        sim_with_vehicles = simulation_state_ops.add_entities_safe(sim, vehicles).unwrap() 
+        self.assertEqual(len(sim_with_vehicles.vehicles.values()), 10)
+
+        stations = [mock_station(i) for i in range(10)]
+        sim_with_stations = simulation_state_ops.add_entities_safe(sim, stations).unwrap() 
+        self.assertEqual(len(sim_with_stations.stations.values()), 10)
+
+        bases = [mock_base(i) for i in range(10)]
+        sim_with_bases = simulation_state_ops.add_entities_safe(sim, bases).unwrap() 
+        self.assertEqual(len(sim_with_bases.bases.values()), 10)
+
     def test_add_request(self):
         req = mock_request()
         sim = mock_sim()
