@@ -21,8 +21,7 @@ class TestSimulationState(TestCase):
             stations=(sta,),
             bases=(b,)
         )
-        error, sim_with_request = simulation_state_ops.add_request(sim, req)
-        self.assertIsNone(error, "test invariant failed")
+        sim_with_request = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
         result = sim_with_request.at_geoid(veh.geoid)
         self.assertIn(veh.id, result['vehicles'], "should have found this vehicle")
@@ -35,8 +34,7 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere)
         sim = mock_sim(vehicles=(veh,))
-        error, sim_with_veh = simulation_state_ops.add_request(sim, req)
-        self.assertIsNone(error, "test invariant failed")
+        sim_with_veh = simulation_state_ops.add_request_safe(sim, req).unwrap()
         result = sim_with_veh.vehicle_at_request(veh.id, req.id)
         self.assertTrue(result, "the vehicle should be at the request")
 
@@ -46,7 +44,7 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         req = mock_request_from_geoids(origin=somewhere_else)
         sim = mock_sim(vehicles=(veh,))
-        error, sim_with_veh = simulation_state_ops.add_request(sim, req)
+        sim_with_veh = simulation_state_ops.add_request_safe(sim, req).unwrap()
         result = sim_with_veh.vehicle_at_request(veh.id, req.id)
         self.assertFalse(result, "the vehicle should not be at the request")
 
@@ -208,8 +206,7 @@ class TestSimulationState(TestCase):
         req = mock_request_from_geoids(origin=somewhere_else,
                                        destination=somewhere,
                                        passengers=2)
-        e1, sim = simulation_state_ops.add_request(mock_sim(vehicles=(veh,)), req)
-        self.assertIsNone(e1, "test invariant failed")
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(veh,)), req).unwrap()
 
         instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
         env = mock_env()
@@ -479,9 +476,9 @@ class TestSimulationState(TestCase):
         r1 = mock_request('r1', departure_time=0)
         r2 = mock_request('r2', departure_time=10)
         r3 = mock_request('r3', departure_time=20)
-        _, sim = simulation_state_ops.add_request(sim, r3)
-        _, sim = simulation_state_ops.add_request(sim, r2)
-        _, sim = simulation_state_ops.add_request(sim, r1)
+        sim = simulation_state_ops.add_request_safe(sim, r3).unwrap()
+        sim = simulation_state_ops.add_request_safe(sim, r2).unwrap()
+        sim = simulation_state_ops.add_request_safe(sim, r1).unwrap()
 
         sorted_requests = sim.get_requests(sort=True, sort_key=lambda r: r.departure_time)
 

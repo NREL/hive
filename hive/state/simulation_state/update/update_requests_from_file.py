@@ -6,6 +6,8 @@ from csv import DictReader
 from pathlib import Path
 from typing import NamedTuple, Tuple, Optional, Iterator, Dict
 
+from returns.result import Failure
+
 from hive.model.request import Request, RequestRateStructure
 from hive.model.sim_time import SimTime
 from hive.reporting.reporter import Report, ReportType
@@ -151,12 +153,14 @@ def update_requests_from_iterator(it: Iterator[Dict[str, str]],
             return sim
         else:
             req_updated = req.assign_value(rate_structure, sim.road_network)
-            error, sim_updated = simulation_state_ops.add_request(sim, req_updated)
-            if error:
+            sim_or_error = simulation_state_ops.add_request_safe(sim, req_updated)
+            if isinstance(sim, Failure):
+                error = sim_or_error.failure()
                 log.error(error)
                 return sim
             else:
                 # successfully added request
+                sim_updated = sim_or_error.unwrap()
                 req_in_sim = sim_updated.requests.get(req.id)
                 if not req_in_sim:
                     warning = f"adding new request {req.id} to sim succeeded but now request is not found"

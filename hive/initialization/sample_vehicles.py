@@ -13,7 +13,7 @@ from hive.runner import Environment
 from hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
 from hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
 from hive.state.simulation_state.simulation_state import SimulationState
-from hive.state.simulation_state.simulation_state_ops import add_vehicle_returns
+from hive.state.simulation_state.simulation_state_ops import add_vehicle_safe
 from hive.state.vehicle_state.idle import Idle
 from hive.util import Ratio
 
@@ -76,7 +76,7 @@ def sample_vehicles(
                                       vehicle_state=vehicle_state,
                                       driver_state=driver_state,
                                       total_seats=total_seats)
-                    add_result = add_vehicle_returns(s, vehicle)
+                    add_result = add_vehicle_safe(s, vehicle)
                     return add_result
                 except Exception as e:
                     return Failure(e)

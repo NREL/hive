@@ -22,7 +22,7 @@ class TestLocalSimulationRunner(TestCase):
             bases=(mock_base(stall_count=5),),
         )
 
-        _, initial_sim = simulation_state_ops.add_request(initial_sim, req)
+        initial_sim = simulation_state_ops.add_request_safe(initial_sim, req).unwrap()
 
         update = mock_update()
         runner_payload = RunnerPayload(initial_sim, env, update)

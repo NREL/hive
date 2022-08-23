@@ -19,7 +19,7 @@ class TestInstructionGenerators(TestCase):
             h3_search_res=9,
             vehicles=(close_veh, far_veh),
         )
-        _, sim = simulation_state_ops.add_request(sim, req)
+        sim = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
         dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
@@ -38,7 +38,7 @@ class TestInstructionGenerators(TestCase):
 
         req = mock_request_from_geoids(origin=somewhere)
         sim = mock_sim(h3_location_res=9, h3_search_res=9)
-        _, sim = simulation_state_ops.add_request(sim, req)
+        sim = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
         dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
