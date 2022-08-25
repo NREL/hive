@@ -8,6 +8,9 @@ import h3
 import immutables
 import logging
 
+from returns.result import ResultE, Success, Failure
+from hive.model.energy import charger
+
 from hive.runner.environment import Environment
 from hive.model.station.charger_state import ChargerState
 from hive.model.energy import EnergyType
@@ -17,13 +20,14 @@ from hive.model.entity_position import EntityPosition
 from hive.model.roadnetwork.link import Link
 from hive.model.roadnetwork.roadnetwork import RoadNetwork
 from hive.model.station.station_ops import (
-    station_state_update, 
-    station_state_optional_update, 
-    station_state_updates)
+    station_state_update,
+    station_state_optional_update,
+    station_state_updates,
+)
 from hive.util.error_or_result import ErrorOr
 from hive.util.typealiases import *
 from hive.util.exception import H3Error, SimulationStateError
-from hive.util.units import Currency
+from hive.util.units import Currency, KwH
 from hive.util.validation import validate_fields
 
 log = logging.getLogger(__name__)
@@ -49,6 +53,7 @@ class Station(NamedTuple):
     :param balance: the net income of this station
     :type balance: :py:obj:`Currency`
     """
+
     id: StationId
     position: EntityPosition
     state: immutables.Map[ChargerId, ChargerState]
@@ -61,16 +66,17 @@ class Station(NamedTuple):
         return self.position.geoid
 
     @classmethod
-    def build(cls,
-              id: StationId,
-              geoid: GeoId,
-              road_network: RoadNetwork,
-              chargers: immutables.Map[ChargerId, int],
-              on_shift_access: FrozenSet[ChargerId],
-              membership: Membership,
-              env: Environment
-              ):
-        
+    def build(
+        cls,
+        id: StationId,
+        geoid: GeoId,
+        road_network: RoadNetwork,
+        chargers: immutables.Map[ChargerId, int],
+        on_shift_access: FrozenSet[ChargerId],
+        membership: Membership,
+        env: Environment,
+    ):
+
         # TODO
         # problems with this
         # - mock_station code (and other code) can't call Station.build with a list of
@@ -122,13 +128,12 @@ class Station(NamedTuple):
             position=position,
             state=charger_states,
             on_shift_access_chargers=on_shift_access,
-            membership=membership
+            membership=membership,
         )
 
-    def append_chargers(self,
-               charger_id: ChargerId,
-               charger_count: int,
-               env: Environment) -> ErrorOr[Station]:
+    def append_chargers(
+        self, charger_id: ChargerId, charger_count: int, env: Environment
+    ) -> ErrorOr[Station]:
         """
         adds chargers to existing station along with amount of chargers to add.
         this method has "append" semantics: if this charger_id already exists at
@@ -153,21 +158,22 @@ class Station(NamedTuple):
                 )
                 return TypeError(msg), None
             append_cs = ChargerState.build(charger, charger_count)
-        
+
         updated_station_state = self.state.update({charger_id: append_cs})
         updated_on_shift = self.on_shift_access_chargers.union([charger_id])
         updated_station = self._replace(
-            state=updated_station_state,
-            on_shift_access_chargers=updated_on_shift
+            state=updated_station_state, on_shift_access_chargers=updated_on_shift
         )
         return None, updated_station
 
     @classmethod
-    def from_row(cls, row: Dict[str, str],
-                 builder: Union[immutables.Map[StationId, Station], Dict[StationId, Station]],
-                 road_network: RoadNetwork,
-                 env: Environment
-                 ) -> Station:
+    def from_row(
+        cls,
+        row: Dict[str, str],
+        builder: Union[immutables.Map[StationId, Station], Dict[StationId, Station]],
+        road_network: RoadNetwork,
+        env: Environment,
+    ) -> Station:
         """
         takes a csv row and turns it into a Station
 
@@ -180,31 +186,35 @@ class Station(NamedTuple):
         :return: a Station, or an error
         """
         _EXPECTED_FIELDS = [
-            'station_id',
-            'lat',
-            'lon',
-            'charger_id',
-            'charger_count',
-            'on_shift_access'
+            "station_id",
+            "lat",
+            "lon",
+            "charger_id",
+            "charger_count",
+            "on_shift_access",
         ]
         validate_fields(row, _EXPECTED_FIELDS)
-        
+
         # decode row string inputs
-        station_id = row['station_id']
+        station_id = row["station_id"]
         try:
-            lat, lon = float(row['lat']), float(row['lon'])
+            lat, lon = float(row["lat"]), float(row["lon"])
             geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
-            charger_id: ChargerId = row['charger_id']
-            charger_count = int(float(row['charger_count']))
-            on_shift_access = bool(strtobool(row['on_shift_access'].lower()))
+            charger_id: ChargerId = row["charger_id"]
+            charger_count = int(float(row["charger_count"]))
+            on_shift_access = bool(strtobool(row["on_shift_access"].lower()))
         except ValueError as v:
-            raise IOError(f"unable to parse station {station_id} from row due to invalid value(s): {row}") from v
-        
+            raise IOError(
+                f"unable to parse station {station_id} from row due to invalid value(s): {row}"
+            ) from v
+
         # add this station to the simulation. this can happen one of two ways:
         # 1. the provided station id has not yet been seen -> create a new station
         # 2. the provided station id has already been seen -> append to existing
         if charger_id is None:
-            raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
+            raise IOError(
+                f"invalid charger_id type {row['charger_id']} for station {station_id}"
+            )
         elif station_id not in builder:
             # create this station
             return Station.build(
@@ -212,14 +222,18 @@ class Station(NamedTuple):
                 geoid=geoid,
                 road_network=road_network,
                 chargers=immutables.Map({charger_id: charger_count}),
-                on_shift_access=frozenset([charger_id]) if on_shift_access else frozenset(),
+                on_shift_access=frozenset([charger_id])
+                if on_shift_access
+                else frozenset(),
                 membership=Membership(),
-                env=env
+                env=env,
             )
         else:
             # add this charger to the existing station
             prev_station = builder[station_id]
-            error, updated_station = prev_station.append_chargers(charger_id, charger_count, env)
+            error, updated_station = prev_station.append_chargers(
+                charger_id, charger_count, env
+            )
             if error is not None:
                 raise error
             return updated_station
@@ -237,7 +251,7 @@ class Station(NamedTuple):
 
     def get_charger_instance(self, charger_id: ChargerId) -> ErrorOr[Charger]:
         """
-        gets a Charger with a specific charger id from this station. this 
+        gets a Charger with a specific charger id from this station. this
         returns a Charger from the Station.state collection, which allows for
         modifications to the charging rate local to this station.
 
@@ -263,7 +277,7 @@ class Station(NamedTuple):
         """
         cs = self.state.get(charger_id)
         chargers = cs.available_chargers if cs is not None else None
-        return chargers    
+        return chargers
 
     def get_total_chargers(self, charger_id: ChargerId) -> Optional[int]:
         """
@@ -275,7 +289,7 @@ class Station(NamedTuple):
         """
         cs = self.state.get(charger_id)
         chargers = cs.total_chargers if cs is not None else None
-        return chargers   
+        return chargers
 
     def has_available_charger(self, charger_id: ChargerId) -> bool:
         """
@@ -307,6 +321,7 @@ class Station(NamedTuple):
         :param charger_id: the charger_id type to be checked out
         :return: Updated station or None if no chargers available/ if vehicle is not a member
         """
+
         def _checkout(cs: ChargerState):
             if not cs.has_available_charger():
                 return None, None
@@ -324,13 +339,67 @@ class Station(NamedTuple):
         :param charger_id: Charger to be returned
         :return: The updated station with returned charger_id
         """
+
         def _return(cs: ChargerState) -> ErrorOr[ChargerState]:
             return cs.increment_available_chargers()
 
         return station_state_update(station=self, charger_id=charger_id, op=_return)
 
-    def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> ErrorOr[Station]:
-        
+    def set_charger_rate(self, charger_id: ChargerId, rate: KwH) -> ResultE[Station]:
+        """
+        Set the rate for a charger.
+
+        :param charger_id: The charger to update.
+        :param rate: The rate to update to (in kwh)
+
+        :return: The updated station or an error
+        """
+        charger_state = self.state.get(charger_id)
+        if charger_state is None:
+            err = SimulationStateError(
+                f"Charger id {charger_id} does not exist at station {self.id}"
+            )
+            return Failure(err)
+
+        new_charger_state_or_err = charger_state.set_charge_rate(rate)
+        if isinstance(new_charger_state_or_err, Failure):
+            return new_charger_state_or_err
+        else:
+            new_charger_state = new_charger_state_or_err.unwrap()
+            new_state = self.state.set(charger_id, new_charger_state)
+            new_station = self._replace(state=new_state)
+            return Success(new_station)
+
+    def scale_charger_rate(
+        self, charger_id: ChargerId, scale: float
+    ) -> ResultE[Station]:
+        """
+        Scale the charging rate for a charger.
+
+        :param charger_id: The charger to update.
+        :param scale: The scale factor to use. Must be between [0, 1]
+
+        :return: The updated station or an error
+        """
+        charger_state = self.state.get(charger_id)
+        if charger_state is None:
+            err = SimulationStateError(
+                f"Charger id {charger_id} does not exist at station {self.id}"
+            )
+            return Failure(err)
+
+        new_charger_state_or_err = charger_state.scale_charge_rate(scale)
+        if isinstance(new_charger_state_or_err, Failure):
+            return new_charger_state_or_err
+        else:
+            new_charger_state = new_charger_state_or_err.unwrap()
+            new_state = self.state.set(charger_id, new_charger_state)
+            new_station = self._replace(state=new_state)
+            return Success(new_station)
+
+    def update_prices(
+        self, new_prices: immutables.Map[ChargerId, Currency]
+    ) -> ErrorOr[Station]:
         def _update(cs: ChargerState, price: Currency) -> ErrorOr[ChargerState]:
             return None, cs._replace(price_per_kwh=price)
 
@@ -352,6 +421,7 @@ class Station(NamedTuple):
         :param charger_id: the charger_id type
         :return: the updated Station
         """
+
         def _enqueue(cs: ChargerState) -> ErrorOr[ChargerState]:
             return None, cs.increment_enqueued_vehicles()
 
@@ -371,7 +441,9 @@ class Station(NamedTuple):
 
         return station_state_update(station=self, charger_id=charger_id, op=_dequeue)
 
-    def enqueued_vehicle_count_for_charger(self, charger_id: ChargerId) -> Optional[int]:
+    def enqueued_vehicle_count_for_charger(
+        self, charger_id: ChargerId
+    ) -> Optional[int]:
         """
         gets the current count of vehicles enqueued for a specific charger_id at this station
 
