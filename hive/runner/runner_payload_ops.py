@@ -1,4 +1,4 @@
-from typing import Iterable, Type, Union
+from typing import Iterable, Tuple, Type, Union
 from returns.result import ResultE, Success, Failure
 
 
@@ -60,6 +60,26 @@ def get_instruction_generator(
     """
     new_ig_or_error = rp.u.step_update.get_instruction_generator(ig)
     return throw_or_return(new_ig_or_error)
+
+
+def set_instruction_generators(
+    rp: RunnerPayload, instruction_generators: Tuple[InstructionGenerator]
+) -> RunnerPayload:
+    """
+    Set the instruction generators on a runner payload.
+    Overwrites any existing instruction generators.
+
+    :param rp: The runner payload to update
+    :param instruction_generators: The instruction generators to set
+
+    :return: The updated runner payload
+    """
+    new_step_simulation = rp.u.step_update.update_instruction_generators(
+        instruction_generators
+    )
+    new_update = rp.u._replace(step_update=new_step_simulation)
+    new_rp = rp._replace(u=new_update)
+    return new_rp
 
 
 def modify_entities_safe(
