@@ -9,6 +9,8 @@ import immutables
 import yaml
 from pkg_resources import resource_filename
 
+from returns.result import ResultE, Success, Failure
+
 from hive.config import HiveConfig
 from hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface

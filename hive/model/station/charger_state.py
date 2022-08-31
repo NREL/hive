@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import NamedTuple
+
+from returns.result import ResultE, Success, Failure
+
 from hive.model.energy.charger.charger import Charger
 from hive.util.typealiases import ChargerId
 from hive.util.units import Currency, KwH
@@ -116,7 +119,7 @@ class ChargerState(NamedTuple):
             )
             return None, updated
 
-    def set_charge_rate(self, value: KwH) -> ErrorOr[ChargerState]:
+    def set_charge_rate(self, value: KwH) -> ResultE[ChargerState]:
         """
         sets the charge rate to some provided KwH
         :param value: the value to set
@@ -125,46 +128,38 @@ class ChargerState(NamedTuple):
         """
         if value < 0.0:
             msg = f"attempting to set charge rate with negative KwH value {value}"
-            return ValueError(msg), None
+            return Failure(ValueError(msg))
         elif self.charger.rate < value:
             msg = (
                 f"attempting to set charge rate with KwH value {value} exceeding "
                 f"the factory charge rate {self.charger.rate}"
             )
-            return ValueError(msg), None
+            return Failure(ValueError(msg))
         else:
             updated = self._replace(
                 charger=self.charger._replace(
                     rate=value
                 )
             )
-            return None, updated
+            return Success(updated)
 
-    def scale_charge_rate(self, factor: float, env: Environment) -> ErrorOr[ChargerState]:
+    def scale_charge_rate(self, factor: float) -> ResultE[ChargerState]:
         """
         scales the charge rate by a factor of the Charger's prototype rate.
 
         :param factor: the factor, a percentage value in [0, 1]
-        :param env: the sim environment
         :return: updated charger state or an error
         """
-        ref_charger = env.chargers.get(self.id)
         if not 0.0 <= factor <= 1.0:
             msg = f"charge rate factor must be in range [0, 1], but found {factor}"
-            return ValueError(msg), None
-        elif ref_charger is None:
-            msg = (
-                f"station has charger with id {self.id} which is not "
-                f"found in the simulation environment"
-            )
-            return SimulationStateError(msg), None
+            return Failure(SimulationStateError(msg)) 
         else:
             updated = self._replace(
                 charger=self.charger._replace(
-                    rate=ref_charger.rate * factor
+                    rate=self.charger.rate * factor
                 )
             )
-            return None, updated
+            return Success(updated) 
     
     def reset_charge_rate(self) -> ChargerState:
         """
