@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from hive.runner import LocalSimulationRunner
-from hive.runner import RunnerPayload
-from hive.state.simulation_state.update.cancel_requests import CancelRequests
-from hive.resources.mock_lobster import *
+from nrel.hive.runner import LocalSimulationRunner
+from nrel.hive.runner import RunnerPayload
+from nrel.hive.state.simulation_state.update.cancel_requests import CancelRequests
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestLocalSimulationRunner(TestCase):

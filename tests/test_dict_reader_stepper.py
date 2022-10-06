@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from pkg_resources import resource_filename
 
-from hive.model.sim_time import SimTime
-from hive.util.iterators import *
+from nrel.hive.model.sim_time import SimTime
+from nrel.hive.util.iterators import *
 
 
 class TestDictReaderStepper(TestCase):
@@ -21,7 +21,7 @@ class TestDictReaderStepper(TestCase):
         self.assertIsInstance(error, Exception)
 
     def test_reading_up_to_a_time_bounds_should_leave_remaining_file_available(self):
-        test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
+        test_filename = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
         stop_time = SimTime.build('1970-01-01T00:12:00')
         stop_condition = self._generate_stop_condition(stop_time)
@@ -42,7 +42,7 @@ class TestDictReaderStepper(TestCase):
         stepper.close()
 
     def test_reading_two_consecutive_times(self):
-        test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
+        test_filename = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
         _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         stop1 = SimTime.build('1970-01-01T00:12:00')
@@ -68,7 +68,7 @@ class TestDictReaderStepper(TestCase):
         stepper.close()
 
     def test_no_agents_after_end_of_file(self):
-        test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
+        test_filename = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
         _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         _ = tuple(stepper.read_until_stop_condition(self._generate_stop_condition(SimTime.build(9999998))))
@@ -76,7 +76,7 @@ class TestDictReaderStepper(TestCase):
         self.assertEqual(len(result), 0, "should find no more agents after end of time")
 
     def test_no_second_file_reading_on_repeated_value(self):
-        test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
+        test_filename = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
         _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         stop = SimTime.build('1970-01-01T00:12:00')
@@ -86,7 +86,7 @@ class TestDictReaderStepper(TestCase):
         self.assertEqual(len(result2), 0, f"will not advance file by calling same stop value {stop}")
 
     def test_correct_management_of_stored_value_after_repeated_value(self):
-        test_filename = resource_filename("hive.resources.scenarios.denver_downtown.requests",
+        test_filename = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests",
                                           "denver_demo_requests.csv")
         _, stepper = DictReaderStepper.build(test_filename, "departure_time", parser=SimTime.build)
         stop1 = SimTime.build('1970-01-01T00:12:00')

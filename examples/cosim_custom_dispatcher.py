@@ -1,21 +1,24 @@
 import random
-from typing import NamedTuple, Tuple
+from typing import Tuple
 
 from dataclasses import dataclass, replace
 
 from tqdm import tqdm
 
-from hive import package_root
-from hive.dispatcher.instruction.instructions import IdleInstruction
-from hive.dispatcher.instruction_generator.instruction_generator import (
+from nrel.hive import package_root
+from nrel.hive.dispatcher.instruction.instructions import IdleInstruction
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
 )
-from hive.runner.runner_payload_ops import get_instruction_generator, update_instruction_generator
-from hive.state.simulation_state.simulation_state import SimulationState
-from hive.runner.environment import Environment
-from hive.dispatcher.instruction.instruction import Instruction
+from nrel.hive.runner.runner_payload_ops import (
+    get_instruction_generator,
+    update_instruction_generator,
+)
+from nrel.hive.state.simulation_state.simulation_state import SimulationState
+from nrel.hive.runner.environment import Environment
+from nrel.hive.dispatcher.instruction.instruction import Instruction
 
-import hive.app.hive_cosim as hc 
+import nrel.hive.app.hive_cosim as hc
 
 
 @dataclass(frozen=True)
@@ -36,11 +39,10 @@ class CustomDispatcher(InstructionGenerator):
             instructions.append(IdleInstruction(vehicle.id))
 
         return (self, tuple(instructions))
-    
+
     def new_random_state(self):
         new_r = random.choice(range(10))
         return replace(self, random_instructions=new_r)
-
 
 
 def run():
@@ -63,17 +65,19 @@ def run():
         crank_result = hc.crank(rp, 10)
 
         # get dispatcher to update it
-        dispatcher: CustomDispatcher = get_instruction_generator(crank_result.runner_payload, CustomDispatcher)
+        dispatcher: CustomDispatcher = get_instruction_generator(
+            crank_result.runner_payload, CustomDispatcher
+        )
 
         # apply some change to the state of the dispatcher
         updated_dispatcher = dispatcher.new_random_state()
 
         # inject the dispatcher back into the simulation
-        rp = update_instruction_generator(crank_result.runner_payload, updated_dispatcher)
-    
+        rp = update_instruction_generator(
+            crank_result.runner_payload, updated_dispatcher
+        )
+
     hc.close(rp)
-
-
 
 
 if __name__ == "__main__":

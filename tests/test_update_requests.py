@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
-from hive.resources.mock_lobster import *
+from nrel.hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestUpdateRequests(TestCase):
@@ -17,8 +17,8 @@ class TestUpdateRequests(TestCase):
             end_time="2019-01-10T00:00:00",
         )
         env = mock_env(config, fleet_ids=frozenset())
-        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
+        req_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
@@ -39,8 +39,8 @@ class TestUpdateRequests(TestCase):
             end_time="2019-01-10T00:00:00",
         )
         env = mock_env(config, fleet_ids=frozenset())
-        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
+        req_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
@@ -60,8 +60,8 @@ class TestUpdateRequests(TestCase):
             end_time="2019-01-10T00:00:00",
         )
         env = mock_env(config, fleet_ids=frozenset())
-        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
+        req_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
@@ -80,8 +80,8 @@ class TestUpdateRequests(TestCase):
             end_time="2019-01-10T00:00:00",
         )
         env = mock_env(config, fleet_ids=frozenset())
-        req_file = resource_filename("hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
-        rate_structure_file = resource_filename("hive.resources.scenarios.denver_downtown.service_prices",
+        req_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv")
+        rate_structure_file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.service_prices",
                                                 "rate_structure.csv")
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file, lazy_file_reading=True)
         result, _ = fn.update(sim, env)

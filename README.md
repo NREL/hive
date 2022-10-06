@@ -1,11 +1,11 @@
-# HIVE :honeybee:  
+# HIVE™ :honeybee:  
 
 **H**ighly  
 **I**ntegrated  
 **V**ehicle  
 **E**cosystem  
 
-HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.
+HIVE™ is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.
 
 ## What is HIVE
 

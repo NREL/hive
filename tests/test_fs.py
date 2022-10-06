@@ -5,8 +5,8 @@ from unittest import TestCase
 
 import yaml
 
-from hive.config.global_config import GlobalConfig
-from hive.util.fs import global_hive_config_search
+from nrel.hive.config.global_config import GlobalConfig
+from nrel.hive.util.fs import global_hive_config_search
 
 
 class TestDictReaderStepper(TestCase):

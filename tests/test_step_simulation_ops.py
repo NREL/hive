@@ -1,6 +1,6 @@
 from unittest import TestCase
-from hive.state.simulation_state.update.step_simulation_ops import step_vehicle
-from hive.resources.mock_lobster import *
+from nrel.hive.state.simulation_state.update.step_simulation_ops import step_vehicle
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestStepSimulationOps(TestCase):

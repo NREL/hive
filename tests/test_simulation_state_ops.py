@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from returns.result import Success
 
-from hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestSimulationStateOps(TestCase):
