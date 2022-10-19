@@ -102,7 +102,7 @@ Beyond these, HIVE uses Uber H3, a geospatial index which HIVE uses for position
 
 ## Developer documentation
 
-Documentation can be found [here](https://readthedocs.org/nrel_hive).
+Documentation can be found [here](https://readthedocs.org/nrel-hive).
 
 ## Why HIVE?
 
@@ -149,7 +149,7 @@ output_file = "~/hive/output/denver_demo_2021-02-08_11-00-07/state.log"
 pd.read_json(output_file, lines=True)
 ```
 
-By default, there are these outputs:
+By default, these outputs are generated:
 
 file name                        | file type | description
 -------------------------------- | --------- | -----------
@@ -162,7 +162,11 @@ station_capacities.csv           | CSV       | energy load capacity for each sta
 summary_stats.json               | JSON      | summary stats as displayed in run.log but in JSON format
 time_step_stats_{$FLEET|all}.csv | CSV       | aggregated data across a fleet (or all fleets) by time step
 
-Running this scenario should produce an output similar to the following. First, HIVE announces where it is loading configuration from. It then dumps the global and scenario configuration to the console. Finally, after around 65 lines, it begins running the simulation with a progress bar. After, it prints the summary stats to the console and exits.
+Running this scenario should also feed some logging into the console. 
+First, HIVE announces where it is loading configuration from (1). 
+It then dumps the global and scenario configuration to the console (2). 
+Finally, after around 65 lines, it begins running the simulation with a progress bar (3). 
+After, it prints the summary stats to the console and exits (4).
 
 ```
 (hive) $ hive denver_demo.yaml
@@ -178,8 +182,8 @@ Running this scenario should produce an output similar to the following. First, 
         .         .         . -{{_(|8)
           ' .  . ' ' .  . '     (__/
     
-/.../denver_demo.yaml
-[INFO] - nrel.hive.config.hive_config - global hive configuration loaded from hive/.hive.yaml
+/.../denver_demo.yaml (1)
+[INFO] - nrel.hive.config.hive_config - global hive configuration loaded from hive/.hive.yaml (2)
 [INFO] - nrel.hive.config.hive_config -   global_settings_file_path: hive/.hive.yaml
 [INFO] - nrel.hive.config.hive_config -   output_base_directory: hive_output
 [INFO] - nrel.hive.config.hive_config -   local_parallelism: 1
@@ -237,9 +241,9 @@ sim:
   timestep_duration_seconds: 60
 
 [INFO] - hive - creating run log at hive_output/denver_demo_2022-10-19_12-53-00/run.log with log level INFO
-[INFO] - hive - running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00:
+[INFO] - hive - running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00: (3)
 100%|█████████████████████████████████████████████████████████████████████████████████| 1440/1440 [00:10<00:00, 132.44it/s]
-[INFO] - hive - done! time elapsed: 10.88 seconds
+[INFO] - hive - done! time elapsed: 10.88 seconds (4)
 [INFO] - nrel.hive.reporting.handler.summary_stats - 49.67 %         Mean Final SOC
 [INFO] - nrel.hive.reporting.handler.summary_stats - 97.44 %         Requests Served
 [INFO] - nrel.hive.reporting.handler.summary_stats - 28.02 %         Time in State Idle
