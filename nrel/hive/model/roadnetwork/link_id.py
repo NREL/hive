@@ -3,7 +3,8 @@ from typing import Optional, Tuple, TypeVar
 from ast import literal_eval
 import re
 
-NodeId = TypeVar('NodeId')
+NodeId = TypeVar("NodeId")
+
 
 def create_link_id(src: int, dst: int) -> LinkId:
     """
@@ -15,7 +16,9 @@ def create_link_id(src: int, dst: int) -> LinkId:
     return f"{src}-{dst}"
 
 
-def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[NodeId, NodeId]]]:
+def extract_node_ids(
+    link_id: LinkId,
+) -> Tuple[Optional[Exception], Optional[Tuple[NodeId, NodeId]]]:
     """
     expects the provided string is of the form {src_node_id}-{dst_node_id}
     :param link_id: a string that is a LinkId
@@ -23,9 +26,19 @@ def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tup
     """
     result = link_id.split("-")
     if len(result) < 2:
-        return Exception(f"LinkId {link_id} does not take the form src_node_id-dst_node_id"), None
+        return (
+            Exception(
+                f"LinkId {link_id} does not take the form src_node_id-dst_node_id"
+            ),
+            None,
+        )
     elif len(result) > 2:
-        return Exception(f"LinkId {link_id} can only have one dash (-) character in the form src_node_id-dst_node_id"), None
+        return (
+            Exception(
+                f"LinkId {link_id} can only have one dash (-) character in the form src_node_id-dst_node_id"
+            ),
+            None,
+        )
     else:
         try:
             src = literal_eval(result[0])
@@ -36,7 +49,9 @@ def extract_node_ids(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tup
         return None, (src, dst)
 
 
-def reverse_link_id(link_id: LinkId) -> Tuple[Optional[Exception], Optional[LinkId]]:
+def reverse_link_id(
+    link_id: LinkId,
+) -> Tuple[Optional[Exception], Optional[LinkId]]:
     """
     attempts to reverse a link id by swapping the node ids. can be used to look up the
     "other side of the street" on 2-way streets.
@@ -45,7 +60,9 @@ def reverse_link_id(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Link
     """
     error, node_ids = extract_node_ids(link_id)
     if error:
-        response = Exception(f"failure during link reversal for link {link_id}")
+        response = Exception(
+            f"failure during link reversal for link {link_id}"
+        )
         response.__cause__ = error
         return response, None
     else:

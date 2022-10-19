@@ -16,14 +16,15 @@ if TYPE_CHECKING:
 
 class H3Ops:
     @classmethod
-    def nearest_entity_by_great_circle_distance(cls,
-                                                geoid: GeoId,
-                                                entities: immutables.Map[EntityId, Entity],
-                                                entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                                                sim_h3_search_resolution: int,
-                                                is_valid: Callable[[Entity], bool] = lambda x: True,
-                                                max_search_distance_km: Kilometers = 10  # kilometers
-                                                ) -> Optional[Entity]:
+    def nearest_entity_by_great_circle_distance(
+        cls,
+        geoid: GeoId,
+        entities: immutables.Map[EntityId, Entity],
+        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+        sim_h3_search_resolution: int,
+        is_valid: Callable[[Entity], bool] = lambda x: True,
+        max_search_distance_km: Kilometers = 10,  # kilometers
+    ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -44,20 +45,23 @@ class H3Ops:
             entity_search=entity_search,
             sim_h3_search_resolution=sim_h3_search_resolution,
             is_valid=is_valid,
-            distance_function=lambda e: cls.great_circle_distance(geoid, e.geoid),
-            max_search_distance_km=max_search_distance_km
+            distance_function=lambda e: cls.great_circle_distance(
+                geoid, e.geoid
+            ),
+            max_search_distance_km=max_search_distance_km,
         )
 
     @classmethod
-    def nearest_entity(cls,
-                       geoid: GeoId,
-                       entities: Tuple[Entity, ...],
-                       entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                       sim_h3_search_resolution: int,
-                       distance_function: Callable[[Entity], float],
-                       is_valid: Callable[[Entity], bool] = lambda x: True,
-                       max_search_distance_km: Kilometers = 10  # kilometers
-                       ) -> Optional[Entity]:
+    def nearest_entity(
+        cls,
+        geoid: GeoId,
+        entities: Tuple[Entity, ...],
+        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+        sim_h3_search_resolution: int,
+        distance_function: Callable[[Entity], float],
+        is_valid: Callable[[Entity], bool] = lambda x: True,
+        max_search_distance_km: Kilometers = 10,  # kilometers
+    ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -77,9 +81,13 @@ class H3Ops:
             return None
         geoid_res = h3.h3_get_resolution(geoid)
         if geoid_res < sim_h3_search_resolution:
-            raise H3Error('search resolution must be less than geoid resolution')
+            raise H3Error(
+                "search resolution must be less than geoid resolution"
+            )
 
-        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit='km') * 2  # kilometers
+        k_dist_km = (
+            h3.edge_length(sim_h3_search_resolution, unit="km") * 2
+        )  # kilometers
         max_k = ceil(max_search_distance_km / k_dist_km)
         search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
 
@@ -92,9 +100,14 @@ class H3Ops:
                 ring = h3.k_ring(search_geoid, current_k)
 
                 # get all entities in this ring
-                found = (entity for cell in ring
-                         for entity in cls.get_entities_at_cell(cell, entity_search, entities))
-                
+                found = (
+                    entity
+                    for cell in ring
+                    for entity in cls.get_entities_at_cell(
+                        cell, entity_search, entities
+                    )
+                )
+
                 best_dist_km = 1000000
                 best_entity = None
 
@@ -115,10 +128,12 @@ class H3Ops:
         return _search()
 
     @classmethod
-    def get_entities_at_cell(cls,
-                             search_cell: GeoId,
-                             entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-                             entities: Tuple[Entity, ...]) -> Tuple[Entity, ...]:
+    def get_entities_at_cell(
+        cls,
+        search_cell: GeoId,
+        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+        entities: Tuple[Entity, ...],
+    ) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
@@ -136,12 +151,13 @@ class H3Ops:
             return found
 
     @classmethod
-    def nearest_entity_point_to_point(cls,
-                                      geoid: GeoId,
-                                      entities: Dict[EntityId, Entity],
-                                      entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
-                                      is_valid: Callable = lambda x: True,
-                                      ) -> Optional[Entity]:
+    def nearest_entity_point_to_point(
+        cls,
+        geoid: GeoId,
+        entities: Dict[EntityId, Entity],
+        entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+        is_valid: Callable = lambda x: True,
+    ) -> Optional[Entity]:
         """
         A nearest neighbor search that scans all entities and returns the one with the lowest distance to the geoid.
 
@@ -193,7 +209,9 @@ class H3Ops:
         return 2 * avg_earth_radius_km * asin(sqrt(d))
 
     @classmethod
-    def point_along_link(cls, link: LinkTraversal, available_time_seconds: Seconds) -> GeoId:
+    def point_along_link(
+        cls, link: LinkTraversal, available_time_seconds: Seconds
+    ) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 
@@ -204,7 +222,9 @@ class H3Ops:
         """
 
         threshold = 0.000001
-        experienced_distance_km = (available_time_seconds * SECONDS_TO_HOURS) * link.speed_kmph
+        experienced_distance_km = (
+            available_time_seconds * SECONDS_TO_HOURS
+        ) * link.speed_kmph
         ratio_trip_experienced = experienced_distance_km / link.distance_km
         if ratio_trip_experienced < (0 + threshold):
             return link.start

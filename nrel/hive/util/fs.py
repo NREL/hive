@@ -25,7 +25,9 @@ def global_hive_config_search() -> GlobalConfig:
                 return _backprop_search(updated_search_path)
 
     # load the default file to be merged with any found files
-    default_global_config_file_path = pkg_resources.resource_filename("nrel.hive.resources.defaults", ".hive.yaml")
+    default_global_config_file_path = pkg_resources.resource_filename(
+        "nrel.hive.resources.defaults", ".hive.yaml"
+    )
     with Path(default_global_config_file_path).open() as df:
         default = yaml.safe_load(df)
 
@@ -42,7 +44,13 @@ def global_hive_config_search() -> GlobalConfig:
     file_found_at_home_directory = file_at_home_directory.is_file()
 
     # if we found a file (preferring the ones in the directory tree over the user home directory), we use that
-    file_found = file_found_in_backprop if file_found_in_backprop else file_at_home_directory if file_found_at_home_directory else None
+    file_found = (
+        file_found_in_backprop
+        if file_found_in_backprop
+        else file_at_home_directory
+        if file_found_at_home_directory
+        else None
+    )
     if file_found:
         with file_found.open() as f:
             global_hive_config = yaml.safe_load(f)
@@ -52,7 +60,12 @@ def global_hive_config_search() -> GlobalConfig:
         return GlobalConfig.from_dict(default, default_global_config_file_path)
 
 
-def construct_asset_path(file: str, scenario_directory: str, default_directory_name: str, resources_subdirectory: str) -> str:
+def construct_asset_path(
+    file: str,
+    scenario_directory: str,
+    default_directory_name: str,
+    resources_subdirectory: str,
+) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both
     the user-provided relative path, and if that fails, attempts to load at the default directory; finally, checks
@@ -71,23 +84,31 @@ def construct_asset_path(file: str, scenario_directory: str, default_directory_n
     :raises: FileNotFoundError if asset is not found
     """
     try:
-        result = construct_scenario_asset_path(file, scenario_directory, default_directory_name)
+        result = construct_scenario_asset_path(
+            file, scenario_directory, default_directory_name
+        )
         return result
     except FileNotFoundError:
         # try the resources directory fallback
-        fallback = pkg_resources.resource_filename(f"nrel.hive.resources.{resources_subdirectory}", file)
+        fallback = pkg_resources.resource_filename(
+            f"nrel.hive.resources.{resources_subdirectory}", file
+        )
         if Path(fallback).is_file():
             return fallback
         else:
-            msg = f"could not find the file {file} in any of the following locations: \n" \
-                  f" - {Path(scenario_directory).joinpath(file)} \n" \
-                  f" - {Path(scenario_directory).joinpath(default_directory_name).joinpath(file)} \n" \
-                  f" - {Path(fallback)}"
+            msg = (
+                f"could not find the file {file} in any of the following locations: \n"
+                f" - {Path(scenario_directory).joinpath(file)} \n"
+                f" - {Path(scenario_directory).joinpath(default_directory_name).joinpath(file)} \n"
+                f" - {Path(fallback)}"
+            )
 
             raise FileNotFoundError(msg)
 
 
-def construct_scenario_asset_path(file: str, scenario_directory: str, default_directory_name: str) -> str:
+def construct_scenario_asset_path(
+    file: str, scenario_directory: str, default_directory_name: str
+) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both
     the user-provided relative path, and if that fails, attempts to load at the default directory.
@@ -104,13 +125,19 @@ def construct_scenario_asset_path(file: str, scenario_directory: str, default_di
     :raises: FileNotFoundError if asset is not found
     """
     file_at_scenario_directory = Path(scenario_directory).joinpath(file)
-    file_at_default_directory = Path(scenario_directory).joinpath(default_directory_name).joinpath(file)
+    file_at_default_directory = (
+        Path(scenario_directory)
+        .joinpath(default_directory_name)
+        .joinpath(file)
+    )
     if file_at_scenario_directory.is_file():
         return str(file_at_scenario_directory)
     elif file_at_default_directory.is_file():
         return str(file_at_default_directory)
     else:
-        raise FileNotFoundError(f"cannot find file {file} in directory {scenario_directory}")
+        raise FileNotFoundError(
+            f"cannot find file {file} in directory {scenario_directory}"
+        )
 
 
 def find_scenario(user_provided_scenario: str) -> Path:
@@ -125,8 +152,17 @@ def find_scenario(user_provided_scenario: str) -> Path:
     """
     absolute_path = Path(user_provided_scenario).absolute()
     relative_path = Path.cwd().joinpath(user_provided_scenario)
-    den_path = Path(pkg_resources.resource_filename("nrel.hive.resources.scenarios.denver_downtown", user_provided_scenario))
-    nyc_path = Path(pkg_resources.resource_filename("nrel.hive.resources.scenarios.manhattan", user_provided_scenario))
+    den_path = Path(
+        pkg_resources.resource_filename(
+            "nrel.hive.resources.scenarios.denver_downtown",
+            user_provided_scenario,
+        )
+    )
+    nyc_path = Path(
+        pkg_resources.resource_filename(
+            "nrel.hive.resources.scenarios.manhattan", user_provided_scenario
+        )
+    )
 
     print(den_path)
 

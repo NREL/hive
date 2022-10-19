@@ -6,8 +6,12 @@ import logging
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
-from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.dispatcher.instruction.instruction_result import (
+    InstructionResult,
+)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
+    InstructionGenerator,
+)
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
@@ -19,7 +23,9 @@ from nrel.hive.util import TupleOps, SimulationStateError
 
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.util.typealiases import SimTime, VehicleId
 
 log = logging.getLogger(__name__)
@@ -27,20 +33,22 @@ log = logging.getLogger(__name__)
 
 def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
     i_dict = asdict(i)
-    i_dict['sim_time'] = sim_time
-    i_dict['instruction_type'] = i.__class__.__name__
+    i_dict["sim_time"] = sim_time
+    i_dict["instruction_type"] = i.__class__.__name__
 
     return Report(ReportType.INSTRUCTION, i_dict)
 
 
-def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_time: SimTime):
+def log_instructions(
+    instructions: Tuple[Instruction], env: Environment, sim_time: SimTime
+):
     for i in instructions:
         env.reporter.file_report(_instruction_to_report(i, sim_time))
 
 
-def step_vehicle(simulation_state: SimulationState,
-                 env: Environment,
-                 vehicle_id: VehicleId) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+def step_vehicle(
+    simulation_state: SimulationState, env: Environment, vehicle_id: VehicleId
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     steps a single vehicle for a single simulation time step.
 
@@ -53,10 +61,14 @@ def step_vehicle(simulation_state: SimulationState,
 
     vehicle = simulation_state.vehicles.get(vehicle_id)
     if not vehicle:
-        err = SimulationStateError(f"attempting to step vehicle {vehicle_id} but doesn't exist in this simulation state")
+        err = SimulationStateError(
+            f"attempting to step vehicle {vehicle_id} but doesn't exist in this simulation state"
+        )
         return err, None
 
-    driver_error, driver_sim = vehicle.driver_state.update(simulation_state, env)
+    driver_error, driver_sim = vehicle.driver_state.update(
+        simulation_state, env
+    )
 
     if driver_error:
         return driver_error, None
@@ -65,13 +77,15 @@ def step_vehicle(simulation_state: SimulationState,
 
     if vehicle_error:
         return vehicle_error, None
-    
+
     next_time_sim = tick(vehicle_sim)
 
     return None, next_time_sim
 
 
-def perform_driver_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
+def perform_driver_state_updates(
+    simulation_state: SimulationState, env: Environment
+) -> SimulationState:
     """
     helper function for StepSimulation which runs the update function for all driver states
 
@@ -91,11 +105,15 @@ def perform_driver_state_updates(simulation_state: SimulationState, env: Environ
         else:
             return updated_sim
 
-    next_state = ft.reduce(_step_drivers, simulation_state.vehicles.values(), simulation_state)
+    next_state = ft.reduce(
+        _step_drivers, simulation_state.vehicles.values(), simulation_state
+    )
     return next_state
 
 
-def perform_vehicle_state_updates(simulation_state: SimulationState, env: Environment) -> SimulationState:
+def perform_vehicle_state_updates(
+    simulation_state: SimulationState, env: Environment
+) -> SimulationState:
     """
     helper function for StepSimulation which applies a vehicle state update to each vehicle
 
@@ -127,12 +145,15 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
         :return: the vehicles with all ChargeQueueing vehicles at the tail
         """
         charge_queueing_vehicles, other_vehicles = TupleOps.partition(
-            lambda v: isinstance(v.vehicle_state, ChargeQueueing),
-            vs
+            lambda v: isinstance(v.vehicle_state, ChargeQueueing), vs
         )
 
         sorted_charge_queueing_vehicles = tuple(
-            sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time))
+            sorted(
+                charge_queueing_vehicles,
+                key=lambda v: v.vehicle_state.enqueue_time,
+            )
+        )
 
         return other_vehicles + sorted_charge_queueing_vehicles
 
@@ -144,12 +165,14 @@ def perform_vehicle_state_updates(simulation_state: SimulationState, env: Enviro
     return next_state
 
 
-InstructionApplicationResult = Tuple[Optional[Exception], Optional[InstructionResult]]
+InstructionApplicationResult = Tuple[
+    Optional[Exception], Optional[InstructionResult]
+]
 
 
-def apply_instructions(sim: SimulationState,
-                       env: Environment,
-                       instructions: Tuple[Instruction]) -> SimulationState:
+def apply_instructions(
+    sim: SimulationState, env: Environment, instructions: Tuple[Instruction]
+) -> SimulationState:
     """
     this helper function takes a map with one instruction per agent at most, and attempts to apply each
     instruction to the simulation, managing the instruction's externalities, and managing failure.
@@ -167,24 +190,38 @@ def apply_instructions(sim: SimulationState,
         # todo: inject some means for parallel execution of the apply instruction operation
         #   requires shared memory access to SimulationState and Environment,
         #   and a serialization codec to ship Instructions and Instruction.apply_instruction remotely
-        instruction_results_and_errors, updated_sim = ((NotImplementedError, None),), sim
+        instruction_results_and_errors, updated_sim = (
+            (NotImplementedError, None),
+        ), sim
     else:
         # run in a synchronous loop
-        def apply_instructions(acc: Tuple[Tuple[InstructionApplicationResult, ...], SimulationState],
-                               i: Instruction) -> Tuple[Tuple[InstructionApplicationResult, ...], SimulationState]:
+        def apply_instructions(
+            acc: Tuple[
+                Tuple[InstructionApplicationResult, ...], SimulationState
+            ],
+            i: Instruction,
+        ) -> Tuple[Tuple[InstructionApplicationResult, ...], SimulationState]:
             results, inner_sim = acc
             err, instruction_result = i.apply_instruction(inner_sim, env)
             if err is not None:
                 log.error(err)
                 return acc
             else:
-                updated_instructions = inner_sim.applied_instructions.update({i.vehicle_id: i})
-                updated_sim = inner_sim._replace(applied_instructions=updated_instructions)
+                updated_instructions = inner_sim.applied_instructions.update(
+                    {i.vehicle_id: i}
+                )
+                updated_sim = inner_sim._replace(
+                    applied_instructions=updated_instructions
+                )
                 return results + ((None, instruction_result),), updated_sim
 
-        instruction_results_and_errors, updated_sim = ft.reduce(apply_instructions, instructions, ((), sim))
+        instruction_results_and_errors, updated_sim = ft.reduce(
+            apply_instructions, instructions, ((), sim)
+        )
 
-    has_errors, no_errors = TupleOps.partition(lambda t: t[0] is not None, instruction_results_and_errors)
+    has_errors, no_errors = TupleOps.partition(
+        lambda t: t[0] is not None, instruction_results_and_errors
+    )
     valid_instruction_results = map(lambda t: t[1], no_errors)
     # report any errors from applying instructions
     if len(has_errors) > 0:
@@ -194,10 +231,15 @@ def apply_instructions(sim: SimulationState,
 
     # update the simulation with each vehicle state transition in sequence
     def _add_instruction(
-            s: SimulationState,
-            i: InstructionResult,
+        s: SimulationState,
+        i: InstructionResult,
     ) -> SimulationState:
-        update_error, updated_sim = entity_state_ops.transition_previous_to_next(s, env, i.prev_state, i.next_state)
+        (
+            update_error,
+            updated_sim,
+        ) = entity_state_ops.transition_previous_to_next(
+            s, env, i.prev_state, i.next_state
+        )
         if update_error:
             log.error(update_error)
             return s
@@ -207,9 +249,7 @@ def apply_instructions(sim: SimulationState,
             return updated_sim
 
     result = ft.reduce(
-        _add_instruction,
-        valid_instruction_results,
-        updated_sim
+        _add_instruction, valid_instruction_results, updated_sim
     )
 
     return result
@@ -223,9 +263,14 @@ class UserProvidedUpdateAccumulator(NamedTuple):
 
 
 def instruction_generator_update_fn(
-        fn: Callable[[InstructionGenerator, SimulationState], Optional[InstructionGenerator]],
-        sim: SimulationState
-) -> Callable[[UserProvidedUpdateAccumulator, InstructionGenerator], UserProvidedUpdateAccumulator]:
+    fn: Callable[
+        [InstructionGenerator, SimulationState], Optional[InstructionGenerator]
+    ],
+    sim: SimulationState,
+) -> Callable[
+    [UserProvidedUpdateAccumulator, InstructionGenerator],
+    UserProvidedUpdateAccumulator,
+]:
     """
     applies a user-provided function designed to inject an external update to InstructionGenerators
 
@@ -234,9 +279,9 @@ def instruction_generator_update_fn(
     :return: the updated list of InstructionGenerators
     """
 
-    def _inner(acc: UserProvidedUpdateAccumulator,
-               i: InstructionGenerator
-               ) -> UserProvidedUpdateAccumulator:
+    def _inner(
+        acc: UserProvidedUpdateAccumulator, i: InstructionGenerator
+    ) -> UserProvidedUpdateAccumulator:
         try:
             result = fn(i, sim)
             if not result:

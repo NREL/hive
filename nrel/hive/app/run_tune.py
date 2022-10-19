@@ -7,7 +7,9 @@ from typing import Dict
 import ray
 from ray import tune
 
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
+    ChargingFleetManager,
+)
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.reporting.reporter import Reporter
@@ -18,8 +20,8 @@ from nrel.hive.util import fs
 
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
-    'scenario_file',
-    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")'
+    "scenario_file",
+    help='which scenario file to run (try "denver_downtown.yaml" or "manhattan.yaml")',
 )
 
 log = logging.getLogger("hive")
@@ -52,13 +54,13 @@ class OptimizationWrapper(tune.Trainable):
         print("VEHICLES ", payload.s.vehicles.values())
         return score
 
-    def _setup(self, config: Dict[str: int]):
+    def _setup(self, config: Dict[str:int]):
         scenarios = {
-            1: 'denver_demo.yaml',
-            2: 'denver_demo_constrained_charging.yaml',
+            1: "denver_demo.yaml",
+            2: "denver_demo_constrained_charging.yaml",
         }
-        scenario_file = scenarios[config['scenario']]
-        log.info(f'setting up experiment with scenario {scenario_file}')
+        scenario_file = scenarios[config["scenario"]]
+        log.info(f"setting up experiment with scenario {scenario_file}")
 
         # TODO: update this load method with a the new sampling loader.
         sim, env = load_simulation(fs.find_scenario(scenario_file))
@@ -87,16 +89,16 @@ def run() -> int:
 
     _welcome_to_hive()
 
-    log.info('running tune experiments')
+    log.info("running tune experiments")
 
     result = tune.run(
         OptimizationWrapper,
         stop={"training_iteration": 1},
-        config={'scenario': tune.grid_search([1, 2])}
+        config={"scenario": tune.grid_search([1, 2])},
     )
 
     df = result.dataframe()
-    df = df[['config/scenario', 'score']]
+    df = df[["config/scenario", "score"]]
 
     df.to_csv("results.csv", index=False)
 

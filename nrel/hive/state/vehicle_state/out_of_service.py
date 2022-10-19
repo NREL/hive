@@ -6,12 +6,17 @@ from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.runner.environment import Environment
-from nrel.hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
+from nrel.hive.state.vehicle_state.vehicle_state import (
+    VehicleState,
+    VehicleStateInstanceId,
+)
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 
 @dataclass(frozen=True)
@@ -34,21 +39,28 @@ class OutOfService(VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.OUT_OF_SERVICE
 
-    def update(self, sim: SimulationState,
-               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState,
-              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
 
-        new_state = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+        new_state = VehicleState.apply_new_vehicle_state(
+            sim, self.vehicle_id, self
+        )
         return new_state
 
-    def exit(self, next_state: VehicleState, sim: SimulationState,
-             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(
+        self, next_state: VehicleState, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(
+        self, sim: SimulationState, env: Environment
+    ) -> bool:
         """
         There is no terminal state for OutOfService
 
@@ -59,8 +71,8 @@ class OutOfService(VehicleState):
         return False
 
     def _default_terminal_state(
-            self, sim: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -70,8 +82,9 @@ class OutOfService(VehicleState):
         """
         return None, self
 
-    def _perform_update(self, sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         as of now, there is no update for being OutOfService
 

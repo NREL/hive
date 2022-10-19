@@ -4,32 +4,42 @@ from nrel.hive.resources.mock_lobster import *
 
 
 class TestICE(TestCase):
-
     def test_energy_gain(self):
         ice = mock_ice(tank_capacity_gallons=10)
         vehicle = mock_vehicle(soc=0, mechatronics=ice)
 
-        full_vehicle, _ = ice.add_energy(vehicle, mock_gasoline_pump(), hours_to_seconds(10))
+        full_vehicle, _ = ice.add_energy(
+            vehicle, mock_gasoline_pump(), hours_to_seconds(10)
+        )
         self.assertAlmostEqual(
-            full_vehicle.energy[EnergyType.GASOLINE] / ice.tank_capacity_gallons,
+            full_vehicle.energy[EnergyType.GASOLINE]
+            / ice.tank_capacity_gallons,
             1,
-            places=2
+            places=2,
         )
 
     def test_energy_gain_full_soc(self):
         ice = mock_ice(tank_capacity_gallons=10)
         vehicle = mock_vehicle(soc=1, mechatronics=ice)
 
-        full_vehicle, _ = ice.add_energy(vehicle, mock_gasoline_pump(), hours_to_seconds(10))
+        full_vehicle, _ = ice.add_energy(
+            vehicle, mock_gasoline_pump(), hours_to_seconds(10)
+        )
 
-        self.assertEqual(full_vehicle.energy[EnergyType.GASOLINE], 10, "Should be full")
+        self.assertEqual(
+            full_vehicle.energy[EnergyType.GASOLINE], 10, "Should be full"
+        )
 
     def test_energy_cost_empty_route(self):
         ice = mock_ice(tank_capacity_gallons=10)
         vehicle = mock_vehicle(soc=1, mechatronics=ice)
 
         moved_vehicle = ice.consume_energy(vehicle, route=())
-        self.assertEqual(moved_vehicle.energy[EnergyType.GASOLINE], 10, "empty route should yield zero energy cost")
+        self.assertEqual(
+            moved_vehicle.energy[EnergyType.GASOLINE],
+            10,
+            "empty route should yield zero energy cost",
+        )
 
     def test_energy_cost_real_route(self):
         ice = mock_ice(tank_capacity_gallons=10, nominal_miles_per_gallon=10)
@@ -44,7 +54,8 @@ class TestICE(TestCase):
         self.assertAlmostEqual(
             10 - moved_vehicle.energy[EnergyType.GASOLINE],
             expected_gal_gas,
-            places=0)
+            places=0,
+        )
 
     def test_remaining_range(self):
         ice = mock_ice(tank_capacity_gallons=10, nominal_miles_per_gallon=10)

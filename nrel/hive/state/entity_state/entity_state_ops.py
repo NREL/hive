@@ -25,7 +25,9 @@ def transition_previous_to_next(
     if exit_error:
         prev_state_name = prev_state.__class__.__name__
         next_state_name = next_state.__class__.__name__
-        error = StateTransitionError(repr(exit_error), prev_state_name, next_state_name)
+        error = StateTransitionError(
+            repr(exit_error), prev_state_name, next_state_name
+        )
         return error, None
     elif not exit_sim:
         return None, None

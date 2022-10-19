@@ -6,24 +6,23 @@ from typing import Dict
 from nrel.hive.util.typealiases import *
 
 
-Key = TypeVar('Key')
+Key = TypeVar("Key")
 """
 the type used to switch off of
 """
 
-Arguments = TypeVar('Arguments')
+Arguments = TypeVar("Arguments")
 """
 the type of the arguments fed to the inner switch clause
 """
 
-Result = TypeVar('Result')
+Result = TypeVar("Result")
 """
 the type returned from the SwitchCase (can be "Any")
 """
 
 
 class SwitchCase(ABC):
-
     @abstractmethod
     def _default(self, arguments: Arguments) -> Result:
         """

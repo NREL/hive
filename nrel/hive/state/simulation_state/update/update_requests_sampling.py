@@ -66,7 +66,9 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
             stop_condition=lambda dt: dt < 0,
         )
 
-        return UpdateRequestsSampling(request_iterator=stepper, rate_structure=rate_structure)
+        return UpdateRequestsSampling(
+            request_iterator=stepper, rate_structure=rate_structure
+        )
 
     def update(
         self, sim_state: SimulationState, env: Environment
@@ -93,10 +95,14 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
             for r in self.request_iterator
         )
 
-        def _add_request(sim: SimulationState, request: Request) -> SimulationState:
+        def _add_request(
+            sim: SimulationState, request: Request
+        ) -> SimulationState:
             # add request and handle any errors
 
-            new_sim_or_error = simulation_state_ops.add_request_safe(sim, request)
+            new_sim_or_error = simulation_state_ops.add_request_safe(
+                sim, request
+            )
             if isinstance(new_sim_or_error, Failure):
                 error = new_sim_or_error.failure()
                 log.error(error)

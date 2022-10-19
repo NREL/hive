@@ -97,7 +97,9 @@ def modify_entities_safe(
         return Success(new_rp)
 
 
-def modify_entities(rp: RunnerPayload, entities: Iterable[Entity]) -> RunnerPayload:
+def modify_entities(
+    rp: RunnerPayload, entities: Iterable[Entity]
+) -> RunnerPayload:
     """
     Modify entities in a runner payload
     """

@@ -30,10 +30,14 @@ class TestH3Ops(TestCase):
         somewhere = h3.geo_to_h3(39.748971, -104.992323, 15)
         close_to_somewhere = h3.geo_to_h3(39.753600, -104.993369, 15)
         far_from_somewhere = h3.geo_to_h3(39.728882, -105.002792, 15)
-        entities = immutables.Map({'1': 1, '2': 2, '3': 3, '4': 4})
-        entity_locations = immutables.Map({close_to_somewhere: ('1', '2'), far_from_somewhere: ('3', '4')})
+        entities = immutables.Map({"1": 1, "2": 2, "3": 3, "4": 4})
+        entity_locations = immutables.Map(
+            {close_to_somewhere: ("1", "2"), far_from_somewhere: ("3", "4")}
+        )
 
-        nearest_entity = H3Ops.nearest_entity_point_to_point(somewhere, entities, entity_locations)
+        nearest_entity = H3Ops.nearest_entity_point_to_point(
+            somewhere, entities, entity_locations
+        )
 
         self.assertEqual(nearest_entity, 1, "should have returned 1")
 
@@ -47,17 +51,29 @@ class TestH3Ops(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, h3_resolution)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, h3_resolution)
         far_from_somewhere = h3.geo_to_h3(39.755, -104.976, h3_resolution)
-        req_near = mock_request_from_geoids(origin=somewhere, destination=near_to_somewhere)
-        req_far = mock_request_from_geoids(origin=somewhere, destination=far_from_somewhere)
+        req_near = mock_request_from_geoids(
+            origin=somewhere, destination=near_to_somewhere
+        )
+        req_far = mock_request_from_geoids(
+            origin=somewhere, destination=far_from_somewhere
+        )
 
-        sim = mock_sim(h3_location_res=h3_resolution, h3_search_res=h3_search_res)
-        sim_with_req1 = throw_or_return(simulation_state_ops.add_request_safe(sim, req_near))
-        sim_with_reqs = throw_or_return(simulation_state_ops.add_request_safe(sim_with_req1, req_far))
+        sim = mock_sim(
+            h3_location_res=h3_resolution, h3_search_res=h3_search_res
+        )
+        sim_with_req1 = throw_or_return(
+            simulation_state_ops.add_request_safe(sim, req_near)
+        )
+        sim_with_reqs = throw_or_return(
+            simulation_state_ops.add_request_safe(sim_with_req1, req_far)
+        )
 
-        nearest = H3Ops.nearest_entity_by_great_circle_distance(geoid=somewhere,
-                                                                entities=tuple(sim_with_reqs.requests.values()),
-                                                                entity_search=sim_with_reqs.r_search,
-                                                                sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution)
+        nearest = H3Ops.nearest_entity_by_great_circle_distance(
+            geoid=somewhere,
+            entities=tuple(sim_with_reqs.requests.values()),
+            entity_search=sim_with_reqs.r_search,
+            sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution,
+        )
 
         self.assertEqual(nearest.geoid, req_near.geoid)
 

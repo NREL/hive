@@ -4,9 +4,15 @@ import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
-from nrel.hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
+from nrel.hive.model.roadnetwork.route import (
+    Route,
+    route_cooresponds_with_entities,
+)
 from nrel.hive.runner.environment import Environment
-from nrel.hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
+from nrel.hive.state.vehicle_state.vehicle_state import (
+    VehicleState,
+    VehicleStateInstanceId,
+)
 from nrel.hive.state.vehicle_state import vehicle_state_ops
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
@@ -15,7 +21,9 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import BaseId, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -29,26 +37,40 @@ class DispatchBase(VehicleState):
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
-        return cls(vehicle_id=vehicle_id, base_id=base_id, route=route, instance_id=uuid4())
+    def build(
+        cls, vehicle_id: VehicleId, base_id: BaseId, route: Route
+    ) -> DispatchBase:
+        return cls(
+            vehicle_id=vehicle_id,
+            base_id=base_id,
+            route=route,
+            instance_id=uuid4(),
+        )
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.DISPATCH_BASE
-    
+
     def update_route(self, route: Route) -> DispatchBase:
         return replace(self, route=route)
 
-    def update(self, sim: SimulationState,
-               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState,
-              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
-        is_valid = route_cooresponds_with_entities(self.route, vehicle.position,
-                                                   base.position) if vehicle and base else False
+        is_valid = (
+            route_cooresponds_with_entities(
+                self.route, vehicle.position, base.position
+            )
+            if vehicle and base
+            else False
+        )
         context = f"vehicle {self.vehicle_id} entering dispatch base state at base {self.base_id}"
         if not base:
             msg = f"base not found; context: {context}"
@@ -58,18 +80,25 @@ class DispatchBase(VehicleState):
             return SimulationStateError(msg), None
         elif not is_valid:
             return None, None
-        elif not base.membership.grant_access_to_membership(vehicle.membership):
+        elif not base.membership.grant_access_to_membership(
+            vehicle.membership
+        ):
             msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
             return SimulationStateError(msg), None
         else:
-            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
+            result = VehicleState.apply_new_vehicle_state(
+                sim, self.vehicle_id, self
+            )
             return result
 
-    def exit(self, next_state: VehicleState, sim: SimulationState,
-             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(
+        self, next_state: VehicleState, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
+    def _has_reached_terminal_state_condition(
+        self, sim: SimulationState, env: Environment
+    ) -> bool:
         """
         this terminates when we reach a base
 
@@ -80,8 +109,8 @@ class DispatchBase(VehicleState):
         return len(self.route) == 0
 
     def _default_terminal_state(
-            self, sim: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -106,8 +135,9 @@ class DispatchBase(VehicleState):
                 next_state = Idle.build(self.vehicle_id)
             return None, next_state
 
-    def _perform_update(self, sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         take a step along the route to the base
 
@@ -115,11 +145,14 @@ class DispatchBase(VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
+        move_error, move_sim = vehicle_state_ops.move(
+            sim, env, self.vehicle_id
+        )
 
         if move_error:
             response = SimulationStateError(
-                f"failure during DispatchBase._perform_update for vehicle {self.vehicle_id}")
+                f"failure during DispatchBase._perform_update for vehicle {self.vehicle_id}"
+            )
             response.__cause__ = move_error
             return response, None
         else:

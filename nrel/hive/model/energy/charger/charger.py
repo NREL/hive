@@ -10,6 +10,7 @@ class Charger(NamedTuple):
     """
     Represents a charger in the simulation.
     """
+
     id: ChargerId
     energy_type: EnergyType
     rate: float

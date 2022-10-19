@@ -35,7 +35,9 @@ class HiveConfig(NamedTuple):
         cls,
         scenario_file_path: Path,
         config: Dict = None,
-        output_suffix: Optional[str] = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        output_suffix: Optional[str] = datetime.now().strftime(
+            "%Y-%m-%d_%H-%M-%S"
+        ),
     ) -> Union[Exception, HiveConfig]:
         """
         builds a hive config by reading from a scenario file. optionally append additional key/value
@@ -48,12 +50,16 @@ class HiveConfig(NamedTuple):
         return ConfigBuilder.build(
             default_config={},
             required_config=(),
-            config_constructor=lambda c: HiveConfig.from_dict(c, scenario_file_path, output_suffix),
-            config=config)
+            config_constructor=lambda c: HiveConfig.from_dict(
+                c, scenario_file_path, output_suffix
+            ),
+            config=config,
+        )
 
     @classmethod
-    def from_dict(cls, d: Dict, scenario_file_path: Path,
-                  output_suffix: Optional[str]) -> Union[Exception, HiveConfig]:
+    def from_dict(
+        cls, d: Dict, scenario_file_path: Path, output_suffix: Optional[str]
+    ) -> Union[Exception, HiveConfig]:
         # collect the global hive configuration
         global_config = fs.global_hive_config_search()
 
@@ -66,38 +72,50 @@ class HiveConfig(NamedTuple):
         root_logger = logging.getLogger("")
         root_logger.setLevel(global_config.log_level)
 
-        log.info(f"global hive configuration loaded from {global_config.global_settings_file_path}")
+        log.info(
+            f"global hive configuration loaded from {global_config.global_settings_file_path}"
+        )
         for k, v in global_config.asdict().items():
             log.info(f"  {k}: {v}")
 
         # start build using the Hive config defaults file
-        defaults_file_str = pkg_resources.resource_filename("nrel.hive.resources.defaults",
-                                                            "hive_config.yaml")
+        defaults_file_str = pkg_resources.resource_filename(
+            "nrel.hive.resources.defaults", "hive_config.yaml"
+        )
         defaults_file = Path(defaults_file_str)
 
-        with defaults_file.open('r') as f:
+        with defaults_file.open("r") as f:
             conf = yaml.safe_load(f)
 
             # append input_config file to default configuration with overwrite
-            conf['input'].update(d['input'])
-            conf['sim'].update(d['sim'])
-            conf['network'].update(d['network'])
-            conf['dispatcher'].update(d['dispatcher'])
+            conf["input"].update(d["input"])
+            conf["sim"].update(d["sim"])
+            conf["network"].update(d["network"])
+            conf["dispatcher"].update(d["dispatcher"])
 
             # is this still possible now with the default config loading from nrel.hive.resources.defaults?
-            warn_missing_config_keys = ['input', 'sim', 'network']
+            warn_missing_config_keys = ["input", "sim", "network"]
             for key in warn_missing_config_keys:
                 if key not in conf:
-                    log.warning(f"scenario file is missing a '{key}' section may cause errors")
+                    log.warning(
+                        f"scenario file is missing a '{key}' section may cause errors"
+                    )
 
-            sconfig = Sim.build(conf.get('sim'))
-            iconfig = Input.build(conf.get('input'), scenario_file_path, conf.get('cache'))
-            nconfig = Network.build(conf.get('network'))
-            dconfig = DispatcherConfig.build(conf.get('dispatcher'))
+            sconfig = Sim.build(conf.get("sim"))
+            iconfig = Input.build(
+                conf.get("input"), scenario_file_path, conf.get("cache")
+            )
+            nconfig = Network.build(conf.get("network"))
+            dconfig = DispatcherConfig.build(conf.get("dispatcher"))
 
-            scenario_name = sconfig.sim_name + "_" + output_suffix if output_suffix is not None else sconfig.sim_name
+            scenario_name = (
+                sconfig.sim_name + "_" + output_suffix
+                if output_suffix is not None
+                else sconfig.sim_name
+            )
             scenario_output_directory = Path(
-                global_config.output_base_directory) / Path(scenario_name)
+                global_config.output_base_directory
+            ) / Path(scenario_name)
 
             hive_config = HiveConfig(
                 global_config=global_config,
@@ -108,7 +126,9 @@ class HiveConfig(NamedTuple):
                 scenario_output_directory=scenario_output_directory,
             )
 
-            log.info(f"output directory set to {hive_config.input_config.scenario_directory}")
+            log.info(
+                f"output directory set to {hive_config.input_config.scenario_directory}"
+            )
             log.info(f"hive config loaded from {str(scenario_file_path)}")
             log.info(f"\n{yaml.dump(conf)}")
 
@@ -127,11 +147,11 @@ class HiveConfig(NamedTuple):
                 if not path.is_file():
                     continue
                 else:
-                    with path.open(mode='rb') as f:
+                    with path.open(mode="rb") as f:
                         data = f.read()
                         md5_sum = hashlib.md5(data).hexdigest()
                         cache[name] = md5_sum
-        out_dict['cache'] = cache
+        out_dict["cache"] = cache
 
         for name, config in self._asdict().items():
             if issubclass(config.__class__, Tuple):
@@ -141,7 +161,9 @@ class HiveConfig(NamedTuple):
 
         return out_dict
 
-    def set_scenario_output_directory(self, output_directory: Path) -> HiveConfig:
+    def set_scenario_output_directory(
+        self, output_directory: Path
+    ) -> HiveConfig:
         return self._replace(scenario_output_directory=output_directory)
 
     def suppress_logging(self) -> HiveConfig:
@@ -164,5 +186,5 @@ class HiveConfig(NamedTuple):
         config_dump = self.asdict()
         dump_name = self.sim.sim_name + ".yaml"
         dump_path = os.path.join(self.scenario_output_directory, dump_name)
-        with open(dump_path, 'w') as f:
+        with open(dump_path, "w") as f:
             yaml.dump(config_dump, f, sort_keys=False)

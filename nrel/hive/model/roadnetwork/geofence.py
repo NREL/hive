@@ -13,18 +13,27 @@ class GeoFence(NamedTuple):
     h3_resolution: H3Resolution
 
     @classmethod
-    def from_geojson_file(cls, geosjon_file: str, h3_resolution: H3Resolution = 10) -> GeoFence:
-        with open(geosjon_file, 'r') as gj:
+    def from_geojson_file(
+        cls, geosjon_file: str, h3_resolution: H3Resolution = 10
+    ) -> GeoFence:
+        with open(geosjon_file, "r") as gj:
             geojson = json.loads(gj.read())
 
         return GeoFence.from_geojson(geojson, h3_resolution)
 
     @classmethod
-    def from_geojson(cls, geojson: Dict, h3_resolution: H3Resolution = 10) -> GeoFence:
-        geofence_set = frozenset(h3.polyfill(
-            geojson=geojson['features'][0]['geometry'] if 'features' in geojson else geojson['geometry'],
-            res=h3_resolution,
-            geo_json_conformant=True))
+    def from_geojson(
+        cls, geojson: Dict, h3_resolution: H3Resolution = 10
+    ) -> GeoFence:
+        geofence_set = frozenset(
+            h3.polyfill(
+                geojson=geojson["features"][0]["geometry"]
+                if "features" in geojson
+                else geojson["geometry"],
+                res=h3_resolution,
+                geo_json_conformant=True,
+            )
+        )
 
         return GeoFence(
             geofence_set=geofence_set,
@@ -32,7 +41,9 @@ class GeoFence(NamedTuple):
         )
 
     def contains(self, geoid: GeoId) -> bool:
-        raise NotImplementedError("GeoFence is under construction, please don't use this method.")
+        raise NotImplementedError(
+            "GeoFence is under construction, please don't use this method."
+        )
         # geoid_res = h3.h3_get_resolution(geoid)
         # if geoid_res < self.h3_resolution:
         #     raise H3Error('geofence resolution must be less than geoid resolution')

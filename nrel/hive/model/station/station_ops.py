@@ -10,21 +10,22 @@ if TYPE_CHECKING:
 
 
 _EXPECTED_FIELDS = [
-    'station_id',
-    'lat',
-    'lon',
-    'charger_id',
-    'charger_count',
-    'on_shift_access'
+    "station_id",
+    "lat",
+    "lon",
+    "charger_id",
+    "charger_count",
+    "on_shift_access",
 ]
 
+
 def station_state_update(
-    station: 'Station',
+    station: "Station",
     charger_id: ChargerId,
-    op: Callable[['ChargerState'], ErrorOr['ChargerState']]
-    ) -> ErrorOr['Station']:
+    op: Callable[["ChargerState"], ErrorOr["ChargerState"]],
+) -> ErrorOr["Station"]:
     """
-    helper function for code where we want to perform an operation on a 
+    helper function for code where we want to perform an operation on a
     ChargerState and if it does not fail, update the Station with the state
     change.
 
@@ -48,13 +49,14 @@ def station_state_update(
             result = station._replace(state=updated_s)
             return None, result
 
+
 def station_state_optional_update(
-    station: 'Station',
+    station: "Station",
     charger_id: ChargerId,
-    op: Callable[['ChargerState'], ErrorOr[Optional['ChargerState']]]
-    ) -> ErrorOr[Optional['Station']]:
+    op: Callable[["ChargerState"], ErrorOr[Optional["ChargerState"]]],
+) -> ErrorOr[Optional["Station"]]:
     """
-    helper function for code where we want to perform an operation on a 
+    helper function for code where we want to perform an operation on a
     ChargerState and if it does not fail, update the Station with the state
     change.
 
@@ -81,13 +83,15 @@ def station_state_optional_update(
             result = station._replace(state=updated_s)
             return None, result
 
+
 T = TypeVar("T")
 
+
 def station_state_updates(
-    station: 'Station',
+    station: "Station",
     it: Iterable[Tuple[ChargerId, T]],
-    op: Callable[['ChargerState', T], ErrorOr['ChargerState']]
-    ) -> ErrorOr['Station']:
+    op: Callable[["ChargerState", T], ErrorOr["ChargerState"]],
+) -> ErrorOr["Station"]:
     """
     runs a batch update on a station's charger states
 
@@ -105,11 +109,9 @@ def station_state_updates(
         else:
             charger_id, t = update_tuple
             return station_state_optional_update(
-                station, 
-                charger_id, 
-                lambda cs: op(cs, t)
+                station, charger_id, lambda cs: op(cs, t)
             )
-    
+
     initial = None, station
     result = ft.reduce(_update, it, initial)
     return result

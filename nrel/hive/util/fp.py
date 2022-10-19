@@ -20,7 +20,9 @@ def throw_on_failure(io_result: IOResult):
     if isinstance(inner_result._inner_value, Exception):
         raise inner_result._inner_value
 
+
 T = TypeVar("T")
+
 
 def throw_or_return(result: ResultE[T]) -> T:
     """

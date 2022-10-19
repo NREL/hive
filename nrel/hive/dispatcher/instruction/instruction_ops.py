@@ -12,15 +12,19 @@ from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import Vehicle, RequestId
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
+    ServicingPoolingTrip,
+)
 from nrel.hive.util import GeoId
 from nrel.hive.util.exception import InstructionError
 
 log = logging.getLogger(__name__)
 
 
-def trip_plan_covers_previous(previous_state: ServicingPoolingTrip,
-                              new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]) -> bool:
+def trip_plan_covers_previous(
+    previous_state: ServicingPoolingTrip,
+    new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+) -> bool:
     """
     checks that the incoming trip plan covers the previous plan
 
@@ -36,8 +40,10 @@ def trip_plan_covers_previous(previous_state: ServicingPoolingTrip,
     return previous_plan_not_covered
 
 
-def trip_plan_ordering_is_valid(new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
-                                previous_state: Optional[ServicingPoolingTrip] = None) -> bool:
+def trip_plan_ordering_is_valid(
+    new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+    previous_state: Optional[ServicingPoolingTrip] = None,
+) -> bool:
     """
     checks that the incoming trip plan has a logical pickup and dropoff ordering and that
     no passengers are left on the vehicle after all steps in the trip plan.
@@ -48,13 +54,18 @@ def trip_plan_ordering_is_valid(new_trip_plan: Tuple[Tuple[RequestId, TripPhase]
     """
     # inspect previous state and test for coverage of requests/state
 
-    boarded_req_ids = frozenset(map(lambda trip: trip.request.id, previous_state.trips)) \
-        if previous_state else frozenset()
+    boarded_req_ids = (
+        frozenset(map(lambda trip: trip.request.id, previous_state.trips))
+        if previous_state
+        else frozenset()
+    )
 
     # traverses the new trip plan, confirming that pickup and dropoff orders are correct,
     # and that, at the end, all trips are dropped off
-    def _test(acc: Tuple[bool, FrozenSet[str]],
-              plan_step: Tuple[RequestId, TripPhase]) -> Tuple[bool, FrozenSet[str]]:
+    def _test(
+        acc: Tuple[bool, FrozenSet[str]],
+        plan_step: Tuple[RequestId, TripPhase],
+    ) -> Tuple[bool, FrozenSet[str]]:
         is_good, boarded = acc
         if not is_good:
             return acc
@@ -75,15 +86,17 @@ def trip_plan_ordering_is_valid(new_trip_plan: Tuple[Tuple[RequestId, TripPhase]
                 return False, frozenset()
 
     initial = (True, boarded_req_ids)
-    has_valid_order, final_boarding_state = ft.reduce(_test, new_trip_plan, initial)
+    has_valid_order, final_boarding_state = ft.reduce(
+        _test, new_trip_plan, initial
+    )
     no_passengers_at_end_of_trip_plan = len(final_boarding_state) == 0
 
     return has_valid_order and no_passengers_at_end_of_trip_plan
 
 
 def trip_plan_all_requests_allow_pooling(
-        sim: 'SimulationState', trip_plan: Tuple[Tuple[RequestId, TripPhase],
-                                                 ...]) -> Optional[str]:
+    sim: "SimulationState", trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+) -> Optional[str]:
     """
     confirm that each request in the trip plan allows pooling
 
@@ -91,15 +104,17 @@ def trip_plan_all_requests_allow_pooling(
     :param trip_plan: the proposed trip plan from dispatch
     :return: None if all requests do allow pooling, otherwise, a specific error
     """
-    def _test_req(test_errors: Tuple[Tuple[str, ...], Tuple[str, ...]],
-                  r_id: RequestId) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
+
+    def _test_req(
+        test_errors: Tuple[Tuple[str, ...], Tuple[str, ...]], r_id: RequestId
+    ) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
         sim_error_ids, pool_error_ids = test_errors
         req = sim.requests.get(r_id)
         if req is None:
-            updated_sim_error_ids = sim_error_ids + (r_id, )
+            updated_sim_error_ids = sim_error_ids + (r_id,)
             return updated_sim_error_ids, pool_error_ids
         elif not req.allows_pooling:
-            updated_pool_error_ids = sim_error_ids + (r_id, )
+            updated_pool_error_ids = sim_error_ids + (r_id,)
             return sim_error_ids, updated_pool_error_ids
         else:
             return test_errors
@@ -107,7 +122,9 @@ def trip_plan_all_requests_allow_pooling(
     req_ids, _ = frozenset(zip(*trip_plan))
     req_ids_unique = frozenset(req_ids)
     initial_errors = ((), ())
-    sim_error_req_ids, pool_error_req_ids = ft.reduce(_test_req, req_ids_unique, initial_errors)
+    sim_error_req_ids, pool_error_req_ids = ft.reduce(
+        _test_req, req_ids_unique, initial_errors
+    )
     if len(sim_error_req_ids) > 0 and len(pool_error_req_ids) > 0:
         msg = f"reqs not in sim: {sim_error_req_ids}; reqs which don't allow pooling: {pool_error_req_ids}"
         return msg

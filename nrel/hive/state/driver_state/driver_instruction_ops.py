@@ -22,7 +22,9 @@ from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.model.roadnetwork.route import route_distance_km
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.base import Base
@@ -32,10 +34,10 @@ log = logging.getLogger(__name__)
 
 
 def human_charge_at_home(
-        veh: Vehicle,
-        home_base: Base,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    home_base: Base,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[ChargeBaseInstruction]:
     """
     Attempts to charge at home using the lowest power charger
@@ -44,22 +46,26 @@ def human_charge_at_home(
     :param home_base:
     :param sim:
     :param env:
-    :return: 
+    :return:
     """
 
     my_station = sim.stations.get(home_base.station_id)
     my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
 
     if not my_station:
-        log.error(f"could not find station {home_base.station_id} for home_base {home_base.id}")
+        log.error(
+            f"could not find station {home_base.station_id} for home_base {home_base.id}"
+        )
         return None
     elif my_mechatronics.is_full(veh):
         return None
 
-    chargers = tuple(filter(
-        lambda c: my_mechatronics.valid_charger(c),
-        [env.chargers[cid] for cid in my_station.state.keys()]
-    ))
+    chargers = tuple(
+        filter(
+            lambda c: my_mechatronics.valid_charger(c),
+            [env.chargers[cid] for cid in my_station.state.keys()],
+        )
+    )
     if not chargers:
         return None
     else:
@@ -69,10 +75,10 @@ def human_charge_at_home(
 
 
 def human_go_home(
-        veh: Vehicle,
-        home_base: Base,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    home_base: Base,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[Instruction]:
     """
     human drivers go home at the end of their shift.
@@ -86,12 +92,18 @@ def human_go_home(
     :return: the instruction for this driver
     """
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
-    remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
+    remaining_range = (
+        mechatronics.range_remaining_km(veh) if mechatronics else None
+    )
     if not remaining_range:
         return None
     else:
-        required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
-        if (home_base.station_id is None) and (EnergyType.ELECTRIC in veh.energy):
+        required_range = sim.road_network.distance_by_geoid_km(
+            veh.geoid, home_base.geoid
+        )
+        if (home_base.station_id is None) and (
+            EnergyType.ELECTRIC in veh.energy
+        ):
             # no charger at home, need enough charge to make it to a station in the morning
             required_range += get_nearest_valid_station_distance(
                 max_search_radius_km=env.config.dispatcher.max_search_radius_km,
@@ -100,11 +112,13 @@ def human_go_home(
                 simulation_state=sim,
                 environment=env,
                 target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
-                charging_search_type=env.config.dispatcher.charging_search_type
+                charging_search_type=env.config.dispatcher.charging_search_type,
             )
 
-            target_soc = mechatronics.calc_required_soc(required_range +
-                                                        env.config.dispatcher.charging_range_km_threshold)
+            target_soc = mechatronics.calc_required_soc(
+                required_range
+                + env.config.dispatcher.charging_range_km_threshold
+            )
         else:
             target_soc = env.config.dispatcher.ideal_fastcharge_soc_limit
 
@@ -121,15 +135,15 @@ def human_go_home(
                 simulation_state=sim,
                 environment=env,
                 target_soc=target_soc,
-                charging_search_type=env.config.dispatcher.charging_search_type
+                charging_search_type=env.config.dispatcher.charging_search_type,
             )
 
             return TupleOps.head_optional(charge_instructions)
 
 
 def human_look_for_requests(
-        veh: Vehicle,
-        sim: SimulationState,
+    veh: Vehicle,
+    sim: SimulationState,
 ) -> Optional[RepositionInstruction]:
     """
     Human driver relocates in search of greener request pastures.
@@ -150,10 +164,13 @@ def human_look_for_requests(
         else:
             # find the most dense request search hex and sends vehicles to the center
             best_search_hex = sorted(
-                [(k, len(v)) for k, v in sim.r_search.items()], key=lambda t: t[1],
-                reverse=True
+                [(k, len(v)) for k, v in sim.r_search.items()],
+                key=lambda t: t[1],
+                reverse=True,
             )[0][0]
-        destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
+        destination = h3.h3_to_center_child(
+            best_search_hex, sim.sim_h3_location_resolution
+        )
         destination_link = sim.road_network.position_from_geoid(destination)
         return destination_link
 
@@ -165,16 +182,16 @@ def human_look_for_requests(
 
 
 def idle_if_at_soc_limit(
-        veh: Vehicle,
-        env: Environment,
+    veh: Vehicle,
+    env: Environment,
 ) -> Optional[IdleInstruction]:
     """
-    Generates an IdleInstruction if the vehicle soc is above the limit set by 
+    Generates an IdleInstruction if the vehicle soc is above the limit set by
     env.config.dispatcher.ideal_fastcharge_soc_limit
 
     :param veh:
     :param env:
-    :return: 
+    :return:
     """
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
     battery_soc = mechatronics.fuel_source_soc(veh)
@@ -183,17 +200,17 @@ def idle_if_at_soc_limit(
 
 
 def av_charge_base_instruction(
-        veh: Vehicle,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[ChargeBaseInstruction]:
     """
     Autonomous vehicles will attempt to charge at the base until they reach full energy capacity
-    
+
     :param veh:
     :param sim:
     :param env:
-    :return: 
+    :return:
     """
 
     my_base = sim.bases.get(veh.vehicle_state.base_id)
@@ -209,13 +226,17 @@ def av_charge_base_instruction(
 
     my_station = sim.stations.get(my_base.station_id)
     if not my_station:
-        log.error(f"could not find station {my_base.station_id} for base {my_base.base_id}")
+        log.error(
+            f"could not find station {my_base.station_id} for base {my_base.base_id}"
+        )
         return None
 
-    chargers = tuple(filter(
-        lambda c: my_mechatronics.valid_charger(c),
-        [cs.charger for cs in my_station.state.values()]
-    ))
+    chargers = tuple(
+        filter(
+            lambda c: my_mechatronics.valid_charger(c),
+            [cs.charger for cs in my_station.state.values()],
+        )
+    )
 
     if not chargers:
         return None
@@ -226,9 +247,9 @@ def av_charge_base_instruction(
 
 
 def av_dispatch_base_instruction(
-        veh: Vehicle,
-        sim: SimulationState,
-        env: Environment,
+    veh: Vehicle,
+    sim: SimulationState,
+    env: Environment,
 ) -> Optional[DispatchBaseInstruction]:
     """
     Autonomous vehicles will return to a base after 10 minutes of being idle;
@@ -239,11 +260,16 @@ def av_dispatch_base_instruction(
     :param env:
     :return:
     """
-    if veh.vehicle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
+    if (
+        veh.vehicle_state.idle_duration
+        > env.config.dispatcher.idle_time_out_seconds
+    ):
         # timeout after being idle too long
 
         def valid_fn(base: Base) -> bool:
-            vehicle_has_access = base.membership.grant_access_to_membership(veh.membership)
+            vehicle_has_access = base.membership.grant_access_to_membership(
+                veh.membership
+            )
             return vehicle_has_access
 
         best_base = H3Ops.nearest_entity_by_great_circle_distance(

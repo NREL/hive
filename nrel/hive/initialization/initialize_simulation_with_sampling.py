@@ -18,7 +18,9 @@ from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
+    HaversineRoadNetwork,
+)
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
@@ -55,7 +57,9 @@ def initialize_simulation_with_sampling(
 
     # deprecated geofence input
     if config.input_config.geofence_file:
-        geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
+        geofence = GeoFence.from_geojson_file(
+            config.input_config.geofence_file
+        )
     else:
         geofence = None
 
@@ -112,11 +116,13 @@ def initialize_simulation_with_sampling(
 
     # sample vehicles
     if not vehicle_location_sampling_function:
-        vehicle_location_sampling_function = build_default_location_sampling_fn(
-            seed=random_seed
+        vehicle_location_sampling_function = (
+            build_default_location_sampling_fn(seed=random_seed)
         )
     if not vehicle_soc_sampling_function:
-        vehicle_soc_sampling_function = build_default_soc_sampling_fn(seed=random_seed)
+        vehicle_soc_sampling_function = build_default_soc_sampling_fn(
+            seed=random_seed
+        )
 
     sample_result = sample_vehicles(
         count=vehicle_count,
@@ -173,7 +179,9 @@ def _build_stations(
     def _add_row_unsafe(
         builder: immutables.Map[str, Station], row: Dict[str, str]
     ) -> immutables.Map[str, Station]:
-        station = Station.from_row(row, builder, simulation_state.road_network, env)
+        station = Station.from_row(
+            row, builder, simulation_state.road_network, env
+        )
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
 
@@ -186,7 +194,7 @@ def _build_stations(
 
     # add all stations to the simulation once we know they are complete
     sim_with_stations = simulation_state_ops.add_entities(
-            simulation_state, stations_builder.values()
-        )
+        simulation_state, stations_builder.values()
+    )
 
     return sim_with_stations

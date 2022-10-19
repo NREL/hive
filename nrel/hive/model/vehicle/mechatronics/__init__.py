@@ -7,18 +7,21 @@ import yaml
 
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
+    MechatronicsInterface,
+)
 from nrel.hive.util import fs
 from nrel.hive.util.typealiases import MechatronicsId
 
 mechatronic_models = {
-    'bev': BEV,
-    'ice': ICE,
+    "bev": BEV,
+    "ice": ICE,
 }
 
 
-def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) -> Dict[
-    MechatronicsId, MechatronicsInterface]:
+def build_mechatronics_table(
+    mechatronics_file: str, scenario_directory: str
+) -> Dict[MechatronicsId, MechatronicsInterface]:
     """
     constructs a dictionary containing all of the provided vehicle configurations where the key is the mechatronics ID
     and the contents are the appropriate mechatronics models with the desired attributes
@@ -36,34 +39,44 @@ def build_mechatronics_table(mechatronics_file: str, scenario_directory: str) ->
         config_dict = yaml.safe_load(f)
         for mechatronics_id in config_dict:
             # add the mechatronics id to the nested dictionary
-            config_dict[mechatronics_id]['mechatronics_id'] = mechatronics_id
+            config_dict[mechatronics_id]["mechatronics_id"] = mechatronics_id
             try:
-                mechatronics_type = config_dict[mechatronics_id]['mechatronics_type']
+                mechatronics_type = config_dict[mechatronics_id][
+                    "mechatronics_type"
+                ]
             except KeyError:
-                raise IOError(f'could not find mechatronics_type in {mechatronics_id}')
+                raise IOError(
+                    f"could not find mechatronics_type in {mechatronics_id}"
+                )
             try:
                 model = mechatronic_models[mechatronics_type]
             except KeyError:
-                raise IOError(f'{mechatronics_type} not registered with hive')
+                raise IOError(f"{mechatronics_type} not registered with hive")
 
             if "powertrain_file" in config_dict[mechatronics_id]:
                 powertrain_file = fs.construct_asset_path(
-                    config_dict[mechatronics_id]['powertrain_file'],
+                    config_dict[mechatronics_id]["powertrain_file"],
                     scenario_directory,
                     "powertrain",
-                    "powertrain"  # resources.powertrain
+                    "powertrain",  # resources.powertrain
                 )
-                config_dict[mechatronics_id]['powertrain_file'] = powertrain_file
+                config_dict[mechatronics_id][
+                    "powertrain_file"
+                ] = powertrain_file
 
             if "powercurve_file" in config_dict[mechatronics_id]:
                 powercurve_file = fs.construct_asset_path(
-                    config_dict[mechatronics_id]['powercurve_file'],
+                    config_dict[mechatronics_id]["powercurve_file"],
                     scenario_directory,
                     "powercurve",
-                    "powercurve"  # resources.powercurve
+                    "powercurve",  # resources.powercurve
                 )
-                config_dict[mechatronics_id]['powercurve_file'] = powercurve_file
+                config_dict[mechatronics_id][
+                    "powercurve_file"
+                ] = powercurve_file
 
-            mechatronics[mechatronics_id] = model.from_dict(config_dict[mechatronics_id])
+            mechatronics[mechatronics_id] = model.from_dict(
+                config_dict[mechatronics_id]
+            )
 
     return mechatronics

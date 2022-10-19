@@ -23,10 +23,12 @@ class EventfulHandler(Handler):
     handles events and appends them to the event.log output file based on global logging settings
     """
 
-    def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
+    def __init__(
+        self, global_config: GlobalConfig, scenario_output_directory: Path
+    ):
 
-        log_path = scenario_output_directory / 'event.log'
-        self.log_file = open(log_path, 'a')
+        log_path = scenario_output_directory / "event.log"
+        self.log_file = open(log_path, "a")
 
         self.global_config = global_config
 
@@ -34,21 +36,27 @@ class EventfulHandler(Handler):
 
         sim_state = runner_payload.s
 
-        reports_not_instructions = tuple(filter(lambda r: r.report_type != ReportType.INSTRUCTION, reports))
+        reports_not_instructions = tuple(
+            filter(lambda r: r.report_type != ReportType.INSTRUCTION, reports)
+        )
 
         # station load events, written with reference to a specific station, take the sum of
         # charge events over a time step associated with a single station
         if ReportType.STATION_LOAD_EVENT in self.global_config.log_sim_config:
-            station_load_reports = vehicle_event_ops.construct_station_load_events(reports_not_instructions, sim_state)
+            station_load_reports = (
+                vehicle_event_ops.construct_station_load_events(
+                    reports_not_instructions, sim_state
+                )
+            )
             for report in station_load_reports:
                 entry = json.dumps(report.as_json(), default=str)
-                self.log_file.write(entry + '\n')
+                self.log_file.write(entry + "\n")
 
         for report in reports_not_instructions:
             if report.report_type in self.global_config.log_sim_config:
                 report_json = report.as_json()
                 entry = json.dumps(report_json, default=str)
-                self.log_file.write(entry + '\n')
+                self.log_file.write(entry + "\n")
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()

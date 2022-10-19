@@ -3,7 +3,10 @@ from __future__ import annotations
 import functools as ft
 from typing import Optional, NamedTuple
 
-from nrel.hive.model.roadnetwork.linktraversal import LinkTraversalResult, LinkTraversal
+from nrel.hive.model.roadnetwork.linktraversal import (
+    LinkTraversalResult,
+    LinkTraversal,
+)
 from nrel.hive.model.roadnetwork.linktraversal import traverse_up_to
 from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.util import TupleOps
@@ -28,6 +31,7 @@ class RouteTraversal(NamedTuple):
     :param remaining_route: The route that remains after a traversal.
     :type remaining_route: :py:obj:`Route`
     """
+
     remaining_time_seconds: Seconds = 0
     traversal_distance_km: Kilometers = 0
     experienced_route: Route = ()
@@ -49,14 +53,20 @@ class RouteTraversal(NamedTuple):
         :param t: a link traversal
         :return: the updated route traversal
         """
-        updated_experienced_route = self.experienced_route \
-            if t.traversed is None \
+        updated_experienced_route = (
+            self.experienced_route
+            if t.traversed is None
             else self.experienced_route + (t.traversed,)
-        updated_remaining_route = self.remaining_route \
-            if t.remaining is None \
+        )
+        updated_remaining_route = (
+            self.remaining_route
+            if t.remaining is None
             else self.remaining_route + (t.remaining,)
+        )
         if t.traversed:
-            traversal_distance = self.traversal_distance_km + t.traversed.distance_km
+            traversal_distance = (
+                self.traversal_distance_km + t.traversed.distance_km
+            )
         else:
             traversal_distance = self.traversal_distance_km
         return self._replace(
@@ -74,13 +84,12 @@ class RouteTraversal(NamedTuple):
         :param link: a link traversal for the remaining route
         :return: the updated RouteTraversal
         """
-        return self._replace(
-            remaining_route=self.remaining_route + (link,)
-        )
+        return self._replace(remaining_route=self.remaining_route + (link,))
 
 
-def traverse(route_estimate: Route,
-             duration_seconds: Seconds) -> Tuple[Optional[Exception], RouteTraversal]:
+def traverse(
+    route_estimate: Route, duration_seconds: Seconds
+) -> Tuple[Optional[Exception], RouteTraversal]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
@@ -94,29 +103,41 @@ def traverse(route_estimate: Route,
              the route is malformed.
     """
     if len(route_estimate) == 0:
-        return None, RouteTraversal() 
-    elif TupleOps.head(route_estimate).start == TupleOps.last(route_estimate).end:
-        return None, RouteTraversal() 
+        return None, RouteTraversal()
+    elif (
+        TupleOps.head(route_estimate).start
+        == TupleOps.last(route_estimate).end
+    ):
+        return None, RouteTraversal()
     else:
 
         # function that steps through the route
-        def _traverse(acc: Tuple[Optional[Exception], Optional[RouteTraversal]],
-                      link: LinkTraversal) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
+        def _traverse(
+            acc: Tuple[Optional[Exception], Optional[RouteTraversal]],
+            link: LinkTraversal,
+        ) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
             acc_failures, acc_traversal = acc
             if acc_traversal.no_time_left():
                 return acc_failures, acc_traversal.add_link_not_traversed(link)
             # traverse this link as far as we can go
-            error, traverse_result = traverse_up_to(link, acc_traversal.remaining_time_seconds)
+            error, traverse_result = traverse_up_to(
+                link, acc_traversal.remaining_time_seconds
+            )
             if error:
                 response = Exception(f"failure during traverse")
                 response.__cause__ = error
                 return response, None
             else:
-                updated_experienced_route = acc_traversal.add_traversal(traverse_result)
+                updated_experienced_route = acc_traversal.add_traversal(
+                    traverse_result
+                )
                 return acc_failures, updated_experienced_route
 
         # initial search state has a route traversal and an Optional[Exception]
-        initial = (None, RouteTraversal(remaining_time_seconds=duration_seconds))
+        initial = (
+            None,
+            RouteTraversal(remaining_time_seconds=duration_seconds),
+        )
 
         result = ft.reduce(_traverse, route_estimate, initial)
 

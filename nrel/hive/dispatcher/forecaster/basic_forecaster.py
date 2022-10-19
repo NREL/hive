@@ -6,7 +6,9 @@ from typing import Tuple, NamedTuple
 
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
-from nrel.hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
+from nrel.hive.dispatcher.forecaster.forecaster_interface import (
+    ForecasterInterface,
+)
 from nrel.hive.util.iterators import DictReaderStepper
 
 
@@ -28,15 +30,21 @@ class BasicForecaster(ForecasterInterface):
         :raises: an exception if there were file loading issues
         """
         if not Path(demand_forecast_file).is_file():
-            raise IOError(f"{demand_forecast_file} is not a valid path to a request file")
+            raise IOError(
+                f"{demand_forecast_file} is not a valid path to a request file"
+            )
 
-        error, reader = DictReaderStepper.build(demand_forecast_file, "sim_time", parser=SimTime.build)
+        error, reader = DictReaderStepper.build(
+            demand_forecast_file, "sim_time", parser=SimTime.build
+        )
         if error:
             raise error
         else:
             return BasicForecaster(reader)
 
-    def generate_forecast(self, simulation_state: 'SimulationState') -> Tuple[BasicForecaster, Forecast]:
+    def generate_forecast(
+        self, simulation_state: "SimulationState"
+    ) -> Tuple[BasicForecaster, Forecast]:
         """
         Generate fleet targets to be consumed by the dispatcher.
 
@@ -51,9 +59,13 @@ class BasicForecaster(ForecasterInterface):
         def stop_condition(value: int) -> bool:
             return value < current_sim_time + (30 * 60)
 
-        demand_result = tuple(self.reader.read_until_stop_condition(stop_condition))
-        future_demand = sum([int(n['requests']) for n in demand_result])
+        demand_result = tuple(
+            self.reader.read_until_stop_condition(stop_condition)
+        )
+        future_demand = sum([int(n["requests"]) for n in demand_result])
 
-        demand_forecast = Forecast(type=ForecastType.DEMAND, value=current_demand + future_demand)
+        demand_forecast = Forecast(
+            type=ForecastType.DEMAND, value=current_demand + future_demand
+        )
 
         return self, demand_forecast

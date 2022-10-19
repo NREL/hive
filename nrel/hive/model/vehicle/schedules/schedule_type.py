@@ -20,6 +20,9 @@ class ScheduleType(Enum):
             return ScheduleType.TIME_RANGE
         else:
             valid_names_list = list(ScheduleType)
-            valid_names = ", ".join(list(map(lambda x: x.name, valid_names_list)))
-            raise NameError(f"schedule type '{string}' is not known, must be one of {{{valid_names}}}")
-
+            valid_names = ", ".join(
+                list(map(lambda x: x.name, valid_names_list))
+            )
+            raise NameError(
+                f"schedule type '{string}' is not known, must be one of {{{valid_names}}}"
+            )

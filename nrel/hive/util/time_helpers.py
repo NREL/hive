@@ -30,7 +30,9 @@ def read_time_string(s: str) -> time:
             time_value = time(hour=h, minute=m, second=s)
             return time_value
         except Exception as e:
-            raise ValueError("unexpected error condition while parsing time from string") from e
+            raise ValueError(
+                "unexpected error condition while parsing time from string"
+            ) from e
 
 
 def time_diff(start: time, end: time) -> timedelta:
@@ -44,7 +46,9 @@ def time_diff(start: time, end: time) -> timedelta:
     if start == end:
         return timedelta()
     else:
-        duration = datetime.combine(date.min, end) - datetime.combine(date.min, start)
+        duration = datetime.combine(date.min, end) - datetime.combine(
+            date.min, start
+        )
         if duration.days == -1:
             # remove the "days" from the time transition
             duration_without_day = duration + timedelta(days=1)

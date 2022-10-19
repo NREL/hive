@@ -8,10 +8,18 @@ import immutables
 
 if TYPE_CHECKING:
     from nrel.hive.model.energy.charger.charger import Charger
-    from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+    from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
+        MechatronicsInterface,
+    )
     from nrel.hive.config import HiveConfig
-    from nrel.hive.util.typealiases import ChargerId, MechatronicsId, MembershipId, MembershipMap, ScheduleFunction, \
-        ScheduleId
+    from nrel.hive.util.typealiases import (
+        ChargerId,
+        MechatronicsId,
+        MembershipId,
+        MembershipMap,
+        ScheduleFunction,
+        ScheduleId,
+    )
 
 
 class Environment(NamedTuple):
@@ -19,8 +27,11 @@ class Environment(NamedTuple):
     Environment of this Hive Simulation.
 
     """
+
     config: HiveConfig
-    mechatronics: immutables.Map[MechatronicsId, MechatronicsInterface] = immutables.Map()
+    mechatronics: immutables.Map[
+        MechatronicsId, MechatronicsInterface
+    ] = immutables.Map()
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
     schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
     fleet_ids: FrozenSet[MembershipId] = frozenset()

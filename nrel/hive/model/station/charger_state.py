@@ -11,6 +11,7 @@ from nrel.hive.util.error_or_result import ErrorOr
 from nrel.hive.runner.environment import Environment
 from nrel.hive.util.exception import SimulationStateError
 
+
 class ChargerState(NamedTuple):
     id: ChargerId
     charger: Charger
@@ -20,7 +21,7 @@ class ChargerState(NamedTuple):
     enqueued_vehicles: int
 
     @classmethod
-    def build(cls,charger: Charger, count: int) -> ChargerState:
+    def build(cls, charger: Charger, count: int) -> ChargerState:
         """
         builds a ChargerState from a charger and some total count
         of this charger type at a station
@@ -35,11 +36,11 @@ class ChargerState(NamedTuple):
             total_chargers=count,
             available_chargers=count,
             price_per_kwh=0.0,
-            enqueued_vehicles=0
+            enqueued_vehicles=0,
         )
 
     def add_chargers(self, charger_count: int) -> ChargerState:
-        """adds chargers to this ChargerState, updating the 
+        """adds chargers to this ChargerState, updating the
         total and available charger counts
 
         :param charger_count: count to add
@@ -47,7 +48,7 @@ class ChargerState(NamedTuple):
         """
         return self._replace(
             total_chargers=self.total_chargers + charger_count,
-            available_chargers=self.available_chargers + charger_count
+            available_chargers=self.available_chargers + charger_count,
         )
 
     def has_available_charger(self) -> bool:
@@ -97,9 +98,7 @@ class ChargerState(NamedTuple):
         station with this charger type
         :return: updated charger state
         """
-        return self._replace(
-            enqueued_vehicles=self.enqueued_vehicles + 1
-        )   
+        return self._replace(enqueued_vehicles=self.enqueued_vehicles + 1)
 
     def decrement_enqueued_vehicles(self) -> ErrorOr[ChargerState]:
         """
@@ -136,11 +135,7 @@ class ChargerState(NamedTuple):
             )
             return Failure(ValueError(msg))
         else:
-            updated = self._replace(
-                charger=self.charger._replace(
-                    rate=value
-                )
-            )
+            updated = self._replace(charger=self.charger._replace(rate=value))
             return Success(updated)
 
     def scale_charge_rate(self, factor: float) -> ResultE[ChargerState]:
@@ -152,20 +147,16 @@ class ChargerState(NamedTuple):
         """
         if not 0.0 <= factor <= 1.0:
             msg = f"charge rate factor must be in range [0, 1], but found {factor}"
-            return Failure(SimulationStateError(msg)) 
+            return Failure(SimulationStateError(msg))
         else:
             updated = self._replace(
-                charger=self.charger._replace(
-                    rate=self.charger.rate * factor
-                )
+                charger=self.charger._replace(rate=self.charger.rate * factor)
             )
-            return Success(updated) 
-    
+            return Success(updated)
+
     def reset_charge_rate(self) -> ChargerState:
         """
         resets the charge rate to the factory charge rate
         :return: updated charger state
         """
-        return self._replace(
-            current_charge_rate=self.charger.rate
-        )
+        return self._replace(current_charge_rate=self.charger.rate)

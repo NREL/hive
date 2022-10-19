@@ -10,12 +10,18 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
 )
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.cancel_requests import CancelRequests
-from nrel.hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
+from nrel.hive.state.simulation_state.update.cancel_requests import (
+    CancelRequests,
+)
+from nrel.hive.state.simulation_state.update.charging_price_update import (
+    ChargingPriceUpdate,
+)
 from nrel.hive.state.simulation_state.update.simulation_update import (
     SimulationUpdateFunction,
 )
-from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
+from nrel.hive.state.simulation_state.update.step_simulation import (
+    StepSimulation,
+)
 from nrel.hive.state.simulation_state.update.update_requests_from_file import (
     UpdateRequestsFromFile,
 )
@@ -117,7 +123,9 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
 
     # if we received an updated version of this SimulationUpdateFunction, store it
     next_update_fns = (
-        p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)
+        p.updated_step_fns + (updated_fn,)
+        if updated_fn
+        else p.updated_step_fns + (fn,)
     )
     updated_payload = p.runner_payload._replace(s=result)
 

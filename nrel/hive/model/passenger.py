@@ -11,16 +11,16 @@ from nrel.hive.util.typealiases import *
 class Passenger(NamedTuple):
     """
     A tuple representing a passenger in the simulation.
-    
+
 
     :param id: the unique id of the passenger
-    :type id: PassengerId 
+    :type id: PassengerId
 
     :param origin: the pickup location of the passenger
-    :type origin: GeoId 
+    :type origin: GeoId
 
     :param destination: the destination location of the passenger
-    :type destination: GeoId 
+    :type destination: GeoId
 
     :param departure_time: the departure time of the passenger
     :type departure_time: SimTime
@@ -28,6 +28,7 @@ class Passenger(NamedTuple):
     :param vehicle_id: id of the vehicle that the passenger is occupying
     :type vehicle_id: Optional[VehicleId]
     """
+
     id: PassengerId
     origin: GeoId
     destination: GeoId
@@ -46,7 +47,9 @@ class Passenger(NamedTuple):
         return self._replace(vehicle_id=vehicle_id)
 
 
-def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId:
+def create_passenger_id(
+    request_id: RequestId, passenger_id: int
+) -> PassengerId:
     """
     Constructs a passenger id using a RequestId and an integer
 
@@ -59,7 +62,9 @@ def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId
     return f"{request_id}-{passenger_id}"
 
 
-def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> Tuple[Passenger, ...]:
+def board_vehicle(
+    passengers: Tuple[Passenger, ...], vehicle_id: VehicleId
+) -> Tuple[Passenger, ...]:
     """
     updates each passenger with a vehicle_id
 
@@ -67,4 +72,6 @@ def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> T
     :param vehicle_id: the vehicle they are boarding
     :return: the passengers with their vehicle_id updated
     """
-    return ft.reduce(lambda acc, p: acc + (p.add_vehicle_id(vehicle_id),), passengers, ())
+    return ft.reduce(
+        lambda acc, p: acc + (p.add_vehicle_id(vehicle_id),), passengers, ()
+    )

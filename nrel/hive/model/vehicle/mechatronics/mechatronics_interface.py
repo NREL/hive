@@ -15,9 +15,11 @@ if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.roadnetwork.route import Route
 
+
 @dataclass(frozen=True)
 class MechatronicsMixin:
     mechatronics_id: MechatronicsId
+
 
 class MechatronicsInterfaceABC(ABC):
     """
@@ -44,7 +46,9 @@ class MechatronicsInterfaceABC(ABC):
         """
 
     @abstractmethod
-    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
+    def initial_energy(
+        self, percent_full: Ratio
+    ) -> immutables.Map[EnergyType, float]:
         """
         construct an initial energy state for a Vehicle
 
@@ -83,11 +87,11 @@ class MechatronicsInterfaceABC(ABC):
     @abstractmethod
     def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
-        consume energy over a route 
+        consume energy over a route
 
         :param vehicle:
         :param route:
-        :return: the vehicle after moving; 
+        :return: the vehicle after moving;
         """
 
     @abstractmethod
@@ -102,7 +106,9 @@ class MechatronicsInterfaceABC(ABC):
         """
 
     @abstractmethod
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
+    def add_energy(
+        self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds
+    ) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
@@ -112,6 +118,7 @@ class MechatronicsInterfaceABC(ABC):
         :param time_seconds:
         :return: the updated vehicle, along with the time spent charging
         """
+
 
 class MechatronicsInterface(MechatronicsMixin, MechatronicsInterfaceABC):
     """"""
