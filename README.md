@@ -7,9 +7,9 @@
 
 HIVE™ is an open-source mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.
 
-HIVE supports researchers explore **ev fleet dispatch control**, **EVSE siting** and **fleet composition** problems, and is designed for _ease-of-use_, _scalability_, and _co-simulation_. 
+HIVE supports researchers explore **Electric Vehicle (EV) fleet control**, **Electric Vehicle Supply Equipment (EVSE) siting**, and **fleet composition** problems, and is designed for _ease-of-use_, _scalability_, and _co-simulation_. 
 Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning. 
-HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity playouts over arbitrary road networks and demand scenarios.
+HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity energy estimation over arbitrary road networks and demand scenarios.
 
 ## Installation
 
