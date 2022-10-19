@@ -7,56 +7,9 @@
 
 HIVE™ is an open-source mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.
 
-## What is HIVE
-
-HIVE is a complete autonomous ridehail simulator supporting charging infrastructure and fleet composition research, designed for ease-of-use, scalability, and co-simulation. Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning. HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity playouts over arbitrary road networks and demand scenarios.
-
-## Why HIVE?
-
-When the Mobility, Behavior, and Advanced Powertrains group began looking to answer questions related to fleet sizing, charging infrastructure, and dynamic energy pricing, we could not find a simulator which was right-sized for our research questions. Most modern models for mobility services have a large barrier-to-entry due to the complex interactions of mode choice, economics, and model tuning required to use the leading micro and mesoscopic transportation models (BEAM, POLARIS, MATSim, SUMO, AMoDeus, etc.). Additionally, they have heavyweight technical infrastructure demands where deployment of these models requires a specialized team. HIVE attempts to fill a gap for researchers seeking to study the economic and energy impacts of autonomous ride hail fleets by providing the following feature set:
-
-- agent-based model (ABM)
-- data-driven control interfaces for Model-Predicted Control and Reinforcement Learning research
-- easy integration/co-simulation (can be called alongside other software tools)
-- dynamic dispatch, trip energy, routing, and economics
-- simple to define/share scenarios via configuration files and simulation snapshots
-- 100% Python (v 3.7) code with a small(ish) set of dependencies and well-documented code
-
-HIVE is _not_ a fully-featured [Activity-Based Model](https://en.wikipedia.org/wiki/Transportation_forecasting#Activity-based_models), does _not_ simulate all vehicles on the network, and does not simulate congestion. It also assumes demand is fixed. If these assumptions are too strong for your research question, then one of the other mesoscopic models capable of ridehail simulation may be a more appropriate fit. The following (opinionated) chart attempts to compare features of HIVE against LBNL's BEAM and ANL's POLARIS models.
-
-| feature                                            | HIVE       | BEAM      | POLARIS |
-| -------------------------------------------------- | ---------- | --------- | ------- |
-| Agent-Based Ridehail Model                         | :honeybee: | :red_car: | :train: |
-| Designed for large-scale inputs                    | :honeybee: | :red_car: | :train: |
-| Integrates with NREL energy models                 | :honeybee: | :red_car: | :train: |
-| Charging infrastructure & charge events            | :honeybee: | :red_car: | :train: |
-| Service pricing and income model                   | :honeybee: | :red_car: | :train: |
-| Data-driven ridehail dispatcher                    | :honeybee: |           |         |
-| Does not require socio-demographic data            | :honeybee: |           |         |
-| Built-in example scenario                          | :honeybee: | :red_car: |         |
-| Written entirely in Python, installed via pip      | :honeybee: |           |         |
-| Activity-Based Demand Model                        |            | :red_car: | :train: |
-| Dynamic demand using behavioral models             |            | :red_car: | :train: |
-| Robust assignment of population demographics       |            | :red_car: | :train: |
-| Supports broad set of travel modes                 |            | :red_car: | :train: |
-| Endogenous traffic congestion modeling             |            | :red_car: | :train: |
-
-## Dependencies
-
-HIVE attempts to rely on as few dependencies as possible. For the most part, these dependencies are obvious choices from the open-source Python analysis ecosystem:
-
-- [scipy](https://www.scipy.org/) (bipartite matching optimization)
-- [numpy](https://numpy.org) (linear interpolation of energy lookup tables)
-- [pandas](https://pandas.pydata.org) (file IO)
-- [networkx](https://networkx.org) (underlying network model)
-- [pyyaml](https://github.com/yaml/pyyaml)
-- [tqdm](https://github.com/tqdm/tqdm) (command line progress bars)
-
-Beyond these, HIVE uses Uber H3, a geospatial index which HIVE uses for positioning and search, and MagicStack Immutables, which provides the implementation of an immutable Map to replace the standard Python `Dict` type. The Returns library provides Python-approximations for functional containers. Links provided here:
-
-- [h3](https://github.com/uber/h3) (spatial index)
-- [immutables](https://github.com/MagicStack/immutables) ([HAMT](https://en.wikipedia.org/wiki/Hash_array_mapped_trie) implementation for "immutable dict")
-- [returns](https://github.com/dry-python/returns) (functional containers)
+HIVE supports researchers explore **ev fleet dispatch control**, **EVSE siting** and **fleet composition** problems, and is designed for _ease-of-use_, _scalability_, and _co-simulation_. 
+Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning. 
+HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity playouts over arbitrary road networks and demand scenarios.
 
 ## Installation
 
@@ -128,9 +81,56 @@ If you want to override any entries in this file, you can create a new one by th
 Hive will also check your base user directory for this file (aka `~/.hive.yaml`). 
 This can be useful if you would like to reduce the output files or change the default output base directory (for example, to something like as `~/hive/output`).
 
+## Dependencies
+
+HIVE attempts to rely on as few dependencies as possible. For the most part, these dependencies are obvious choices from the open-source Python analysis ecosystem:
+
+- [scipy](https://www.scipy.org/) (bipartite matching optimization)
+- [numpy](https://numpy.org) (linear interpolation of energy lookup tables)
+- [pandas](https://pandas.pydata.org) (file IO)
+- [networkx](https://networkx.org) (underlying network model)
+- [pyyaml](https://github.com/yaml/pyyaml)
+- [tqdm](https://github.com/tqdm/tqdm) (command line progress bars)
+
+Beyond these, HIVE uses Uber H3, a geospatial index which HIVE uses for positioning and search, and MagicStack Immutables, which provides the implementation of an immutable Map to replace the standard Python `Dict` type. The Returns library provides Python-approximations for functional containers. Links provided here:
+
+- [h3](https://github.com/uber/h3) (spatial index)
+- [immutables](https://github.com/MagicStack/immutables) ([HAMT](https://en.wikipedia.org/wiki/Hash_array_mapped_trie) implementation for "immutable dict")
+- [returns](https://github.com/dry-python/returns) (functional containers)
+
 ## Developer documentation
 
 Documentation can be found [here](https://readthedocs.org/nrel_hive).
+
+## Why HIVE?
+
+When the Mobility, Behavior, and Advanced Powertrains group began looking to answer questions related to fleet sizing, charging infrastructure, and dynamic energy pricing, we could not find a simulator which was right-sized for our research questions. Most modern models for mobility services have a large barrier-to-entry due to the complex interactions of mode choice, economics, and model tuning required to use the leading micro and mesoscopic transportation models (BEAM, POLARIS, MATSim, SUMO, AMoDeus, etc.). Additionally, they have heavyweight technical infrastructure demands where deployment of these models requires a specialized team. HIVE attempts to fill a gap for researchers seeking to study the economic and energy impacts of autonomous ride hail fleets by providing the following feature set:
+
+- agent-based model (ABM)
+- data-driven control interfaces for Model-Predicted Control and Reinforcement Learning research
+- easy integration/co-simulation (can be called alongside other software tools)
+- dynamic dispatch, trip energy, routing, and economics
+- simple to define/share scenarios via configuration files and simulation snapshots
+- 100% Python (v 3.7) code with a small(ish) set of dependencies and well-documented code
+
+HIVE is _not_ a fully-featured [Activity-Based Model](https://en.wikipedia.org/wiki/Transportation_forecasting#Activity-based_models), does _not_ simulate all vehicles on the network, and does not simulate congestion. It also assumes demand is fixed. If these assumptions are too strong for your research question, then one of the other mesoscopic models capable of ridehail simulation may be a more appropriate fit. The following (opinionated) chart attempts to compare features of HIVE against LBNL's BEAM and ANL's POLARIS models.
+
+| feature                                            | HIVE       | BEAM      | POLARIS |
+| -------------------------------------------------- | ---------- | --------- | ------- |
+| Agent-Based Ridehail Model                         | :honeybee: | :red_car: | :train: |
+| Designed for large-scale inputs                    | :honeybee: | :red_car: | :train: |
+| Integrates with NREL energy models                 | :honeybee: | :red_car: | :train: |
+| Charging infrastructure & charge events            | :honeybee: | :red_car: | :train: |
+| Service pricing and income model                   | :honeybee: | :red_car: | :train: |
+| Data-driven ridehail dispatcher                    | :honeybee: |           |         |
+| Does not require socio-demographic data            | :honeybee: |           |         |
+| Built-in example scenario                          | :honeybee: | :red_car: |         |
+| Written entirely in Python, installed via pip      | :honeybee: |           |         |
+| Activity-Based Demand Model                        |            | :red_car: | :train: |
+| Dynamic demand using behavioral models             |            | :red_car: | :train: |
+| Robust assignment of population demographics       |            | :red_car: | :train: |
+| Supports broad set of travel modes                 |            | :red_car: | :train: |
+| Endogenous traffic congestion modeling             |            | :red_car: | :train: |
 
 ## Looking at a default scenario
 
