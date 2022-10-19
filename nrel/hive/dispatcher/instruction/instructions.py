@@ -62,7 +62,7 @@ class IdleInstruction(Instruction):
 
 
 @dataclass(frozen=True)
-class DispatchTripInstruction(NamedTuple, Instruction):
+class DispatchTripInstruction(Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
 
@@ -96,7 +96,7 @@ class DispatchTripInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class DispatchPoolingTripInstruction(NamedTuple, Instruction):
+class DispatchPoolingTripInstruction(Instruction):
     vehicle_id: VehicleId
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
 
@@ -147,7 +147,7 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class DispatchStationInstruction(NamedTuple, Instruction):
+class DispatchStationInstruction(Instruction):
     vehicle_id: VehicleId
     station_id: StationId
     charger_id: ChargerId
@@ -178,7 +178,7 @@ class DispatchStationInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class ChargeStationInstruction(NamedTuple, Instruction):
+class ChargeStationInstruction(Instruction):
     vehicle_id: VehicleId
     station_id: StationId
     charger_id: ChargerId
@@ -199,7 +199,7 @@ class ChargeStationInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class ChargeBaseInstruction(NamedTuple, Instruction):
+class ChargeBaseInstruction(Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
     charger_id: ChargerId
@@ -220,7 +220,7 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class DispatchBaseInstruction(NamedTuple, Instruction):
+class DispatchBaseInstruction(Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
 
@@ -249,7 +249,7 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class RepositionInstruction(NamedTuple, Instruction):
+class RepositionInstruction(Instruction):
     vehicle_id: VehicleId
     destination: LinkId
 
@@ -280,7 +280,7 @@ class RepositionInstruction(NamedTuple, Instruction):
 
 
 @dataclass(frozen=True)
-class ReserveBaseInstruction(NamedTuple, Instruction):
+class ReserveBaseInstruction(Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
 

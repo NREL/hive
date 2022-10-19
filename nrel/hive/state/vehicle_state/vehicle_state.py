@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 from uuid import UUID
 
@@ -18,7 +19,12 @@ if TYPE_CHECKING:
 
 VehicleStateInstanceId = UUID
 
-class VehicleState(EntityState):
+@dataclass(frozen=True)
+class Mixin:
+    vehicle_id: VehicleId 
+    instance_id: VehicleStateInstanceId 
+
+class VehicleStateABC(EntityState):
     """
     a state representation along with methods for state transitions and discrete time step updates
 
@@ -28,14 +34,8 @@ class VehicleState(EntityState):
     an enter or exit can return an exception, a SimulationState, or (None, None) signifying that the
     state cannot be entered/exited under this circumstance.
     """
-    @abstractproperty
-    def vehicle_id(self) -> VehicleId:
-        """
-        the vehicle id associated with this state
-        """
-        pass
-
-    @abstractproperty
+    @property
+    @abstractmethod
     def vehicle_state_type(cls) -> VehicleStateType:
         """
         unique state type, used for comparison, replaces need to call isinstance on the concrete
@@ -44,13 +44,6 @@ class VehicleState(EntityState):
         """
         pass
 
-    @abstractproperty
-    def instance_id(self) -> VehicleStateInstanceId:
-        """
-        a unique id for this state instance
-        """
-        pass
-    
     def __repr__(self) -> str:
         return super().__repr__()
 
@@ -163,3 +156,6 @@ class VehicleState(EntityState):
         """
         pass
 
+class VehicleState(Mixin, VehicleStateABC):
+    """
+    """

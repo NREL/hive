@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING, Tuple
 
 import immutables
@@ -12,8 +13,12 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
+@dataclass(frozen=True)
+class InstructionMixin:
+    vehicle_id: VehicleId
 
-class Instruction(ABC):
+
+class InstructionABC(ABC):
     """
     an abstract base class for instructions.
     """
@@ -31,15 +36,10 @@ class Instruction(ABC):
         """
         pass
 
-    @property
-    @abstractmethod
-    def vehicle_id(self) -> VehicleId:
-        """
-        the id of the vehicle to apply this instruction to
-
-        :return:
-        """
-        pass
+class Instruction(InstructionMixin, InstructionABC):
+    """"""
 
 
 InstructionMap = immutables.Map[VehicleId, Instruction]
+
+

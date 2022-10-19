@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 
 from typing import Optional, Tuple, TYPE_CHECKING, NamedTuple
 
@@ -90,7 +91,7 @@ def complete_trip_phase(
                 updated_boarded_requests = vehicle_state.boarded_requests.set(request.id, request)
                 updated_num_passengers = vehicle_state.num_passengers + len(request.passengers)
                 updated_departure_times = vehicle_state.departure_times.set(request.id, sim.sim_time)
-                updated_vehicle_state = vehicle_state._replace(
+                updated_vehicle_state = replace(vehicle_state,
                     trip_plan=updated_trip_plan,
                     routes=updated_routes,
                     boarded_requests=updated_boarded_requests,
@@ -122,7 +123,7 @@ def complete_trip_phase(
                 # remove this request from the boarded vehicles
                 updated_boarded_requests = vehicle_state.boarded_requests.delete(request.id)
                 updated_num_passengers = vehicle_state.num_passengers - len(request.passengers)
-                updated_vehicle_state = vehicle_state._replace(
+                updated_vehicle_state = replace(vehicle_state,
                     trip_plan=updated_trip_plan,
                     routes=updated_routes,
                     boarded_requests=updated_boarded_requests,
@@ -269,7 +270,7 @@ def remove_completed_trip(sim: SimulationState,
         vehicle = sim.vehicles.get(state.vehicle_id)
         removed_trip_request_id, updated_trip_order = TupleOps.head_tail(state.trip_order)
         updated_trips = state.trips.delete(removed_trip_request_id)
-        updated_state = state._replace(
+        updated_state = replace(state,
             trip_order=updated_trip_order,
             trips=updated_trips
         )

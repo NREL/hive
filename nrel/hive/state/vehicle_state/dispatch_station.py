@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -45,7 +45,7 @@ class DispatchStation(VehicleState):
         return VehicleStateType.DISPATCH_STATION
     
     def update_route(self, route: Route) -> DispatchStation:
-        return self._replace(route=route)
+        return replace(self, route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

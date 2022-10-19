@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from typing import Dict, TYPE_CHECKING, Tuple
 
 import immutables
@@ -14,19 +15,14 @@ if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.roadnetwork.route import Route
 
+@dataclass(frozen=True)
+class MechatronicsMixin:
+    mechatronics_id: MechatronicsId
 
-class MechatronicsInterface(ABC):
+class MechatronicsInterfaceABC(ABC):
     """
     Interface for creating energy sources
     """
-
-    @property
-    @abstractmethod
-    def mechatronics_id(self) -> MechatronicsId:
-        """
-        what id?
-        :return:
-        """
 
     @classmethod
     @abstractmethod
@@ -36,14 +32,6 @@ class MechatronicsInterface(ABC):
 
         :param d: the dictionary to build from
         :return: the built Mechatronics object
-        """
-
-    @property
-    @abstractmethod
-    def total_number_of_seats(self):
-        """
-        total number of seats in this car for passengers
-        :return: integer count of seats in the car
         """
 
     @abstractmethod
@@ -124,3 +112,6 @@ class MechatronicsInterface(ABC):
         :param time_seconds:
         :return: the updated vehicle, along with the time spent charging
         """
+
+class MechatronicsInterface(MechatronicsMixin, MechatronicsInterfaceABC):
+    """"""

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
@@ -40,7 +40,7 @@ class Repositioning(VehicleState):
         return VehicleStateType.REPOSITIONING
     
     def update_route(self, route: Route) -> Repositioning:
-        return self._replace(route=route)
+        return replace(self, route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

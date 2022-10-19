@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import asdict
 
 import functools as ft
 import logging
@@ -25,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
-    i_dict = i._asdict()
+    i_dict = asdict(i)
     i_dict['sim_time'] = sim_time
     i_dict['instruction_type'] = i.__class__.__name__
 

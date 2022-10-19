@@ -66,7 +66,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
             stop_condition=lambda dt: dt < 0,
         )
 
-        return UpdateRequestsSampling(stepper, rate_structure)
+        return UpdateRequestsSampling(request_iterator=stepper, rate_structure=rate_structure)
 
     def update(
         self, sim_state: SimulationState, env: Environment

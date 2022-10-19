@@ -70,7 +70,7 @@ class UpdateRequestsFromFile(SimulationUpdateFunction):
 
             stepper = DictReaderStepper.from_iterator(reader, "departure_time", parser=SimTime.build)
 
-        return UpdateRequestsFromFile(stepper, rate_structure)
+        return UpdateRequestsFromFile(reader=stepper, rate_structure=rate_structure)
 
     def update(self,
                sim_state: SimulationState,

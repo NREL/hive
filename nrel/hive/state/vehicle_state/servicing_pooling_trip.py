@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import logging
 from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
@@ -75,7 +75,7 @@ class ServicingPoolingTrip(VehicleState):
     def update_route(self, route: Route) -> ServicingPoolingTrip:
         tail = TupleOps.tail(self.routes)
         updated_routes = TupleOps.prepend(route, tail)
-        return self._replace(routes=updated_routes)
+        return replace(self, routes=updated_routes)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
@@ -125,7 +125,7 @@ class ServicingPoolingTrip(VehicleState):
                 return result, None
             else:
                 # enter ServicingPoolingTrip state with first request boarded
-                vehicle_state_with_first_trip = self._replace(
+                vehicle_state_with_first_trip = replace(self,
                     boarded_requests=immutables.Map({first_req_id: first_req}),
                     departure_times=immutables.Map({first_req_id: sim.sim_time}),
                     num_passengers=len(first_req.passengers),

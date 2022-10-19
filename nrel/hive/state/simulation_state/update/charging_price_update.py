@@ -66,7 +66,7 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
 
             fallback_values = ft.reduce(create_default_price, table.keys(), ())
             stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=SimTime.build)
-            return ChargingPriceUpdate(stepper, True)
+            return ChargingPriceUpdate(reader=stepper, use_defaults=True)
         else:
             charging_path = Path(charging_price_file)
             if not charging_path.is_file():

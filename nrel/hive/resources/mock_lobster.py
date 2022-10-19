@@ -326,7 +326,7 @@ def mock_ev_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
     with Path(powertrain_file).open() as f:
         data = yaml.safe_load(f)
         data["scale_factor"] = nominal_watt_hour_per_mile
-        return TabularPowertrain(data=data)
+        return TabularPowertrain.from_data(data=data)
 
 
 def mock_powercurve(
@@ -368,7 +368,7 @@ def mock_ice_powertrain(nominal_miles_per_gallon) -> TabularPowertrain:
     with Path(powertrain_file).open() as f:
         data = yaml.safe_load(f)
         data["scale_factor"] = 1 / nominal_miles_per_gallon
-        return TabularPowertrain(data=data)
+        return TabularPowertrain.from_data(data=data)
 
 
 def mock_ice(

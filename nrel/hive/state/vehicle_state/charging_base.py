@@ -34,7 +34,11 @@ class ChargingBase(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId) -> ChargingBase:
-        return ChargingBase(vehicle_id, base_id, charger_id, instance_id=uuid4())
+        return ChargingBase(
+            vehicle_id=vehicle_id, 
+            base_id=base_id, 
+            charger_id=charger_id, 
+            instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

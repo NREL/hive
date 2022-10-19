@@ -27,7 +27,7 @@ class ReserveBase(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId) -> ReserveBase:
-        return cls(vehicle_id, base_id, instance_id=uuid4())
+        return ReserveBase(vehicle_id=vehicle_id, base_id=base_id, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
