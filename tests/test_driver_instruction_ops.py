@@ -1,8 +1,8 @@
 
 from unittest import TestCase
 
-from hive.state.driver_state.driver_instruction_ops import human_go_home
-from hive.resources.mock_lobster import *
+from nrel.hive.state.driver_state.driver_instruction_ops import human_go_home
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestDriverInstructionOps(TestCase):

@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from hive.model.roadnetwork.linktraversal import traverse_up_to
-from hive.model.roadnetwork.routetraversal import traverse
-from hive.resources.mock_lobster import *
+from nrel.hive.model.roadnetwork.linktraversal import traverse_up_to
+from nrel.hive.model.roadnetwork.routetraversal import traverse
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestRouteTraversal(TestCase):

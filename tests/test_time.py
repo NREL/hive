@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.util.time_helpers import read_time_string
+from nrel.hive.util.time_helpers import read_time_string
 from datetime import time
 
 

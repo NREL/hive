@@ -1,2 +1,2 @@
 include LICENSE README.md setup.py
-recursive-include hive/resources *
+recursive-include nrel/hive/resources *

@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from returns.result import Success
 
-from hive.state.vehicle_state import vehicle_state_ops
-from hive.resources.mock_lobster import *
+from nrel.hive.state.vehicle_state import vehicle_state_ops
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestVehicleStateOps(TestCase):

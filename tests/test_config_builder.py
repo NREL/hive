@@ -1,7 +1,7 @@
 from typing import NamedTuple, Dict
 from unittest import TestCase
 
-from hive.config.config_builder import ConfigBuilder
+from nrel.hive.config.config_builder import ConfigBuilder
 
 
 class TestConfigBuilder(TestCase):

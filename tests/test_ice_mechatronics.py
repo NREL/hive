@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestICE(TestCase):

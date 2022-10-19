@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from hive.config.network import Network
-from hive.initialization.initialize_simulation import initialize_simulation
-from hive.initialization.initialize_simulation_with_sampling import initialize_simulation_with_sampling
-from hive.resources.mock_lobster import *
+from nrel.hive.config.network import Network
+from nrel.hive.initialization.initialize_simulation import initialize_simulation
+from nrel.hive.initialization.initialize_simulation_with_sampling import initialize_simulation_with_sampling
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestInitializeSimulation(TestCase):
@@ -48,7 +48,7 @@ class TestInitializeSimulation(TestCase):
         )).suppress_logging()
 
         new_input = conf.input_config._replace(road_network_file=Path(
-            resource_filename("hive.resources.scenarios.denver_downtown.road_network",
+            resource_filename("nrel.hive.resources.scenarios.denver_downtown.road_network",
                               "downtown_denver_network.json")))
 
         conf = conf._replace(input_config=new_input)

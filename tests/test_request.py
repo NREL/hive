@@ -1,9 +1,9 @@
 from unittest import TestCase
 from csv import DictReader
 
-from hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import *
 
-from hive.util.exception import TimeParseError
+from nrel.hive.util.exception import TimeParseError
 
 
 class TestRequest(TestCase):

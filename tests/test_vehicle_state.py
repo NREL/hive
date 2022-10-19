@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from hive.state.entity_state import entity_state_ops
-from hive.state.vehicle_state.charge_queueing import ChargeQueueing
-from hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
-from hive.state.vehicle_state.servicing_trip import ServicingTrip
-from hive.state.vehicle_state.out_of_service import OutOfService
-from hive.resources.mock_lobster import *
+from nrel.hive.state.entity_state import entity_state_ops
+from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
+from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
+from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
+from nrel.hive.state.vehicle_state.out_of_service import OutOfService
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestVehicleState(TestCase):

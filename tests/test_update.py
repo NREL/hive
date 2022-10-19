@@ -1,7 +1,7 @@
 from unittest import TestCase, skip
 
-from hive.runner import RunnerPayload
-from hive.resources.mock_lobster import *
+from nrel.hive.runner import RunnerPayload
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestUpdate(TestCase):

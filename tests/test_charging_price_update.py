@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
-from hive.resources.mock_lobster import *
+from nrel.hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestChargingPriceUpdate(TestCase):
@@ -16,7 +16,7 @@ class TestChargingPriceUpdate(TestCase):
             sim_time=28801)
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
-        file = resource_filename("hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_station_id.csv")
+        file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_station_id.csv")
         fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
         s1_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[s1].state.items()}
@@ -37,7 +37,7 @@ class TestChargingPriceUpdate(TestCase):
         sim = mock_sim(stations=stations, sim_time=36001)
         env = mock_env()
         s1, s2, bs1 = "s1", "s2", "bs1"  # StationIds in the Denver Downtown scenario
-        file = resource_filename("hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_geoid.csv")
+        file = resource_filename("nrel.hive.resources.scenarios.denver_downtown.charging_prices", "denver_charging_prices_by_geoid.csv")
         fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
         s1_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[s1].state.items()}

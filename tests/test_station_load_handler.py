@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from hive.reporting import vehicle_event_ops
-from hive.resources.mock_lobster import *
+from nrel.hive.reporting import vehicle_event_ops
+from nrel.hive.resources.mock_lobster import *
 
 
 class TestStationLoadHandler(TestCase):

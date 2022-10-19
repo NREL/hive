@@ -3,7 +3,7 @@ from unittest import TestCase
 import immutables
 from typing import FrozenSet
 
-from hive.util import DictOps
+from nrel.hive.util import DictOps
 
 
 class TestDictOps(TestCase):
