@@ -32,9 +32,7 @@ class TestUpdateRequests(TestCase):
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 2, "should have added the reqs")
         for req in result.requests.values():
-            self.assertLess(
-                req.departure_time, sim_time, f"should be less than {sim_time}"
-            )
+            self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
 
     def test_update_some_aready_cancelled(self):
         """
@@ -61,13 +59,9 @@ class TestUpdateRequests(TestCase):
         )
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
-        self.assertEqual(
-            expected_reqs, len(result.requests), "should have added the reqs"
-        )
+        self.assertEqual(expected_reqs, len(result.requests), "should have added the reqs")
         for req in result.requests.values():
-            self.assertLess(
-                req.departure_time, sim_time, f"should be less than {sim_time}"
-            )
+            self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
 
     def test_update_rate_structure(self):
         """
@@ -122,12 +116,8 @@ class TestUpdateRequests(TestCase):
             "nrel.hive.resources.scenarios.denver_downtown.service_prices",
             "rate_structure.csv",
         )
-        fn = UpdateRequestsFromFile.build(
-            req_file, rate_structure_file, lazy_file_reading=True
-        )
+        fn = UpdateRequestsFromFile.build(req_file, rate_structure_file, lazy_file_reading=True)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 2, "should have added the reqs")
         for req in result.requests.values():
-            self.assertLess(
-                req.departure_time, sim_time, f"should be less than {sim_time}"
-            )
+            self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")

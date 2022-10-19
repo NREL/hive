@@ -135,9 +135,7 @@ class CombinedException(Exception):
         self.errors = errors
 
     def __str__(self):
-        combined = ft.reduce(
-            lambda acc, err: acc + f"{err.message}\n", self.errors, ""
-        )
+        combined = ft.reduce(lambda acc, err: acc + f"{err.message}\n", self.errors, "")
         return repr(combined)
 
 

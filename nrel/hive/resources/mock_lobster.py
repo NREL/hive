@@ -147,24 +147,18 @@ def mock_membership():
     return Membership().from_tuple((DefaultIds.mock_membership_id(),))
 
 
-def mock_geofence(
-    geojson: Dict = mock_geojson(), resolution: H3Resolution = 10
-) -> GeoFence:
+def mock_geofence(geojson: Dict = mock_geojson(), resolution: H3Resolution = 10) -> GeoFence:
     return GeoFence.from_geojson(geojson, resolution)
 
 
-def mock_network(
-    h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10
-) -> RoadNetwork:
+def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
     return HaversineRoadNetwork(
         geofence=mock_geofence(resolution=geofence_res),
         sim_h3_resolution=h3_res,
     )
 
 
-def mock_osm_network(
-    h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10
-) -> OSMRoadNetwork:
+def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
     road_network_file = resource_filename(
         "nrel.hive.resources.scenarios.denver_downtown.road_network",
         "downtown_denver_network.json",
@@ -204,9 +198,7 @@ def mock_base_from_geoid(
     membership: Membership = Membership(),
     road_network: RoadNetwork = mock_network(),
 ) -> Base:
-    return Base.build(
-        base_id, geoid, road_network, station_id, stall_count, membership
-    )
+    return Base.build(base_id, geoid, road_network, station_id, stall_count, membership)
 
 
 def mock_station(
@@ -249,9 +241,7 @@ def mock_station_from_geoid(
     env: Optional[Environment] = None,
 ) -> Station:
     if chargers is None:
-        chargers = immutables.Map(
-            {mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1}
-        )
+        chargers = immutables.Map({mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1})
     elif isinstance(chargers, dict):
         chargers = immutables.Map(chargers)
     if on_shift_access_chargers is None:
@@ -345,9 +335,7 @@ def mock_powercurve(
     nominal_max_charge_kw=50,
     battery_capacity_kwh=50,
 ) -> TabularPowercurve:
-    powercurve_file = resource_filename(
-        "nrel.hive.resources.powercurve", "normalized.yaml"
-    )
+    powercurve_file = resource_filename("nrel.hive.resources.powercurve", "normalized.yaml")
     with Path(powercurve_file).open() as f:
         data = yaml.safe_load(f)
         return TabularPowercurve(
@@ -369,9 +357,7 @@ def mock_bev(
         battery_capacity_kwh=battery_capacity_kwh,
         idle_kwh_per_hour=idle_kwh_per_hour,
         powertrain=mock_ev_powertrain(nominal_watt_hour_per_mile),
-        powercurve=mock_powercurve(
-            nominal_max_charge_kw, battery_capacity_kwh
-        ),
+        powercurve=mock_powercurve(nominal_max_charge_kw, battery_capacity_kwh),
         nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
         charge_taper_cutoff_kw=charge_taper_cutoff_kw,
     )
@@ -563,12 +549,8 @@ def mock_env(
     config: HiveConfig = mock_config(),
     mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
     chargers: Optional[Dict[Charger, Charger]] = None,
-    schedules: Optional[
-        Dict[ScheduleId, Callable[["SimulationState", VehicleId], bool]]
-    ] = None,
-    fleet_ids: FrozenSet[MembershipId] = frozenset(
-        [DefaultIds.mock_membership_id()]
-    ),
+    schedules: Optional[Dict[ScheduleId, Callable[["SimulationState", VehicleId], bool]]] = None,
+    fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()]),
 ) -> Environment:
     if mechatronics is None:
         mechatronics = {
@@ -672,16 +654,12 @@ def mock_haversine_zigzag_route(
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_route_from_geoids(
-    src: GeoId, dst: GeoId, speed_kmph: Kmph = 1
-) -> Tuple[Link, ...]:
+def mock_route_from_geoids(src: GeoId, dst: GeoId, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
     link = Link.build("1", src, dst, speed_kmph=speed_kmph)
     return (link,)
 
 
-def mock_graph_links(
-    h3_res: int = 15, speed_kmph: Kmph = 1
-) -> Dict[str, Link]:
+def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     """
     test_routetraversal is dependent on this graph topology + its attributes
     each link is approximately 1 kilometer
@@ -712,9 +690,7 @@ def mock_graph_links(
 
 
 def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
-    return tuple(
-        mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values()
-    )
+    return tuple(mock_graph_links(h3_res=h3_res, speed_kmph=speed_kmph).values())
 
 
 def mock_forecaster(forecast: int = 1) -> ForecasterInterface:

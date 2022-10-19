@@ -37,9 +37,7 @@ def requests_exist_and_match_membership(
             return False
         else:
             membership_ok = (
-                req.membership.grant_access_to_membership(vehicle.membership)
-                if req
-                else False
+                req.membership.grant_access_to_membership(vehicle.membership) if req else False
             )
             return membership_ok
 
@@ -162,9 +160,7 @@ def begin_or_replan_dispatch_pooling_state(
         )
         return error, None
     elif first_trip is None:
-        error = SimulationStateError(
-            f"attempting to dispatch pooling trip with empty trip plan"
-        )
+        error = SimulationStateError(f"attempting to dispatch pooling trip with empty trip plan")
         return error, None
     else:
         first_req_id, first_phase = first_trip
@@ -180,10 +176,7 @@ def begin_or_replan_dispatch_pooling_state(
 
             # todo: this should become a ServicingPoolingTrip instead
             #  - maybe we need a TripPhase.REPLANNING for the leg that is the interruption?
-            if (
-                vehicle.vehicle_state.vehicle_state_type
-                == VehicleStateType.SERVICING_POOLING_TRIP
-            ):
+            if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
                 # already servicing pooling - copy over passenger state
                 next_state = DispatchPoolingTrip.build(
                     vehicle_id,
@@ -196,7 +189,5 @@ def begin_or_replan_dispatch_pooling_state(
                 return None, next_state
             else:
                 # not already servicing pooling - just dispatch, don't carry over passenger state
-                next_state = DispatchPoolingTrip.build(
-                    vehicle_id, trip_plan, route
-                )
+                next_state = DispatchPoolingTrip.build(vehicle_id, trip_plan, route)
                 return None, next_state

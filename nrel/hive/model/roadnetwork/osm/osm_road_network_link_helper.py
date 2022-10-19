@@ -32,9 +32,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
     links_linkid_lookup: Tuple[LinkId, ...]
     link_count: int
 
-    def link_by_geoid(
-        self, geoid: GeoId
-    ) -> Tuple[Optional[Exception], Optional[Link]]:
+    def link_by_geoid(self, geoid: GeoId) -> Tuple[Optional[Exception], Optional[Link]]:
         """
         uses the CKDTree to find a nearest Link to some geoid
 
@@ -45,11 +43,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             query = h3.h3_to_geo(geoid)
             _, index_result = self.links_spatial_lookup.query(query)
             index = int(index_result)
-            link_id = (
-                self.links_linkid_lookup[index]
-                if 0 <= index < self.link_count
-                else None
-            )
+            link_id = self.links_linkid_lookup[index] if 0 <= index < self.link_count else None
             link = self.links.get(link_id) if link_id else None
             if not link_id or not link:
                 return (
@@ -94,9 +88,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             link_ids: Tuple[LinkId, ...] = ()
             link_centroids: Tuple[Tuple[float, float], ...] = ()
 
-            def add_link(
-                self, link: Link
-            ) -> Tuple[Optional[Exception], Optional[Accumulator]]:
+            def add_link(self, link: Link) -> Tuple[Optional[Exception], Optional[Accumulator]]:
                 """
                 adding a link to this accumulator creates an entry in the data structures used to
                 run spatial queries over the graph edge space
@@ -109,9 +101,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                     # we want to look up edges by their midpoint. that said, two edges will share the same
                     # endpoints, one for each direction. since these two edges would share the same midpoint,
                     # we aim here to make both centroids _just barely_ different by subtracting the midpoint index by 1.
-                    midpoint_h3_line_index = (
-                        round(len(h3_line) / 2) if len(h3_line) > 0 else None
-                    )
+                    midpoint_h3_line_index = round(len(h3_line) / 2) if len(h3_line) > 0 else None
                     src_oriented_midpoint_index = (
                         midpoint_h3_line_index - 1
                         if midpoint_h3_line_index > 0
@@ -122,9 +112,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                         if src_oriented_midpoint_index
                         else link.start
                     )
-                    link_centroid_lat, link_centroid_lon = h3.h3_to_geo(
-                        midpoint_hex
-                    )
+                    link_centroid_lat, link_centroid_lon = h3.h3_to_geo(midpoint_hex)
                     updated_acc = self._replace(
                         lookup=self.lookup.set(link.link_id, link),
                         link_ids=self.link_ids + (link.link_id,),
@@ -149,12 +137,8 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                     link_id = create_link_id(src, dst)
                     src_node = graph.nodes[src]
                     dst_node = graph.nodes[dst]
-                    src_coord_err, src_coord = safe_get_node_coordinates(
-                        src_node, src
-                    )
-                    dst_coord_err, dst_coord = safe_get_node_coordinates(
-                        dst_node, dst
-                    )
+                    src_coord_err, src_coord = safe_get_node_coordinates(src_node, src)
+                    dst_coord_err, dst_coord = safe_get_node_coordinates(dst_node, dst)
                     if src_coord_err:
                         response = Exception(
                             f"failure getting node coordinates while building OSMRoadNetworkLinkHelper"
@@ -170,12 +154,8 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                     else:
                         src_lat, src_lon = src_coord
                         dst_lat, dst_lon = dst_coord
-                        src_geoid = h3.geo_to_h3(
-                            src_lat, src_lon, resolution=sim_h3_resolution
-                        )
-                        dst_geoid = h3.geo_to_h3(
-                            dst_lat, dst_lon, resolution=sim_h3_resolution
-                        )
+                        src_geoid = h3.geo_to_h3(src_lat, src_lon, resolution=sim_h3_resolution)
+                        dst_geoid = h3.geo_to_h3(dst_lat, dst_lon, resolution=sim_h3_resolution)
                         data = graph.get_edge_data(
                             src, dst, 0, None
                         )  # data index "0" as this uses networkx's multigraph implementation
@@ -185,18 +165,12 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                             else default_speed_kmph
                         )
                         distance_miles = (
-                            data.get("length", default_distance_km)
-                            if data
-                            else default_distance_km
+                            data.get("length", default_distance_km) if data else default_distance_km
                         )
                         distance = (
-                            distance_miles * M_TO_KM
-                            if distance_miles
-                            else default_distance_km
+                            distance_miles * M_TO_KM if distance_miles else default_distance_km
                         )
-                        link = Link.build(
-                            link_id, src_geoid, dst_geoid, speed, distance
-                        )
+                        link = Link.build(link_id, src_geoid, dst_geoid, speed, distance)
                         (
                             add_link_error,
                             updated_accumulator,

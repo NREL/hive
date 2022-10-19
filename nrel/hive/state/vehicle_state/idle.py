@@ -46,9 +46,7 @@ class Idle(VehicleState):
         self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
 
-        new_state = VehicleState.apply_new_vehicle_state(
-            sim, self.vehicle_id, self
-        )
+        new_state = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
         return new_state
 
     def exit(
@@ -56,9 +54,7 @@ class Idle(VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         If energy has run out, we will move to OutOfService
 
@@ -103,22 +99,14 @@ class Idle(VehicleState):
             )
         elif not mechatronics:
             return (
-                SimulationStateError(
-                    f"cannot find {vehicle.mechatronics_id} in environment"
-                ),
+                SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"),
                 None,
             )
         else:
-            less_energy_vehicle = mechatronics.idle(
-                vehicle, sim.sim_timestep_duration_seconds
-            )
+            less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
-            updated_idle_duration = (
-                self.idle_duration + sim.sim_timestep_duration_seconds
-            )
+            updated_idle_duration = self.idle_duration + sim.sim_timestep_duration_seconds
             updated_state = replace(self, idle_duration=updated_idle_duration)
-            updated_vehicle = less_energy_vehicle.modify_vehicle_state(
-                updated_state
-            )
+            updated_vehicle = less_energy_vehicle.modify_vehicle_state(updated_state)
 
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)

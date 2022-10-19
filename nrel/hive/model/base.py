@@ -56,9 +56,7 @@ class Base(NamedTuple):
     ):
 
         position = road_network.position_from_geoid(geoid)
-        return Base(
-            id, position, stall_count, stall_count, station_id, membership
-        )
+        return Base(id, position, stall_count, stall_count, station_id, membership)
 
     @classmethod
     def from_row(
@@ -89,14 +87,8 @@ class Base(NamedTuple):
                 stall_count = int(row["stall_count"])
 
                 # allow user to leave station_id blank or use the word "none" to signify no station at base
-                station_id_name = (
-                    row["station_id"] if len(row["station_id"]) > 0 else "none"
-                )
-                station_id = (
-                    None
-                    if station_id_name.lower() == "none"
-                    else station_id_name
-                )
+                station_id_name = row["station_id"] if len(row["station_id"]) > 0 else "none"
+                station_id = None if station_id_name.lower() == "none" else station_id_name
 
                 # TODO: think about how to assing vehicles to bases based on fleet membership
 
@@ -119,9 +111,9 @@ class Base(NamedTuple):
 
         :return: Boolean
         """
-        return bool(
-            self.available_stalls > 0
-        ) and self.membership.grant_access_to_membership(membership)
+        return bool(self.available_stalls > 0) and self.membership.grant_access_to_membership(
+            membership
+        )
 
     def checkout_stall(self) -> Optional[Base]:
         """

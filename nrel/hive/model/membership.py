@@ -23,9 +23,7 @@ class Membership(NamedTuple):
         :return:
         """
         if any([m == PUBLIC_MEMBERSHIP_ID for m in member_ids]):
-            raise TypeError(
-                f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id"
-            )
+            raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
         return Membership(frozenset(member_ids))
 
     @classmethod
@@ -37,9 +35,7 @@ class Membership(NamedTuple):
         :return:
         """
         if membership_id == PUBLIC_MEMBERSHIP_ID:
-            raise TypeError(
-                f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id"
-            )
+            raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
         return Membership(frozenset((membership_id,)))
 
     @property
@@ -54,15 +50,11 @@ class Membership(NamedTuple):
         :return:
         """
         if membership_id == PUBLIC_MEMBERSHIP_ID:
-            raise TypeError(
-                f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id"
-            )
+            raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
         new_member_ids = [m for m in self.memberships] + [membership_id]
         return self._replace(memberships=frozenset(new_member_ids))
 
-    def memberships_in_common(
-        self, other_membership: Membership
-    ) -> FrozenSet[MembershipId]:
+    def memberships_in_common(self, other_membership: Membership) -> FrozenSet[MembershipId]:
         """
         lists the MembershipIds in common with another Membership, such as to identify
         which ride hail service provider was used to pick up a request
@@ -84,9 +76,7 @@ class Membership(NamedTuple):
         else:
             return len(self.memberships_in_common(other_membership)) > 0
 
-    def grant_access_to_membership_id(
-        self, membership_id: MembershipId
-    ) -> bool:
+    def grant_access_to_membership_id(self, membership_id: MembershipId) -> bool:
         """
         returns true if the membership id is valid for this membership
 

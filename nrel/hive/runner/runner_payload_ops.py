@@ -31,9 +31,7 @@ def update_instruction_generator_safe(
         return Success(new_rp)
 
 
-def update_instruction_generator(
-    rp: RunnerPayload, ig: InstructionGenerator
-) -> RunnerPayload:
+def update_instruction_generator(rp: RunnerPayload, ig: InstructionGenerator) -> RunnerPayload:
     """
     Inject an updated InstructionGenerator into a runner payload
 
@@ -74,17 +72,13 @@ def set_instruction_generators(
 
     :return: The updated runner payload
     """
-    new_step_simulation = rp.u.step_update.update_instruction_generators(
-        instruction_generators
-    )
+    new_step_simulation = rp.u.step_update.update_instruction_generators(instruction_generators)
     new_update = rp.u._replace(step_update=new_step_simulation)
     new_rp = rp._replace(u=new_update)
     return new_rp
 
 
-def modify_entities_safe(
-    rp: RunnerPayload, entities: Iterable[Entity]
-) -> ResultE[RunnerPayload]:
+def modify_entities_safe(rp: RunnerPayload, entities: Iterable[Entity]) -> ResultE[RunnerPayload]:
     """
     Modify entities in a runner payload
     """
@@ -97,9 +91,7 @@ def modify_entities_safe(
         return Success(new_rp)
 
 
-def modify_entities(
-    rp: RunnerPayload, entities: Iterable[Entity]
-) -> RunnerPayload:
+def modify_entities(rp: RunnerPayload, entities: Iterable[Entity]) -> RunnerPayload:
     """
     Modify entities in a runner payload
     """

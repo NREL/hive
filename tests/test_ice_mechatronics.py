@@ -8,12 +8,9 @@ class TestICE(TestCase):
         ice = mock_ice(tank_capacity_gallons=10)
         vehicle = mock_vehicle(soc=0, mechatronics=ice)
 
-        full_vehicle, _ = ice.add_energy(
-            vehicle, mock_gasoline_pump(), hours_to_seconds(10)
-        )
+        full_vehicle, _ = ice.add_energy(vehicle, mock_gasoline_pump(), hours_to_seconds(10))
         self.assertAlmostEqual(
-            full_vehicle.energy[EnergyType.GASOLINE]
-            / ice.tank_capacity_gallons,
+            full_vehicle.energy[EnergyType.GASOLINE] / ice.tank_capacity_gallons,
             1,
             places=2,
         )
@@ -22,13 +19,9 @@ class TestICE(TestCase):
         ice = mock_ice(tank_capacity_gallons=10)
         vehicle = mock_vehicle(soc=1, mechatronics=ice)
 
-        full_vehicle, _ = ice.add_energy(
-            vehicle, mock_gasoline_pump(), hours_to_seconds(10)
-        )
+        full_vehicle, _ = ice.add_energy(vehicle, mock_gasoline_pump(), hours_to_seconds(10))
 
-        self.assertEqual(
-            full_vehicle.energy[EnergyType.GASOLINE], 10, "Should be full"
-        )
+        self.assertEqual(full_vehicle.energy[EnergyType.GASOLINE], 10, "Should be full")
 
     def test_energy_cost_empty_route(self):
         ice = mock_ice(tank_capacity_gallons=10)

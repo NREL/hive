@@ -73,9 +73,7 @@ class DispatchStation(VehicleState):
         station = sim.stations.get(self.station_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         is_valid = (
-            route_cooresponds_with_entities(
-                self.route, vehicle.position, station.position
-            )
+            route_cooresponds_with_entities(self.route, vehicle.position, station.position)
             if vehicle and station
             else False
         )
@@ -92,21 +90,15 @@ class DispatchStation(VehicleState):
             )
         elif station.geoid == vehicle.geoid:
             # already there!
-            next_state = ChargingStation.build(
-                self.vehicle_id, self.station_id, self.charger_id
-            )
+            next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
             return next_state.enter(sim, env)
         elif not is_valid:
             return None, None
-        elif not station.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not station.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} and station {station.id} don't share a membership"
             return SimulationStateError(msg), None
         else:
-            result = VehicleState.apply_new_vehicle_state(
-                sim, self.vehicle_id, self
-            )
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
 
     def exit(
@@ -114,9 +106,7 @@ class DispatchStation(VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a station
 
@@ -138,11 +128,7 @@ class DispatchStation(VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
-        available_chargers = (
-            station.get_available_chargers(self.charger_id)
-            if station
-            else None
-        )
+        available_chargers = station.get_available_chargers(self.charger_id) if station else None
         context = f"vehicle {self.vehicle_id} entering default terminal state for dispatch station state for station {self.station_id} with charger {self.charger_id}"
         if not vehicle:
             return (
@@ -160,9 +146,7 @@ class DispatchStation(VehicleState):
             return SimulationStateError(message), None
         else:
             next_state = (
-                ChargingStation.build(
-                    self.vehicle_id, self.station_id, self.charger_id
-                )
+                ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
                 if available_chargers is not None
                 else ChargeQueueing.build(
                     self.vehicle_id,
@@ -183,9 +167,7 @@ class DispatchStation(VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-        move_error, move_sim = vehicle_state_ops.move(
-            sim, env, self.vehicle_id
-        )
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
         if move_error:
             response = SimulationStateError(

@@ -47,9 +47,7 @@ class Passenger(NamedTuple):
         return self._replace(vehicle_id=vehicle_id)
 
 
-def create_passenger_id(
-    request_id: RequestId, passenger_id: int
-) -> PassengerId:
+def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId:
     """
     Constructs a passenger id using a RequestId and an integer
 
@@ -72,6 +70,4 @@ def board_vehicle(
     :param vehicle_id: the vehicle they are boarding
     :return: the passengers with their vehicle_id updated
     """
-    return ft.reduce(
-        lambda acc, p: acc + (p.add_vehicle_id(vehicle_id),), passengers, ()
-    )
+    return ft.reduce(lambda acc, p: acc + (p.add_vehicle_id(vehicle_id),), passengers, ())

@@ -32,9 +32,7 @@ def safe_get_node_coordinates(
             return None, (node["lat"], node["lon"])
         except KeyError:
             return (
-                KeyError(
-                    f"node {node_id} does not have either (y, x) or (lat, lon) information"
-                ),
+                KeyError(f"node {node_id} does not have either (y, x) or (lat, lon) information"),
                 None,
             )
 
@@ -56,9 +54,7 @@ def route_from_nx_path(
     else:
 
         def _accumulate_links(
-            acc: Tuple[
-                Optional[Exception], Optional[Tuple[LinkTraversal, ...]]
-            ],
+            acc: Tuple[Optional[Exception], Optional[Tuple[LinkTraversal, ...]]],
             node_id_pair: Tuple[int, int],
         ) -> Tuple[Optional[Exception], Optional[Tuple[LinkTraversal, ...]]]:
             err, prev_links = acc
@@ -78,9 +74,7 @@ def route_from_nx_path(
                     updated_links = prev_links + (link.to_link_traversal(),)
                     return None, updated_links
 
-        nx_path_adj_pairs = [
-            (nx_path[i], nx_path[i + 1]) for i in range(0, len(nx_path) - 1)
-        ]
+        nx_path_adj_pairs = [(nx_path[i], nx_path[i + 1]) for i in range(0, len(nx_path) - 1)]
         initial = None, ()
         result = ft.reduce(_accumulate_links, nx_path_adj_pairs, initial)
         return result
@@ -113,13 +107,7 @@ def resolve_route_src_dst_positions(
         # for any length inner route, form the total route by attaching these
         # start and end links whose start or end values have been modified to
         # align with the search start/end locations
-        src_link_traversal = src_link.to_link_traversal().update_start(
-            src_link_pos.geoid
-        )
-        dst_link_traversal = dst_link.to_link_traversal().update_end(
-            dst_link_pos.geoid
-        )
-        updated_route = (
-            (src_link_traversal,) + inner_route + (dst_link_traversal,)
-        )
+        src_link_traversal = src_link.to_link_traversal().update_start(src_link_pos.geoid)
+        dst_link_traversal = dst_link.to_link_traversal().update_end(dst_link_pos.geoid)
+        updated_route = (src_link_traversal,) + inner_route + (dst_link_traversal,)
         return updated_route

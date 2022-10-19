@@ -43,16 +43,12 @@ class HaversineRoadNetwork(RoadNetwork):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
 
-    def route(
-        self, origin: EntityPosition, destination: EntityPosition
-    ) -> Route:
+    def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
         if origin == destination:
             return empty_route()
 
         link_id = h_ops.geoids_to_link_id(origin.geoid, destination.geoid)
-        link_dist_km = self.distance_by_geoid_km(
-            origin.geoid, destination.geoid
-        )
+        link_dist_km = self.distance_by_geoid_km(origin.geoid, destination.geoid)
         link = LinkTraversal(
             link_id=link_id,
             start=origin.geoid,
@@ -65,9 +61,7 @@ class HaversineRoadNetwork(RoadNetwork):
 
         return route
 
-    def distance_by_geoid_km(
-        self, origin: GeoId, destination: GeoId
-    ) -> Kilometers:
+    def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         return H3Ops.great_circle_distance(origin, destination)
 
     def link_from_link_id(self, link_id: LinkId) -> Optional[Link]:

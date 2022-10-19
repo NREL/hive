@@ -99,16 +99,12 @@ class ChargingStation(VehicleState):
         charger_err, charger = station.get_charger_instance(self.charger_id)
         if mechatronics is None:
             return (
-                SimulationStateError(
-                    f"unknown mechatronics id {vehicle.mechatronics_id}"
-                ),
+                SimulationStateError(f"unknown mechatronics id {vehicle.mechatronics_id}"),
                 None,
             )
         if vehicle.geoid != station.geoid:
             return None, None
-        elif not station.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not station.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} doesn't have access to station {station.id}"
             return SimulationStateError(msg), None
         elif charger_err is not None:
@@ -123,9 +119,7 @@ class ChargingStation(VehicleState):
             elif updated_station is None:
                 return None, None
             else:
-                error, updated_sim = simulation_state_ops.modify_station(
-                    sim, updated_station
-                )
+                error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                 if error:
                     response = SimulationStateError(
                         f"failure during ChargingStation.enter for vehicle {self.vehicle_id}"
@@ -133,9 +127,7 @@ class ChargingStation(VehicleState):
                     response.__cause__ = error
                     return response, None
                 else:
-                    return VehicleState.apply_new_vehicle_state(
-                        updated_sim, self.vehicle_id, self
-                    )
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(
         self, sim: "SimulationState", env: Environment
@@ -221,6 +213,4 @@ class ChargingStation(VehicleState):
         :return: an exception due to failure or an optional updated simulation
         """
 
-        return charge(
-            sim, env, self.vehicle_id, self.station_id, self.charger_id
-        )
+        return charge(sim, env, self.vehicle_id, self.station_id, self.charger_id)

@@ -41,13 +41,9 @@ def build_mechatronics_table(
             # add the mechatronics id to the nested dictionary
             config_dict[mechatronics_id]["mechatronics_id"] = mechatronics_id
             try:
-                mechatronics_type = config_dict[mechatronics_id][
-                    "mechatronics_type"
-                ]
+                mechatronics_type = config_dict[mechatronics_id]["mechatronics_type"]
             except KeyError:
-                raise IOError(
-                    f"could not find mechatronics_type in {mechatronics_id}"
-                )
+                raise IOError(f"could not find mechatronics_type in {mechatronics_id}")
             try:
                 model = mechatronic_models[mechatronics_type]
             except KeyError:
@@ -60,9 +56,7 @@ def build_mechatronics_table(
                     "powertrain",
                     "powertrain",  # resources.powertrain
                 )
-                config_dict[mechatronics_id][
-                    "powertrain_file"
-                ] = powertrain_file
+                config_dict[mechatronics_id]["powertrain_file"] = powertrain_file
 
             if "powercurve_file" in config_dict[mechatronics_id]:
                 powercurve_file = fs.construct_asset_path(
@@ -71,12 +65,8 @@ def build_mechatronics_table(
                     "powercurve",
                     "powercurve",  # resources.powercurve
                 )
-                config_dict[mechatronics_id][
-                    "powercurve_file"
-                ] = powercurve_file
+                config_dict[mechatronics_id]["powercurve_file"] = powercurve_file
 
-            mechatronics[mechatronics_id] = model.from_dict(
-                config_dict[mechatronics_id]
-            )
+            mechatronics[mechatronics_id] = model.from_dict(config_dict[mechatronics_id])
 
     return mechatronics

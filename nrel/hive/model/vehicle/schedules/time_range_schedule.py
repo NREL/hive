@@ -58,14 +58,10 @@ def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
     schedule_id = row.get("schedule_id")
     start_time_string = row.get("start_time")
     if not start_time_string:
-        raise KeyError(
-            "time range file missing start_time column or entry missing"
-        )
+        raise KeyError("time range file missing start_time column or entry missing")
     end_time_string = row.get("end_time")
     if not end_time_string:
-        raise KeyError(
-            "time range file missing end_time column or entry missing"
-        )
+        raise KeyError("time range file missing end_time column or entry missing")
     start_time = read_time_string(start_time_string)
     end_time = read_time_string(end_time_string)
 

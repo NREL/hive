@@ -12,18 +12,10 @@ class TestRouteTraversal(TestCase):
         """
         links = mock_route()
 
-        _, result = traverse(
-            route_estimate=links, duration_seconds=hours_to_seconds(4)
-        )
-        self.assertGreater(
-            result.remaining_time_seconds, 0, "should have more time left"
-        )
-        self.assertEqual(
-            len(result.remaining_route), 0, "should have no more route"
-        )
-        self.assertEqual(
-            len(result.experienced_route), 3, "should have hit all 3 links"
-        )
+        _, result = traverse(route_estimate=links, duration_seconds=hours_to_seconds(4))
+        self.assertGreater(result.remaining_time_seconds, 0, "should have more time left")
+        self.assertEqual(len(result.remaining_route), 0, "should have no more route")
+        self.assertEqual(len(result.experienced_route), 3, "should have hit all 3 links")
 
     def test_traverse_without_enough_time(self):
         """
@@ -33,19 +25,11 @@ class TestRouteTraversal(TestCase):
         links = mock_route()
         _, result = traverse(
             route_estimate=links,
-            duration_seconds=hours_to_seconds(
-                1.5
-            ),  # 1.5 hours at 1kmph, 1km per link, 3 links
+            duration_seconds=hours_to_seconds(1.5),  # 1.5 hours at 1kmph, 1km per link, 3 links
         )
-        self.assertEqual(
-            result.remaining_time_seconds, 0, "should have no more time left"
-        )
-        self.assertEqual(
-            len(result.remaining_route), 2, "should have 2 links remaining"
-        )
-        self.assertEqual(
-            len(result.experienced_route), 2, "should have traversed 2 links"
-        )
+        self.assertEqual(result.remaining_time_seconds, 0, "should have no more time left")
+        self.assertEqual(len(result.remaining_route), 2, "should have 2 links remaining")
+        self.assertEqual(len(result.experienced_route), 2, "should have traversed 2 links")
 
     def test_traverse_up_to_split(self):
         links = mock_route()

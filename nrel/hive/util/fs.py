@@ -84,9 +84,7 @@ def construct_asset_path(
     :raises: FileNotFoundError if asset is not found
     """
     try:
-        result = construct_scenario_asset_path(
-            file, scenario_directory, default_directory_name
-        )
+        result = construct_scenario_asset_path(file, scenario_directory, default_directory_name)
         return result
     except FileNotFoundError:
         # try the resources directory fallback
@@ -126,18 +124,14 @@ def construct_scenario_asset_path(
     """
     file_at_scenario_directory = Path(scenario_directory).joinpath(file)
     file_at_default_directory = (
-        Path(scenario_directory)
-        .joinpath(default_directory_name)
-        .joinpath(file)
+        Path(scenario_directory).joinpath(default_directory_name).joinpath(file)
     )
     if file_at_scenario_directory.is_file():
         return str(file_at_scenario_directory)
     elif file_at_default_directory.is_file():
         return str(file_at_default_directory)
     else:
-        raise FileNotFoundError(
-            f"cannot find file {file} in directory {scenario_directory}"
-        )
+        raise FileNotFoundError(f"cannot find file {file} in directory {scenario_directory}")
 
 
 def find_scenario(user_provided_scenario: str) -> Path:

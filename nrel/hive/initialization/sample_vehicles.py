@@ -50,9 +50,7 @@ def sample_vehicles(
     mechatronics_id = random.choice(list(env.mechatronics.keys()))
     mechatronics = env.mechatronics.get(mechatronics_id)
     if not mechatronics:
-        return Failure(
-            KeyError(f"mechatronics with id {mechatronics_id} not found")
-        )
+        return Failure(KeyError(f"mechatronics with id {mechatronics_id} not found"))
     else:
 
         def _add_sample(i: int):
@@ -79,9 +77,7 @@ def sample_vehicles(
                     link = location_sampling_function(s)
                     position = EntityPosition(link.link_id, link.start)
                     vehicle_state = Idle.build(vehicle_id)
-                    driver_state = AutonomousAvailable(
-                        AutonomousDriverAttributes(vehicle_id)
-                    )
+                    driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
                     vehicle = Vehicle(
                         id=vehicle_id,
                         mechatronics_id=mechatronics_id,

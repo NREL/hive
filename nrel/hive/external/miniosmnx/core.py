@@ -132,9 +132,7 @@ def remove_isolated_nodes(G):
     networkx multidigraph
     """
 
-    isolated_nodes = [
-        node for node, degree in dict(G.degree()).items() if degree < 1
-    ]
+    isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
     return G
 
@@ -169,9 +167,7 @@ def add_edge_lengths(G):
             for u, v, k in G.edges(keys=True)
         ]
     )
-    df_coords = pd.DataFrame(
-        coords, columns=["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]
-    )
+    df_coords = pd.DataFrame(coords, columns=["u", "v", "k", "u_y", "u_x", "v_y", "v_x"])
     df_coords[["u", "v", "k"]] = df_coords[["u", "v", "k"]].astype(np.int64)
     df_coords = df_coords.set_index(["u", "v", "k"])
 
@@ -260,9 +256,7 @@ def add_paths(G, paths, bidirectional=False):
             add_path(G, data, one_way=True)
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
-        elif (
-            "oneway" in data and data["oneway"] in osm_oneway_values
-        ) and not bidirectional:
+        elif ("oneway" in data and data["oneway"] in osm_oneway_values) and not bidirectional:
             if data["oneway"] == "-1" or data["oneway"] == "T":
                 # paths with a one-way value of -1 or T are one-way, but in the
                 # reverse direction of the nodes' order, see osm documentation
@@ -270,9 +264,7 @@ def add_paths(G, paths, bidirectional=False):
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
 
-        elif (
-            "junction" in data and data["junction"] == "roundabout"
-        ) and not bidirectional:
+        elif ("junction" in data and data["junction"] == "roundabout") and not bidirectional:
             # roundabout are also oneway but not tagged as is
             add_path(G, data, one_way=True)
 
@@ -288,9 +280,7 @@ def add_paths(G, paths, bidirectional=False):
     return G
 
 
-def create_graph(
-    response_jsons, name="unnamed", retain_all=False, bidirectional=False
-):
+def create_graph(response_jsons, name="unnamed", retain_all=False, bidirectional=False):
     """
     Create a networkx graph from Overpass API HTTP response objects.
 
@@ -315,9 +305,7 @@ def create_graph(
     for response_json in response_jsons:
         elements.extend(response_json["elements"])
     if len(elements) < 1:
-        raise Exception(
-            "There are no data elements in the response JSON objects"
-        )
+        raise Exception("There are no data elements in the response JSON objects")
 
     # create the graph as a MultiDiGraph and set the original CRS to DEFAULT_CRS
     G = nx.MultiDiGraph(name=name, crs=DEFAULT_CRS)
@@ -352,9 +340,7 @@ def create_graph(
     return G
 
 
-def graph_from_file(
-    filename, bidirectional=False, retain_all=False, name="unnamed"
-):
+def graph_from_file(filename, bidirectional=False, retain_all=False, name="unnamed"):
     """
     Create a networkx graph from OSM data in an XML file.
 

@@ -11,9 +11,7 @@ from nrel.hive.runner import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
-def log_station_capacities(
-    sim: SimulationState, env: Environment
-) -> IOResultE[Path]:
+def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[Path]:
     """
     logs each station and it's load capacity to the output directory
 
@@ -47,9 +45,7 @@ def log_station_capacities(
             (),
         )
 
-        output_file = Path(env.config.scenario_output_directory).joinpath(
-            "station_capacities.csv"
-        )
+        output_file = Path(env.config.scenario_output_directory).joinpath("station_capacities.csv")
         with output_file.open("w") as f:
             writer = csv.DictWriter(f, fieldnames=["station_id", "rate"])
             writer.writeheader()

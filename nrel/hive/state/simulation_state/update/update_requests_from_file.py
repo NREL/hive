@@ -53,18 +53,14 @@ class UpdateRequestsFromFile(SimulationUpdateFunction):
         if rate_structure_file:
             rate_structure_path = Path(rate_structure_file)
             if not rate_structure_path.is_file():
-                raise IOError(
-                    f"{rate_structure_file} is not a valid path to a request file"
-                )
+                raise IOError(f"{rate_structure_file} is not a valid path to a request file")
             with open(rate_structure_file, "r", encoding="utf-8-sig") as rsf:
                 reader = DictReader(rsf)
                 rate_structure = RequestRateStructure.from_row(next(reader))
 
         req_path = Path(request_file)
         if not req_path.is_file():
-            raise IOError(
-                f"{request_file} is not a valid path to a request file"
-            )
+            raise IOError(f"{request_file} is not a valid path to a request file")
 
         if lazy_file_reading:
             error, stepper = DictReaderStepper.build(
@@ -81,9 +77,7 @@ class UpdateRequestsFromFile(SimulationUpdateFunction):
                 reader, "departure_time", parser=SimTime.build
             )
 
-        return UpdateRequestsFromFile(
-            reader=stepper, rate_structure=rate_structure
-        )
+        return UpdateRequestsFromFile(reader=stepper, rate_structure=rate_structure)
 
     def update(
         self, sim_state: SimulationState, env: Environment
@@ -148,9 +142,7 @@ def update_requests_from_iterator(
         """
         error, req = Request.from_row(row, env, sim.road_network)
         this_req_cancel_time = (
-            req.departure_time + env.config.sim.request_cancel_time_seconds
-            if req
-            else None
+            req.departure_time + env.config.sim.request_cancel_time_seconds if req else None
         )
         if error:
             log.error(error)
@@ -174,9 +166,7 @@ def update_requests_from_iterator(
             return sim
         else:
             req_updated = req.assign_value(rate_structure, sim.road_network)
-            sim_or_error = simulation_state_ops.add_request_safe(
-                sim, req_updated
-            )
+            sim_or_error = simulation_state_ops.add_request_safe(sim, req_updated)
             if isinstance(sim, Failure):
                 error = sim_or_error.failure()
                 log.error(error)
@@ -186,7 +176,9 @@ def update_requests_from_iterator(
                 sim_updated = sim_or_error.unwrap()
                 req_in_sim = sim_updated.requests.get(req.id)
                 if not req_in_sim:
-                    warning = f"adding new request {req.id} to sim succeeded but now request is not found"
+                    warning = (
+                        f"adding new request {req.id} to sim succeeded but now request is not found"
+                    )
                     log.warning(warning)
                     return sim
                 else:
@@ -196,9 +188,7 @@ def update_requests_from_iterator(
                         "departure_time": dep_t,
                         "fleet_id": str(req.membership),
                     }
-                    env.reporter.file_report(
-                        Report(ReportType.ADD_REQUEST_EVENT, report_data)
-                    )
+                    env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
                     return sim_updated
 
     # stream in all Requests that occur before the sim time of the provided SimulationState

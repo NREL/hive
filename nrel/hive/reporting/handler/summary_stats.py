@@ -56,21 +56,15 @@ class SummaryStats:
         )
 
         requests_served_percent = (
-            1 - (self.cancelled_requests / self.requests)
-            if self.requests > 0
-            else 0
+            1 - (self.cancelled_requests / self.requests) if self.requests > 0 else 0
         )
         total_state_count = sum(self.state_count.values())
         total_vkt = sum(self.vkt.values())
         vehicle_state_output = {}
-        vehicle_states_observed = set(self.state_count.keys()).union(
-            self.vkt.keys()
-        )
+        vehicle_states_observed = set(self.state_count.keys()).union(self.vkt.keys())
         for v in vehicle_states_observed:
             observed_pct = (
-                self.state_count.get(v) / total_state_count
-                if self.state_count.get(v)
-                else 0
+                self.state_count.get(v) / total_state_count if self.state_count.get(v) else 0
             )
             vkt = self.vkt.get(v, 0)
             data = {"observed_percent": observed_pct, "vkt": vkt}
@@ -89,42 +83,22 @@ class SummaryStats:
         return output
 
     def log(self):
-        log.info(
-            f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(
-                15
-            )
-        )
+        log.info(f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(15))
         requests_served_percent = (
-            (1 - (self.cancelled_requests / self.requests)) * 100
-            if self.requests > 0
-            else 0
+            (1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
         )
-        log.info(
-            f"{requests_served_percent:.2f} % \t Requests Served".expandtabs(
-                15
-            )
-        )
+        log.info(f"{requests_served_percent:.2f} % \t Requests Served".expandtabs(15))
 
         total_state_count = sum(self.state_count.values())
         for s, v in self.state_count.items():
             log.info(
-                f"{round(v / total_state_count * 100, 2)} % \t Time in State {s}".expandtabs(
-                    15
-                )
+                f"{round(v / total_state_count * 100, 2)} % \t Time in State {s}".expandtabs(15)
             )
 
         total_vkt = sum(self.vkt.values())
-        log.info(
-            f"{total_vkt:.2f} km \t Total Kilometers Traveled".expandtabs(15)
-        )
+        log.info(f"{total_vkt:.2f} km \t Total Kilometers Traveled".expandtabs(15))
         for s, v in self.vkt.items():
-            log.info(
-                f"{v:.2f} km \t Kilometers Traveled in State {s}".expandtabs(
-                    15
-                )
-            )
+            log.info(f"{v:.2f} km \t Kilometers Traveled in State {s}".expandtabs(15))
 
-        log.info(
-            f"$ {self.station_revenue:.2f} \t Station Revenue".expandtabs(15)
-        )
+        log.info(f"$ {self.station_revenue:.2f} \t Station Revenue".expandtabs(15))
         log.info(f"$ {self.fleet_revenue:.2f} \t Fleet Revenue".expandtabs(15))

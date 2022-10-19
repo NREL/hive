@@ -89,9 +89,7 @@ class Update(NamedTuple):
         )
 
         # run each pre_step_update
-        pre_step_result = ft.reduce(
-            _apply_fn, self.pre_step_update, UpdatePayload(init_rp)
-        )
+        pre_step_result = ft.reduce(_apply_fn, self.pre_step_update, UpdatePayload(init_rp))
 
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
         updated_sim, updated_step_fn = self.step_update.update(
@@ -123,9 +121,7 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
 
     # if we received an updated version of this SimulationUpdateFunction, store it
     next_update_fns = (
-        p.updated_step_fns + (updated_fn,)
-        if updated_fn
-        else p.updated_step_fns + (fn,)
+        p.updated_step_fns + (updated_fn,) if updated_fn else p.updated_step_fns + (fn,)
     )
     updated_payload = p.runner_payload._replace(s=result)
 

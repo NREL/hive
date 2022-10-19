@@ -46,9 +46,7 @@ class MechatronicsInterfaceABC(ABC):
         """
 
     @abstractmethod
-    def initial_energy(
-        self, percent_full: Ratio
-    ) -> immutables.Map[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
         """
         construct an initial energy state for a Vehicle
 

@@ -80,9 +80,7 @@ class OSMRoadNetwork(RoadNetwork):
                 return False
 
         if not all(map(_valid_node_id, graph.nodes())):
-            raise TypeError(
-                "all node ids must be either an integer or a tuple of integers"
-            )
+            raise TypeError("all node ids must be either an integer or a tuple of integers")
 
         #   check to make sure the graph has the right information on the links
         missing_length = 0
@@ -113,9 +111,7 @@ class OSMRoadNetwork(RoadNetwork):
             self.graph = graph
             self.link_helper = link_helper
 
-    def route(
-        self, origin: EntityPosition, destination: EntityPosition
-    ) -> Route:
+    def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
         """
         Returns a route containing road network links between the origin and destination geoids.
         :param origin: the origin Link
@@ -139,17 +135,11 @@ class OSMRoadNetwork(RoadNetwork):
             destination_node_id, _ = dst_nodes
 
             # node-oriented shortest path from the end of the origin link to the beginning of the destination link
-            nx_path = nx.shortest_path(
-                self.graph, origin_node_id, destination_node_id
-            )
-            link_path_error, inner_link_path = route_from_nx_path(
-                nx_path, self.link_helper.links
-            )
+            nx_path = nx.shortest_path(self.graph, origin_node_id, destination_node_id)
+            link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)
 
             if link_path_error:
-                log.error(
-                    f"unable to build route from {origin} to {destination}"
-                )
+                log.error(f"unable to build route from {origin} to {destination}")
                 log.error(link_path_error)
                 log.error(
                     f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}"
@@ -168,9 +158,7 @@ class OSMRoadNetwork(RoadNetwork):
                 else:
                     return resolved_route
 
-    def distance_by_geoid_km(
-        self, origin: GeoId, destination: GeoId
-    ) -> Kilometers:
+    def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         """
         Returns the road network distance between the origin and destination
 

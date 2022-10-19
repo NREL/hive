@@ -42,9 +42,7 @@ class TestHumanDriverState(TestCase):
             self.assertIsInstance(veh_updated.driver_state, HumanUnavailable)
 
     def test_becomes_unavailable_while_station_charging(self):
-        state = mock_human_driver(
-            available=True, schedule_id="off", home_base_id="home_base"
-        )
+        state = mock_human_driver(available=True, schedule_id="off", home_base_id="home_base")
         veh_id = DefaultIds.mock_vehicle_id()
         veh_state = ChargingStation.build(veh_id, "away_station", "DCFC")
 
@@ -56,18 +54,14 @@ class TestHumanDriverState(TestCase):
             driver_state=state,
             vehicle_state=veh_state,
         )
-        away_station = mock_station(
-            lat=39.7664622, lon=-105.0390823, station_id="away_station"
-        )
+        away_station = mock_station(lat=39.7664622, lon=-105.0390823, station_id="away_station")
         home_base = mock_base(
             lat=39.7544977,
             lon=-104.9809168,
             base_id="home_base",
             station_id="home_station",
         )
-        home_station = mock_station(
-            lat=39.7544977, lon=-104.9809168, station_id="home_station"
-        )
+        home_station = mock_station(lat=39.7544977, lon=-104.9809168, station_id="home_station")
 
         sim = mock_sim(
             vehicles=(veh,),
@@ -80,9 +74,7 @@ class TestHumanDriverState(TestCase):
             raise error
         else:
             updated_veh = updated_sim.vehicles.get(veh_id)
-            instruction = updated_veh.driver_state.generate_instruction(
-                updated_sim, env, ()
-            )
+            instruction = updated_veh.driver_state.generate_instruction(updated_sim, env, ())
             self.assertEqual(
                 instruction,
                 DispatchBaseInstruction("v0", "home_base"),
@@ -90,9 +82,7 @@ class TestHumanDriverState(TestCase):
             )
 
     def test_becomes_unavailable_while_station_charging_no_home_charger(self):
-        state = mock_human_driver(
-            available=True, schedule_id="off", home_base_id="home_base"
-        )
+        state = mock_human_driver(available=True, schedule_id="off", home_base_id="home_base")
         veh_id = DefaultIds.mock_vehicle_id()
         veh_state = ChargingStation.build(veh_id, "away_station", "DCFC")
 
@@ -104,9 +94,7 @@ class TestHumanDriverState(TestCase):
             driver_state=state,
             vehicle_state=veh_state,
         )
-        away_station = mock_station(
-            lat=39.7664622, lon=-105.0390823, station_id="away_station"
-        )
+        away_station = mock_station(lat=39.7664622, lon=-105.0390823, station_id="away_station")
         home_base = mock_base(
             lat=39.7544977,
             lon=-104.9809168,
@@ -114,24 +102,18 @@ class TestHumanDriverState(TestCase):
             station_id=None,
         )
 
-        sim = mock_sim(
-            vehicles=(veh,), bases=(home_base,), stations=(away_station,)
-        )
+        sim = mock_sim(vehicles=(veh,), bases=(home_base,), stations=(away_station,))
         env = mock_env(schedules=test_schedules)
         error, updated_sim = state.update(sim, env)
         if error:
             raise error
         else:
             updated_veh = updated_sim.vehicles.get(veh_id)
-            instruction = updated_veh.driver_state.generate_instruction(
-                updated_sim, env, ()
-            )
+            instruction = updated_veh.driver_state.generate_instruction(updated_sim, env, ())
             self.assertEqual(
                 instruction,
                 DispatchBaseInstruction("v0", "home_base"),
-                "should have been sent home, "
-                "enough charge to get to "
-                "station in the morning",
+                "should have been sent home, " "enough charge to get to " "station in the morning",
             )
 
     def test_stays_unavailable(self):
@@ -165,9 +147,7 @@ class TestHumanDriverState(TestCase):
         state = mock_human_driver(available=False, schedule_id="off")
         veh = mock_vehicle_from_geoid(driver_state=state, geoid=somewhere())
         station = mock_station_from_geoid(geoid=somewhere_else())
-        base = mock_base_from_geoid(
-            station_id=station.id, geoid=somewhere_else()
-        )
+        base = mock_base_from_geoid(station_id=station.id, geoid=somewhere_else())
         sim = mock_sim(vehicles=(veh,), bases=(base,), stations=(station,))
         env = mock_env()
 
@@ -178,9 +158,7 @@ class TestHumanDriverState(TestCase):
     def test_home_charge_instruction(self):
         # vehicle and base/station are at same location (i.e. vehicle is at home)
         state = mock_human_driver(available=False, schedule_id="off")
-        veh = mock_vehicle_from_geoid(
-            driver_state=state, geoid=somewhere(), soc=0.5
-        )
+        veh = mock_vehicle_from_geoid(driver_state=state, geoid=somewhere(), soc=0.5)
         station = mock_station_from_geoid(geoid=somewhere())
         base = mock_base_from_geoid(station_id=station.id, geoid=somewhere())
         sim = mock_sim(vehicles=(veh,), bases=(base,), stations=(station,))
@@ -200,13 +178,9 @@ class TestHumanDriverState(TestCase):
                 DefaultIds.mock_base_id(),
             ),
         )
-        req = mock_request_from_geoids(
-            origin=somewhere_else(), destination=somewhere()
-        )
+        req = mock_request_from_geoids(origin=somewhere_else(), destination=somewhere())
         sim = mock_sim(vehicles=(veh,))
-        sim_w_req = throw_or_return(
-            simulation_state_ops.add_request_safe(sim, req)
-        )
+        sim_w_req = throw_or_return(simulation_state_ops.add_request_safe(sim, req))
         env = mock_env()
 
         i = veh.driver_state.generate_instruction(sim_w_req, env)

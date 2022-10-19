@@ -48,13 +48,10 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_time_step_stats = False
 
-        if (
-            config.global_config.log_fleet_time_step_stats
-            and len(fleet_ids) > 0
-        ):
+        if config.global_config.log_fleet_time_step_stats and len(fleet_ids) > 0:
             self.log_fleet_time_step_stats = True
-            self.fleets_timestep_stats_outpath = (
-                scenario_output_directory.joinpath("fleet_time_step_stats/")
+            self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
+                "fleet_time_step_stats/"
             )
             self.fleets_data = {}
             for fleet_id in fleet_ids:
@@ -121,21 +118,15 @@ class TimeStepStatsHandler(Handler):
 
         # get number of assigned requests in this time step
         assigned_requests_count = len(
-            sim_state.get_requests(
-                filter_function=lambda r: r.dispatched_vehicle is not None
-            )
+            sim_state.get_requests(filter_function=lambda r: r.dispatched_vehicle is not None)
         )
 
         # get number of active requests in this time step (unassigned)
-        active_requests_count = (
-            len(sim_state.get_requests()) - assigned_requests_count
-        )
+        active_requests_count = len(sim_state.get_requests()) - assigned_requests_count
 
         # get number of canceled requests in this time step
         if ReportType.CANCEL_REQUEST_EVENT in reports_by_type.keys():
-            canceled_requests_count = len(
-                reports_by_type[ReportType.CANCEL_REQUEST_EVENT]
-            )
+            canceled_requests_count = len(reports_by_type[ReportType.CANCEL_REQUEST_EVENT])
         else:
             canceled_requests_count = 0
 
@@ -164,9 +155,7 @@ class TimeStepStatsHandler(Handler):
             if len(sim_state.get_vehicles()) > 0:
                 stats_row["avg_soc_percent"] = 100 * np.mean(
                     [
-                        env.mechatronics.get(
-                            v.mechatronics_id
-                        ).fuel_source_soc(v)
+                        env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v)
                         for v in sim_state.get_vehicles()
                     ]
                 )
@@ -178,9 +167,7 @@ class TimeStepStatsHandler(Handler):
                 stats_row["vkt"] = sum(
                     [
                         me.report["distance_km"]
-                        for me in reports_by_type[
-                            ReportType.VEHICLE_MOVE_EVENT
-                        ]
+                        for me in reports_by_type[ReportType.VEHICLE_MOVE_EVENT]
                     ]
                 )
             else:
@@ -200,16 +187,13 @@ class TimeStepStatsHandler(Handler):
                 [len(v.vehicle_state.boarded_requests) for v in veh_pooling]
             )
             stats_row["servicing_requests"] = (
-                veh_state_counts[VehicleStateType.SERVICING_TRIP.name]
-                + pooling_request_count
+                veh_state_counts[VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
             )
 
             # add the number of vehicles in each vehicle state
             stats_row["vehicles"] = len(sim_state.vehicles)
             for state in self.vehicle_state_names:
-                stats_row[f"vehicles_{state.lower()}"] = veh_state_counts[
-                    state
-                ]
+                stats_row[f"vehicles_{state.lower()}"] = veh_state_counts[state]
 
             available_driver_counts = Counter(
                 map(
@@ -229,9 +213,7 @@ class TimeStepStatsHandler(Handler):
                     )
                 )
                 for charger in env.chargers.keys():
-                    stats_row[f"charger_{charger.lower()}"] = charger_counts[
-                        charger
-                    ]
+                    stats_row[f"charger_{charger.lower()}"] = charger_counts[charger]
             else:
                 for charger in env.chargers.keys():
                     stats_row[f"charger_{charger.lower()}"] = 0
@@ -246,9 +228,7 @@ class TimeStepStatsHandler(Handler):
                     membership_id: MembershipId,
                 ) -> Callable[[Vehicle], bool]:
                     if membership_id == "none":
-                        return lambda v: not any(
-                            set(env.fleet_ids) & set(v.membership.memberships)
-                        )
+                        return lambda v: not any(set(env.fleet_ids) & set(v.membership.memberships))
                     else:
                         return lambda v: fleet_id in v.membership.memberships
 
@@ -257,14 +237,10 @@ class TimeStepStatsHandler(Handler):
                 ) -> Callable[[Report], bool]:
                     if membership_id == "none":
                         return lambda r: not any(
-                            set(env.fleet_ids)
-                            & set(r.report["vehicle_memberships"])
+                            set(env.fleet_ids) & set(r.report["vehicle_memberships"])
                         )
                     else:
-                        return (
-                            lambda r: fleet_id
-                            in r.report["vehicle_memberships"]
-                        )
+                        return lambda r: fleet_id in r.report["vehicle_memberships"]
 
                 # get vehicles in this fleet
                 veh_in_fleet = sim_state.get_vehicles(
@@ -321,9 +297,7 @@ class TimeStepStatsHandler(Handler):
                 if len(veh_in_fleet) > 0:
                     fleet_stats_row["avg_soc_percent"] = 100 * np.mean(
                         [
-                            env.mechatronics.get(
-                                v.mechatronics_id
-                            ).fuel_source_soc(v)
+                            env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v)
                             for v in veh_in_fleet
                         ]
                     )
@@ -335,27 +309,18 @@ class TimeStepStatsHandler(Handler):
                     fleet_stats_row["vkt"] = sum(
                         [
                             me.report["distance_km"]
-                            for me in requests_in_fleet[
-                                ReportType.VEHICLE_MOVE_EVENT
-                            ]
+                            for me in requests_in_fleet[ReportType.VEHICLE_MOVE_EVENT]
                         ]
                     )
                 else:
                     fleet_stats_row["vkt"] = 0
 
                 # get number of assigned requests in this fleet
-                assigned_requests = veh_state_counts_in_fleet[
-                    VehicleStateType.DISPATCH_TRIP.name
-                ]
+                assigned_requests = veh_state_counts_in_fleet[VehicleStateType.DISPATCH_TRIP.name]
                 assigned_pooling_requests = sum(
-                    [
-                        len(v.vehicle_state.trip_plan)
-                        for v in veh_dispatch_pooling_in_fleet
-                    ]
+                    [len(v.vehicle_state.trip_plan) for v in veh_dispatch_pooling_in_fleet]
                 )
-                fleet_stats_row["assigned_requests"] = (
-                    assigned_requests + assigned_pooling_requests
-                )
+                fleet_stats_row["assigned_requests"] = assigned_requests + assigned_pooling_requests
 
                 # add number of active requests in this time step (unassigned)
                 fleet_stats_row["active_requests"] = active_requests_count
@@ -364,14 +329,9 @@ class TimeStepStatsHandler(Handler):
                 fleet_stats_row["canceled_requests"] = canceled_requests_count
 
                 # get count of requests currently being serviced by a vehicle
-                servicing_requests = veh_state_counts_in_fleet[
-                    VehicleStateType.SERVICING_TRIP.name
-                ]
+                servicing_requests = veh_state_counts_in_fleet[VehicleStateType.SERVICING_TRIP.name]
                 servicing_pooling_requests = sum(
-                    [
-                        len(v.vehicle_state.boarded_requests)
-                        for v in veh_pooling_in_fleet
-                    ]
+                    [len(v.vehicle_state.boarded_requests) for v in veh_pooling_in_fleet]
                 )
                 fleet_stats_row["servicing_requests"] = (
                     servicing_requests + servicing_pooling_requests
@@ -380,19 +340,13 @@ class TimeStepStatsHandler(Handler):
                 # add the number of vehicles in each vehicle state in this fleet
                 fleet_stats_row["vehicles"] = len(veh_in_fleet)
                 for state in self.vehicle_state_names:
-                    fleet_stats_row[
-                        f"vehicles_{state.lower()}"
-                    ] = veh_state_counts_in_fleet[state]
+                    fleet_stats_row[f"vehicles_{state.lower()}"] = veh_state_counts_in_fleet[state]
 
                 available_driver_counts_in_fleet = Counter(
                     map(lambda v: v.driver_state.available, veh_in_fleet)
                 )
-                fleet_stats_row[
-                    "drivers_available"
-                ] = available_driver_counts_in_fleet[True]
-                fleet_stats_row[
-                    "drivers_unavailable"
-                ] = available_driver_counts_in_fleet[False]
+                fleet_stats_row["drivers_available"] = available_driver_counts_in_fleet[True]
+                fleet_stats_row["drivers_unavailable"] = available_driver_counts_in_fleet[False]
 
                 # count number of chargers in use by type
                 if ReportType.VEHICLE_CHARGE_EVENT in requests_in_fleet.keys():
@@ -403,9 +357,9 @@ class TimeStepStatsHandler(Handler):
                         )
                     )
                     for charger in env.chargers.keys():
-                        fleet_stats_row[
-                            f"charger_{charger.lower()}"
-                        ] = charger_counts_in_fleet[charger]
+                        fleet_stats_row[f"charger_{charger.lower()}"] = charger_counts_in_fleet[
+                            charger
+                        ]
                 else:
                     for charger in env.chargers.keys():
                         fleet_stats_row[f"charger_{charger.lower()}"] = 0
@@ -425,9 +379,7 @@ class TimeStepStatsHandler(Handler):
                 self.time_step_stats_outpath,
                 index=False,
             )
-            log.info(
-                f"time step stats written to {self.time_step_stats_outpath}"
-            )
+            log.info(f"time step stats written to {self.time_step_stats_outpath}")
 
         if self.log_fleet_time_step_stats:
             os.mkdir(self.fleets_timestep_stats_outpath)
@@ -437,6 +389,4 @@ class TimeStepStatsHandler(Handler):
                         f"{self.file_name}_{fleet_id}.csv"
                     )
                     pd.DataFrame.to_csv(fleet_df, outpath, index=False)
-                    log.info(
-                        f"fleet id: {fleet_id} time step stats written to {outpath}"
-                    )
+                    log.info(f"fleet id: {fleet_id} time step stats written to {outpath}")

@@ -62,9 +62,7 @@ class DispatchPoolingTrip(VehicleState):
         vehicle_id: VehicleId,
         trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
         route: Route,
-        boarded_requests: immutables.Map[
-            RequestId, Request
-        ] = immutables.Map(),
+        boarded_requests: immutables.Map[RequestId, Request] = immutables.Map(),
         departure_times: immutables.Map[RequestId, SimTime] = immutables.Map(),
         num_passengers: int = 0,
     ) -> DispatchPoolingTrip:
@@ -108,10 +106,8 @@ class DispatchPoolingTrip(VehicleState):
         else:
             req_ids, _ = tuple(zip(*self.trip_plan))
             vehicle = sim.vehicles.get(self.vehicle_id)
-            reqs_exist_and_match_membership = (
-                dispatch_ops.requests_exist_and_match_membership(
-                    sim, vehicle, req_ids
-                )
+            reqs_exist_and_match_membership = dispatch_ops.requests_exist_and_match_membership(
+                sim, vehicle, req_ids
             )
             first_req_id, first_phase = first_stop
             first_req = sim.requests.get(first_req_id)
@@ -123,21 +119,15 @@ class DispatchPoolingTrip(VehicleState):
                 else False
             )
 
-            context = (
-                f"vehicle {self.vehicle_id} entering dispatch pooling state"
-            )
+            context = f"vehicle {self.vehicle_id} entering dispatch pooling state"
             if not vehicle:
-                error = SimulationStateError(
-                    f"vehicle does not exist; context: {context}"
-                )
+                error = SimulationStateError(f"vehicle does not exist; context: {context}")
                 return error, None
             elif not reqs_exist_and_match_membership:
                 # not an error - may have been picked up; or, bad dispatcher.. fail silently
                 return None, None
             elif not is_valid:
-                log.debug(
-                    f"bad route to connect vehicle {vehicle.id} to request {first_req.id}"
-                )
+                log.debug(f"bad route to connect vehicle {vehicle.id} to request {first_req.id}")
                 return None, None
             else:
                 error, updated_sim = dispatch_ops.modify_vehicle_assignment(
@@ -171,9 +161,7 @@ class DispatchPoolingTrip(VehicleState):
         )
         return result
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a base
 
@@ -217,9 +205,7 @@ class DispatchPoolingTrip(VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-        move_error, move_sim = vehicle_state_ops.move(
-            sim, env, self.vehicle_id
-        )
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
         if move_error:
             response = SimulationStateError(

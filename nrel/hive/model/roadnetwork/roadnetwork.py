@@ -24,9 +24,7 @@ class RoadNetwork(ABC):
     geofence: Optional[GeoFence]
 
     @abstractmethod
-    def route(
-        self, origin: EntityPosition, destination: EntityPosition
-    ) -> Route:
+    def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
         """
         Returns a route between two road network property links
 
@@ -37,9 +35,7 @@ class RoadNetwork(ABC):
         """
 
     @abstractmethod
-    def distance_by_geoid_km(
-        self, origin: GeoId, destination: GeoId
-    ) -> Kilometers:
+    def distance_by_geoid_km(self, origin: GeoId, destination: GeoId) -> Kilometers:
         """
         Returns the road network distance between two geoids
 
@@ -85,9 +81,7 @@ class RoadNetwork(ABC):
                 position = EntityPosition(link.link_id, geoid)
                 return position
             else:
-                hexes_by_dist = sorted(
-                    hexes_on_link, key=lambda h: h3.h3_distance(geoid, h)
-                )
+                hexes_by_dist = sorted(hexes_on_link, key=lambda h: h3.h3_distance(geoid, h))
                 closest_hex_to_query = hexes_by_dist[0]
                 position = EntityPosition(link.link_id, closest_hex_to_query)
                 return position

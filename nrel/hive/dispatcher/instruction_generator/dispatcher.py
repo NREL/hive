@@ -55,27 +55,18 @@ class Dispatcher(InstructionGenerator):
             membership_id: Optional[MembershipId],
         ) -> Tuple[DispatchTripInstruction, ...]:
             def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
-                vehicle_state_str = (
-                    vehicle.vehicle_state.__class__.__name__.lower()
-                )
-                if (
-                    vehicle_state_str
-                    not in environment.config.dispatcher.valid_dispatch_states
-                ):
+                vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
+                if vehicle_state_str not in environment.config.dispatcher.valid_dispatch_states:
                     return False
                 elif not vehicle.driver_state.available:
                     return False
                 elif (
                     membership_id is not None
-                    and not vehicle.membership.grant_access_to_membership_id(
-                        membership_id
-                    )
+                    and not vehicle.membership.grant_access_to_membership_id(membership_id)
                 ):
                     return False
 
-                mechatronics = environment.mechatronics.get(
-                    vehicle.mechatronics_id
-                )
+                mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
                 range_remaining_km = mechatronics.range_remaining_km(vehicle)
 
                 # if we are at a base, do we have enough remaining range to leave the base?
@@ -86,15 +77,12 @@ class Dispatcher(InstructionGenerator):
                     return False
                 # do we have enough remaining range to allow us to match?
                 return bool(
-                    range_remaining_km
-                    > environment.config.dispatcher.matching_range_km_threshold
+                    range_remaining_km > environment.config.dispatcher.matching_range_km_threshold
                 )
 
             def _valid_request(r: Request) -> bool:
                 not_already_dispatched = not r.dispatched_vehicle
-                valid_access = r.membership.grant_access_to_membership_id(
-                    membership_id
-                )
+                valid_access = r.membership.grant_access_to_membership_id(membership_id)
                 return not_already_dispatched and valid_access
 
             # collect the vehicles and requests for the assignment algorithm

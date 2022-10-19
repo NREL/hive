@@ -68,9 +68,7 @@ def route_cooresponds_with_entities(
         else:
             # confirm both src and dst
             end_link = route[-1]
-            is_valid = (
-                start_link.start == src.geoid and end_link.end == dst.geoid
-            )
+            is_valid = start_link.start == src.geoid and end_link.end == dst.geoid
             return is_valid
 
 
@@ -88,9 +86,7 @@ def to_linestring(route: Route, env: Environment) -> str:
         link = route[0]
         src = h3.h3_to_geo(link.start)
         dst = h3.h3_to_geo(link.end)
-        linestring = wkt.linestring_2d(
-            (src, dst), env.config.global_config.wkt_x_y_ordering
-        )
+        linestring = wkt.linestring_2d((src, dst), env.config.global_config.wkt_x_y_ordering)
         return linestring
     else:
         points = ft.reduce(
@@ -98,9 +94,7 @@ def to_linestring(route: Route, env: Environment) -> str:
             route,
             (),
         )
-        linestring = wkt.linestring_2d(
-            points, env.config.global_config.wkt_x_y_ordering
-        )
+        linestring = wkt.linestring_2d(points, env.config.global_config.wkt_x_y_ordering)
         return linestring
 
 
@@ -118,7 +112,5 @@ def routes_are_connected(prev_route: Route, next_route: Route) -> bool:
 
     prev_link = TupleOps.head_optional(prev_route)
     next_link = TupleOps.last(next_route)
-    connected = (
-        prev_link.end == next_link.start if prev_link and next_link else True
-    )
+    connected = prev_link.end == next_link.start if prev_link and next_link else True
     return connected

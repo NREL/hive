@@ -70,9 +70,7 @@ class ChargerState(NamedTuple):
             )
             return ValueError(msg), None
         else:
-            updated = self._replace(
-                available_chargers=self.available_chargers + 1
-            )
+            updated = self._replace(available_chargers=self.available_chargers + 1)
             return None, updated
 
     def decrement_available_chargers(self) -> ErrorOr[ChargerState]:
@@ -87,9 +85,7 @@ class ChargerState(NamedTuple):
             )
             return ValueError(msg), None
         else:
-            updated = self._replace(
-                available_chargers=self.available_chargers - 1
-            )
+            updated = self._replace(available_chargers=self.available_chargers - 1)
             return None, updated
 
     def increment_enqueued_vehicles(self) -> ChargerState:
@@ -113,9 +109,7 @@ class ChargerState(NamedTuple):
             )
             return ValueError(msg), None
         else:
-            updated = self._replace(
-                enqueued_vehicles=self.enqueued_vehicles - 1
-            )
+            updated = self._replace(enqueued_vehicles=self.enqueued_vehicles - 1)
             return None, updated
 
     def set_charge_rate(self, value: KwH) -> ResultE[ChargerState]:
@@ -149,9 +143,7 @@ class ChargerState(NamedTuple):
             msg = f"charge rate factor must be in range [0, 1], but found {factor}"
             return Failure(SimulationStateError(msg))
         else:
-            updated = self._replace(
-                charger=self.charger._replace(rate=self.charger.rate * factor)
-            )
+            updated = self._replace(charger=self.charger._replace(rate=self.charger.rate * factor))
             return Success(updated)
 
     def reset_charge_rate(self) -> ChargerState:

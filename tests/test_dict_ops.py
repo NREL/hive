@@ -10,9 +10,7 @@ class TestDictOps(TestCase):
     def test_add_to_dict(self):
         m = immutables.Map()
         result = DictOps.add_to_dict(m, "a", 500)
-        self.assertEqual(
-            result["a"], 500, "should have stored the value 500 at key 'a'"
-        )
+        self.assertEqual(result["a"], 500, "should have stored the value 500 at key 'a'")
 
     def test_remove_from_dict(self):
         m = immutables.Map({"a": 500})
@@ -30,9 +28,7 @@ class TestDictOps(TestCase):
     def test_add_to_collection_dict(self):
         some_locs = immutables.Map({"1234": frozenset(["v1", "v2"])})
         update_at_loc = DictOps.add_to_collection_dict(some_locs, "1234", "v3")
-        update_empty_loc = DictOps.add_to_collection_dict(
-            some_locs, "5678", "v4"
-        )
+        update_empty_loc = DictOps.add_to_collection_dict(some_locs, "5678", "v4")
         self.assertIn(
             "v3",
             update_at_loc.get("1234"),
@@ -48,9 +44,7 @@ class TestDictOps(TestCase):
             update_at_loc.get("1234"),
             "v2 should not have been removed at location 1234",
         )
-        self.assertIn(
-            "5678", update_empty_loc.keys(), "location 1234 should be added"
-        )
+        self.assertIn("5678", update_empty_loc.keys(), "location 1234 should be added")
         self.assertIn(
             "v4",
             update_empty_loc.get("5678"),
@@ -68,12 +62,8 @@ class TestDictOps(TestCase):
                 ),
             }
         )
-        update_at_loc = DictOps.remove_from_collection_dict(
-            some_locs, "1234", "v1"
-        )
-        update_empties_loc = DictOps.remove_from_collection_dict(
-            some_locs, "5678", "v3"
-        )
+        update_at_loc = DictOps.remove_from_collection_dict(some_locs, "1234", "v1")
+        update_empties_loc = DictOps.remove_from_collection_dict(some_locs, "5678", "v3")
         self.assertNotIn(
             "v1",
             update_at_loc.get("1234"),
@@ -93,6 +83,4 @@ class TestDictOps(TestCase):
         with self.assertRaises(KeyError) as raised:
             DictOps.remove_from_collection_dict(some_locs, "910_", "v4")
 
-        self.assertIsInstance(
-            raised.exception, KeyError, "should have raised a KeyError"
-        )
+        self.assertIsInstance(raised.exception, KeyError, "should have raised a KeyError")

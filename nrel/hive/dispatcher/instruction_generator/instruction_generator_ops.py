@@ -35,9 +35,7 @@ i_map: immutables.Map[VehicleId, List[Instruction]] = immutables.Map()
 
 
 class InstructionGenerationResult(NamedTuple):
-    instruction_stack: immutables.Map[
-        VehicleId, Tuple[Instruction]
-    ] = immutables.Map()
+    instruction_stack: immutables.Map[VehicleId, Tuple[Instruction]] = immutables.Map()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(
@@ -59,9 +57,7 @@ class InstructionGenerationResult(NamedTuple):
         (
             updated_gen,
             new_instructions,
-        ) = instruction_generator.generate_instructions(
-            simulation_state, environment
-        )
+        ) = instruction_generator.generate_instructions(simulation_state, environment)
 
         updated_instruction_stack = ft.reduce(
             lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i),
@@ -71,8 +67,7 @@ class InstructionGenerationResult(NamedTuple):
 
         return self._replace(
             instruction_stack=updated_instruction_stack,
-            updated_instruction_generators=self.updated_instruction_generators
-            + (updated_gen,),
+            updated_instruction_generators=self.updated_instruction_generators + (updated_gen,),
         )
 
     def add_driver_instructions(self, simulation_state, environment):
@@ -99,9 +94,7 @@ class InstructionGenerationResult(NamedTuple):
         )
 
         updated_instruction_stack = ft.reduce(
-            lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i)
-            if i
-            else acc,
+            lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i) if i else acc,
             new_instructions,
             self.instruction_stack,
         )
@@ -130,24 +123,18 @@ def generate_instructions(
     """
 
     result = ft.reduce(
-        lambda acc, gen: acc.apply_instruction_generator(
-            gen, simulation_state, environment
-        ),
+        lambda acc, gen: acc.apply_instruction_generator(gen, simulation_state, environment),
         instruction_generators,
         InstructionGenerationResult(),
     )
 
     # give drivers a chance to add instructions
-    driver_result = result.add_driver_instructions(
-        simulation_state, environment
-    )
+    driver_result = result.add_driver_instructions(simulation_state, environment)
 
     return driver_result
 
 
-def valid_station_for_vehicle(
-    vehicle: Vehicle, env: Environment
-) -> Callable[[Station], bool]:
+def valid_station_for_vehicle(vehicle: Vehicle, env: Environment) -> Callable[[Station], bool]:
     """
     only allows vehicles to use stations where the membership is correct
     and the fuel type is correct
@@ -158,17 +145,12 @@ def valid_station_for_vehicle(
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
 
     def _inner(station: Station):
-        vehicle_has_access = station.membership.grant_access_to_membership(
-            vehicle.membership
-        )
+        vehicle_has_access = station.membership.grant_access_to_membership(vehicle.membership)
         if not vehicle_has_access:
             return False
         else:
             station_has_valid_charger = any(
-                [
-                    mechatronics.valid_charger(env.chargers.get(cid))
-                    for cid in station.state.keys()
-                ]
+                [mechatronics.valid_charger(env.chargers.get(cid)) for cid in station.state.keys()]
             )
             return station_has_valid_charger
 
@@ -207,9 +189,7 @@ def instruct_vehicles_to_dispatch_to_station(
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
             # use the simple weighted euclidean distance ranking
 
-            distance_fn = assignment_ops.nearest_shortest_queue_distance(
-                veh, environment
-            )
+            distance_fn = assignment_ops.nearest_shortest_queue_distance(veh, environment)
 
         else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
             # use the search-based metric which considers travel, queueing, and charging time
@@ -234,16 +214,11 @@ def instruct_vehicles_to_dispatch_to_station(
             # get the best charger id for this station. re-computes distance ranking one last time
             # this could be removed if our nearest entity search also returned the best charger id
             # these both could return "None" but that shouldn't be possible if we found a nearest station
-            if (
-                charging_search_type
-                == ChargingSearchType.NEAREST_SHORTEST_QUEUE
-            ):
+            if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
                 (
                     best_charger_id,
                     best_charger_rank,
-                ) = assignment_ops.nearest_shortest_queue_ranking(
-                    veh, nearest_station, environment
-                )
+                ) = assignment_ops.nearest_shortest_queue_ranking(veh, nearest_station, environment)
             else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
                 (
                     best_charger_id,
@@ -292,9 +267,7 @@ def get_nearest_valid_station_distance(
     if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
         # use the simple weighted euclidean distance ranking
 
-        distance_fn = assignment_ops.nearest_shortest_queue_distance(
-            vehicle, environment
-        )
+        distance_fn = assignment_ops.nearest_shortest_queue_distance(vehicle, environment)
 
     else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
         # use the search-based metric which considers travel, queueing, and charging time

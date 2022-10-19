@@ -146,18 +146,12 @@ class DriverState(ABC):
         )
 
         if not schedule_id:
-            driver_state = AutonomousAvailable(
-                AutonomousDriverAttributes(vehicle_id)
-            )
+            driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
             return driver_state
         else:
             if not base_id:
-                raise Exception(
-                    "cannot build a vehicle with schedule but not a home base id"
-                )
+                raise Exception("cannot build a vehicle with schedule but not a home base id")
             driver_state = HumanUnavailable(
-                HumanDriverAttributes(
-                    vehicle_id, schedule_id, base_id, allows_pooling
-                )
+                HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling)
             )
             return driver_state

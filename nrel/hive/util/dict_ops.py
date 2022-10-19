@@ -26,9 +26,7 @@ class DictOps:
     V = TypeVar("V")
 
     @classmethod
-    def add_to_dict(
-        cls, xs: immutables.Map[K, V], obj_id: K, obj: V
-    ) -> immutables.Map[K, V]:
+    def add_to_dict(cls, xs: immutables.Map[K, V], obj_id: K, obj: V) -> immutables.Map[K, V]:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -42,9 +40,7 @@ class DictOps:
         return xs.set(obj_id, obj)
 
     @classmethod
-    def remove_from_dict(
-        cls, xs: immutables.Map[K, V], obj_id: K
-    ) -> immutables.Map[K, V]:
+    def remove_from_dict(cls, xs: immutables.Map[K, V], obj_id: K) -> immutables.Map[K, V]:
         """
         updates Dicts for arbitrary keys and values
         performs a shallow copy and update, treating Dict as an immutable hash table
@@ -183,9 +179,7 @@ class DictOps:
         :return: the updated dictionaries
         """
         old_entity = entities[updated_entity.id]
-        entities_updated = DictOps.add_to_dict(
-            entities, updated_entity.id, updated_entity
-        )
+        entities_updated = DictOps.add_to_dict(entities, updated_entity.id, updated_entity)
 
         if old_entity.geoid == updated_entity.geoid:
             return EntityUpdateResult(entities=entities_updated)
@@ -197,18 +191,12 @@ class DictOps:
             locations_removed, updated_entity.geoid, updated_entity.id
         )
 
-        old_search_geoid = h3.h3_to_parent(
-            old_entity.geoid, sim_h3_search_resolution
-        )
-        updated_search_geoid = h3.h3_to_parent(
-            updated_entity.geoid, sim_h3_search_resolution
-        )
+        old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
+        updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
 
         if old_search_geoid == updated_search_geoid:
             # no update to search location
-            return EntityUpdateResult(
-                entities=entities_updated, locations=locations_updated
-            )
+            return EntityUpdateResult(entities=entities_updated, locations=locations_updated)
 
         # update request search dict location
         search_removed = DictOps.remove_from_collection_dict(

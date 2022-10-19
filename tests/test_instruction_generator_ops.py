@@ -29,9 +29,7 @@ class TestInstructionGenerators(TestCase):
             vehicles=(vehicle,),
             stations=(station,),
         )
-        env = mock_env(
-            mechatronics={ice_mechatronics.mechatronics_id: ice_mechatronics}
-        )
+        env = mock_env(mechatronics={ice_mechatronics.mechatronics_id: ice_mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(
             n=1,
@@ -43,9 +41,7 @@ class TestInstructionGenerators(TestCase):
             charging_search_type=ChargingSearchType.NEAREST_SHORTEST_QUEUE,
         )
 
-        self.assertEqual(
-            len(instructions), 0, "should not have generated any instructions"
-        )
+        self.assertEqual(len(instructions), 0, "should not have generated any instructions")
 
     def test_dispatch_station_ops_mismatch_charger_shortest_time(self):
         """
@@ -66,9 +62,7 @@ class TestInstructionGenerators(TestCase):
             vehicles=(vehicle,),
             stations=(station,),
         )
-        env = mock_env(
-            mechatronics={mechatronics.mechatronics_id: mechatronics}
-        )
+        env = mock_env(mechatronics={mechatronics.mechatronics_id: mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(
             n=1,
@@ -80,6 +74,4 @@ class TestInstructionGenerators(TestCase):
             charging_search_type=ChargingSearchType.SHORTEST_TIME_TO_CHARGE,
         )
 
-        self.assertEqual(
-            len(instructions), 0, "should not have generated any instructions"
-        )
+        self.assertEqual(len(instructions), 0, "should not have generated any instructions")

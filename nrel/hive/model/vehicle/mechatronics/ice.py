@@ -125,9 +125,7 @@ class ICE(MechatronicsInterface):
         :param vehicle:
         :return:
         """
-        return (
-            vehicle.energy[EnergyType.GASOLINE] >= self.tank_capacity_gallons
-        )
+        return vehicle.energy[EnergyType.GASOLINE] >= self.tank_capacity_gallons
 
     def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
@@ -144,9 +142,7 @@ class ICE(MechatronicsInterface):
         )
 
         vehicle_energy_gal_gas = vehicle.energy[EnergyType.GASOLINE]
-        new_energy_gal_gas = max(
-            0.0, vehicle_energy_gal_gas - energy_used_gal_gas
-        )
+        new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - energy_used_gal_gas)
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.GASOLINE: new_energy_gal_gas})
         )
@@ -162,13 +158,9 @@ class ICE(MechatronicsInterface):
         :param time_seconds:
         :return:
         """
-        idle_energy_gal_gas = (
-            self.idle_gallons_per_hour * time_seconds * SECONDS_TO_HOURS
-        )
+        idle_energy_gal_gas = self.idle_gallons_per_hour * time_seconds * SECONDS_TO_HOURS
         vehicle_energy_gal_gas = vehicle.energy[EnergyType.GASOLINE]
-        new_energy_gal_gas = max(
-            0.0, vehicle_energy_gal_gas - idle_energy_gal_gas
-        )
+        new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - idle_energy_gal_gas)
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.GASOLINE: new_energy_gal_gas})
         )
@@ -199,8 +191,6 @@ class ICE(MechatronicsInterface):
         pump_gal_gas = start_gal_gas + charger.rate * time_seconds
         new_gal_gas = min(self.tank_capacity_gallons, pump_gal_gas)
 
-        updated_vehicle = vehicle.modify_energy(
-            immutables.Map({EnergyType.GASOLINE: new_gal_gas})
-        )
+        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.GASOLINE: new_gal_gas}))
 
         return updated_vehicle, time_seconds

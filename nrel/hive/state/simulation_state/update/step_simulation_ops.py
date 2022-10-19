@@ -39,9 +39,7 @@ def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
     return Report(ReportType.INSTRUCTION, i_dict)
 
 
-def log_instructions(
-    instructions: Tuple[Instruction], env: Environment, sim_time: SimTime
-):
+def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_time: SimTime):
     for i in instructions:
         env.reporter.file_report(_instruction_to_report(i, sim_time))
 
@@ -66,9 +64,7 @@ def step_vehicle(
         )
         return err, None
 
-    driver_error, driver_sim = vehicle.driver_state.update(
-        simulation_state, env
-    )
+    driver_error, driver_sim = vehicle.driver_state.update(simulation_state, env)
 
     if driver_error:
         return driver_error, None
@@ -105,9 +101,7 @@ def perform_driver_state_updates(
         else:
             return updated_sim
 
-    next_state = ft.reduce(
-        _step_drivers, simulation_state.vehicles.values(), simulation_state
-    )
+    next_state = ft.reduce(_step_drivers, simulation_state.vehicles.values(), simulation_state)
     return next_state
 
 
@@ -165,9 +159,7 @@ def perform_vehicle_state_updates(
     return next_state
 
 
-InstructionApplicationResult = Tuple[
-    Optional[Exception], Optional[InstructionResult]
-]
+InstructionApplicationResult = Tuple[Optional[Exception], Optional[InstructionResult]]
 
 
 def apply_instructions(
@@ -190,15 +182,11 @@ def apply_instructions(
         # todo: inject some means for parallel execution of the apply instruction operation
         #   requires shared memory access to SimulationState and Environment,
         #   and a serialization codec to ship Instructions and Instruction.apply_instruction remotely
-        instruction_results_and_errors, updated_sim = (
-            (NotImplementedError, None),
-        ), sim
+        instruction_results_and_errors, updated_sim = ((NotImplementedError, None),), sim
     else:
         # run in a synchronous loop
         def apply_instructions(
-            acc: Tuple[
-                Tuple[InstructionApplicationResult, ...], SimulationState
-            ],
+            acc: Tuple[Tuple[InstructionApplicationResult, ...], SimulationState],
             i: Instruction,
         ) -> Tuple[Tuple[InstructionApplicationResult, ...], SimulationState]:
             results, inner_sim = acc
@@ -207,12 +195,8 @@ def apply_instructions(
                 log.error(err)
                 return acc
             else:
-                updated_instructions = inner_sim.applied_instructions.update(
-                    {i.vehicle_id: i}
-                )
-                updated_sim = inner_sim._replace(
-                    applied_instructions=updated_instructions
-                )
+                updated_instructions = inner_sim.applied_instructions.update({i.vehicle_id: i})
+                updated_sim = inner_sim._replace(applied_instructions=updated_instructions)
                 return results + ((None, instruction_result),), updated_sim
 
         instruction_results_and_errors, updated_sim = ft.reduce(
@@ -237,9 +221,7 @@ def apply_instructions(
         (
             update_error,
             updated_sim,
-        ) = entity_state_ops.transition_previous_to_next(
-            s, env, i.prev_state, i.next_state
-        )
+        ) = entity_state_ops.transition_previous_to_next(s, env, i.prev_state, i.next_state)
         if update_error:
             log.error(update_error)
             return s
@@ -248,9 +230,7 @@ def apply_instructions(
         else:
             return updated_sim
 
-    result = ft.reduce(
-        _add_instruction, valid_instruction_results, updated_sim
-    )
+    result = ft.reduce(_add_instruction, valid_instruction_results, updated_sim)
 
     return result
 
@@ -263,9 +243,7 @@ class UserProvidedUpdateAccumulator(NamedTuple):
 
 
 def instruction_generator_update_fn(
-    fn: Callable[
-        [InstructionGenerator, SimulationState], Optional[InstructionGenerator]
-    ],
+    fn: Callable[[InstructionGenerator, SimulationState], Optional[InstructionGenerator]],
     sim: SimulationState,
 ) -> Callable[
     [UserProvidedUpdateAccumulator, InstructionGenerator],

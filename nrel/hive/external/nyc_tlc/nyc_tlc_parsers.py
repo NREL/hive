@@ -43,30 +43,18 @@ def parse_yellow_tripdata_row(
     """
     try:
         # time
-        date_time = datetime.strptime(
-            row["pickup_datetime"], "%Y-%m-%d %H:%M:%S"
-        )
-        start_of_day = date_time.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        date_time = datetime.strptime(row["pickup_datetime"], "%Y-%m-%d %H:%M:%S")
+        start_of_day = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
         time_diff = date_time - start_of_day
         departure_time = time_diff.seconds
         cancel_time = min(departure_time + cancel_time, 86399)  # 11:59:59
 
         # agent id
-        agent_id = (
-            f"{id_number}#{date_time.date()}"
-            if use_date_in_request_id
-            else id_number
-        )
+        agent_id = f"{id_number}#{date_time.date()}" if use_date_in_request_id else id_number
 
         # locations
-        o_lat, o_lon = float(row["pickup_latitude"]), float(
-            row["pickup_longitude"]
-        )
-        d_lat, d_lon = float(row["dropoff_latitude"]), float(
-            row["dropoff_longitude"]
-        )
+        o_lat, o_lon = float(row["pickup_latitude"]), float(row["pickup_longitude"])
+        d_lat, d_lon = float(row["dropoff_latitude"]), float(row["dropoff_longitude"])
         origin = h3.geo_to_h3(o_lat, o_lon, sim_h3_location_resolution)
         destination = h3.geo_to_h3(d_lat, d_lon, sim_h3_location_resolution)
 
@@ -74,11 +62,7 @@ def parse_yellow_tripdata_row(
         destination_link = Link("d", destination, destination, 0, 0)
 
         # passengers (
-        passengers = (
-            int(row["passengers"])
-            if "passengers" in row
-            else default_passengers
-        )
+        passengers = int(row["passengers"]) if "passengers" in row else default_passengers
 
         request_as_passengers = [
             Passenger(

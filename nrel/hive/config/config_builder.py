@@ -33,8 +33,6 @@ class ConfigBuilder:
         for key in required_config:
             value = c.get(key)
             if value is None:
-                raise AttributeError(
-                    f"expected required config key {key} not found"
-                )
+                raise AttributeError(f"expected required config key {key} not found")
 
         return config_constructor(c)

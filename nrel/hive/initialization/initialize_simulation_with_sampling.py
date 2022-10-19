@@ -57,9 +57,7 @@ def initialize_simulation_with_sampling(
 
     # deprecated geofence input
     if config.input_config.geofence_file:
-        geofence = GeoFence.from_geojson_file(
-            config.input_config.geofence_file
-        )
+        geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
     else:
         geofence = None
 
@@ -110,19 +108,13 @@ def initialize_simulation_with_sampling(
 
     # populate simulation with static entities
     sim_with_bases = _build_bases(config.input_config.bases_file, sim_initial)
-    sim_with_stations = _build_stations(
-        config.input_config.stations_file, sim_with_bases, env
-    )
+    sim_with_stations = _build_stations(config.input_config.stations_file, sim_with_bases, env)
 
     # sample vehicles
     if not vehicle_location_sampling_function:
-        vehicle_location_sampling_function = (
-            build_default_location_sampling_fn(seed=random_seed)
-        )
+        vehicle_location_sampling_function = build_default_location_sampling_fn(seed=random_seed)
     if not vehicle_soc_sampling_function:
-        vehicle_soc_sampling_function = build_default_soc_sampling_fn(
-            seed=random_seed
-        )
+        vehicle_soc_sampling_function = build_default_soc_sampling_fn(seed=random_seed)
 
     sample_result = sample_vehicles(
         count=vehicle_count,
@@ -179,9 +171,7 @@ def _build_stations(
     def _add_row_unsafe(
         builder: immutables.Map[str, Station], row: Dict[str, str]
     ) -> immutables.Map[str, Station]:
-        station = Station.from_row(
-            row, builder, simulation_state.road_network, env
-        )
+        station = Station.from_row(row, builder, simulation_state.road_network, env)
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
 

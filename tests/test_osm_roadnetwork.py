@@ -11,19 +11,11 @@ class TestOSMRoadNetwork(TestCase):
 
         network = mock_osm_network()
 
-        out_of_geofence = network.geoid_within_geofence(
-            somewhere_out_of_geofence
-        )
-        within_geofence = network.geoid_within_geofence(
-            somewhere_within_geofence
-        )
+        out_of_geofence = network.geoid_within_geofence(somewhere_out_of_geofence)
+        within_geofence = network.geoid_within_geofence(somewhere_within_geofence)
 
-        self.assertEqual(
-            out_of_geofence, False, "should not have found geoid in geofence"
-        )
-        self.assertEqual(
-            within_geofence, True, "should have found geoid in geofence"
-        )
+        self.assertEqual(out_of_geofence, False, "should not have found geoid in geofence")
+        self.assertEqual(within_geofence, True, "should have found geoid in geofence")
 
     def test_route(self):
         sim_h3_resolution = 15

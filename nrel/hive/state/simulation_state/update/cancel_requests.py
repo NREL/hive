@@ -32,9 +32,7 @@ class CancelRequests(SimulationUpdateFunction):
         :return: state without cancelled requests, along with this update function
         """
 
-        def _remove_from_sim(
-            sim: SimulationState, request_id: RequestId
-        ) -> SimulationState:
+        def _remove_from_sim(sim: SimulationState, request_id: RequestId) -> SimulationState:
             """
             inner function that removes each canceled request from the sim
 
@@ -43,8 +41,7 @@ class CancelRequests(SimulationUpdateFunction):
             :return: the sim without the request
             """
             this_request_cancel_time = (
-                sim.requests[request_id].departure_time
-                + env.config.sim.request_cancel_time_seconds
+                sim.requests[request_id].departure_time + env.config.sim.request_cancel_time_seconds
             )
             if sim.sim_time < this_request_cancel_time:
                 return sim

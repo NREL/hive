@@ -8,12 +8,9 @@ class TestBEV(TestCase):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=0)
 
-        charged_vehicle, _ = bev.add_energy(
-            vehicle, mock_dcfc_charger(), hours_to_seconds(10)
-        )
+        charged_vehicle, _ = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertAlmostEqual(
-            charged_vehicle.energy[EnergyType.ELECTRIC]
-            / bev.battery_capacity_kwh,
+            charged_vehicle.energy[EnergyType.ELECTRIC] / bev.battery_capacity_kwh,
             1,
             places=2,
         )
@@ -22,9 +19,7 @@ class TestBEV(TestCase):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=1)
 
-        charged_vehicle, _ = bev.add_energy(
-            vehicle, mock_dcfc_charger(), hours_to_seconds(10)
-        )
+        charged_vehicle, _ = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertEqual(
             charged_vehicle.energy[EnergyType.ELECTRIC],
             50,
@@ -35,9 +30,7 @@ class TestBEV(TestCase):
         bev = mock_bev(battery_capacity_kwh=50)
         vehicle = mock_vehicle(soc=0)
 
-        charged_vehicle, _ = bev.add_energy(
-            vehicle, mock_l2_charger(), hours_to_seconds(0.1)
-        )
+        charged_vehicle, _ = bev.add_energy(vehicle, mock_l2_charger(), hours_to_seconds(0.1))
         self.assertLess(
             charged_vehicle.energy[EnergyType.ELECTRIC],
             50,
@@ -56,17 +49,13 @@ class TestBEV(TestCase):
         )
 
     def test_leaf_energy_cost_real_route(self):
-        bev = mock_bev(
-            battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000
-        )
+        bev = mock_bev(battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000)
         vehicle = mock_vehicle(soc=1)
 
         # route is ~ 3km in length
         test_route = mock_route(speed_kmph=45)
 
-        expected_energy_kwh = vehicle.energy[EnergyType.ELECTRIC] - 1 * (
-            3 * KM_TO_MILE
-        )
+        expected_energy_kwh = vehicle.energy[EnergyType.ELECTRIC] - 1 * (3 * KM_TO_MILE)
 
         moved_vehicle = bev.consume_energy(vehicle, route=test_route)
         self.assertAlmostEqual(
@@ -76,9 +65,7 @@ class TestBEV(TestCase):
         )
 
     def test_remaining_range(self):
-        bev = mock_bev(
-            battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000
-        )
+        bev = mock_bev(battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000)
         vehicle = mock_vehicle(soc=1)
 
         remaining_range_km = bev.range_remaining_km(vehicle)
@@ -90,9 +77,7 @@ class TestBEV(TestCase):
         )
 
     def test_calc_required_soc(self):
-        bev = mock_bev(
-            battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000
-        )
+        bev = mock_bev(battery_capacity_kwh=50, nominal_watt_hour_per_mile=1000)
 
         required_soc = bev.calc_required_soc(50 * MILE_TO_KM)
 

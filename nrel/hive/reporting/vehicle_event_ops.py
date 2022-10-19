@@ -44,25 +44,19 @@ def vehicle_move_event(
     vehicle_id = next_vehicle.id
     vehicle_state = prev_vehicle.vehicle_state.__class__.__name__
     vehicle_memberships = prev_vehicle.membership.to_json()
-    delta_distance: float = (
-        next_vehicle.distance_traveled_km - prev_vehicle.distance_traveled_km
-    )
+    delta_distance: float = next_vehicle.distance_traveled_km - prev_vehicle.distance_traveled_km
 
     if set(prev_vehicle.energy.keys()) != set(next_vehicle.energy.keys()):
         raise ValueError(
             f"Energy types do not match: {set(prev_vehicle.energy.keys())} != {set(next_vehicle.energy.keys())}"
         )
     elif len(next_vehicle.energy.keys()) > 1:
-        raise NotImplemented(
-            "hive doesn't currently support multiple energy types"
-        )
+        raise NotImplemented("hive doesn't currently support multiple energy types")
     else:
         energy_units = list(next_vehicle.energy.keys())[0].units
 
     delta_energy = ft.reduce(
-        lambda acc, e_type: acc
-        + next_vehicle.energy.get(e_type)
-        - prev_vehicle.energy.get(e_type),
+        lambda acc, e_type: acc + next_vehicle.energy.get(e_type) - prev_vehicle.energy.get(e_type),
         next_vehicle.energy.keys(),
         0,
     )
@@ -125,17 +119,14 @@ def vehicle_charge_event(
     vehicle_memberships = prev_vehicle.membership.to_json()
 
     energy_transacted = (
-        next_vehicle.energy[charger.energy_type]
-        - prev_vehicle.energy[charger.energy_type]
+        next_vehicle.energy[charger.energy_type] - prev_vehicle.energy[charger.energy_type]
     )  # kwh
 
     start_soc = mechatronics.fuel_source_soc(prev_vehicle)
     end_soc = mechatronics.fuel_source_soc(next_vehicle)
 
     charger_price = station.get_price(charger.id)  # Currency
-    charging_price = (
-        energy_transacted * charger_price if charger_price is not None else 0.0
-    )
+    charging_price = energy_transacted * charger_price if charger_price is not None else 0.0
 
     geoid = next_vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
@@ -204,9 +195,7 @@ def report_pickup_request(
     return report
 
 
-def report_dropoff_request(
-    vehicle: Vehicle, sim: SimulationState, request: Request
-) -> Report:
+def report_dropoff_request(vehicle: Vehicle, sim: SimulationState, request: Request) -> Report:
     """
     reports information about the marginal effect of a request dropoff from a ServicingTrip state
     which allows us to assume some ServicingTrip vehicle state properties.
@@ -275,15 +264,11 @@ def construct_station_load_events(
             energy_units = report.report["energy_units"]
             station_energy, _ = acc.get(station_id, (0.0, ""))
             updated_energy = station_energy + energy
-            updated_acc = acc.update(
-                {station_id: (updated_energy, energy_units)}
-            )
+            updated_acc = acc.update({station_id: (updated_energy, energy_units)})
 
             return updated_acc
 
-    def _to_reports(
-        acc: immutables.Map[StationId, float]
-    ) -> Tuple[Report, ...]:
+    def _to_reports(acc: immutables.Map[StationId, float]) -> Tuple[Report, ...]:
         """
         transforms the accumulated values into Reports
         :return: a collection of STATION_LOAD_EVENT reports
@@ -303,23 +288,15 @@ def construct_station_load_events(
             )
             return report
 
-        these_reports: Tuple[Report, ...] = tuple(
-            map(_cast_as_report, acc.keys())
-        )
+        these_reports: Tuple[Report, ...] = tuple(map(_cast_as_report, acc.keys()))
         return these_reports
 
     # collect vehicle charge events
-    reported_charge_events_accumulator = ft.reduce(
-        _add, reports, immutables.Map()
-    )
+    reported_charge_events_accumulator = ft.reduce(_add, reports, immutables.Map())
 
     # create entries for stations with no charge events reported
-    reported_stations: Set[StationId] = set(
-        reported_charge_events_accumulator.keys()
-    )
-    unreported_station_ids: Set[StationId] = set(
-        sim.stations.keys()
-    ).difference(reported_stations)
+    reported_stations: Set[StationId] = set(reported_charge_events_accumulator.keys())
+    unreported_station_ids: Set[StationId] = set(sim.stations.keys()).difference(reported_stations)
     all_stations_accumulator = ft.reduce(
         lambda acc, id: acc.update({id: (0.0, "")}),
         unreported_station_ids,

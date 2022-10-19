@@ -12,18 +12,14 @@ class TestLocalSimulationRunner(TestCase):
     def test_run(self):
         config = mock_config(end_time=600, timestep_duration_seconds=60)
         env = mock_env(config)
-        req = mock_request(
-            request_id="1", departure_time=SimTime.build(0), passengers=2
-        )
+        req = mock_request(request_id="1", departure_time=SimTime.build(0), passengers=2)
         initial_sim = mock_sim(
             vehicles=(mock_vehicle(),),
             stations=(mock_station(),),
             bases=(mock_base(stall_count=5),),
         )
 
-        initial_sim = simulation_state_ops.add_request_safe(
-            initial_sim, req
-        ).unwrap()
+        initial_sim = simulation_state_ops.add_request_safe(initial_sim, req).unwrap()
 
         update = mock_update()
         runner_payload = RunnerPayload(initial_sim, env, update)
@@ -47,9 +43,7 @@ class TestLocalSimulationRunner(TestCase):
 
         self.assertAlmostEqual(
             0.56,
-            result.s.vehicles[
-                DefaultIds.mock_vehicle_id()
-            ].distance_traveled_km,
+            result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km,
             places=1,
         )
 
@@ -65,14 +59,10 @@ class TestLocalSimulationRunner(TestCase):
 
         stepped = LocalSimulationRunner.step(runner_payload)
 
-        self.assertNotEqual(
-            stepped, None, "should have stepped the simulation"
-        )
+        self.assertNotEqual(stepped, None, "should have stepped the simulation")
 
     def test_step_after_end_time(self):
-        config = mock_config(
-            end_time=20, start_time=40, timestep_duration_seconds=1
-        )
+        config = mock_config(end_time=20, start_time=40, timestep_duration_seconds=1)
         env = mock_env(config)
         sim = mock_sim(sim_time=40)
         update = Update(

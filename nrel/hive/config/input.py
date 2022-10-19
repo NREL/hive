@@ -37,22 +37,16 @@ class Input(NamedTuple):
         return "vehicles_file", "requests_file", "stations_file", "bases_file"
 
     @classmethod
-    def build(
-        cls, config: Dict, scenario_file_path: Path, cache: Optional[Dict]
-    ) -> Input:
+    def build(cls, config: Dict, scenario_file_path: Path, cache: Optional[Dict]) -> Input:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
-            config_constructor=lambda c: Input.from_dict(
-                c, scenario_file_path, cache
-            ),
+            config_constructor=lambda c: Input.from_dict(c, scenario_file_path, cache),
             config=config,
         )
 
     @classmethod
-    def from_dict(
-        cls, d: Dict, scenario_file_path: Path, cache: Optional[Dict]
-    ) -> Input:
+    def from_dict(cls, d: Dict, scenario_file_path: Path, cache: Optional[Dict]) -> Input:
 
         # add the (required) directories which should contain
         scenario_directory = scenario_file_path.parent
@@ -68,9 +62,7 @@ class Input(NamedTuple):
         stations_file = fs.construct_scenario_asset_path(
             d["stations_file"], scenario_directory, "stations"
         )
-        bases_file = fs.construct_scenario_asset_path(
-            d["bases_file"], scenario_directory, "bases"
-        )
+        bases_file = fs.construct_scenario_asset_path(d["bases_file"], scenario_directory, "bases")
 
         # may be found in hive.resources
         mechatronics_file = fs.construct_asset_path(
@@ -82,18 +74,12 @@ class Input(NamedTuple):
 
         # optional files
         schedules_filename = (
-            d["schedules_file"]
-            if d.get("schedules_file")
-            else "default_schedules.csv"
+            d["schedules_file"] if d.get("schedules_file") else "default_schedules.csv"
         )
         schedules_file = fs.construct_asset_path(
             schedules_filename, scenario_directory, "schedules", "schedules"
         )
-        chargers_filename = (
-            d["chargers_file"]
-            if d.get("chargers_file")
-            else "default_chargers.csv"
-        )
+        chargers_filename = d["chargers_file"] if d.get("chargers_file") else "default_chargers.csv"
         chargers_file = fs.construct_asset_path(
             chargers_filename, scenario_directory, "chargers", "chargers"
         )
@@ -105,9 +91,7 @@ class Input(NamedTuple):
             else None
         )
         geofence_file = (
-            fs.construct_scenario_asset_path(
-                d["geofence_file"], scenario_directory, "geofence"
-            )
+            fs.construct_scenario_asset_path(d["geofence_file"], scenario_directory, "geofence")
             if d.get("geofence_file")
             else None
         )
@@ -135,9 +119,7 @@ class Input(NamedTuple):
             else None
         )
         fleets_file = (
-            fs.construct_scenario_asset_path(
-                d["fleets_file"], scenario_directory, "fleets"
-            )
+            fs.construct_scenario_asset_path(d["fleets_file"], scenario_directory, "fleets")
             if d.get("fleets_file")
             else None
         )
@@ -165,9 +147,7 @@ class Input(NamedTuple):
             for (
                 name,
                 path,
-            ) in (
-                input.items()
-            ):  # input_config.asdict(absolute_paths=True).items():
+            ) in input.items():  # input_config.asdict(absolute_paths=True).items():
                 if path:
                     cls._check_md5_checksum(path, cache[name])
 

@@ -60,9 +60,7 @@ class Repositioning(VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         vehicle = sim.vehicles.get(self.vehicle_id)
         is_valid = (
-            route_cooresponds_with_entities(self.route, vehicle.position)
-            if vehicle
-            else False
+            route_cooresponds_with_entities(self.route, vehicle.position) if vehicle else False
         )
         context = f"vehicle {self.vehicle_id} entering repositioning state"
         if not vehicle:
@@ -73,9 +71,7 @@ class Repositioning(VehicleState):
         elif not is_valid:
             return None, None
         else:
-            result = VehicleState.apply_new_vehicle_state(
-                sim, self.vehicle_id, self
-            )
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
 
     def exit(
@@ -83,9 +79,7 @@ class Repositioning(VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a base
 
@@ -118,9 +112,7 @@ class Repositioning(VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-        move_error, move_sim = vehicle_state_ops.move(
-            sim, env, self.vehicle_id
-        )
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
         if move_error:
             response = SimulationStateError(

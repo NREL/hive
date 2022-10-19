@@ -38,11 +38,7 @@ def down_sample_nyc_tlc_data(
     """
 
     # this could clearly be generalized for other polygons/request sets
-    with open(
-        resource_filename(
-            "nrel.hive.resources.geofence", "nyc_single_polygon.geojson"
-        )
-    ) as f:
+    with open(resource_filename("nrel.hive.resources.geofence", "nyc_single_polygon.geojson")) as f:
 
         # needs to be a Polygon, not a MultiPolygon feature
         # used for ETL to confirm that requests sampled are in fact within the study area (some are not)
@@ -71,15 +67,10 @@ def down_sample_nyc_tlc_data(
 
                 # while loop state
                 attempted_count = 0
-                absolute_cutoff = (
-                    sample_size * 2
-                )  # arbitrary cutoff here; errors should be few
+                absolute_cutoff = sample_size * 2  # arbitrary cutoff here; errors should be few
                 recorded_count = 0
 
-                while (
-                    recorded_count < sample_size
-                    and attempted_count < absolute_cutoff
-                ):
+                while recorded_count < sample_size and attempted_count < absolute_cutoff:
                     # parse the next row of data
                     row = next(reader)
                     req = parse_yellow_tripdata_row(
@@ -91,8 +82,7 @@ def down_sample_nyc_tlc_data(
 
                     if (
                         not isinstance(req, Exception)
-                        and h3.h3_to_parent(req.geoid, boundary_h3_resolution)
-                        in hexes
+                        and h3.h3_to_parent(req.geoid, boundary_h3_resolution) in hexes
                     ):
                         # request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
                         out_row = {
@@ -146,19 +136,11 @@ def sample_vehicles_in_geofence(
     """
 
     # load geojson file with boundary polygon
-    with open(
-        resource_filename(
-            "nrel.hive.resources.geofence", "nyc_single_polygon.geojson"
-        )
-    ) as f:
+    with open(resource_filename("nrel.hive.resources.geofence", "nyc_single_polygon.geojson")) as f:
 
         # needs to be a Polygon, not a MultiPolygon feature
         geojson = json.load(f)
-        hexes = list(
-            h3.polyfill(
-                geojson=geojson["geometry"], res=10, geo_json_conformant=True
-            )
-        )
+        hexes = list(h3.polyfill(geojson=geojson["geometry"], res=10, geo_json_conformant=True))
 
         with open(out_file, "w", newline="") as w:
             header = [

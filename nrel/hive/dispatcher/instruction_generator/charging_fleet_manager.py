@@ -61,10 +61,7 @@ class ChargingFleetManager(InstructionGenerator):
 
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
             range_remaining_km = mechatronics.range_remaining_km(v)
-            if (
-                range_remaining_km
-                > environment.config.dispatcher.charging_range_km_soft_threshold
-            ):
+            if range_remaining_km > environment.config.dispatcher.charging_range_km_soft_threshold:
                 # don't even check station distance if vehicle range is over soft threshold
                 return False
 
@@ -78,8 +75,7 @@ class ChargingFleetManager(InstructionGenerator):
                 charging_search_type=environment.config.dispatcher.charging_search_type,
             )
             is_charge_candidate = (
-                environment.config.dispatcher.charging_range_km_threshold
-                + nearest_station_distance
+                environment.config.dispatcher.charging_range_km_threshold + nearest_station_distance
             ) >= range_remaining_km
             return is_charge_candidate
 

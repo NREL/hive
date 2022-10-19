@@ -103,7 +103,9 @@ class ServicingTrip(VehicleState):
             if vehicle and request
             else False
         )
-        context = f"vehicle {self.vehicle_id} entering servicing trip state for request {self.request.id}"
+        context = (
+            f"vehicle {self.vehicle_id} entering servicing trip state for request {self.request.id}"
+        )
         if vehicle is None:
             return (
                 SimulationStateError(f"vehicle not found; context: {context}"),
@@ -115,18 +117,13 @@ class ServicingTrip(VehicleState):
         elif not is_valid:
             msg = "ServicingTrip route does not correspond to request"
             return SimulationStateError(msg), None
-        elif (
-            not vehicle.vehicle_state.vehicle_state_type
-            == VehicleStateType.DISPATCH_TRIP
-        ):
+        elif not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.DISPATCH_TRIP:
             # the only supported transition into ServicingTrip comes from DispatchTrip
             prev_state = vehicle.vehicle_state.__class__.__name__
             msg = f"ServicingTrip called for vehicle {vehicle.id} but previous state ({prev_state}) is not DispatchTrip as required"
             error = SimulationStateError(msg)
             return error, None
-        elif not self.request.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not self.request.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} with mis-matched memberships/fleets"
             return SimulationStateError(msg), None
         elif not route_cooresponds_with_entities(self.route, vehicle.position):
@@ -140,9 +137,7 @@ class ServicingTrip(VehicleState):
             log.warning(msg)
             return None, None
         else:
-            pickup_error, pickup_sim = pick_up_trip(
-                sim, env, self.vehicle_id, self.request.id
-            )
+            pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, self.request.id)
             if pickup_error:
                 response = SimulationStateError(
                     f"failure during ServicingTrip.enter for vehicle {self.vehicle_id}"
@@ -170,9 +165,7 @@ class ServicingTrip(VehicleState):
         else:
             return None, None
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         if the route is complete we are finished
 
@@ -223,17 +216,12 @@ class ServicingTrip(VehicleState):
                 SimulationStateError(f"vehicle not found; context: {context}"),
                 None,
             )
-        elif (
-            moved_vehicle.vehicle_state.vehicle_state_type
-            == VehicleStateType.OUT_OF_SERVICE
-        ):
+        elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_sim
         elif len(moved_vehicle.vehicle_state.route) == 0:
             # reached destination.
             # let's drop the passengers off during this time step
-            result = drop_off_trip(
-                move_sim, env, self.vehicle_id, self.request
-            )
+            result = drop_off_trip(move_sim, env, self.vehicle_id, self.request)
             return result
         else:
             return None, move_sim

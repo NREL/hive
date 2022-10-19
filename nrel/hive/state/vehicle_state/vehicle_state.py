@@ -66,9 +66,7 @@ class VehicleStateABC(EntityState):
         :param state: the vehicle state we are updating
         :return: an exception due to failure or an optional updated simulation
         """
-        terminal_state_condition_met = (
-            state._has_reached_terminal_state_condition(sim, env)
-        )
+        terminal_state_condition_met = state._has_reached_terminal_state_condition(sim, env)
         if terminal_state_condition_met:
             # get the default terminal state to transition into
             err1, next_state = state._default_terminal_state(sim, env)
@@ -84,9 +82,7 @@ class VehicleStateABC(EntityState):
                 (
                     err2,
                     updated_sim,
-                ) = entity_state_ops.transition_previous_to_next(
-                    sim, env, state, next_state
-                )
+                ) = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
                 if err2 is not None:
                     state_type = state.vehicle_state_type
                     err_res = SimulationStateError(
@@ -98,9 +94,7 @@ class VehicleStateABC(EntityState):
                     return None, None
                 else:
                     # perform regular update function for subsequent state
-                    updated_vehicle = updated_sim.vehicles.get(
-                        next_state.vehicle_id
-                    )
+                    updated_vehicle = updated_sim.vehicles.get(next_state.vehicle_id)
                     if updated_vehicle is None:
                         state_type = state.vehicle_state_type
                         err_res = SimulationStateError(
@@ -109,9 +103,7 @@ class VehicleStateABC(EntityState):
                         return err_res, None
                     else:
                         updated_next_state = updated_vehicle.vehicle_state
-                        return updated_next_state._perform_update(
-                            updated_sim, env
-                        )
+                        return updated_next_state._perform_update(updated_sim, env)
         else:
             return state._perform_update(sim, env)
 
@@ -142,9 +134,7 @@ class VehicleStateABC(EntityState):
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @abstractmethod
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         test if we have reached a terminal state and need to apply the default transition
 

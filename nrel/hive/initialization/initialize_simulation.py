@@ -58,9 +58,7 @@ def initialize_simulation(
 
     # deprecated geofence input
     if config.input_config.geofence_file:
-        geofence = GeoFence.from_geojson_file(
-            config.input_config.geofence_file
-        )
+        geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
     else:
         geofence = None
 
@@ -195,9 +193,7 @@ def _build_vehicles(
                 [_collect_vehicle(row) for row in reader],
             )
         )
-        sim_with_vehicles = simulation_state_ops.add_entities(
-            simulation_state, vehicles
-        )
+        sim_with_vehicles = simulation_state_ops.add_entities(simulation_state, vehicles)
 
     return sim_with_vehicles
 
@@ -233,11 +229,7 @@ def _build_bases(
     # add all bases from the base file
     with open(bases_file, "r", encoding="utf-8-sig") as bf:
         reader = csv.DictReader(bf)
-        bases = list(
-            filter(
-                lambda b: b is not None, [_collect_base(row) for row in reader]
-            )
-        )
+        bases = list(filter(lambda b: b is not None, [_collect_base(row) for row in reader]))
 
     sim_w_bases = simulation_state_ops.add_entities(simulation_state, bases)
 
@@ -254,9 +246,7 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
     :return: sim state where vehicles + bases which should have a private relationship have been updated
     """
 
-    def _find_human_drivers(
-        acc: SimulationState, v: Vehicle
-    ) -> SimulationState:
+    def _find_human_drivers(acc: SimulationState, v: Vehicle) -> SimulationState:
         home_base_id = v.driver_state.home_base_id
         if home_base_id is None:
             return acc
@@ -272,22 +262,14 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                 updated_v = v.add_membership(home_base_membership_id)
                 updated_b = home_base.add_membership(home_base_membership_id)
                 station = sim.stations.get(home_base.station_id)
-                updated_s = (
-                    station.add_membership(home_base_membership_id)
-                    if station
-                    else None
-                )
+                updated_s = station.add_membership(home_base_membership_id) if station else None
 
-                error_v, with_v = simulation_state_ops.modify_vehicle(
-                    acc, updated_v
-                )
+                error_v, with_v = simulation_state_ops.modify_vehicle(acc, updated_v)
                 if error_v:
                     log.error(error_v)
                     return acc
                 else:
-                    error_b, with_b = simulation_state_ops.modify_base(
-                        with_v, updated_b
-                    )
+                    error_b, with_b = simulation_state_ops.modify_base(with_v, updated_b)
                     if error_b:
                         log.error(error_b)
                         return acc
@@ -299,9 +281,7 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                             (
                                 error_s,
                                 with_s,
-                            ) = simulation_state_ops.modify_station(
-                                with_b, updated_s
-                            )
+                            ) = simulation_state_ops.modify_station(with_b, updated_s)
                             if error_s:
                                 log.error(error_s)
                                 return acc
@@ -334,17 +314,13 @@ def _build_stations(
     def _add_row_unsafe(
         builder: immutables.Map[str, Station], row: Dict[str, str]
     ) -> immutables.Map[str, Station]:
-        station = Station.from_row(
-            row, builder, simulation_state.road_network, env
-        )
+        station = Station.from_row(row, builder, simulation_state.road_network, env)
         if not station_filter(station):
             return builder
 
         if station_member_ids is not None:
             if station.id in station_member_ids:
-                station = station.set_membership(
-                    station_member_ids[station.id]
-                )
+                station = station.set_membership(station_member_ids[station.id])
 
         updated_builder = DictOps.add_to_dict(builder, station.id, station)
         return updated_builder
@@ -357,6 +333,4 @@ def _build_stations(
         )
 
     # add all stations to the simulation once we know they are complete
-    return simulation_state_ops.add_entities(
-        simulation_state, stations_builder.values()
-    )
+    return simulation_state_ops.add_entities(simulation_state, stations_builder.values())

@@ -50,9 +50,7 @@ class HumanUnavailableChargeParameters(NamedTuple):
             return HumanUnavailableChargeParameters()
         else:
             remaining_range = my_mechatronics.range_remaining_km(vehicle)
-            range_to_get_home = sim.road_network.distance_by_geoid_km(
-                vehicle.geoid, my_base.geoid
-            )
+            range_to_get_home = sim.road_network.distance_by_geoid_km(vehicle.geoid, my_base.geoid)
             buffer = env.config.dispatcher.charging_range_km_threshold
 
             # if we do not have home charging, then we must charge at least enough to reach a charger tomorrow
@@ -71,14 +69,8 @@ class HumanUnavailableChargeParameters(NamedTuple):
             )
 
             # determine if we have a charge target
-            total_range_required = (
-                range_to_get_home + range_to_charger_tomorrow + buffer
-            )
-            charge_target = (
-                total_range_required
-                if total_range_required > remaining_range
-                else None
-            )
+            total_range_required = range_to_get_home + range_to_charger_tomorrow + buffer
+            charge_target = total_range_required if total_range_required > remaining_range else None
             charge_params = (
                 HumanUnavailableChargeParameters()
                 if charge_target is None

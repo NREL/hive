@@ -61,9 +61,7 @@ class SimulationState(NamedTuple):
     requests: immutables.Map[RequestId, Request] = immutables.Map()
 
     # the instructions applied in the most recent state transition
-    applied_instructions: immutables.Map[
-        VehicleId, Instruction
-    ] = immutables.Map()
+    applied_instructions: immutables.Map[VehicleId, Instruction] = immutables.Map()
 
     # location collections - the lowest-level spatial representation in Hive
     v_locations: immutables.Map[GeoId, FrozenSet[VehicleId]] = immutables.Map()
@@ -219,26 +217,10 @@ class SimulationState(NamedTuple):
         :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
         :return: an Optional AtLocationResponse
         """
-        vehicles = (
-            self.v_locations[geoid]
-            if geoid in self.v_locations
-            else frozenset()
-        )
-        requests = (
-            self.r_locations[geoid]
-            if geoid in self.r_locations
-            else frozenset()
-        )
-        station = (
-            self.s_locations[geoid]
-            if geoid in self.s_locations
-            else frozenset()
-        )
-        base = (
-            self.b_locations[geoid]
-            if geoid in self.b_locations
-            else frozenset()
-        )
+        vehicles = self.v_locations[geoid] if geoid in self.v_locations else frozenset()
+        requests = self.r_locations[geoid] if geoid in self.r_locations else frozenset()
+        station = self.s_locations[geoid] if geoid in self.s_locations else frozenset()
+        base = self.b_locations[geoid] if geoid in self.b_locations else frozenset()
 
         result = cast(
             AtLocationResponse,

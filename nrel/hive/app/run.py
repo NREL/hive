@@ -52,17 +52,11 @@ def run_sim(scenario_file, position=0):
     sim, env = load_simulation(scenario_file)
 
     # initialize logging
-    logging.basicConfig(
-        level=env.config.global_config.log_level, format="%(message)s"
-    )
+    logging.basicConfig(level=env.config.global_config.log_level, format="%(message)s")
     if env.config.global_config.log_run:
-        run_log_path = os.path.join(
-            env.config.scenario_output_directory, "run.log"
-        )
+        run_log_path = os.path.join(env.config.scenario_output_directory, "run.log")
         log_fh = logging.FileHandler(run_log_path)
-        formatter = logging.Formatter(
-            "[%(levelname)s] - %(name)s - %(message)s"
-        )
+        formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
         # log_fh.setLevel(env.config.global_config.log_level)
         log_fh.setFormatter(formatter)
         log.addHandler(log_fh)
@@ -164,9 +158,7 @@ def print_defaults():
     defaults_file_str = pkg_resources.resource_filename(
         "nrel.hive.resources.defaults", "hive_config.yaml"
     )
-    log.info(
-        f"printing the default scenario configuration stored at {defaults_file_str}:\n"
-    )
+    log.info(f"printing the default scenario configuration stored at {defaults_file_str}:\n")
     # start build using the Hive config defaults file
     defaults_file = Path(defaults_file_str)
 

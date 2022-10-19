@@ -35,10 +35,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     theta2 = np.deg2rad(lng2)
     d_theta = theta2 - theta1
 
-    h = (
-        np.sin(d_phi / 2) ** 2
-        + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2
-    )
+    h = np.sin(d_phi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2
     h = np.minimum(1.0, h)  # protect against floating point errors
 
     arc = 2 * np.arcsin(np.sqrt(h))
@@ -63,23 +60,11 @@ class OSMContentHandler(xml.sax.handler.ContentHandler):
 
     def startElement(self, name, attrs):
         if name == "osm":
-            self.object.update(
-                {
-                    k: attrs[k]
-                    for k in attrs.keys()
-                    if k in ("version", "generator")
-                }
-            )
+            self.object.update({k: attrs[k] for k in attrs.keys() if k in ("version", "generator")})
 
         elif name in ("node", "way"):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update(
-                {
-                    k: float(attrs[k])
-                    for k in attrs.keys()
-                    if k in ("lat", "lon")
-                }
-            )
+            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ("lat", "lon")})
             self._element.update(
                 {
                     k: int(attrs[k])

@@ -49,15 +49,11 @@ class GlobalConfig(NamedTuple):
         )
 
     @classmethod
-    def build(
-        cls, config: Dict, global_settings_file_path: str
-    ) -> GlobalConfig:
+    def build(cls, config: Dict, global_settings_file_path: str) -> GlobalConfig:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
-            config_constructor=lambda c: GlobalConfig.from_dict(
-                c, global_settings_file_path
-            ),
+            config_constructor=lambda c: GlobalConfig.from_dict(c, global_settings_file_path),
             config=config,
         )
 

@@ -18,23 +18,13 @@ class TestSimulationState(TestCase):
         sta = mock_station_from_geoid(geoid=somewhere)
         b = mock_base_from_geoid(geoid=somewhere_else)
         sim = mock_sim(vehicles=(veh,), stations=(sta,), bases=(b,))
-        sim_with_request = simulation_state_ops.add_request_safe(
-            sim, req
-        ).unwrap()
+        sim_with_request = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
         result = sim_with_request.at_geoid(veh.geoid)
-        self.assertIn(
-            veh.id, result["vehicles"], "should have found this vehicle"
-        )
-        self.assertIn(
-            req.id, result["requests"], "should have found this request"
-        )
-        self.assertIn(
-            sta.id, result["station"], "should have found this station"
-        )
-        self.assertEqual(
-            result["base"], frozenset(), "should not have found this base"
-        )
+        self.assertIn(veh.id, result["vehicles"], "should have found this vehicle")
+        self.assertIn(req.id, result["requests"], "should have found this request")
+        self.assertIn(sta.id, result["station"], "should have found this station")
+        self.assertEqual(result["base"], frozenset(), "should not have found this base")
 
     def test_vehicle_at_request(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -240,16 +230,10 @@ class TestSimulationState(TestCase):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
-        req = mock_request_from_geoids(
-            origin=somewhere_else, destination=somewhere, passengers=2
-        )
-        sim = simulation_state_ops.add_request_safe(
-            mock_sim(vehicles=(veh,)), req
-        ).unwrap()
+        req = mock_request_from_geoids(origin=somewhere_else, destination=somewhere, passengers=2)
+        sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(veh,)), req).unwrap()
 
-        instruction = DispatchTripInstruction(
-            vehicle_id=veh.id, request_id=req.id
-        )
+        instruction = DispatchTripInstruction(vehicle_id=veh.id, request_id=req.id)
         env = mock_env()
         e2, instruction_result = instruction.apply_instruction(sim, env)
         if e2:
@@ -343,9 +327,7 @@ class TestSimulationState(TestCase):
             ChargingStation,
             "Vehicle should have transitioned to charging.",
         )
-        self.assertEqual(
-            charging_veh.geoid, sta.geoid, "Vehicle should be at station."
-        )
+        self.assertEqual(charging_veh.geoid, sta.geoid, "Vehicle should be at station.")
         self.assertLess(
             station_w_veh.get_available_chargers(mock_dcfc_charger_id()),
             station_w_veh.get_total_chargers(mock_dcfc_charger_id()),
@@ -361,9 +343,7 @@ class TestSimulationState(TestCase):
         sim = mock_sim(vehicles=(veh,), bases=(base,))
         env = mock_env()
 
-        instruction = DispatchBaseInstruction(
-            vehicle_id=veh.id, base_id=base.id
-        )
+        instruction = DispatchBaseInstruction(vehicle_id=veh.id, base_id=base.id)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
@@ -390,9 +370,7 @@ class TestSimulationState(TestCase):
             ReserveBase,
             "Vehicle should have transitioned to RESERVE_BASE",
         )
-        self.assertEqual(
-            veh_at_base.geoid, base.geoid, "Vehicle should be located at base"
-        )
+        self.assertEqual(veh_at_base.geoid, base.geoid, "Vehicle should be located at base")
 
     def test_terminal_state_repositioning(self):
         # approx 8.5 km distance.
@@ -401,9 +379,7 @@ class TestSimulationState(TestCase):
         veh = mock_vehicle_from_geoid(geoid=somewhere)
         sim = mock_sim(vehicles=(veh,))
         env = mock_env()
-        somewhere_else_link = sim.road_network.position_from_geoid(
-            somewhere_else
-        )
+        somewhere_else_link = sim.road_network.position_from_geoid(somewhere_else)
 
         instruction = RepositionInstruction(
             vehicle_id=veh.id, destination=somewhere_else_link.link_id
@@ -520,21 +496,13 @@ class TestSimulationState(TestCase):
     def test_vehicle_runs_out_of_energy(self):
 
         low_energy_veh = mock_vehicle_from_geoid(soc=0.01)
-        sim = mock_sim(
-            vehicles=(low_energy_veh,), sim_timestep_duration_seconds=3600
-        )
+        sim = mock_sim(vehicles=(low_energy_veh,), sim_timestep_duration_seconds=3600)
 
         env = mock_env()
 
-        inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(
-            63.8002568, -53.3170783, 15
-        )
-        dst_link = sim.road_network.position_from_geoid(
-            inbox_cafe_in_torvet_julianehab_greenland
-        )
-        instruction = RepositionInstruction(
-            DefaultIds.mock_vehicle_id(), dst_link.link_id
-        )
+        inbox_cafe_in_torvet_julianehab_greenland = h3.geo_to_h3(63.8002568, -53.3170783, 15)
+        dst_link = sim.road_network.position_from_geoid(inbox_cafe_in_torvet_julianehab_greenland)
+        instruction = RepositionInstruction(DefaultIds.mock_vehicle_id(), dst_link.link_id)
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
@@ -552,9 +520,7 @@ class TestSimulationState(TestCase):
         # one movement takes more energy than this agent has
         sim_out_of_order = perform_vehicle_state_updates(sim_updated, env)
 
-        veh_result = sim_out_of_order.vehicles.get(
-            DefaultIds.mock_vehicle_id()
-        )
+        veh_result = sim_out_of_order.vehicles.get(DefaultIds.mock_vehicle_id())
         self.assertIsNotNone(
             veh_result,
             "stepped vehicle should have advanced the simulation state",
@@ -592,9 +558,7 @@ class TestSimulationState(TestCase):
 
         dcfc_stations = sim.get_stations(filter_function=has_dcfc)
 
-        self.assertEqual(
-            len(dcfc_stations), 1, "only one station with dcfc charger_id"
-        )
+        self.assertEqual(len(dcfc_stations), 1, "only one station with dcfc charger_id")
         self.assertEqual(dcfc_stations[0].id, "s1", "s1 has dcfc charger_id")
 
     def test_get_stations_at_same_geoid(self):
@@ -639,9 +603,7 @@ class TestSimulationState(TestCase):
             sort=True, sort_reversed=True, sort_key=lambda b: b.total_stalls
         )
 
-        self.assertEqual(
-            sorted_bases[0].id, "b2", "base 2 has the most stalls"
-        )
+        self.assertEqual(sorted_bases[0].id, "b2", "base 2 has the most stalls")
 
     def test_get_bases_at_same_geoid(self):
         sim = mock_sim(
@@ -674,9 +636,7 @@ class TestSimulationState(TestCase):
             sort_reversed=True,
         )
 
-        self.assertEqual(
-            sorted_and_filtered_vehicles[0].id, "v1", "v1 has highest soc"
-        )
+        self.assertEqual(sorted_and_filtered_vehicles[0].id, "v1", "v1 has highest soc")
 
     def test_get_requests(self):
         sim = mock_sim()
@@ -687,10 +647,6 @@ class TestSimulationState(TestCase):
         sim = simulation_state_ops.add_request_safe(sim, r2).unwrap()
         sim = simulation_state_ops.add_request_safe(sim, r1).unwrap()
 
-        sorted_requests = sim.get_requests(
-            sort=True, sort_key=lambda r: r.departure_time
-        )
+        sorted_requests = sim.get_requests(sort=True, sort_key=lambda r: r.departure_time)
 
-        self.assertEqual(
-            sorted_requests[0].id, "r1", "r1 has lowest departure time"
-        )
+        self.assertEqual(sorted_requests[0].id, "r1", "r1 has lowest departure time")

@@ -32,9 +32,7 @@ class ReserveBase(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId) -> ReserveBase:
-        return ReserveBase(
-            vehicle_id=vehicle_id, base_id=base_id, instance_id=uuid4()
-        )
+        return ReserveBase(vehicle_id=vehicle_id, base_id=base_id, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
@@ -68,10 +66,10 @@ class ReserveBase(VehicleState):
                 f"ReserveBase.enter(): vehicle {vehicle.id} not at same location as {base.id}"
             )
             return None, None
-        elif not base.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
-            msg = f"ReserveBase.enter(): vehicle {vehicle.id} does not have access to base {base.id}"
+        elif not base.membership.grant_access_to_membership(vehicle.membership):
+            msg = (
+                f"ReserveBase.enter(): vehicle {vehicle.id} does not have access to base {base.id}"
+            )
             return SimulationStateError(msg), None
 
         else:
@@ -79,9 +77,7 @@ class ReserveBase(VehicleState):
             if not updated_base:
                 return None, None
             else:
-                error, updated_sim = simulation_state_ops.modify_base(
-                    sim, updated_base
-                )
+                error, updated_sim = simulation_state_ops.modify_base(sim, updated_base)
                 if error:
                     response = SimulationStateError(
                         f"failure during ReserveBase.enter for vehicle {self.vehicle_id}"
@@ -89,9 +85,7 @@ class ReserveBase(VehicleState):
                     response.__cause__ = error
                     return response, None
                 else:
-                    return VehicleState.apply_new_vehicle_state(
-                        updated_sim, self.vehicle_id, self
-                    )
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def exit(
         self, next_state: VehicleState, sim: SimulationState, env: Environment
@@ -117,9 +111,7 @@ class ReserveBase(VehicleState):
                 return response, None
             return simulation_state_ops.modify_base(sim, updated_base)
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         There is no terminal state for ReserveBase
 

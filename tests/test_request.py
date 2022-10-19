@@ -45,15 +45,11 @@ class TestRequest(TestCase):
         self.assertEqual(req.id, "1_a")
         self.assertEqual(
             req.origin,
-            h3.geo_to_h3(
-                31.2074449, 121.4294263, env.config.sim.sim_h3_resolution
-            ),
+            h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
         )
         self.assertEqual(
             req.destination,
-            h3.geo_to_h3(
-                31.2109091, 121.4532226, env.config.sim.sim_h3_resolution
-            ),
+            h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution),
         )
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
@@ -70,15 +66,11 @@ class TestRequest(TestCase):
         self.assertEqual(req.id, "1_a")
         self.assertEqual(
             req.origin,
-            h3.geo_to_h3(
-                31.2074449, 121.4294263, env.config.sim.sim_h3_resolution
-            ),
+            h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
         )
         self.assertEqual(
             req.destination,
-            h3.geo_to_h3(
-                31.2109091, 121.4532226, env.config.sim.sim_h3_resolution
-            ),
+            h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution),
         )
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)

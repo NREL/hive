@@ -74,9 +74,7 @@ class ChargeQueueing(VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
         has_available_charger = (
-            station.has_available_charger(self.charger_id)
-            if station is not None
-            else False
+            station.has_available_charger(self.charger_id) if station is not None else False
         )
         context = f"vehicle {self.vehicle_id} entering queueing at station {self.station_id}"
         if not vehicle:
@@ -94,21 +92,15 @@ class ChargeQueueing(VehicleState):
         elif has_available_charger:
             # maybe here instead, re-directed to ChargingStation?
             return None, None
-        elif not station.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not station.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle doesn't have access to station; context: {context}"
             return SimulationStateError(msg), None
         else:
-            err1, updated_station = station.enqueue_for_charger(
-                self.charger_id
-            )
+            err1, updated_station = station.enqueue_for_charger(self.charger_id)
             if err1 is not None:
                 return err1, None
             else:
-                err2, updated_sim = simulation_state_ops.modify_station(
-                    sim, updated_station
-                )
+                err2, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                 if err2 is not None:
                     response = SimulationStateError(
                         f"failure during ChargeQueueing.enter for vehicle {self.vehicle_id}"
@@ -116,9 +108,7 @@ class ChargeQueueing(VehicleState):
                     response.__cause__ = err2
                     return response, None
                 else:
-                    return VehicleState.apply_new_vehicle_state(
-                        updated_sim, self.vehicle_id, self
-                    )
+                    return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(
         self, sim: SimulationState, env: "Environment"
@@ -147,15 +137,11 @@ class ChargeQueueing(VehicleState):
             )
         else:
 
-            error, updated_station = station.dequeue_for_charger(
-                self.charger_id
-            )
+            error, updated_station = station.dequeue_for_charger(self.charger_id)
             if error is not None:
                 return error, None
             else:
-                error, updated_sim = simulation_state_ops.modify_station(
-                    sim, updated_station
-                )
+                error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                 if error:
                     response = SimulationStateError(
                         f"failure during ChargeQueueing.exit for vehicle {self.vehicle_id}"
@@ -164,9 +150,7 @@ class ChargeQueueing(VehicleState):
                     return response, None
                 return None, updated_sim
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         vehicle has reached a terminal state if the station disappeared
         or if it has at least one charger_id of the correct type
@@ -194,9 +178,7 @@ class ChargeQueueing(VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         station = sim.stations.get(self.station_id)
         has_available_charger = (
-            station.has_available_charger(self.charger_id)
-            if station is not None
-            else False
+            station.has_available_charger(self.charger_id) if station is not None else False
         )
         context = f"vehicle {self.vehicle_id} entering default terminal state for charge queueing at station {self.station_id}"
         if not vehicle:
@@ -211,15 +193,11 @@ class ChargeQueueing(VehicleState):
             )
         elif not has_available_charger:
             return (
-                SimulationStateError(
-                    f"no charger is available; context: {context}"
-                ),
+                SimulationStateError(f"no charger is available; context: {context}"),
                 None,
             )
         else:
-            next_state = ChargingStation.build(
-                self.vehicle_id, self.station_id, self.charger_id
-            )
+            next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
             return None, next_state
 
     def _perform_update(
@@ -236,9 +214,7 @@ class ChargeQueueing(VehicleState):
         context = f"vehicle {self.vehicle_id} performing update for charge queueing at station {self.station_id}"
         if not vehicle:
             return (
-                SimulationStateError(
-                    f"vehicle {self.vehicle_id} not found; context: {context}"
-                ),
+                SimulationStateError(f"vehicle {self.vehicle_id} not found; context: {context}"),
                 None,
             )
         else:
@@ -250,10 +226,6 @@ class ChargeQueueing(VehicleState):
                     ),
                     None,
                 )
-            less_energy_vehicle = mechatronics.idle(
-                vehicle, sim.sim_timestep_duration_seconds
-            )
+            less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
-            return simulation_state_ops.modify_vehicle(
-                sim, less_energy_vehicle
-            )
+            return simulation_state_ops.modify_vehicle(sim, less_energy_vehicle)

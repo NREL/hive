@@ -151,9 +151,7 @@ class Request(NamedTuple):
             )
         elif "passengers" not in row:
             return (
-                IOError(
-                    "cannot load a request without a number of 'passengers'"
-                ),
+                IOError("cannot load a request without a number of 'passengers'"),
                 None,
             )
         else:
@@ -163,12 +161,8 @@ class Request(NamedTuple):
 
                 o_lat, o_lon = float(row["o_lat"]), float(row["o_lon"])
                 d_lat, d_lon = float(row["d_lat"]), float(row["d_lon"])
-                o_geoid = h3.geo_to_h3(
-                    o_lat, o_lon, env.config.sim.sim_h3_resolution
-                )
-                d_geoid = h3.geo_to_h3(
-                    d_lat, d_lon, env.config.sim.sim_h3_resolution
-                )
+                o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
+                d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
                 departure_time_result = SimTime.build(row["departure_time"])
                 if isinstance(departure_time_result, TimeParseError):
@@ -176,9 +170,7 @@ class Request(NamedTuple):
 
                 passengers = int(row["passengers"])
                 allows_pooling = (
-                    bool(row["allows_pooling"])
-                    if row.get("allows_pooling") is not None
-                    else False
+                    bool(row["allows_pooling"]) if row.get("allows_pooling") is not None else False
                 )
 
                 request = Request.build(
@@ -200,9 +192,7 @@ class Request(NamedTuple):
                     None,
                 )
 
-    def assign_dispatched_vehicle(
-        self, vehicle_id: VehicleId, current_time: SimTime
-    ) -> Request:
+    def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """
         allows the dispatcher to update the request that a vehicle has been dispatched to them.
         this does not signal that the vehicle is guaranteed to pick them up.
@@ -213,18 +203,14 @@ class Request(NamedTuple):
         :param current_time: the current simulation time
         :return: the updated Request
         """
-        return self._replace(
-            dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time
-        )
+        return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
 
     def unassign_dispatched_vehicle(self) -> Request:
         """
         removes any vehicle listed as assigned to this request
         :return: the updated request
         """
-        updated = self._replace(
-            dispatched_vehicle=None, dispatched_vehicle_time=None
-        )
+        updated = self._replace(dispatched_vehicle=None, dispatched_vehicle_time=None)
         return updated
 
     def assign_value(
@@ -239,11 +225,7 @@ class Request(NamedTuple):
 
         :return: the updated request
         """
-        distance_km = road_network.distance_by_geoid_km(
-            self.origin, self.destination
-        )
+        distance_km = road_network.distance_by_geoid_km(self.origin, self.destination)
         distance_miles = distance_km * KM_TO_MILE
-        price = rate_structure.base_price + (
-            rate_structure.price_per_mile * distance_miles
-        )
+        price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
         return self._replace(value=max(rate_structure.minimum_price, price))

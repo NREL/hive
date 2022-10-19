@@ -11,9 +11,7 @@ class TestInstructionGenerators(TestCase):
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
         far_from_somewhere = h3.geo_to_h3(39.755, -104.976, 15)
 
-        req = mock_request_from_geoids(
-            origin=somewhere, fleet_id=DefaultIds.mock_membership_id()
-        )
+        req = mock_request_from_geoids(origin=somewhere, fleet_id=DefaultIds.mock_membership_id())
         close_veh = mock_vehicle_from_geoid(
             vehicle_id="close_veh",
             geoid=near_to_somewhere,
@@ -31,9 +29,7 @@ class TestInstructionGenerators(TestCase):
         )
         sim = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
-        dispatcher, instructions = dispatcher.generate_instructions(
-            sim, mock_env()
-        )
+        dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
         self.assertGreaterEqual(
             len(instructions),
@@ -60,9 +56,7 @@ class TestInstructionGenerators(TestCase):
         sim = mock_sim(h3_location_res=9, h3_search_res=9)
         sim = simulation_state_ops.add_request_safe(sim, req).unwrap()
 
-        dispatcher, instructions = dispatcher.generate_instructions(
-            sim, mock_env()
-        )
+        dispatcher, instructions = dispatcher.generate_instructions(sim, mock_env())
 
         self.assertEqual(
             len(instructions),
@@ -118,9 +112,7 @@ class TestInstructionGenerators(TestCase):
             chargers={mock_dcfc_charger_id(): 1},
         )
         e, s1 = s1.checkout_charger(mock_dcfc_charger_id())
-        self.assertIsNone(
-            e, "test invariant failed (unable to check out charger at station"
-        )
+        self.assertIsNone(e, "test invariant failed (unable to check out charger at station")
         e, s1 = s1.enqueue_for_charger(mock_dcfc_charger_id())
         self.assertIsNone(
             e,
@@ -132,9 +124,7 @@ class TestInstructionGenerators(TestCase):
             chargers={mock_dcfc_charger_id(): 1},
         )
 
-        self.assertIsNotNone(
-            s1, "test invariant failed (unable to checkout charger)"
-        )
+        self.assertIsNotNone(s1, "test invariant failed (unable to checkout charger)")
 
         sim = mock_sim(
             h3_location_res=15,

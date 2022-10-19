@@ -29,9 +29,7 @@ class Environment(NamedTuple):
     """
 
     config: HiveConfig
-    mechatronics: immutables.Map[
-        MechatronicsId, MechatronicsInterface
-    ] = immutables.Map()
+    mechatronics: immutables.Map[MechatronicsId, MechatronicsInterface] = immutables.Map()
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
     schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
     fleet_ids: FrozenSet[MembershipId] = frozenset()

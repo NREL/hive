@@ -11,19 +11,11 @@ class TestHaversineRoadNetwork(TestCase):
 
         network = mock_network()
 
-        out_of_geofence = network.geoid_within_geofence(
-            somewhere_out_of_geofence
-        )
-        within_geofence = network.geoid_within_geofence(
-            somewhere_within_geofence
-        )
+        out_of_geofence = network.geoid_within_geofence(somewhere_out_of_geofence)
+        within_geofence = network.geoid_within_geofence(somewhere_within_geofence)
 
-        self.assertEqual(
-            out_of_geofence, False, "should not have found geoid in geofence"
-        )
-        self.assertEqual(
-            within_geofence, True, "should have found geoid in geofence"
-        )
+        self.assertEqual(out_of_geofence, False, "should not have found geoid in geofence")
+        self.assertEqual(within_geofence, True, "should have found geoid in geofence")
 
     def test_route(self):
         """
@@ -39,12 +31,8 @@ class TestHaversineRoadNetwork(TestCase):
         route = network.route(o, d)
 
         self.assertEqual(len(route), 1, "Route should have only one link")
-        self.assertEqual(
-            route[0].start, origin, "Route should start from origin"
-        )
-        self.assertEqual(
-            route[0].end, destination, "Route should end at destination"
-        )
+        self.assertEqual(route[0].start, origin, "Route should start from origin")
+        self.assertEqual(route[0].end, destination, "Route should end at destination")
         self.assertAlmostEqual(
             route[0].distance_km,
             1.1,

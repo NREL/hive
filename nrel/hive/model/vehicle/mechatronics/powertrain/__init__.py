@@ -26,9 +26,7 @@ def build_powertrain(config: dict) -> Powertrain:
         config.update(powertrain_file_contents)
 
         if not powertrain_type:
-            raise KeyError(
-                f"powertrain file {file} missing required 'type' field"
-            )
+            raise KeyError(f"powertrain file {file} missing required 'type' field")
         elif powertrain_type not in powertrain_models:
             raise IOError(
                 f"PowerCurve with type {powertrain_type} is not recognized, must be one of {powertrain_models.keys()}"

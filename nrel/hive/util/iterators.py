@@ -201,13 +201,9 @@ class DictReaderStepper:
         :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
-        return cls(
-            data, None, step_column_name, initial_stop_condition, parser
-        )
+        return cls(data, None, step_column_name, initial_stop_condition, parser)
 
-    def read_until_stop_condition(
-        self, stop_condition: Callable
-    ) -> Iterator[Dict[str, str]]:
+    def read_until_stop_condition(self, stop_condition: Callable) -> Iterator[Dict[str, str]]:
         """
         reads rows from the DictReader as long as step_column_name is less than or equal to "value"
 

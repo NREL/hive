@@ -12,9 +12,7 @@ class TestVehicleStateOps(TestCase):
         somewhere_else = h3.geo_to_h3(39.7579, -104.978, 15)
         sim = mock_sim(sim_timestep_duration_seconds=10)
         somewhere_link = sim.road_network.position_from_geoid(somewhere)
-        somewhere_else_link = sim.road_network.position_from_geoid(
-            somewhere_else
-        )
+        somewhere_else_link = sim.road_network.position_from_geoid(somewhere_else)
         route = sim.road_network.route(somewhere_link, somewhere_else_link)
         state = Repositioning.build(DefaultIds.mock_vehicle_id(), route)
         vehicle = mock_vehicle_from_geoid(geoid=somewhere, vehicle_state=state)
@@ -30,9 +28,7 @@ class TestVehicleStateOps(TestCase):
             self.fail(error)
 
         moved_vehicle = move_sim.vehicles.get(vehicle.id)
-        soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(
-            moved_vehicle
-        )
+        soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(moved_vehicle)
 
         self.assertLess(soc, 1, "should have used 1 unit of mock energy")
         self.assertNotEqual(
@@ -64,9 +60,7 @@ class TestVehicleStateOps(TestCase):
         )
         env = mock_env()
 
-        error, result = vehicle_state_ops.charge(
-            sim, env, veh.id, sta.id, mock_dcfc_charger_id()
-        )
+        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, mock_dcfc_charger_id())
         if error:
             self.fail(error)
 
@@ -96,9 +90,7 @@ class TestVehicleStateOps(TestCase):
         )
         env = mock_env()
 
-        error, result = vehicle_state_ops.charge(
-            sim, env, veh.id, sta.id, mock_dcfc_charger_id()
-        )
+        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, mock_dcfc_charger_id())
 
         self.assertIsNotNone(error)
         self.assertIsNone(result)

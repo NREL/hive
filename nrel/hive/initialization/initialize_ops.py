@@ -26,9 +26,9 @@ def process_fleet_file(fleet_file: str, entity_type: str) -> MembershipMap:
         for fleet_id in config_dict:
             for entity_id in config_dict[fleet_id][entity_type]:
                 if entity_id in fleet_id_map_mutation:
-                    fleet_id_map_mutation[entity_id] = fleet_id_map_mutation[
-                        entity_id
-                    ] + (fleet_id,)
+                    fleet_id_map_mutation[entity_id] = fleet_id_map_mutation[entity_id] + (
+                        fleet_id,
+                    )
                 else:
                     fleet_id_map_mutation.set(entity_id, (fleet_id,))
         fleet_id_map = fleet_id_map_mutation.finish()
@@ -48,6 +48,4 @@ def read_fleet_ids_from_file(fleet_file: str) -> FrozenSet[EntityId]:
         result = frozenset(fleet_dict.keys())
         return result
     except Exception as e:
-        raise IOError(
-            f"failed reading fleet ids from fleet file {fleet_file}"
-        ) from e
+        raise IOError(f"failed reading fleet ids from fleet file {fleet_file}") from e

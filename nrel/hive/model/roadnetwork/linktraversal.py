@@ -109,9 +109,7 @@ def traverse_up_to(
     """
     if link is None:
         return (
-            AttributeError(
-                f"attempting to traverse link which does not exist"
-            ),
+            AttributeError(f"attempting to traverse link which does not exist"),
             None,
         )
     elif link.start == link.end:
@@ -129,9 +127,7 @@ def traverse_up_to(
             result = LinkTraversalResult(
                 traversed=link,
                 remaining=None,
-                remaining_time_seconds=(
-                    available_time_seconds - link.travel_time_seconds
-                ),
+                remaining_time_seconds=(available_time_seconds - link.travel_time_seconds),
             )
             return None, result
         else:

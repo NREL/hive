@@ -97,9 +97,7 @@ class DispatchTripInstruction(Instruction):
             end = request.origin_position
             route = sim_state.road_network.route(start, end)
             prev_state = vehicle.vehicle_state
-            next_state = DispatchTrip.build(
-                self.vehicle_id, self.request_id, route
-            )
+            next_state = DispatchTrip.build(self.vehicle_id, self.request_id, route)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -121,9 +119,9 @@ class DispatchPoolingTripInstruction(Instruction):
         )
         # seating_error = check_if_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
 
-        if isinstance(
-            v_state, ServicingPoolingTrip
-        ) and not trip_plan_covers_previous(v_state, self.trip_plan):
+        if isinstance(v_state, ServicingPoolingTrip) and not trip_plan_covers_previous(
+            v_state, self.trip_plan
+        ):
             msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
             error = InstructionError(msg)
             return error, None
@@ -149,18 +147,13 @@ class DispatchPoolingTripInstruction(Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            (
-                error,
-                next_state,
-            ) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
+            (error, next_state,) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
                 sim_state, self.vehicle_id, self.trip_plan
             )
             if error is not None:
                 return error, None
             else:
-                return None, InstructionResult(
-                    vehicle.vehicle_state, next_state
-                )
+                return None, InstructionResult(vehicle.vehicle_state, next_state)
 
 
 @dataclass(frozen=True)
@@ -220,9 +213,7 @@ class ChargeStationInstruction(Instruction):
             )
         else:
             prev_state = vehicle.vehicle_state
-            next_state = ChargingStation.build(
-                self.vehicle_id, self.station_id, self.charger_id
-            )
+            next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -246,9 +237,7 @@ class ChargeBaseInstruction(Instruction):
             )
         else:
             prev_state = vehicle.vehicle_state
-            next_state = ChargingBase.build(
-                self.vehicle_id, self.base_id, self.charger_id
-            )
+            next_state = ChargingBase.build(self.vehicle_id, self.base_id, self.charger_id)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -283,9 +272,7 @@ class DispatchBaseInstruction(Instruction):
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
-            next_state = DispatchBase.build(
-                self.vehicle_id, self.base_id, route
-            )
+            next_state = DispatchBase.build(self.vehicle_id, self.base_id, route)
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -319,9 +306,7 @@ class RepositionInstruction(Instruction):
                 )
             else:
                 destination_position = EntityPosition(link.link_id, link.end)
-                route = sim_state.road_network.route(
-                    start, destination_position
-                )
+                route = sim_state.road_network.route(start, destination_position)
 
                 prev_state = vehicle.vehicle_state
                 next_state = Repositioning.build(self.vehicle_id, route)

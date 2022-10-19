@@ -81,9 +81,7 @@ class HumanAvailable(DriverState):
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         if not my_vehicle:
-            log.error(
-                f"could not find vehicle {self.attributes.vehicle_id} in simulation"
-            )
+            log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
 
         state = my_vehicle.vehicle_state
 
@@ -97,10 +95,7 @@ class HumanAvailable(DriverState):
         elif isinstance(state, Idle):
             # if the driver has been idle for longer than the idle_time_out_seconds limit, we move to seek out greener
             # pastures
-            if (
-                state.idle_duration
-                > env.config.dispatcher.idle_time_out_seconds
-            ):
+            if state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
                 return human_look_for_requests(my_vehicle, sim)
         else:
             return None
@@ -119,9 +114,7 @@ class HumanAvailable(DriverState):
         schedule_function = env.schedules.get(self.attributes.schedule_id)
         vehicle = sim.vehicles.get(self.attributes.vehicle_id)
 
-        if not schedule_function or schedule_function(
-            sim, self.attributes.vehicle_id
-        ):
+        if not schedule_function or schedule_function(sim, self.attributes.vehicle_id):
             # stay available
             return None, sim
         elif not vehicle:
@@ -132,9 +125,7 @@ class HumanAvailable(DriverState):
             return error, None
         else:
             # log transition
-            report = driver_schedule_event(
-                sim, env, vehicle, ScheduleEventType.OFF
-            )
+            report = driver_schedule_event(sim, env, vehicle, ScheduleEventType.OFF)
             env.reporter.file_report(report)
 
             # transition to unavailable
@@ -142,9 +133,7 @@ class HumanAvailable(DriverState):
                 vehicle, self.attributes.home_base_id, sim, env
             )
             next_state = HumanUnavailable(self.attributes, charge_params)
-            result = DriverState.apply_new_driver_state(
-                sim, self.attributes.vehicle_id, next_state
-            )
+            result = DriverState.apply_new_driver_state(sim, self.attributes.vehicle_id, next_state)
             return result
 
 
@@ -155,9 +144,7 @@ class HumanUnavailable(DriverState):
     """
 
     attributes: HumanDriverAttributes
-    charge_params: HumanUnavailableChargeParameters = (
-        HumanUnavailableChargeParameters()
-    )
+    charge_params: HumanUnavailableChargeParameters = HumanUnavailableChargeParameters()
 
     @property
     def schedule_id(cls) -> Optional[ScheduleId]:
@@ -196,9 +183,7 @@ class HumanUnavailable(DriverState):
         my_base = sim.bases.get(self.attributes.home_base_id)
 
         if not my_vehicle:
-            log.error(
-                f"could not find vehicle {self.attributes.vehicle_id} in simulation"
-            )
+            log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
             return None
         elif not my_base:
             log.error(
@@ -214,16 +199,13 @@ class HumanUnavailable(DriverState):
                 if isinstance(my_vehicle.vehicle_state, DispatchBase):
                     # stick with the plan
                     return None
-                if isinstance(
-                    my_vehicle.vehicle_state, DispatchStation
-                ) or isinstance(my_vehicle.vehicle_state, ChargingStation):
-                    remaining_range = my_mechatronics.range_remaining_km(
-                        my_vehicle
-                    )
+                if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(
+                    my_vehicle.vehicle_state, ChargingStation
+                ):
+                    remaining_range = my_mechatronics.range_remaining_km(my_vehicle)
                     if (
                         self.charge_params.remaining_range_target
-                        and remaining_range
-                        < self.charge_params.remaining_range_target
+                        and remaining_range < self.charge_params.remaining_range_target
                     ):
                         # stick with the plan (charging)
                         return None
@@ -278,22 +260,16 @@ class HumanUnavailable(DriverState):
                 f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state"
             )
             return error, None
-        elif schedule_function and schedule_function(
-            sim, self.attributes.vehicle_id
-        ):
+        elif schedule_function and schedule_function(sim, self.attributes.vehicle_id):
             # log transition
-            report = driver_schedule_event(
-                sim, env, vehicle, ScheduleEventType.ON
-            )
+            report = driver_schedule_event(sim, env, vehicle, ScheduleEventType.ON)
             env.reporter.file_report(report)
 
             # transition to available, because of one of these reasons:
             #   being unavailable but not having a schedule is invalid.
             #   the schedule function returns true, so, we should be activated
             next_state = HumanAvailable(self.attributes)
-            result = DriverState.apply_new_driver_state(
-                sim, self.attributes.vehicle_id, next_state
-            )
+            result = DriverState.apply_new_driver_state(sim, self.attributes.vehicle_id, next_state)
             return result
         else:
             # stay unavailable

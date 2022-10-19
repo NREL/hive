@@ -78,9 +78,7 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
         else:
             charging_path = Path(charging_price_file)
             if not charging_path.is_file():
-                raise IOError(
-                    f"{charging_price_file} is not a valid path to a request file"
-                )
+                raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
                     error, stepper = DictReaderStepper.build(
@@ -91,9 +89,7 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
                 else:
                     with charging_path.open() as f:
                         reader = iter(tuple(DictReader(f)))
-                    stepper = DictReaderStepper.from_iterator(
-                        reader, "time", parser=SimTime.build
-                    )
+                    stepper = DictReaderStepper.from_iterator(reader, "time", parser=SimTime.build)
 
                 return ChargingPriceUpdate(stepper, False)
 
@@ -130,9 +126,7 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             # the default constructor creates one station_id called "default" and we
             # apply it to every station here.
             result = ft.reduce(
-                lambda sim, s_id: _update_station_prices(
-                    sim, s_id, charger_update["default"]
-                ),
+                lambda sim, s_id: _update_station_prices(sim, s_id, charger_update["default"]),
                 sim_state.stations.keys(),
                 sim_state,
             )
@@ -142,15 +136,11 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             # apply update to all stations
             # if these updates are in the form of GeoIds, map them to StationIds
             as_station_updates = _map_to_station_ids(charger_update, sim_state)
-            station_ids_to_update = set(sim_state.stations.keys()).union(
-                as_station_updates.keys()
-            )
+            station_ids_to_update = set(sim_state.stations.keys()).union(as_station_updates.keys())
 
             # we are applying only the updates related to valid StationIds with updates
             result = ft.reduce(
-                lambda sim, s_id: _update_station_prices(
-                    sim, s_id, as_station_updates[s_id]
-                ),
+                lambda sim, s_id: _update_station_prices(sim, s_id, as_station_updates[s_id]),
                 station_ids_to_update,
                 sim_state,
             )
@@ -177,19 +167,13 @@ def _add_row_to_this_update(
         charger_id = row["charger_id"]
         if "station_id" in row:
             station_id = row["station_id"]
-            this_entry = (
-                rows[station_id] if rows.get(station_id) else immutables.Map()
-            )
-            updated = DictOps.add_to_dict(
-                rows, station_id, this_entry.set(charger_id, price)
-            )
+            this_entry = rows[station_id] if rows.get(station_id) else immutables.Map()
+            updated = DictOps.add_to_dict(rows, station_id, this_entry.set(charger_id, price))
             return updated
         elif "geoid" in row:
             geoid = row["geoid"]
             this_entry = rows[geoid] if rows.get(geoid) else immutables.Map()
-            updated = DictOps.add_to_dict(
-                rows, geoid, this_entry.set(charger_id, price)
-            )
+            updated = DictOps.add_to_dict(rows, geoid, this_entry.set(charger_id, price))
             return updated
         else:
             log.error(f"missing geoid|station_id for row: {row}")
@@ -256,13 +240,9 @@ def _map_to_station_ids(
                 # provided station charge price geoid
                 search_geoids = (k,)
                 if res > sim.sim_h3_search_resolution:
-                    search_geoids = (
-                        h3.h3_to_parent(k, sim.sim_h3_search_resolution),
-                    )
+                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution),)
                 elif res < sim.sim_h3_search_resolution:
-                    search_geoids = tuple(
-                        h3.h3_to_children(k, sim.sim_h3_search_resolution)
-                    )
+                    search_geoids = tuple(h3.h3_to_children(k, sim.sim_h3_search_resolution))
 
                 station_ids = (
                     station_id
@@ -277,8 +257,6 @@ def _map_to_station_ids(
 
             except ValueError as e:
                 # todo: handle failure here
-                log.debug(
-                    f"tried to update charging price for key {k} but failed."
-                )
+                log.debug(f"tried to update charging price for key {k} but failed.")
 
     return immutables.Map(updated)

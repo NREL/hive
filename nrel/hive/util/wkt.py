@@ -36,9 +36,7 @@ def point_2d(point: Tuple[float, float], x_y_ordering: bool) -> str:
         return point_str
 
 
-def linestring_2d(
-    points: Tuple[Tuple[float, float], ...], x_y_ordering: bool
-) -> str:
+def linestring_2d(points: Tuple[Tuple[float, float], ...], x_y_ordering: bool) -> str:
     """
     creates a linestring from a sequence of points, or, returns an empty
     polygon if no points are provided
@@ -53,8 +51,7 @@ def linestring_2d(
         return point_2d(points[0], x_y_ordering)
     else:
         pts_strings = ft.reduce(
-            lambda acc, pair: acc
-            + (f"{_point_to_string(pair, x_y_ordering)}",),
+            lambda acc, pair: acc + (f"{_point_to_string(pair, x_y_ordering)}",),
             points,
             (),
         )

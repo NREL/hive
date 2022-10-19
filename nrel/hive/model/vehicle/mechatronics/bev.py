@@ -63,13 +63,9 @@ class BEV(MechatronicsInterface):
         battery_capacity_kwh = float(d["battery_capacity_kwh"])
 
         if not updated_d.get("powertrain_file"):
-            raise FileNotFoundError(
-                "missing powertrain file in mechatronics config"
-            )
+            raise FileNotFoundError("missing powertrain file in mechatronics config")
         elif not updated_d.get("powercurve_file"):
-            raise FileNotFoundError(
-                "missing powercurve file in mechatronics config"
-            )
+            raise FileNotFoundError("missing powercurve file in mechatronics config")
 
         powertrain = build_powertrain(updated_d)
         powercurve = build_powercurve(updated_d)
@@ -94,18 +90,14 @@ class BEV(MechatronicsInterface):
         """
         return charger.energy_type == EnergyType.ELECTRIC
 
-    def initial_energy(
-        self, percent_full: Ratio
-    ) -> immutables.Map[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
 
         :param percent_full:
         :return:
         """
-        return immutables.Map(
-            {EnergyType.ELECTRIC: self.battery_capacity_kwh * percent_full}
-        )
+        return immutables.Map({EnergyType.ELECTRIC: self.battery_capacity_kwh * percent_full})
 
     def range_remaining_km(self, vehicle: Vehicle) -> Kilometers:
         """
@@ -113,11 +105,7 @@ class BEV(MechatronicsInterface):
         :return:
         """
         energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
-        return (
-            energy_kwh
-            / (self.nominal_watt_hour_per_mile * WH_TO_KWH)
-            * MILE_TO_KM
-        )
+        return energy_kwh / (self.nominal_watt_hour_per_mile * WH_TO_KWH) * MILE_TO_KM
 
     def calc_required_soc(self, required_range: Kilometers) -> Ratio:
         """
@@ -188,9 +176,7 @@ class BEV(MechatronicsInterface):
         :param time_seconds:
         :return:
         """
-        idle_energy_kwh = (
-            self.idle_kwh_per_hour * time_seconds * SECONDS_TO_HOURS
-        )
+        idle_energy_kwh = self.idle_kwh_per_hour * time_seconds * SECONDS_TO_HOURS
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - idle_energy_kwh)
         updated_vehicle = vehicle.modify_energy(
@@ -222,17 +208,12 @@ class BEV(MechatronicsInterface):
         start_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
 
         if charger.rate < self.charge_taper_cutoff_kw:
-            charger_energy_kwh = (
-                start_energy_kwh
-                + charger.rate * time_seconds * SECONDS_TO_HOURS
-            )
+            charger_energy_kwh = start_energy_kwh + charger.rate * time_seconds * SECONDS_TO_HOURS
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
             time_charging_seconds = time_seconds
         else:
             # if we're above the charge taper cutoff, we'll use the powercurve
-            energy_limit_kwh = (
-                self.battery_capacity_kwh - self.battery_full_threshold_kwh
-            )
+            energy_limit_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
             charger_energy_kwh, time_charging_seconds = self.powercurve.charge(
                 start_soc=start_energy_kwh,
                 full_soc=energy_limit_kwh,

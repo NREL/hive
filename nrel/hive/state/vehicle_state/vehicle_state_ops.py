@@ -43,15 +43,9 @@ def charge(
     """
 
     vehicle = sim.vehicles.get(vehicle_id)
-    mechatronics = (
-        env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
-    )
+    mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
     station = sim.stations.get(station_id)
-    charger_err, charger = (
-        station.get_charger_instance(charger_id)
-        if station is not None
-        else None
-    )
+    charger_err, charger = station.get_charger_instance(charger_id) if station is not None else None
 
     context = f"vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
 
@@ -93,25 +87,18 @@ def charge(
 
         # determine price of charge event
         kwh_transacted = (
-            charged_vehicle.energy[charger.energy_type]
-            - vehicle.energy[charger.energy_type]
+            charged_vehicle.energy[charger.energy_type] - vehicle.energy[charger.energy_type]
         )  # kwh
         charger_price = station.get_price(charger_id)  # Currency
-        charging_price = (
-            kwh_transacted * charger_price if charger_price else 0.0
-        )
+        charging_price = kwh_transacted * charger_price if charger_price else 0.0
 
         # perform updates
         updated_vehicle = charged_vehicle.send_payment(charging_price)
         updated_station = station.receive_payment(charging_price)
 
-        veh_error, sim_with_vehicle = simulation_state_ops.modify_vehicle(
-            sim, updated_vehicle
-        )
+        veh_error, sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         if veh_error:
-            response = SimulationStateError(
-                f"failure during charge for vehicle {vehicle.id}"
-            )
+            response = SimulationStateError(f"failure during charge for vehicle {vehicle.id}")
             response.__cause__ = veh_error
             return response, None
         else:
@@ -125,9 +112,7 @@ def charge(
             )
             env.reporter.file_report(report)
 
-            return simulation_state_ops.modify_station(
-                sim_with_vehicle, updated_station
-            )
+            return simulation_state_ops.modify_station(sim_with_vehicle, updated_station)
 
 
 class MoveResult(NamedTuple):
@@ -181,17 +166,13 @@ def move(
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     if not mechatronics:
         return (
-            SimulationStateError(
-                f"cannot find {vehicle.mechatronics_id} in environment"
-            ),
+            SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"),
             None,
         )
 
     if not hasattr(vehicle.vehicle_state, "route"):
         return (
-            SimulationStateError(
-                f"vehicle state does not have route; context {context}"
-            ),
+            SimulationStateError(f"vehicle state does not have route; context {context}"),
             None,
         )
     else:
@@ -206,16 +187,12 @@ def move(
 
     if not traverse_result.experienced_route:
         # vehicle did not traverse so we set an empty route
-        updated_vehicle_state = vehicle.vehicle_state.update_route(
-            route=empty_route()
-        )
+        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route())
         updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
     else:
         experienced_route = traverse_result.experienced_route
         remaining_route = traverse_result.remaining_route
-        less_energy_vehicle = mechatronics.consume_energy(
-            vehicle, experienced_route
-        )
+        less_energy_vehicle = mechatronics.consume_energy(vehicle, experienced_route)
         if mechatronics.is_empty(less_energy_vehicle):
             # impossible to move, let's transition to OutOfService
             return _go_out_of_service_on_empty(sim, env, vehicle_id)
@@ -223,28 +200,18 @@ def move(
         step_distance_km = traverse_result.traversal_distance_km
         last_link_traversed = experienced_route[-1]
 
-        vehicle_position = EntityPosition(
-            last_link_traversed.link_id, last_link_traversed.end
-        )
+        vehicle_position = EntityPosition(last_link_traversed.link_id, last_link_traversed.end)
         new_position_vehicle = less_energy_vehicle.modify_position(
             position=vehicle_position
         ).tick_distance_traveled_km(step_distance_km)
 
-        new_route_state = new_position_vehicle.vehicle_state.update_route(
-            route=remaining_route
-        )
-        updated_vehicle = new_position_vehicle.modify_vehicle_state(
-            new_route_state
-        )
+        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)
+        updated_vehicle = new_position_vehicle.modify_vehicle_state(new_route_state)
 
-        report = vehicle_move_event(
-            sim, vehicle, updated_vehicle, traverse_result, env
-        )
+        report = vehicle_move_event(sim, vehicle, updated_vehicle, traverse_result, env)
         env.reporter.file_report(report)
 
-    error, moved_sim = simulation_state_ops.modify_vehicle(
-        sim, updated_vehicle
-    )
+    error, moved_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
     if error:
         response = SimulationStateError(
             f"failure during _apply_route_traversal for vehicle {vehicle.id}"

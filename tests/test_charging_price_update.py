@@ -27,22 +27,11 @@ class TestChargingPriceUpdate(TestCase):
             "nrel.hive.resources.scenarios.denver_downtown.charging_prices",
             "denver_charging_prices_by_station_id.csv",
         )
-        fn = ChargingPriceUpdate.build(
-            file, env.config.input_config.chargers_file
-        )
+        fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
-        s1_prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[s1].state.items()
-        }
-        s2_prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[s2].state.items()
-        }
-        bs1_prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[bs1].state.items()
-        }
+        s1_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[s1].state.items()}
+        s2_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[s2].state.items()}
+        bs1_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[bs1].state.items()}
         self.assertEqual(
             s1_prices.get(mock_dcfc_charger_id()),
             0.5,
@@ -93,22 +82,11 @@ class TestChargingPriceUpdate(TestCase):
             "nrel.hive.resources.scenarios.denver_downtown.charging_prices",
             "denver_charging_prices_by_geoid.csv",
         )
-        fn = ChargingPriceUpdate.build(
-            file, env.config.input_config.chargers_file
-        )
+        fn = ChargingPriceUpdate.build(file, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
-        s1_prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[s1].state.items()
-        }
-        s2_prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[s2].state.items()
-        }
-        bs1_prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[bs1].state.items()
-        }
+        s1_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[s1].state.items()}
+        s2_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[s2].state.items()}
+        bs1_prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[bs1].state.items()}
         self.assertEqual(
             s1_prices.get(mock_dcfc_charger_id()),
             0.3,
@@ -144,14 +122,9 @@ class TestChargingPriceUpdate(TestCase):
             sim_timestep_duration_seconds=1,
         )
         env = mock_env()
-        fn = ChargingPriceUpdate.build(
-            None, env.config.input_config.chargers_file
-        )
+        fn = ChargingPriceUpdate.build(None, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
-        prices = {
-            c_id: cs.price_per_kwh
-            for c_id, cs in result.stations[station.id].state.items()
-        }
+        prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[station.id].state.items()}
         self.assertEqual(
             prices.get(mock_l1_charger_id()),
             0.0,

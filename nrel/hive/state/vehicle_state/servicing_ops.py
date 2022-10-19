@@ -56,9 +56,7 @@ def get_active_pooling_trip(
         return error, None
     else:
         request_id, trip_phase = first_trip
-        active_pooling_trip = ActivePoolingTrip(
-            request_id, trip_phase, first_route
-        )
+        active_pooling_trip = ActivePoolingTrip(request_id, trip_phase, first_route)
         return None, active_pooling_trip
 
 
@@ -88,9 +86,7 @@ def complete_trip_phase(
         request = sim.requests.get(active_trip.request_id)
         if request is None:
             return (
-                SimulationStateError(
-                    f"request {active_trip.request_id} not found"
-                ),
+                SimulationStateError(f"request {active_trip.request_id} not found"),
                 None,
             )
         else:
@@ -103,12 +99,8 @@ def complete_trip_phase(
                 return response, None
             else:
                 # add this request to the boarded vehicles
-                updated_boarded_requests = vehicle_state.boarded_requests.set(
-                    request.id, request
-                )
-                updated_num_passengers = vehicle_state.num_passengers + len(
-                    request.passengers
-                )
+                updated_boarded_requests = vehicle_state.boarded_requests.set(request.id, request)
+                updated_num_passengers = vehicle_state.num_passengers + len(request.passengers)
                 updated_departure_times = vehicle_state.departure_times.set(
                     request.id, sim.sim_time
                 )
@@ -120,17 +112,13 @@ def complete_trip_phase(
                     num_passengers=updated_num_passengers,
                     departure_times=updated_departure_times,
                 )
-                updated_vehicle = vehicle.modify_vehicle_state(
-                    updated_vehicle_state
-                )
+                updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
                 result = modify_vehicle(sim2, updated_vehicle)
                 return result
 
     elif active_trip.trip_phase == TripPhase.DROPOFF:
         # perform dropoff operation and update remaining route plan
-        request = vehicle.vehicle_state.boarded_requests.get(
-            active_trip.request_id
-        )
+        request = vehicle.vehicle_state.boarded_requests.get(active_trip.request_id)
         if request is None:
             error = SimulationStateError(
                 f"request {active_trip.request_id} should have boarded pooling with vehicle {vehicle.id} but not found"
@@ -148,12 +136,8 @@ def complete_trip_phase(
                 return response, None
             else:
                 # remove this request from the boarded vehicles
-                updated_boarded_requests = (
-                    vehicle_state.boarded_requests.delete(request.id)
-                )
-                updated_num_passengers = vehicle_state.num_passengers - len(
-                    request.passengers
-                )
+                updated_boarded_requests = vehicle_state.boarded_requests.delete(request.id)
+                updated_num_passengers = vehicle_state.num_passengers - len(request.passengers)
                 updated_vehicle_state = replace(
                     vehicle_state,
                     trip_plan=updated_trip_plan,
@@ -161,16 +145,12 @@ def complete_trip_phase(
                     boarded_requests=updated_boarded_requests,
                     num_passengers=updated_num_passengers,
                 )
-                updated_vehicle = vehicle.modify_vehicle_state(
-                    updated_vehicle_state
-                )
+                updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
                 result = modify_vehicle(sim2, updated_vehicle)
                 return result
     else:
         return (
-            SimulationStateError(
-                f"invalid trip phase {active_trip.trip_phase}"
-            ),
+            SimulationStateError(f"invalid trip phase {active_trip.trip_phase}"),
             None,
         )
 
@@ -186,9 +166,7 @@ def update_active_pooling_trip(
     :param vehicle_state:
     :return:
     """
-    context = (
-        f"updating active pooling trip for vehicle {vehicle_state.vehicle_id}"
-    )
+    context = f"updating active pooling trip for vehicle {vehicle_state.vehicle_id}"
     vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
     if vehicle is None:
         return (
@@ -249,23 +227,17 @@ def pick_up_trip(
             maybe_sim_with_vehicle,
         ) = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         if mod_error:
-            response = SimulationStateError(
-                f"failure during pick_up_trip for vehicle {vehicle.id}"
-            )
+            response = SimulationStateError(f"failure during pick_up_trip for vehicle {vehicle.id}")
             response.__cause__ = mod_error
             return response, None
         else:
             try:
-                report = report_pickup_request(
-                    updated_vehicle, request, maybe_sim_with_vehicle
-                )
+                report = report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle)
                 env.reporter.file_report(report)
             except:
                 # previous state may not be DispatchTrip (may not have expected attributes)
                 pass
-            return simulation_state_ops.remove_request(
-                maybe_sim_with_vehicle, request_id
-            )
+            return simulation_state_ops.remove_request(maybe_sim_with_vehicle, request_id)
 
 
 def drop_off_trip(
@@ -324,13 +296,9 @@ def remove_completed_trip(
     state = vehicle.vehicle_state if vehicle else None
     context = f"remove completed trip for vehicle {vehicle_id}"
     if state is None:
-        error = SimulationStateError(
-            f"vehicle not found in simulation state; context: {context}"
-        )
+        error = SimulationStateError(f"vehicle not found in simulation state; context: {context}")
         return error, None
-    elif (
-        not state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP
-    ):
+    elif not state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
         error = SimulationStateError(
             f"vehicle {vehicle_id} state not pooling but attempting to remove it's oldest pooling trip"
         )
@@ -342,15 +310,9 @@ def remove_completed_trip(
         return error, None
     else:
         vehicle = sim.vehicles.get(state.vehicle_id)
-        removed_trip_request_id, updated_trip_order = TupleOps.head_tail(
-            state.trip_order
-        )
+        removed_trip_request_id, updated_trip_order = TupleOps.head_tail(state.trip_order)
         updated_trips = state.trips.delete(removed_trip_request_id)
-        updated_state = replace(
-            state, trip_order=updated_trip_order, trips=updated_trips
-        )
+        updated_state = replace(state, trip_order=updated_trip_order, trips=updated_trips)
         updated_vehicle = vehicle.modify_vehicle_state(updated_state)
-        error, result = simulation_state_ops.modify_vehicle(
-            sim, updated_vehicle
-        )
+        error, result = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         return error, (result, len(updated_trips))

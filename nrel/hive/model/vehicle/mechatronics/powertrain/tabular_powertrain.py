@@ -43,40 +43,24 @@ class TabularPowertrain(Powertrain):
         ]
         for key in expected_keys:
             if key not in data:
-                raise IOError(
-                    f"invalid input file for tabular power train model missing key {key}"
-                )
+                raise IOError(f"invalid input file for tabular power train model missing key {key}")
 
         if not valid_unit(data["speed_units"]):
-            raise TypeError(
-                f"{data['speed_units']} not a recognized unit in hive"
-            )
+            raise TypeError(f"{data['speed_units']} not a recognized unit in hive")
         elif not valid_unit(data["distance_units"]):
-            raise TypeError(
-                f"{data['distance_units']} not a recognized unit in hive"
-            )
+            raise TypeError(f"{data['distance_units']} not a recognized unit in hive")
         elif not valid_unit(data["energy_units"]):
-            raise TypeError(
-                f"{data['energy_units']} not a recognized unit in hive"
-            )
+            raise TypeError(f"{data['energy_units']} not a recognized unit in hive")
 
         speed_units = data["speed_units"]
         energy_units = data["energy_units"]
         distance_units = data["distance_units"]
 
         # linear interpolation function approximation via these lookup values
-        consumption_model = sorted(
-            data["consumption_model"], key=lambda x: x["speed"]
-        )
-        consumption_speed = np.array(
-            list(map(lambda x: x["speed"], consumption_model))
-        )
+        consumption_model = sorted(data["consumption_model"], key=lambda x: x["speed"])
+        consumption_speed = np.array(list(map(lambda x: x["speed"], consumption_model)))
         consumption_energy_per_distance = (
-            np.array(
-                list(
-                    map(lambda x: x["energy_per_distance"], consumption_model)
-                )
-            )
+            np.array(list(map(lambda x: x["energy_per_distance"], consumption_model)))
             * scale_factor
         )
 
@@ -97,9 +81,7 @@ class TabularPowertrain(Powertrain):
         :return: energy in units captured by self.energy_units
         """
         # convert kilometers per hour to whatever units are used by this powertrain
-        link_speed = link.speed_kmph * get_unit_conversion(
-            "kmph", self.speed_units
-        )
+        link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
 
         energy_per_distance = np.interp(
             link_speed,
@@ -107,9 +89,7 @@ class TabularPowertrain(Powertrain):
             self.consumption_energy_per_distance,
         )
         # link distance is in kilometers
-        link_distance = link.distance_km * get_unit_conversion(
-            "kilometer", self.distance_units
-        )
+        link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)
         energy = energy_per_distance * link_distance
         return energy
 

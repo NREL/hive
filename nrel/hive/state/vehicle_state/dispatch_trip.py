@@ -48,9 +48,7 @@ class DispatchTrip(VehicleState):
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(
-        cls, vehicle_id: VehicleId, request_id: RequestId, route: Route
-    ) -> DispatchTrip:
+    def build(cls, vehicle_id: VehicleId, request_id: RequestId, route: Route) -> DispatchTrip:
         return cls(
             vehicle_id=vehicle_id,
             request_id=request_id,
@@ -84,9 +82,7 @@ class DispatchTrip(VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
         is_valid = (
-            route_cooresponds_with_entities(
-                self.route, vehicle.position, request.origin_position
-            )
+            route_cooresponds_with_entities(self.route, vehicle.position, request.origin_position)
             if vehicle and request
             else False
         )
@@ -99,20 +95,14 @@ class DispatchTrip(VehicleState):
         elif not request:
             # not an error - may have been picked up. fail silently
             return None, None
-        elif not request.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not request.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} doesn't have access to request {request.id}"
             return SimulationStateError(msg), None
         elif not is_valid:
             return None, None
         else:
-            updated_request = request.assign_dispatched_vehicle(
-                self.vehicle_id, sim.sim_time
-            )
-            error, updated_sim = simulation_state_ops.modify_request(
-                sim, updated_request
-            )
+            updated_request = request.assign_dispatched_vehicle(self.vehicle_id, sim.sim_time)
+            error, updated_sim = simulation_state_ops.modify_request(sim, updated_request)
             if error:
                 response = SimulationStateError(
                     f"failure during DispatchTrip.enter for vehicle {self.vehicle_id}"
@@ -120,9 +110,7 @@ class DispatchTrip(VehicleState):
                 response.__cause__ = error
                 return response, None
             else:
-                result = VehicleState.apply_new_vehicle_state(
-                    updated_sim, self.vehicle_id, self
-                )
+                result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                 return result
 
     def exit(
@@ -145,9 +133,7 @@ class DispatchTrip(VehicleState):
             result = modify_request(sim, updated_request)
             return result
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a base
 
@@ -179,29 +165,21 @@ class DispatchTrip(VehicleState):
             return None, next_state
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
-            route = sim.road_network.route(
-                request.origin_position, request.destination_position
-            )
+            route = sim.road_network.route(request.origin_position, request.destination_position)
             # apply next state
             # generate the data to describe the trip for this request
             # where the pickup phase is currently happening + doesn't need to be added to the trip plan
-            trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = (
-                (request.id, TripPhase.DROPOFF),
-            )
+            trip_plan: Tuple[Tuple[RequestId, TripPhase], ...] = ((request.id, TripPhase.DROPOFF),)
             departure_time = sim.sim_time
 
             # create the state (pooling, or, standard servicing trip, depending on the sitch)
-            pooling_trip = (
-                vehicle.driver_state.allows_pooling and request.allows_pooling
-            )
+            pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
             next_state = (
                 ServicingPoolingTrip.build(
                     vehicle_id=vehicle.id,
                     trip_plan=trip_plan,
                     boarded_requests=immutables.Map({request.id: request}),
-                    departure_times=immutables.Map(
-                        {request.id, departure_time}
-                    ),
+                    departure_times=immutables.Map({request.id, departure_time}),
                     routes=(route,),
                     num_passengers=len(request.passengers),
                 )
@@ -225,9 +203,7 @@ class DispatchTrip(VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-        move_error, move_sim = vehicle_state_ops.move(
-            sim, env, self.vehicle_id
-        )
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
         if move_error:
             response = SimulationStateError(

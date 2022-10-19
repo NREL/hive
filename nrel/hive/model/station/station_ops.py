@@ -108,9 +108,7 @@ def station_state_updates(
             return acc
         else:
             charger_id, t = update_tuple
-            return station_state_optional_update(
-                station, charger_id, lambda cs: op(cs, t)
-            )
+            return station_state_optional_update(station, charger_id, lambda cs: op(cs, t))
 
     initial = None, station
     result = ft.reduce(_update, it, initial)

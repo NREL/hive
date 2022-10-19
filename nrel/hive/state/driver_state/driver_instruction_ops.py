@@ -53,9 +53,7 @@ def human_charge_at_home(
     my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
 
     if not my_station:
-        log.error(
-            f"could not find station {home_base.station_id} for home_base {home_base.id}"
-        )
+        log.error(f"could not find station {home_base.station_id} for home_base {home_base.id}")
         return None
     elif my_mechatronics.is_full(veh):
         return None
@@ -92,18 +90,12 @@ def human_go_home(
     :return: the instruction for this driver
     """
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
-    remaining_range = (
-        mechatronics.range_remaining_km(veh) if mechatronics else None
-    )
+    remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
     if not remaining_range:
         return None
     else:
-        required_range = sim.road_network.distance_by_geoid_km(
-            veh.geoid, home_base.geoid
-        )
-        if (home_base.station_id is None) and (
-            EnergyType.ELECTRIC in veh.energy
-        ):
+        required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
+        if (home_base.station_id is None) and (EnergyType.ELECTRIC in veh.energy):
             # no charger at home, need enough charge to make it to a station in the morning
             required_range += get_nearest_valid_station_distance(
                 max_search_radius_km=env.config.dispatcher.max_search_radius_km,
@@ -116,8 +108,7 @@ def human_go_home(
             )
 
             target_soc = mechatronics.calc_required_soc(
-                required_range
-                + env.config.dispatcher.charging_range_km_threshold
+                required_range + env.config.dispatcher.charging_range_km_threshold
             )
         else:
             target_soc = env.config.dispatcher.ideal_fastcharge_soc_limit
@@ -168,9 +159,7 @@ def human_look_for_requests(
                 key=lambda t: t[1],
                 reverse=True,
             )[0][0]
-        destination = h3.h3_to_center_child(
-            best_search_hex, sim.sim_h3_location_resolution
-        )
+        destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
         destination_link = sim.road_network.position_from_geoid(destination)
         return destination_link
 
@@ -226,9 +215,7 @@ def av_charge_base_instruction(
 
     my_station = sim.stations.get(my_base.station_id)
     if not my_station:
-        log.error(
-            f"could not find station {my_base.station_id} for base {my_base.base_id}"
-        )
+        log.error(f"could not find station {my_base.station_id} for base {my_base.base_id}")
         return None
 
     chargers = tuple(
@@ -260,16 +247,11 @@ def av_dispatch_base_instruction(
     :param env:
     :return:
     """
-    if (
-        veh.vehicle_state.idle_duration
-        > env.config.dispatcher.idle_time_out_seconds
-    ):
+    if veh.vehicle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
         # timeout after being idle too long
 
         def valid_fn(base: Base) -> bool:
-            vehicle_has_access = base.membership.grant_access_to_membership(
-                veh.membership
-            )
+            vehicle_has_access = base.membership.grant_access_to_membership(veh.membership)
             return vehicle_has_access
 
         best_base = H3Ops.nearest_entity_by_great_circle_distance(

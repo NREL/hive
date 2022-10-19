@@ -51,9 +51,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
         if rate_structure_file:
             rate_structure_path = Path(rate_structure_file)
             if not rate_structure_path.is_file():
-                raise IOError(
-                    f"{rate_structure_file} is not a valid path to a request file"
-                )
+                raise IOError(f"{rate_structure_file} is not a valid path to a request file")
             with open(rate_structure_file, "r", encoding="utf-8-sig") as rsf:
                 reader = DictReader(rsf)
                 rate_structure = RequestRateStructure.from_row(next(reader))
@@ -66,9 +64,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
             stop_condition=lambda dt: dt < 0,
         )
 
-        return UpdateRequestsSampling(
-            request_iterator=stepper, rate_structure=rate_structure
-        )
+        return UpdateRequestsSampling(request_iterator=stepper, rate_structure=rate_structure)
 
     def update(
         self, sim_state: SimulationState, env: Environment
@@ -95,14 +91,10 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
             for r in self.request_iterator
         )
 
-        def _add_request(
-            sim: SimulationState, request: Request
-        ) -> SimulationState:
+        def _add_request(sim: SimulationState, request: Request) -> SimulationState:
             # add request and handle any errors
 
-            new_sim_or_error = simulation_state_ops.add_request_safe(
-                sim, request
-            )
+            new_sim_or_error = simulation_state_ops.add_request_safe(sim, request)
             if isinstance(new_sim_or_error, Failure):
                 error = new_sim_or_error.failure()
                 log.error(error)
@@ -114,9 +106,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
                     "departure_time": request.departure_time,
                     "fleet_id": str(request.membership),
                 }
-                env.reporter.file_report(
-                    Report(ReportType.ADD_REQUEST_EVENT, report_data)
-                )
+                env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
             return new_sim
 
         updated_sim = ft.reduce(_add_request, priced_requests, sim_state)

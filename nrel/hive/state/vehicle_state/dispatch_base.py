@@ -37,9 +37,7 @@ class DispatchBase(VehicleState):
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(
-        cls, vehicle_id: VehicleId, base_id: BaseId, route: Route
-    ) -> DispatchBase:
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
         return cls(
             vehicle_id=vehicle_id,
             base_id=base_id,
@@ -65,9 +63,7 @@ class DispatchBase(VehicleState):
         base = sim.bases.get(self.base_id)
         vehicle = sim.vehicles.get(self.vehicle_id)
         is_valid = (
-            route_cooresponds_with_entities(
-                self.route, vehicle.position, base.position
-            )
+            route_cooresponds_with_entities(self.route, vehicle.position, base.position)
             if vehicle and base
             else False
         )
@@ -80,15 +76,11 @@ class DispatchBase(VehicleState):
             return SimulationStateError(msg), None
         elif not is_valid:
             return None, None
-        elif not base.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not base.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle {vehicle.id} and base {base.id} don't share a membership"
             return SimulationStateError(msg), None
         else:
-            result = VehicleState.apply_new_vehicle_state(
-                sim, self.vehicle_id, self
-            )
+            result = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
             return result
 
     def exit(
@@ -96,9 +88,7 @@ class DispatchBase(VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         this terminates when we reach a base
 
@@ -120,7 +110,9 @@ class DispatchBase(VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
-        context = f"vehicle {self.vehicle_id} entering terminal state for dispatch base at {self.base_id}"
+        context = (
+            f"vehicle {self.vehicle_id} entering terminal state for dispatch base at {self.base_id}"
+        )
         if not base:
             msg = f"base not found; context: {context}"
             return SimulationStateError(msg), None
@@ -145,9 +137,7 @@ class DispatchBase(VehicleState):
         :param env: the simulation environment
         :return: the sim state with vehicle moved
         """
-        move_error, move_sim = vehicle_state_ops.move(
-            sim, env, self.vehicle_id
-        )
+        move_error, move_sim = vehicle_state_ops.move(sim, env, self.vehicle_id)
 
         if move_error:
             response = SimulationStateError(

@@ -13,13 +13,9 @@ class TestIntializeOps(TestCase):
 
         veh_member_ids = process_fleet_file(fleets_file_location, "vehicles")
         base_member_ids = process_fleet_file(fleets_file_location, "bases")
-        station_member_ids = process_fleet_file(
-            fleets_file_location, "stations"
-        )
+        station_member_ids = process_fleet_file(fleets_file_location, "stations")
 
-        self.assertEqual(
-            len(veh_member_ids["v7"]), 2, "v7 should be a member of two fleets"
-        )
+        self.assertEqual(len(veh_member_ids["v7"]), 2, "v7 should be a member of two fleets")
         self.assertEqual(
             len(veh_member_ids["v13"]),
             1,

@@ -27,9 +27,7 @@ def extract_node_ids(
     result = link_id.split("-")
     if len(result) < 2:
         return (
-            Exception(
-                f"LinkId {link_id} does not take the form src_node_id-dst_node_id"
-            ),
+            Exception(f"LinkId {link_id} does not take the form src_node_id-dst_node_id"),
             None,
         )
     elif len(result) > 2:
@@ -60,9 +58,7 @@ def reverse_link_id(
     """
     error, node_ids = extract_node_ids(link_id)
     if error:
-        response = Exception(
-            f"failure during link reversal for link {link_id}"
-        )
+        response = Exception(f"failure during link reversal for link {link_id}")
         response.__cause__ = error
         return response, None
     else:

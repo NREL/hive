@@ -43,16 +43,10 @@ class DispatcherConfig(NamedTuple):
     @classmethod
     def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
         try:
-            d["valid_dispatch_states"] = tuple(
-                s.lower() for s in d["valid_dispatch_states"]
-            )
-            d["charging_search_type"] = ChargingSearchType.from_string(
-                d["charging_search_type"]
-            )
+            d["valid_dispatch_states"] = tuple(s.lower() for s in d["valid_dispatch_states"])
+            d["charging_search_type"] = ChargingSearchType.from_string(d["charging_search_type"])
         except ValueError:
-            return IOError(
-                "valid_dispatch_states and active_states must be in a list format"
-            )
+            return IOError("valid_dispatch_states and active_states must be in a list format")
 
         return DispatcherConfig(**d)
 

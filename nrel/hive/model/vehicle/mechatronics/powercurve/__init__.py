@@ -28,9 +28,7 @@ def build_powercurve(config: dict) -> Powercurve:
         config.update(powercurve_file_contents)
 
         if not powercurve_type:
-            raise KeyError(
-                f"powertrain file {file} missing required 'type' field"
-            )
+            raise KeyError(f"powertrain file {file} missing required 'type' field")
         if powercurve_type not in powercurve_models:
             raise IOError(
                 f"PowerCurve with type {powercurve_type} is not recognized, must be one of {powercurve_models.keys()}"

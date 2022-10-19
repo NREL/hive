@@ -18,9 +18,7 @@ class TestUpdateRequestsSampling(TestCase):
 
         fn = UpdateRequestsSampling.build(sampled_requests=requests)
         result, _ = fn.update(sim, env)
-        self.assertEqual(
-            len(result.requests), 5, "should have added 5 requests"
-        )
+        self.assertEqual(len(result.requests), 5, "should have added 5 requests")
 
         for r in result.requests.values():
             self.assertNotEqual(

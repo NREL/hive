@@ -25,9 +25,7 @@ def default_request_sampler(
     :return: a tuple of the sampled requests
     """
     if not isinstance(simulation_state.road_network, OSMRoadNetwork):
-        raise NotImplementedError(
-            "request sampling is only implemented for the OSMRoadNetwork"
-        )
+        raise NotImplementedError("request sampling is only implemented for the OSMRoadNetwork")
 
     random.seed(random_seed)
 
@@ -40,9 +38,7 @@ def default_request_sampler(
             environment.config.sim.timestep_duration_seconds,
         )
     )
-    possible_links = list(
-        simulation_state.road_network.link_helper.links.values()
-    )
+    possible_links = list(simulation_state.road_network.link_helper.links.values())
 
     id_counter = 0
     while len(requests) < count:

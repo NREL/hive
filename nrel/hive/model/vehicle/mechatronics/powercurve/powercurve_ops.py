@@ -22,9 +22,7 @@ def time_to_full(
     :return: the time to charge
     """
 
-    def _fill(
-        charging_vehicle: Vehicle, time_charged_accumulator: Seconds = 0
-    ) -> Seconds:
+    def _fill(charging_vehicle: Vehicle, time_charged_accumulator: Seconds = 0) -> Seconds:
         if mechatronics.fuel_source_soc(charging_vehicle) >= target_soc:
             return time_charged_accumulator
         else:

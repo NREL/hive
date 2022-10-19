@@ -48,9 +48,7 @@ class OutOfService(VehicleState):
         self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
 
-        new_state = VehicleState.apply_new_vehicle_state(
-            sim, self.vehicle_id, self
-        )
+        new_state = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
         return new_state
 
     def exit(
@@ -58,9 +56,7 @@ class OutOfService(VehicleState):
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return None, sim
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         There is no terminal state for OutOfService
 

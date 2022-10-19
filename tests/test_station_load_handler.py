@@ -25,18 +25,12 @@ class TestStationLoadHandler(TestCase):
 
         err, sim_charging = state.enter(sim, env)
 
-        self.assertIsNone(
-            err, "test invariant failed - vehicle in charging state"
-        )
+        self.assertIsNone(err, "test invariant failed - vehicle in charging state")
 
         err, sim_charged = state.update(sim_charging, env)
 
-        updated_vehicle = sim_charged.vehicles.get(
-            DefaultIds.mock_vehicle_id()
-        )
-        updated_station = sim_charged.stations.get(
-            DefaultIds.mock_station_id()
-        )
+        updated_vehicle = sim_charged.vehicles.get(DefaultIds.mock_vehicle_id())
+        updated_station = sim_charged.stations.get(DefaultIds.mock_station_id())
 
         vehicle_charge_event = vehicle_event_ops.vehicle_charge_event(
             veh,
@@ -50,9 +44,7 @@ class TestStationLoadHandler(TestCase):
         # perhaps in the future, add tests with multiple events
         vehicle_charge_events = (vehicle_charge_event,)
 
-        result = vehicle_event_ops.construct_station_load_events(
-            vehicle_charge_events, sim_charged
-        )
+        result = vehicle_event_ops.construct_station_load_events(vehicle_charge_events, sim_charged)
 
         r = result[0]
         self.assertEqual(

@@ -27,9 +27,7 @@ from nrel.hive.util.fp import throw_on_failure
 
 def load_scenario(
     scenario_file: Path,
-    custom_instruction_generators: Optional[
-        Tuple[InstructionGenerator, ...]
-    ] = None,
+    custom_instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None,
 ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state
@@ -84,11 +82,7 @@ def crank(
     :return: the updated simulation state and all charge events that occurred
     """
 
-    steps = (
-        tqdm(range(time_steps), position=0)
-        if progress_bar
-        else range(time_steps)
-    )
+    steps = tqdm(range(time_steps), position=0) if progress_bar else range(time_steps)
 
     def run_step(acc: Tuple[RunnerPayload, Tuple[DataFrame, ...]], i: int):
         rp0, events = acc

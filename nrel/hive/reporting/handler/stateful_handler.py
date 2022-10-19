@@ -18,9 +18,7 @@ class StatefulHandler(Handler):
     prints the state of entities in the simulation to the state.log output file based on global logging settings
     """
 
-    def __init__(
-        self, global_config: GlobalConfig, scenario_output_directory: Path
-    ):
+    def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
         log_path = scenario_output_directory / "state.log"
         self.log_file = open(log_path, "a")

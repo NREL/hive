@@ -103,17 +103,12 @@ class Vehicle(NamedTuple):
                     "schedule_id"
                 )  # if None, it signals an autonomous vehicle, otherwise, human with schedule
                 home_base_id = row.get("home_base_id")
-                if (
-                    schedule_id
-                    and not schedule_id in environment.schedules.keys()
-                ):
+                if schedule_id and not schedule_id in environment.schedules.keys():
                     raise IOError(
                         f"was not able to find schedule '{schedule_id}' in environment for vehicle {vehicle_id}"
                     )
                 allows_pooling = (
-                    bool(row["allows_pooling"])
-                    if row.get("allows_pooling") is not None
-                    else False
+                    bool(row["allows_pooling"]) if row.get("allows_pooling") is not None else False
                 )
                 available_seats = int(row.get("available_seats", 0))
                 driver_state = DriverState.build(
@@ -140,9 +135,7 @@ class Vehicle(NamedTuple):
     def __repr__(self) -> str:
         return f"Vehicle({self.id},{self.vehicle_state})"
 
-    def modify_energy(
-        self, energy: immutables.Map[EnergyType, float]
-    ) -> Vehicle:
+    def modify_energy(self, energy: immutables.Map[EnergyType, float]) -> Vehicle:
         """
         modify the energy level of the vehicle. should only be used by the mechatronics ops
 
@@ -203,9 +196,7 @@ class Vehicle(NamedTuple):
         :param delta_d_km:
         :return:
         """
-        return self._replace(
-            distance_traveled_km=self.distance_traveled_km + delta_d_km
-        )
+        return self._replace(distance_traveled_km=self.distance_traveled_km + delta_d_km)
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """

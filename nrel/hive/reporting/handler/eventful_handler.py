@@ -23,9 +23,7 @@ class EventfulHandler(Handler):
     handles events and appends them to the event.log output file based on global logging settings
     """
 
-    def __init__(
-        self, global_config: GlobalConfig, scenario_output_directory: Path
-    ):
+    def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
         log_path = scenario_output_directory / "event.log"
         self.log_file = open(log_path, "a")
@@ -43,10 +41,8 @@ class EventfulHandler(Handler):
         # station load events, written with reference to a specific station, take the sum of
         # charge events over a time step associated with a single station
         if ReportType.STATION_LOAD_EVENT in self.global_config.log_sim_config:
-            station_load_reports = (
-                vehicle_event_ops.construct_station_load_events(
-                    reports_not_instructions, sim_state
-                )
+            station_load_reports = vehicle_event_ops.construct_station_load_events(
+                reports_not_instructions, sim_state
             )
             for report in station_load_reports:
                 entry = json.dumps(report.as_json(), default=str)

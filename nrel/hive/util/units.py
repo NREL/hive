@@ -97,8 +97,6 @@ def get_unit_conversion(from_unit: str, to_unit: str) -> float:
     try:
         conversion = _unit_conversions[from_unit][to_unit]
     except KeyError:
-        raise NotImplemented(
-            f"no conversion exists for {from_unit} to {to_unit}"
-        )
+        raise NotImplemented(f"no conversion exists for {from_unit} to {to_unit}")
 
     return conversion

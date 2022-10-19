@@ -45,9 +45,7 @@ class H3Ops:
             entity_search=entity_search,
             sim_h3_search_resolution=sim_h3_search_resolution,
             is_valid=is_valid,
-            distance_function=lambda e: cls.great_circle_distance(
-                geoid, e.geoid
-            ),
+            distance_function=lambda e: cls.great_circle_distance(geoid, e.geoid),
             max_search_distance_km=max_search_distance_km,
         )
 
@@ -81,13 +79,9 @@ class H3Ops:
             return None
         geoid_res = h3.h3_get_resolution(geoid)
         if geoid_res < sim_h3_search_resolution:
-            raise H3Error(
-                "search resolution must be less than geoid resolution"
-            )
+            raise H3Error("search resolution must be less than geoid resolution")
 
-        k_dist_km = (
-            h3.edge_length(sim_h3_search_resolution, unit="km") * 2
-        )  # kilometers
+        k_dist_km = h3.edge_length(sim_h3_search_resolution, unit="km") * 2  # kilometers
         max_k = ceil(max_search_distance_km / k_dist_km)
         search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
 
@@ -103,9 +97,7 @@ class H3Ops:
                 found = (
                     entity
                     for cell in ring
-                    for entity in cls.get_entities_at_cell(
-                        cell, entity_search, entities
-                    )
+                    for entity in cls.get_entities_at_cell(cell, entity_search, entities)
                 )
 
                 best_dist_km = 1000000
@@ -209,9 +201,7 @@ class H3Ops:
         return 2 * avg_earth_radius_km * asin(sqrt(d))
 
     @classmethod
-    def point_along_link(
-        cls, link: LinkTraversal, available_time_seconds: Seconds
-    ) -> GeoId:
+    def point_along_link(cls, link: LinkTraversal, available_time_seconds: Seconds) -> GeoId:
         """
         finds the GeoId which is some percentage between two GeoIds along a line
 
@@ -222,9 +212,7 @@ class H3Ops:
         """
 
         threshold = 0.000001
-        experienced_distance_km = (
-            available_time_seconds * SECONDS_TO_HOURS
-        ) * link.speed_kmph
+        experienced_distance_km = (available_time_seconds * SECONDS_TO_HOURS) * link.speed_kmph
         ratio_trip_experienced = experienced_distance_km / link.distance_km
         if ratio_trip_experienced < (0 + threshold):
             return link.start

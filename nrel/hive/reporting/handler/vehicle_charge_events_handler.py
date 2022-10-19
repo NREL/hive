@@ -27,15 +27,9 @@ class VehicleChargeEventsHandler(Handler):
         for report in reports:
             if report.report_type == ReportType.VEHICLE_CHARGE_EVENT:
                 try:
-                    self.events["vehicle_id"].append(
-                        report.report["vehicle_id"]
-                    )
-                    self.events["sim_time_start"].append(
-                        report.report["sim_time_start"]
-                    )
-                    self.events["sim_time_end"].append(
-                        report.report["sim_time_end"]
-                    )
+                    self.events["vehicle_id"].append(report.report["vehicle_id"])
+                    self.events["sim_time_start"].append(report.report["sim_time_start"])
+                    self.events["sim_time_end"].append(report.report["sim_time_end"])
                     self.events["energy"].append(report.report["energy"])
                     self.events["units"].append(report.report["energy_units"])
                 except KeyError as e:

@@ -12,9 +12,7 @@ from nrel.hive.util.fs import global_hive_config_search
 class TestDictReaderStepper(TestCase):
     def test_global_hive_config_search_finds_default(self):
         result = global_hive_config_search()
-        self.assertIsInstance(
-            result, GlobalConfig, "should be a GlobalConfig class instance"
-        )
+        self.assertIsInstance(result, GlobalConfig, "should be a GlobalConfig class instance")
 
     def test_global_hive_config_search_finds_parent(self):
         with tempfile.TemporaryDirectory() as parent:

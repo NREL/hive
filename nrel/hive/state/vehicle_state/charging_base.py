@@ -38,9 +38,7 @@ class ChargingBase(VehicleState):
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(
-        cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId
-    ) -> ChargingBase:
+    def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId) -> ChargingBase:
         return ChargingBase(
             vehicle_id=vehicle_id,
             base_id=base_id,
@@ -65,18 +63,10 @@ class ChargingBase(VehicleState):
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
-        station_id = (
-            base.station_id
-            if base is not None and base.station_id is not None
-            else None
-        )
-        station = (
-            sim.stations.get(station_id) if station_id is not None else None
-        )
+        station_id = base.station_id if base is not None and base.station_id is not None else None
+        station = sim.stations.get(station_id) if station_id is not None else None
         mechatronics = (
-            env.mechatronics.get(vehicle.mechatronics_id)
-            if vehicle is not None
-            else None
+            env.mechatronics.get(vehicle.mechatronics_id) if vehicle is not None else None
         )
         context = f"vehicle {self.vehicle_id} entering charging base state at base {self.base_id} with charger {self.charger_id}"
         if not vehicle:
@@ -94,9 +84,7 @@ class ChargingBase(VehicleState):
         elif not mechatronics:
             msg = f"vehicle {vehicle.id} has invalid mechatronics id; context: {context}"
             return SimulationStateError(msg), None
-        elif not base.membership.grant_access_to_membership(
-            vehicle.membership
-        ):
+        elif not base.membership.grant_access_to_membership(vehicle.membership):
             msg = f"vehicle doesn't have access to base; context: {context}"
             return SimulationStateError(msg), None
         else:
@@ -107,9 +95,7 @@ class ChargingBase(VehicleState):
                 return None, None
             else:
                 # grab the charger from the station
-                charger_err, charger = station.get_charger_instance(
-                    self.charger_id
-                )
+                charger_err, charger = station.get_charger_instance(self.charger_id)
                 if charger_err is not None:
                     return charger_err, None
                 elif not mechatronics.valid_charger(charger):
@@ -117,9 +103,7 @@ class ChargingBase(VehicleState):
                     return SimulationStateError(msg), None
                 else:
                     # check out this charger from the station
-                    error, updated_station = station.checkout_charger(
-                        self.charger_id
-                    )
+                    error, updated_station = station.checkout_charger(self.charger_id)
                     if error is not None:
                         return error, None
                     elif not updated_station:
@@ -129,9 +113,7 @@ class ChargingBase(VehicleState):
                         return None, None
                     else:
                         # update the base + station state
-                        err1, sim2 = simulation_state_ops.modify_base(
-                            sim, updated_base
-                        )
+                        err1, sim2 = simulation_state_ops.modify_base(sim, updated_base)
                         if err1:
                             response = SimulationStateError(
                                 f"failure during ChargingBase.enter for vehicle {self.vehicle_id}"
@@ -139,9 +121,7 @@ class ChargingBase(VehicleState):
                             response.__cause__ = err1
                             return response, None
                         else:
-                            err2, sim3 = simulation_state_ops.modify_station(
-                                sim2, updated_station
-                            )
+                            err2, sim3 = simulation_state_ops.modify_station(sim2, updated_station)
                             if err2:
                                 response = SimulationStateError(
                                     f"failure during ChargingBase.enter for vehicle {self.vehicle_id}"
@@ -170,9 +150,7 @@ class ChargingBase(VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
-        station = (
-            sim.stations.get(base.station_id) if base.station_id else None
-        )
+        station = sim.stations.get(base.station_id) if base.station_id else None
         context = f"vehicle {self.vehicle_id} exiting charging base state at base {self.base_id}"
 
         if not vehicle:
@@ -182,9 +160,7 @@ class ChargingBase(VehicleState):
             )
         elif not station:
             return (
-                SimulationStateError(
-                    f"station for base not found; context: {context}"
-                ),
+                SimulationStateError(f"station for base not found; context: {context}"),
                 None,
             )
         else:
@@ -196,9 +172,7 @@ class ChargingBase(VehicleState):
                 response.__cause__ = err1
                 return response, None
             else:
-                err2, sim2 = simulation_state_ops.modify_base(
-                    sim, updated_base
-                )
+                err2, sim2 = simulation_state_ops.modify_base(sim, updated_base)
                 if err2:
                     response = SimulationStateError(
                         f"failure during ChargingBase.exit for vehicle {self.vehicle_id}"
@@ -206,22 +180,16 @@ class ChargingBase(VehicleState):
                     response.__cause__ = err2
                     return response, None
                 else:
-                    err3, updated_station = station.return_charger(
-                        self.charger_id
-                    )
+                    err3, updated_station = station.return_charger(self.charger_id)
                     if err3:
                         response = SimulationStateError(
                             f"failure during ChargingBase.exit for vehicle {self.vehicle_id}"
                         )
                         response.__cause__ = err3
                         return response, None
-                    return simulation_state_ops.modify_station(
-                        sim2, updated_station
-                    )
+                    return simulation_state_ops.modify_station(sim2, updated_station)
 
-    def _has_reached_terminal_state_condition(
-        self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         test if charging is finished
 
@@ -272,6 +240,4 @@ class ChargingBase(VehicleState):
                 None,
             )
         else:
-            return charge(
-                sim, env, self.vehicle_id, station_id, self.charger_id
-            )
+            return charge(sim, env, self.vehicle_id, station_id, self.charger_id)

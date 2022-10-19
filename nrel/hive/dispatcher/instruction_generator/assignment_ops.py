@@ -48,9 +48,7 @@ class AssignmentSolution(NamedTuple):
     solution: Tuple[Tuple[EntityId, EntityId], ...] = ()
     solution_cost: float = 0.0
 
-    def add(
-        self, pair: Tuple[EntityId, EntityId], cost: float
-    ) -> AssignmentSolution:
+    def add(self, pair: Tuple[EntityId, EntityId], cost: float) -> AssignmentSolution:
         return self._replace(
             solution=(pair,) + self.solution,
             solution_cost=self.solution_cost + cost,
@@ -82,11 +80,7 @@ def find_assignment(
         for i in range(len(assignees)):
             for j in range(len(targets)):
                 cost = cost_fn(assignees[i], targets[j])
-                upper_bound = (
-                    cost
-                    if cost > upper_bound and cost != float("inf")
-                    else upper_bound
-                )
+                upper_bound = cost if cost > upper_bound and cost != float("inf") else upper_bound
                 table[i][j] = cost
 
         # linear_sum_assignment borks with infinite values; this 2nd step replaces
@@ -98,16 +92,12 @@ def find_assignment(
         rows, cols = linear_sum_assignment(table)
 
         # interpret the row/column assignments back to EntityIds and compute the total cost of this assignment
-        def _add_to_solution(
-            assignment_solution: AssignmentSolution, i: int
-        ) -> AssignmentSolution:
+        def _add_to_solution(assignment_solution: AssignmentSolution, i: int) -> AssignmentSolution:
             this_pair = (assignees[rows[i]].id, targets[cols[i]].id)
             this_cost = table[rows[i]][cols[i]]
             return assignment_solution.add(this_pair, this_cost)
 
-        solution = ft.reduce(
-            _add_to_solution, range(len(rows)), AssignmentSolution()
-        )
+        solution = ft.reduce(_add_to_solution, range(len(rows)), AssignmentSolution())
 
         return solution
 
@@ -152,9 +142,7 @@ def nearest_shortest_queue_distance(
     """
 
     def fn(station: Station) -> float:
-        result = nearest_shortest_queue_ranking(
-            vehicle, station, env, MAX_DIST
-        )
+        result = nearest_shortest_queue_ranking(vehicle, station, env, MAX_DIST)
         if result is None:
             return MAX_DIST  #
         else:
@@ -196,9 +184,7 @@ def nearest_shortest_queue_ranking(
             return acc
         else:
             prev_best_charger_id, prev_best_distance_metric = acc
-            enqueued_for_charger_id = (
-                station.enqueued_vehicle_count_for_charger(charger_id)
-            )
+            enqueued_for_charger_id = station.enqueued_vehicle_count_for_charger(charger_id)
             queue_factor = enqueued_for_charger_id / total_chargers
             this_distance_metric = distance + distance * queue_factor
             if prev_best_distance_metric < this_distance_metric:
@@ -236,9 +222,7 @@ def shortest_time_to_charge_distance(
     """
 
     def fn(station: Station) -> Seconds:
-        result = shortest_time_to_charge_ranking(
-            sim, env, vehicle, station, target_soc
-        )
+        result = shortest_time_to_charge_ranking(sim, env, vehicle, station, target_soc)
         dist = 999999999.0 if result is None else result[1]
         return dist
 
@@ -266,9 +250,7 @@ def shortest_time_to_charge_ranking(
 
     vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
     remaining_range = (
-        vehicle_mechatronics.range_remaining_km(vehicle)
-        if vehicle_mechatronics
-        else 0.0
+        vehicle_mechatronics.range_remaining_km(vehicle) if vehicle_mechatronics else 0.0
     )
     route = sim.road_network.route(vehicle.position, station.position)
     distance_km = route_distance_km(route)
@@ -340,16 +322,10 @@ def shortest_time_to_charge_ranking(
                 updated_time_passed = time_passed + next_released_charger_time
 
                 # remove charging agents who are done
-                _charging_time_advanced = map(
-                    lambda t: t - next_released_charger_time, _charging
-                )
-                _charging_vacated = tuple(
-                    filter(lambda t: t > 0, _charging_time_advanced)
-                )
+                _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
+                _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
 
-                vacancies = station.get_total_chargers(_charger_id) - len(
-                    _charging_vacated
-                )
+                vacancies = station.get_total_chargers(_charger_id) - len(_charging_vacated)
                 if vacancies <= 0:
                     # no space for any changes from enqueued -> charging
                     return _greedy_assignment(
@@ -362,9 +338,7 @@ def shortest_time_to_charge_ranking(
                     # dequeue longest-waiting agents
                     _enqueued_to_dequeue = _enqueued[0:vacancies]
                     _updated_enqueued = _enqueued[vacancies:]
-                    _updated_charging = tuple(
-                        sorted(_charging_vacated + _enqueued_to_dequeue)
-                    )
+                    _updated_charging = tuple(sorted(_charging_vacated + _enqueued_to_dequeue))
 
                     return _greedy_assignment(
                         _charging=_updated_charging,
@@ -384,13 +358,9 @@ def shortest_time_to_charge_ranking(
         estimates = {}
         for charger_id in station.state.keys():
             charger_state = station.state.get(charger_id)
-            charger = (
-                charger_state.charger if charger_state is not None else None
-            )
+            charger = charger_state.charger if charger_state is not None else None
 
-            if charger is None or not vehicle_mechatronics.valid_charger(
-                charger
-            ):
+            if charger is None or not vehicle_mechatronics.valid_charger(charger):
                 # vehicle can't use this charger so we skip it
                 continue
 
@@ -428,9 +398,7 @@ def shortest_time_to_charge_ranking(
             )
 
             # combine wait time with charge time
-            overall_time_est = (
-                this_vehicle_charge_time + wait_estimate_for_charger
-            )
+            overall_time_est = this_vehicle_charge_time + wait_estimate_for_charger
             estimates.update({charger_id: overall_time_est})
 
         if not estimates:

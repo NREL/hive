@@ -36,9 +36,7 @@ class TestUpdate(TestCase):
 
         sim = mock_sim()
         env = mock_env()
-        u = Update.build(
-            mock_config(), (MockGenerator(),), user_provided_update_fn
-        )
+        u = Update.build(mock_config(), (MockGenerator(),), user_provided_update_fn)
         runner = RunnerPayload(sim, env, u)
         result = u.apply_update(runner)
         updated_mock_gen = result.u.step_update.instruction_generators[0]

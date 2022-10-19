@@ -61,16 +61,12 @@ class TabularPowercurve(Powercurve):
                 f"TabularPowercurve initialized with invalid energy type {self.energy_type}"
             )
 
-        charging_model = sorted(
-            data["power_curve"], key=lambda x: x["energy_kwh"]
-        )
+        charging_model = sorted(data["power_curve"], key=lambda x: x["energy_kwh"])
         self._charging_energy_kwh = (
-            np.array(list(map(lambda x: x["energy_kwh"], charging_model)))
-            * battery_capacity_kwh
+            np.array(list(map(lambda x: x["energy_kwh"], charging_model))) * battery_capacity_kwh
         )
         self._charging_rate_kw = (
-            np.array(list(map(lambda x: x["power_kw"], charging_model)))
-            * nominal_max_charge_kw
+            np.array(list(map(lambda x: x["power_kw"], charging_model))) * nominal_max_charge_kw
         )
 
     def charge(
@@ -99,9 +95,7 @@ class TabularPowercurve(Powercurve):
                 energy_kwh, self._charging_energy_kwh, self._charging_rate_kw
             )  # kilowatt
             charge_power_kw = min(veh_kw_rate, power_kw)  # kilowatt
-            kwh = charge_power_kw * (
-                self.step_size_seconds * SECONDS_TO_HOURS
-            )  # kilowatt-hours
+            kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours
 
             energy_kwh += kwh
 

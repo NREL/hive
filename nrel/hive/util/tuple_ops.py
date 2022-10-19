@@ -83,9 +83,7 @@ class TupleOps:
         :return:
         """
         t1, t2 = it.tee(t)
-        return tuple(filter(predicate, t1)), tuple(
-            it.filterfalse(predicate, t2)
-        )
+        return tuple(filter(predicate, t1)), tuple(it.filterfalse(predicate, t2))
 
     @classmethod
     def flatten(cls, nested_tuple: Tuple[Tuple[T, ...], ...]) -> Tuple[T, ...]:

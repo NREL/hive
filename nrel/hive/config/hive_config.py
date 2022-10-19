@@ -35,9 +35,7 @@ class HiveConfig(NamedTuple):
         cls,
         scenario_file_path: Path,
         config: Dict = None,
-        output_suffix: Optional[str] = datetime.now().strftime(
-            "%Y-%m-%d_%H-%M-%S"
-        ),
+        output_suffix: Optional[str] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
     ) -> Union[Exception, HiveConfig]:
         """
         builds a hive config by reading from a scenario file. optionally append additional key/value
@@ -50,9 +48,7 @@ class HiveConfig(NamedTuple):
         return ConfigBuilder.build(
             default_config={},
             required_config=(),
-            config_constructor=lambda c: HiveConfig.from_dict(
-                c, scenario_file_path, output_suffix
-            ),
+            config_constructor=lambda c: HiveConfig.from_dict(c, scenario_file_path, output_suffix),
             config=config,
         )
 
@@ -72,9 +68,7 @@ class HiveConfig(NamedTuple):
         root_logger = logging.getLogger("")
         root_logger.setLevel(global_config.log_level)
 
-        log.info(
-            f"global hive configuration loaded from {global_config.global_settings_file_path}"
-        )
+        log.info(f"global hive configuration loaded from {global_config.global_settings_file_path}")
         for k, v in global_config.asdict().items():
             log.info(f"  {k}: {v}")
 
@@ -97,14 +91,10 @@ class HiveConfig(NamedTuple):
             warn_missing_config_keys = ["input", "sim", "network"]
             for key in warn_missing_config_keys:
                 if key not in conf:
-                    log.warning(
-                        f"scenario file is missing a '{key}' section may cause errors"
-                    )
+                    log.warning(f"scenario file is missing a '{key}' section may cause errors")
 
             sconfig = Sim.build(conf.get("sim"))
-            iconfig = Input.build(
-                conf.get("input"), scenario_file_path, conf.get("cache")
-            )
+            iconfig = Input.build(conf.get("input"), scenario_file_path, conf.get("cache"))
             nconfig = Network.build(conf.get("network"))
             dconfig = DispatcherConfig.build(conf.get("dispatcher"))
 
@@ -113,9 +103,9 @@ class HiveConfig(NamedTuple):
                 if output_suffix is not None
                 else sconfig.sim_name
             )
-            scenario_output_directory = Path(
-                global_config.output_base_directory
-            ) / Path(scenario_name)
+            scenario_output_directory = Path(global_config.output_base_directory) / Path(
+                scenario_name
+            )
 
             hive_config = HiveConfig(
                 global_config=global_config,
@@ -126,9 +116,7 @@ class HiveConfig(NamedTuple):
                 scenario_output_directory=scenario_output_directory,
             )
 
-            log.info(
-                f"output directory set to {hive_config.input_config.scenario_directory}"
-            )
+            log.info(f"output directory set to {hive_config.input_config.scenario_directory}")
             log.info(f"hive config loaded from {str(scenario_file_path)}")
             log.info(f"\n{yaml.dump(conf)}")
 
@@ -161,9 +149,7 @@ class HiveConfig(NamedTuple):
 
         return out_dict
 
-    def set_scenario_output_directory(
-        self, output_directory: Path
-    ) -> HiveConfig:
+    def set_scenario_output_directory(self, output_directory: Path) -> HiveConfig:
         return self._replace(scenario_output_directory=output_directory)
 
     def suppress_logging(self) -> HiveConfig:

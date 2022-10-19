@@ -15,9 +15,7 @@ class TestInitializeSimulation(TestCase):
         conf = mock_config().suppress_logging()
 
         sim, env = initialize_simulation(conf)
-        self.assertEqual(
-            len(sim.vehicles), 20, "should have loaded 20 vehicles"
-        )
+        self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
         self.assertEqual(len(sim.bases), 2, "should have loaded 1 base")
 
@@ -43,15 +41,9 @@ class TestInitializeSimulation(TestCase):
             station_filter=filter_station,
         )
 
-        self.assertIsNone(
-            sim.vehicles.get("v1"), "should not have loaded vehicle v1"
-        )
-        self.assertIsNone(
-            sim.bases.get("b1"), "should not have loaded base b1"
-        )
-        self.assertIsNone(
-            sim.stations.get("s1"), "should not have loaded station s1"
-        )
+        self.assertIsNone(sim.vehicles.get("v1"), "should not have loaded vehicle v1")
+        self.assertIsNone(sim.bases.get("b1"), "should not have loaded base b1")
+        self.assertIsNone(sim.stations.get("s1"), "should not have loaded station s1")
 
     def test_initialize_simulation_with_sampling(self):
         conf = (
@@ -80,8 +72,6 @@ class TestInitializeSimulation(TestCase):
             config=conf,
             vehicle_count=20,
         )
-        self.assertEqual(
-            len(sim.vehicles), 20, "should have loaded 20 vehicles"
-        )
+        self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
         self.assertEqual(len(sim.bases), 2, "should have loaded 2 bases")

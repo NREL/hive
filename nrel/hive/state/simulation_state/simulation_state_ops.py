@@ -35,9 +35,7 @@ def tick(sim: SimulationState) -> SimulationState:
     :return: the simulation after being updated
     """
 
-    return sim._replace(
-        sim_time=sim.sim_time + sim.sim_timestep_duration_seconds
-    )
+    return sim._replace(sim_time=sim.sim_time + sim.sim_timestep_duration_seconds)
 
 
 def add_entity(sim: SimulationState, entity: Entity) -> SimulationState:
@@ -66,9 +64,7 @@ def modify_entity(sim: SimulationState, entity: Entity) -> SimulationState:
     return throw_or_return(modify_entity_safe(sim, entity))
 
 
-def add_entities(
-    sim: SimulationState, entities: Iterable[Entity]
-) -> SimulationState:
+def add_entities(sim: SimulationState, entities: Iterable[Entity]) -> SimulationState:
     """
     helper for adding multiple entities to the simulation
 
@@ -81,9 +77,7 @@ def add_entities(
     return throw_or_return(add_entities_safe(sim, entities))
 
 
-def modify_entities(
-    sim: SimulationState, entities: Iterable[Entity]
-) -> SimulationState:
+def modify_entities(sim: SimulationState, entities: Iterable[Entity]) -> SimulationState:
     """
     helper for modifying multiple entities in the simulation
 
@@ -96,9 +90,7 @@ def modify_entities(
     return throw_or_return(modify_entities_safe(sim, entities))
 
 
-def add_entity_safe(
-    sim: SimulationState, entity: Entity
-) -> ResultE[SimulationState]:
+def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
     """
     helper for adding a general entity to the simulation
 
@@ -120,9 +112,7 @@ def add_entity_safe(
         return Failure(err)
 
 
-def add_entities_safe(
-    sim: SimulationState, entities: Iterable[Entity]
-) -> ResultE[SimulationState]:
+def add_entities_safe(sim: SimulationState, entities: Iterable[Entity]) -> ResultE[SimulationState]:
     """
     helper for adding multiple general entities to the simulation
 
@@ -141,9 +131,7 @@ def add_entities_safe(
     return apply_op_to_accumulator(_add, entities, sim)
 
 
-def modify_entity_safe(
-    sim: SimulationState, entity: Entity
-) -> ResultE[SimulationState]:
+def modify_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
     """
     helper for modifying a general entity in the simulation
 
@@ -161,9 +149,7 @@ def modify_entity_safe(
     if entity.__class__.__name__ == "Request":
         return modify_request_safe(sim, entity)
     else:
-        err = SimulationStateError(
-            f"cannot modify entity {entity} to simulation"
-        )
+        err = SimulationStateError(f"cannot modify entity {entity} to simulation")
         return Failure(err)
 
 
@@ -188,9 +174,7 @@ def modify_entities_safe(
     return apply_op_to_accumulator(_mod, entities, sim)
 
 
-def add_request_safe(
-    sim: SimulationState, request: Request
-) -> ResultE[SimulationState]:
+def add_request_safe(sim: SimulationState, request: Request) -> ResultE[SimulationState]:
     """
     adds a request to the SimulationState
 
@@ -202,30 +186,20 @@ def add_request_safe(
 
     if not sim.road_network.geoid_within_geofence(request.origin):
         return Failure(
-            SimulationStateError(
-                f"origin {request.origin} not within road network geofence"
-            )
+            SimulationStateError(f"origin {request.origin} not within road network geofence")
         )
     else:
-        search_geoid = h3.h3_to_parent(
-            request.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
 
         updated_sim = sim._replace(
             requests=DictOps.add_to_dict(sim.requests, request.id, request),
-            r_locations=DictOps.add_to_collection_dict(
-                sim.r_locations, request.geoid, request.id
-            ),
-            r_search=DictOps.add_to_collection_dict(
-                sim.r_search, search_geoid, request.id
-            ),
+            r_locations=DictOps.add_to_collection_dict(sim.r_locations, request.geoid, request.id),
+            r_search=DictOps.add_to_collection_dict(sim.r_search, search_geoid, request.id),
         )
         return Success(updated_sim)
 
 
-def remove_request_safe(
-    sim: SimulationState, request_id: RequestId
-) -> ResultE[SimulationState]:
+def remove_request_safe(sim: SimulationState, request_id: RequestId) -> ResultE[SimulationState]:
     """
     removes a request from this simulation.
     called once a Request has been fully serviced and is no longer
@@ -244,9 +218,7 @@ def remove_request_safe(
         return Failure(error)
     else:
         request = sim.requests[request_id]
-        search_geoid = h3.h3_to_parent(
-            request.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
         updated_requests = DictOps.remove_from_dict(sim.requests, request.id)
         updated_r_locations = DictOps.remove_from_collection_dict(
             sim.r_locations, request.geoid, request.id
@@ -275,9 +247,7 @@ def remove_request(
         return None, result.unwrap()
 
 
-def modify_request_safe(
-    sim: SimulationState, updated_request: Request
-) -> ResultE[SimulationState]:
+def modify_request_safe(sim: SimulationState, updated_request: Request) -> ResultE[SimulationState]:
     """
     given an updated request, update the SimulationState with that request
 
@@ -296,9 +266,7 @@ def modify_request_safe(
             f"cannot modify request {updated_request.id}: origin not within road network"
         )
         return Failure(error)
-    elif not sim.road_network.geoid_within_geofence(
-        updated_request.destination
-    ):
+    elif not sim.road_network.geoid_within_geofence(updated_request.destination):
         error = SimulationStateError(
             f"cannot modify request {updated_request.id}: destination not within road network"
         )
@@ -314,9 +282,7 @@ def modify_request_safe(
 
         updated_sim = sim._replace(
             requests=result.entities if result.entities else sim.requests,
-            r_locations=result.locations
-            if result.locations
-            else sim.r_locations,
+            r_locations=result.locations if result.locations else sim.r_locations,
             r_search=result.search if result.search else sim.r_search,
         )
         return Success(updated_sim)
@@ -333,9 +299,7 @@ def modify_request(
         return None, result.unwrap()
 
 
-def add_vehicle_safe(
-    sim: SimulationState, vehicle: Vehicle
-) -> ResultE[SimulationState]:
+def add_vehicle_safe(sim: SimulationState, vehicle: Vehicle) -> ResultE[SimulationState]:
     """
     adds a vehicle into the region supported by the RoadNetwork in this SimulationState
 
@@ -350,15 +314,11 @@ def add_vehicle_safe(
         )
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(
-            vehicle.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
         updated_v_locations = DictOps.add_to_collection_dict(
             sim.v_locations, vehicle.geoid, vehicle.id
         )
-        updated_v_search = DictOps.add_to_collection_dict(
-            sim.v_search, search_geoid, vehicle.id
-        )
+        updated_v_search = DictOps.add_to_collection_dict(sim.v_search, search_geoid, vehicle.id)
         updated_sim = sim._replace(
             vehicles=DictOps.add_to_dict(sim.vehicles, vehicle.id, vehicle),
             v_locations=updated_v_locations,
@@ -367,9 +327,7 @@ def add_vehicle_safe(
         return Success(updated_sim)
 
 
-def modify_vehicle_safe(
-    sim: SimulationState, updated_vehicle: Vehicle
-) -> ResultE[SimulationState]:
+def modify_vehicle_safe(sim: SimulationState, updated_vehicle: Vehicle) -> ResultE[SimulationState]:
     """
     given an updated vehicle, update the SimulationState with that vehicle
 
@@ -408,9 +366,7 @@ def modify_vehicle_safe(
             v_locations=updated_dictionaries.locations
             if updated_dictionaries.locations
             else sim.v_locations,
-            v_search=updated_dictionaries.search
-            if updated_dictionaries.search
-            else sim.v_search,
+            v_search=updated_dictionaries.search if updated_dictionaries.search else sim.v_search,
         )
         return Success(updated_sim)
 
@@ -426,9 +382,7 @@ def modify_vehicle(
         return None, result.unwrap()
 
 
-def remove_vehicle_safe(
-    sim: SimulationState, vehicle_id: VehicleId
-) -> ResultE[SimulationState]:
+def remove_vehicle_safe(sim: SimulationState, vehicle_id: VehicleId) -> ResultE[SimulationState]:
     """
     removes the vehicle from play (perhaps to simulate a broken vehicle or end of a shift)
 
@@ -449,18 +403,14 @@ def remove_vehicle_safe(
         return Failure(error)
     else:
         vehicle = sim.vehicles[vehicle_id]
-        search_geoid = h3.h3_to_parent(
-            vehicle.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
 
         updated_sim = sim._replace(
             vehicles=DictOps.remove_from_dict(sim.vehicles, vehicle_id),
             v_locations=DictOps.remove_from_collection_dict(
                 sim.v_locations, vehicle.geoid, vehicle_id
             ),
-            v_search=DictOps.remove_from_collection_dict(
-                sim.v_search, search_geoid, vehicle_id
-            ),
+            v_search=DictOps.remove_from_collection_dict(sim.v_search, search_geoid, vehicle_id),
         )
         return Success(updated_sim)
 
@@ -497,9 +447,7 @@ def pop_vehicle_safe(
     else:
         remove_result = remove_vehicle_safe(sim, vehicle_id)
         if isinstance(remove_result, Failure):
-            response = SimulationStateError(
-                f"failure in pop_vehicle for vehicle {vehicle_id}"
-            )
+            response = SimulationStateError(f"failure in pop_vehicle for vehicle {vehicle_id}")
             response.__cause__ = remove_result.failure()
             return Failure(error)
         else:
@@ -517,9 +465,7 @@ def pop_vehicle(
         return None, result.unwrap()
 
 
-def add_station_safe(
-    sim: SimulationState, station: Station
-) -> ResultE[SimulationState]:
+def add_station_safe(sim: SimulationState, station: Station) -> ResultE[SimulationState]:
     """
     adds a station to the simulation
 
@@ -534,15 +480,11 @@ def add_station_safe(
         )
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(
-            station.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
         updated_s_locations = DictOps.add_to_collection_dict(
             sim.s_locations, station.geoid, station.id
         )
-        updated_s_search = DictOps.add_to_collection_dict(
-            sim.s_search, search_geoid, station.id
-        )
+        updated_s_search = DictOps.add_to_collection_dict(sim.s_search, search_geoid, station.id)
         updated_sim = sim._replace(
             stations=DictOps.add_to_dict(sim.stations, station.id, station),
             s_locations=updated_s_locations,
@@ -551,9 +493,7 @@ def add_station_safe(
         return Success(updated_sim)
 
 
-def remove_station_safe(
-    sim: SimulationState, station_id: StationId
-) -> ResultE[SimulationState]:
+def remove_station_safe(sim: SimulationState, station_id: StationId) -> ResultE[SimulationState]:
     """
     remove a station from the simulation. maybe they closed due to inclement weather.
 
@@ -564,14 +504,10 @@ def remove_station_safe(
     """
     station = sim.stations.get(station_id)
     if not station:
-        error = SimulationStateError(
-            f"cannot remove station {station_id}, it does not exist"
-        )
+        error = SimulationStateError(f"cannot remove station {station_id}, it does not exist")
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(
-            station.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
         updated_s_locations = DictOps.remove_from_collection_dict(
             sim.s_locations, station.geoid, station_id
         )
@@ -598,9 +534,7 @@ def remove_station(
         return None, result.unwrap()
 
 
-def modify_station_safe(
-    sim: SimulationState, updated_station: Station
-) -> ResultE[SimulationState]:
+def modify_station_safe(sim: SimulationState, updated_station: Station) -> ResultE[SimulationState]:
     """
     given an updated station, update the SimulationState with that station
 
@@ -626,9 +560,7 @@ def modify_station_safe(
         return Failure(error)
     else:
         updated_sim = sim._replace(
-            stations=DictOps.add_to_dict(
-                sim.stations, updated_station.id, updated_station
-            )
+            stations=DictOps.add_to_dict(sim.stations, updated_station.id, updated_station)
         )
         return Success(updated_sim)
 
@@ -644,9 +576,7 @@ def modify_station(
         return None, result.unwrap()
 
 
-def add_base_safe(
-    sim: SimulationState, base: Base
-) -> ResultE[SimulationState]:
+def add_base_safe(sim: SimulationState, base: Base) -> ResultE[SimulationState]:
     """
     adds a base to the simulation
 
@@ -661,15 +591,9 @@ def add_base_safe(
         )
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(
-            base.geoid, sim.sim_h3_search_resolution
-        )
-        updated_b_locations = DictOps.add_to_collection_dict(
-            sim.b_locations, base.geoid, base.id
-        )
-        updated_b_search = DictOps.add_to_collection_dict(
-            sim.b_search, search_geoid, base.id
-        )
+        search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
+        updated_b_locations = DictOps.add_to_collection_dict(sim.b_locations, base.geoid, base.id)
+        updated_b_search = DictOps.add_to_collection_dict(sim.b_search, search_geoid, base.id)
 
         updated_sim = sim._replace(
             bases=DictOps.add_to_dict(sim.bases, base.id, base),
@@ -679,9 +603,7 @@ def add_base_safe(
         return Success(updated_sim)
 
 
-def remove_base_safe(
-    sim: SimulationState, base_id: BaseId
-) -> ResultE[SimulationState]:
+def remove_base_safe(sim: SimulationState, base_id: BaseId) -> ResultE[SimulationState]:
     """
     remove a base from the simulation. all your base belong to us.
 
@@ -692,20 +614,14 @@ def remove_base_safe(
     """
     base = sim.bases.get(base_id)
     if not base:
-        error = SimulationStateError(
-            f"cannot remove base {base_id}, it does not exist"
-        )
+        error = SimulationStateError(f"cannot remove base {base_id}, it does not exist")
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(
-            base.geoid, sim.sim_h3_search_resolution
-        )
+        search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
         updated_b_locations = DictOps.remove_from_collection_dict(
             sim.b_locations, base.geoid, base_id
         )
-        updated_b_search = DictOps.remove_from_collection_dict(
-            sim.b_search, search_geoid, base_id
-        )
+        updated_b_search = DictOps.remove_from_collection_dict(sim.b_search, search_geoid, base_id)
         updated_sim = sim._replace(
             bases=DictOps.remove_from_dict(sim.bases, base_id),
             b_locations=updated_b_locations,
@@ -725,9 +641,7 @@ def remove_base(
         return None, result.unwrap()
 
 
-def modify_base_safe(
-    sim: SimulationState, updated_base: Base
-) -> ResultE[SimulationState]:
+def modify_base_safe(sim: SimulationState, updated_base: Base) -> ResultE[SimulationState]:
     """
     given an updated base, update the SimulationState with that base
     invariant: base locations will not be changed!
@@ -770,9 +684,7 @@ def modify_base(
         return None, result.unwrap()
 
 
-def update_road_network(
-    sim: SimulationState, sim_time: SimTime
-) -> SimulationState:
+def update_road_network(sim: SimulationState, sim_time: SimTime) -> SimulationState:
     """
     trigger the update of the road network model based on the current sim time
 

@@ -86,9 +86,7 @@ def trip_plan_ordering_is_valid(
                 return False, frozenset()
 
     initial = (True, boarded_req_ids)
-    has_valid_order, final_boarding_state = ft.reduce(
-        _test, new_trip_plan, initial
-    )
+    has_valid_order, final_boarding_state = ft.reduce(_test, new_trip_plan, initial)
     no_passengers_at_end_of_trip_plan = len(final_boarding_state) == 0
 
     return has_valid_order and no_passengers_at_end_of_trip_plan
@@ -122,9 +120,7 @@ def trip_plan_all_requests_allow_pooling(
     req_ids, _ = frozenset(zip(*trip_plan))
     req_ids_unique = frozenset(req_ids)
     initial_errors = ((), ())
-    sim_error_req_ids, pool_error_req_ids = ft.reduce(
-        _test_req, req_ids_unique, initial_errors
-    )
+    sim_error_req_ids, pool_error_req_ids = ft.reduce(_test_req, req_ids_unique, initial_errors)
     if len(sim_error_req_ids) > 0 and len(pool_error_req_ids) > 0:
         msg = f"reqs not in sim: {sim_error_req_ids}; reqs which don't allow pooling: {pool_error_req_ids}"
         return msg

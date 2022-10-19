@@ -171,9 +171,7 @@ class Station(NamedTuple):
     def from_row(
         cls,
         row: Dict[str, str],
-        builder: Union[
-            immutables.Map[StationId, Station], Dict[StationId, Station]
-        ],
+        builder: Union[immutables.Map[StationId, Station], Dict[StationId, Station]],
         road_network: RoadNetwork,
         env: Environment,
     ) -> Station:
@@ -215,9 +213,7 @@ class Station(NamedTuple):
         # 1. the provided station id has not yet been seen -> create a new station
         # 2. the provided station id has already been seen -> append to existing
         if charger_id is None:
-            raise IOError(
-                f"invalid charger_id type {row['charger_id']} for station {station_id}"
-            )
+            raise IOError(f"invalid charger_id type {row['charger_id']} for station {station_id}")
         elif station_id not in builder:
             # create this station
             return Station.build(
@@ -225,18 +221,14 @@ class Station(NamedTuple):
                 geoid=geoid,
                 road_network=road_network,
                 chargers=immutables.Map({charger_id: charger_count}),
-                on_shift_access=frozenset([charger_id])
-                if on_shift_access
-                else frozenset(),
+                on_shift_access=frozenset([charger_id]) if on_shift_access else frozenset(),
                 membership=Membership(),
                 env=env,
             )
         else:
             # add this charger to the existing station
             prev_station = builder[station_id]
-            error, updated_station = prev_station.append_chargers(
-                charger_id, charger_count, env
-            )
+            error, updated_station = prev_station.append_chargers(charger_id, charger_count, env)
             if error is not None:
                 raise error
             return updated_station
@@ -316,9 +308,7 @@ class Station(NamedTuple):
         """
         return len(self.on_shift_access_chargers) > 0
 
-    def checkout_charger(
-        self, charger_id: ChargerId
-    ) -> ErrorOr[Optional[Station]]:
+    def checkout_charger(self, charger_id: ChargerId) -> ErrorOr[Optional[Station]]:
         """
         Checks out a charger_id of type `charger_id` and returns an updated station if there are any available
 
@@ -348,13 +338,9 @@ class Station(NamedTuple):
         def _return(cs: ChargerState) -> ErrorOr[ChargerState]:
             return cs.increment_available_chargers()
 
-        return station_state_update(
-            station=self, charger_id=charger_id, op=_return
-        )
+        return station_state_update(station=self, charger_id=charger_id, op=_return)
 
-    def set_charger_rate(
-        self, charger_id: ChargerId, rate: KwH
-    ) -> ResultE[Station]:
+    def set_charger_rate(self, charger_id: ChargerId, rate: KwH) -> ResultE[Station]:
         """
         Set the rate for a charger.
 
@@ -379,9 +365,7 @@ class Station(NamedTuple):
             new_station = self._replace(state=new_state)
             return Success(new_station)
 
-    def scale_charger_rate(
-        self, charger_id: ChargerId, scale: float
-    ) -> ResultE[Station]:
+    def scale_charger_rate(self, charger_id: ChargerId, scale: float) -> ResultE[Station]:
         """
         Scale the charging rate for a charger.
 
@@ -406,17 +390,11 @@ class Station(NamedTuple):
             new_station = self._replace(state=new_state)
             return Success(new_station)
 
-    def update_prices(
-        self, new_prices: immutables.Map[ChargerId, Currency]
-    ) -> ErrorOr[Station]:
-        def _update(
-            cs: ChargerState, price: Currency
-        ) -> ErrorOr[ChargerState]:
+    def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> ErrorOr[Station]:
+        def _update(cs: ChargerState, price: Currency) -> ErrorOr[ChargerState]:
             return None, cs._replace(price_per_kwh=price)
 
-        return station_state_updates(
-            station=self, it=new_prices.items(), op=_update
-        )
+        return station_state_updates(station=self, it=new_prices.items(), op=_update)
 
     def receive_payment(self, currency_received: Currency) -> Station:
         """
@@ -438,9 +416,7 @@ class Station(NamedTuple):
         def _enqueue(cs: ChargerState) -> ErrorOr[ChargerState]:
             return None, cs.increment_enqueued_vehicles()
 
-        return station_state_update(
-            station=self, charger_id=charger_id, op=_enqueue
-        )
+        return station_state_update(station=self, charger_id=charger_id, op=_enqueue)
 
     def dequeue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
@@ -454,13 +430,9 @@ class Station(NamedTuple):
         def _dequeue(cs: ChargerState) -> ErrorOr[ChargerState]:
             return cs.decrement_enqueued_vehicles()
 
-        return station_state_update(
-            station=self, charger_id=charger_id, op=_dequeue
-        )
+        return station_state_update(station=self, charger_id=charger_id, op=_dequeue)
 
-    def enqueued_vehicle_count_for_charger(
-        self, charger_id: ChargerId
-    ) -> Optional[int]:
+    def enqueued_vehicle_count_for_charger(self, charger_id: ChargerId) -> Optional[int]:
         """
         gets the current count of vehicles enqueued for a specific charger_id at this station
 
