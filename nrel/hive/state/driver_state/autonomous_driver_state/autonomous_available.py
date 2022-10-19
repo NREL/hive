@@ -1,7 +1,8 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class AutonomousAvailable(NamedTuple, DriverState):
+@dataclass(frozen=True)
+class AutonomousAvailable(DriverState):
     """
     an autonomous driver that is available to work
     """

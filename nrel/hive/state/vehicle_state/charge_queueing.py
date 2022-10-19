@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -19,7 +20,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class ChargeQueueing(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ChargeQueueing(VehicleState):
     """
     A vehicle tracks it's own place in a queue (Stations do not know about queues), and what guarantees
     a respect to vehicle queue positioning is their respective queue_times, which is used to sort all

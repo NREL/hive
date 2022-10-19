@@ -1,4 +1,3 @@
-from nrel.hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 from nrel.hive.util.iterators import DictReaderStepper
 from nrel.hive.util.exception import (
     StateOfChargeError,

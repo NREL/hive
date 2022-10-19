@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 from pathlib import Path
 from typing import Tuple, NamedTuple
@@ -9,7 +10,8 @@ from nrel.hive.dispatcher.forecaster.forecaster_interface import ForecasterInter
 from nrel.hive.util.iterators import DictReaderStepper
 
 
-class BasicForecaster(NamedTuple, ForecasterInterface):
+@dataclass(frozen=True)
+class BasicForecaster(ForecasterInterface):
     """
     A forecaster that generates a prediction based on the current demand.
     """

@@ -1,24 +1,26 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 from nrel.hive.model.roadnetwork.route import Route
-from nrel.hive.util.abc_utils import abstract_attribute, ABCMeta
 
 
-class Powertrain(metaclass=ABCMeta):
+class Powertrain(ABC):
     """
     a powertrain has the behavior where it calculate energy consumption in KwH
     """
-    @abstract_attribute
+    @property
+    @abstractmethod
     def speed_units(self) -> str:
         pass
 
-    @abstract_attribute
+    @property
+    @abstractmethod
     def distance_units(self) -> str:
         pass
 
-    @abstract_attribute
+    @property
+    @abstractmethod
     def energy_units(self) -> str:
         pass
 

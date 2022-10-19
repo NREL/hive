@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
@@ -16,7 +17,8 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
-class Repositioning(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class Repositioning(VehicleState):
     vehicle_id: VehicleId
     route: Route
 

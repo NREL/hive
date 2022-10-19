@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional, TYPE_CHECKING, Tuple
 
 import immutables
 
 from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
-from nrel.hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
 
 
-class Instruction(metaclass=ABCNamedTupleMeta):
+class Instruction(ABC):
     """
     an abstract base class for instructions.
     """

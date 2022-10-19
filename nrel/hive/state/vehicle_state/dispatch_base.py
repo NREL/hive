@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
@@ -19,7 +20,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class DispatchBase(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class DispatchBase(VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
     route: Route

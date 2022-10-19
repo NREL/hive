@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from abc import abstractmethod, ABCMeta, abstractproperty
-from typing import Tuple, Optional, NamedTupleMeta, TYPE_CHECKING
-import uuid
+from abc import abstractmethod, abstractproperty
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.state.entity_state import entity_state_ops
 from nrel.hive.state.entity_state.entity_state import EntityState
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 
 VehicleStateInstanceId = UUID
 
-class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
+class VehicleState(EntityState):
     """
     a state representation along with methods for state transitions and discrete time step updates
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 
 import logging
 import inspect
@@ -35,7 +36,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class StepSimulation(NamedTuple, SimulationUpdateFunction):
+@dataclass(frozen=True)
+class StepSimulation(SimulationUpdateFunction):
     instruction_generators: immutables.Map[InstructionGeneratorId, InstructionGenerator]
     instruction_generator_order: Tuple[InstructionGeneratorId, ...]
 
@@ -69,7 +71,7 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         """
         Update the set of instruction generators.
         """
-        return self._replace(
+        return replace(self, 
             instruction_generators=immutables.Map(
                 {i_gen.name: i_gen for i_gen in updated_i_gens}
             ),
@@ -165,5 +167,5 @@ class StepSimulation(NamedTuple, SimulationUpdateFunction):
         )
 
         return Success(
-            self._replace(instruction_generators=updated_instruction_generators)
+            replace(self, instruction_generators=updated_instruction_generators)
         )

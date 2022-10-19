@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
@@ -20,7 +21,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class ChargingStation(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ChargingStation(VehicleState):
     """
     a vehicle is charging at a station with a specific charger_id type
     """

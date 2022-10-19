@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -26,7 +27,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class DispatchTrip(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class DispatchTrip(VehicleState):
     vehicle_id: VehicleId
     request_id: RequestId
     route: Route

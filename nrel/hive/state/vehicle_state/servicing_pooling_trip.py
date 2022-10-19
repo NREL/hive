@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
@@ -27,7 +28,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class ServicingPoolingTrip(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ServicingPoolingTrip(VehicleState):
     """
     a pooling trip is in service, for the given trips in the given trip_order.
     """

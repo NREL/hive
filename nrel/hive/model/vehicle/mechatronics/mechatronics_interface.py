@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Dict, TYPE_CHECKING, Tuple
 
 import immutables
 
 from nrel.hive.model.energy import EnergyType, Charger
-from nrel.hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
     from nrel.hive.util.units import Seconds, Ratio, Kilometers
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
     from nrel.hive.model.roadnetwork.route import Route
 
 
-class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
+class MechatronicsInterface(ABC):
     """
     Interface for creating energy sources
     """

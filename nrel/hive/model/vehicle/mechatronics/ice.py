@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 
@@ -20,7 +21,8 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-class ICE(NamedTuple, MechatronicsInterface):
+@dataclass(frozen=True)
+class ICE(MechatronicsInterface):
     """
     Mechatronics for an internal combustion engine (ICE)
     """
