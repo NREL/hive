@@ -81,7 +81,7 @@ Some values are set by a global configuration file with filename `.hive.yaml`.
 The defaults are set in the repo [here](nrel/hive/resources/defaults/.hive.yaml). 
 If you want to override any entries in this file, you can create a new one by the same name `.hive.yaml` and place it in your working directory or a parent directory. 
 Hive will also check your base user directory for this file (aka `~/.hive.yaml`). 
-This can be useful if you would like to reduce the output files or change the default output base directory (for example, to something like as `~/hive/output`).
+This can be useful if you would like to reduce the output files or change the default output base directory (for example, to something like `~/hive/output`).
 
 ## Dependencies
 
