@@ -13,7 +13,7 @@ HIVE is designed to integrate with vehicle power and energy grid power models in
 
 ## Installation
 
-HIVE depends on a Python installation with version 3.7 or later and the pip package manager ( [python.org](https://www.python.org/downloads/) | [conda](https://www.anaconda.com/products/distribution) | [miniconda](https://docs.conda.io/en/latest/miniconda.html) )
+HIVE depends on a Python installation [3.7, 3.8] and the pip package manager ( [python.org](https://www.python.org/downloads/) | [conda](https://www.anaconda.com/products/distribution) | [miniconda](https://docs.conda.io/en/latest/miniconda.html) )
 
 ### via pip
 
