@@ -1,4 +1,4 @@
-# HIVE™ |:honeybee:|  
+# HIVE™ :honeybee:  
 
 **H**ighly  
 **I**ntegrated  
