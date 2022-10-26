@@ -32,11 +32,18 @@ release = 'v0.8.0'
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "autoapi.extension",
+    "sphinx.ext.napoleon",
     'sphinx_autodoc_typehints',
     "sphinx_rtd_theme",
     "recommonmark",
     "sphinx_markdown_tables",
+    "sphinxemoji.sphinxemoji",
+    "sphinx.ext.viewcode"
 ]
+
+autoapi_type = 'python'
+autoapi_dirs = ['../../nrel']
 
 autodoc_member_order = 'bysource'
 
@@ -70,6 +77,12 @@ autosectionlabel_prefix_document = True
 
 github_doc_root = 'https://github.com/rtfd/recommonmark/tree/master/docs/'
 
+import collections
+
+def remove_namedtuple_attrib_docstring(app, what, name, obj, skip, options):
+    if type(obj) is collections._tuplegetter:
+        return True
+    return skip
 
 def setup(app):
     app.add_config_value('recommonmark_config', {
@@ -77,3 +90,4 @@ def setup(app):
         'auto_toc_tree_section': 'Contents',
     }, True)
     app.add_transform(AutoStructify)
+    app.connect("autodoc-skip-member", remove_namedtuple_attrib_docstring)

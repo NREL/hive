@@ -42,6 +42,7 @@ setup(
         "dev": ["pytest", "black"],
         "docs": [
             "sphinx",
+            "sphinx-autoapi",
             "sphinx-rtd-theme",
             "sphinxemoji",
             "recommonmark",
