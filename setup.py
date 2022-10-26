@@ -39,7 +39,16 @@ setup(
         "returns",
     ],
     extras_require={
-        "dev": ["pytest", "black"]
+        "dev": ["pytest", "black"],
+        "docs": [
+            "sphinx",
+            "sphinx-rtd-theme",
+            "sphinxemoji",
+            "recommonmark",
+            "sphinx-markdown-tables",
+            "sphinx-autodoc-typehints"
+
+        ]
     },
     include_package_data=True,
     package_data={
