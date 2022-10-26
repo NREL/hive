@@ -36,7 +36,6 @@ extensions = [
     "sphinx.ext.napoleon",
     'sphinx_autodoc_typehints',
     "sphinx_rtd_theme",
-    "sphinx_markdown_tables",
     "sphinxemoji.sphinxemoji",
     "sphinx.ext.viewcode",
     "myst_parser"

@@ -45,8 +45,7 @@ setup(
             "sphinx-autoapi",
             "sphinx-rtd-theme",
             "sphinxemoji",
-            "myst-parser"
-            "sphinx-markdown-tables",
+            "myst-parser",
             "sphinx-autodoc-typehints"
 
         ]
