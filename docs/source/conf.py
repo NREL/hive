@@ -18,8 +18,8 @@ sys.path.append(os.path.abspath("./ext"))
 
 # -- Project information -----------------------------------------------------
 
-project = 'hive'
-copyright = '2020, NREL'
+project = 'nrel.hive'
+copyright = '2022, NREL'
 author = 'NREL'
 
 # The full version, including alpha/beta/rc tags
@@ -36,10 +36,10 @@ extensions = [
     "sphinx.ext.napoleon",
     'sphinx_autodoc_typehints',
     "sphinx_rtd_theme",
-    "recommonmark",
     "sphinx_markdown_tables",
     "sphinxemoji.sphinxemoji",
-    "sphinx.ext.viewcode"
+    "sphinx.ext.viewcode",
+    "myst_parser"
 ]
 
 autoapi_type = 'python'
@@ -47,7 +47,7 @@ autoapi_dirs = ['../../nrel']
 
 autodoc_member_order = 'bysource'
 
-source_suffix = ['.rst', '.md']
+source_suffix = [".rst", ".md"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -46,6 +46,7 @@ setup(
             "sphinx-rtd-theme",
             "sphinxemoji",
             "recommonmark",
+            "myst-parser"
             "sphinx-markdown-tables",
             "sphinx-autodoc-typehints"
 
