@@ -31,26 +31,19 @@ from nrel.hive.dispatcher import *
 from nrel.hive.state.simulation_state.update.update import Update
 from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
 
+
 def package_root() -> Path:
-  return Path(__file__).parent
+    return Path(__file__).parent
 
 
-class TqdmHandler(logging.StreamHandler):
-    def emit(self, record):
-        msg = self.format(record)
-        tqdm.write(msg)
+from rich.logging import RichHandler
 
 
-# dictConfig(LOGGING_CONFIG)
-log = logging.getLogger()
-log.setLevel(logging.INFO)
-
-formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
-
-sh = TqdmHandler()
-sh.setLevel(logging.INFO)
-sh.setFormatter(formatter)
-
-log.addHandler(sh)
-
-
+FORMAT = "%(message)s"
+rich_handler = RichHandler(markup=True, rich_tracebacks=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format=FORMAT,
+    datefmt="[%X]",
+    handlers=[rich_handler],
+)

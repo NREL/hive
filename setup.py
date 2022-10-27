@@ -34,6 +34,7 @@ setup(
         "networkx",
         "PyYAML",
         "tqdm",
+        "rich",
         "h3>=3.7.1",
         "scipy",
         "returns",

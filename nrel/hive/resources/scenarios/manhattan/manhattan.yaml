@@ -21,5 +21,7 @@ dispatcher:
   valid_dispatch_states:
     - idle
     - repositioning
+    - reservebase 
+    - chargingbase 
 
 

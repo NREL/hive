@@ -12,6 +12,7 @@ Checkout the `README <https://github.com/NREL/hive>`_ for installation instructi
 .. toctree::
    :maxdepth: 1 
    
+   example
    inputs
    outputs
    developer/index

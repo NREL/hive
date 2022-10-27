@@ -14,6 +14,70 @@ input is (required) or (optional); take a look at `nrel.hive.resources.defaults.
 :language: yaml
 ```
 
+## Scenario Files
+
+In addition to the scenario config yaml file, each scenario has several other files used to describe the scenario.
+
+### Bases
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/bases/README.md
+```
+
+### Chargers
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/chargers/README.md
+```
+
+### Charging Prices
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/charging_prices/README.md
+```
+
+### Fleets 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/fleets/README.md
+```
+
+### Geofence 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/geofence/README.md
+```
+
+### Mechatronics 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/mechatronics/README.md
+```
+
+### Requests 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/requests/README.md
+```
+
+### Road Network 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/road_network/README.md
+```
+
+### Service Prices 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/service_prices/README.md
+```
+
+### Stations 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
+```
+
+### Stations 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
+```
+
+### Vehicles 
+
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
+```
+
 ## Global Config
 
 All of the inputs described above are scenario specific.
