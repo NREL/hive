@@ -24,10 +24,10 @@ def build_chargers_table(chargers_file: str) -> Dict[ChargerId, Charger]:
         with chargers_file_path.open() as f:
             reader = DictReader(f)
             for row in reader:
-                charger_id = row.get('charger_id')
-                energy_type_srt = row.get('energy_type')
-                rate_str = row.get('rate')
-                units = row.get('units')
+                charger_id = row.get("charger_id")
+                energy_type_srt = row.get("energy_type")
+                rate_str = row.get("rate")
+                units = row.get("units")
                 if not charger_id:
                     raise IOError(f"charger row missing charger_id field: {row}")
                 elif not rate_str:
@@ -40,10 +40,17 @@ def build_chargers_table(chargers_file: str) -> Dict[ChargerId, Charger]:
                     try:
                         rate = float(rate_str)
                     except TypeError as e:
-                        raise TypeError(f"unable to parse charger rate as number for row {row}") from e
+                        raise TypeError(
+                            f"unable to parse charger rate as number for row {row}"
+                        ) from e
                     energy_type = EnergyType.from_string(energy_type_srt)
                     if not energy_type:
                         raise TypeError(f"unable to parse energy type for row {row}")
-                    new_charger = Charger(id=charger_id, energy_type=energy_type, rate=rate, units=units)
+                    new_charger = Charger(
+                        id=charger_id,
+                        energy_type=energy_type,
+                        rate=rate,
+                        units=units,
+                    )
                     chargers_table.update({charger_id: new_charger})
         return chargers_table

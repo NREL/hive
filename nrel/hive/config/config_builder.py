@@ -5,14 +5,16 @@ from typing import *
 
 class ConfigBuilder:
 
-    T = TypeVar('T')
+    T = TypeVar("T")
 
     @classmethod
-    def build(cls,
-              default_config: Dict,
-              required_config: Tuple[str, ...],
-              config_constructor: Callable[[Dict], Union[Exception, T]],
-              config: Dict = None) -> T:
+    def build(
+        cls,
+        default_config: Dict,
+        required_config: Tuple[str, ...],
+        config_constructor: Callable[[Dict], Union[Exception, T]],
+        config: Dict = None,
+    ) -> T:
         """
         constructs a Config from a configuration Dict
 
@@ -23,7 +25,11 @@ class ConfigBuilder:
         :return: a Config, or, an error
         """
 
-        c = default_config if config is None else dict(list(default_config.items()) + list(config.items()))
+        c = (
+            default_config
+            if config is None
+            else dict(list(default_config.items()) + list(config.items()))
+        )
         for key in required_config:
             value = c.get(key)
             if value is None:

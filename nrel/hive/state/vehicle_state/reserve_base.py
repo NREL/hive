@@ -7,13 +7,18 @@ from uuid import uuid4
 
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
-from nrel.hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
+from nrel.hive.state.vehicle_state.vehicle_state import (
+    VehicleState,
+    VehicleStateInstanceId,
+)
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import VehicleId, BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -33,12 +38,14 @@ class ReserveBase(VehicleState):
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.RESERVE_BASE
 
-    def update(self, sim: SimulationState,
-               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState,
-              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         to enter this state, the base must have a stall for the vehicle
 
@@ -56,10 +63,13 @@ class ReserveBase(VehicleState):
             return SimulationStateError(f"{context}; base not found"), None
         elif base.geoid != vehicle.geoid:
             log.warning(
-                f"ReserveBase.enter(): vehicle {vehicle.id} not at same location as {base.id}")
+                f"ReserveBase.enter(): vehicle {vehicle.id} not at same location as {base.id}"
+            )
             return None, None
         elif not base.membership.grant_access_to_membership(vehicle.membership):
-            msg = f"ReserveBase.enter(): vehicle {vehicle.id} does not have access to base {base.id}"
+            msg = (
+                f"ReserveBase.enter(): vehicle {vehicle.id} does not have access to base {base.id}"
+            )
             return SimulationStateError(msg), None
 
         else:
@@ -70,14 +80,16 @@ class ReserveBase(VehicleState):
                 error, updated_sim = simulation_state_ops.modify_base(sim, updated_base)
                 if error:
                     response = SimulationStateError(
-                        f"failure during ReserveBase.enter for vehicle {self.vehicle_id}")
+                        f"failure during ReserveBase.enter for vehicle {self.vehicle_id}"
+                    )
                     response.__cause__ = error
                     return response, None
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
-    def exit(self, next_state: VehicleState, sim: SimulationState,
-             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(
+        self, next_state: VehicleState, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         releases the stall that this vehicle occupied
 
@@ -93,7 +105,8 @@ class ReserveBase(VehicleState):
             error, updated_base = base.return_stall()
             if error:
                 response = SimulationStateError(
-                    f"failure during ReserveBase.exit for vehicle {self.vehicle_id}")
+                    f"failure during ReserveBase.exit for vehicle {self.vehicle_id}"
+                )
                 response.__cause__ = error
                 return response, None
             return simulation_state_ops.modify_base(sim, updated_base)
@@ -109,8 +122,8 @@ class ReserveBase(VehicleState):
         return False
 
     def _default_terminal_state(
-            self, sim: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
 
@@ -120,8 +133,9 @@ class ReserveBase(VehicleState):
         """
         return None, self
 
-    def _perform_update(self, sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         as of now, there is no update for being ReserveBase
 

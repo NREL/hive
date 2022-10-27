@@ -8,11 +8,11 @@ from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 
 
 def default_request_sampler(
-        count: int,
-        simulation_state: SimulationState,
-        environment: Environment,
-        allow_pooling: bool = False,
-        random_seed: int = 0
+    count: int,
+    simulation_state: SimulationState,
+    environment: Environment,
+    allow_pooling: bool = False,
+    random_seed: int = 0,
 ) -> Tuple[Request, ...]:
     """
     samples `count` requests uniformly across time and space
@@ -31,11 +31,13 @@ def default_request_sampler(
 
     requests = []
 
-    possible_timesteps = list(range(
-        int(environment.config.sim.start_time),
-        int(environment.config.sim.end_time),
-        environment.config.sim.timestep_duration_seconds,
-    ))
+    possible_timesteps = list(
+        range(
+            int(environment.config.sim.start_time),
+            int(environment.config.sim.end_time),
+            environment.config.sim.timestep_duration_seconds,
+        )
+    )
     possible_links = list(simulation_state.road_network.link_helper.links.values())
 
     id_counter = 0
@@ -54,7 +56,7 @@ def default_request_sampler(
             road_network=simulation_state.road_network,
             departure_time=random.choice(possible_timesteps),
             passengers=random.choice([1, 2, 3, 4]),
-            allows_pooling=allow_pooling
+            allows_pooling=allow_pooling,
         )
 
         requests.append(request)

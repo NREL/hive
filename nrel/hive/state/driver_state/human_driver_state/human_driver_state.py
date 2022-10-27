@@ -6,17 +6,26 @@ from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
 from nrel.hive.dispatcher.instruction.instructions import (
-    DispatchBaseInstruction, ReserveBaseInstruction,
+    DispatchBaseInstruction,
+    ReserveBaseInstruction,
 )
-from nrel.hive.reporting.driver_event_ops import driver_schedule_event, ScheduleEventType
+from nrel.hive.reporting.driver_event_ops import (
+    driver_schedule_event,
+    ScheduleEventType,
+)
 from nrel.hive.state.driver_state.driver_instruction_ops import (
     human_charge_at_home,
     idle_if_at_soc_limit,
     human_look_for_requests,
-    human_go_home)
+    human_go_home,
+)
 from nrel.hive.state.driver_state.driver_state import DriverState
-from nrel.hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
-from nrel.hive.state.driver_state.human_driver_state.human_unavailable_charge_parameters import HumanUnavailableChargeParameters
+from nrel.hive.state.driver_state.human_driver_state.human_driver_attributes import (
+    HumanDriverAttributes,
+)
+from nrel.hive.state.driver_state.human_driver_state.human_unavailable_charge_parameters import (
+    HumanUnavailableChargeParameters,
+)
 from nrel.hive.state.vehicle_state.charging_base import ChargingBase
 from nrel.hive.state.vehicle_state.charging_station import ChargingStation
 from nrel.hive.state.vehicle_state.dispatch_base import DispatchBase
@@ -26,7 +35,9 @@ from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import SimulationStateError, BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId
 
@@ -42,6 +53,7 @@ class HumanAvailable(DriverState):
     a human driver that is available to work as the current simulation state is consistent with
     the driver's schedule function
     """
+
     attributes: HumanDriverAttributes
 
     @property
@@ -61,10 +73,10 @@ class HumanAvailable(DriverState):
         return cls.attributes.home_base_id
 
     def generate_instruction(
-            self,
-            sim: SimulationState,
-            env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
+        self,
+        sim: SimulationState,
+        env: Environment,
+        previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
@@ -88,10 +100,9 @@ class HumanAvailable(DriverState):
         else:
             return None
 
-    def update(self,
-               sim: SimulationState,
-               env: Environment
-               ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         test that the agent is available to work. if unavailable, transition to an unavailable state.
 
@@ -108,7 +119,9 @@ class HumanAvailable(DriverState):
             return None, sim
         elif not vehicle:
             state_name = self.__class__.__name__
-            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state")
+            error = SimulationStateError(
+                f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state"
+            )
             return error, None
         else:
             # log transition
@@ -116,11 +129,11 @@ class HumanAvailable(DriverState):
             env.reporter.file_report(report)
 
             # transition to unavailable
-            charge_params = HumanUnavailableChargeParameters.build(vehicle, self.attributes.home_base_id, sim, env)
+            charge_params = HumanUnavailableChargeParameters.build(
+                vehicle, self.attributes.home_base_id, sim, env
+            )
             next_state = HumanUnavailable(self.attributes, charge_params)
-            result = DriverState.apply_new_driver_state(sim,
-                                                        self.attributes.vehicle_id,
-                                                        next_state)
+            result = DriverState.apply_new_driver_state(sim, self.attributes.vehicle_id, next_state)
             return result
 
 
@@ -129,6 +142,7 @@ class HumanUnavailable(DriverState):
     """
     a human driver that is not available to work
     """
+
     attributes: HumanDriverAttributes
     charge_params: HumanUnavailableChargeParameters = HumanUnavailableChargeParameters()
 
@@ -149,10 +163,10 @@ class HumanUnavailable(DriverState):
         return cls.attributes.home_base_id
 
     def generate_instruction(
-            self,
-            sim: SimulationState,
-            env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
+        self,
+        sim: SimulationState,
+        env: Environment,
+        previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
         """
         while in this state, the driver checks the vehicle location; if the vehicle is not at the home base,
@@ -172,8 +186,10 @@ class HumanUnavailable(DriverState):
             log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
             return None
         elif not my_base:
-            log.error(f"could not find base {self.attributes.home_base_id} in simulation "
-                      f"for veh {self.attributes.vehicle_id}")
+            log.error(
+                f"could not find base {self.attributes.home_base_id} in simulation "
+                f"for veh {self.attributes.vehicle_id}"
+            )
             return None
         else:
             at_home = my_base.geoid == my_vehicle.geoid
@@ -183,32 +199,50 @@ class HumanUnavailable(DriverState):
                 if isinstance(my_vehicle.vehicle_state, DispatchBase):
                     # stick with the plan
                     return None
-                if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(my_vehicle.vehicle_state, ChargingStation):
+                if isinstance(my_vehicle.vehicle_state, DispatchStation) or isinstance(
+                    my_vehicle.vehicle_state, ChargingStation
+                ):
                     remaining_range = my_mechatronics.range_remaining_km(my_vehicle)
-                    if self.charge_params.remaining_range_target and remaining_range < self.charge_params.remaining_range_target:
+                    if (
+                        self.charge_params.remaining_range_target
+                        and remaining_range < self.charge_params.remaining_range_target
+                    ):
                         # stick with the plan (charging)
                         return None
                     else:
                         # we have charged to our charge target, or, have no charging target
-                        instruction = DispatchBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+                        instruction = DispatchBaseInstruction(
+                            self.attributes.vehicle_id,
+                            self.attributes.home_base_id,
+                        )
                         return instruction
                 else:
                     # go home or charge on the way home if you need to
                     return human_go_home(my_vehicle, my_base, sim, env)
             else:
-                not_full = my_mechatronics.fuel_source_soc(my_vehicle) < env.config.dispatcher.ideal_fastcharge_soc_limit
-                if not_full and my_base.station_id and not isinstance(my_vehicle.vehicle_state, ChargingBase):
+                not_full = (
+                    my_mechatronics.fuel_source_soc(my_vehicle)
+                    < env.config.dispatcher.ideal_fastcharge_soc_limit
+                )
+                if (
+                    not_full
+                    and my_base.station_id
+                    and not isinstance(my_vehicle.vehicle_state, ChargingBase)
+                ):
                     # otherwise, if we're at home and we have a plug, we try to charge to full
                     return human_charge_at_home(my_vehicle, my_base, sim, env)
                 elif isinstance(my_vehicle.vehicle_state, Idle):
                     # finally, if we're at home and idling, we turn the vehicle off
-                    return ReserveBaseInstruction(self.attributes.vehicle_id, self.attributes.home_base_id)
+                    return ReserveBaseInstruction(
+                        self.attributes.vehicle_id,
+                        self.attributes.home_base_id,
+                    )
                 else:
                     return None
 
-    def update(self,
-               sim: 'SimulationState',
-               env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(
+        self, sim: "SimulationState", env: "Environment"
+    ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
         """
         test that the agent is unavailable to work. if not, transition to an available state.
 
@@ -222,7 +256,9 @@ class HumanUnavailable(DriverState):
 
         if not vehicle:
             state_name = self.__class__.__name__
-            error = SimulationStateError(f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state")
+            error = SimulationStateError(
+                f"vehicle {self.attributes.vehicle_id} not found; context: update {state_name} driver state"
+            )
             return error, None
         elif schedule_function and schedule_function(sim, self.attributes.vehicle_id):
             # log transition
@@ -233,9 +269,7 @@ class HumanUnavailable(DriverState):
             #   being unavailable but not having a schedule is invalid.
             #   the schedule function returns true, so, we should be activated
             next_state = HumanAvailable(self.attributes)
-            result = DriverState.apply_new_driver_state(sim,
-                                                        self.attributes.vehicle_id,
-                                                        next_state)
+            result = DriverState.apply_new_driver_state(sim, self.attributes.vehicle_id, next_state)
             return result
         else:
             # stay unavailable

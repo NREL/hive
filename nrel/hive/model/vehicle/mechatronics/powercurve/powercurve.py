@@ -13,12 +13,13 @@ class Powercurve(ABC):
     """
 
     @abstractmethod
-    def charge(self,
-               start_soc: Ratio,
-               full_soc: Ratio,
-               power_kw: Kw,
-               duration_seconds: Seconds = 1  # seconds
-               ) -> Tuple[KwH, Seconds]:
+    def charge(
+        self,
+        start_soc: Ratio,
+        full_soc: Ratio,
+        power_kw: Kw,
+        duration_seconds: Seconds = 1,  # seconds
+    ) -> Tuple[KwH, Seconds]:
         """
 
 
@@ -28,4 +29,3 @@ class Powercurve(ABC):
         :param duration_seconds:
         :return: the charge amount along with the time spent charging
         """
-

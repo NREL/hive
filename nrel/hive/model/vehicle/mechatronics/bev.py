@@ -8,7 +8,9 @@ from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
 import immutables
 
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
+    MechatronicsInterface,
+)
 from nrel.hive.model.vehicle.mechatronics.powercurve import build_powercurve
 from nrel.hive.model.vehicle.mechatronics.powertrain import build_powertrain
 from nrel.hive.util.typealiases import MechatronicsId
@@ -18,8 +20,12 @@ if TYPE_CHECKING:
     from nrel.hive.model.energy.charger import Charger
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.roadnetwork.route import Route
-    from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
-    from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
+    from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import (
+        Powertrain,
+    )
+    from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import (
+        Powercurve,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -48,31 +54,31 @@ class BEV(MechatronicsInterface):
         :param d: the dictionary to build from
         :return: the built Mechatronics object
         """
-        nominal_watt_hour_per_mile = float(d['nominal_watt_hour_per_mile'])
+        nominal_watt_hour_per_mile = float(d["nominal_watt_hour_per_mile"])
 
         # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
         updated_d = d.copy()
-        updated_d['scale_factor'] = nominal_watt_hour_per_mile
+        updated_d["scale_factor"] = nominal_watt_hour_per_mile
 
-        battery_capacity_kwh = float(d['battery_capacity_kwh'])
+        battery_capacity_kwh = float(d["battery_capacity_kwh"])
 
-        if not updated_d.get('powertrain_file'):
+        if not updated_d.get("powertrain_file"):
             raise FileNotFoundError("missing powertrain file in mechatronics config")
-        elif not updated_d.get('powercurve_file'):
+        elif not updated_d.get("powercurve_file"):
             raise FileNotFoundError("missing powercurve file in mechatronics config")
 
         powertrain = build_powertrain(updated_d)
         powercurve = build_powercurve(updated_d)
-        idle_kwh_per_hour = float(updated_d['idle_kwh_per_hour'])
-        charge_taper_cutoff_kw = float(updated_d['charge_taper_cutoff_kw'])
+        idle_kwh_per_hour = float(updated_d["idle_kwh_per_hour"])
+        charge_taper_cutoff_kw = float(updated_d["charge_taper_cutoff_kw"])
         return BEV(
-            mechatronics_id=updated_d['mechatronics_id'],
+            mechatronics_id=updated_d["mechatronics_id"],
             battery_capacity_kwh=battery_capacity_kwh,
             idle_kwh_per_hour=idle_kwh_per_hour,
             powertrain=powertrain,
             powercurve=powercurve,
             nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
-            charge_taper_cutoff_kw=charge_taper_cutoff_kw
+            charge_taper_cutoff_kw=charge_taper_cutoff_kw,
         )
 
     def valid_charger(self, charger: Charger) -> bool:
@@ -107,7 +113,9 @@ class BEV(MechatronicsInterface):
         :param required_range: the distance the vehicle needs to travel
         :return:
         """
-        required_energy_kwh = (required_range / MILE_TO_KM) * (self.nominal_watt_hour_per_mile * WH_TO_KWH)
+        required_energy_kwh = (required_range / MILE_TO_KM) * (
+            self.nominal_watt_hour_per_mile * WH_TO_KWH
+        )
         return required_energy_kwh / self.battery_capacity_kwh
 
     def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
@@ -139,7 +147,7 @@ class BEV(MechatronicsInterface):
 
     def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
-        consume_energy over a route 
+        consume_energy over a route
 
 
         :param vehicle:
@@ -148,10 +156,14 @@ class BEV(MechatronicsInterface):
         :return:
         """
         energy_used = self.powertrain.energy_cost(route)
-        energy_used_kwh = energy_used * get_unit_conversion(self.powertrain.energy_units, "kilowatthour")
+        energy_used_kwh = energy_used * get_unit_conversion(
+            self.powertrain.energy_units, "kilowatthour"
+        )
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)
-        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.ELECTRIC: new_energy_kwh}))
+        updated_vehicle = vehicle.modify_energy(
+            immutables.Map({EnergyType.ELECTRIC: new_energy_kwh})
+        )
         return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
@@ -167,11 +179,15 @@ class BEV(MechatronicsInterface):
         idle_energy_kwh = self.idle_kwh_per_hour * time_seconds * SECONDS_TO_HOURS
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - idle_energy_kwh)
-        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.ELECTRIC: new_energy_kwh}))
+        updated_vehicle = vehicle.modify_energy(
+            immutables.Map({EnergyType.ELECTRIC: new_energy_kwh})
+        )
 
         return updated_vehicle
 
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
+    def add_energy(
+        self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds
+    ) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
@@ -184,7 +200,9 @@ class BEV(MechatronicsInterface):
         :return: the updated vehicle, along with the time spent charging
         """
         if not self.valid_charger(charger):
-            log.warning(f"BEV vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging.")
+            log.warning(
+                f"BEV vehicle attempting to use charger of energy type: {charger.energy_type}. Not charging."
+            )
             return vehicle, 0
 
         start_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
@@ -204,7 +222,8 @@ class BEV(MechatronicsInterface):
             )
             new_energy_kwh = min(self.battery_capacity_kwh, charger_energy_kwh)
 
-
-        updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.ELECTRIC: new_energy_kwh}))
+        updated_vehicle = vehicle.modify_energy(
+            immutables.Map({EnergyType.ELECTRIC: new_energy_kwh})
+        )
 
         return updated_vehicle, time_charging_seconds

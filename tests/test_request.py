@@ -21,7 +21,7 @@ class TestRequest(TestCase):
         d_lon=4,
         h3_res=11,
         departure_time=28800,
-        passengers=2
+        passengers=2,
     )
 
     def test_request_constructor(self):
@@ -43,8 +43,14 @@ class TestRequest(TestCase):
         network = mock_network()
         _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
-        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
-        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
+        self.assertEqual(
+            req.origin,
+            h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
+        )
+        self.assertEqual(
+            req.destination,
+            h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution),
+        )
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
         self.assertTrue(req.membership.public)
@@ -58,21 +64,27 @@ class TestRequest(TestCase):
         network = mock_network()
         _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
-        self.assertEqual(req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution))
-        self.assertEqual(req.destination, h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution))
+        self.assertEqual(
+            req.origin,
+            h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
+        )
+        self.assertEqual(
+            req.destination,
+            h3.geo_to_h3(31.2109091, 121.4532226, env.config.sim.sim_h3_resolution),
+        )
         self.assertEqual(req.departure_time, 61200)
         self.assertEqual(len(req.passengers), 4)
-        self.assertTrue('uber' in req.membership.memberships)
+        self.assertTrue("uber" in req.membership.memberships)
 
     def test_from_row_datetime_bad(self):
         row = {
-            'request_id': '1_a',
-            'o_lat': '0',
-            'o_lon': '0',
-            'd_lat': '0',
-            'd_lon': '0',
-            'departure_time': '01-09-2019 11:11:11',
-            'passengers': '4'
+            "request_id": "1_a",
+            "o_lat": "0",
+            "o_lon": "0",
+            "d_lat": "0",
+            "d_lon": "0",
+            "departure_time": "01-09-2019 11:11:11",
+            "passengers": "4",
         }
         config = mock_config(
             start_time="2019-01-09T00:00:00",

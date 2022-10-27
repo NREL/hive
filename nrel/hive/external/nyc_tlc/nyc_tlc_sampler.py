@@ -5,16 +5,20 @@ from csv import DictReader, DictWriter
 import h3
 from pkg_resources import resource_filename
 
-from nrel.hive.external.nyc_tlc.nyc_tlc_parsers import parse_yellow_tripdata_row
+from nrel.hive.external.nyc_tlc.nyc_tlc_parsers import (
+    parse_yellow_tripdata_row,
+)
 from nrel.hive.util.units import KwH, Kw
 
 
-def down_sample_nyc_tlc_data(in_file: str,
-                             out_file: str,
-                             sample_size: int,
-                             request_cancel_time_buffer: int = 300,
-                             sim_h3_location_resolution: int = 15,
-                             boundary_h3_resolution: int = 10):
+def down_sample_nyc_tlc_data(
+    in_file: str,
+    out_file: str,
+    sample_size: int,
+    request_cancel_time_buffer: int = 300,
+    sim_h3_location_resolution: int = 15,
+    boundary_h3_resolution: int = 10,
+):
     """
     down-samples in input_config TLC data file for Yellow cab data
 
@@ -40,22 +44,22 @@ def down_sample_nyc_tlc_data(in_file: str,
         # used for ETL to confirm that requests sampled are in fact within the study area (some are not)
         geojson = json.load(f)
         hexes = h3.polyfill(
-            geojson=geojson['geometry'],
+            geojson=geojson["geometry"],
             res=boundary_h3_resolution,
-            geo_json_conformant=True
+            geo_json_conformant=True,
         )
 
         with open(in_file) as f:
-            with open(out_file, 'w', newline='') as w:
+            with open(out_file, "w", newline="") as w:
                 reader = DictReader(f)
                 header = [
-                    'request_id',
-                    'o_lat',
-                    'o_lon',
-                    'd_lat',
-                    'd_lon',
-                    'departure_time',
-                    'passengers'
+                    "request_id",
+                    "o_lat",
+                    "o_lon",
+                    "d_lat",
+                    "d_lon",
+                    "departure_time",
+                    "passengers",
                 ]
 
                 writer = DictWriter(w, header)
@@ -73,19 +77,22 @@ def down_sample_nyc_tlc_data(in_file: str,
                         row,
                         recorded_count,
                         request_cancel_time_buffer,
-                        sim_h3_location_resolution
+                        sim_h3_location_resolution,
                     )
 
-                    if not isinstance(req, Exception) and h3.h3_to_parent(req.geoid, boundary_h3_resolution) in hexes:
+                    if (
+                        not isinstance(req, Exception)
+                        and h3.h3_to_parent(req.geoid, boundary_h3_resolution) in hexes
+                    ):
                         # request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers
                         out_row = {
-                            'request_id': req.id,
-                            'o_lat': row['pickup_latitude'],
-                            'o_lon': row['pickup_longitude'],
-                            'd_lat': row['dropoff_latitude'],
-                            'd_lon': row['dropoff_longitude'],
-                            'departure_time': req.departure_time,
-                            'passengers': len(req.passengers)
+                            "request_id": req.id,
+                            "o_lat": row["pickup_latitude"],
+                            "o_lon": row["pickup_longitude"],
+                            "d_lat": row["dropoff_latitude"],
+                            "d_lon": row["dropoff_longitude"],
+                            "departure_time": req.departure_time,
+                            "passengers": len(req.passengers),
                         }
                         writer.writerow(out_row)
                         recorded_count += 1
@@ -93,17 +100,21 @@ def down_sample_nyc_tlc_data(in_file: str,
                         print(f"row for id {recorded_count} failed: {row}")
 
     if attempted_count == absolute_cutoff:
-        raise IOError(f"too many errors, input_config file {in_file} (and corresponding file {out_file}) may be corrupt")
+        raise IOError(
+            f"too many errors, input_config file {in_file} (and corresponding file {out_file}) may be corrupt"
+        )
 
 
-def sample_vehicles_in_geofence(num: int,
-                                out_file: str,
-                                powertrain_id: str,
-                                powercurve_id: str,
-                                capacity: KwH,
-                                initial_soc: float,
-                                ideal_energy_limit: KwH,
-                                max_charge_acceptance_kw: Kw):
+def sample_vehicles_in_geofence(
+    num: int,
+    out_file: str,
+    powertrain_id: str,
+    powercurve_id: str,
+    capacity: KwH,
+    initial_soc: float,
+    ideal_energy_limit: KwH,
+    max_charge_acceptance_kw: Kw,
+):
     """
     samples points in the NYC polygon and creates Vehicles from them, writing to an output file
 
@@ -129,15 +140,20 @@ def sample_vehicles_in_geofence(num: int,
 
         # needs to be a Polygon, not a MultiPolygon feature
         geojson = json.load(f)
-        hexes = list(h3.polyfill(
-            geojson=geojson['geometry'],
-            res=10,
-            geo_json_conformant=True)
-        )
+        hexes = list(h3.polyfill(geojson=geojson["geometry"], res=10, geo_json_conformant=True))
 
-        with open(out_file, 'w', newline='') as w:
-            header = ["vehicle_id", "lat", "lon", "powertrain_id", "powercurve_id", "capacity", "ideal_energy_limit",
-                      "max_charge_acceptance", "initial_soc"]
+        with open(out_file, "w", newline="") as w:
+            header = [
+                "vehicle_id",
+                "lat",
+                "lon",
+                "powertrain_id",
+                "powercurve_id",
+                "capacity",
+                "ideal_energy_limit",
+                "max_charge_acceptance",
+                "initial_soc",
+            ]
 
             writer = DictWriter(w, header)
             writer.writeheader()
@@ -150,15 +166,15 @@ def sample_vehicles_in_geofence(num: int,
                 lat, lon = h3.h3_to_geo(random_lower_hex)
 
                 row = {
-                    'vehicle_id': vehicle_id,
-                    'lat': lat,
-                    'lon': lon,
-                    'powertrain_id': powertrain_id,
-                    'powercurve_id': powercurve_id,
-                    'capacity': capacity,
-                    'initial_soc': initial_soc,
-                    'ideal_energy_limit': ideal_energy_limit,
-                    'max_charge_acceptance': max_charge_acceptance_kw
+                    "vehicle_id": vehicle_id,
+                    "lat": lat,
+                    "lon": lon,
+                    "powertrain_id": powertrain_id,
+                    "powercurve_id": powercurve_id,
+                    "capacity": capacity,
+                    "initial_soc": initial_soc,
+                    "ideal_energy_limit": ideal_energy_limit,
+                    "max_charge_acceptance": max_charge_acceptance_kw,
                 }
 
                 writer.writerow(row)

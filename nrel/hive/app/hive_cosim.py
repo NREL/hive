@@ -7,22 +7,28 @@ from pandas import DataFrame
 from tqdm import tqdm
 
 from nrel.hive import Update
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
+    InstructionGenerator,
+)
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
+    ChargingFleetManager,
+)
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.reporting import reporter_ops
-from nrel.hive.reporting.handler.vehicle_charge_events_handler import VehicleChargeEventsHandler
+from nrel.hive.reporting.handler.vehicle_charge_events_handler import (
+    VehicleChargeEventsHandler,
+)
 from nrel.hive.runner import RunnerPayload
 from nrel.hive.util import SimulationStateError
 from nrel.hive.util.fp import throw_on_failure
 
 
 def load_scenario(
-    scenario_file: Path, 
-    custom_instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None
-    ) -> RunnerPayload:
+    scenario_file: Path,
+    custom_instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None,
+) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state
     :param scenario_file: the HIVE scenario file to read
@@ -46,7 +52,6 @@ def load_scenario(
     else:
         instruction_generators = custom_instruction_generators
 
-
     # add a specialized Reporter handler that catches vehicle charge events
     env.reporter.add_handler(VehicleChargeEventsHandler())
 
@@ -62,10 +67,12 @@ class CrankResult(NamedTuple):
     charge_events: DataFrame
 
 
-def crank(runner_payload: RunnerPayload,
-          time_steps: int,
-          progress_bar: bool = False,
-          flush_events: bool = True) -> CrankResult:
+def crank(
+    runner_payload: RunnerPayload,
+    time_steps: int,
+    progress_bar: bool = False,
+    flush_events: bool = True,
+) -> CrankResult:
     """
     advances the previous HIVE state some number of time steps
     :param runner_payload: the previous HIVE state
@@ -92,7 +99,9 @@ def crank(runner_payload: RunnerPayload,
                 handler.clear()
 
         if new_events is None:
-            raise SimulationStateError(f'VehicleChargeEventsHandler missing from reporter in env {rp1.e}')
+            raise SimulationStateError(
+                f"VehicleChargeEventsHandler missing from reporter in env {rp1.e}"
+            )
 
         updated_events = events + (new_events,)
 

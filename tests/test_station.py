@@ -81,18 +81,12 @@ class TestStation(TestCase):
         )
         self.assertIsNone(error, f"should be no error, found {error}")
 
-        self.assertEqual(
-            updated_station.get_available_chargers(mock_dcfc_charger_id()), 0
-        )
+        self.assertEqual(updated_station.get_available_chargers(mock_dcfc_charger_id()), 0)
 
     def test_checkout_charger_none_avail(self):
-        updated_station = mock_station(
-            chargers=immutables.Map({mock_dcfc_charger_id(): 0})
-        )
+        updated_station = mock_station(chargers=immutables.Map({mock_dcfc_charger_id(): 0}))
 
-        error, no_dcfc_station = updated_station.checkout_charger(
-            mock_dcfc_charger_id()
-        )
+        error, no_dcfc_station = updated_station.checkout_charger(mock_dcfc_charger_id())
 
         self.assertIsNone(error)
         self.assertIsNone(no_dcfc_station)
@@ -100,9 +94,7 @@ class TestStation(TestCase):
     def test_return_charger(self):
         station = mock_station(chargers=immutables.Map({mock_l2_charger_id(): 1}))
         err1, updated_station = station.checkout_charger(mock_l2_charger_id())
-        self.assertIsNone(
-            err1, "test invariant failed (station has checked out charger)"
-        )
+        self.assertIsNone(err1, "test invariant failed (station has checked out charger)")
         err2, station_w_l2 = updated_station.return_charger(mock_l2_charger_id())
         self.assertIsNone(err2, "should have no error returning charger")
         self.assertEqual(station_w_l2.state[mock_l2_charger_id()].available_chargers, 1)
@@ -171,12 +163,8 @@ class TestStation(TestCase):
         l2_count = s3.enqueued_vehicle_count_for_charger(mock_l2_charger_id())
 
         self.assertEqual(dc_count, 2, "should have enqueued 2 vehicles for DC charging")
-        self.assertEqual(
-            l1_count, 1, "should have enqueued 1 vehicles for Level 1 charging"
-        )
-        self.assertEqual(
-            l2_count, 0, "should have enqueued 0 vehicles for Level 2 charging"
-        )
+        self.assertEqual(l1_count, 1, "should have enqueued 1 vehicles for Level 1 charging")
+        self.assertEqual(l2_count, 0, "should have enqueued 0 vehicles for Level 2 charging")
 
     def test_dequeue_for_charger(self):
         err1, station = mock_station().enqueue_for_charger(mock_dcfc_charger_id())
@@ -184,15 +172,11 @@ class TestStation(TestCase):
 
         err2, dequeue_1 = station.dequeue_for_charger(mock_dcfc_charger_id())
         self.assertIsNone(err2, "should be able to dequeue enqueued vehicle")
-        dequeue_1_count = dequeue_1.enqueued_vehicle_count_for_charger(
-            mock_dcfc_charger_id()
-        )
+        dequeue_1_count = dequeue_1.enqueued_vehicle_count_for_charger(mock_dcfc_charger_id())
         self.assertEqual(dequeue_1_count, 0, "should have dequeued the single vehicle")
 
         err3, dequeue_2 = dequeue_1.dequeue_for_charger(mock_dcfc_charger_id())
-        self.assertIsNone(
-            dequeue_2, "should not be able to dequeue with empty queue (error)"
-        )
+        self.assertIsNone(dequeue_2, "should not be able to dequeue with empty queue (error)")
         self.assertIsNotNone(err3, "should have an error")
 
     def test_set_membership(self):

@@ -15,7 +15,9 @@ from nrel.hive.model.sim_time import SimTime
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from nrel.hive.state.simulation_state.update.simulation_update import (
+    SimulationUpdateFunction,
+)
 from nrel.hive.util.iterators import DictReaderStepper
 from nrel.hive.util import DictOps
 from nrel.hive.util.typealiases import StationId, ChargerId
@@ -29,15 +31,17 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
     """
     loads charging prices from a file or sets all prices to zero if none provided
     """
+
     reader: DictReaderStepper
     use_defaults: bool
 
     @classmethod
-    def build(cls,
-              charging_price_file: Optional[str],
-              chargers_file: str,
-              lazy_file_reading: bool = False,
-              ) -> ChargingPriceUpdate:
+    def build(
+        cls,
+        charging_price_file: Optional[str],
+        chargers_file: str,
+        lazy_file_reading: bool = False,
+    ) -> ChargingPriceUpdate:
         """
         reads a requests file and builds a ChargingPriceUpdate SimulationUpdateFunction
         if no charging_file is specified, builds a price update which sets all
@@ -55,17 +59,21 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             # assign default price of $0.00 for any charger types
             table = build_chargers_table(chargers_file)
 
-            def create_default_price(acc: Tuple[Dict, ...], charger_id: ChargerId) -> Tuple[Dict, ...]:
+            def create_default_price(
+                acc: Tuple[Dict, ...], charger_id: ChargerId
+            ) -> Tuple[Dict, ...]:
                 default_price = {
                     "time": "0",
                     "station_id": "default",
                     "charger_id": charger_id,
-                    "price_kwh": "0.0"
+                    "price_kwh": "0.0",
                 }
                 return acc + (default_price,)
 
             fallback_values = ft.reduce(create_default_price, table.keys(), ())
-            stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=SimTime.build)
+            stepper = DictReaderStepper.from_iterator(
+                iter(fallback_values), "time", parser=SimTime.build
+            )
             return ChargingPriceUpdate(reader=stepper, use_defaults=True)
         else:
             charging_path = Path(charging_price_file)
@@ -73,7 +81,9 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
                 raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
-                    error, stepper = DictReaderStepper.build(charging_path, "time", parser=SimTime.build)
+                    error, stepper = DictReaderStepper.build(
+                        charging_path, "time", parser=SimTime.build
+                    )
                     if error:
                         raise error
                 else:
@@ -83,9 +93,9 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
 
                 return ChargingPriceUpdate(stepper, False)
 
-    def update(self,
-               sim_state: SimulationState,
-               env: Environment) -> Tuple[SimulationState, Optional[ChargingPriceUpdate]]:
+    def update(
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[SimulationState, Optional[ChargingPriceUpdate]]:
         """
         update charging price when the simulation reaches the update's time
 
@@ -104,7 +114,7 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
         charger_update = ft.reduce(
             _add_row_to_this_update,
             self.reader.read_until_stop_condition(stop_condition),
-            immutables.Map()
+            immutables.Map(),
         )
 
         if len(charger_update) == 0:
@@ -116,9 +126,9 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             # the default constructor creates one station_id called "default" and we
             # apply it to every station here.
             result = ft.reduce(
-                lambda sim, s_id: _update_station_prices(sim, s_id, charger_update['default']),
+                lambda sim, s_id: _update_station_prices(sim, s_id, charger_update["default"]),
                 sim_state.stations.keys(),
-                sim_state
+                sim_state,
             )
             return result, self
 
@@ -132,14 +142,15 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             result = ft.reduce(
                 lambda sim, s_id: _update_station_prices(sim, s_id, as_station_updates[s_id]),
                 station_ids_to_update,
-                sim_state
+                sim_state,
             )
             return result, self
 
 
-def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[ChargerId, Currency]],
-                            row: Dict[str, str]
-                            ) -> immutables.Map[str, immutables.Map[ChargerId, Currency]]:
+def _add_row_to_this_update(
+    acc: immutables.Map[str, immutables.Map[ChargerId, Currency]],
+    row: Dict[str, str],
+) -> immutables.Map[str, immutables.Map[ChargerId, Currency]]:
     """
     adds a single row to an accumulator that is storing only the most recently
     observed {StationId|GeoId}/charger_id/currency combinations
@@ -152,7 +163,7 @@ def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[ChargerId, C
     rows = acc
 
     try:
-        price = float(row['price_kwh'])
+        price = float(row["price_kwh"])
         charger_id = row["charger_id"]
         if "station_id" in row:
             station_id = row["station_id"]
@@ -172,9 +183,11 @@ def _add_row_to_this_update(acc: immutables.Map[str, immutables.Map[ChargerId, C
         return rows
 
 
-def _update_station_prices(simulation_state: SimulationState,
-                           station_id: StationId,
-                           prices_update: immutables.Map[ChargerId, Currency]) -> SimulationState:
+def _update_station_prices(
+    simulation_state: SimulationState,
+    station_id: StationId,
+    prices_update: immutables.Map[ChargerId, Currency],
+) -> SimulationState:
     """
     updates a simulation state with prices for a station by station id
 
@@ -192,7 +205,9 @@ def _update_station_prices(simulation_state: SimulationState,
             log.error(error)
             return simulation_state
         else:
-            error, updated_sim = simulation_state_ops.modify_station(simulation_state, updated_station)
+            error, updated_sim = simulation_state_ops.modify_station(
+                simulation_state, updated_station
+            )
             if error:
                 log.error(error)
                 return simulation_state
@@ -200,8 +215,10 @@ def _update_station_prices(simulation_state: SimulationState,
                 return updated_sim
 
 
-def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[ChargerId, Currency]],
-                        sim: SimulationState) -> immutables.Map[StationId, immutables.Map[ChargerId, Currency]]:
+def _map_to_station_ids(
+    this_update: immutables.Map[str, immutables.Map[ChargerId, Currency]],
+    sim: SimulationState,
+) -> immutables.Map[StationId, immutables.Map[ChargerId, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds
 
@@ -227,8 +244,12 @@ def _map_to_station_ids(this_update: immutables.Map[str, immutables.Map[ChargerI
                 elif res < sim.sim_h3_search_resolution:
                     search_geoids = tuple(h3.h3_to_children(k, sim.sim_h3_search_resolution))
 
-                station_ids = (station_id for search_geoid in search_geoids if sim.s_search.get(search_geoid)
-                               for station_id in sim.s_search.get(search_geoid))
+                station_ids = (
+                    station_id
+                    for search_geoid in search_geoids
+                    if sim.s_search.get(search_geoid)
+                    for station_id in sim.s_search.get(search_geoid)
+                )
 
                 # all of these station ids should get entries managers the provided geoid
                 for station_id in station_ids:

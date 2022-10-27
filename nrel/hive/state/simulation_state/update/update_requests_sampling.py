@@ -51,9 +51,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
         if rate_structure_file:
             rate_structure_path = Path(rate_structure_file)
             if not rate_structure_path.is_file():
-                raise IOError(
-                    f"{rate_structure_file} is not a valid path to a request file"
-                )
+                raise IOError(f"{rate_structure_file} is not a valid path to a request file")
             with open(rate_structure_file, "r", encoding="utf-8-sig") as rsf:
                 reader = DictReader(rsf)
                 rate_structure = RequestRateStructure.from_row(next(reader))
@@ -108,9 +106,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
                     "departure_time": request.departure_time,
                     "fleet_id": str(request.membership),
                 }
-                env.reporter.file_report(
-                    Report(ReportType.ADD_REQUEST_EVENT, report_data)
-                )
+                env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
             return new_sim
 
         updated_sim = ft.reduce(_add_request, priced_requests, sim_state)

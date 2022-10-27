@@ -17,10 +17,7 @@ if TYPE_CHECKING:
     pass
 
 parser = argparse.ArgumentParser(description="run hive")
-parser.add_argument(
-    'batch_config',
-    help='which batch config file to use?'
-)
+parser.add_argument("batch_config", help="which batch config file to use?")
 
 log = logging.getLogger("hive")
 
@@ -30,10 +27,10 @@ class BatchConfig(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: dict) -> BatchConfig:
-        if 'scenario_files' not in d:
+        if "scenario_files" not in d:
             raise KeyError("must specify scenario_files in the batch config")
 
-        scenario_files = [fs.find_scenario(f) for f in d['scenario_files']]
+        scenario_files = [fs.find_scenario(f) for f in d["scenario_files"]]
 
         return BatchConfig(scenario_files)
 
@@ -68,7 +65,7 @@ def run() -> int:
     if not config_file.is_file():
         raise FileNotFoundError(f"couldn't find config file: {config_file}")
 
-    with config_file.open('r') as stream:
+    with config_file.open("r") as stream:
         d = yaml.safe_load(stream)
         config = BatchConfig.from_dict(d)
 

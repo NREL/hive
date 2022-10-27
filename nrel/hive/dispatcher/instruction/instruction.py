@@ -6,12 +6,17 @@ from typing import Optional, TYPE_CHECKING, Tuple
 
 import immutables
 
-from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
+from nrel.hive.dispatcher.instruction.instruction_result import (
+    InstructionResult,
+)
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
+
 
 @dataclass(frozen=True)
 class InstructionMixin:
@@ -24,9 +29,9 @@ class InstructionABC(ABC):
     """
 
     @abstractmethod
-    def apply_instruction(self,
-                          sim_state: SimulationState,
-                          env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+    def apply_instruction(
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         """
         attempts to apply an instruction to a vehicle
 
@@ -36,10 +41,9 @@ class InstructionABC(ABC):
         """
         pass
 
+
 class Instruction(InstructionMixin, InstructionABC):
     """"""
 
 
 InstructionMap = immutables.Map[VehicleId, Instruction]
-
-

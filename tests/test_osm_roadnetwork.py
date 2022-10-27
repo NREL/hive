@@ -14,8 +14,8 @@ class TestOSMRoadNetwork(TestCase):
         out_of_geofence = network.geoid_within_geofence(somewhere_out_of_geofence)
         within_geofence = network.geoid_within_geofence(somewhere_within_geofence)
 
-        self.assertEqual(out_of_geofence, False, 'should not have found geoid in geofence')
-        self.assertEqual(within_geofence, True, 'should have found geoid in geofence')
+        self.assertEqual(out_of_geofence, False, "should not have found geoid in geofence")
+        self.assertEqual(within_geofence, True, "should have found geoid in geofence")
 
     def test_route(self):
         sim_h3_resolution = 15
@@ -31,7 +31,23 @@ class TestOSMRoadNetwork(TestCase):
         destination_position = network.position_from_geoid(destination)
         route = network.route(origin_position, destination_position)
 
-        self.assertEqual(origin_position.link_id, route[0].link_id, "origin link id should be first route link id")
-        self.assertEqual(destination_position.link_id, route[-1].link_id, "destination link id should be the last route link id")
-        self.assertEqual(origin_position.geoid, route[0].start, "route should start at origin GeoId (stationary road network location)")
-        self.assertEqual(destination_position.geoid, route[-1].end, "route should end at destination GeoId (stationary road network location)")
+        self.assertEqual(
+            origin_position.link_id,
+            route[0].link_id,
+            "origin link id should be first route link id",
+        )
+        self.assertEqual(
+            destination_position.link_id,
+            route[-1].link_id,
+            "destination link id should be the last route link id",
+        )
+        self.assertEqual(
+            origin_position.geoid,
+            route[0].start,
+            "route should start at origin GeoId (stationary road network location)",
+        )
+        self.assertEqual(
+            destination_position.geoid,
+            route[-1].end,
+            "route should end at destination GeoId (stationary road network location)",
+        )

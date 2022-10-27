@@ -5,7 +5,6 @@ from nrel.hive.resources.mock_lobster import *
 
 
 class TestBase(TestCase):
-
     def test_from_row(self):
         source = """base_id,lat,lon,stall_count,station_id
                     b1,37,122,10,s1"""
@@ -84,7 +83,10 @@ class TestBase(TestCase):
 
         self.assertTrue(base.membership.public, "should be public")
 
-        base = base.set_membership(('fleet_1', 'fleet_3'))
+        base = base.set_membership(("fleet_1", "fleet_3"))
 
-        self.assertEqual(base.membership.memberships, frozenset(['fleet_1', 'fleet_3']),
-                         "should have membership for fleet_1 and fleet_3")
+        self.assertEqual(
+            base.membership.memberships,
+            frozenset(["fleet_1", "fleet_3"]),
+            "should have membership for fleet_1 and fleet_3",
+        )

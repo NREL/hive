@@ -9,15 +9,21 @@ from nrel.hive.state.vehicle_state.charging_base import ChargingBase
 from nrel.hive.util.typealiases import MembershipId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
     from nrel.hive.dispatcher.instruction.instruction import Instruction
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.request.request import Request
     from nrel.hive.config.dispatcher_config import DispatcherConfig
 
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from nrel.hive.dispatcher.instruction.instructions import DispatchTripInstruction
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
+    InstructionGenerator,
+)
+from nrel.hive.dispatcher.instruction.instructions import (
+    DispatchTripInstruction,
+)
 
 
 @dataclass(frozen=True)
@@ -25,12 +31,13 @@ class Dispatcher(InstructionGenerator):
     """
     A managers algorithm that assigns vehicles greedily to most expensive request.
     """
+
     config: DispatcherConfig
 
     def generate_instructions(
-            self,
-            simulation_state: SimulationState,
-            environment: Environment,
+        self,
+        simulation_state: SimulationState,
+        environment: Environment,
     ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
@@ -39,11 +46,13 @@ class Dispatcher(InstructionGenerator):
         :param simulation_state: The current simulation state
         :return: the updated Dispatcher along with instructions
         """
-        base_charging_range_km_threshold = environment.config.dispatcher.base_charging_range_km_threshold
+        base_charging_range_km_threshold = (
+            environment.config.dispatcher.base_charging_range_km_threshold
+        )
 
         def _solve_assignment(
-                inst_acc: Tuple[DispatchTripInstruction, ...],
-                membership_id: Optional[MembershipId],
+            inst_acc: Tuple[DispatchTripInstruction, ...],
+            membership_id: Optional[MembershipId],
         ) -> Tuple[DispatchTripInstruction, ...]:
             def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
                 vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
@@ -51,18 +60,25 @@ class Dispatcher(InstructionGenerator):
                     return False
                 elif not vehicle.driver_state.available:
                     return False
-                elif membership_id is not None and not vehicle.membership.grant_access_to_membership_id(membership_id):
+                elif (
+                    membership_id is not None
+                    and not vehicle.membership.grant_access_to_membership_id(membership_id)
+                ):
                     return False
 
                 mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
                 range_remaining_km = mechatronics.range_remaining_km(vehicle)
 
                 # if we are at a base, do we have enough remaining range to leave the base?
-                if isinstance(vehicle.vehicle_state,
-                              ChargingBase) and range_remaining_km < base_charging_range_km_threshold:
+                if (
+                    isinstance(vehicle.vehicle_state, ChargingBase)
+                    and range_remaining_km < base_charging_range_km_threshold
+                ):
                     return False
                 # do we have enough remaining range to allow us to match?
-                return bool(range_remaining_km > environment.config.dispatcher.matching_range_km_threshold)
+                return bool(
+                    range_remaining_km > environment.config.dispatcher.matching_range_km_threshold
+                )
 
             def _valid_request(r: Request) -> bool:
                 not_already_dispatched = not r.dispatched_vehicle
@@ -82,10 +98,16 @@ class Dispatcher(InstructionGenerator):
             )
 
             # select assignment of vehicles to requests
-            solution = assignment_ops.find_assignment(available_vehicles, unassigned_requests,
-                                                      assignment_ops.h3_distance_cost)
+            solution = assignment_ops.find_assignment(
+                available_vehicles,
+                unassigned_requests,
+                assignment_ops.h3_distance_cost,
+            )
             instructions = ft.reduce(
-                lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1])),
+                lambda acc, pair: (
+                    *acc,
+                    DispatchTripInstruction(pair[0], pair[1]),
+                ),
                 solution.solution,
                 inst_acc,
             )

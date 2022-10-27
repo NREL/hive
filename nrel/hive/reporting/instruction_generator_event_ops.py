@@ -10,7 +10,9 @@ from nrel.hive.util import wkt
 if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.runner import Environment
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 
 def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment) -> Report:
@@ -28,15 +30,15 @@ def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment
     report = Report(
         report_type=ReportType.REFUEL_SEARCH_EVENT,
         report={
-            'vehicle_id': vehicle.id,
-            'vehicle_state': vehicle.vehicle_state.__class__.__name__,
-            'vehicle_memberships': vehicle.membership.to_json(),
-            'sim_time_start': sim.sim_time,
-            'sim_time_end': next_sim_time,
-            'lat': lat,
-            'lon': lon,
-            'geoid': vehicle.geoid,
-            'wkt': point_wkt
-        }
+            "vehicle_id": vehicle.id,
+            "vehicle_state": vehicle.vehicle_state.__class__.__name__,
+            "vehicle_memberships": vehicle.membership.to_json(),
+            "sim_time_start": sim.sim_time,
+            "sim_time_end": next_sim_time,
+            "lat": lat,
+            "lon": lon,
+            "geoid": vehicle.geoid,
+            "wkt": point_wkt,
+        },
     )
     return report

@@ -2,9 +2,20 @@ from __future__ import annotations
 
 import csv
 import logging
-from typing import Iterator, Dict, TextIO, Optional, Callable, Tuple, NamedTuple, Iterable, Generator
+from typing import (
+    Iterator,
+    Dict,
+    TextIO,
+    Optional,
+    Callable,
+    Tuple,
+    NamedTuple,
+    Iterable,
+    Generator,
+)
 
 from itertools import islice, tee
+
 log = logging.getLogger(__name__)
 
 
@@ -13,7 +24,12 @@ class NamedTupleIterator:
     iterator that deals with a set of named tuples
     """
 
-    def __init__(self, items: Tuple[NamedTuple, ...], step_attr_name: str, stop_condition: Callable):
+    def __init__(
+        self,
+        items: Tuple[NamedTuple, ...],
+        step_attr_name: str,
+        stop_condition: Callable,
+    ):
         self._iterator = iter(items)
         self.step_attr_name = step_attr_name
         self.stop_condition = stop_condition
@@ -54,12 +70,13 @@ class DictReaderIterator:
     iterator used internally by DictReaderStepper
     """
 
-    def __init__(self,
-                 reader: Iterator[Dict[str, str]],
-                 step_column_name: str,
-                 stop_condition: Callable,
-                 parser: Callable,
-                 ):
+    def __init__(
+        self,
+        reader: Iterator[Dict[str, str]],
+        step_column_name: str,
+        stop_condition: Callable,
+        parser: Callable,
+    ):
         self.reader = reader
         self.history = None
         self.step_column_name = step_column_name
@@ -112,13 +129,14 @@ class DictReaderStepper:
     destruction: should be explicitly closed via DictReaderStepper.close()
     """
 
-    def __init__(self,
-                 dict_reader: Iterator[Dict[str, str]],
-                 file_reference: Optional[TextIO],
-                 step_column_name: str,
-                 initial_stop_condition: Callable = lambda x: x < 0,
-                 parser: Callable = lambda x: x,
-                 ):
+    def __init__(
+        self,
+        dict_reader: Iterator[Dict[str, str]],
+        file_reference: Optional[TextIO],
+        step_column_name: str,
+        initial_stop_condition: Callable = lambda x: x < 0,
+        parser: Callable = lambda x: x,
+    ):
         """
         creates a DictReaderStepper with an internal DictReaderIterator
 
@@ -127,16 +145,19 @@ class DictReaderStepper:
         :param initial_stop_condition: the initial bounds - set low (zero) for ascending, high (inf) for descending
         :param parser: an optional parameter for parsing the input_config value
         """
-        self._iterator = DictReaderIterator(dict_reader, step_column_name, initial_stop_condition, parser)
+        self._iterator = DictReaderIterator(
+            dict_reader, step_column_name, initial_stop_condition, parser
+        )
         self._file = file_reference
 
     @classmethod
-    def build(cls,
-              file: str,
-              step_column_name: str,
-              initial_stop_condition: Callable = lambda x: x < 0,
-              parser: Callable = lambda x: x,
-              ) -> Tuple[Optional[Exception], Optional[DictReaderStepper]]:
+    def build(
+        cls,
+        file: str,
+        step_column_name: str,
+        initial_stop_condition: Callable = lambda x: x < 0,
+        parser: Callable = lambda x: x,
+    ) -> Tuple[Optional[Exception], Optional[DictReaderStepper]]:
         """
         alternative constructor that takes a file path and returns a DictReaderStepper, or, a failure
 
@@ -148,18 +169,25 @@ class DictReaderStepper:
         :return: a new reader or an exception
         """
         try:
-            f = open(file, 'r')
-            return None, cls(csv.DictReader(f), f, step_column_name, initial_stop_condition, parser)
+            f = open(file, "r")
+            return None, cls(
+                csv.DictReader(f),
+                f,
+                step_column_name,
+                initial_stop_condition,
+                parser,
+            )
         except Exception as e:
             return e, None
 
     @classmethod
-    def from_iterator(cls,
-                      data: Iterator[Dict[str, str]],
-                      step_column_name: str,
-                      initial_stop_condition: Callable = lambda x: x < 0,
-                      parser: Callable = lambda x: x,
-                      ) -> DictReaderStepper:
+    def from_iterator(
+        cls,
+        data: Iterator[Dict[str, str]],
+        step_column_name: str,
+        initial_stop_condition: Callable = lambda x: x < 0,
+        parser: Callable = lambda x: x,
+    ) -> DictReaderStepper:
         """
         allows for substituting a simple Dict Iterator in place of loading from
         a file, allowing for programmatic data loading (for debugging, or, for

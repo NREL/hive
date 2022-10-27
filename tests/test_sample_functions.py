@@ -4,13 +4,15 @@ from returns.primitives.exceptions import UnwrapFailedError
 from returns.result import Result
 
 from nrel.hive.initialization.sample_requests import default_request_sampler
-from nrel.hive.initialization.sample_vehicles import sample_vehicles, build_default_location_sampling_fn, \
-    build_default_soc_sampling_fn
+from nrel.hive.initialization.sample_vehicles import (
+    sample_vehicles,
+    build_default_location_sampling_fn,
+    build_default_soc_sampling_fn,
+)
 from nrel.hive.resources.mock_lobster import *
 
 
 class TestSampleVehicles(TestCase):
-
     def test_sample_n_requests_default(self):
         n = 100
         sim = mock_sim(road_network=mock_osm_network())
@@ -21,7 +23,11 @@ class TestSampleVehicles(TestCase):
         self.assertEquals(len(sample_requests), n, f"should have sampled {n} requests")
 
         for r in sample_requests:
-            self.assertNotEqual(r.origin, r.destination, f"request should not have equal origin and destination")
+            self.assertNotEqual(
+                r.origin,
+                r.destination,
+                f"request should not have equal origin and destination",
+            )
 
     def test_sample_n_vehicles_default(self):
         """
@@ -41,13 +47,15 @@ class TestSampleVehicles(TestCase):
             sim=sim,
             env=env,
             location_sampling_function=loc_fn,
-            soc_sampling_function=soc_fn
+            soc_sampling_function=soc_fn,
         )
 
         def check_vehicle(v: Vehicle):
             self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
-            self.assertEquals(v.energy.get(EnergyType.ELECTRIC),
-                              env.mechatronics.get(mechatronics_id).battery_capacity_kwh)
+            self.assertEquals(
+                v.energy.get(EnergyType.ELECTRIC),
+                env.mechatronics.get(mechatronics_id).battery_capacity_kwh,
+            )
             self.assertEquals(v.position, base.position)
 
         self.assertEqual(len(result.unwrap().vehicles), n, f"should have {n} vehicles")
@@ -84,7 +92,7 @@ class TestSampleVehicles(TestCase):
             sim=sim,
             env=env,
             location_sampling_function=wonky_loc_fn,
-            soc_sampling_function=soc_fn
+            soc_sampling_function=soc_fn,
         )
 
         with self.assertRaises(UnwrapFailedError):

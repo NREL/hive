@@ -35,6 +35,7 @@ class Request(NamedTuple):
     :param dispatched_vehicle: The id of the vehicle dispatched to service this request.
     :param dispatched_vehicle_time: Time time which a vehicle was dispatched for this request.
     """
+
     id: RequestId
     origin_position: EntityPosition
     destination_position: EntityPosition
@@ -55,19 +56,20 @@ class Request(NamedTuple):
         return self.destination_position.geoid
 
     @classmethod
-    def build(cls,
-              request_id: RequestId,
-              origin: GeoId,
-              destination: GeoId,
-              road_network: RoadNetwork,
-              departure_time: SimTime,
-              passengers: int,
-              allows_pooling: bool,
-              fleet_id: Optional[MembershipId] = None,
-              value: Currency = 0
-              ) -> Request:
-        assert (departure_time >= 0)
-        assert (passengers > 0)
+    def build(
+        cls,
+        request_id: RequestId,
+        origin: GeoId,
+        destination: GeoId,
+        road_network: RoadNetwork,
+        departure_time: SimTime,
+        passengers: int,
+        allows_pooling: bool,
+        fleet_id: Optional[MembershipId] = None,
+        value: Currency = 0,
+    ) -> Request:
+        assert departure_time >= 0
+        assert passengers > 0
         origin_position = road_network.position_from_geoid(origin)
         destination_position = road_network.position_from_geoid(destination)
         if fleet_id:
@@ -81,7 +83,7 @@ class Request(NamedTuple):
                 origin=origin_position.geoid,
                 destination=destination_position.geoid,
                 departure_time=departure_time,
-                membership=membership
+                membership=membership,
             )
             for pass_idx in range(0, passengers)
         ]
@@ -103,9 +105,9 @@ class Request(NamedTuple):
         return self.origin
 
     @classmethod
-    def from_row(cls, row: Dict[str, str],
-                 env: Environment,
-                 road_network: RoadNetwork) -> Tuple[Optional[Exception], Optional[Request]]:
+    def from_row(
+        cls, row: Dict[str, str], env: Environment, road_network: RoadNetwork
+    ) -> Tuple[Optional[Exception], Optional[Request]]:
         """
         takes a csv row and turns it into a Request
 
@@ -117,36 +119,59 @@ class Request(NamedTuple):
         :param road_network: the road network
         :return: a Request, or an error
         """
-        if 'request_id' not in row:
-            return IOError("cannot load a request without a 'request_id'"), None
-        elif 'o_lat' not in row:
-            return IOError("cannot load a request without an 'o_lat' value"), None
-        elif 'o_lon' not in row:
-            return IOError("cannot load a request without an 'o_lon' value"), None
-        elif 'd_lat' not in row:
-            return IOError("cannot load a request without a 'd_lat' value"), None
-        elif 'd_lon' not in row:
-            return IOError("cannot load a request without a 'd_lon' value"), None
-        elif 'departure_time' not in row:
-            return IOError("cannot load a request without a 'departure_time'"), None
-        elif 'passengers' not in row:
-            return IOError("cannot load a request without a number of 'passengers'"), None
+        if "request_id" not in row:
+            return (
+                IOError("cannot load a request without a 'request_id'"),
+                None,
+            )
+        elif "o_lat" not in row:
+            return (
+                IOError("cannot load a request without an 'o_lat' value"),
+                None,
+            )
+        elif "o_lon" not in row:
+            return (
+                IOError("cannot load a request without an 'o_lon' value"),
+                None,
+            )
+        elif "d_lat" not in row:
+            return (
+                IOError("cannot load a request without a 'd_lat' value"),
+                None,
+            )
+        elif "d_lon" not in row:
+            return (
+                IOError("cannot load a request without a 'd_lon' value"),
+                None,
+            )
+        elif "departure_time" not in row:
+            return (
+                IOError("cannot load a request without a 'departure_time'"),
+                None,
+            )
+        elif "passengers" not in row:
+            return (
+                IOError("cannot load a request without a number of 'passengers'"),
+                None,
+            )
         else:
-            request_id = row['request_id']
-            fleet_id = row.get('fleet_id')
+            request_id = row["request_id"]
+            fleet_id = row.get("fleet_id")
             try:
 
-                o_lat, o_lon = float(row['o_lat']), float(row['o_lon'])
-                d_lat, d_lon = float(row['d_lat']), float(row['d_lon'])
+                o_lat, o_lon = float(row["o_lat"]), float(row["o_lon"])
+                d_lat, d_lon = float(row["d_lat"]), float(row["d_lon"])
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
                 d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
-                departure_time_result = SimTime.build(row['departure_time'])
+                departure_time_result = SimTime.build(row["departure_time"])
                 if isinstance(departure_time_result, TimeParseError):
                     return departure_time_result, None
 
-                passengers = int(row['passengers'])
-                allows_pooling = bool(row['allows_pooling']) if row.get('allows_pooling') is not None else False
+                passengers = int(row["passengers"])
+                allows_pooling = (
+                    bool(row["allows_pooling"]) if row.get("allows_pooling") is not None else False
+                )
 
                 request = Request.build(
                     request_id=request_id,
@@ -156,11 +181,16 @@ class Request(NamedTuple):
                     road_network=road_network,
                     departure_time=departure_time_result,
                     passengers=passengers,
-                    allows_pooling=allows_pooling
+                    allows_pooling=allows_pooling,
                 )
                 return None, request
             except ValueError:
-                return IOError(f"unable to parse request {request_id} from row due to invalid value(s): {row}"), None
+                return (
+                    IOError(
+                        f"unable to parse request {request_id} from row due to invalid value(s): {row}"
+                    ),
+                    None,
+                )
 
     def assign_dispatched_vehicle(self, vehicle_id: VehicleId, current_time: SimTime) -> Request:
         """
@@ -183,7 +213,9 @@ class Request(NamedTuple):
         updated = self._replace(dispatched_vehicle=None, dispatched_vehicle_time=None)
         return updated
 
-    def assign_value(self, rate_structure: RequestRateStructure, road_network: RoadNetwork) -> Request:
+    def assign_value(
+        self, rate_structure: RequestRateStructure, road_network: RoadNetwork
+    ) -> Request:
         """
         used to assign a value to this request based on it's properties as well as possible surge pricing.
 

@@ -5,7 +5,9 @@ import logging
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
-from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
+from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import (
+    AutonomousDriverAttributes,
+)
 from nrel.hive.state.driver_state.driver_instruction_ops import (
     av_charge_base_instruction,
     av_dispatch_base_instruction,
@@ -18,7 +20,9 @@ from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId
 
@@ -30,6 +34,7 @@ class AutonomousAvailable(DriverState):
     """
     an autonomous driver that is available to work
     """
+
     attributes: AutonomousDriverAttributes = AutonomousDriverAttributes
 
     @property
@@ -49,10 +54,10 @@ class AutonomousAvailable(DriverState):
         return None
 
     def generate_instruction(
-            self,
-            sim: SimulationState,
-            env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
+        self,
+        sim: SimulationState,
+        env: Environment,
+        previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
@@ -66,6 +71,8 @@ class AutonomousAvailable(DriverState):
         else:
             return None
 
-    def update(self, sim: SimulationState, env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         # there is no other state for an autonomous driver, so, this is a noop
         return None, sim

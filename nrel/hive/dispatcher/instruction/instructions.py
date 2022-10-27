@@ -10,7 +10,9 @@ from nrel.hive.dispatcher.instruction.instruction_ops import (
     trip_plan_all_requests_allow_pooling,
     trip_plan_covers_previous,
 )
-from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
+from nrel.hive.dispatcher.instruction.instruction_result import (
+    InstructionResult,
+)
 from nrel.hive.model.roadnetwork.link import Link, EntityPosition
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.state.vehicle_state import dispatch_ops
@@ -22,13 +24,17 @@ from nrel.hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.repositioning import Repositioning
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
+    ServicingPoolingTrip,
+)
 from nrel.hive.util.exception import SimulationStateError, InstructionError
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.util.typealiases import (
         StationId,
         VehicleId,
@@ -46,13 +52,14 @@ class IdleInstruction(Instruction):
     vehicle_id: VehicleId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         if not vehicle:
             return (
                 SimulationStateError(
-                    f"vehicle {vehicle} not found; context: applying idle instruction."),
+                    f"vehicle {vehicle} not found; context: applying idle instruction."
+                ),
                 None,
             )
         else:
@@ -67,8 +74,8 @@ class DispatchTripInstruction(Instruction):
     request_id: RequestId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         request = sim_state.requests.get(self.request_id)
         if not vehicle:
@@ -101,18 +108,20 @@ class DispatchPoolingTripInstruction(Instruction):
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         # see https://github.com/NREL/hive/issues/9 for implementation plan
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         v_state = vehicle.vehicle_state
 
         req_allow_pooling_error_msg = trip_plan_all_requests_allow_pooling(
-            sim_state, self.trip_plan)
+            sim_state, self.trip_plan
+        )
         # seating_error = check_if_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
 
         if isinstance(v_state, ServicingPoolingTrip) and not trip_plan_covers_previous(
-                v_state, self.trip_plan):
+            v_state, self.trip_plan
+        ):
             msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
             error = InstructionError(msg)
             return error, None
@@ -138,8 +147,9 @@ class DispatchPoolingTripInstruction(Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            error, next_state = dispatch_ops.begin_or_replan_dispatch_pooling_state(
-                sim_state, self.vehicle_id, self.trip_plan)
+            (error, next_state,) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
+                sim_state, self.vehicle_id, self.trip_plan
+            )
             if error is not None:
                 return error, None
             else:
@@ -153,26 +163,33 @@ class DispatchStationInstruction(Instruction):
     charger_id: ChargerId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         station = sim_state.stations.get(self.station_id)
         if not vehicle:
-            return SimulationStateError(
-                f"vehicle {vehicle} not found: context: applying dispatch station instruction to station {self.station_id}"
-            ), None
+            return (
+                SimulationStateError(
+                    f"vehicle {vehicle} not found: context: applying dispatch station instruction to station {self.station_id}"
+                ),
+                None,
+            )
         elif not station:
-            return SimulationStateError(
-                f"station {station} not found: context: applying dispatch station instruction for vehicle {self.vehicle_id}"
-            ), None
+            return (
+                SimulationStateError(
+                    f"station {station} not found: context: applying dispatch station instruction for vehicle {self.vehicle_id}"
+                ),
+                None,
+            )
         else:
             start = vehicle.position
             end = station.position
             route = sim_state.road_network.route(start, end)
 
             prev_state = vehicle.vehicle_state
-            next_state = DispatchStation.build(self.vehicle_id, self.station_id, route,
-                                               self.charger_id)
+            next_state = DispatchStation.build(
+                self.vehicle_id, self.station_id, route, self.charger_id
+            )
 
             return None, InstructionResult(prev_state, next_state)
 
@@ -184,13 +201,16 @@ class ChargeStationInstruction(Instruction):
     charger_id: ChargerId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         if not vehicle:
-            return SimulationStateError(
-                f"vehicle {vehicle} not found: context: applying charge station instruction at {self.station_id} with {self.charger_id} charger"
-            ), None
+            return (
+                SimulationStateError(
+                    f"vehicle {vehicle} not found: context: applying charge station instruction at {self.station_id} with {self.charger_id} charger"
+                ),
+                None,
+            )
         else:
             prev_state = vehicle.vehicle_state
             next_state = ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
@@ -205,13 +225,16 @@ class ChargeBaseInstruction(Instruction):
     charger_id: ChargerId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         if not vehicle:
-            return SimulationStateError(
-                f"vehicle {vehicle} not found; context: applying charge base instruction at base {self.base_id} with {self.charger_id} charger"
-            ), None
+            return (
+                SimulationStateError(
+                    f"vehicle {vehicle} not found; context: applying charge base instruction at base {self.base_id} with {self.charger_id} charger"
+                ),
+                None,
+            )
         else:
             prev_state = vehicle.vehicle_state
             next_state = ChargingBase.build(self.vehicle_id, self.base_id, self.charger_id)
@@ -225,18 +248,24 @@ class DispatchBaseInstruction(Instruction):
     base_id: BaseId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         base = sim_state.bases.get(self.base_id)
         if not vehicle:
-            return SimulationStateError(
-                f"vehicle {self.vehicle_id} not found; context: applying dispatch base instruction to {self.base_id}"
-            ), None
+            return (
+                SimulationStateError(
+                    f"vehicle {self.vehicle_id} not found; context: applying dispatch base instruction to {self.base_id}"
+                ),
+                None,
+            )
         if not base:
-            return SimulationStateError(
-                f"base {self.base_id} not found; context: applying dispatch base instruction for {self.vehicle_id}"
-            ), None
+            return (
+                SimulationStateError(
+                    f"base {self.base_id} not found; context: applying dispatch base instruction for {self.vehicle_id}"
+                ),
+                None,
+            )
         else:
             start = vehicle.position
             end = base.position
@@ -254,21 +283,27 @@ class RepositionInstruction(Instruction):
     destination: LinkId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         if not vehicle:
-            return SimulationStateError(
-                f"vehicle {self.vehicle_id} not found; context: applying reposition instruction to link {self.destination}"
-            ), None
+            return (
+                SimulationStateError(
+                    f"vehicle {self.vehicle_id} not found; context: applying reposition instruction to link {self.destination}"
+                ),
+                None,
+            )
         else:
             start = vehicle.position
 
             link = sim_state.road_network.link_from_link_id(self.destination)
             if not link:
-                return SimulationStateError(
-                    f"link {self.destination} not found; context: applying reposition instruction for vehicle {self.vehicle_id}"
-                ), None
+                return (
+                    SimulationStateError(
+                        f"link {self.destination} not found; context: applying reposition instruction for vehicle {self.vehicle_id}"
+                    ),
+                    None,
+                )
             else:
                 destination_position = EntityPosition(link.link_id, link.end)
                 route = sim_state.road_network.route(start, destination_position)
@@ -285,13 +320,16 @@ class ReserveBaseInstruction(Instruction):
     base_id: BaseId
 
     def apply_instruction(
-            self, sim_state: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         vehicle = sim_state.vehicles.get(self.vehicle_id)
         if not vehicle:
-            return SimulationStateError(
-                f"vehicle {self.vehicle_id} not found; context: applying reserve base instruction at base {self.base_id}"
-            ), None
+            return (
+                SimulationStateError(
+                    f"vehicle {self.vehicle_id} not found; context: applying reserve base instruction at base {self.base_id}"
+                ),
+                None,
+            )
 
         prev_state = vehicle.vehicle_state
         next_state = ReserveBase.build(self.vehicle_id, self.base_id)

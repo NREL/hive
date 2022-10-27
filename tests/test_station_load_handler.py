@@ -12,12 +12,14 @@ class TestStationLoadHandler(TestCase):
         break station load reporting
         :return:
         """
-        state = ChargingStation.build(vehicle_id=DefaultIds.mock_vehicle_id(),
-                                      station_id=DefaultIds.mock_station_id(),
-                                      charger_id=mock_dcfc_charger_id())
+        state = ChargingStation.build(
+            vehicle_id=DefaultIds.mock_vehicle_id(),
+            station_id=DefaultIds.mock_station_id(),
+            charger_id=mock_dcfc_charger_id(),
+        )
         veh = mock_vehicle(soc=0.1)
         sta = mock_station()
-        sim = mock_sim(vehicles=(veh, ), stations=(sta, ))
+        sim = mock_sim(vehicles=(veh,), stations=(sta,))
         env = mock_env()
         mech = mock_bev()
 
@@ -40,12 +42,18 @@ class TestStationLoadHandler(TestCase):
         )
 
         # perhaps in the future, add tests with multiple events
-        vehicle_charge_events = (vehicle_charge_event, )
+        vehicle_charge_events = (vehicle_charge_event,)
 
         result = vehicle_event_ops.construct_station_load_events(vehicle_charge_events, sim_charged)
 
         r = result[0]
-        self.assertEqual(r.report['station_id'], DefaultIds.mock_station_id(),
-                         "should have captured which station this happened at")
-        self.assertGreater(r.report['energy'], 0.0,
-                           "we should have captured the effect of 60 seconds of charge time")
+        self.assertEqual(
+            r.report["station_id"],
+            DefaultIds.mock_station_id(),
+            "should have captured which station this happened at",
+        )
+        self.assertGreater(
+            r.report["energy"],
+            0.0,
+            "we should have captured the effect of 60 seconds of charge time",
+        )

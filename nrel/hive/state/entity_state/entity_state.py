@@ -14,10 +14,11 @@ class EntityState(ABC):
     """
 
     @abstractmethod
-    def update(self,
-               sim: 'SimulationState',
-               env: 'Environment',
-               ) -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def update(
+        self,
+        sim: "SimulationState",
+        env: "Environment",
+    ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
         """
         apply any effects due to an entity being advanced one discrete time unit in this EntityState
 
@@ -28,9 +29,9 @@ class EntityState(ABC):
         pass
 
     @abstractmethod
-    def enter(self,
-              sim: 'SimulationState',
-              env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def enter(
+        self, sim: "SimulationState", env: "Environment"
+    ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
         """
         apply any effects due to an entity transitioning into this state
 
@@ -41,10 +42,12 @@ class EntityState(ABC):
         pass
 
     @abstractmethod
-    def exit(self,
-             next_state: EntityState,
-             sim: 'SimulationState',
-             env: 'Environment') -> Tuple[Optional[Exception], Optional['SimulationState']]:
+    def exit(
+        self,
+        next_state: EntityState,
+        sim: "SimulationState",
+        env: "Environment",
+    ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
         """
         apply any effects due to an entity transitioning out of this state
 
