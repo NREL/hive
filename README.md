@@ -1,4 +1,4 @@
-# HIVE™ :honeybee:  
+# HIVE™ :honeybee  
 
 **H**ighly  
 **I**ntegrated  
@@ -7,13 +7,13 @@
 
 HIVE™ is an open-source mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.
 
-HIVE supports researchers who explore **Electric Vehicle (EV) fleet control**, **Electric Vehicle Supply Equipment (EVSE) siting**, and **fleet composition** problems, and is designed for _ease-of-use_, _scalability_, and _co-simulation_. 
-Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning. 
+HIVE supports researchers who explore **Electric Vehicle (EV) fleet control**, **Electric Vehicle Supply Equipment (EVSE) siting**, and **fleet composition** problems, and is designed for _ease-of-use_, _scalability_, and _co-simulation_.
+Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning.
 HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity energy estimation over arbitrary road networks and demand scenarios.
 
 ## Installation
 
-HIVE depends on a Python installation [3.7, 3.8] and the pip package manager ( [python.org](https://www.python.org/downloads/). 
+HIVE depends on a Python installation [3.7, 3.8] and the pip package manager ( [python.org](https://www.python.org/downloads/).
 In our installation example we use [conda](https://www.anaconda.com/products/distribution) | [miniconda](https://docs.conda.io/en/latest/miniconda.html) for managing a HIVE Python environment.
 
 ### via pip (coming soon)
@@ -22,7 +22,7 @@ In our installation example we use [conda](https://www.anaconda.com/products/dis
 
 ### build from source
 
-Via conda, create a dedicated 'hive' Python environment: 
+Via conda, create a dedicated 'hive' Python environment:
 
     > conda create -n hive python=3.7 
     > conda activate hive
@@ -32,7 +32,7 @@ to run tests, also install `pytest`:
     > pip install pytest
 
 to load hive as a command line application along with all dependencies into your conda environment:
-    
+
     > git clone https://github.com/NREL/hive.git
     > cd hive
     > pip install -e .
@@ -42,7 +42,7 @@ to load hive as a command line application along with all dependencies into your
 run a test of hive using a [built-in scenario](#built-in-scenarios):
 
     > hive denver_demo.yaml
-   
+
 if you want the program to use a file outside of this location, provide a valid path:
 
     > hive some_other_directory/my_scenario.yaml
@@ -78,10 +78,10 @@ For a description of file contents and schemas, please read our [technical repor
 
 ## Global configuration
 
-Some values are set by a global configuration file with filename `.hive.yaml`. 
-The defaults are set in the repo [here](nrel/hive/resources/defaults/.hive.yaml). 
-If you want to override any entries in this file, you can create a new one by the same name `.hive.yaml` and place it in your working directory or a parent directory. 
-Hive will also check your base user directory for this file (aka `~/.hive.yaml`). 
+Some values are set by a global configuration file with filename `.hive.yaml`.
+The defaults are set in the repo [here](nrel/hive/resources/defaults/.hive.yaml).
+If you want to override any entries in this file, you can create a new one by the same name `.hive.yaml` and place it in your working directory or a parent directory.
+Hive will also check your base user directory for this file (aka `~/.hive.yaml`).
 This can be useful if you would like to reduce the output files or change the default output base directory (for example, to something like `~/hive/output`).
 
 ## Dependencies
@@ -163,13 +163,13 @@ station_capacities.csv           | CSV       | energy load capacity for each sta
 summary_stats.json               | JSON      | summary stats as displayed in run.log but in JSON format
 time_step_stats_{$FLEET|all}.csv | CSV       | aggregated data across a fleet (or all fleets) by time step
 
-Running this scenario should also feed some logging into the console. 
-First, HIVE announces where it is loading configuration from (1). 
-It then dumps the global and scenario configuration to the console (2). 
-Finally, after around 65 lines, it begins running the simulation with a progress bar (3). 
+Running this scenario should also feed some logging into the console.
+First, HIVE announces where it is loading configuration from (1).
+It then dumps the global and scenario configuration to the console (2).
+Finally, after around 65 lines, it begins running the simulation with a progress bar (3).
 After, it prints the summary stats to the console and exits (4).
 
-```
+```console
 (hive) $ hive denver_demo.yaml
 [INFO] - hive - 
 ##     ##  ####  ##     ##  #######
@@ -271,6 +271,7 @@ Process finished with exit code 0
 ```
 
 ## Roadmap
+
 _Updated October, 2022_
 
 HIVE intends to implement the following features in the near-term:
