@@ -1,5 +1,8 @@
 time,station_id,charger_id,price_kwh
 0,bs1,LEVEL_2,0.05
+0,bs2,LEVEL_2,0.05
+0,bs3,LEVEL_2,0.05
+0,bs4,LEVEL_2,0.05
 0,s1,DCFC,0.1
 0,s2,DCFC,0.1
 0,s3,DCFC,0.1

@@ -33,6 +33,7 @@ setup(
         "networkx",
         "PyYAML",
         "tqdm",
+        "rich",
         "h3>=3.7.1",
         "scipy",
         "returns",
@@ -41,13 +42,12 @@ setup(
         "dev": ["pytest", "black"],
         "docs": [
             "sphinx",
+            "sphinx-autoapi",
             "sphinx-rtd-theme",
             "sphinxemoji",
-            "recommonmark",
-            "sphinx-markdown-tables",
-            "sphinx-autodoc-typehints"
-
-        ]
+            "myst-parser",
+            "sphinx-autodoc-typehints",
+        ],
     },
     include_package_data=True,
     package_data={"nrel.hive.resources": ["*"]},

@@ -51,8 +51,6 @@ def run_sim(scenario_file, position=0):
     """
     sim, env = load_simulation(scenario_file)
 
-    # initialize logging
-    logging.basicConfig(level=env.config.global_config.log_level, format="%(message)s")
     if env.config.global_config.log_run:
         run_log_path = os.path.join(env.config.scenario_output_directory, "run.log")
         log_fh = logging.FileHandler(run_log_path)

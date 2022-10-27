@@ -1,24 +1,105 @@
 sim:
+  # (required) any name you want to give your simulation (go ahead, be creative);
   sim_name: denver_demo
-  timestep_duration_seconds: 60
-  request_cancel_time_seconds: 600
+
+  # (required) the start time of the simulation;
   start_time: "1970-01-01T00:00:00"
+
+  # (required) the end time of the simulation;
   end_time: "1970-01-02T00:00:00"
+
+  # (optional) how many seconds does a single hive time step represent;
+  # must be an integer; generally, 60 seconds is the recommended value based on internal testing and validation;
+  timestep_duration_seconds: 60
+
+  # (optional) represents how long a request will be active in the simulation;
+  # after this timeout the request is destroyed;
+  request_cancel_time_seconds: 600
+
+  # (optional) what is the atomic unit of the simulation;
+  # 15 is equivalent to approximately 1 meter;
+  sim_h3_resolution: 15
+
+  # (optional) which h3 resolution should we search for entities?
+  sim_h3_search_resolution: 7
+
+  # (optional) if using human drivers, what type of schedule should we use?
+  schedule_type: "time_range"
+
 network:
+  # (required) what type of network to use; options: osm_network | euclidean
   network_type: osm_network
+
+  # (optional) if no speed exists in the road network data input, we fill it in with this value;
+  default_speed_kmph: 40.0
+
 input:
+  # (required)
   vehicles_file: denver_demo_vehicles.csv
+
+  # (required)
   requests_file: denver_demo_requests.csv
+
+  # (required)
   bases_file: denver_demo_bases.csv
+
+  # (required)
   stations_file: denver_demo_stations.csv
+
+  # (optional) only used with `network_type: osm_network`
   road_network_file: downtown_denver_network.json
+
+  # (optional) outline a geofence for control purposes
   geofence_file: downtown_denver.geojson
+
+  # (optional) defaults to zero cost if not specified
   rate_structure_file: rate_structure.csv
+
+  # (optional) defaults to zero cost if not specified
   charging_price_file: denver_charging_prices_by_geoid.csv
+
+  # (optional) default is no demand forecasting
   demand_forecast_file: denver_demand.csv
+
 dispatcher:
+
+
+  # (optional) how often should we issue dispatching instructions?  
+  default_update_interval_seconds: 600
+
+
+  # (optional) ingnore searching for any entity beyond this threshold  
+  max_search_radius_km: 100.0
+
+  ## Parameters for the default matching dispatcher
+
+  # (optional) don't match requests to vehicles beyond this range 
+  matching_range_km_threshold: 20 
+
+  # (optional) which states will the default matching dispatcher consider valid?
   valid_dispatch_states:
     - Idle
     - Repositioning
 
+  ## Parameters for the default charging dispatcher
 
+  # (optional) how to search for stations? nearest_shortest_queue | shortest_time_to_charge 
+  charging_search_type: nearest_shortest_queue 
+
+  # (optional) ignore charging at stations when remaining range is greater than this plus the nearest station distance
+  charging_range_km_threshold: 20               
+
+  # (optional) ignore charging at stations when remaining range is greater than this 
+  charging_range_km_soft_threshold: 50          
+
+  # (optional) ignore base charging at bases more than this threshold 
+  base_charging_range_km_threshold: 100         
+
+
+  ## Parameters for the driver control
+
+  # (optional) SOC target for fast charging at a station 
+  ideal_fastcharge_soc_limit: 0.8
+
+  # (optional) how long do drivers idle before returning to a base?  
+  idle_time_out_seconds: 1800

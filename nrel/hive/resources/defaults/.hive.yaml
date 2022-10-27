@@ -1,10 +1,26 @@
+# where should we write outputs from a scenario?
 output_base_directory: ""
+
+# whether or not to log the console output from a run 
 log_run: True
+
+# whether or not to log the states for all entities at all timesteps; 
+# this file can get very large for big scenarios but contains detailed information; 
 log_states: True
+
+# whether or not to log events when they occur (i.e. a charging event) 
 log_events: True
+
+# whether or not to log issued instructions 
 log_instructions: True
+
+# whether or not to log aggregate statistics like total vehicle miles traveled 
 log_stats: True
+
+# python logging level 
 log_level: INFO
+
+# which states and events to log 
 log_sim_config:
 - 'instruction'
 - 'station_state'
@@ -19,10 +35,25 @@ log_sim_config:
 - 'station_load_event'
 - 'refuel_search_event'
 - 'driver_schedule_event'
+
+# whether or not to log station capacities 
 log_station_capacities: True
+
+# whether or not to log time step level statistics 
 log_time_step_stats: True
+
+# whether or not to log fleet time step level statistics 
 log_fleet_time_step_stats: True
+
+# level of parallelism for a single scenario (NOTE: this is not yet used) 
 local_parallelism: 1
+
+# parallelism timeout (NOTE: this is not yet used) 
 local_parallelism_timeout_sec: 60
+
+# whether or not to read files lazily;
+# this is useful is you have very large inputs and don't want to read all into memory at the start 
 lazy_file_reading: False
+
+# If True, well know text inputs are read (X, Y) 
 wkt_x_y_ordering: True

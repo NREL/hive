@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+from rich.table import Table
+from rich.console import Console
+
 
 @dataclass
 class SummaryStats:
@@ -83,22 +86,28 @@ class SummaryStats:
         return output
 
     def log(self):
-        log.info(f"{self.mean_final_soc * 100:.2f} % \t Mean Final SOC".expandtabs(15))
+        table = Table(title="Summary Stats")
+        table.add_column("Stat")
+        table.add_column("Value")
+
+        table.add_row("Mean Final SOC", f"{round(self.mean_final_soc * 100, 2)}%")
         requests_served_percent = (
             (1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
         )
+        table.add_row("Requests Served", f"{round(requests_served_percent, 2)}%")
         log.info(f"{requests_served_percent:.2f} % \t Requests Served".expandtabs(15))
 
         total_state_count = sum(self.state_count.values())
         for s, v in self.state_count.items():
-            log.info(
-                f"{round(v / total_state_count * 100, 2)} % \t Time in State {s}".expandtabs(15)
-            )
+            table.add_row(f"Time in State {s}", f"{round(v / total_state_count * 100, 2)}%")
 
         total_vkt = sum(self.vkt.values())
-        log.info(f"{total_vkt:.2f} km \t Total Kilometers Traveled".expandtabs(15))
+        table.add_row("Total Kilometers Traveled", f"{round(total_vkt, 2)} km")
         for s, v in self.vkt.items():
-            log.info(f"{v:.2f} km \t Kilometers Traveled in State {s}".expandtabs(15))
+            table.add_row(f"Kilometers Traveled in State {s}", f"{round(v, 2)} km")
 
-        log.info(f"$ {self.station_revenue:.2f} \t Station Revenue".expandtabs(15))
-        log.info(f"$ {self.fleet_revenue:.2f} \t Fleet Revenue".expandtabs(15))
+        table.add_row("Station Revenue", f"$ {round(self.station_revenue, 2)}")
+        table.add_row("Fleet Revenue", f"$ {round(self.fleet_revenue, 2)}")
+
+        console = Console()
+        console.print(table)
