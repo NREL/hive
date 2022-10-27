@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple, Union
@@ -40,7 +41,8 @@ if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
 
 
-class IdleInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class IdleInstruction(Instruction):
     vehicle_id: VehicleId
 
     def apply_instruction(
@@ -59,7 +61,8 @@ class IdleInstruction(NamedTuple, Instruction):
             return None, InstructionResult(prev_state, next_state)
 
 
-class DispatchTripInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class DispatchTripInstruction(Instruction):
     vehicle_id: VehicleId
     request_id: RequestId
 
@@ -92,7 +95,8 @@ class DispatchTripInstruction(NamedTuple, Instruction):
             return None, InstructionResult(prev_state, next_state)
 
 
-class DispatchPoolingTripInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class DispatchPoolingTripInstruction(Instruction):
     vehicle_id: VehicleId
     trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
 
@@ -142,7 +146,8 @@ class DispatchPoolingTripInstruction(NamedTuple, Instruction):
                 return None, InstructionResult(vehicle.vehicle_state, next_state)
 
 
-class DispatchStationInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class DispatchStationInstruction(Instruction):
     vehicle_id: VehicleId
     station_id: StationId
     charger_id: ChargerId
@@ -172,7 +177,8 @@ class DispatchStationInstruction(NamedTuple, Instruction):
             return None, InstructionResult(prev_state, next_state)
 
 
-class ChargeStationInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class ChargeStationInstruction(Instruction):
     vehicle_id: VehicleId
     station_id: StationId
     charger_id: ChargerId
@@ -192,7 +198,8 @@ class ChargeStationInstruction(NamedTuple, Instruction):
             return None, InstructionResult(prev_state, next_state)
 
 
-class ChargeBaseInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class ChargeBaseInstruction(Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
     charger_id: ChargerId
@@ -212,7 +219,8 @@ class ChargeBaseInstruction(NamedTuple, Instruction):
             return None, InstructionResult(prev_state, next_state)
 
 
-class DispatchBaseInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class DispatchBaseInstruction(Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
 
@@ -240,7 +248,8 @@ class DispatchBaseInstruction(NamedTuple, Instruction):
             return None, InstructionResult(prev_state, next_state)
 
 
-class RepositionInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class RepositionInstruction(Instruction):
     vehicle_id: VehicleId
     destination: LinkId
 
@@ -270,7 +279,8 @@ class RepositionInstruction(NamedTuple, Instruction):
                 return None, InstructionResult(prev_state, next_state)
 
 
-class ReserveBaseInstruction(NamedTuple, Instruction):
+@dataclass(frozen=True)
+class ReserveBaseInstruction(Instruction):
     vehicle_id: VehicleId
     base_id: BaseId
 

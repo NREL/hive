@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -35,7 +36,8 @@ log = logging.getLogger(__name__)
 # these two classes (HumanAvailable, HumanUnavailable) are in the same file in order to avoid circular references
 
 
-class HumanAvailable(NamedTuple, DriverState):
+@dataclass(frozen=True)
+class HumanAvailable(DriverState):
     """
     a human driver that is available to work as the current simulation state is consistent with
     the driver's schedule function
@@ -122,7 +124,8 @@ class HumanAvailable(NamedTuple, DriverState):
             return result
 
 
-class HumanUnavailable(NamedTuple, DriverState):
+@dataclass(frozen=True)
+class HumanUnavailable(DriverState):
     """
     a human driver that is not available to work
     """

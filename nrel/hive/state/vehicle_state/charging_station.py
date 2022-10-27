@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 
 import logging
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
@@ -20,7 +21,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class ChargingStation(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ChargingStation(VehicleState):
     """
     a vehicle is charging at a station with a specific charger_id type
     """
@@ -61,7 +63,7 @@ class ChargingStation(NamedTuple, VehicleState):
         :return: an exception due to failure or an optional updated simulation
         """
 
-        self = self._replace(instance_id=uuid.uuid4())
+        self = replace(self, instance_id=uuid.uuid4())
 
         # ok, we want to enter a charging state.
         # we attempt to claim a charger_id from the station of this self.charger_id type

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import functools as ft
 import logging
@@ -22,7 +23,8 @@ from nrel.hive.util.iterators import NamedTupleIterator
 log = logging.getLogger(__name__)
 
 
-class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
+@dataclass(frozen=True)
+class UpdateRequestsSampling(SimulationUpdateFunction):
     """
     injects requests into the simulation based on set of pre-sampled requests.
     """
@@ -64,7 +66,7 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
             stop_condition=lambda dt: dt < 0,
         )
 
-        return UpdateRequestsSampling(stepper, rate_structure)
+        return UpdateRequestsSampling(request_iterator=stepper, rate_structure=rate_structure)
 
     def update(
         self, sim_state: SimulationState, env: Environment

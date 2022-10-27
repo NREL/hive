@@ -1,10 +1,11 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import functools as ft
 import logging
 from csv import DictReader
 from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict
 
 import immutables
 import h3
@@ -23,7 +24,8 @@ from nrel.hive.util.units import Currency
 log = logging.getLogger(__name__)
 
 
-class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
+@dataclass(frozen=True)
+class ChargingPriceUpdate(SimulationUpdateFunction):
     """
     loads charging prices from a file or sets all prices to zero if none provided
     """
@@ -64,7 +66,7 @@ class ChargingPriceUpdate(NamedTuple, SimulationUpdateFunction):
 
             fallback_values = ft.reduce(create_default_price, table.keys(), ())
             stepper = DictReaderStepper.from_iterator(iter(fallback_values), "time", parser=SimTime.build)
-            return ChargingPriceUpdate(stepper, True)
+            return ChargingPriceUpdate(reader=stepper, use_defaults=True)
         else:
             charging_path = Path(charging_price_file)
             if not charging_path.is_file():

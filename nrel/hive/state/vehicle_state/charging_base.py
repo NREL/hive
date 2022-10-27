@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
@@ -19,7 +20,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class ChargingBase(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ChargingBase(VehicleState):
     """
     a vehicle is charging at a base with a specific charger_id type
     """
@@ -32,7 +34,11 @@ class ChargingBase(NamedTuple, VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId) -> ChargingBase:
-        return ChargingBase(vehicle_id, base_id, charger_id, instance_id=uuid4())
+        return ChargingBase(
+            vehicle_id=vehicle_id, 
+            base_id=base_id, 
+            charger_id=charger_id, 
+            instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

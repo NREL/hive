@@ -28,4 +28,4 @@ def build_powertrain(config: dict) -> Powertrain:
         elif powertrain_type not in powertrain_models:
             raise IOError(f"PowerCurve with type {powertrain_type} is not recognized, must be one of {powertrain_models.keys()}")
         else:
-            return powertrain_models[powertrain_type](data=config)
+            return powertrain_models[powertrain_type].from_data(data=config)

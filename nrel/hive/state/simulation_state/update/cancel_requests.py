@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import functools as ft
 from typing import Tuple, Optional, NamedTuple
@@ -15,7 +16,8 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class CancelRequests(NamedTuple, SimulationUpdateFunction):
+@dataclass(frozen=True)
+class CancelRequests(SimulationUpdateFunction):
 
     def update(
             self,

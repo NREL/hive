@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Tuple, Optional
 
 
@@ -8,7 +8,7 @@ from typing import Tuple, Optional
 #     from nrel.hive.runner.environment import Environment
 
 
-class EntityState:
+class EntityState(ABC):
     """
     a state representation along with methods for state transitions and discrete time step updates
     """

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 
@@ -13,7 +14,8 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
-class OutOfService(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class OutOfService(VehicleState):
     vehicle_id: VehicleId
 
     instance_id: VehicleStateInstanceId

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -17,7 +18,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class ReserveBase(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ReserveBase(VehicleState):
     vehicle_id: VehicleId
     base_id: BaseId
 
@@ -25,7 +27,7 @@ class ReserveBase(NamedTuple, VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId) -> ReserveBase:
-        return cls(vehicle_id, base_id, instance_id=uuid4())
+        return ReserveBase(vehicle_id=vehicle_id, base_id=base_id, instance_id=uuid4())
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

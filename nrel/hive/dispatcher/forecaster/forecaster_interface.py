@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
-from nrel.hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 from nrel.hive.dispatcher.forecaster.forecast import Forecast
 
 
-class ForecasterInterface(metaclass=ABCNamedTupleMeta):
+class ForecasterInterface(ABC):
     """
     A class that computes an optimal fleet state.
     """

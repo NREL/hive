@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
@@ -16,7 +17,8 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
-class Repositioning(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class Repositioning(VehicleState):
     vehicle_id: VehicleId
     route: Route
 
@@ -38,7 +40,7 @@ class Repositioning(NamedTuple, VehicleState):
         return VehicleStateType.REPOSITIONING
     
     def update_route(self, route: Route) -> Repositioning:
-        return self._replace(route=route)
+        return replace(self, route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

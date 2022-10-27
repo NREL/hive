@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -21,7 +22,8 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
-class DispatchStation(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class DispatchStation(VehicleState):
     vehicle_id: VehicleId
     station_id: StationId
     route: Route
@@ -43,7 +45,7 @@ class DispatchStation(NamedTuple, VehicleState):
         return VehicleStateType.DISPATCH_STATION
     
     def update_route(self, route: Route) -> DispatchStation:
-        return self._replace(route=route)
+        return replace(self, route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
@@ -16,7 +17,8 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
-class Idle(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class Idle(VehicleState):
     vehicle_id: VehicleId
     instance_id: VehicleStateInstanceId
 
@@ -90,7 +92,7 @@ class Idle(NamedTuple, VehicleState):
             less_energy_vehicle = mechatronics.idle(vehicle, sim.sim_timestep_duration_seconds)
 
             updated_idle_duration = (self.idle_duration + sim.sim_timestep_duration_seconds)
-            updated_state = self._replace(idle_duration=updated_idle_duration)
+            updated_state = replace(self, idle_duration=updated_idle_duration)
             updated_vehicle = less_energy_vehicle.modify_vehicle_state(updated_state)
 
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)

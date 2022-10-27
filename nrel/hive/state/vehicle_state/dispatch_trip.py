@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
@@ -26,7 +27,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class DispatchTrip(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class DispatchTrip(VehicleState):
     vehicle_id: VehicleId
     request_id: RequestId
     route: Route
@@ -42,7 +44,7 @@ class DispatchTrip(NamedTuple, VehicleState):
         return VehicleStateType.DISPATCH_TRIP
     
     def update_route(self, route: Route) -> DispatchTrip:
-        return self._replace(route=route)
+        return replace(self, route=route)
 
     def update(self, sim: SimulationState,
                env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
