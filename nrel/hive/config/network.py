@@ -23,7 +23,7 @@ class Network(NamedTuple):
             default_config=cls.default_config(),
             required_config=cls.required_config(),
             config_constructor=lambda c: Network.from_dict(c),
-            config=config
+            config=config,
         )
 
     @classmethod

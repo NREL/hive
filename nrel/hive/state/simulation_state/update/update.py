@@ -10,12 +10,18 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
 )
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.cancel_requests import CancelRequests
-from nrel.hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
+from nrel.hive.state.simulation_state.update.cancel_requests import (
+    CancelRequests,
+)
+from nrel.hive.state.simulation_state.update.charging_price_update import (
+    ChargingPriceUpdate,
+)
 from nrel.hive.state.simulation_state.update.simulation_update import (
     SimulationUpdateFunction,
 )
-from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
+from nrel.hive.state.simulation_state.update.step_simulation import (
+    StepSimulation,
+)
 from nrel.hive.state.simulation_state.update.update_requests_from_file import (
     UpdateRequestsFromFile,
 )
@@ -83,9 +89,7 @@ class Update(NamedTuple):
         )
 
         # run each pre_step_update
-        pre_step_result = ft.reduce(
-            _apply_fn, self.pre_step_update, UpdatePayload(init_rp)
-        )
+        pre_step_result = ft.reduce(_apply_fn, self.pre_step_update, UpdatePayload(init_rp))
 
         # apply the simulation step using the StepSimulation update, which includes the dispatcher
         updated_sim, updated_step_fn = self.step_update.update(

@@ -1,5 +1,7 @@
 from unittest import TestCase
-from nrel.hive.state.simulation_state.update.step_simulation_ops import step_vehicle
+from nrel.hive.state.simulation_state.update.step_simulation_ops import (
+    step_vehicle,
+)
 from nrel.hive.resources.mock_lobster import *
 
 
@@ -27,8 +29,11 @@ class TestStepSimulationOps(TestCase):
         veh2_idle_time = vehicle2.vehicle_state.idle_duration
 
         self.assertEqual(veh1_idle_time, 0, "vehicle 1 should not have idled")
-        self.assertEqual(veh2_idle_time, 600,
-                         "vehicle 2 should have idled for 10 time steps (600 s)")
+        self.assertEqual(
+            veh2_idle_time,
+            600,
+            "vehicle 2 should have idled for 10 time steps (600 s)",
+        )
 
     # @unittest.skip("refactor so that we aren't injecting VehicleState into vehicles which bypasses VehicleState.enter op")
     def test_step_vehicle_state_change(self):
@@ -38,7 +43,7 @@ class TestStepSimulationOps(TestCase):
         check to make sure only one vehicle transitioned from the charging state to the idle state.
         """
         self.skipTest(
-            "refactor so that we aren't injecting VehicleState into vehicles. doing so " 
+            "refactor so that we aren't injecting VehicleState into vehicles. doing so "
             "bypasses the VehicleState.enter method, which in this case will lead to an "
             "unexpected behavior when these vehicles return chargers that they never checked "
             "out in the first place."
@@ -52,7 +57,7 @@ class TestStepSimulationOps(TestCase):
             vehicle_id="2",
             vehicle_state=ChargingStation.build("2", "s1", mock_dcfc_charger_id()),
         )
-        sim = mock_sim(vehicles=(vehicle1, vehicle2), stations=(station, ))
+        sim = mock_sim(vehicles=(vehicle1, vehicle2), stations=(station,))
         env = mock_env()
 
         for _ in range(10):
@@ -66,6 +71,9 @@ class TestStepSimulationOps(TestCase):
         veh1_state = vehicle1.vehicle_state
         veh2_state = vehicle2.vehicle_state
 
-        self.assertIsInstance(veh1_state, ChargingStation,
-                              "vehicle 1 should still be in charging state")
+        self.assertIsInstance(
+            veh1_state,
+            ChargingStation,
+            "vehicle 1 should still be in charging state",
+        )
         self.assertIsInstance(veh2_state, Idle, "vehicle 2 should have transitioned to idle")

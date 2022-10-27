@@ -8,12 +8,14 @@ from nrel.hive.model.request import Request
 from nrel.hive.model.roadnetwork.link import Link
 
 
-def parse_yellow_tripdata_row(row: Dict[str, str],
-                              id_number: int,
-                              cancel_time: int,
-                              sim_h3_location_resolution: int,
-                              default_passengers: int = 1,
-                              use_date_in_request_id: bool = False) -> Union[Exception, Request]:
+def parse_yellow_tripdata_row(
+    row: Dict[str, str],
+    id_number: int,
+    cancel_time: int,
+    sim_h3_location_resolution: int,
+    default_passengers: int = 1,
+    use_date_in_request_id: bool = False,
+) -> Union[Exception, Request]:
     """
     takes a row (via a DictReader) from a Yellow Cab Taxi Company data source and
     converts it to a Request, unless it is missing a required field.
@@ -41,7 +43,7 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
     """
     try:
         # time
-        date_time = datetime.strptime(row['pickup_datetime'], '%Y-%m-%d %H:%M:%S')
+        date_time = datetime.strptime(row["pickup_datetime"], "%Y-%m-%d %H:%M:%S")
         start_of_day = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
         time_diff = date_time - start_of_day
         departure_time = time_diff.seconds
@@ -51,23 +53,23 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
         agent_id = f"{id_number}#{date_time.date()}" if use_date_in_request_id else id_number
 
         # locations
-        o_lat, o_lon = float(row['pickup_latitude']), float(row['pickup_longitude'])
-        d_lat, d_lon = float(row['dropoff_latitude']), float(row['dropoff_longitude'])
+        o_lat, o_lon = float(row["pickup_latitude"]), float(row["pickup_longitude"])
+        d_lat, d_lon = float(row["dropoff_latitude"]), float(row["dropoff_longitude"])
         origin = h3.geo_to_h3(o_lat, o_lon, sim_h3_location_resolution)
         destination = h3.geo_to_h3(d_lat, d_lon, sim_h3_location_resolution)
 
-        origin_link = Link('o', origin, origin, 0, 0)
-        destination_link = Link('d', destination, destination, 0, 0)
+        origin_link = Link("o", origin, origin, 0, 0)
+        destination_link = Link("d", destination, destination, 0, 0)
 
         # passengers (
-        passengers = int(row['passengers']) if 'passengers' in row else default_passengers
+        passengers = int(row["passengers"]) if "passengers" in row else default_passengers
 
         request_as_passengers = [
             Passenger(
                 create_passenger_id(agent_id, pass_idx),
                 origin_link.start,
                 destination_link.end,
-                departure_time
+                departure_time,
             )
             for pass_idx in range(0, passengers)
         ]
@@ -78,7 +80,7 @@ def parse_yellow_tripdata_row(row: Dict[str, str],
             destination_link=destination_link,
             departure_time=departure_time,
             cancel_time=cancel_time,
-            passengers=tuple(request_as_passengers)
+            passengers=tuple(request_as_passengers),
         )
 
     except Exception as e:

@@ -10,16 +10,22 @@ from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
 from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
 from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
-from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
+from nrel.hive.reporting.handler.time_step_stats_handler import (
+    TimeStepStatsHandler,
+)
 from nrel.hive.reporting.reporter import Reporter
 from nrel.hive.runner.environment import Environment
-from nrel.hive.initialization.initialize_simulation import initialize_simulation
+from nrel.hive.initialization.initialize_simulation import (
+    initialize_simulation,
+)
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 run_log = logging.getLogger(__name__)
 
 
-def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environment]:
+def load_simulation(
+    scenario_file_path: Path,
+) -> Tuple[SimulationState, Environment]:
     """
     takes a scenario path and attempts to build all assets required to run a scenario
 
@@ -28,7 +34,7 @@ def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environm
     :return: the assets required to run a scenario
     :raises: Exception if the scenario_path is not found or if other scenario files are not found or fail to parse
     """
-    with scenario_file_path.open('r') as f:
+    with scenario_file_path.open("r") as f:
         config_builder = yaml.safe_load(f)
 
     try:
@@ -45,15 +51,23 @@ def load_simulation(scenario_file_path: Path) -> Tuple[SimulationState, Environm
     # configure reporting
     reporter = Reporter()
     if config.global_config.log_events:
-        reporter.add_handler(EventfulHandler(config.global_config, config.scenario_output_directory))
+        reporter.add_handler(
+            EventfulHandler(config.global_config, config.scenario_output_directory)
+        )
     if config.global_config.log_states:
-        reporter.add_handler(StatefulHandler(config.global_config, config.scenario_output_directory))
+        reporter.add_handler(
+            StatefulHandler(config.global_config, config.scenario_output_directory)
+        )
     if config.global_config.log_instructions:
-        reporter.add_handler(InstructionHandler(config.global_config, config.scenario_output_directory))
+        reporter.add_handler(
+            InstructionHandler(config.global_config, config.scenario_output_directory)
+        )
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
     if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:
-        reporter.add_handler(TimeStepStatsHandler(config, config.scenario_output_directory, environment.fleet_ids))
+        reporter.add_handler(
+            TimeStepStatsHandler(config, config.scenario_output_directory, environment.fleet_ids)
+        )
 
     environment_w_reporter = environment.set_reporter(reporter)
 

@@ -18,7 +18,9 @@ from nrel.hive.initialization.initialize_ops import (
 from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
+    HaversineRoadNetwork,
+)
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
@@ -132,7 +134,10 @@ def initialize_simulation(
         vehicle_filter,
     )
     sim_with_bases = _build_bases(
-        config.input_config.bases_file, base_member_ids, sim_with_vehicles, base_filter
+        config.input_config.bases_file,
+        base_member_ids,
+        sim_with_vehicles,
+        base_filter,
     )
     sim_with_stations = _build_stations(
         config.input_config.stations_file,
@@ -183,11 +188,12 @@ def _build_vehicles(
     with open(vehicles_file, "r", encoding="utf-8-sig") as vf:
         reader = csv.DictReader(vf)
         vehicles = list(
-            filter(lambda v: v is not None, [_collect_vehicle(row) for row in reader])
+            filter(
+                lambda v: v is not None,
+                [_collect_vehicle(row) for row in reader],
+            )
         )
-        sim_with_vehicles = simulation_state_ops.add_entities(
-            simulation_state, vehicles
-        )
+        sim_with_vehicles = simulation_state_ops.add_entities(simulation_state, vehicles)
 
     return sim_with_vehicles
 
@@ -223,9 +229,7 @@ def _build_bases(
     # add all bases from the base file
     with open(bases_file, "r", encoding="utf-8-sig") as bf:
         reader = csv.DictReader(bf)
-        bases = list(
-            filter(lambda b: b is not None, [_collect_base(row) for row in reader])
-        )
+        bases = list(filter(lambda b: b is not None, [_collect_base(row) for row in reader]))
 
     sim_w_bases = simulation_state_ops.add_entities(simulation_state, bases)
 
@@ -258,18 +262,14 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                 updated_v = v.add_membership(home_base_membership_id)
                 updated_b = home_base.add_membership(home_base_membership_id)
                 station = sim.stations.get(home_base.station_id)
-                updated_s = (
-                    station.add_membership(home_base_membership_id) if station else None
-                )
+                updated_s = station.add_membership(home_base_membership_id) if station else None
 
                 error_v, with_v = simulation_state_ops.modify_vehicle(acc, updated_v)
                 if error_v:
                     log.error(error_v)
                     return acc
                 else:
-                    error_b, with_b = simulation_state_ops.modify_base(
-                        with_v, updated_b
-                    )
+                    error_b, with_b = simulation_state_ops.modify_base(with_v, updated_b)
                     if error_b:
                         log.error(error_b)
                         return acc
@@ -278,9 +278,10 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                         if not station:
                             return with_b
                         else:
-                            error_s, with_s = simulation_state_ops.modify_station(
-                                with_b, updated_s
-                            )
+                            (
+                                error_s,
+                                with_s,
+                            ) = simulation_state_ops.modify_station(with_b, updated_s)
                             if error_s:
                                 log.error(error_s)
                                 return acc
@@ -332,6 +333,4 @@ def _build_stations(
         )
 
     # add all stations to the simulation once we know they are complete
-    return simulation_state_ops.add_entities(
-        simulation_state, stations_builder.values()
-    )
+    return simulation_state_ops.add_entities(simulation_state, stations_builder.values())

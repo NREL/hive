@@ -18,5 +18,3 @@ class VehicleStateType(Enum):
     DISPATCH_STATION = 30
     CHARGING_STATION = 31
     CHARGE_QUEUEING = 32
-
-

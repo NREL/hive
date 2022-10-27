@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Tuple
 
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
-from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
+from nrel.hive.reporting.handler.time_step_stats_handler import (
+    TimeStepStatsHandler,
+)
 
 if TYPE_CHECKING:
     from nrel.hive.model.membership import MembershipId
@@ -21,7 +23,7 @@ class Report(NamedTuple):
 
     def as_json(self) -> Dict[str, str]:
         out = {str(k): str(v) for k, v in self.report.items()}
-        out['report_type'] = self.report_type.name.lower()
+        out["report_type"] = self.report_type.name.lower()
         return out
 
 
@@ -71,7 +73,9 @@ class Reporter:
                 final_report = handler.get_stats(rp)
         return final_report
 
-    def get_time_step_stats(self) -> Tuple[Optional[DataFrame], Optional[Map[MembershipId, DataFrame]]]:
+    def get_time_step_stats(
+        self,
+    ) -> Tuple[Optional[DataFrame], Optional[Map[MembershipId, DataFrame]]]:
         """
         if a TimeStepStatsHandler exists, return the time step stats DataFrame and the fleet time step stats DataFrames
         :return: the time step stats DataFrame and the fleet time step stats collection of DataFrames if they exist

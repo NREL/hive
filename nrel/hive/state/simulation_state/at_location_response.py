@@ -6,7 +6,7 @@ from nrel.hive.util.typealiases import RequestId, VehicleId, StationId, BaseId
 class AtLocationResponse(Dict):
     """
     Wrapper for entities at a specific location.
-    
+
 
     :param requests: requests at the location
     :type requests: :py:obj:`FrozenSet[RequestId, ...]`
@@ -20,6 +20,7 @@ class AtLocationResponse(Dict):
     :param base: base at the location
     :type base: :py:obj:`Optional[BaseId]`
     """
+
     requests: FrozenSet[RequestId]
     vehicles: FrozenSet[VehicleId]
     station: FrozenSet[StationId]

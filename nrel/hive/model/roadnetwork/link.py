@@ -7,7 +7,13 @@ import h3
 from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.typealiases import LinkId, GeoId
-from nrel.hive.util.units import Kilometers, Kmph, Seconds, Ratio, hours_to_seconds
+from nrel.hive.util.units import (
+    Kilometers,
+    Kmph,
+    Seconds,
+    Ratio,
+    hours_to_seconds,
+)
 
 
 class EntityPosition(NamedTuple):
@@ -15,6 +21,7 @@ class EntityPosition(NamedTuple):
     A pairing of a geoid at the simulation resolution and a link id which yields the position of an entity
     with the context of a link for directionality.
     """
+
     link_id: LinkId
     geoid: GeoId
 
@@ -28,7 +35,7 @@ class Link(NamedTuple):
     the vertex set. an agent route may also use a Link to represent
     a partial link traversal, using an o/d pair which is within the link but
     not necessarily the end-points.
-    
+
 
     :param link_id: The unique link id.
     :type link_id: :py:obj:`LinkId`
@@ -39,6 +46,7 @@ class Link(NamedTuple):
     :param end: The ending endpoint of the link
     :type end: :py:obj:`GeoId`
     """
+
     link_id: LinkId
     start: GeoId
     end: GeoId
@@ -51,12 +59,12 @@ class Link(NamedTuple):
 
     @classmethod
     def build(
-            cls,
-            link_id: LinkId,
-            start: GeoId,
-            end: GeoId,
-            speed_kmph: Kmph,
-            distance_km: Optional[Kilometers] = None,
+        cls,
+        link_id: LinkId,
+        start: GeoId,
+        end: GeoId,
+        speed_kmph: Kmph,
+        distance_km: Optional[Kilometers] = None,
     ) -> Link:
         if not distance_km:
             distance_km = H3Ops.great_circle_distance(start, end)

@@ -1,29 +1,42 @@
 from __future__ import annotations
+from dataclasses import dataclass, replace
 
 import logging
 from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.model.request import Request
-from nrel.hive.model.roadnetwork.route import Route, route_cooresponds_with_entities
+from nrel.hive.model.roadnetwork.route import (
+    Route,
+    route_cooresponds_with_entities,
+)
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.idle import Idle
-from nrel.hive.state.vehicle_state.servicing_ops import drop_off_trip, pick_up_trip
-from nrel.hive.state.vehicle_state.vehicle_state import VehicleState, VehicleStateInstanceId
+from nrel.hive.state.vehicle_state.servicing_ops import (
+    drop_off_trip,
+    pick_up_trip,
+)
+from nrel.hive.state.vehicle_state.vehicle_state import (
+    VehicleState,
+    VehicleStateInstanceId,
+)
 from nrel.hive.state.vehicle_state.vehicle_state_ops import move
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 log = logging.getLogger(__name__)
 
 
-class ServicingTrip(NamedTuple, VehicleState):
+@dataclass(frozen=True)
+class ServicingTrip(VehicleState):
     vehicle_id: VehicleId
     request: Request
     departure_time: SimTime
@@ -32,8 +45,13 @@ class ServicingTrip(NamedTuple, VehicleState):
     instance_id: VehicleStateInstanceId
 
     @classmethod
-    def build(cls, vehicle_id: VehicleId, request: Request, departure_time: SimTime,
-              route: Route) -> ServicingTrip:
+    def build(
+        cls,
+        vehicle_id: VehicleId,
+        request: Request,
+        departure_time: SimTime,
+        route: Route,
+    ) -> ServicingTrip:
         """
         build a servicing trip state
 
@@ -43,25 +61,29 @@ class ServicingTrip(NamedTuple, VehicleState):
         :param route: the route
         :return: the servicing trip state
         """
-        return cls(vehicle_id=vehicle_id,
-                   request=request,
-                   departure_time=departure_time,
-                   route=route,
-                   instance_id=uuid4())
+        return cls(
+            vehicle_id=vehicle_id,
+            request=request,
+            departure_time=departure_time,
+            route=route,
+            instance_id=uuid4(),
+        )
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:
         return VehicleStateType.SERVICING_TRIP
-    
-    def update_route(self, route: Route) -> ServicingTrip:
-        return self._replace(route=route)
 
-    def update(self, sim: SimulationState,
-               env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def update_route(self, route: Route) -> ServicingTrip:
+        return replace(self, route=route)
+
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         return VehicleState.default_update(sim, env, self)
 
-    def enter(self, sim: SimulationState,
-              env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         transition from DispatchTrip into a non-pooling trip service leg
 
@@ -72,12 +94,23 @@ class ServicingTrip(NamedTuple, VehicleState):
 
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request.id)
-        is_valid = route_cooresponds_with_entities(
-            self.route, request.origin_position,
-            request.destination_position) if vehicle and request else False
-        context = f"vehicle {self.vehicle_id} entering servicing trip state for request {self.request.id}"
+        is_valid = (
+            route_cooresponds_with_entities(
+                self.route,
+                request.origin_position,
+                request.destination_position,
+            )
+            if vehicle and request
+            else False
+        )
+        context = (
+            f"vehicle {self.vehicle_id} entering servicing trip state for request {self.request.id}"
+        )
         if vehicle is None:
-            return SimulationStateError(f"vehicle not found; context: {context}"), None
+            return (
+                SimulationStateError(f"vehicle not found; context: {context}"),
+                None,
+            )
         elif request is None:
             # request moved on to greener pastures
             return None, None
@@ -97,8 +130,9 @@ class ServicingTrip(NamedTuple, VehicleState):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match location of vehicle)"
             log.warning(msg)
             return None, None
-        elif not route_cooresponds_with_entities(self.route, request.origin_position,
-                                                 request.destination_position):
+        elif not route_cooresponds_with_entities(
+            self.route, request.origin_position, request.destination_position
+        ):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match o/d of request)"
             log.warning(msg)
             return None, None
@@ -106,16 +140,19 @@ class ServicingTrip(NamedTuple, VehicleState):
             pickup_error, pickup_sim = pick_up_trip(sim, env, self.vehicle_id, self.request.id)
             if pickup_error:
                 response = SimulationStateError(
-                    f"failure during ServicingTrip.enter for vehicle {self.vehicle_id}")
+                    f"failure during ServicingTrip.enter for vehicle {self.vehicle_id}"
+                )
                 response.__cause__ = pickup_error
                 return response, None
             else:
-                enter_result = VehicleState.apply_new_vehicle_state(pickup_sim, self.vehicle_id,
-                                                                    self)
+                enter_result = VehicleState.apply_new_vehicle_state(
+                    pickup_sim, self.vehicle_id, self
+                )
                 return enter_result
 
-    def exit(self, next_state: VehicleState, sim: SimulationState,
-             env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def exit(
+        self, next_state: VehicleState, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         leave this state when the route is completed
 
@@ -139,8 +176,8 @@ class ServicingTrip(NamedTuple, VehicleState):
         return len(self.route) == 0
 
     def _default_terminal_state(
-            self, sim: SimulationState,
-            env: Environment) -> Tuple[Optional[Exception], Optional[VehicleState]]:
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         gets the default terminal state for this state which should be transitioned to
         once it reaches the end of the current task.
@@ -151,10 +188,11 @@ class ServicingTrip(NamedTuple, VehicleState):
         next_state = Idle.build(self.vehicle_id)
         return None, next_state
 
-    def _perform_update(self, sim: SimulationState,
-                        env: Environment) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def _perform_update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
-        take a step along the route to a trip destination  
+        take a step along the route to a trip destination
 
         :param sim: the simulation state
         :param env: the simulation environment
@@ -166,14 +204,18 @@ class ServicingTrip(NamedTuple, VehicleState):
 
         if move_error:
             response = SimulationStateError(
-                f"failure during ServicingTrip._perform_update for vehicle {self.vehicle_id}")
+                f"failure during ServicingTrip._perform_update for vehicle {self.vehicle_id}"
+            )
             response.__cause__ = move_error
             return response, None
 
         moved_vehicle = move_sim.vehicles.get(self.vehicle_id)
 
         if not moved_vehicle:
-            return SimulationStateError(f"vehicle not found; context: {context}"), None
+            return (
+                SimulationStateError(f"vehicle not found; context: {context}"),
+                None,
+            )
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_sim
         elif len(moved_vehicle.vehicle_state.route) == 0:

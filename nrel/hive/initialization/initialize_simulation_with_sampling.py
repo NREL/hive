@@ -18,7 +18,9 @@ from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
+    HaversineRoadNetwork,
+)
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
@@ -106,15 +108,11 @@ def initialize_simulation_with_sampling(
 
     # populate simulation with static entities
     sim_with_bases = _build_bases(config.input_config.bases_file, sim_initial)
-    sim_with_stations = _build_stations(
-        config.input_config.stations_file, sim_with_bases, env
-    )
+    sim_with_stations = _build_stations(config.input_config.stations_file, sim_with_bases, env)
 
     # sample vehicles
     if not vehicle_location_sampling_function:
-        vehicle_location_sampling_function = build_default_location_sampling_fn(
-            seed=random_seed
-        )
+        vehicle_location_sampling_function = build_default_location_sampling_fn(seed=random_seed)
     if not vehicle_soc_sampling_function:
         vehicle_soc_sampling_function = build_default_soc_sampling_fn(seed=random_seed)
 
@@ -186,7 +184,7 @@ def _build_stations(
 
     # add all stations to the simulation once we know they are complete
     sim_with_stations = simulation_state_ops.add_entities(
-            simulation_state, stations_builder.values()
-        )
+        simulation_state, stations_builder.values()
+    )
 
     return sim_with_stations

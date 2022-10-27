@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from typing import Dict, TYPE_CHECKING, Tuple
 
 import immutables
 
 from nrel.hive.model.energy import EnergyType, Charger
-from nrel.hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
 
 if TYPE_CHECKING:
     from nrel.hive.util.units import Seconds, Ratio, Kilometers
@@ -16,18 +16,15 @@ if TYPE_CHECKING:
     from nrel.hive.model.roadnetwork.route import Route
 
 
-class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
+@dataclass(frozen=True)
+class MechatronicsMixin:
+    mechatronics_id: MechatronicsId
+
+
+class MechatronicsInterfaceABC(ABC):
     """
     Interface for creating energy sources
     """
-
-    @property
-    @abstractmethod
-    def mechatronics_id(self) -> MechatronicsId:
-        """
-        what id?
-        :return:
-        """
 
     @classmethod
     @abstractmethod
@@ -37,14 +34,6 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
 
         :param d: the dictionary to build from
         :return: the built Mechatronics object
-        """
-
-    @property
-    @abstractmethod
-    def total_number_of_seats(self):
-        """
-        total number of seats in this car for passengers
-        :return: integer count of seats in the car
         """
 
     @abstractmethod
@@ -96,11 +85,11 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
     @abstractmethod
     def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
-        consume energy over a route 
+        consume energy over a route
 
         :param vehicle:
         :param route:
-        :return: the vehicle after moving; 
+        :return: the vehicle after moving;
         """
 
     @abstractmethod
@@ -115,7 +104,9 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         """
 
     @abstractmethod
-    def add_energy(self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds) -> Tuple[Vehicle, Seconds]:
+    def add_energy(
+        self, vehicle: Vehicle, charger: Charger, time_seconds: Seconds
+    ) -> Tuple[Vehicle, Seconds]:
         """
         add energy into the system
 
@@ -125,3 +116,7 @@ class MechatronicsInterface(metaclass=ABCNamedTupleMeta):
         :param time_seconds:
         :return: the updated vehicle, along with the time spent charging
         """
+
+
+class MechatronicsInterface(MechatronicsMixin, MechatronicsInterfaceABC):
+    """"""

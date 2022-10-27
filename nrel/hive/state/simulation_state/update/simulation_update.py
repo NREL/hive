@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Optional, Tuple, TYPE_CHECKING
 
-from nrel.hive.util.abc_named_tuple_meta import ABCNamedTupleMeta
-
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
 
 
-class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
-
+class SimulationUpdateFunction(ABC):
     @abstractmethod
-    def update(self,
-               simulation_state: SimulationState,
-               env: Environment) -> Tuple[SimulationState, Optional[SimulationUpdateFunction]]:
+    def update(
+        self, simulation_state: SimulationState, env: Environment
+    ) -> Tuple[SimulationState, Optional[SimulationUpdateFunction]]:
         """
         takes a simulation state and modifies it, returning the updated simulation state
 
@@ -25,4 +24,3 @@ class SimulationUpdateFunction(metaclass=ABCNamedTupleMeta):
         :return: the updated sim state, along with any reporting;
         as well, an Optionally-updated SimulationUpdate function
         """
-

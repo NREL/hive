@@ -7,7 +7,9 @@ from nrel.hive.util.exception import TimeParseError
 
 
 class SimTime(int):
-    ERROR_MSG = "Unable to parse datetime. Make sure the time is an ISO 8601 string or an epoch integer."
+    ERROR_MSG = (
+        "Unable to parse datetime. Make sure the time is an ISO 8601 string or an epoch integer."
+    )
 
     @classmethod
     def build(cls, value: Union[str, int]) -> Union[TimeParseError, SimTime]:

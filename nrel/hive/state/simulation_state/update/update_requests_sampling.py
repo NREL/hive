@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import functools as ft
 import logging
@@ -22,7 +23,8 @@ from nrel.hive.util.iterators import NamedTupleIterator
 log = logging.getLogger(__name__)
 
 
-class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
+@dataclass(frozen=True)
+class UpdateRequestsSampling(SimulationUpdateFunction):
     """
     injects requests into the simulation based on set of pre-sampled requests.
     """
@@ -49,9 +51,7 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
         if rate_structure_file:
             rate_structure_path = Path(rate_structure_file)
             if not rate_structure_path.is_file():
-                raise IOError(
-                    f"{rate_structure_file} is not a valid path to a request file"
-                )
+                raise IOError(f"{rate_structure_file} is not a valid path to a request file")
             with open(rate_structure_file, "r", encoding="utf-8-sig") as rsf:
                 reader = DictReader(rsf)
                 rate_structure = RequestRateStructure.from_row(next(reader))
@@ -64,7 +64,7 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
             stop_condition=lambda dt: dt < 0,
         )
 
-        return UpdateRequestsSampling(stepper, rate_structure)
+        return UpdateRequestsSampling(request_iterator=stepper, rate_structure=rate_structure)
 
     def update(
         self, sim_state: SimulationState, env: Environment
@@ -106,9 +106,7 @@ class UpdateRequestsSampling(NamedTuple, SimulationUpdateFunction):
                     "departure_time": request.departure_time,
                     "fleet_id": str(request.membership),
                 }
-                env.reporter.file_report(
-                    Report(ReportType.ADD_REQUEST_EVENT, report_data)
-                )
+                env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))
             return new_sim
 
         updated_sim = ft.reduce(_add_request, priced_requests, sim_state)

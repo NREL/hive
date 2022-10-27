@@ -6,7 +6,9 @@ from typing import NamedTuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.update.update import Update
     from nrel.hive.runner.environment import Environment
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 
 class RunnerPayload(NamedTuple):
@@ -23,6 +25,7 @@ class RunnerPayload(NamedTuple):
     :param u: the updates we need to apply during each sim step
     :type u: :py:obj:`Update`
     """
+
     s: SimulationState
     e: Environment
     u: Update

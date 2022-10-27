@@ -1,14 +1,31 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, cast, Tuple, Callable, TYPE_CHECKING, FrozenSet
+from typing import (
+    NamedTuple,
+    Optional,
+    cast,
+    Tuple,
+    Callable,
+    TYPE_CHECKING,
+    FrozenSet,
+)
 
 import immutables
 
-from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
+from nrel.hive.state.simulation_state.at_location_response import (
+    AtLocationResponse,
+)
 from nrel.hive.model.membership import PUBLIC_MEMBERSHIP_ID
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import geo
-from nrel.hive.util.typealiases import RequestId, VehicleId, BaseId, StationId, GeoId, MembershipId
+from nrel.hive.util.typealiases import (
+    RequestId,
+    VehicleId,
+    BaseId,
+    StationId,
+    GeoId,
+    MembershipId,
+)
 
 if TYPE_CHECKING:
     from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -27,6 +44,7 @@ class SimulationState(NamedTuple):
     specify their own level of granularity for
     https://uber.github.io/h3/#/documentation/core-library/resolution-table
     """
+
     # road network representation
     road_network: RoadNetwork
 
@@ -58,11 +76,11 @@ class SimulationState(NamedTuple):
     b_search: immutables.Map[GeoId, FrozenSet[BaseId]] = immutables.Map()
 
     def get_stations(
-            self,
-            filter_function: Optional[Callable[[Station], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Station], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Station, ...]:
         """
         returns a tuple of stations.
@@ -77,7 +95,12 @@ class SimulationState(NamedTuple):
         """
         stations = self.stations.values()
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(stations, key=sort_key, reverse=sort_reversed)))
+            return tuple(
+                filter(
+                    filter_function,
+                    sorted(stations, key=sort_key, reverse=sort_reversed),
+                )
+            )
         elif filter_function:
             return tuple(filter(filter_function, stations))
         elif sort:
@@ -86,11 +109,11 @@ class SimulationState(NamedTuple):
             return tuple(stations)
 
     def get_bases(
-            self,
-            filter_function: Optional[Callable[[Base], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Base], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Base, ...]:
         """
         returns a tuple of bases.
@@ -106,7 +129,12 @@ class SimulationState(NamedTuple):
         bases = self.bases.values()
 
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(bases, key=sort_key, reverse=sort_reversed)))
+            return tuple(
+                filter(
+                    filter_function,
+                    sorted(bases, key=sort_key, reverse=sort_reversed),
+                )
+            )
         elif filter_function:
             return tuple(filter(filter_function, bases))
         elif sort:
@@ -115,11 +143,11 @@ class SimulationState(NamedTuple):
             return tuple(bases)
 
     def get_vehicles(
-            self,
-            filter_function: Optional[Callable[[Vehicle], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Vehicle], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Vehicle, ...]:
         """
         returns a tuple of vehicles.
@@ -135,7 +163,13 @@ class SimulationState(NamedTuple):
         vehicles = self.vehicles.values()
 
         if filter_function and sort:
-            return tuple(sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed))
+            return tuple(
+                sorted(
+                    filter(filter_function, vehicles),
+                    key=sort_key,
+                    reverse=sort_reversed,
+                )
+            )
         elif filter_function:
             return tuple(filter(filter_function, vehicles))
         elif sort:
@@ -144,11 +178,11 @@ class SimulationState(NamedTuple):
             return tuple(vehicles)
 
     def get_requests(
-            self,
-            filter_function: Optional[Callable[[Request], bool]] = None,
-            sort: bool = False,
-            sort_key: Callable = lambda k: k,
-            sort_reversed: bool = False,
+        self,
+        filter_function: Optional[Callable[[Request], bool]] = None,
+        sort: bool = False,
+        sort_key: Callable = lambda k: k,
+        sort_reversed: bool = False,
     ) -> Tuple[Request, ...]:
         """
         returns a tuple of requests.
@@ -163,7 +197,12 @@ class SimulationState(NamedTuple):
         """
         requests = self.requests.values()
         if filter_function and sort:
-            return tuple(filter(filter_function, sorted(requests, key=sort_key, reverse=sort_reversed)))
+            return tuple(
+                filter(
+                    filter_function,
+                    sorted(requests, key=sort_key, reverse=sort_reversed),
+                )
+            )
         elif filter_function:
             return tuple(filter(filter_function, requests))
         elif sort:
@@ -183,18 +222,23 @@ class SimulationState(NamedTuple):
         station = self.s_locations[geoid] if geoid in self.s_locations else frozenset()
         base = self.b_locations[geoid] if geoid in self.b_locations else frozenset()
 
-        result = cast(AtLocationResponse, {
-            'vehicles': vehicles,
-            'requests': requests,
-            'station': station,
-            'base': base
-        })
+        result = cast(
+            AtLocationResponse,
+            {
+                "vehicles": vehicles,
+                "requests": requests,
+                "station": station,
+                "base": base,
+            },
+        )
         return result
 
-    def vehicle_at_request(self,
-                           vehicle_id: VehicleId,
-                           request_id: RequestId,
-                           override_resolution: Optional[int] = None) -> bool:
+    def vehicle_at_request(
+        self,
+        vehicle_id: VehicleId,
+        request_id: RequestId,
+        override_resolution: Optional[int] = None,
+    ) -> bool:
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
 
@@ -209,15 +253,19 @@ class SimulationState(NamedTuple):
         if not vehicle or not request:
             return False
         else:
-            return geo.same_simulation_location(vehicle.geoid,
-                                                request.origin,
-                                                self.sim_h3_location_resolution,
-                                                override_resolution)
+            return geo.same_simulation_location(
+                vehicle.geoid,
+                request.origin,
+                self.sim_h3_location_resolution,
+                override_resolution,
+            )
 
-    def vehicle_at_station(self,
-                           vehicle_id: VehicleId,
-                           station_id: StationId,
-                           override_resolution: Optional[int] = None) -> bool:
+    def vehicle_at_station(
+        self,
+        vehicle_id: VehicleId,
+        station_id: StationId,
+        override_resolution: Optional[int] = None,
+    ) -> bool:
         """
         tests whether vehicle is at the station within the scope of the given geoid resolution
 
@@ -232,15 +280,19 @@ class SimulationState(NamedTuple):
         if not vehicle or not station:
             return False
         else:
-            return geo.same_simulation_location(vehicle.geoid,
-                                                station.geoid,
-                                                self.sim_h3_location_resolution,
-                                                override_resolution)
+            return geo.same_simulation_location(
+                vehicle.geoid,
+                station.geoid,
+                self.sim_h3_location_resolution,
+                override_resolution,
+            )
 
-    def vehicle_at_base(self,
-                        vehicle_id: VehicleId,
-                        base_id: BaseId,
-                        override_resolution: Optional[int] = None) -> bool:
+    def vehicle_at_base(
+        self,
+        vehicle_id: VehicleId,
+        base_id: BaseId,
+        override_resolution: Optional[int] = None,
+    ) -> bool:
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
 
@@ -255,7 +307,9 @@ class SimulationState(NamedTuple):
         if not vehicle or not base:
             return False
         else:
-            return geo.same_simulation_location(vehicle.geoid,
-                                                base.geoid,
-                                                self.sim_h3_location_resolution,
-                                                override_resolution)
+            return geo.same_simulation_location(
+                vehicle.geoid,
+                base.geoid,
+                self.sim_h3_location_resolution,
+                override_resolution,
+            )

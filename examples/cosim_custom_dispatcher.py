@@ -47,18 +47,12 @@ class CustomDispatcher(InstructionGenerator):
 
 def run():
     denver_demo_path = (
-        package_root()
-        / "resources"
-        / "scenarios"
-        / "denver_downtown"
-        / "denver_demo.yaml"
+        package_root() / "resources" / "scenarios" / "denver_downtown" / "denver_demo.yaml"
     )
 
     dispatcher = CustomDispatcher.build(1)
 
-    rp = hc.load_scenario(
-        denver_demo_path, custom_instruction_generators=tuple([dispatcher])
-    )
+    rp = hc.load_scenario(denver_demo_path, custom_instruction_generators=tuple([dispatcher]))
 
     for _ in tqdm(range(100)):
         # crank sim 10 time steps
@@ -73,9 +67,7 @@ def run():
         updated_dispatcher = dispatcher.new_random_state()
 
         # inject the dispatcher back into the simulation
-        rp = update_instruction_generator(
-            crank_result.runner_payload, updated_dispatcher
-        )
+        rp = update_instruction_generator(crank_result.runner_payload, updated_dispatcher)
 
     hc.close(rp)
 

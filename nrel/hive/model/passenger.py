@@ -11,16 +11,16 @@ from nrel.hive.util.typealiases import *
 class Passenger(NamedTuple):
     """
     A tuple representing a passenger in the simulation.
-    
+
 
     :param id: the unique id of the passenger
-    :type id: PassengerId 
+    :type id: PassengerId
 
     :param origin: the pickup location of the passenger
-    :type origin: GeoId 
+    :type origin: GeoId
 
     :param destination: the destination location of the passenger
-    :type destination: GeoId 
+    :type destination: GeoId
 
     :param departure_time: the departure time of the passenger
     :type departure_time: SimTime
@@ -28,6 +28,7 @@ class Passenger(NamedTuple):
     :param vehicle_id: id of the vehicle that the passenger is occupying
     :type vehicle_id: Optional[VehicleId]
     """
+
     id: PassengerId
     origin: GeoId
     destination: GeoId
@@ -59,7 +60,9 @@ def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId
     return f"{request_id}-{passenger_id}"
 
 
-def board_vehicle(passengers: Tuple[Passenger, ...], vehicle_id: VehicleId) -> Tuple[Passenger, ...]:
+def board_vehicle(
+    passengers: Tuple[Passenger, ...], vehicle_id: VehicleId
+) -> Tuple[Passenger, ...]:
     """
     updates each passenger with a vehicle_id
 

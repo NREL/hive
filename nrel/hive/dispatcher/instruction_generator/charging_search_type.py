@@ -23,4 +23,6 @@ class ChargingSearchType(Enum):
             return ChargingSearchType.SHORTEST_TIME_TO_CHARGE
         else:
             valid_names = "{nearest_shortest_queue|shortest_time_to_charge}"
-            raise NameError(f"charging search type {string} is not known, must be one of {valid_names}")
+            raise NameError(
+                f"charging search type {string} is not known, must be one of {valid_names}"
+            )

@@ -25,18 +25,21 @@ class InstructionHandler(Handler):
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
 
-        log_path = scenario_output_directory / 'instruction.log'
-        self.log_file = open(log_path, 'a')
+        log_path = scenario_output_directory / "instruction.log"
+        self.log_file = open(log_path, "a")
 
         self.global_config = global_config
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
 
         for report in reports:
-            if report.report_type == ReportType.INSTRUCTION and ReportType.INSTRUCTION in self.global_config.log_sim_config:
+            if (
+                report.report_type == ReportType.INSTRUCTION
+                and ReportType.INSTRUCTION in self.global_config.log_sim_config
+            ):
                 report_json = report.as_json()
                 entry = json.dumps(report_json, default=str)
-                self.log_file.write(entry + '\n')
+                self.log_file.write(entry + "\n")
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()

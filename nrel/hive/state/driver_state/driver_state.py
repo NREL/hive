@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
-from typing import NamedTupleMeta, Tuple, Optional, TYPE_CHECKING
+from abc import abstractmethod, ABC
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.util import SimulationStateError
 from nrel.hive.state.simulation_state import simulation_state_ops
-from nrel.hive.state.entity_state.entity_state import EntityState
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId, BaseId, VehicleId
     from nrel.hive.dispatcher.instruction.instruction import Instruction
 
 
-class DriverState(ABCMeta, NamedTupleMeta, EntityState):
+class DriverState(ABC):
     """
     superclass for all driver state instances
     """
@@ -45,10 +46,10 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def generate_instruction(
-            self,
-            sim: SimulationState,
-            env: Environment,
-            previous_instructions: Optional[Tuple[Instruction, ...]] = None,
+        self,
+        sim: SimulationState,
+        env: Environment,
+        previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
         """
         allows the driver state to issue an optional instruction for the vehicle considering all the
@@ -62,8 +63,9 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None
 
-    def enter(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         there are no operations associated with entering a DriverState
 
@@ -73,8 +75,9 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         """
         return None, sim
 
-    def exit(self, sim: SimulationState, env: Environment) -> Tuple[
-        Optional[Exception], Optional[SimulationState]]:
+    def exit(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         there are no operations associated with exiting a DriverState
 
@@ -85,11 +88,12 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         return None, sim
 
     @classmethod
-    def apply_new_driver_state(mcs,
-                               sim: SimulationState,
-                               vehicle_id: VehicleId,
-                               new_state: DriverState
-                               ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+    def apply_new_driver_state(
+        mcs,
+        sim: SimulationState,
+        vehicle_id: VehicleId,
+        new_state: DriverState,
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         helper for updating a Vehicle with a new DriverState
 
@@ -101,18 +105,24 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         vehicle = sim.vehicles.get(vehicle_id)
         if not vehicle:
             state_name = new_state.__class__.__name__
-            return SimulationStateError(f"vehicle {vehicle_id} not found; context: applying new {state_name} driver state"), None
+            return (
+                SimulationStateError(
+                    f"vehicle {vehicle_id} not found; context: applying new {state_name} driver state"
+                ),
+                None,
+            )
         else:
             updated_vehicle = vehicle.modify_driver_state(new_state)
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @classmethod
-    def build(mcs,
-              vehicle_id: VehicleId,
-              schedule_id: Optional[ScheduleId],
-              base_id: Optional[BaseId],
-              allows_pooling: bool
-              ) -> DriverState:
+    def build(
+        mcs,
+        vehicle_id: VehicleId,
+        schedule_id: Optional[ScheduleId],
+        base_id: Optional[BaseId],
+        allows_pooling: bool,
+    ) -> DriverState:
         """
         constructs a new DriverState based on the provided arguments
 
@@ -122,15 +132,26 @@ class DriverState(ABCMeta, NamedTupleMeta, EntityState):
         :param allows_pooling: set true if this agent will pick up pooling requests
         :return: the driver state instance created
         """
-        from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import AutonomousAvailable
-        from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import AutonomousDriverAttributes
-        from nrel.hive.state.driver_state.human_driver_state.human_driver_attributes import HumanDriverAttributes
-        from nrel.hive.state.driver_state.human_driver_state.human_driver_state import HumanUnavailable
+        from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
+            AutonomousAvailable,
+        )
+        from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attributes import (
+            AutonomousDriverAttributes,
+        )
+        from nrel.hive.state.driver_state.human_driver_state.human_driver_attributes import (
+            HumanDriverAttributes,
+        )
+        from nrel.hive.state.driver_state.human_driver_state.human_driver_state import (
+            HumanUnavailable,
+        )
+
         if not schedule_id:
             driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
             return driver_state
         else:
             if not base_id:
                 raise Exception("cannot build a vehicle with schedule but not a home base id")
-            driver_state = HumanUnavailable(HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling))
+            driver_state = HumanUnavailable(
+                HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling)
+            )
             return driver_state

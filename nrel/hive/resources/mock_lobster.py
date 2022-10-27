@@ -13,7 +13,9 @@ from returns.result import ResultE, Success, Failure
 
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
-from nrel.hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
+from nrel.hive.dispatcher.forecaster.forecaster_interface import (
+    ForecasterInterface,
+)
 from nrel.hive.dispatcher.instruction.instructions import *
 from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
     ChargingFleetManager,
@@ -28,7 +30,9 @@ from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.request import Request, RequestRateStructure
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
+    HaversineRoadNetwork,
+)
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -37,7 +41,9 @@ from nrel.hive.model.sim_time import SimTime
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
+    MechatronicsInterface,
+)
 from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import (
     TabularPowercurve,
 )
@@ -64,7 +70,9 @@ from nrel.hive.state.driver_state.human_driver_state.human_driver_state import (
 )
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
+from nrel.hive.state.simulation_state.update.step_simulation import (
+    StepSimulation,
+)
 from nrel.hive.state.simulation_state.update.update import Update
 from nrel.hive.state.vehicle_state.vehicle_state import VehicleState
 from nrel.hive.util.h3_ops import H3Ops
@@ -139,24 +147,18 @@ def mock_membership():
     return Membership().from_tuple((DefaultIds.mock_membership_id(),))
 
 
-def mock_geofence(
-    geojson: Dict = mock_geojson(), resolution: H3Resolution = 10
-) -> GeoFence:
+def mock_geofence(geojson: Dict = mock_geojson(), resolution: H3Resolution = 10) -> GeoFence:
     return GeoFence.from_geojson(geojson, resolution)
 
 
-def mock_network(
-    h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10
-) -> RoadNetwork:
+def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
     return HaversineRoadNetwork(
         geofence=mock_geofence(resolution=geofence_res),
         sim_h3_resolution=h3_res,
     )
 
 
-def mock_osm_network(
-    h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10
-) -> OSMRoadNetwork:
+def mock_osm_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> OSMRoadNetwork:
     road_network_file = resource_filename(
         "nrel.hive.resources.scenarios.denver_downtown.road_network",
         "downtown_denver_network.json",
@@ -326,7 +328,7 @@ def mock_ev_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
     with Path(powertrain_file).open() as f:
         data = yaml.safe_load(f)
         data["scale_factor"] = nominal_watt_hour_per_mile
-        return TabularPowertrain(data=data)
+        return TabularPowertrain.from_data(data=data)
 
 
 def mock_powercurve(
@@ -368,7 +370,7 @@ def mock_ice_powertrain(nominal_miles_per_gallon) -> TabularPowertrain:
     with Path(powertrain_file).open() as f:
         data = yaml.safe_load(f)
         data["scale_factor"] = 1 / nominal_miles_per_gallon
-        return TabularPowertrain(data=data)
+        return TabularPowertrain.from_data(data=data)
 
 
 def mock_ice(
@@ -518,7 +520,8 @@ def mock_config(
     conf_without_temp_dir = HiveConfig.build(
         Path(
             resource_filename(
-                "nrel.hive.resources.scenarios.denver_downtown", "denver_demo.yaml"
+                "nrel.hive.resources.scenarios.denver_downtown",
+                "denver_demo.yaml",
             )
         ),
         {
@@ -546,9 +549,7 @@ def mock_env(
     config: HiveConfig = mock_config(),
     mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
     chargers: Optional[Dict[Charger, Charger]] = None,
-    schedules: Optional[
-        Dict[ScheduleId, Callable[["SimulationState", VehicleId], bool]]
-    ] = None,
+    schedules: Optional[Dict[ScheduleId, Callable[["SimulationState", VehicleId], bool]]] = None,
     fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()]),
 ) -> Environment:
     if mechatronics is None:
@@ -653,9 +654,7 @@ def mock_haversine_zigzag_route(
     return ft.reduce(step, range(0, n), ())
 
 
-def mock_route_from_geoids(
-    src: GeoId, dst: GeoId, speed_kmph: Kmph = 1
-) -> Tuple[Link, ...]:
+def mock_route_from_geoids(src: GeoId, dst: GeoId, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
     link = Link.build("1", src, dst, speed_kmph=speed_kmph)
     return (link,)
 

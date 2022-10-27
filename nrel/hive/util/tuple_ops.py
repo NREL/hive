@@ -3,7 +3,7 @@ from typing import Tuple, TypeVar, Optional, Callable
 
 
 class TupleOps:
-    T = TypeVar('T')
+    T = TypeVar("T")
 
     @classmethod
     def is_empty(cls, xs: Tuple[T, ...]) -> bool:
@@ -69,9 +69,9 @@ class TupleOps:
             return remaining
 
     @classmethod
-    def partition(cls,
-                  predicate: Callable[[T], bool],
-                  t: Tuple[T, ...]) -> Tuple[Tuple[T, ...], Tuple[T, ...]]:
+    def partition(
+        cls, predicate: Callable[[T], bool], t: Tuple[T, ...]
+    ) -> Tuple[Tuple[T, ...], Tuple[T, ...]]:
         """
         partitions a tuple into two tuples where members of the first tuple
         match the case where the provided predicate is True
@@ -97,7 +97,7 @@ class TupleOps:
         """
 
         return tuple(sum(nested_tuple, ()))
-    
+
     @classmethod
     def prepend(cls, x: T, xs: Tuple[T, ...]) -> Tuple[T, ...]:
         """

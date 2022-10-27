@@ -7,6 +7,7 @@ class ReportType(Enum):
     """
     A strict set of report types
     """
+
     STATION_STATE = 1
     VEHICLE_STATE = 2
     DRIVER_STATE = 3
@@ -36,7 +37,7 @@ class ReportType(Enum):
             "vehicle_move_event": cls.VEHICLE_MOVE_EVENT,
             "station_load_event": cls.STATION_LOAD_EVENT,
             "refuel_search_event": cls.REFUEL_SEARCH_EVENT,
-            "driver_schedule_event": cls.DRIVER_SCHEDULE_EVENT
+            "driver_schedule_event": cls.DRIVER_SCHEDULE_EVENT,
         }
         try:
             return values[s]

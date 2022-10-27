@@ -16,8 +16,8 @@ ChargerId = str
 ScheduleId = str
 MembershipId = str
 
-Entity = TypeVar('Entity')
-EntityId = TypeVar('EntityId')
+Entity = TypeVar("Entity")
+EntityId = TypeVar("EntityId")
 
 # Collections
 MembershipMap = Map[EntityId, Tuple[MembershipId, ...]]
@@ -36,4 +36,4 @@ SimStep = int  # the iteration of the simulation
 
 # if we create a DriverId type, and it has a lookup table on SimulationState, we may
 # want to change this from VehicleId to DriverId
-ScheduleFunction = Callable[['SimulationState', VehicleId], bool]
+ScheduleFunction = Callable[["SimulationState", VehicleId], bool]

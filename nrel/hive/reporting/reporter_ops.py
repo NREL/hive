@@ -33,21 +33,21 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
         rate: float = ft.reduce(
             lambda acc, cs: acc + cs.total_chargers * cs.charger.rate,
             station.state.values(),
-            0.0
+            0.0,
         )
 
-        return {'station_id': station.id, 'rate': rate}
+        return {"station_id": station.id, "rate": rate}
 
     try:
         result: Tuple[immutables.Map, ...] = ft.reduce(
             lambda acc, s: acc + (_station_energy(s),),
             sim.stations.values(),
-            ()
+            (),
         )
 
         output_file = Path(env.config.scenario_output_directory).joinpath("station_capacities.csv")
-        with output_file.open('w') as f:
-            writer = csv.DictWriter(f, fieldnames=['station_id', 'rate'])
+        with output_file.open("w") as f:
+            writer = csv.DictWriter(f, fieldnames=["station_id", "rate"])
             writer.writeheader()
             writer.writerows(result)
 

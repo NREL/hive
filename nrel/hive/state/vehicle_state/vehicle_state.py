@@ -1,10 +1,10 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from abc import abstractmethod, ABCMeta, abstractproperty
-from typing import Tuple, Optional, NamedTupleMeta, TYPE_CHECKING
-import uuid
+from abc import abstractmethod, abstractproperty
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.state.entity_state import entity_state_ops
 from nrel.hive.state.entity_state.entity_state import EntityState
@@ -15,11 +15,20 @@ from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
-    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.simulation_state.simulation_state import (
+        SimulationState,
+    )
 
 VehicleStateInstanceId = UUID
 
-class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
+
+@dataclass(frozen=True)
+class Mixin:
+    vehicle_id: VehicleId
+    instance_id: VehicleStateInstanceId
+
+
+class VehicleStateABC(EntityState):
     """
     a state representation along with methods for state transitions and discrete time step updates
 
@@ -29,14 +38,9 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
     an enter or exit can return an exception, a SimulationState, or (None, None) signifying that the
     state cannot be entered/exited under this circumstance.
     """
-    @abstractproperty
-    def vehicle_id(self) -> VehicleId:
-        """
-        the vehicle id associated with this state
-        """
-        pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def vehicle_state_type(cls) -> VehicleStateType:
         """
         unique state type, used for comparison, replaces need to call isinstance on the concrete
@@ -45,19 +49,12 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         """
         pass
 
-    @abstractproperty
-    def instance_id(self) -> VehicleStateInstanceId:
-        """
-        a unique id for this state instance
-        """
-        pass
-    
     def __repr__(self) -> str:
         return super().__repr__()
 
     @classmethod
     def default_update(
-            mcs, sim: SimulationState, env: Environment, state: VehicleState
+        mcs, sim: SimulationState, env: Environment, state: VehicleState
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         apply any effects due to a vehicle being advanced one discrete time unit in this VehicleState.
@@ -75,15 +72,22 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             err1, next_state = state._default_terminal_state(sim, env)
             if err1 is not None:
                 state_type = state.vehicle_state_type
-                err_res = SimulationStateError(f"failure during default update of {state_type} state")
+                err_res = SimulationStateError(
+                    f"failure during default update of {state_type} state"
+                )
                 err_res.__cause__ = err1
                 return err_res, None
             else:
                 # perform default state transition
-                err2, updated_sim = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
+                (
+                    err2,
+                    updated_sim,
+                ) = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
                 if err2 is not None:
                     state_type = state.vehicle_state_type
-                    err_res = SimulationStateError(f"failure during default update of {state_type} state")
+                    err_res = SimulationStateError(
+                        f"failure during default update of {state_type} state"
+                    )
                     err_res.__cause__ = err2
                     return err_res, None
                 elif updated_sim is None:
@@ -94,7 +98,8 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
                     if updated_vehicle is None:
                         state_type = state.vehicle_state_type
                         err_res = SimulationStateError(
-                            f"cannot find vehicle in sim after transition to {state_type} state")
+                            f"cannot find vehicle in sim after transition to {state_type} state"
+                        )
                         return err_res, None
                     else:
                         updated_next_state = updated_vehicle.vehicle_state
@@ -104,7 +109,10 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @classmethod
     def apply_new_vehicle_state(
-            mcs, sim: SimulationState, vehicle_id: VehicleId, new_state: VehicleState
+        mcs,
+        sim: SimulationState,
+        vehicle_id: VehicleId,
+        new_state: VehicleState,
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         this default enter operation simply modifies the vehicle's stored state value
@@ -126,9 +134,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
             return simulation_state_ops.modify_vehicle(sim, updated_vehicle)
 
     @abstractmethod
-    def _has_reached_terminal_state_condition(
-            self, sim: SimulationState, env: Environment
-    ) -> bool:
+    def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
         """
         test if we have reached a terminal state and need to apply the default transition
 
@@ -140,7 +146,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def _default_terminal_state(
-            self, sim: SimulationState, env: Environment
+        self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[VehicleState]]:
         """
         give the default state to transition to after having met a terminal condition
@@ -153,7 +159,7 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
 
     @abstractmethod
     def _perform_update(
-            self, sim: SimulationState, env: Environment
+        self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         perform a simulation state update for a vehicle in this state
@@ -164,3 +170,6 @@ class VehicleState(ABCMeta, NamedTupleMeta, EntityState):
         """
         pass
 
+
+class VehicleState(Mixin, VehicleStateABC):
+    """ """

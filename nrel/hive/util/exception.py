@@ -9,10 +9,7 @@ def report_error(error: Exception) -> Dict:
     :param error: the error that occurred during simulation
     :return: packaged as a report
     """
-    data = {
-        'report_type': 'error',
-        'message': error.args
-    }
+    data = {"report_type": "error", "message": error.args}
     return data
 
 
@@ -35,10 +32,10 @@ class StateTransitionError(Exception):
     """
 
     def __init__(
-            self,
-            msg: str,
-            this_state_name: Optional[str] = None,
-            next_state_name: Optional[str] = None,
+        self,
+        msg: str,
+        this_state_name: Optional[str] = None,
+        next_state_name: Optional[str] = None,
     ):
         """
         :param msg: any addition context information
@@ -138,11 +135,7 @@ class CombinedException(Exception):
         self.errors = errors
 
     def __str__(self):
-        combined = ft.reduce(
-            lambda acc, err: acc + f"{err.message}\n",
-            self.errors,
-            ""
-        )
+        combined = ft.reduce(lambda acc, err: acc + f"{err.message}\n", self.errors, "")
         return repr(combined)
 
 

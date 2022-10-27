@@ -28,13 +28,13 @@ class TestVehicleStateOps(TestCase):
             self.fail(error)
 
         moved_vehicle = move_sim.vehicles.get(vehicle.id)
-        soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(
-            moved_vehicle
-        )
+        soc = env.mechatronics.get(vehicle.mechatronics_id).fuel_source_soc(moved_vehicle)
 
         self.assertLess(soc, 1, "should have used 1 unit of mock energy")
         self.assertNotEqual(
-            somewhere, moved_vehicle.geoid, "should not be at the same location"
+            somewhere,
+            moved_vehicle.geoid,
+            "should not be at the same location",
         )
         self.assertNotEqual(
             somewhere,
@@ -60,9 +60,7 @@ class TestVehicleStateOps(TestCase):
         )
         env = mock_env()
 
-        error, result = vehicle_state_ops.charge(
-            sim, env, veh.id, sta.id, mock_dcfc_charger_id()
-        )
+        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, mock_dcfc_charger_id())
         if error:
             self.fail(error)
 
@@ -92,9 +90,7 @@ class TestVehicleStateOps(TestCase):
         )
         env = mock_env()
 
-        error, result = vehicle_state_ops.charge(
-            sim, env, veh.id, sta.id, mock_dcfc_charger_id()
-        )
+        error, result = vehicle_state_ops.charge(sim, env, veh.id, sta.id, mock_dcfc_charger_id())
 
         self.assertIsNotNone(error)
         self.assertIsNone(result)
