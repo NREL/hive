@@ -46,9 +46,8 @@ setup(
             "sphinx-rtd-theme",
             "sphinxemoji",
             "myst-parser",
-            "sphinx-autodoc-typehints"
-
-        ]
+            "sphinx-autodoc-typehints",
+        ],
     },
     include_package_data=True,
     package_data={"nrel.hive.resources": ["*"]},

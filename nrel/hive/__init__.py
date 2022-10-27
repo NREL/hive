@@ -34,7 +34,6 @@ from nrel.hive.state.simulation_state.update.step_simulation import (
 )
 
 
-
 def package_root() -> Path:
     return Path(__file__).parent
 

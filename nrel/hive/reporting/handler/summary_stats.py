@@ -91,11 +91,10 @@ class SummaryStats:
         table.add_column("Value")
 
         table.add_row("Mean Final SOC", f"{round(self.mean_final_soc * 100, 2)}%")
-        requests_served_percent = (1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
-        table.add_row(
-            "Requests Served",
-            f"{round(requests_served_percent, 2)}%" 
+        requests_served_percent = (
+            (1 - (self.cancelled_requests / self.requests)) * 100 if self.requests > 0 else 0
         )
+        table.add_row("Requests Served", f"{round(requests_served_percent, 2)}%")
         log.info(f"{requests_served_percent:.2f} % \t Requests Served".expandtabs(15))
 
         total_state_count = sum(self.state_count.values())
