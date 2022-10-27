@@ -1,4 +1,4 @@
-# HIVE™ :honeybee  
+# HIVE™ :honeybee:  
 
 **H**ighly  
 **I**ntegrated  
@@ -170,104 +170,111 @@ Finally, after around 65 lines, it begins running the simulation with a progress
 After, it prints the summary stats to the console and exits (4).
 
 ```console
-(hive) $ hive denver_demo.yaml
-[INFO] - hive - 
-##     ##  ####  ##     ##  #######
-##     ##   ##   ##     ##  ##
-#########   ##   ##     ##  ######
-##     ##   ##    ##   ##   ##
-##     ##  ####     ###     #######
+INFO
+         ##     ##  ####  ##     ##  #######
+         ##     ##   ##   ##     ##  ##
+         #########   ##   ##     ##  ######
+         ##     ##   ##    ##   ##   ##
+         ##     ##  ####     ###     #######
 
-                .' '.            __
-       .        .   .           (__\_
-        .         .         . -{{_(|8)
-          ' .  . ' ' .  . '     (__/
-    
-/.../denver_demo.yaml (1)
-[INFO] - nrel.hive.config.hive_config - global hive configuration loaded from hive/.hive.yaml (2)
-[INFO] - nrel.hive.config.hive_config -   global_settings_file_path: hive/.hive.yaml
-[INFO] - nrel.hive.config.hive_config -   output_base_directory: hive_output
-[INFO] - nrel.hive.config.hive_config -   local_parallelism: 1
-[INFO] - nrel.hive.config.hive_config -   local_parallelism_timeout_sec: 60
-[INFO] - nrel.hive.config.hive_config -   log_run: True
-[INFO] - nrel.hive.config.hive_config -   log_events: True
-[INFO] - nrel.hive.config.hive_config -   log_states: True
-[INFO] - nrel.hive.config.hive_config -   log_instructions: True
-[INFO] - nrel.hive.config.hive_config -   log_stats: True
-[INFO] - nrel.hive.config.hive_config -   log_level: INFO
-[INFO] - nrel.hive.config.hive_config -   log_sim_config: {<ReportType.PICKUP_REQUEST_EVENT: 5>, <ReportType.STATION_STATE: 1>, <ReportType.VEHICLE_CHARGE_EVENT: 9>, <ReportType.INSTRUCTION: 8>, <ReportType.DRIVER_STATE: 3>, <ReportType.CANCEL_REQUEST_EVENT: 7>, <ReportType.DROPOFF_REQUEST_EVENT: 6>, <ReportType.ADD_REQUEST_EVENT: 4>, <ReportType.VEHICLE_STATE: 2>, <ReportType.STATION_LOAD_EVENT: 11>, <ReportType.REFUEL_SEARCH_EVENT: 12>, <ReportType.DRIVER_SCHEDULE_EVENT: 13>, <ReportType.VEHICLE_MOVE_EVENT: 10>}
-[INFO] - nrel.hive.config.hive_config -   log_station_capacities: True
-[INFO] - nrel.hive.config.hive_config -   log_time_step_stats: True
-[INFO] - nrel.hive.config.hive_config -   log_fleet_time_step_stats: True
-[INFO] - nrel.hive.config.hive_config -   lazy_file_reading: False
-[INFO] - nrel.hive.config.hive_config -   wkt_x_y_ordering: True
-[INFO] - nrel.hive.config.hive_config - output directory set to hive/nrel/hive/resources/scenarios/denver_downtown
-[INFO] - nrel.hive.config.hive_config - hive config loaded from hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
-[INFO] - nrel.hive.config.hive_config - 
-dispatcher:
-  base_charging_range_km_threshold: 100
-  charging_range_km_soft_threshold: 50
-  charging_range_km_threshold: 20
-  charging_search_type: nearest_shortest_queue
-  default_update_interval_seconds: 600
-  ideal_fastcharge_soc_limit: 0.8
-  idle_time_out_seconds: 1800
-  matching_range_km_threshold: 20
-  max_search_radius_km: 100.0
-  valid_dispatch_states:
-  - Idle
-  - Repositioning
-input:
-  bases_file: denver_demo_bases.csv
-  charging_price_file: denver_charging_prices_by_geoid.csv
-  demand_forecast_file: denver_demand.csv
-  geofence_file: downtown_denver.geojson
-  mechatronics_file: mechatronics.yaml
-  rate_structure_file: rate_structure.csv
-  requests_file: denver_demo_requests.csv
-  road_network_file: downtown_denver_network.json
-  stations_file: denver_demo_stations.csv
-  vehicles_file: denver_demo_vehicles.csv
-network:
-  default_speed_kmph: 40.0
-  network_type: osm_network
-sim:
-  end_time: '1970-01-02T00:00:00'
-  request_cancel_time_seconds: 600
-  schedule_type: time_range
-  sim_h3_resolution: 15
-  sim_h3_search_resolution: 7
-  sim_name: denver_demo
-  start_time: '1970-01-01T00:00:00'
-  timestep_duration_seconds: 60
+                         .' '.            __
+                .        .   .           (__\_
+                 .         .         . -{{_(|8)
+                   ' .  . ' ' .  . '     (__/
 
-[INFO] - hive - creating run log at hive_output/denver_demo_2022-10-19_12-53-00/run.log with log level INFO
-[INFO] - hive - running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00: (3)
-100%|█████████████████████████████████████████████████████████████████████████████████| 1440/1440 [00:10<00:00, 132.44it/s]
-[INFO] - hive - done! time elapsed: 10.88 seconds (4)
-[INFO] - nrel.hive.reporting.handler.summary_stats - 49.67 %         Mean Final SOC
-[INFO] - nrel.hive.reporting.handler.summary_stats - 97.44 %         Requests Served
-[INFO] - nrel.hive.reporting.handler.summary_stats - 28.02 %         Time in State Idle
-[INFO] - nrel.hive.reporting.handler.summary_stats - 0.07 %          Time in State DispatchBase
-[INFO] - nrel.hive.reporting.handler.summary_stats - 21.16 %         Time in State DispatchTrip
-[INFO] - nrel.hive.reporting.handler.summary_stats - 5.38 %          Time in State ChargingBase
-[INFO] - nrel.hive.reporting.handler.summary_stats - 27.7 %          Time in State ServicingTrip
-[INFO] - nrel.hive.reporting.handler.summary_stats - 13.52 %         Time in State ReserveBase
-[INFO] - nrel.hive.reporting.handler.summary_stats - 0.25 %          Time in State DispatchStation
-[INFO] - nrel.hive.reporting.handler.summary_stats - 3.9 %           Time in State ChargingStation
-[INFO] - nrel.hive.reporting.handler.summary_stats - 0.0 %           Time in State Repositioning
-[INFO] - nrel.hive.reporting.handler.summary_stats - 8099.45 km      Total Kilometers Traveled
-[INFO] - nrel.hive.reporting.handler.summary_stats - 11.41 km        Kilometers Traveled in State DispatchBase
-[INFO] - nrel.hive.reporting.handler.summary_stats - 3346.76 km      Kilometers Traveled in State DispatchTrip
-[INFO] - nrel.hive.reporting.handler.summary_stats - 4698.76 km      Kilometers Traveled in State ServicingTrip
-[INFO] - nrel.hive.reporting.handler.summary_stats - 41.84 km        Kilometers Traveled in State DispatchStation
-[INFO] - nrel.hive.reporting.handler.summary_stats - 0.69 km         Kilometers Traveled in State Repositioning
-[INFO] - nrel.hive.reporting.handler.summary_stats - $ 181.33        Station Revenue
-[INFO] - nrel.hive.reporting.handler.summary_stats - $ 12108.26      Fleet Revenue
-[INFO] - nrel.hive.reporting.handler.stats_handler - summary stats written to hive_output/denver_demo_2022-10-19_12-53-00/summary_stats.json
-[INFO] - nrel.hive.reporting.handler.time_step_stats_handler - time step stats written to hive_output/denver_demo_2022-10-19_12-53-00/time_step_stats_all.csv
+/Users/nreinick/dev/repos/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
+INFO     global hive configuration loaded from /Users/nreinick/dev/repos/hive/nrel/hive/resources/defaults/.hive.yaml
+INFO       global_settings_file_path: /Users/nreinick/dev/repos/hive/nrel/hive/resources/defaults/.hive.yaml
+INFO       output_base_directory: .
+INFO       local_parallelism: 1
+INFO       local_parallelism_timeout_sec: 60
+INFO       log_run: True
+INFO       log_events: True
+INFO       log_states: True
+INFO       log_instructions: True
+INFO       log_stats: True
+INFO       log_level: INFO
+INFO       log_sim_config: {<ReportType.INSTRUCTION: 8>, <ReportType.VEHICLE_STATE: 2>, <ReportType.DRIVER_SCHEDULE_EVENT: 13>,
+         <ReportType.DRIVER_STATE: 3>, <ReportType.VEHICLE_CHARGE_EVENT: 9>, <ReportType.CANCEL_REQUEST_EVENT: 7>,
+         <ReportType.DROPOFF_REQUEST_EVENT: 6>, <ReportType.STATION_LOAD_EVENT: 11>, <ReportType.VEHICLE_MOVE_EVENT: 10>,
+         <ReportType.REFUEL_SEARCH_EVENT: 12>, <ReportType.STATION_STATE: 1>, <ReportType.PICKUP_REQUEST_EVENT: 5>,
+         <ReportType.ADD_REQUEST_EVENT: 4>}
+INFO       log_station_capacities: True
+INFO       log_time_step_stats: True
+INFO       log_fleet_time_step_stats: True
+INFO       lazy_file_reading: False
+INFO       wkt_x_y_ordering: True
+INFO     output directory set to /Users/nreinick/dev/repos/hive/nrel/hive/resources/scenarios/denver_downtown
+INFO     hive config loaded from /Users/nreinick/dev/repos/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
+INFO
+         dispatcher:
+           base_charging_range_km_threshold: 100
+           charging_range_km_soft_threshold: 50
+           charging_range_km_threshold: 20
+           charging_search_type: nearest_shortest_queue
+           default_update_interval_seconds: 600
+           ideal_fastcharge_soc_limit: 0.8
+           idle_time_out_seconds: 1800
+           matching_range_km_threshold: 20
+           max_search_radius_km: 100.0
+           valid_dispatch_states:
+           - Idle
+           - Repositioning
+         input:
+           bases_file: denver_demo_bases.csv
+           charging_price_file: denver_charging_prices_by_geoid.csv
+           demand_forecast_file: denver_demand.csv
+           geofence_file: downtown_denver.geojson
+           mechatronics_file: mechatronics.yaml
+           rate_structure_file: rate_structure.csv
+           requests_file: denver_demo_requests.csv
+           road_network_file: downtown_denver_network.json
+           stations_file: denver_demo_stations.csv
+           vehicles_file: denver_demo_vehicles.csv
+         network:
+           default_speed_kmph: 40.0
+           network_type: osm_network
+         sim:
+           end_time: '1970-01-02T00:00:00'
+           request_cancel_time_seconds: 600
+           schedule_type: time_range
+           sim_h3_resolution: 15
+           sim_h3_search_resolution: 7
+           sim_name: denver_demo
+           start_time: '1970-01-01T00:00:00'
+           timestep_duration_seconds: 60
 
-Process finished with exit code 0
+INFO     creating run log at denver_demo_2022-10-27_16-36-43/run.log with log level INFO
+INFO     running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00:
+100%|██████████████████████████████████████████████████████████████████████████████████████| 1440/1440 [00:09<00:00, 144.72it/s]
+INFO     done! time elapsed: 9.97 seconds
+INFO     96.84 %         Requests Served
+                        Summary Stats
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Stat                                         ┃ Value      ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ Mean Final SOC                               │ 51.1%      │
+│ Requests Served                              │ 96.84%     │
+│ Time in State Idle                           │ 28.03%     │
+│ Time in State DispatchBase                   │ 0.07%      │
+│ Time in State DispatchTrip                   │ 20.89%     │
+│ Time in State ChargingBase                   │ 3.62%      │
+│ Time in State ServicingTrip                  │ 27.51%     │
+│ Time in State ReserveBase                    │ 15.3%      │
+│ Time in State DispatchStation                │ 0.29%      │
+│ Time in State ChargingStation                │ 4.3%       │
+│ Time in State Repositioning                  │ 0.0%       │
+│ Total Kilometers Traveled                    │ 8032.26 km │
+│ Kilometers Traveled in State DispatchBase    │ 11.41 km   │
+│ Kilometers Traveled in State DispatchTrip    │ 3304.36 km │
+│ Kilometers Traveled in State ServicingTrip   │ 4665.25 km │
+│ Kilometers Traveled in State DispatchStation │ 50.54 km   │
+│ Kilometers Traveled in State Repositioning   │ 0.69 km    │
+│ Station Revenue                              │ $ 196.72   │
+│ Fleet Revenue                                │ $ 12017.56 │
+└──────────────────────────────────────────────┴────────────┘
+INFO     summary stats written to denver_demo_2022-10-27_16-36-43/summary_stats.json
+INFO     time step stats written to denver_demo_2022-10-27_16-36-43/time_step_stats_all.csv
 ```
 
 ## Roadmap
