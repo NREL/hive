@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Type, Union
+from typing import Iterable, Tuple, Type, Union, TYPE_CHECKING
 from returns.result import ResultE, Success, Failure
 
 
@@ -11,7 +11,9 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
 )
 from nrel.hive.util.fp import throw_or_return
-from nrel.hive.util.typealiases import Entity
+
+if TYPE_CHECKING:
+    from nrel.hive.model.entity import Entity
 
 
 def update_instruction_generator_safe(

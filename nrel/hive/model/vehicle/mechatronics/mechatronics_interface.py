@@ -62,6 +62,12 @@ class MechatronicsInterfaceABC(ABC):
         """
 
     @abstractmethod
+    def calc_required_soc(self, required_range: Kilometers) -> Ratio:
+        """
+        How much SOC needed to go required_range
+        """
+
+    @abstractmethod
     def fuel_source_soc(self, vehicle: Vehicle) -> Ratio:
         """
         how much battery soc

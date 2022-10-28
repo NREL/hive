@@ -16,7 +16,6 @@ ChargerId = str
 ScheduleId = str
 MembershipId = str
 
-Entity = TypeVar("Entity")
 EntityId = str 
 
 # Collections

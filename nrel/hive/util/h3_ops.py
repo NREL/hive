@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from math import radians, cos, sin, asin, sqrt, ceil
 from typing import Dict, Optional, TYPE_CHECKING, FrozenSet, Iterable, Callable, Tuple
-from xml.dom.minidom import Entity
 
 import h3
 import immutables
@@ -12,6 +11,7 @@ from nrel.hive.util.typealiases import EntityId, GeoId
 from nrel.hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
+    from nrel.hive.model.entity import Entity
     from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 
 

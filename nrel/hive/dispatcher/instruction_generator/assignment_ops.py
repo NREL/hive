@@ -25,6 +25,7 @@ from nrel.hive.util.tuple_ops import TupleOps
 if TYPE_CHECKING:
     from nrel.hive.util.units import Ratio, Seconds
     from nrel.hive.util.typealiases import *
+    from nrel.hive.model.entity import Entity
 
 
 log = logging.getLogger(__name__)
@@ -32,14 +33,6 @@ log = logging.getLogger(__name__)
 MAX_DIST = 999999999.0
 
 
-class Entity:
-    """
-    this class is used as a type hint (duck-typing style) for the following functions
-    but is not intended to be implemented.
-    """
-
-    id: EntityId
-    geoid: GeoId
 
 
 class AssignmentSolution(NamedTuple):

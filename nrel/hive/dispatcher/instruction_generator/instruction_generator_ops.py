@@ -13,7 +13,7 @@ from nrel.hive.dispatcher.instruction_generator.charging_search_type import (
 )
 from nrel.hive.model.station.station import Station
 from nrel.hive.util.h3_ops import H3Ops
-from nrel.hive.util.dict_ops import DictOps 
+from nrel.hive.util.dict_ops import DictOps
 from nrel.hive.util.units import Kilometers
 
 log = logging.getLogger(__name__)
@@ -145,12 +145,17 @@ def valid_station_for_vehicle(vehicle: Vehicle, env: Environment) -> Callable[[S
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
 
     def _inner(station: Station):
+        if mechatronics is None:
+            # TODO: make a safe version of this using returns
+            log.error(f"mechatronics {vehicle.mechatronics_id} not found in environment")
+            return False 
+
         vehicle_has_access = station.membership.grant_access_to_membership(vehicle.membership)
         if not vehicle_has_access:
             return False
         else:
             station_has_valid_charger = any(
-                [mechatronics.valid_charger(env.chargers.get(cid)) for cid in station.state.keys()]
+                [mechatronics.valid_charger(env.chargers[cid]) for cid in station.state.keys()]
             )
             return station_has_valid_charger
 
@@ -165,7 +170,7 @@ def instruct_vehicles_to_dispatch_to_station(
     environment: Environment,
     target_soc: Ratio,
     charging_search_type: ChargingSearchType,
-) -> Tuple[Instruction]:
+) -> Tuple[Instruction, ...]:
     """
     a helper function to set n vehicles to charge at a station
 
@@ -179,7 +184,7 @@ def instruct_vehicles_to_dispatch_to_station(
     :return: instructions for vehicles to charge at stations
     """
 
-    instructions = ()
+    instructions: Tuple[Instruction, ...] = ()
 
     for veh in vehicles:
 
@@ -215,21 +220,32 @@ def instruct_vehicles_to_dispatch_to_station(
             # this could be removed if our nearest entity search also returned the best charger id
             # these both could return "None" but that shouldn't be possible if we found a nearest station
             if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
-                (
-                    best_charger_id,
-                    best_charger_rank,
-                ) = assignment_ops.nearest_shortest_queue_ranking(veh, nearest_station, environment)
+                result = assignment_ops.nearest_shortest_queue_ranking(
+                    veh, nearest_station, environment
+                )
+                if result is None:
+                    continue
+                else:
+                    (
+                        best_charger_id,
+                        best_charger_rank,
+                    ) = result
+
             else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
-                (
-                    best_charger_id,
-                    best_charger_rank,
-                ) = assignment_ops.shortest_time_to_charge_ranking(
+                result = assignment_ops.shortest_time_to_charge_ranking(
                     vehicle=veh,
                     station=nearest_station,
                     sim=simulation_state,
                     env=environment,
                     target_soc=target_soc,
                 )
+                if result is None:
+                    continue
+                else:
+                    (
+                        best_charger_id,
+                        best_charger_rank,
+                    ) = result
 
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,
@@ -272,7 +288,7 @@ def get_nearest_valid_station_distance(
     else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
         # use the search-based metric which considers travel, queueing, and charging time
 
-        distance_fn, cache = assignment_ops.shortest_time_to_charge_distance(
+        distance_fn = assignment_ops.shortest_time_to_charge_distance(
             vehicle=vehicle,
             sim=simulation_state,
             env=environment,

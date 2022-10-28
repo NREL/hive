@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, TYPE_CHECKING
+from turtle import home
+from typing import Optional, TYPE_CHECKING, Tuple
 
 import h3
 
@@ -12,13 +13,14 @@ from nrel.hive.dispatcher.instruction.instructions import (
     IdleInstruction,
     RepositionInstruction,
 )
-from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_dispatch_to_station,
     get_nearest_valid_station_distance,
 )
 from nrel.hive.util import TupleOps, H3Ops
 from nrel.hive.state.vehicle_state.idle import Idle
+from nrel.hive.state.vehicle_state.charging_base import ChargingBase
+from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.model.energy.energytype import EnergyType
 
 if TYPE_CHECKING:
@@ -28,6 +30,8 @@ if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.base import Base
+    from nrel.hive.model.energy.charger import Charger
+    from nrel.hive.model.entity_position import EntityPosition
 
 log = logging.getLogger(__name__)
 
@@ -48,8 +52,16 @@ def human_charge_at_home(
     :return:
     """
 
+    if home_base.station_id is None:
+        # can't charge at home, no station
+        return None
+
     my_station = sim.stations.get(home_base.station_id)
     my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
+
+    if my_mechatronics is None:
+        log.error(f"no mechatronics {veh.mechatronics_id} found for vehicle {veh.id}")
+        return None
 
     if not my_station:
         log.error(f"could not find station {home_base.station_id} for home_base {home_base.id}")
@@ -59,7 +71,7 @@ def human_charge_at_home(
 
     chargers = tuple(
         filter(
-            lambda c: my_mechatronics.valid_charger(c),
+            my_mechatronics.valid_charger,
             [env.chargers[cid] for cid in my_station.state.keys()],
         )
     )
@@ -67,7 +79,7 @@ def human_charge_at_home(
         return None
     else:
         # take the lowest power charger
-        charger = sorted(chargers, key=lambda c: c.rate)[0]
+        charger: Charger = sorted(chargers, key=lambda c: c.rate)[0]
         return ChargeBaseInstruction(veh.id, home_base.id, charger.id)
 
 
@@ -89,6 +101,10 @@ def human_go_home(
     :return: the instruction for this driver
     """
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
+    if mechatronics is None:
+        log.error(f"no mechatronics {veh.mechatronics_id} found for vehicle {veh.id}")
+        return None
+
     remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
     if not remaining_range:
         return None
@@ -143,7 +159,7 @@ def human_look_for_requests(
     :return:
     """
 
-    def _get_reposition_location() -> Optional[Link]:
+    def _get_reposition_location() -> Optional[EntityPosition]:
         """
         takes the most dense request search hex as a proxy for high demand areas
         :return:
@@ -182,9 +198,15 @@ def idle_if_at_soc_limit(
     :return:
     """
     mechatronics = env.mechatronics.get(veh.mechatronics_id)
+    if mechatronics is None:
+        log.error(f"no mechatronics {veh.mechatronics_id} found for vehicle {veh.id}")
+        return None
+
     battery_soc = mechatronics.fuel_source_soc(veh)
     if battery_soc >= env.config.dispatcher.ideal_fastcharge_soc_limit:
         return IdleInstruction(veh.id)
+
+    return None
 
 
 def av_charge_base_instruction(
@@ -200,8 +222,12 @@ def av_charge_base_instruction(
     :param env:
     :return:
     """
+    base_state = veh.vehicle_state
+    if not isinstance(base_state, (ReserveBase, ChargingBase)):
+        # this instruction is only valid for these two states
+        return None
 
-    my_base = sim.bases.get(veh.vehicle_state.base_id)
+    my_base = sim.bases.get(base_state.base_id)
     my_mechatronics = env.mechatronics.get(veh.mechatronics_id)
     if not my_base:
         return None
@@ -214,12 +240,12 @@ def av_charge_base_instruction(
 
     my_station = sim.stations.get(my_base.station_id)
     if not my_station:
-        log.error(f"could not find station {my_base.station_id} for base {my_base.base_id}")
+        log.error(f"could not find station {my_base.station_id} for base {my_base.id}")
         return None
 
-    chargers = tuple(
+    chargers: Tuple[Charger, ...] = tuple(
         filter(
-            lambda c: my_mechatronics.valid_charger(c),
+            my_mechatronics.valid_charger,
             [cs.charger for cs in my_station.state.values()],
         )
     )
@@ -228,7 +254,7 @@ def av_charge_base_instruction(
         return None
 
     # take the lowest power charger
-    charger = sorted(chargers, key=lambda c: c.rate)[0]
+    charger: Charger = sorted(chargers, key=lambda c: c.rate)[0]
     return ChargeBaseInstruction(veh.id, my_base.id, charger.id)
 
 
@@ -249,9 +275,10 @@ def av_dispatch_base_instruction(
     idle_state = veh.vehicle_state
 
     if not isinstance(idle_state, Idle):
-        log.error(f"av_dispatch_base_instruction should only be called on Idle states, got {type(idle_state)}")
+        # this instruction is only valid for idle state
+        return None
 
-    if veh.vehicle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
+    if idle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
         # timeout after being idle too long
 
         def valid_fn(base: Base) -> bool:
