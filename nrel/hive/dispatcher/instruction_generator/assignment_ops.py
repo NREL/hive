@@ -33,8 +33,6 @@ log = logging.getLogger(__name__)
 MAX_DIST = 999999999.0
 
 
-
-
 class AssignmentSolution(NamedTuple):
     """
     each call of find_assignment produces an AssignmentSolution which has any

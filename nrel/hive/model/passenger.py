@@ -5,6 +5,7 @@ from typing import NamedTuple, Optional, TYPE_CHECKING
 
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.sim_time import SimTime
+
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import *
 

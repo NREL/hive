@@ -2,7 +2,7 @@ import random
 from typing import Tuple, List
 
 from nrel.hive.model.request import Request
-from nrel.hive.model.sim_time import SimTime 
+from nrel.hive.model.sim_time import SimTime
 from nrel.hive.runner import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
@@ -27,7 +27,7 @@ def default_request_sampler(
     """
     if not isinstance(simulation_state.road_network, OSMRoadNetwork):
         raise NotImplementedError("request sampling is only implemented for the OSMRoadNetwork")
-    
+
     if simulation_state.road_network.link_helper is None:
         raise Exception("Expected link helper on OSMRoadNetwork but found None")
 

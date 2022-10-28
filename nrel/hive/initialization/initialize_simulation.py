@@ -114,7 +114,7 @@ def initialize_simulation(
     if config.input_config.schedules_file is None:
         schedules = immutables.Map()
     else:
-        schedules=build_schedules_table(
+        schedules = build_schedules_table(
             config.sim.schedule_type, config.input_config.schedules_file
         )
 

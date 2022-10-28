@@ -148,7 +148,7 @@ def valid_station_for_vehicle(vehicle: Vehicle, env: Environment) -> Callable[[S
         if mechatronics is None:
             # TODO: make a safe version of this using returns
             log.error(f"mechatronics {vehicle.mechatronics_id} not found in environment")
-            return False 
+            return False
 
         vehicle_has_access = station.membership.grant_access_to_membership(vehicle.membership)
         if not vehicle_has_access:

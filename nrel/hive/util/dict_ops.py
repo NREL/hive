@@ -1,14 +1,6 @@
 from __future__ import annotations
 
-from typing import (
-    NamedTuple,
-    Tuple,
-    Optional,
-    TypeVar,
-    Dict,
-    FrozenSet,
-    TYPE_CHECKING
-)
+from typing import NamedTuple, Tuple, Optional, TypeVar, Dict, FrozenSet, TYPE_CHECKING
 
 import h3
 import immutables

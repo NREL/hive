@@ -16,7 +16,7 @@ ChargerId = str
 ScheduleId = str
 MembershipId = str
 
-EntityId = str 
+EntityId = str
 
 # Collections
 MembershipMap = Map[EntityId, Tuple[MembershipId, ...]]

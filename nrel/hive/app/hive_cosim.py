@@ -1,6 +1,6 @@
 import functools as ft
 from pathlib import Path
-from typing import Tuple, NamedTuple, Optional, TypeVar 
+from typing import Tuple, NamedTuple, Optional, TypeVar
 
 import pandas as pd
 from pandas import DataFrame
@@ -25,6 +25,7 @@ from nrel.hive.util import SimulationStateError
 from nrel.hive.util.fp import throw_on_failure
 
 T = TypeVar("T", bound=InstructionGenerator)
+
 
 def load_scenario(
     scenario_file: Path,

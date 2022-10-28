@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import (
         SimulationState,
     )
-    from nrel.hive.model.entity import Entity 
+    from nrel.hive.model.entity import Entity
     from nrel.hive.model.base import Base
     from nrel.hive.model.request import Request
     from nrel.hive.model.station.station import Station
