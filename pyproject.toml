@@ -1,2 +1,55 @@
+[build-system]
+requires = ["setuptools>=63.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nrel.hive"
+version = "1.0.0"
+description = "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA."
+readme = "README.md"
+authors = [{ name = "National Renewable Energy Laboratory" }]
+license = { text = "BSD 3-Clause License Copyright (c) 2022, Alliance for Sustainable Energy, LLC" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Scientific/Engineering",
+]
+keywords = ["simulation", "transportation", "ride-sharing", "agent-based"]
+dependencies = [
+    "immutables",
+    "numpy",
+    "pandas",
+    "networkx",
+    "PyYAML",
+    "tqdm",
+    "rich",
+    "h3>=3.7.1",
+    "scipy",
+    "returns",
+]
+requires-python = ">=3.7"
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "sphinx-autoapi",
+    "sphinx-rtd-theme",
+    "sphinxemoji",
+    "myst-parser",
+    "sphinx-autodoc-typehints",
+]
+dev = ["nrel.hive[docs]", "pytest", "black", "mypy", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/NREL/hive"
+
+[project.scripts]
+hive = "nrel.hive.app.run:run"
+hive-batch = "nrel.hive.app.run_batch:run"
+
 [tool.black]
-line-length = 100 
+line-length = 100
