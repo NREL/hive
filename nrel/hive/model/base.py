@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, NamedTuple, Dict
+from typing import Optional, NamedTuple, Dict, TYPE_CHECKING
 
 import h3
 
@@ -8,7 +8,9 @@ from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.util.exception import SimulationStateError
-from nrel.hive.util.typealiases import *
+
+if TYPE_CHECKING:
+    from nrel.hive.util.typealiases import *
 
 
 class Base(NamedTuple):

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 import pandas as pd
 from nrel.hive.reporting.handler.handler import Handler
@@ -14,7 +14,7 @@ class VehicleChargeEventsHandler(Handler):
     """
 
     def __init__(self) -> None:
-        self.prototype = {
+        self.prototype: Dict[str, List] = {
             "vehicle_id": [],
             "sim_time_start": [],
             "sim_time_end": [],

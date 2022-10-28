@@ -18,8 +18,8 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import
     get_nearest_valid_station_distance,
 )
 from nrel.hive.util import TupleOps, H3Ops
+from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.roadnetwork.route import route_distance_km
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import (
@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.base import Base
-    from nrel.hive.util.typealiases import GeoId, BaseId
 
 log = logging.getLogger(__name__)
 
@@ -247,6 +246,11 @@ def av_dispatch_base_instruction(
     :param env:
     :return:
     """
+    idle_state = veh.vehicle_state
+
+    if not isinstance(idle_state, Idle):
+        log.error(f"av_dispatch_base_instruction should only be called on Idle states, got {type(idle_state)}")
+
     if veh.vehicle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
         # timeout after being idle too long
 

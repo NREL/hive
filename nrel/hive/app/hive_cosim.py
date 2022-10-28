@@ -1,6 +1,6 @@
 import functools as ft
 from pathlib import Path
-from typing import Tuple, NamedTuple, Optional
+from typing import Tuple, NamedTuple, Optional, TypeVar 
 
 import pandas as pd
 from pandas import DataFrame
@@ -24,10 +24,11 @@ from nrel.hive.runner import RunnerPayload
 from nrel.hive.util import SimulationStateError
 from nrel.hive.util.fp import throw_on_failure
 
+T = TypeVar("T", bound=InstructionGenerator)
 
 def load_scenario(
     scenario_file: Path,
-    custom_instruction_generators: Optional[Tuple[InstructionGenerator, ...]] = None,
+    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
 ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state
@@ -49,13 +50,13 @@ def load_scenario(
             ChargingFleetManager(env.config.dispatcher),
             Dispatcher(env.config.dispatcher),
         )
+        update = Update.build(env.config, instruction_generators)
     else:
-        instruction_generators = custom_instruction_generators
+        update = Update.build(env.config, custom_instruction_generators)
 
     # add a specialized Reporter handler that catches vehicle charge events
     env.reporter.add_handler(VehicleChargeEventsHandler())
 
-    update = Update.build(env.config, instruction_generators)
     initial_payload = RunnerPayload(sim, env, update)
 
     return initial_payload

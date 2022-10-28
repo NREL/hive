@@ -78,7 +78,7 @@ class StepSimulation(SimulationUpdateFunction):
         self,
         simulation_state: SimulationState,
         env: Environment,
-    ) -> Tuple[SimulationState, Optional[StepSimulation]]:
+    ) -> Tuple[SimulationState, StepSimulation]:
         """
         generates all instructions for this time step and then attempts to apply them to the SimulationState
         upon completion, returns the modified simulation state along with any reports and additionally, returns

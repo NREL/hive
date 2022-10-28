@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from math import radians, cos, sin, asin, sqrt, ceil
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Dict, Optional, TYPE_CHECKING, FrozenSet, Iterable, Callable, Tuple
+from xml.dom.minidom import Entity
 
 import h3
 import immutables
 
 from nrel.hive.util.exception import H3Error
-from nrel.hive.util.typealiases import *
+from nrel.hive.util.typealiases import EntityId, GeoId
 from nrel.hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
@@ -19,8 +20,8 @@ class H3Ops:
     def nearest_entity_by_great_circle_distance(
         cls,
         geoid: GeoId,
-        entities: immutables.Map[EntityId, Entity],
-        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+        entities: Iterable[Entity],
+        entity_search: immutables.Map[GeoId, FrozenSet[EntityId]],
         sim_h3_search_resolution: int,
         is_valid: Callable[[Entity], bool] = lambda x: True,
         max_search_distance_km: Kilometers = 10,  # kilometers
@@ -53,8 +54,8 @@ class H3Ops:
     def nearest_entity(
         cls,
         geoid: GeoId,
-        entities: Tuple[Entity, ...],
-        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
+        entities: Iterable[Entity],
+        entity_search: immutables.Map[GeoId, FrozenSet[EntityId]],
         sim_h3_search_resolution: int,
         distance_function: Callable[[Entity], float],
         is_valid: Callable[[Entity], bool] = lambda x: True,
@@ -100,7 +101,7 @@ class H3Ops:
                     for entity in cls.get_entities_at_cell(cell, entity_search, entities)
                 )
 
-                best_dist_km = 1000000
+                best_dist_km = 1000000.0
                 best_entity = None
 
                 count = 0
@@ -123,8 +124,8 @@ class H3Ops:
     def get_entities_at_cell(
         cls,
         search_cell: GeoId,
-        entity_search: immutables.Map[GeoId, Tuple[EntityId, ...]],
-        entities: Tuple[Entity, ...],
+        entity_search: immutables.Map[GeoId, FrozenSet[EntityId]],
+        entities: Iterable[Entity],
     ) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell

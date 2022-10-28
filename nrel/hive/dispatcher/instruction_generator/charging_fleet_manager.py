@@ -60,6 +60,10 @@ class ChargingFleetManager(InstructionGenerator):
                 return False
 
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
+            if mechatronics is None:
+                log.error(f"mechatronics {v.mechatronics_id} missing for vehicle {v.id}")
+                return False
+
             range_remaining_km = mechatronics.range_remaining_km(v)
             if range_remaining_km > environment.config.dispatcher.charging_range_km_soft_threshold:
                 # don't even check station distance if vehicle range is over soft threshold

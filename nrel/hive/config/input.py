@@ -19,8 +19,8 @@ class Input(NamedTuple):
     bases_file: str
     stations_file: str
     mechatronics_file: str
+    chargers_file: str
     schedules_file: Optional[str]
-    chargers_file: Optional[str]
     road_network_file: Optional[str]
     geofence_file: Optional[str]
     rate_structure_file: Optional[str]

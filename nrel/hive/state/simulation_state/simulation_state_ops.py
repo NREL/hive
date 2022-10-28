@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING, Tuple
 
 import h3
 from returns.result import Success, Failure, ResultE
 
 from nrel.hive.model.sim_time import SimTime
-from nrel.hive.util import DictOps
+from nrel.hive.util.dict_ops import DictOps
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.fp import apply_op_to_accumulator, throw_or_return
-from nrel.hive.util.typealiases import *
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import (
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
     from nrel.hive.model.request import Request
     from nrel.hive.model.station.station import Station
     from nrel.hive.model.vehicle.vehicle import Vehicle
+    from nrel.hive.util.typealiases import Entity, RequestId, StationId, VehicleId, BaseId
 
 """
 a collection of operations to modify the SimulationState which are not

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Callable, NamedTuple, Dict, Optional
+from typing import Tuple, Callable, NamedTuple, Optional, TYPE_CHECKING
 
-import math
 import logging
 import h3
 import numpy as np
@@ -20,12 +19,16 @@ from nrel.hive.runner import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from nrel.hive.state.vehicle_state.charging_station import ChargingStation
-from nrel.hive.util import H3Ops, GeoId, Seconds, Ratio, TupleOps
-from nrel.hive.util.typealiases import ChargerId
+from nrel.hive.util.h3_ops import H3Ops
+from nrel.hive.util.tuple_ops import TupleOps
+
+if TYPE_CHECKING:
+    from nrel.hive.util.units import Ratio, Seconds
+    from nrel.hive.util.typealiases import *
+
 
 log = logging.getLogger(__name__)
 
-EntityId = str
 MAX_DIST = 999999999.0
 
 

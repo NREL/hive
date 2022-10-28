@@ -17,7 +17,7 @@ ScheduleId = str
 MembershipId = str
 
 Entity = TypeVar("Entity")
-EntityId = TypeVar("EntityId")
+EntityId = str 
 
 # Collections
 MembershipMap = Map[EntityId, Tuple[MembershipId, ...]]

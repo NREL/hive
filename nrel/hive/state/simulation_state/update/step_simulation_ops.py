@@ -39,7 +39,7 @@ def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
     return Report(ReportType.INSTRUCTION, i_dict)
 
 
-def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_time: SimTime):
+def log_instructions(instructions: Tuple[Instruction, ...], env: Environment, sim_time: SimTime):
     for i in instructions:
         env.reporter.file_report(_instruction_to_report(i, sim_time))
 
@@ -163,7 +163,7 @@ InstructionApplicationResult = Tuple[Optional[Exception], Optional[InstructionRe
 
 
 def apply_instructions(
-    sim: SimulationState, env: Environment, instructions: Tuple[Instruction]
+    sim: SimulationState, env: Environment, instructions: Tuple[Instruction, ...]
 ) -> SimulationState:
     """
     this helper function takes a map with one instruction per agent at most, and attempts to apply each

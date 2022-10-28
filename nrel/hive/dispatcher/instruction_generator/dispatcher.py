@@ -6,7 +6,6 @@ from typing import Tuple, TYPE_CHECKING, Optional
 
 from nrel.hive.dispatcher.instruction_generator import assignment_ops
 from nrel.hive.state.vehicle_state.charging_base import ChargingBase
-from nrel.hive.util.typealiases import MembershipId
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import (
@@ -17,6 +16,7 @@ if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.request.request import Request
     from nrel.hive.config.dispatcher_config import DispatcherConfig
+    from nrel.hive.util.typealiases import MembershipId
 
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,

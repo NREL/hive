@@ -10,12 +10,12 @@ from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util.exception import TimeParseError
-from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import Currency, KM_TO_MILE
 
 if TYPE_CHECKING:
     from nrel.hive.model.request import RequestRateStructure
     from nrel.hive.runner.environment import Environment
+    from nrel.hive.util.typealiases import *
 
 
 class Request(NamedTuple):

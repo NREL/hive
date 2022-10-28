@@ -7,12 +7,14 @@ from typing import (
     TypeVar,
     Dict,
     FrozenSet,
+    TYPE_CHECKING
 )
 
 import h3
 import immutables
 
-from nrel.hive.util.typealiases import GeoId
+if TYPE_CHECKING:
+    from nrel.hive.util.typealiases import GeoId
 
 
 class EntityUpdateResult(NamedTuple):

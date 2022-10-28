@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, TYPE_CHECKING
 
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.sim_time import SimTime
-from nrel.hive.util.typealiases import *
+if TYPE_CHECKING:
+    from nrel.hive.util.typealiases import *
 
 
 class Passenger(NamedTuple):

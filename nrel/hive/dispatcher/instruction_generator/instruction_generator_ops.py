@@ -12,9 +12,8 @@ from nrel.hive.dispatcher.instruction_generator.charging_search_type import (
     ChargingSearchType,
 )
 from nrel.hive.model.station.station import Station
-from nrel.hive.util.typealiases import GeoId
-from nrel.hive.util import Ratio, DictOps
 from nrel.hive.util.h3_ops import H3Ops
+from nrel.hive.util.dict_ops import DictOps 
 from nrel.hive.util.units import Kilometers
 
 log = logging.getLogger(__name__)
@@ -29,7 +28,8 @@ if TYPE_CHECKING:
     from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
         InstructionGenerator,
     )
-    from nrel.hive.util.typealiases import MembershipId
+    from nrel.hive.util.typealiases import GeoId
+    from nrel.hive.util.units import Ratio
 
 i_map: immutables.Map[VehicleId, List[Instruction]] = immutables.Map()
 

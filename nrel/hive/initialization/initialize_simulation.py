@@ -29,8 +29,7 @@ from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.util import DictOps
-from nrel.hive.util.fp import throw_or_return
+from nrel.hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import MembershipMap

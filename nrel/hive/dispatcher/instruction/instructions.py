@@ -42,7 +42,6 @@ if TYPE_CHECKING:
         BaseId,
         ChargerId,
         LinkId,
-        GeoId,
     )
     from nrel.hive.runner.environment import Environment
 
