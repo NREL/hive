@@ -5,6 +5,8 @@ from pathlib import Path
 
 import yaml
 
+from immutables import Map
+
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
 from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
@@ -21,7 +23,7 @@ mechatronic_models = {
 
 def build_mechatronics_table(
     mechatronics_file: str, scenario_directory: str
-) -> Dict[MechatronicsId, MechatronicsInterface]:
+) -> Map[MechatronicsId, MechatronicsInterface]:
     """
     constructs a dictionary containing all of the provided vehicle configurations where the key is the mechatronics ID
     and the contents are the appropriate mechatronics models with the desired attributes
@@ -69,4 +71,4 @@ def build_mechatronics_table(
 
             mechatronics[mechatronics_id] = model.from_dict(config_dict[mechatronics_id])
 
-    return mechatronics
+    return Map(mechatronics)

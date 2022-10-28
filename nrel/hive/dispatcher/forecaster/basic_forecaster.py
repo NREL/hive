@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pathlib import Path
-from typing import Tuple, NamedTuple
+from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
@@ -10,6 +10,9 @@ from nrel.hive.dispatcher.forecaster.forecaster_interface import (
     ForecasterInterface,
 )
 from nrel.hive.util.iterators import DictReaderStepper
+
+if TYPE_CHECKING:
+    from hive.state.simulation_state.simulation_state import SimulationState
 
 
 @dataclass(frozen=True)
@@ -38,10 +41,13 @@ class BasicForecaster(ForecasterInterface):
         if error:
             raise error
         else:
+            if reader is None:
+                raise Exception("No reader supplied by the DictReaderStepper")
+
             return BasicForecaster(reader)
 
     def generate_forecast(
-        self, simulation_state: "SimulationState"
+        self, simulation_state: SimulationState
     ) -> Tuple[BasicForecaster, Forecast]:
         """
         Generate fleet targets to be consumed by the dispatcher.

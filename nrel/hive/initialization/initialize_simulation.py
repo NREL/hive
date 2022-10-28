@@ -111,6 +111,13 @@ def initialize_simulation(
         else None
     )
 
+    if config.input_config.schedules_file is None:
+        schedules = immutables.Map()
+    else:
+        schedules=build_schedules_table(
+            config.sim.schedule_type, config.input_config.schedules_file
+        )
+
     env_initial = Environment(
         config=config,
         mechatronics=build_mechatronics_table(
@@ -118,9 +125,7 @@ def initialize_simulation(
             config.input_config.scenario_directory,
         ),
         chargers=build_chargers_table(config.input_config.chargers_file),
-        schedules=build_schedules_table(
-            config.sim.schedule_type, config.input_config.schedules_file
-        ),
+        schedules=schedules,
         fleet_ids=fleet_ids,
     )
 

@@ -7,7 +7,6 @@ from typing import Optional, Union
 
 import networkx as nx
 
-from nrel.hive.external.miniosmnx.core import graph_from_file
 from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
@@ -51,12 +50,7 @@ class OSMRoadNetwork(RoadNetwork):
         self.geofence = geofence
 
         # read in the network file
-        if road_network_file.suffix == ".xml":
-            log.warning(
-                ".xml files have been deprecated in hive. please switch to using .json formats"
-            )
-            graph = graph_from_file(str(road_network_file))
-        elif road_network_file.suffix == ".json":
+        if road_network_file.suffix == ".json":
             with road_network_file.open("r") as f:
                 graph = nx.node_link_graph(json.load(f))
         else:

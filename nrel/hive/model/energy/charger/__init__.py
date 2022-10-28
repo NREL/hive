@@ -2,12 +2,14 @@ from csv import DictReader
 from pathlib import Path
 from typing import Dict
 
+from immutables import Map
+
 from nrel.hive.model.energy.charger.charger import Charger
 from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.util.typealiases import ChargerId
 
 
-def build_chargers_table(chargers_file: str) -> Dict[ChargerId, Charger]:
+def build_chargers_table(chargers_file: str) -> Map[ChargerId, Charger]:
     """
     constructs a table of the chargers available in this simulation
 
@@ -53,4 +55,4 @@ def build_chargers_table(chargers_file: str) -> Dict[ChargerId, Charger]:
                         units=units,
                     )
                     chargers_table.update({charger_id: new_charger})
-        return chargers_table
+        return Map(chargers_table)

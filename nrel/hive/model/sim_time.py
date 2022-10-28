@@ -12,7 +12,7 @@ class SimTime(int):
     )
 
     @classmethod
-    def build(cls, value: Union[str, int]) -> Union[TimeParseError, SimTime]:
+    def build(cls, value: Union[str, int]) -> SimTime:
         if isinstance(value, str):
             try:
                 time = datetime.fromisoformat(value)
@@ -20,14 +20,14 @@ class SimTime(int):
                 try:
                     time = datetime.utcfromtimestamp(int(value))
                 except (ValueError, TypeError):
-                    return TimeParseError(cls.ERROR_MSG + f" got {value}")
+                    raise TimeParseError(cls.ERROR_MSG + f" got {value}")
         elif isinstance(value, int):
             try:
                 time = datetime.utcfromtimestamp(value)
             except (ValueError, TypeError):
-                return TimeParseError(cls.ERROR_MSG + f" got {value}")
+                raise TimeParseError(cls.ERROR_MSG + f" got {value}")
         else:
-            return TimeParseError(cls.ERROR_MSG + f" got {value}")
+            raise TimeParseError(cls.ERROR_MSG + f" got {value}")
 
         if time.tzinfo:
             time = time.replace(tzinfo=None)

@@ -70,6 +70,8 @@ def sample_vehicles(
                 :param s: the SimulationState to update
                 :return: the updated simulation state, or, an exception
                 """
+                if not mechatronics:
+                    return Failure(KeyError(f"mechatronics with id {mechatronics_id} not found"))
                 try:
                     vehicle_id = f"v{i}"
                     initial_soc = soc_sampling_function()
@@ -109,7 +111,7 @@ def sample_vehicles(
         return result
 
 
-def build_default_location_sampling_fn(seed: int = 0) -> Callable[[], Link]:
+def build_default_location_sampling_fn(seed: int = 0) -> Callable[[SimulationState], Link]:
     """
     constructs a link sampling function that uniformly samples from the provided base locations
 
@@ -125,6 +127,10 @@ def build_default_location_sampling_fn(seed: int = 0) -> Callable[[], Link]:
             raise NotImplementedError(
                 f"this sampling function is only implemented for the OSMRoadNetwork"
             )
+
+        if sim.road_network.link_helper is None:
+            raise Exception("Expected link helper on OSMRoadNetwork but found None")
+
         links = list(sim.road_network.link_helper.links.values())
         if len(links) == 0:
             raise AssertionError(f"must have at least one link to sample from")

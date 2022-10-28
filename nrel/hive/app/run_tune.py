@@ -54,7 +54,7 @@ class OptimizationWrapper(tune.Trainable):
         print("VEHICLES ", payload.s.vehicles.values())
         return score
 
-    def _setup(self, config: Dict[str:int]):
+    def _setup(self, config: Dict[str, int]):
         scenarios = {
             1: "denver_demo.yaml",
             2: "denver_demo_constrained_charging.yaml",

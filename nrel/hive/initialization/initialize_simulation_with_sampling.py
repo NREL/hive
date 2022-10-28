@@ -24,7 +24,7 @@ from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
-from nrel.hive.model.vehicle.schedules import build_schedules_table
+from nrel.hive.model.vehicle.schedules import build_schedules_table, ScheduleId, ScheduleFunction
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
@@ -63,35 +63,50 @@ def initialize_simulation_with_sampling(
 
     # set up road network based on user-configured road network type
     if config.network.network_type == "euclidean":
-        road_network = HaversineRoadNetwork(
+        haversine_road_network = HaversineRoadNetwork(
             geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution
         )
+        sim_initial = SimulationState(
+            road_network=haversine_road_network,
+            sim_time=config.sim.start_time,
+            sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
+            sim_h3_location_resolution=config.sim.sim_h3_resolution,
+            sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
+        )
     elif config.network.network_type == "osm_network":
-        road_network = OSMRoadNetwork(
+        if config.input_config.road_network_file is None:
+            raise ValueError("road_network_file required for osm_network")
+
+        osm_road_network = OSMRoadNetwork(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
             road_network_file=Path(config.input_config.road_network_file),
             default_speed_kmph=config.network.default_speed_kmph,
+        )
+        sim_initial = SimulationState(
+            road_network=osm_road_network,
+            sim_time=config.sim.start_time,
+            sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
+            sim_h3_location_resolution=config.sim.sim_h3_resolution,
+            sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
         )
     else:
         raise IOError(
             f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}"
         )
 
-    # initial sim state with road network and no entities
-    sim_initial = SimulationState(
-        road_network=road_network,
-        sim_time=config.sim.start_time,
-        sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
-        sim_h3_location_resolution=config.sim.sim_h3_resolution,
-        sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
-    )
-
     # create simulation environment
     if config.input_config.fleets_file:
         log.warning(
             "the simulation is using sampling which doesn't support a fleet file input;\n"
             "this input will be ignored and entities will not have any fleet information."
+        )
+
+    if config.input_config.schedules_file is None:
+        schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
+    else:
+        schedules = build_schedules_table(
+            config.sim.schedule_type, config.input_config.schedules_file
         )
 
     env = Environment(
@@ -101,9 +116,7 @@ def initialize_simulation_with_sampling(
             config.input_config.scenario_directory,
         ),
         chargers=build_chargers_table(config.input_config.chargers_file),
-        schedules=build_schedules_table(
-            config.sim.schedule_type, config.input_config.schedules_file
-        ),
+        schedules=schedules,
     )
 
     # populate simulation with static entities
