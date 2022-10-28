@@ -13,18 +13,18 @@ HIVE is designed to integrate with vehicle power and energy grid power models in
 
 ## Installation
 
-HIVE depends on a Python installation [3.7, 3.8] and the pip package manager ( [python.org](https://www.python.org/downloads/).
+HIVE depends on a Python installation [3.7, 3.8, 3.9, 3.10] and the pip package manager ( [python.org](https://www.python.org/downloads/).
 In our installation example we use [conda](https://www.anaconda.com/products/distribution) | [miniconda](https://docs.conda.io/en/latest/miniconda.html) for managing a HIVE Python environment.
 
-### via pip (coming soon)
+### via pip
 
-    > pip install nrel-hive
+    > pip install nrel.hive
 
 ### build from source
 
 Via conda, create a dedicated 'hive' Python environment:
 
-    > conda create -n hive python=3.7 
+    > conda create -n hive python=3.8 
     > conda activate hive
 
 to run tests, also install `pytest`:
