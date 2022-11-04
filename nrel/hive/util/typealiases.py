@@ -1,6 +1,8 @@
-from typing import Tuple, FrozenSet, Callable, TypeVar
+from typing import Tuple, FrozenSet
 
 from immutables import Map
+
+
 
 # MODEL ID TYPES
 RequestId = str
@@ -13,8 +15,8 @@ PassengerId = str
 VehicleTypeId = str
 MechatronicsId = str
 ChargerId = str
-ScheduleId = str
 MembershipId = str
+ScheduleId = str
 
 EntityId = str
 
@@ -35,4 +37,4 @@ SimStep = int  # the iteration of the simulation
 
 # if we create a DriverId type, and it has a lookup table on SimulationState, we may
 # want to change this from VehicleId to DriverId
-ScheduleFunction = Callable[["SimulationState", VehicleId], bool]
+# ScheduleFunction = Callable[[SimulationState, VehicleId], bool]

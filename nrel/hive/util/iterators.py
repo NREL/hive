@@ -9,6 +9,7 @@ from typing import (
     Optional,
     Callable,
     Tuple,
+    Any,
     NamedTuple,
     Iterable,
     Generator,
@@ -19,14 +20,14 @@ from itertools import islice, tee
 log = logging.getLogger(__name__)
 
 
-class NamedTupleIterator:
+class ObjectIterator:
     """
     iterator that deals with a set of named tuples
     """
 
     def __init__(
         self,
-        items: Tuple[NamedTuple, ...],
+        items: Tuple[Any, ...],
         step_attr_name: str,
         stop_condition: Callable,
     ):

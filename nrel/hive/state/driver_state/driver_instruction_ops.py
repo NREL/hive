@@ -17,6 +17,7 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import
     instruct_vehicles_to_dispatch_to_station,
     get_nearest_valid_station_distance,
 )
+from nrel.hive.model.entity import Entity
 from nrel.hive.util import TupleOps, H3Ops
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.charging_base import ChargingBase
@@ -281,7 +282,7 @@ def av_dispatch_base_instruction(
     if idle_state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
         # timeout after being idle too long
 
-        def valid_fn(base: Base) -> bool:
+        def valid_fn(base: Entity) -> bool:
             vehicle_has_access = base.membership.grant_access_to_membership(veh.membership)
             return vehicle_has_access
 

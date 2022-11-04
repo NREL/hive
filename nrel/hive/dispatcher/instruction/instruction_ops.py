@@ -1,22 +1,18 @@
 from __future__ import annotations
 
-from typing import Tuple, Optional, FrozenSet
+from typing import Tuple, Optional, FrozenSet, TYPE_CHECKING
 import functools as ft
 
 import logging
 
-import immutables
-
-from nrel.hive.model.request import Request
-from nrel.hive.model.roadnetwork.route import Route
-from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.vehicle.trip_phase import TripPhase
-from nrel.hive.model.vehicle.vehicle import Vehicle, RequestId
+from nrel.hive.model.vehicle.vehicle import RequestId
 from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
     ServicingPoolingTrip,
 )
-from nrel.hive.util import GeoId
-from nrel.hive.util.exception import InstructionError
+
+if TYPE_CHECKING:
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -32,8 +28,8 @@ def trip_plan_covers_previous(
     :param new_trip_plan: the proposed trip plan
     :return: True, if the plan is valid
     """
-    prev_req_ids = set(map(lambda r_id, phase: r_id, previous_state.trip_plan))
-    plan_req_ids = set(map(lambda r_id, phase: r_id, new_trip_plan))
+    prev_req_ids = set(map(lambda rid_and_phase: rid_and_phase[0], previous_state.trip_plan))
+    plan_req_ids = set(map(lambda rid_and_phase: rid_and_phase[0], new_trip_plan))
 
     previous_plan_not_covered = len(prev_req_ids.difference(plan_req_ids)) > 0
 
@@ -42,7 +38,7 @@ def trip_plan_covers_previous(
 
 def trip_plan_ordering_is_valid(
     new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
-    previous_state: Optional[ServicingPoolingTrip] = None,
+    previous_state: ServicingPoolingTrip,
 ) -> bool:
     """
     checks that the incoming trip plan has a logical pickup and dropoff ordering and that
@@ -55,7 +51,7 @@ def trip_plan_ordering_is_valid(
     # inspect previous state and test for coverage of requests/state
 
     boarded_req_ids = (
-        frozenset(map(lambda trip: trip.request.id, previous_state.trips))
+        frozenset(map(lambda trip: trip[0], previous_state.trip_plan))
         if previous_state
         else frozenset()
     )
@@ -93,7 +89,7 @@ def trip_plan_ordering_is_valid(
 
 
 def trip_plan_all_requests_allow_pooling(
-    sim: "SimulationState", trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
+    sim: SimulationState, trip_plan: Tuple[Tuple[RequestId, TripPhase], ...]
 ) -> Optional[str]:
     """
     confirm that each request in the trip plan allows pooling

@@ -82,7 +82,7 @@ class DispatchTrip(VehicleState):
         vehicle = sim.vehicles.get(self.vehicle_id)
         request = sim.requests.get(self.request_id)
         is_valid = (
-            route_cooresponds_with_entities(self.route, vehicle.position, request.origin_position)
+            route_cooresponds_with_entities(self.route, vehicle.position, request.position)
             if vehicle and request
             else False
         )
@@ -165,7 +165,7 @@ class DispatchTrip(VehicleState):
             return None, next_state
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
-            route = sim.road_network.route(request.origin_position, request.destination_position)
+            route = sim.road_network.route(request.position, request.destination_position)
             # apply next state
             # generate the data to describe the trip for this request
             # where the pickup phase is currently happening + doesn't need to be added to the trip plan

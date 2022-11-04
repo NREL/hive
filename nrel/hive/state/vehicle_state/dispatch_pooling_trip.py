@@ -113,7 +113,7 @@ class DispatchPoolingTrip(VehicleState):
             first_req = sim.requests.get(first_req_id)
             is_valid = (
                 route_cooresponds_with_entities(
-                    self.route, vehicle.position, first_req.origin_position
+                    self.route, vehicle.position, first_req.position
                 )
                 if vehicle and first_req
                 else False

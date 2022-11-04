@@ -13,7 +13,7 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
 from nrel.hive.util.fp import throw_or_return
 
 if TYPE_CHECKING:
-    from nrel.hive.model.entity import EntityABC
+    from nrel.hive.model.entity import Entity
 
 
 def update_instruction_generator_safe(
@@ -80,7 +80,7 @@ def set_instruction_generators(
     return new_rp
 
 
-def modify_entities_safe(rp: RunnerPayload, entities: Iterable[EntityABC]) -> ResultE[RunnerPayload]:
+def modify_entities_safe(rp: RunnerPayload, entities: Iterable[Entity]) -> ResultE[RunnerPayload]:
     """
     Modify entities in a runner payload
     """
@@ -93,7 +93,7 @@ def modify_entities_safe(rp: RunnerPayload, entities: Iterable[EntityABC]) -> Re
         return Success(new_rp)
 
 
-def modify_entities(rp: RunnerPayload, entities: Iterable[EntityABC]) -> RunnerPayload:
+def modify_entities(rp: RunnerPayload, entities: Iterable[Entity]) -> RunnerPayload:
     """
     Modify entities in a runner payload
     """

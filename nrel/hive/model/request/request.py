@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
+from dataclasses import dataclass, replace
 
 import h3
 
+from nrel.hive.model.entity import Entity
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.passenger import Passenger, create_passenger_id
 from nrel.hive.model.entity_position import EntityPosition
@@ -18,7 +20,8 @@ if TYPE_CHECKING:
     from nrel.hive.util.typealiases import *
 
 
-class Request(NamedTuple):
+@dataclass(frozen=True)
+class Request(Entity):
     """
     A ride hail request which is alive in the simulation but not yet serviced.
     It should only exist if the current sim time >= self.departure_time.
@@ -37,19 +40,24 @@ class Request(NamedTuple):
     """
 
     id: RequestId
-    origin_position: EntityPosition
+    position: EntityPosition
+    membership: Membership
+
     destination_position: EntityPosition
     departure_time: SimTime
     passengers: Tuple[Passenger, ...]
     allows_pooling: bool
-    membership: Membership = Membership()
     value: Currency = 0
     dispatched_vehicle: Optional[VehicleId] = None
     dispatched_vehicle_time: Optional[SimTime] = None
 
     @property
+    def geoid(self):
+        return self.position.geoid
+
+    @property
     def origin(self):
-        return self.origin_position.geoid
+        return self.position.geoid
 
     @property
     def destination(self):
@@ -71,7 +79,15 @@ class Request(NamedTuple):
         assert departure_time >= 0
         assert passengers > 0
         origin_position = road_network.position_from_geoid(origin)
+        if origin_position is None:
+            raise ValueError(
+                f"request {request_id} origin cannot be positioned on the road network"
+            )
         destination_position = road_network.position_from_geoid(destination)
+        if destination_position is None:
+            raise ValueError(
+                f"request {request_id} destination cannot be positioned on the road network"
+            )
         if fleet_id:
             membership = Membership.single_membership(fleet_id)
         else:
@@ -90,7 +106,7 @@ class Request(NamedTuple):
 
         request = Request(
             id=request_id,
-            origin_position=origin_position,
+            position=origin_position,
             destination_position=destination_position,
             departure_time=departure_time,
             passengers=tuple(request_as_passengers),
@@ -100,9 +116,6 @@ class Request(NamedTuple):
         )
         return request
 
-    @property
-    def geoid(self):
-        return self.origin
 
     @classmethod
     def from_row(
@@ -204,14 +217,14 @@ class Request(NamedTuple):
         :param current_time: the current simulation time
         :return: the updated Request
         """
-        return self._replace(dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
+        return replace(self, dispatched_vehicle=vehicle_id, dispatched_vehicle_time=current_time)
 
     def unassign_dispatched_vehicle(self) -> Request:
         """
         removes any vehicle listed as assigned to this request
         :return: the updated request
         """
-        updated = self._replace(dispatched_vehicle=None, dispatched_vehicle_time=None)
+        updated = replace(self, dispatched_vehicle=None, dispatched_vehicle_time=None)
         return updated
 
     def assign_value(
@@ -229,4 +242,23 @@ class Request(NamedTuple):
         distance_km = road_network.distance_by_geoid_km(self.origin, self.destination)
         distance_miles = distance_km * KM_TO_MILE
         price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
-        return self._replace(value=max(rate_structure.minimum_price, price))
+        return replace(self, value=max(rate_structure.minimum_price, price))
+
+    def set_membership(self, member_ids: Tuple[str, ...]) -> Request:
+        """
+        sets the membership(s) of the request
+
+        :param member_ids: a Tuple containing updated membership(s) of therequest
+        :return:
+        """
+        return replace(self, membership=Membership.from_tuple(member_ids))
+
+    def add_membership(self, membership_id: MembershipId) -> Request:
+        """
+        adds the membership to the request
+
+        :param membership_id: a membership for the request
+        :return:
+        """
+        updated_membership = self.membership.add_membership(membership_id)
+        return replace(self, membership=updated_membership)

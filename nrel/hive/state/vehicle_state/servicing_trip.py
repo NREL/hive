@@ -97,7 +97,7 @@ class ServicingTrip(VehicleState):
         is_valid = (
             route_cooresponds_with_entities(
                 self.route,
-                request.origin_position,
+                request.position,
                 request.destination_position,
             )
             if vehicle and request
@@ -131,7 +131,7 @@ class ServicingTrip(VehicleState):
             log.warning(msg)
             return None, None
         elif not route_cooresponds_with_entities(
-            self.route, request.origin_position, request.destination_position
+            self.route, request.position, request.destination_position
         ):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match o/d of request)"
             log.warning(msg)

@@ -187,7 +187,7 @@ def update_requests_from_iterator(
                     dep_t = req_in_sim.departure_time
                     report_data = {
                         "request_id": req.id,
-                        "departure_time": dep_t,
+                        "departure_time": str(dep_t),
                         "fleet_id": str(req.membership),
                     }
                     env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))

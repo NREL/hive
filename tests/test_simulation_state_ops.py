@@ -1,3 +1,4 @@
+from dataclasses import replace
 from unittest import TestCase
 
 from returns.result import Success
@@ -202,7 +203,7 @@ class TestSimulationStateOps(TestCase):
         sim_with_veh = sim_or_error.unwrap()
 
         # modify some value on the vehicle
-        updated_vehicle = veh._replace(mechatronics_id="test_update")
+        updated_vehicle = replace(veh, mechatronics_id="test_update")
 
         e2, sim_after_update = simulation_state_ops.modify_vehicle(sim_with_veh, updated_vehicle)
 
@@ -306,7 +307,7 @@ class TestSimulationStateOps(TestCase):
         station = mock_station()
         sim = mock_sim(stations=(station,))
         new_position = EntityPosition("test", station.geoid)
-        updated_station = station._replace(position=new_position)
+        updated_station = replace(station, position=new_position)
         error, sim_after_station = simulation_state_ops.modify_station(sim, updated_station)
         self.assertIsNone(error, "should have no error")
 

@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from nrel.hive.resources.mock_lobster import *
+from nrel.hive.util.fp import throw_or_return
 
 
 def on_schedule(a, b):

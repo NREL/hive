@@ -1,4 +1,7 @@
 # Energy
+from typing import Dict
+
+
 KwH = float  # kilowatt-hours
 J = float  # joules
 KwH_per_H = float
@@ -59,7 +62,7 @@ WH_TO_KWH = 0.001
 KWH_TO_WH = 1 / WH_TO_KWH
 MilesPerGallon = float
 
-_unit_conversions = {
+UNIT_CONVERSIONS: Dict[str, Dict[str, float]] = {
     "mph": {
         "kmph": MPH_TO_KMPH,
     },
@@ -83,7 +86,7 @@ _unit_conversions = {
 
 
 def valid_unit(unit: str) -> bool:
-    return unit in _unit_conversions.keys()
+    return unit in UNIT_CONVERSIONS.keys()
 
 
 def get_unit_conversion(from_unit: str, to_unit: str) -> float:
@@ -94,9 +97,12 @@ def get_unit_conversion(from_unit: str, to_unit: str) -> float:
     elif from_unit == to_unit:
         return 1
 
-    try:
-        conversion = _unit_conversions[from_unit][to_unit]
-    except KeyError:
-        raise NotImplemented(f"no conversion exists for {from_unit} to {to_unit}")
+    from_conversion = UNIT_CONVERSIONS.get(from_unit)
+    if from_conversion is None:
+        raise ValueError(f"no unit conversion for from_unit: {from_unit}")
 
-    return conversion
+    to_conversion = from_conversion.get(to_unit)
+    if to_conversion is None:
+        raise ValueError(f"no unit conversion for to_unit: {to_unit}")
+
+    return to_conversion

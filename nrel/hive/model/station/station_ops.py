@@ -1,4 +1,6 @@
 from typing import Iterable, Optional, TypeVar, Callable, TYPE_CHECKING
+from dataclasses import replace
+
 from nrel.hive.util.error_or_result import ErrorOr
 from nrel.hive.util.typealiases import *
 
@@ -46,7 +48,7 @@ def station_state_update(
             return err, None
         else:
             updated_s = station.state.set(charger_id, updated)
-            result = station._replace(state=updated_s)
+            result = replace(station, state=updated_s)
             return None, result
 
 
@@ -80,7 +82,7 @@ def station_state_optional_update(
             return None, None
         else:
             updated_s = station.state.set(charger_id, updated)
-            result = station._replace(state=updated_s)
+            result = replace(station, state=updated_s)
             return None, result
 
 

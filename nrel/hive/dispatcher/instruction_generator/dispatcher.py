@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
+import logging
 import functools as ft
 from typing import Tuple, TYPE_CHECKING, Optional
 
@@ -25,6 +26,7 @@ from nrel.hive.dispatcher.instruction.instructions import (
     DispatchTripInstruction,
 )
 
+log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class Dispatcher(InstructionGenerator):
@@ -67,6 +69,10 @@ class Dispatcher(InstructionGenerator):
                     return False
 
                 mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
+                if mechatronics is None:
+                    log.error(f"mechatonrics not found for vehicle {vehicle.id}")
+                    return False
+
                 range_remaining_km = mechatronics.range_remaining_km(vehicle)
 
                 # if we are at a base, do we have enough remaining range to leave the base?
@@ -82,7 +88,11 @@ class Dispatcher(InstructionGenerator):
 
             def _valid_request(r: Request) -> bool:
                 not_already_dispatched = not r.dispatched_vehicle
-                valid_access = r.membership.grant_access_to_membership_id(membership_id)
+                valid_access = (
+                    r.membership.grant_access_to_membership_id(membership_id)
+                    if membership_id is not None
+                    else True
+                )
                 return not_already_dispatched and valid_access
 
             # collect the vehicles and requests for the assignment algorithm
@@ -118,7 +128,7 @@ class Dispatcher(InstructionGenerator):
             fleet_ids = environment.fleet_ids
         else:
             fleet_ids = frozenset([None])
-        
+
         initial_instructions: Tuple[DispatchTripInstruction, ...] = tuple()
 
         all_instructions = ft.reduce(

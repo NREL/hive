@@ -14,15 +14,18 @@ def global_hive_config_search() -> GlobalConfig:
     """
     # this searches up the path to the root of the file system
     def _backprop_search(search_path: Path) -> Optional[Path]:
-        search_file = search_path.joinpath(".hive.yaml")
-        if search_file.is_file():
-            return search_file
-        else:
-            updated_search_path = search_path.parent
-            if updated_search_path == search_path:
-                return None
+        try:
+            search_file = search_path.joinpath(".hive.yaml")
+            if search_file.is_file():
+                return search_file
             else:
-                return _backprop_search(updated_search_path)
+                updated_search_path = search_path.parent
+                if updated_search_path == search_path:
+                    return None
+                else:
+                    return _backprop_search(updated_search_path)
+        except FileNotFoundError:
+            return None
 
     # load the default file to be merged with any found files
     default_global_config_file_path = pkg_resources.resource_filename(
@@ -33,11 +36,11 @@ def global_hive_config_search() -> GlobalConfig:
 
     # search up the directory tree for a config file
     try:
-        file_found_in_backprop = _backprop_search(Path.cwd())
-    except FileNotFoundError as f:
-        # when running tests on hive, it seems that cwd can be deleted
-        # here we simply drop the cwd backprop search in this case
-        file_found_in_backprop = None
+        cwd = Path.cwd()
+    except FileNotFoundError:
+        cwd = Path("~/")
+
+    file_found_in_backprop = _backprop_search(cwd)
 
     # check user home directory for a config file
     file_at_home_directory = Path.home().joinpath(".hive.yaml")

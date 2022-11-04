@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import radians, cos, sin, asin, sqrt, ceil
-from typing import Dict, Optional, TYPE_CHECKING, FrozenSet, Iterable, Callable, Tuple
+from typing import Any, Dict, Optional, TYPE_CHECKING, FrozenSet, Iterable, Callable, Tuple
 
 import h3
 import immutables
@@ -11,7 +11,7 @@ from nrel.hive.util.typealiases import EntityId, GeoId
 from nrel.hive.util.units import Kilometers, Seconds, SECONDS_TO_HOURS
 
 if TYPE_CHECKING:
-    from nrel.hive.model.entity import EntityABC
+    from nrel.hive.model.entity import Entity
     from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 
 
@@ -20,12 +20,12 @@ class H3Ops:
     def nearest_entity_by_great_circle_distance(
         cls,
         geoid: GeoId,
-        entities: Iterable[EntityABC],
+        entities: Iterable[Entity],
         entity_search: immutables.Map[GeoId, FrozenSet[EntityId]],
         sim_h3_search_resolution: int,
-        is_valid: Callable[[EntityABC], bool] = lambda x: True,
+        is_valid: Callable[[Any], bool] = lambda x: True,
         max_search_distance_km: Kilometers = 10,  # kilometers
-    ) -> Optional[EntityABC]:
+    ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -54,13 +54,13 @@ class H3Ops:
     def nearest_entity(
         cls,
         geoid: GeoId,
-        entities: Iterable[EntityABC],
+        entities: Iterable[Entity],
         entity_search: immutables.Map[GeoId, FrozenSet[EntityId]],
         sim_h3_search_resolution: int,
-        distance_function: Callable[[EntityABC], float],
-        is_valid: Callable[[EntityABC], bool] = lambda x: True,
+        distance_function: Callable[[Any], float],
+        is_valid: Callable[[Any], bool] = lambda x: True,
         max_search_distance_km: Kilometers = 10,  # kilometers
-    ) -> Optional[EntityABC]:
+    ) -> Optional[Entity]:
         """
         returns the closest entity to the given geoid. In the case of a tie, the first entity encountered is returned.
         invariant: the Entity has a geoid field (Entity.geoid)
@@ -86,7 +86,7 @@ class H3Ops:
         max_k = ceil(max_search_distance_km / k_dist_km)
         search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
 
-        def _search(current_k: int = 0) -> Optional[EntityABC]:
+        def _search(current_k: int = 0) -> Optional[Entity]:
             if current_k > max_k:
                 # There are no entities in any of the rings.
                 return None
@@ -125,8 +125,8 @@ class H3Ops:
         cls,
         search_cell: GeoId,
         entity_search: immutables.Map[GeoId, FrozenSet[EntityId]],
-        entities: Iterable[EntityABC],
-    ) -> Tuple[EntityABC, ...]:
+        entities: Iterable[Entity],
+    ) -> Tuple[Entity, ...]:
         """
         gives us entities within a high-level search cell
 
@@ -147,10 +147,10 @@ class H3Ops:
     def nearest_entity_point_to_point(
         cls,
         geoid: GeoId,
-        entities: Dict[EntityId, EntityABC],
+        entities: Dict[EntityId, Entity],
         entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
         is_valid: Callable = lambda x: True,
-    ) -> Optional[EntityABC]:
+    ) -> Optional[Entity]:
         """
         A nearest neighbor search that scans all entities and returns the one with the lowest distance to the geoid.
 
@@ -162,7 +162,7 @@ class H3Ops:
         :return: an optional entity if found
         """
 
-        best_dist_km = 1000000
+        best_dist_km = 1000000.0
         best_e = None
         for e_geoid, e_ids in entity_locations.items():
             dist_km = cls.great_circle_distance(geoid, e_geoid)

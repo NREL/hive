@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from nrel.hive.resources.mock_lobster import *
 
+from returns.result import Failure
 
 class TestStation(TestCase):
     def test_from_row(self):

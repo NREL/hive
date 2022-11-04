@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools as ft
 import random
-from typing import List, Callable
+from typing import List, Callable, NamedTuple
 
 import immutables
 
@@ -215,7 +215,13 @@ def instruct_vehicles_to_dispatch_to_station(
             is_valid=valid_station_for_vehicle(veh, environment),
             distance_function=distance_fn,
         )
-        if nearest_station:
+        if nearest_station is not None:
+            if not isinstance(nearest_station, Station):
+                log.error(
+                    "got wrong type back from nearest entity search; "
+                    f"expected station but got: {type(nearest_station)}"
+                )
+                continue
             # get the best charger id for this station. re-computes distance ranking one last time
             # this could be removed if our nearest entity search also returned the best charger id
             # these both could return "None" but that shouldn't be possible if we found a nearest station

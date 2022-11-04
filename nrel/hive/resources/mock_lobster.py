@@ -1,15 +1,12 @@
-import functools as ft
-import math
 import tempfile
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union, Callable
 
 import h3
 import immutables
 import yaml
 from pkg_resources import resource_filename
 
-from returns.result import ResultE, Success, Failure
 
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
@@ -36,7 +33,6 @@ from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
-from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
@@ -75,10 +71,8 @@ from nrel.hive.state.simulation_state.update.step_simulation import (
 )
 from nrel.hive.state.simulation_state.update.update import Update
 from nrel.hive.state.vehicle_state.vehicle_state import VehicleState
-from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import *
-from nrel.hive.util.fp import throw_or_return
 
 
 class DefaultIds:

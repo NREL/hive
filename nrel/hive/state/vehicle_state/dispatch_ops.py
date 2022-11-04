@@ -2,7 +2,7 @@ import functools as ft
 from typing import Tuple, Optional
 
 from nrel.hive.model.roadnetwork.route import Route
-from nrel.hive.model.roadnetwork.link import Link, EntityPosition
+from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.state.simulation_state import simulation_state_ops
@@ -130,7 +130,7 @@ def get_position_for_phase(
     if req is None:
         return None
     elif trip_phase == TripPhase.PICKUP:
-        return req.origin_position
+        return req.position
     elif trip_phase == TripPhase.DROPOFF:
         return req.destination_position
     else:
