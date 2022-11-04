@@ -1,8 +1,6 @@
 from immutables import Map
 
-from nrel.hive.model.vehicle.schedules.time_range_schedule import (
-    time_range_schedules_from_file,
-)
+from nrel.hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_file
 from nrel.hive.util.typealiases import ScheduleId
 from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 from nrel.hive.model.vehicle.schedules.schedule_type import ScheduleType

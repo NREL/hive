@@ -7,9 +7,7 @@ from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.vehicle_state.dispatch_pooling_trip import (
-    DispatchPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util import (
     VehicleId,
@@ -138,9 +136,7 @@ def get_position_for_phase(
 
 
 def begin_or_replan_dispatch_pooling_state(
-    sim: SimulationState,
-    vehicle_id: VehicleId,
-    trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+    sim: SimulationState, vehicle_id: VehicleId, trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
 ) -> Tuple[Optional[Exception], Optional[DispatchPoolingTrip]]:
     """
     create a DispatchPoolingTrip state. if the vehicle is currently in a ServicingPoolingTrip

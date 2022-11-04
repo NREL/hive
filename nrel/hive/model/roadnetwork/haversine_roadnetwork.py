@@ -36,9 +36,7 @@ class HaversineRoadNetwork(RoadNetwork):
     _AVG_SPEED_KMPH = 40  # kilometer / hour
 
     def __init__(
-        self,
-        geofence: Optional[GeoFence] = None,
-        sim_h3_resolution: H3Resolution = 15,
+        self, geofence: Optional[GeoFence] = None, sim_h3_resolution: H3Resolution = 15,
     ):
         self.sim_h3_resolution = sim_h3_resolution
         self.geofence = geofence
@@ -72,13 +70,7 @@ class HaversineRoadNetwork(RoadNetwork):
 
     def link_from_geoid(self, geoid: GeoId) -> Optional[Link]:
         link_id = h_ops.geoids_to_link_id(geoid, geoid)
-        return Link(
-            link_id=link_id,
-            start=geoid,
-            end=geoid,
-            distance_km=0,
-            speed_kmph=0,
-        )
+        return Link(link_id=link_id, start=geoid, end=geoid, distance_km=0, speed_kmph=0,)
 
     def geoid_within_geofence(self, geoid: GeoId) -> bool:
         return True

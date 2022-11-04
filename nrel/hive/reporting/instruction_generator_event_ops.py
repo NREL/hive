@@ -10,9 +10,7 @@ from nrel.hive.util import wkt
 if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.runner import Environment
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
 def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment) -> Report:

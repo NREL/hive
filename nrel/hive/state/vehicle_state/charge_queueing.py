@@ -18,9 +18,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import VehicleId, StationId, ChargerId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -116,10 +114,7 @@ class ChargeQueueing(VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def exit(
-        self,
-        next_state: VehicleState,
-        sim: SimulationState,
-        env: "Environment",
+        self, next_state: VehicleState, sim: SimulationState, env: "Environment",
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         remove agent from queue before exiting this state

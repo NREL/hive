@@ -1,9 +1,7 @@
 from unittest import TestCase
 from pathlib import Path
 
-from nrel.hive.model.vehicle.mechatronics.__init__ import (
-    build_mechatronics_table,
-)
+from nrel.hive.model.vehicle.mechatronics.__init__ import build_mechatronics_table
 
 test_dir = Path(__file__).parent
 

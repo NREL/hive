@@ -5,9 +5,7 @@ from typing import TYPE_CHECKING, Optional, Dict, Tuple
 import numpy as np
 
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import (
-    Powercurve,
-)
+from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
 from nrel.hive.util.units import Seconds, SECONDS_TO_HOURS, Ratio
 
 if TYPE_CHECKING:

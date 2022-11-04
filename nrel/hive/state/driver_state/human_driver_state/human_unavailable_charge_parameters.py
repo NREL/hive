@@ -7,9 +7,7 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import
 )
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.runner.environment import Environment
 
@@ -24,11 +22,7 @@ class HumanUnavailableChargeParameters(NamedTuple):
 
     @classmethod
     def build(
-        cls,
-        vehicle: Vehicle,
-        home_base_id: BaseId,
-        sim: SimulationState,
-        env: Environment,
+        cls, vehicle: Vehicle, home_base_id: BaseId, sim: SimulationState, env: Environment,
     ) -> HumanUnavailableChargeParameters:
         """
         builds the parameters used to track our vehicle's need for charging. captures

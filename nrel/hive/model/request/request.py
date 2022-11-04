@@ -116,7 +116,6 @@ class Request(Entity):
         )
         return request
 
-
     @classmethod
     def from_row(
         cls, row: Dict[str, str], env: Environment, road_network: RoadNetwork

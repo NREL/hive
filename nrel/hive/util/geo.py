@@ -6,10 +6,7 @@ from nrel.hive.util import GeoId, SimulationStateError
 
 
 def same_simulation_location(
-    a: GeoId,
-    b: GeoId,
-    sim_h3_resolution: int,
-    override_resolution: Optional[int],
+    a: GeoId, b: GeoId, sim_h3_resolution: int, override_resolution: Optional[int],
 ) -> bool:
     """
         tests if two geoids are at the same location in the simulation. allows for overriding test resolution to a parent level.

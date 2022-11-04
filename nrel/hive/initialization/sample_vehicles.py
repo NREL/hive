@@ -18,9 +18,7 @@ from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attr
     AutonomousDriverAttributes,
 )
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.simulation_state_ops import (
-    add_vehicle_safe,
-)
+from nrel.hive.state.simulation_state.simulation_state_ops import add_vehicle_safe
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.util import Ratio
 
@@ -62,9 +60,7 @@ def sample_vehicles(
             :return: a function that adds vehicle i to the SimulationState
             """
 
-            def _inner(
-                s: SimulationState,
-            ) -> Result[SimulationState, Exception]:
+            def _inner(s: SimulationState,) -> Result[SimulationState, Exception]:
                 """
                 attempts to add the i'th vehicle to this simulation state
 
@@ -105,9 +101,7 @@ def sample_vehicles(
         # sample i vehicles, adding each to the sim
         # fail fast if an exception is encountered
         result: Result[SimulationState, Exception] = ft.reduce(
-            lambda acc, i: acc.bind(_add_sample(i)),
-            range(offset, offset + count),
-            Success(sim),
+            lambda acc, i: acc.bind(_add_sample(i)), range(offset, offset + count), Success(sim),
         )
 
         return result

@@ -7,10 +7,7 @@ from nrel.hive.util.exception import StateTransitionError
 
 
 def transition_previous_to_next(
-    sim: "SimulationState",
-    env: Environment,
-    prev_state: EntityState,
-    next_state: EntityState,
+    sim: "SimulationState", env: Environment, prev_state: EntityState, next_state: EntityState,
 ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
     """
     exits the previous state and enters the next state

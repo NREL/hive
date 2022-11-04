@@ -7,9 +7,7 @@ from nrel.hive.state.simulation_state.simulation_state_ops import (
     modify_entities_safe as _modify_entities_safe,
 )
 
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.util.fp import throw_or_return
 
 if TYPE_CHECKING:

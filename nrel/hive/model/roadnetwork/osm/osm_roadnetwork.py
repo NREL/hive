@@ -11,9 +11,7 @@ from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.link_id import extract_node_ids
-from nrel.hive.model.roadnetwork.osm.osm_road_network_link_helper import (
-    OSMRoadNetworkLinkHelper,
-)
+from nrel.hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork_ops import (
     route_from_nx_path,
     resolve_route_src_dst_positions,

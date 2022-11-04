@@ -64,10 +64,7 @@ def global_hive_config_search() -> GlobalConfig:
 
 
 def construct_asset_path(
-    file: str,
-    scenario_directory: str,
-    default_directory_name: str,
-    resources_subdirectory: str,
+    file: str, scenario_directory: str, default_directory_name: str, resources_subdirectory: str,
 ) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both
@@ -151,8 +148,7 @@ def find_scenario(user_provided_scenario: str) -> Path:
     relative_path = Path.cwd().joinpath(user_provided_scenario)
     den_path = Path(
         pkg_resources.resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown",
-            user_provided_scenario,
+            "nrel.hive.resources.scenarios.denver_downtown", user_provided_scenario,
         )
     )
     nyc_path = Path(

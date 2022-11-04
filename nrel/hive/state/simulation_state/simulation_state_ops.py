@@ -12,9 +12,7 @@ from nrel.hive.util.fp import apply_op_to_accumulator, throw_or_return
 from nrel.hive.util.typealiases import RequestId, StationId, VehicleId, BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.model.entity import Entity
     from nrel.hive.model.base import Base
     from nrel.hive.model.request import Request
@@ -230,9 +228,7 @@ def remove_request_safe(sim: SimulationState, request_id: RequestId) -> ResultE[
         )
 
         updated_sim = sim._replace(
-            requests=updated_requests,
-            r_locations=updated_r_locations,
-            r_search=updated_r_search,
+            requests=updated_requests, r_locations=updated_r_locations, r_search=updated_r_search,
         )
 
         return Success(updated_sim)

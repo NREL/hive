@@ -1,7 +1,5 @@
 from unittest import TestCase
-from nrel.hive.state.simulation_state.update.step_simulation_ops import (
-    step_vehicle,
-)
+from nrel.hive.state.simulation_state.update.step_simulation_ops import step_vehicle
 from nrel.hive.resources.mock_lobster import *
 
 
@@ -30,9 +28,7 @@ class TestStepSimulationOps(TestCase):
 
         self.assertEqual(veh1_idle_time, 0, "vehicle 1 should not have idled")
         self.assertEqual(
-            veh2_idle_time,
-            600,
-            "vehicle 2 should have idled for 10 time steps (600 s)",
+            veh2_idle_time, 600, "vehicle 2 should have idled for 10 time steps (600 s)",
         )
 
     # @unittest.skip("refactor so that we aren't injecting VehicleState into vehicles which bypasses VehicleState.enter op")
@@ -50,12 +46,10 @@ class TestStepSimulationOps(TestCase):
         )
         station = mock_station("s1")
         vehicle1 = mock_vehicle(
-            vehicle_id="1",
-            vehicle_state=ChargingStation.build("1", "s1", mock_dcfc_charger_id()),
+            vehicle_id="1", vehicle_state=ChargingStation.build("1", "s1", mock_dcfc_charger_id()),
         )
         vehicle2 = mock_vehicle(
-            vehicle_id="2",
-            vehicle_state=ChargingStation.build("2", "s1", mock_dcfc_charger_id()),
+            vehicle_id="2", vehicle_state=ChargingStation.build("2", "s1", mock_dcfc_charger_id()),
         )
         sim = mock_sim(vehicles=(vehicle1, vehicle2), stations=(station,))
         env = mock_env()
@@ -72,8 +66,6 @@ class TestStepSimulationOps(TestCase):
         veh2_state = vehicle2.vehicle_state
 
         self.assertIsInstance(
-            veh1_state,
-            ChargingStation,
-            "vehicle 1 should still be in charging state",
+            veh1_state, ChargingStation, "vehicle 1 should still be in charging state",
         )
         self.assertIsInstance(veh2_state, Idle, "vehicle 2 should have transitioned to idle")

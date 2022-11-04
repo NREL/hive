@@ -7,9 +7,7 @@ from tqdm import tqdm
 
 from nrel.hive import package_root
 from nrel.hive.dispatcher.instruction.instructions import IdleInstruction
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.runner.runner_payload_ops import (
     get_instruction_generator,
     update_instruction_generator,

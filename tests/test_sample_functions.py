@@ -24,9 +24,7 @@ class TestSampleVehicles(TestCase):
 
         for r in sample_requests:
             self.assertNotEqual(
-                r.origin,
-                r.destination,
-                f"request should not have equal origin and destination",
+                r.origin, r.destination, f"request should not have equal origin and destination",
             )
 
     def test_sample_n_vehicles_default(self):

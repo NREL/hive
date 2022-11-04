@@ -6,9 +6,7 @@ from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Tuple
 
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
-from nrel.hive.reporting.handler.time_step_stats_handler import (
-    TimeStepStatsHandler,
-)
+from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 
 if TYPE_CHECKING:
     from nrel.hive.model.membership import MembershipId

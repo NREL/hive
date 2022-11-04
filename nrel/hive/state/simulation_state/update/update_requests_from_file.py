@@ -15,9 +15,7 @@ from nrel.hive.reporting.reporter import Report, ReportType
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.simulation_update import (
-    SimulationUpdateFunction,
-)
+from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from nrel.hive.util.iterators import DictReaderStepper
 
 log = logging.getLogger(__name__)
@@ -195,9 +193,7 @@ def update_requests_from_iterator(
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(
-        ft.partial(_update, env=env, rate_structure=rate_structure),
-        it,
-        initial_sim_state,
+        ft.partial(_update, env=env, rate_structure=rate_structure), it, initial_sim_state,
     )
 
     return updated_sim

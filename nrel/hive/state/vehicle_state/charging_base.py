@@ -17,9 +17,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import BaseId, VehicleId, ChargerId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
 log = logging.getLogger(__name__)
@@ -40,10 +38,7 @@ class ChargingBase(VehicleState):
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId, charger_id: ChargerId) -> ChargingBase:
         return ChargingBase(
-            vehicle_id=vehicle_id,
-            base_id=base_id,
-            charger_id=charger_id,
-            instance_id=uuid4(),
+            vehicle_id=vehicle_id, base_id=base_id, charger_id=charger_id, instance_id=uuid4(),
         )
 
     @property

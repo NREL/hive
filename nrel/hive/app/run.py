@@ -10,9 +10,7 @@ from typing import TYPE_CHECKING
 import pkg_resources
 import yaml
 
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
-    ChargingFleetManager,
-)
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.reporting import reporter_ops

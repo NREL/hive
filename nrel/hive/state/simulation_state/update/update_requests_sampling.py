@@ -15,9 +15,7 @@ from nrel.hive.reporting.reporter import Report
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state import simulation_state_ops
-from nrel.hive.state.simulation_state.update.simulation_update import (
-    SimulationUpdateFunction,
-)
+from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from nrel.hive.util.iterators import ObjectIterator
 
 log = logging.getLogger(__name__)
@@ -34,9 +32,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
 
     @classmethod
     def build(
-        cls,
-        sampled_requests: Tuple[Request, ...],
-        rate_structure_file: Optional[str] = None,
+        cls, sampled_requests: Tuple[Request, ...], rate_structure_file: Optional[str] = None,
     ):
         """
         reads an optional rate_structure_file and builds a UpdateRequestsFromFile SimulationUpdateFunction

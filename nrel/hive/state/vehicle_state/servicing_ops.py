@@ -14,16 +14,12 @@ from nrel.hive.reporting.vehicle_event_ops import (
 from nrel.hive.runner import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.simulation_state_ops import (
-    modify_vehicle,
-)
+from nrel.hive.state.simulation_state.simulation_state_ops import modify_vehicle
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
-        ServicingPoolingTrip,
-    )
+    from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 
 
 class ActivePoolingTrip(NamedTuple):
@@ -61,10 +57,7 @@ def get_active_pooling_trip(
 
 
 def complete_trip_phase(
-    sim: SimulationState,
-    env: Environment,
-    vehicle: Vehicle,
-    active_trip: ActivePoolingTrip,
+    sim: SimulationState, env: Environment, vehicle: Vehicle, active_trip: ActivePoolingTrip,
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     performs the action associated with closing out a trip phase.
@@ -156,9 +149,7 @@ def complete_trip_phase(
 
 
 def update_active_pooling_trip(
-    sim: SimulationState,
-    env: Environment,
-    vehicle_state: ServicingPoolingTrip,
+    sim: SimulationState, env: Environment, vehicle_state: ServicingPoolingTrip,
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     helper to update the route of the leading trip when no route changes are required
@@ -193,10 +184,7 @@ def update_active_pooling_trip(
 
 
 def pick_up_trip(
-    sim: SimulationState,
-    env: Environment,
-    vehicle_id: VehicleId,
-    request_id: RequestId,
+    sim: SimulationState, env: Environment, vehicle_id: VehicleId, request_id: RequestId,
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     has a vehicle pick up a trip and receive payment for it.
@@ -222,10 +210,9 @@ def pick_up_trip(
         )
     else:
         updated_vehicle = vehicle.receive_payment(request.value)
-        (
-            mod_error,
-            maybe_sim_with_vehicle,
-        ) = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
+        (mod_error, maybe_sim_with_vehicle,) = simulation_state_ops.modify_vehicle(
+            sim, updated_vehicle
+        )
         if mod_error:
             response = SimulationStateError(f"failure during pick_up_trip for vehicle {vehicle.id}")
             response.__cause__ = mod_error
@@ -241,10 +228,7 @@ def pick_up_trip(
 
 
 def drop_off_trip(
-    sim: SimulationState,
-    env: Environment,
-    vehicle_id: VehicleId,
-    request: Request,
+    sim: SimulationState, env: Environment, vehicle_id: VehicleId, request: Request,
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     handles the dropping off of passengers, which is really mostly a validation
@@ -279,9 +263,7 @@ def drop_off_trip(
 
 
 def remove_completed_trip(
-    sim: SimulationState,
-    env: Environment,
-    vehicle_id: VehicleId,
+    sim: SimulationState, env: Environment, vehicle_id: VehicleId,
 ) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, int]]]:
     """
     removes the first trip from a ServicingPoolingTrip state, because

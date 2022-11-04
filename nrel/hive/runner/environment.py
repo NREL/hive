@@ -8,9 +8,7 @@ import immutables
 
 if TYPE_CHECKING:
     from nrel.hive.model.energy.charger.charger import Charger
-    from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
-        MechatronicsInterface,
-    )
+    from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
     from nrel.hive.config import HiveConfig
     from nrel.hive.util.typealiases import (
         ChargerId,

@@ -21,9 +21,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import BaseId, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -38,12 +36,7 @@ class DispatchBase(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
-        return cls(
-            vehicle_id=vehicle_id,
-            base_id=base_id,
-            route=route,
-            instance_id=uuid4(),
-        )
+        return cls(vehicle_id=vehicle_id, base_id=base_id, route=route, instance_id=uuid4(),)
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

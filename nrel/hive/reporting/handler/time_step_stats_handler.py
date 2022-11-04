@@ -71,9 +71,7 @@ class TimeStepStatsHandler(Handler):
 
         return DataFrame(self.data)
 
-    def get_fleet_time_step_stats(
-        self,
-    ) -> Optional[Map[MembershipId, DataFrame]]:
+    def get_fleet_time_step_stats(self,) -> Optional[Map[MembershipId, DataFrame]]:
         """
         return an immutable map of time step stat DataFrames by membership id.
 
@@ -140,10 +138,7 @@ class TimeStepStatsHandler(Handler):
 
             # count the number of vehicles in each vehicle state
             veh_state_counts = Counter(
-                map(
-                    lambda v: v.vehicle_state.vehicle_state_type.name,
-                    sim_state.get_vehicles(),
-                )
+                map(lambda v: v.vehicle_state.vehicle_state_type.name, sim_state.get_vehicles(),)
             )
 
             stats_row = {
@@ -196,10 +191,7 @@ class TimeStepStatsHandler(Handler):
                 stats_row[f"vehicles_{state.lower()}"] = veh_state_counts[state]
 
             available_driver_counts = Counter(
-                map(
-                    lambda v: v.driver_state.available,
-                    sim_state.get_vehicles(),
-                )
+                map(lambda v: v.driver_state.available, sim_state.get_vehicles(),)
             )
             stats_row["drivers_available"] = available_driver_counts[True]
             stats_row["drivers_unavailable"] = available_driver_counts[False]
@@ -224,9 +216,7 @@ class TimeStepStatsHandler(Handler):
         if self.log_fleet_time_step_stats:
             for fleet_id in self.fleets_data.keys():
 
-                def _get_veh_filter_func(
-                    membership_id: MembershipId,
-                ) -> Callable[[Vehicle], bool]:
+                def _get_veh_filter_func(membership_id: MembershipId,) -> Callable[[Vehicle], bool]:
                     if membership_id == "none":
                         return lambda v: not any(set(env.fleet_ids) & set(v.membership.memberships))
                     else:
@@ -255,10 +245,7 @@ class TimeStepStatsHandler(Handler):
                         ReportType.VEHICLE_CHARGE_EVENT,
                     ):
                         requests_in_fleet[report_type] = list(
-                            filter(
-                                _get_report_filter_func(fleet_id),
-                                reports_by_type[report_type],
-                            )
+                            filter(_get_report_filter_func(fleet_id), reports_by_type[report_type],)
                         )
 
                 # get vehicles pooling in this fleet
@@ -281,10 +268,7 @@ class TimeStepStatsHandler(Handler):
 
                 # count the number of vehicles in each vehicle state in this fleet
                 veh_state_counts_in_fleet = Counter(
-                    map(
-                        lambda v: v.vehicle_state.vehicle_state_type.name,
-                        veh_in_fleet,
-                    )
+                    map(lambda v: v.vehicle_state.vehicle_state_type.name, veh_in_fleet,)
                 )
 
                 # create stats row with the time step
@@ -375,9 +359,7 @@ class TimeStepStatsHandler(Handler):
         """
         if self.log_time_step_stats:
             pd.DataFrame.to_csv(
-                self.get_time_step_stats(),
-                self.time_step_stats_outpath,
-                index=False,
+                self.get_time_step_stats(), self.time_step_stats_outpath, index=False,
             )
             log.info(f"time step stats written to {self.time_step_stats_outpath}")
 

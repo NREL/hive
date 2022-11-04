@@ -2,12 +2,8 @@ from pathlib import Path
 
 import yaml
 
-from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import (
-    Powercurve,
-)
-from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import (
-    TabularPowercurve,
-)
+from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
+from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
 
 powercurve_models = {"tabular": TabularPowercurve}
 

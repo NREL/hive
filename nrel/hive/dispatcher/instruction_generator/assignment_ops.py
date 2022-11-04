@@ -44,8 +44,7 @@ class AssignmentSolution(NamedTuple):
 
     def add(self, pair: Tuple[EntityId, EntityId], cost: float) -> AssignmentSolution:
         return self._replace(
-            solution=(pair,) + self.solution,
-            solution_cost=self.solution_cost + cost,
+            solution=(pair,) + self.solution, solution_cost=self.solution_cost + cost,
         )
 
 
@@ -236,11 +235,7 @@ def shortest_time_to_charge_distance(
 
 
 def shortest_time_to_charge_ranking(
-    sim: SimulationState,
-    env: Environment,
-    vehicle: Vehicle,
-    station: Station,
-    target_soc: Ratio,
+    sim: SimulationState, env: Environment, vehicle: Vehicle, station: Station, target_soc: Ratio,
 ) -> Optional[Tuple[ChargerId, float]]:
     """
     given a station charging alternative, determine the time it would take to charge
@@ -287,11 +282,7 @@ def shortest_time_to_charge_ranking(
                     return 0
                 else:
                     time_est = powercurve_ops.time_to_full(
-                        v,
-                        _mech,
-                        _charger,
-                        target_soc,
-                        sim.sim_timestep_duration_seconds,
+                        v, _mech, _charger, target_soc, sim.sim_timestep_duration_seconds,
                     )
                     return time_est
 
@@ -367,9 +358,7 @@ def shortest_time_to_charge_ranking(
         # collect all vehicles that are either charging or enqueued at this station
         vehicles_at_station = sim.get_vehicles(filter_function=_veh_at_station)
         vehicles_enqueued = sim.get_vehicles(
-            filter_function=_veh_enqueued,
-            sort=True,
-            sort_key=_sort_enqueue_time,
+            filter_function=_veh_enqueued, sort=True, sort_key=_sort_enqueue_time,
         )
 
         estimates: Dict[ChargerId, int] = {}
@@ -403,20 +392,14 @@ def shortest_time_to_charge_ranking(
                 return False
 
             # collect all estimated remaining charge times for charging vehicles and sort them
-            charging = filter(
-                _using_charger,
-                vehicles_at_station,
-            )
+            charging = filter(_using_charger, vehicles_at_station,)
             charging_time_to_full: Tuple[Seconds, ...] = tuple(
                 sorted(map(_time_to_full_by_charger_id(charger_id), charging))
             )
 
             # collect estimated remaining charge times for vehicles enqueued for this charger
             # leave them sorted by enqueue time
-            enqueued = filter(
-                _waiting_for_charger,
-                vehicles_enqueued,
-            )
+            enqueued = filter(_waiting_for_charger, vehicles_enqueued,)
             enqueued_time_to_full: Tuple[Seconds, ...] = tuple(
                 map(_time_to_full_by_charger_id(charger_id), enqueued)
             )

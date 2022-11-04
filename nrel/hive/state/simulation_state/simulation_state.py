@@ -12,9 +12,7 @@ from typing import (
 
 import immutables
 
-from nrel.hive.state.simulation_state.at_location_response import (
-    AtLocationResponse,
-)
+from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
 from nrel.hive.model.membership import PUBLIC_MEMBERSHIP_ID
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import geo
@@ -96,10 +94,7 @@ class SimulationState(NamedTuple):
         stations = self.stations.values()
         if filter_function and sort:
             return tuple(
-                filter(
-                    filter_function,
-                    sorted(stations, key=sort_key, reverse=sort_reversed),
-                )
+                filter(filter_function, sorted(stations, key=sort_key, reverse=sort_reversed),)
             )
         elif filter_function:
             return tuple(filter(filter_function, stations))
@@ -130,10 +125,7 @@ class SimulationState(NamedTuple):
 
         if filter_function and sort:
             return tuple(
-                filter(
-                    filter_function,
-                    sorted(bases, key=sort_key, reverse=sort_reversed),
-                )
+                filter(filter_function, sorted(bases, key=sort_key, reverse=sort_reversed),)
             )
         elif filter_function:
             return tuple(filter(filter_function, bases))
@@ -164,11 +156,7 @@ class SimulationState(NamedTuple):
 
         if filter_function and sort:
             return tuple(
-                sorted(
-                    filter(filter_function, vehicles),
-                    key=sort_key,
-                    reverse=sort_reversed,
-                )
+                sorted(filter(filter_function, vehicles), key=sort_key, reverse=sort_reversed,)
             )
         elif filter_function:
             return tuple(filter(filter_function, vehicles))
@@ -198,10 +186,7 @@ class SimulationState(NamedTuple):
         requests = self.requests.values()
         if filter_function and sort:
             return tuple(
-                filter(
-                    filter_function,
-                    sorted(requests, key=sort_key, reverse=sort_reversed),
-                )
+                filter(filter_function, sorted(requests, key=sort_key, reverse=sort_reversed),)
             )
         elif filter_function:
             return tuple(filter(filter_function, requests))
@@ -224,12 +209,7 @@ class SimulationState(NamedTuple):
 
         result = cast(
             AtLocationResponse,
-            {
-                "vehicles": vehicles,
-                "requests": requests,
-                "station": station,
-                "base": base,
-            },
+            {"vehicles": vehicles, "requests": requests, "station": station, "base": base,},
         )
         return result
 
@@ -254,10 +234,7 @@ class SimulationState(NamedTuple):
             return False
         else:
             return geo.same_simulation_location(
-                vehicle.geoid,
-                request.origin,
-                self.sim_h3_location_resolution,
-                override_resolution,
+                vehicle.geoid, request.origin, self.sim_h3_location_resolution, override_resolution,
             )
 
     def vehicle_at_station(
@@ -281,17 +258,11 @@ class SimulationState(NamedTuple):
             return False
         else:
             return geo.same_simulation_location(
-                vehicle.geoid,
-                station.geoid,
-                self.sim_h3_location_resolution,
-                override_resolution,
+                vehicle.geoid, station.geoid, self.sim_h3_location_resolution, override_resolution,
             )
 
     def vehicle_at_base(
-        self,
-        vehicle_id: VehicleId,
-        base_id: BaseId,
-        override_resolution: Optional[int] = None,
+        self, vehicle_id: VehicleId, base_id: BaseId, override_resolution: Optional[int] = None,
     ) -> bool:
         """
         tests whether vehicle is at the request within the scope of the given geoid resolution
@@ -308,8 +279,5 @@ class SimulationState(NamedTuple):
             return False
         else:
             return geo.same_simulation_location(
-                vehicle.geoid,
-                base.geoid,
-                self.sim_h3_location_resolution,
-                override_resolution,
+                vehicle.geoid, base.geoid, self.sim_h3_location_resolution, override_resolution,
             )

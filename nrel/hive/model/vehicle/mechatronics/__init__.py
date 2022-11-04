@@ -9,9 +9,7 @@ from immutables import Map
 
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
-    MechatronicsInterface,
-)
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from nrel.hive.util import fs
 from nrel.hive.util.typealiases import MechatronicsId
 

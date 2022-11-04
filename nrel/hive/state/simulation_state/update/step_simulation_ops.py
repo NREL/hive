@@ -6,12 +6,8 @@ import logging
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
-from nrel.hive.dispatcher.instruction.instruction_result import (
-    InstructionResult,
-)
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
@@ -23,9 +19,7 @@ from nrel.hive.util import TupleOps, SimulationStateError
 
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.util.typealiases import SimTime, VehicleId
 
 log = logging.getLogger(__name__)
@@ -143,10 +137,7 @@ def perform_vehicle_state_updates(
         )
 
         sorted_charge_queueing_vehicles = tuple(
-            sorted(
-                charge_queueing_vehicles,
-                key=lambda v: v.vehicle_state.enqueue_time,
-            )
+            sorted(charge_queueing_vehicles, key=lambda v: v.vehicle_state.enqueue_time,)
         )
 
         return other_vehicles + sorted_charge_queueing_vehicles
@@ -186,8 +177,7 @@ def apply_instructions(
     else:
         # run in a synchronous loop
         def apply_instructions(
-            acc: Tuple[Tuple[InstructionApplicationResult, ...], SimulationState],
-            i: Instruction,
+            acc: Tuple[Tuple[InstructionApplicationResult, ...], SimulationState], i: Instruction,
         ) -> Tuple[Tuple[InstructionApplicationResult, ...], SimulationState]:
             results, inner_sim = acc
             err, instruction_result = i.apply_instruction(inner_sim, env)
@@ -214,14 +204,10 @@ def apply_instructions(
             log.error(err)
 
     # update the simulation with each vehicle state transition in sequence
-    def _add_instruction(
-        s: SimulationState,
-        i: InstructionResult,
-    ) -> SimulationState:
-        (
-            update_error,
-            updated_sim,
-        ) = entity_state_ops.transition_previous_to_next(s, env, i.prev_state, i.next_state)
+    def _add_instruction(s: SimulationState, i: InstructionResult,) -> SimulationState:
+        (update_error, updated_sim,) = entity_state_ops.transition_previous_to_next(
+            s, env, i.prev_state, i.next_state
+        )
         if update_error:
             log.error(update_error)
             return s
@@ -246,8 +232,7 @@ def instruction_generator_update_fn(
     fn: Callable[[InstructionGenerator, SimulationState], Optional[InstructionGenerator]],
     sim: SimulationState,
 ) -> Callable[
-    [UserProvidedUpdateAccumulator, InstructionGenerator],
-    UserProvidedUpdateAccumulator,
+    [UserProvidedUpdateAccumulator, InstructionGenerator], UserProvidedUpdateAccumulator,
 ]:
     """
     applies a user-provided function designed to inject an external update to InstructionGenerators

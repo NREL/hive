@@ -7,9 +7,7 @@ from nrel.hive.util import SimulationStateError
 from nrel.hive.state.simulation_state import simulation_state_ops
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId, BaseId, VehicleId
     from nrel.hive.dispatcher.instruction.instruction import Instruction
@@ -89,10 +87,7 @@ class DriverState(ABC):
 
     @classmethod
     def apply_new_driver_state(
-        mcs,
-        sim: SimulationState,
-        vehicle_id: VehicleId,
-        new_state: DriverState,
+        mcs, sim: SimulationState, vehicle_id: VehicleId, new_state: DriverState,
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         helper for updating a Vehicle with a new DriverState

@@ -10,22 +10,16 @@ from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
 from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
 from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
-from nrel.hive.reporting.handler.time_step_stats_handler import (
-    TimeStepStatsHandler,
-)
+from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 from nrel.hive.reporting.reporter import Reporter
 from nrel.hive.runner.environment import Environment
-from nrel.hive.initialization.initialize_simulation import (
-    initialize_simulation,
-)
+from nrel.hive.initialization.initialize_simulation import initialize_simulation
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 run_log = logging.getLogger(__name__)
 
 
-def load_simulation(
-    scenario_file_path: Path,
-) -> Tuple[SimulationState, Environment]:
+def load_simulation(scenario_file_path: Path,) -> Tuple[SimulationState, Environment]:
     """
     takes a scenario path and attempts to build all assets required to run a scenario
 

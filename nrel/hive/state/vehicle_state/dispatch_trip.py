@@ -14,14 +14,10 @@ from nrel.hive.model.roadnetwork.route import (
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
-from nrel.hive.state.simulation_state.simulation_state_ops import (
-    modify_request,
-)
+from nrel.hive.state.simulation_state.simulation_state_ops import modify_request
 from nrel.hive.state.vehicle_state import vehicle_state_ops
 from nrel.hive.state.vehicle_state.idle import Idle
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
-    ServicingPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.state.vehicle_state.vehicle_state import (
     VehicleState,
@@ -32,9 +28,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import RequestId, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -49,12 +43,7 @@ class DispatchTrip(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, request_id: RequestId, route: Route) -> DispatchTrip:
-        return cls(
-            vehicle_id=vehicle_id,
-            request_id=request_id,
-            route=route,
-            instance_id=uuid4(),
-        )
+        return cls(vehicle_id=vehicle_id, request_id=request_id, route=route, instance_id=uuid4(),)
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

@@ -22,9 +22,7 @@ class TestUpdate(TestCase):
             stored_magic_number: int = old_magic_number
 
             def generate_instructions(
-                self,
-                simulation_state: SimulationState,
-                envronment: Environment,
+                self, simulation_state: SimulationState, envronment: Environment,
             ):
                 return self, ()
 

@@ -18,9 +18,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import StationId, VehicleId, ChargerId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
 log = logging.getLogger(__name__)
@@ -40,10 +38,7 @@ class ChargingStation(VehicleState):
 
     @classmethod
     def build(
-        cls,
-        vehicle_id: VehicleId,
-        station_id: StationId,
-        charger_id: ChargerId,
+        cls, vehicle_id: VehicleId, station_id: StationId, charger_id: ChargerId,
     ) -> ChargingStation:
         """
         build a charging station state
@@ -135,10 +130,7 @@ class ChargingStation(VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def exit(
-        self,
-        next_state: VehicleState,
-        sim: "SimulationState",
-        env: "Environment",
+        self, next_state: VehicleState, sim: "SimulationState", env: "Environment",
     ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
         """
         exiting a charge event requires returning the charger_id to the station

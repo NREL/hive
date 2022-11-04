@@ -21,9 +21,7 @@ from nrel.hive.state.vehicle_state import (
     dispatch_ops,
     servicing_ops,
 )
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
-    ServicingPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.state.vehicle_state.vehicle_state import (
     VehicleState,
     VehicleStateInstanceId,
@@ -34,9 +32,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import RequestId, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -112,9 +108,7 @@ class DispatchPoolingTrip(VehicleState):
             first_req_id, first_phase = first_stop
             first_req = sim.requests.get(first_req_id)
             is_valid = (
-                route_cooresponds_with_entities(
-                    self.route, vehicle.position, first_req.position
-                )
+                route_cooresponds_with_entities(self.route, vehicle.position, first_req.position)
                 if vehicle and first_req
                 else False
             )

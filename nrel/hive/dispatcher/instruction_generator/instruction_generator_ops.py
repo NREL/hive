@@ -8,9 +8,7 @@ import immutables
 
 from nrel.hive.dispatcher.instruction.instructions import *
 from nrel.hive.dispatcher.instruction_generator import assignment_ops
-from nrel.hive.dispatcher.instruction_generator.charging_search_type import (
-    ChargingSearchType,
-)
+from nrel.hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from nrel.hive.model.station.station import Station
 from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.dict_ops import DictOps
@@ -22,9 +20,7 @@ random.seed(123)
 
 if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
         InstructionGenerator,
     )
@@ -54,10 +50,9 @@ class InstructionGenerationResult(NamedTuple):
         :param environment: the simulation environment
         :return: the updated accumulator
         """
-        (
-            updated_gen,
-            new_instructions,
-        ) = instruction_generator.generate_instructions(simulation_state, environment)
+        (updated_gen, new_instructions,) = instruction_generator.generate_instructions(
+            simulation_state, environment
+        )
 
         updated_instruction_stack = ft.reduce(
             lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i),
@@ -83,9 +78,7 @@ class InstructionGenerationResult(NamedTuple):
         new_instructions = ft.reduce(
             lambda acc, v: (
                 v.driver_state.generate_instruction(
-                    simulation_state,
-                    environment,
-                    self.instruction_stack.get(v.id),
+                    simulation_state, environment, self.instruction_stack.get(v.id),
                 ),
             )
             + acc,
@@ -99,9 +92,7 @@ class InstructionGenerationResult(NamedTuple):
             self.instruction_stack,
         )
 
-        return self._replace(
-            instruction_stack=updated_instruction_stack,
-        )
+        return self._replace(instruction_stack=updated_instruction_stack,)
 
 
 def generate_instructions(
@@ -200,10 +191,7 @@ def instruct_vehicles_to_dispatch_to_station(
             # use the search-based metric which considers travel, queueing, and charging time
 
             distance_fn = assignment_ops.shortest_time_to_charge_distance(
-                vehicle=veh,
-                sim=simulation_state,
-                env=environment,
-                target_soc=target_soc,
+                vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc,
             )
 
         nearest_station = H3Ops.nearest_entity(
@@ -232,10 +220,7 @@ def instruct_vehicles_to_dispatch_to_station(
                 if result is None:
                     continue
                 else:
-                    (
-                        best_charger_id,
-                        best_charger_rank,
-                    ) = result
+                    (best_charger_id, best_charger_rank,) = result
 
             else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
                 result = assignment_ops.shortest_time_to_charge_ranking(
@@ -248,15 +233,10 @@ def instruct_vehicles_to_dispatch_to_station(
                 if result is None:
                     continue
                 else:
-                    (
-                        best_charger_id,
-                        best_charger_rank,
-                    ) = result
+                    (best_charger_id, best_charger_rank,) = result
 
             instruction = DispatchStationInstruction(
-                vehicle_id=veh.id,
-                station_id=nearest_station.id,
-                charger_id=best_charger_id,
+                vehicle_id=veh.id, station_id=nearest_station.id, charger_id=best_charger_id,
             )
 
             instructions = instructions + (instruction,)
@@ -295,10 +275,7 @@ def get_nearest_valid_station_distance(
         # use the search-based metric which considers travel, queueing, and charging time
 
         distance_fn = assignment_ops.shortest_time_to_charge_distance(
-            vehicle=vehicle,
-            sim=simulation_state,
-            env=environment,
-            target_soc=target_soc,
+            vehicle=vehicle, sim=simulation_state, env=environment, target_soc=target_soc,
         )
 
     nearest_station = H3Ops.nearest_entity(

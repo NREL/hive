@@ -35,9 +35,7 @@ from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import SimulationStateError, BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId
 
@@ -219,8 +217,7 @@ class HumanUnavailable(DriverState):
                     else:
                         # we have charged to our charge target, or, have no charging target
                         instruction = DispatchBaseInstruction(
-                            self.attributes.vehicle_id,
-                            self.attributes.home_base_id,
+                            self.attributes.vehicle_id, self.attributes.home_base_id,
                         )
                         return instruction
                 else:
@@ -241,8 +238,7 @@ class HumanUnavailable(DriverState):
                 elif isinstance(my_vehicle.vehicle_state, Idle):
                     # finally, if we're at home and idling, we turn the vehicle off
                     return ReserveBaseInstruction(
-                        self.attributes.vehicle_id,
-                        self.attributes.home_base_id,
+                        self.attributes.vehicle_id, self.attributes.home_base_id,
                     )
                 else:
                     return None

@@ -10,9 +10,7 @@ class TestBEV(TestCase):
 
         charged_vehicle, _ = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertAlmostEqual(
-            charged_vehicle.energy[EnergyType.ELECTRIC] / bev.battery_capacity_kwh,
-            1,
-            places=2,
+            charged_vehicle.energy[EnergyType.ELECTRIC] / bev.battery_capacity_kwh, 1, places=2,
         )
 
     def test_leaf_energy_gain_full_soc(self):
@@ -21,9 +19,7 @@ class TestBEV(TestCase):
 
         charged_vehicle, _ = bev.add_energy(vehicle, mock_dcfc_charger(), hours_to_seconds(10))
         self.assertEqual(
-            charged_vehicle.energy[EnergyType.ELECTRIC],
-            50,
-            "Should be fully charged",
+            charged_vehicle.energy[EnergyType.ELECTRIC], 50, "Should be fully charged",
         )
 
     def test_leaf_energy_gain_low_power(self):
@@ -32,9 +28,7 @@ class TestBEV(TestCase):
 
         charged_vehicle, _ = bev.add_energy(vehicle, mock_l2_charger(), hours_to_seconds(0.1))
         self.assertLess(
-            charged_vehicle.energy[EnergyType.ELECTRIC],
-            50,
-            "Should not be fully charged",
+            charged_vehicle.energy[EnergyType.ELECTRIC], 50, "Should not be fully charged",
         )
 
     def test_leaf_energy_cost_empty_route(self):
@@ -59,9 +53,7 @@ class TestBEV(TestCase):
 
         moved_vehicle = bev.consume_energy(vehicle, route=test_route)
         self.assertAlmostEqual(
-            moved_vehicle.energy[EnergyType.ELECTRIC],
-            expected_energy_kwh,
-            places=0,
+            moved_vehicle.energy[EnergyType.ELECTRIC], expected_energy_kwh, places=0,
         )
 
     def test_remaining_range(self):
@@ -71,9 +63,7 @@ class TestBEV(TestCase):
         remaining_range_km = bev.range_remaining_km(vehicle)
 
         self.assertAlmostEqual(
-            remaining_range_km,
-            50 * MILE_TO_KM,
-            places=1,
+            remaining_range_km, 50 * MILE_TO_KM, places=1,
         )
 
     def test_calc_required_soc(self):
@@ -82,6 +72,5 @@ class TestBEV(TestCase):
         required_soc = bev.calc_required_soc(50 * MILE_TO_KM)
 
         self.assertEqual(
-            required_soc,
-            1.0,
+            required_soc, 1.0,
         )

@@ -18,6 +18,7 @@ from nrel.hive.state.vehicle_state.vehicle_state import VehicleState
 from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import Kilometers, Currency
 
+
 @dataclass(frozen=True)
 class Vehicle(Entity):
     """
@@ -38,13 +39,12 @@ class Vehicle(Entity):
 
     # location
     position: EntityPosition
-    
+
     membership: Membership
 
     # mechatronic properties
     mechatronics_id: MechatronicsId
     energy: immutables.Map[EnergyType, float]
-
 
     # vehicle planning/operational properties
     vehicle_state: VehicleState
@@ -56,17 +56,13 @@ class Vehicle(Entity):
     balance: Currency = 0.0
     distance_traveled_km: Kilometers = 0.0
 
-
     @property
     def geoid(self):
         return self.position.geoid
 
     @classmethod
     def from_row(
-        cls,
-        row: Dict[str, str],
-        road_network: RoadNetwork,
-        environment: Environment,
+        cls, row: Dict[str, str], road_network: RoadNetwork, environment: Environment,
     ) -> Vehicle:
         """
         reads a csv row from file to generate a Vehicle

@@ -18,9 +18,7 @@ from nrel.hive.initialization.initialize_ops import (
 from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
-    HaversineRoadNetwork,
-)
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
@@ -121,8 +119,7 @@ def initialize_simulation(
     env_initial = Environment(
         config=config,
         mechatronics=build_mechatronics_table(
-            config.input_config.mechatronics_file,
-            config.input_config.scenario_directory,
+            config.input_config.mechatronics_file, config.input_config.scenario_directory,
         ),
         chargers=build_chargers_table(config.input_config.chargers_file),
         schedules=schedules,
@@ -138,10 +135,7 @@ def initialize_simulation(
         vehicle_filter,
     )
     sim_with_bases = _build_bases(
-        config.input_config.bases_file,
-        base_member_ids,
-        sim_with_vehicles,
-        base_filter,
+        config.input_config.bases_file, base_member_ids, sim_with_vehicles, base_filter,
     )
     sim_with_stations = _build_stations(
         config.input_config.stations_file,
@@ -191,12 +185,7 @@ def _build_vehicles(
     # open vehicles file and add each row
     with open(vehicles_file, "r", encoding="utf-8-sig") as vf:
         reader = csv.DictReader(vf)
-        vehicles = list(
-            filter(
-                lambda v: v is not None,
-                [_collect_vehicle(row) for row in reader],
-            )
-        )
+        vehicles = list(filter(lambda v: v is not None, [_collect_vehicle(row) for row in reader],))
         sim_with_vehicles = simulation_state_ops.add_entities(simulation_state, vehicles)
 
     return sim_with_vehicles
@@ -282,10 +271,9 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                         if not station:
                             return with_b
                         else:
-                            (
-                                error_s,
-                                with_s,
-                            ) = simulation_state_ops.modify_station(with_b, updated_s)
+                            (error_s, with_s,) = simulation_state_ops.modify_station(
+                                with_b, updated_s
+                            )
                             if error_s:
                                 log.error(error_s)
                                 return acc

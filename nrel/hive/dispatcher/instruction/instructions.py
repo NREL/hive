@@ -10,9 +10,7 @@ from nrel.hive.dispatcher.instruction.instruction_ops import (
     trip_plan_all_requests_allow_pooling,
     trip_plan_covers_previous,
 )
-from nrel.hive.dispatcher.instruction.instruction_result import (
-    InstructionResult,
-)
+from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.state.vehicle_state import dispatch_ops
@@ -24,17 +22,13 @@ from nrel.hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.repositioning import Repositioning
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
-    ServicingPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.util.exception import SimulationStateError, InstructionError
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.util.typealiases import (
         StationId,
         VehicleId,

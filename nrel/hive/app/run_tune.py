@@ -7,9 +7,7 @@ from typing import Dict
 import ray
 from ray import tune
 
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
-    ChargingFleetManager,
-)
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.reporting.reporter import Reporter

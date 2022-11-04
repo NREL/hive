@@ -47,15 +47,11 @@ class SummaryStats:
         )
 
         self.station_revenue = reduce(
-            lambda income, station: income + station.balance,
-            sim_state.stations.values(),
-            0.0,
+            lambda income, station: income + station.balance, sim_state.stations.values(), 0.0,
         )
 
         self.fleet_revenue = reduce(
-            lambda income, vehicle: income + vehicle.balance,
-            sim_state.vehicles.values(),
-            0.0,
+            lambda income, vehicle: income + vehicle.balance, sim_state.vehicles.values(), 0.0,
         )
 
         requests_served_percent = (

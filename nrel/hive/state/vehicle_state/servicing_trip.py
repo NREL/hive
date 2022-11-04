@@ -28,9 +28,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -46,11 +44,7 @@ class ServicingTrip(VehicleState):
 
     @classmethod
     def build(
-        cls,
-        vehicle_id: VehicleId,
-        request: Request,
-        departure_time: SimTime,
-        route: Route,
+        cls, vehicle_id: VehicleId, request: Request, departure_time: SimTime, route: Route,
     ) -> ServicingTrip:
         """
         build a servicing trip state
@@ -96,9 +90,7 @@ class ServicingTrip(VehicleState):
         request = sim.requests.get(self.request.id)
         is_valid = (
             route_cooresponds_with_entities(
-                self.route,
-                request.position,
-                request.destination_position,
+                self.route, request.position, request.destination_position,
             )
             if vehicle and request
             else False

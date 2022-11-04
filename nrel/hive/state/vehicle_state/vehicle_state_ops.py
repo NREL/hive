@@ -18,9 +18,7 @@ from nrel.hive.util.typealiases import StationId, ChargerId
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
 
@@ -103,12 +101,7 @@ def charge(
             return response, None
         else:
             report = vehicle_charge_event(
-                vehicle,
-                updated_vehicle,
-                sim_with_vehicle,
-                updated_station,
-                charger,
-                mechatronics,
+                vehicle, updated_vehicle, sim_with_vehicle, updated_station, charger, mechatronics,
             )
             env.reporter.file_report(report)
 
@@ -179,8 +172,7 @@ def move(
         route = vehicle.vehicle_state.route
 
     error, traverse_result = traverse(
-        route_estimate=route,
-        duration_seconds=int(sim.sim_timestep_duration_seconds),
+        route_estimate=route, duration_seconds=int(sim.sim_timestep_duration_seconds),
     )
     if error:
         return error, None

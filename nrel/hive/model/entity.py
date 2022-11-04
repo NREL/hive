@@ -49,5 +49,6 @@ class EntityABC(ABC):
         :return: the updated entity
         """
 
+
 class Entity(EntityMixin, EntityABC):
     """"""

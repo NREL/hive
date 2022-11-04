@@ -1,9 +1,7 @@
 from unittest import TestCase
 
 from nrel.hive.config.network import Network
-from nrel.hive.initialization.initialize_simulation import (
-    initialize_simulation,
-)
+from nrel.hive.initialization.initialize_simulation import initialize_simulation
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
 )
@@ -35,10 +33,7 @@ class TestInitializeSimulation(TestCase):
                 return False
 
         sim, env = initialize_simulation(
-            conf,
-            vehicle_filter=filter_veh,
-            base_filter=filter_base,
-            station_filter=filter_station,
+            conf, vehicle_filter=filter_veh, base_filter=filter_base, station_filter=filter_station,
         )
 
         self.assertIsNone(sim.vehicles.get("v1"), "should not have loaded vehicle v1")
@@ -48,12 +43,7 @@ class TestInitializeSimulation(TestCase):
     def test_initialize_simulation_with_sampling(self):
         conf = (
             mock_config()
-            ._replace(
-                network=Network(
-                    network_type="osm_network",
-                    default_speed_kmph=40,
-                )
-            )
+            ._replace(network=Network(network_type="osm_network", default_speed_kmph=40,))
             .suppress_logging()
         )
 
@@ -68,10 +58,7 @@ class TestInitializeSimulation(TestCase):
 
         conf = conf._replace(input_config=new_input)
 
-        sim, env = initialize_simulation_with_sampling(
-            config=conf,
-            vehicle_count=20,
-        )
+        sim, env = initialize_simulation_with_sampling(config=conf, vehicle_count=20,)
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
         self.assertEqual(len(sim.bases), 2, "should have loaded 2 bases")

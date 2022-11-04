@@ -11,9 +11,7 @@ from nrel.hive.util.typealiases import VehicleId, ScheduleId
 from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 
 
-def time_range_schedules_from_file(
-    file: str,
-) -> Map[ScheduleId, ScheduleFunction]:
+def time_range_schedules_from_file(file: str,) -> Map[ScheduleId, ScheduleFunction]:
     """
     given a CSV file of time ranges by ScheduleId, construct a time range schedule table
 
@@ -29,9 +27,7 @@ def time_range_schedules_from_file(
     return result
 
 
-def time_range_schedules_from_string(
-    string: str,
-) -> Map[ScheduleId, ScheduleFunction]:
+def time_range_schedules_from_string(string: str,) -> Map[ScheduleId, ScheduleFunction]:
     """
     given a string in CSV format, construct a time range schedule table
 

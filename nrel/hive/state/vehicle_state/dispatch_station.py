@@ -25,9 +25,7 @@ from nrel.hive.util.typealiases import StationId, VehicleId, ChargerId
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 
 @dataclass(frozen=True)
@@ -41,11 +39,7 @@ class DispatchStation(VehicleState):
 
     @classmethod
     def build(
-        cls,
-        vehicle_id: VehicleId,
-        station_id: StationId,
-        route: Route,
-        charger_id: ChargerId,
+        cls, vehicle_id: VehicleId, station_id: StationId, route: Route, charger_id: ChargerId,
     ) -> DispatchStation:
         return DispatchStation(
             vehicle_id=vehicle_id,
@@ -149,10 +143,7 @@ class DispatchStation(VehicleState):
                 ChargingStation.build(self.vehicle_id, self.station_id, self.charger_id)
                 if available_chargers is not None
                 else ChargeQueueing.build(
-                    self.vehicle_id,
-                    self.station_id,
-                    self.charger_id,
-                    sim.sim_time,
+                    self.vehicle_id, self.station_id, self.charger_id, sim.sim_time,
                 )
             )
             return None, next_state

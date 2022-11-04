@@ -30,9 +30,7 @@ from nrel.hive.util import SimulationStateError, TupleOps
 from nrel.hive.util.typealiases import RequestId, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 

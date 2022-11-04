@@ -21,9 +21,7 @@ from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId
 

@@ -20,11 +20,7 @@ class LocalSimulationRunner(NamedTuple):
     """
 
     @classmethod
-    def run(
-        cls,
-        runner_payload: RunnerPayload,
-        position: int = 0,
-    ) -> RunnerPayload:
+    def run(cls, runner_payload: RunnerPayload, position: int = 0,) -> RunnerPayload:
         """
         steps through time, running a simulation, and producing a simulation result
 

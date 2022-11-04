@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, date, time
 
+
 def time_in_range(start, end, x):
     """
     Return true if x is in the range [start, end).

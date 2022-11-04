@@ -47,9 +47,7 @@ def extract_node_ids(
         return None, (src, dst)
 
 
-def reverse_link_id(
-    link_id: LinkId,
-) -> Tuple[Optional[Exception], Optional[LinkId]]:
+def reverse_link_id(link_id: LinkId,) -> Tuple[Optional[Exception], Optional[LinkId]]:
     """
     attempts to reverse a link id by swapping the node ids. can be used to look up the
     "other side of the street" on 2-way streets.

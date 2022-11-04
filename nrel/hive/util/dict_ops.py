@@ -65,10 +65,7 @@ class DictOps:
 
     @classmethod
     def add_to_collection_dict(
-        cls,
-        xs: immutables.Map[str, FrozenSet[V]],
-        collection_id: str,
-        obj_id: str,
+        cls, xs: immutables.Map[str, FrozenSet[V]], collection_id: str, obj_id: str,
     ) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
@@ -105,9 +102,7 @@ class DictOps:
 
     @classmethod
     def pop_from_stack_dict(
-        cls,
-        xs: immutables.Map[str, Tuple[V]],
-        collection_id: str,
+        cls, xs: immutables.Map[str, Tuple[V]], collection_id: str,
     ) -> Tuple[Optional[V], immutables.Map[str, Tuple[V]]]:
         """
         pops an element from the stack and returns it;
@@ -129,10 +124,7 @@ class DictOps:
 
     @classmethod
     def remove_from_collection_dict(
-        cls,
-        xs: immutables.Map[str, FrozenSet[V]],
-        collection_id: str,
-        obj_id: str,
+        cls, xs: immutables.Map[str, FrozenSet[V]], collection_id: str, obj_id: str,
     ) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
@@ -201,7 +193,5 @@ class DictOps:
         )
 
         return EntityUpdateResult(
-            entities=entities_updated,
-            locations=locations_updated,
-            search=search_updated,
+            entities=entities_updated, locations=locations_updated, search=search_updated,
         )

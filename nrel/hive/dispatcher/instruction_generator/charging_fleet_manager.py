@@ -10,16 +10,12 @@ from nrel.hive.state.vehicle_state.repositioning import Repositioning
 
 if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.dispatcher.instruction.instruction import Instruction
     from nrel.hive.config.dispatcher_config import DispatcherConfig
 
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_dispatch_to_station,
     get_nearest_valid_station_distance,
@@ -37,9 +33,7 @@ class ChargingFleetManager(InstructionGenerator):
     config: DispatcherConfig
 
     def generate_instructions(
-        self,
-        simulation_state: SimulationState,
-        environment: Environment,
+        self, simulation_state: SimulationState, environment: Environment,
     ) -> Tuple[ChargingFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
@@ -83,9 +77,7 @@ class ChargingFleetManager(InstructionGenerator):
             ) >= range_remaining_km
             return is_charge_candidate
 
-        low_soc_vehicles = simulation_state.get_vehicles(
-            filter_function=charge_candidate,
-        )
+        low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate,)
 
         # for each low_soc_vehicle that will conduct a refuel search, report the search event
         for v in low_soc_vehicles:

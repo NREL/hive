@@ -72,11 +72,7 @@ class Base(Entity):
         )
 
     @classmethod
-    def from_row(
-        cls,
-        row: Dict[str, str],
-        road_network: RoadNetwork,
-    ) -> Base:
+    def from_row(cls, row: Dict[str, str], road_network: RoadNetwork,) -> Base:
         """
         converts a csv row to a base
 

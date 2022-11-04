@@ -7,19 +7,13 @@ from pandas import DataFrame
 from tqdm import tqdm
 
 from nrel.hive import Update
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
-    ChargingFleetManager,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.reporting import reporter_ops
-from nrel.hive.reporting.handler.vehicle_charge_events_handler import (
-    VehicleChargeEventsHandler,
-)
+from nrel.hive.reporting.handler.vehicle_charge_events_handler import VehicleChargeEventsHandler
 from nrel.hive.runner import RunnerPayload
 from nrel.hive.util import SimulationStateError
 from nrel.hive.util.fp import throw_on_failure
@@ -28,8 +22,7 @@ T = TypeVar("T", bound=InstructionGenerator)
 
 
 def load_scenario(
-    scenario_file: Path,
-    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
+    scenario_file: Path, custom_instruction_generators: Optional[Tuple[T, ...]] = None,
 ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state

@@ -6,9 +6,7 @@ from typing import Tuple, NamedTuple, TYPE_CHECKING
 
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
-from nrel.hive.dispatcher.forecaster.forecaster_interface import (
-    ForecasterInterface,
-)
+from nrel.hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from nrel.hive.util.iterators import DictReaderStepper
 
 if TYPE_CHECKING:

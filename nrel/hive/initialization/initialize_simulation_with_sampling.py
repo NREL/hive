@@ -18,9 +18,7 @@ from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
-    HaversineRoadNetwork,
-)
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
@@ -112,8 +110,7 @@ def initialize_simulation_with_sampling(
     env = Environment(
         config=config,
         mechatronics=build_mechatronics_table(
-            config.input_config.mechatronics_file,
-            config.input_config.scenario_directory,
+            config.input_config.mechatronics_file, config.input_config.scenario_directory,
         ),
         chargers=build_chargers_table(config.input_config.chargers_file),
         schedules=schedules,
@@ -142,10 +139,7 @@ def initialize_simulation_with_sampling(
     return sim_w_vehicles, env
 
 
-def _build_bases(
-    bases_file: str,
-    simulation_state: SimulationState,
-) -> SimulationState:
+def _build_bases(bases_file: str, simulation_state: SimulationState,) -> SimulationState:
     """
     all your base are belong to us
 

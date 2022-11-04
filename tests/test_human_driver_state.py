@@ -57,18 +57,11 @@ class TestHumanDriverState(TestCase):
         )
         away_station = mock_station(lat=39.7664622, lon=-105.0390823, station_id="away_station")
         home_base = mock_base(
-            lat=39.7544977,
-            lon=-104.9809168,
-            base_id="home_base",
-            station_id="home_station",
+            lat=39.7544977, lon=-104.9809168, base_id="home_base", station_id="home_station",
         )
         home_station = mock_station(lat=39.7544977, lon=-104.9809168, station_id="home_station")
 
-        sim = mock_sim(
-            vehicles=(veh,),
-            bases=(home_base,),
-            stations=(home_station, away_station),
-        )
+        sim = mock_sim(vehicles=(veh,), bases=(home_base,), stations=(home_station, away_station),)
         env = mock_env(schedules=test_schedules)
         error, updated_sim = state.update(sim, env)
         if error:
@@ -97,10 +90,7 @@ class TestHumanDriverState(TestCase):
         )
         away_station = mock_station(lat=39.7664622, lon=-105.0390823, station_id="away_station")
         home_base = mock_base(
-            lat=39.7544977,
-            lon=-104.9809168,
-            base_id="home_base",
-            station_id=None,
+            lat=39.7544977, lon=-104.9809168, base_id="home_base", station_id=None,
         )
 
         sim = mock_sim(vehicles=(veh,), bases=(home_base,), stations=(away_station,))
@@ -175,8 +165,7 @@ class TestHumanDriverState(TestCase):
         veh = mock_vehicle(
             driver_state=state,
             vehicle_state=ReserveBase.build(
-                DefaultIds.mock_vehicle_id(),
-                DefaultIds.mock_base_id(),
+                DefaultIds.mock_vehicle_id(), DefaultIds.mock_base_id(),
             ),
         )
         req = mock_request_from_geoids(origin=somewhere_else(), destination=somewhere())

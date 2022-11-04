@@ -31,18 +31,14 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
         # TODO: now that we've introduced other energy types, we should return a summary of charger rate by
         #  energy time with corresponding units - ndr
         rate: float = ft.reduce(
-            lambda acc, cs: acc + cs.total_chargers * cs.charger.rate,
-            station.state.values(),
-            0.0,
+            lambda acc, cs: acc + cs.total_chargers * cs.charger.rate, station.state.values(), 0.0,
         )
 
         return {"station_id": station.id, "rate": rate}
 
     try:
         result: Tuple[immutables.Map, ...] = ft.reduce(
-            lambda acc, s: acc + (_station_energy(s),),
-            sim.stations.values(),
-            (),
+            lambda acc, s: acc + (_station_energy(s),), sim.stations.values(), (),
         )
 
         output_file = Path(env.config.scenario_output_directory).joinpath("station_capacities.csv")

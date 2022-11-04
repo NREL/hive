@@ -2,12 +2,8 @@ from pathlib import Path
 
 import yaml
 
-from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import (
-    Powertrain,
-)
-from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import (
-    TabularPowertrain,
-)
+from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
+from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 
 powertrain_models = {"tabular": TabularPowertrain}
 

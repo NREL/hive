@@ -31,6 +31,7 @@ from nrel.hive.util.validation import validate_fields
 
 log = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class Station(Entity):
     """
@@ -160,9 +161,8 @@ class Station(Entity):
 
         updated_station_state = self.state.update({charger_id: append_cs})
         updated_on_shift = self.on_shift_access_chargers.union([charger_id])
-        updated_station = replace(self, 
-            state=updated_station_state,
-            on_shift_access_chargers=updated_on_shift,
+        updated_station = replace(
+            self, state=updated_station_state, on_shift_access_chargers=updated_on_shift,
         )
         return None, updated_station
 

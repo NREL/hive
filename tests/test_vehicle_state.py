@@ -3,9 +3,7 @@ from unittest import TestCase
 
 from nrel.hive.state.entity_state import entity_state_ops
 from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
-from nrel.hive.state.vehicle_state.dispatch_pooling_trip import (
-    DispatchPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
 from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.state.vehicle_state.out_of_service import OutOfService
 from nrel.hive.resources.mock_lobster import *
@@ -33,14 +31,10 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.get_available_chargers(charger)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ChargingStation,
-            "should be in a charging state",
+            updated_vehicle.vehicle_state, ChargingStation, "should be in a charging state",
         )
         self.assertEquals(
-            available_chargers,
-            0,
-            "should have claimed the only DCFC charger_id",
+            available_chargers, 0, "should have claimed the only DCFC charger_id",
         )
 
     def test_charging_station_bad_membership(self):
@@ -75,14 +69,10 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.get_available_chargers(charger)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ChargingStation,
-            "should still be in a charging state",
+            updated_vehicle.vehicle_state, ChargingStation, "should still be in a charging state",
         )
         self.assertEquals(
-            available_chargers,
-            1,
-            "should have returned the only DCFC charger_id",
+            available_chargers, 1, "should have returned the only DCFC charger_id",
         )
 
     def test_charging_station_update(self):
@@ -131,9 +121,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_station = sim_updated.stations.get(station.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            Idle,
-            "vehicle should be in idle state",
+            updated_vehicle.vehicle_state, Idle, "vehicle should be in idle state",
         )
         self.assertEquals(
             updated_station.get_available_chargers(charger),
@@ -144,9 +132,7 @@ class TestVehicleState(TestCase):
     def test_charging_station_enter_with_no_station(self):
         vehicle = mock_vehicle(soc=0.99)
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
 
         state = ChargingStation.build(vehicle.id, DefaultIds.mock_station_id(), charger)
@@ -157,9 +143,7 @@ class TestVehicleState(TestCase):
     def test_charging_station_enter_with_no_vehicle(self):
         station = mock_station()
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            stations=(station,),
-        )
+        sim = mock_sim(stations=(station,),)
         env = mock_env()
 
         state = ChargingStation.build(
@@ -173,10 +157,7 @@ class TestVehicleState(TestCase):
         station = mock_station()
         charger = mock_dcfc_charger_id()
         vehicle = mock_vehicle(mechatronics=mock_ice())
-        sim = mock_sim(
-            stations=(station,),
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(stations=(station,), vehicles=(vehicle,),)
         env = mock_env(mechatronics={DefaultIds.mock_mechatronics_ice_id(): mock_ice()})
 
         state = ChargingStation.build(
@@ -204,12 +185,10 @@ class TestVehicleState(TestCase):
         next_entered_state = sim2.vehicles.get(vehicle.id).vehicle_state
 
         self.assertIsNone(
-            err2,
-            "two subsequent charge instructions should not produce an error",
+            err2, "two subsequent charge instructions should not produce an error",
         )
         self.assertIsNotNone(
-            sim2,
-            "two subsequent charge instructions should update the sim state",
+            sim2, "two subsequent charge instructions should update the sim state",
         )
         self.assertNotEqual(
             entered_state.instance_id,
@@ -222,14 +201,10 @@ class TestVehicleState(TestCase):
         dc_available = updated_station.get_available_chargers(mock_dcfc_charger_id())
         l2_available = updated_station.get_available_chargers(mock_l2_charger_id())
         self.assertEqual(
-            dc_available,
-            1,
-            "should have released DC charger_id on second transition",
+            dc_available, 1, "should have released DC charger_id on second transition",
         )
         self.assertEqual(
-            l2_available,
-            0,
-            "second instruction should have claimed the only L2 charger_id",
+            l2_available, 0, "second instruction should have claimed the only L2 charger_id",
         )
 
     ####################################################################################################################
@@ -253,14 +228,10 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.get_available_chargers(charger)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ChargingBase,
-            "should be in a charging state",
+            updated_vehicle.vehicle_state, ChargingBase, "should be in a charging state",
         )
         self.assertEquals(
-            available_chargers,
-            0,
-            "should have claimed the only DCFC charger_id",
+            available_chargers, 0, "should have claimed the only DCFC charger_id",
         )
 
     def test_charging_base_bad_membership(self):
@@ -285,11 +256,7 @@ class TestVehicleState(TestCase):
         base = mock_base(station_id=DefaultIds.mock_station_id())
         charger = mock_l2_charger_id()
         vehicle = mock_vehicle(mechatronics=mock_ice())
-        sim = mock_sim(
-            stations=(station,),
-            vehicles=(vehicle,),
-            bases=(base,),
-        )
+        sim = mock_sim(stations=(station,), vehicles=(vehicle,), bases=(base,),)
         env = mock_env(mechatronics={DefaultIds.mock_mechatronics_ice_id(): mock_ice()})
 
         state = ChargingBase.build(vehicle.id, base.id, charger)
@@ -318,14 +285,10 @@ class TestVehicleState(TestCase):
         updated_station = updated_sim.stations.get(station.id)
         available_chargers = updated_station.get_available_chargers(charger)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ChargingBase,
-            "should still be in a charging state",
+            updated_vehicle.vehicle_state, ChargingBase, "should still be in a charging state",
         )
         self.assertEquals(
-            available_chargers,
-            1,
-            "should have returned the only DCFC charger_id",
+            available_chargers, 1, "should have returned the only DCFC charger_id",
         )
 
     def test_charging_base_update(self):
@@ -376,24 +339,17 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_base = sim_updated.bases.get(base.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ReserveBase,
-            "vehicle should be in ReserveBase state",
+            updated_vehicle.vehicle_state, ReserveBase, "vehicle should be in ReserveBase state",
         )
         self.assertEquals(
-            updated_base.available_stalls,
-            0,
-            "should have taken the only available stall",
+            updated_base.available_stalls, 0, "should have taken the only available stall",
         )
 
     def test_charging_base_enter_with_no_base(self):
         vehicle = mock_vehicle(soc=1.0)
         station = mock_station()
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-            stations=(station,),
-        )
+        sim = mock_sim(vehicles=(vehicle,), stations=(station,),)
         env = mock_env()
 
         state = ChargingBase.build(vehicle.id, DefaultIds.mock_base_id(), charger)
@@ -454,12 +410,10 @@ class TestVehicleState(TestCase):
         err2, sim2 = entity_state_ops.transition_previous_to_next(sim1, env, state, next_state)
 
         self.assertIsNone(
-            err2,
-            "two subsequent charge instructions should not produce an error",
+            err2, "two subsequent charge instructions should not produce an error",
         )
         self.assertIsNotNone(
-            sim2,
-            "two subsequent charge instructions should update the sim state",
+            sim2, "two subsequent charge instructions should update the sim state",
         )
 
         updated_station = sim2.stations.get(station.id)
@@ -467,14 +421,10 @@ class TestVehicleState(TestCase):
         dc_available = updated_station.get_available_chargers(mock_dcfc_charger_id())
         l2_available = updated_station.get_available_chargers(mock_l2_charger_id())
         self.assertEqual(
-            dc_available,
-            1,
-            "should have released DC charger_id on second transition",
+            dc_available, 1, "should have released DC charger_id on second transition",
         )
         self.assertEqual(
-            l2_available,
-            0,
-            "second instruction should have claimed the only L2 charger_id",
+            l2_available, 0, "second instruction should have claimed the only L2 charger_id",
         )
 
     ####################################################################################################################
@@ -495,9 +445,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            DispatchBase,
-            "should be in a dispatch to base state",
+            updated_vehicle.vehicle_state, DispatchBase, "should be in a dispatch to base state",
         )
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
@@ -584,21 +532,15 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         updated_base = sim_updated.bases.get(base.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ReserveBase,
-            "vehicle should be in ReserveBase state",
+            updated_vehicle.vehicle_state, ReserveBase, "vehicle should be in ReserveBase state",
         )
         self.assertEquals(
-            updated_base.available_stalls,
-            0,
-            "should have taken the only available stall",
+            updated_base.available_stalls, 0, "should have taken the only available stall",
         )
 
     def test_dispatch_base_enter_no_base(self):
         vehicle = mock_vehicle()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = ()
 
@@ -608,9 +550,7 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_base_enter_no_vehicle(self):
         base = mock_base()
-        sim = mock_sim(
-            bases=(base,),
-        )
+        sim = mock_sim(bases=(base,),)
         env = mock_env()
         route = ()
 
@@ -623,10 +563,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         base = mock_base()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-            bases=(base,),
-        )
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,),)
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, base.geoid)
 
@@ -640,10 +577,7 @@ class TestVehicleState(TestCase):
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         base = mock_base()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-            bases=(base,),
-        )
+        sim = mock_sim(vehicles=(vehicle,), bases=(base,),)
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, omf_brewing)
 
@@ -683,10 +617,7 @@ class TestVehicleState(TestCase):
         station = mock_station(membership=Membership.single_membership("lyft"))
         charger = mock_dcfc_charger_id()
 
-        sim = mock_sim(
-            vehicles=(vehicle,),
-            stations=(station,),
-        )
+        sim = mock_sim(vehicles=(vehicle,), stations=(station,),)
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, station.geoid)
 
@@ -776,10 +707,7 @@ class TestVehicleState(TestCase):
         charger = mock_dcfc_charger_id()
         route = ()  # empty route should trigger a default transition
         state = DispatchStation.build(
-            DefaultIds.mock_vehicle_id(),
-            DefaultIds.mock_station_id(),
-            route,
-            charger,
+            DefaultIds.mock_vehicle_id(), DefaultIds.mock_station_id(), route, charger,
         )
         vehicle = mock_vehicle(soc=initial_soc, vehicle_state=state)
         station = mock_station()
@@ -812,9 +740,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_station_enter_no_station(self):
         vehicle = mock_vehicle()
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = ()
 
@@ -825,9 +751,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_station_enter_no_vehicle(self):
         station = mock_station()
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            stations=(station,),
-        )
+        sim = mock_sim(stations=(station,),)
         env = mock_env()
         route = ()
 
@@ -840,10 +764,7 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle()
         station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-            stations=(station,),
-        )
+        sim = mock_sim(vehicles=(vehicle,), stations=(station,),)
         env = mock_env()
         route = mock_route_from_geoids(omf_brewing, station.geoid)
 
@@ -858,10 +779,7 @@ class TestVehicleState(TestCase):
         vehicle = mock_vehicle()
         station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-            stations=(station,),
-        )
+        sim = mock_sim(vehicles=(vehicle,), stations=(station,),)
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, outer_range_brewing)
 
@@ -892,9 +810,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         updated_request = updated_sim.requests.get(request.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            DispatchTrip,
-            "should be in a dispatch to request state",
+            updated_vehicle.vehicle_state, DispatchTrip, "should be in a dispatch to request state",
         )
         self.assertEquals(
             updated_request.dispatched_vehicle,
@@ -978,10 +894,7 @@ class TestVehicleState(TestCase):
     def test_dispatch_trip_update_terminal(self):
         vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
         request = replace(
-            mock_request_from_geoids(
-                origin="8f268cdac30e2d3",
-                destination="8f268cdac70e2d3",
-            ),
+            mock_request_from_geoids(origin="8f268cdac30e2d3", destination="8f268cdac70e2d3",),
             dispatched_vehicle=vehicle.id,
             dispatched_vehicle_time=mock_sim().sim_time,
         )
@@ -1004,13 +917,10 @@ class TestVehicleState(TestCase):
             "vehicle should be in ServicingTrip state",
         )
         self.assertEquals(
-            request,
-            updated_vehicle.vehicle_state.request,
-            "passengers not picked up",
+            request, updated_vehicle.vehicle_state.request, "passengers not picked up",
         )
         self.assertIsNone(
-            updated_request,
-            "request should no longer exist as it has been picked up",
+            updated_request, "request should no longer exist as it has been picked up",
         )
 
     def test_dispatch_trip_enter_no_request(self):
@@ -1025,8 +935,7 @@ class TestVehicleState(TestCase):
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNone(
-            updated_sim,
-            "no request at location should result in no update to sim",
+            updated_sim, "no request at location should result in no update to sim",
         )
 
     def test_dispatch_trip_enter_no_vehicle(self):
@@ -1087,9 +996,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            Idle,
-            "should be in an idle to request state",
+            updated_vehicle.vehicle_state, Idle, "should be in an idle to request state",
         )
 
     def test_idle_exit(self):
@@ -1129,9 +1036,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            Idle,
-            "should still be in an Idle state",
+            updated_vehicle.vehicle_state, Idle, "should still be in an Idle state",
         )
         self.assertLess(
             updated_vehicle.energy[EnergyType.ELECTRIC],
@@ -1168,9 +1073,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         is_empty = env.mechatronics.get(updated_vehicle.mechatronics_id).is_empty(updated_vehicle)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            OutOfService,
-            "vehicle should be OutOfService",
+            updated_vehicle.vehicle_state, OutOfService, "vehicle should be OutOfService",
         )
         self.assertTrue(is_empty, "vehicle should have no energy")
 
@@ -1191,9 +1094,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            OutOfService,
-            "should be in an OutOfService state",
+            updated_vehicle.vehicle_state, OutOfService, "should be in an OutOfService state",
         )
 
     def test_out_of_service_exit(self):
@@ -1229,9 +1130,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            OutOfService,
-            "should still be in an OutOfService state",
+            updated_vehicle.vehicle_state, OutOfService, "should still be in an OutOfService state",
         )
         self.assertEqual(
             updated_vehicle.energy[EnergyType.ELECTRIC],
@@ -1252,9 +1151,7 @@ class TestVehicleState(TestCase):
 
     def test_repositioning_enter(self):
         vehicle = mock_vehicle()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, vehicle.geoid)
 
@@ -1265,17 +1162,13 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            Repositioning,
-            "should be in a repositioning state",
+            updated_vehicle.vehicle_state, Repositioning, "should be in a repositioning state",
         )
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_repositioning_exit(self):
         vehicle = mock_vehicle()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = mock_route_from_geoids(vehicle.geoid, vehicle.geoid)
 
@@ -1293,9 +1186,7 @@ class TestVehicleState(TestCase):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
         omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = mock_route_from_geoids(near, omf_brewing)
 
@@ -1327,9 +1218,7 @@ class TestVehicleState(TestCase):
 
     def test_repositioning_update_terminal(self):
         vehicle = mock_vehicle()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = ()
 
@@ -1343,9 +1232,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            Idle,
-            "vehicle should be in Idle state",
+            updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state",
         )
 
     def test_repositioning_enter_no_vehicle(self):
@@ -1391,14 +1278,10 @@ class TestVehicleState(TestCase):
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         updated_base = updated_sim.bases.get(base.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ReserveBase,
-            "should be in an ReserveBase state",
+            updated_vehicle.vehicle_state, ReserveBase, "should be in an ReserveBase state",
         )
         self.assertEqual(
-            updated_base.available_stalls,
-            0,
-            "only stall should now be occupied",
+            updated_base.available_stalls, 0, "only stall should now be occupied",
         )
 
     def test_reserve_base_bad_membership(self):
@@ -1424,9 +1307,7 @@ class TestVehicleState(TestCase):
         entered_base = entered_sim.bases.get(base.id)
         self.assertIsNone(enter_error, "test precondition (enter works correctly) not met")
         self.assertEqual(
-            entered_base.available_stalls,
-            0,
-            "test precondition (stall in use) not met",
+            entered_base.available_stalls, 0, "test precondition (stall in use) not met",
         )
 
         # begin test
@@ -1453,9 +1334,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertEqual(vehicle.geoid, updated_vehicle.geoid, "should not have moved")
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ReserveBase,
-            "should still be in a ReserveBase state",
+            updated_vehicle.vehicle_state, ReserveBase, "should still be in a ReserveBase state",
         )
         self.assertEqual(
             updated_vehicle.energy[EnergyType.ELECTRIC],
@@ -1470,9 +1349,7 @@ class TestVehicleState(TestCase):
 
     def test_reserve_base_enter_no_base(self):
         vehicle = mock_vehicle()
-        sim = mock_sim(
-            vehicles=(vehicle,),
-        )
+        sim = mock_sim(vehicles=(vehicle,),)
         env = mock_env()
         route = ()
 
@@ -1482,9 +1359,7 @@ class TestVehicleState(TestCase):
 
     def test_reserve_base_enter_no_vehicle(self):
         base = mock_base()
-        sim = mock_sim(
-            bases=(base,),
-        )
+        sim = mock_sim(bases=(base,),)
         env = mock_env()
         route = ()
 
@@ -1501,12 +1376,10 @@ class TestVehicleState(TestCase):
         state = ReserveBase.build(vehicle.id, base.id)
         enter_error, entered_sim = state.enter(sim, env)
         self.assertIsNone(
-            enter_error,
-            "no stall failure should not result in an exception (fail silently)",
+            enter_error, "no stall failure should not result in an exception (fail silently)",
         )
         self.assertIsNone(
-            entered_sim,
-            "no stall failure should result in no SimulationState result",
+            entered_sim, "no stall failure should result in no SimulationState result",
         )
 
     # def test_reserve_base_update_terminal(self):  # there is no terminal state for OutOfService
@@ -1532,9 +1405,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = updated_sim.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ServicingTrip,
-            "should be in a ServicingTrip state",
+            updated_vehicle.vehicle_state, ServicingTrip, "should be in a ServicingTrip state",
         )
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
@@ -1596,9 +1467,7 @@ class TestVehicleState(TestCase):
         )  # errors due to passengers not being at destination
         self.assertIsNone(exited_sim, "should not have allowed exit of ServicingTrip")
 
-    def test_servicing_trip_exit_when_still_has_passengers_but_out_of_fuel(
-        self,
-    ):
+    def test_servicing_trip_exit_when_still_has_passengers_but_out_of_fuel(self,):
         prev_state = DispatchTrip.build(
             DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), ()
         )
@@ -1622,9 +1491,7 @@ class TestVehicleState(TestCase):
             error, "should have no errors"
         )  # errors due to passengers not being at destination
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            OutOfService,
-            "vehicle should be out of service",
+            updated_vehicle.vehicle_state, OutOfService, "vehicle should be out of service",
         )
         # self.assertIsNotNone(updated_sim,
         #                      "should have allowed exit of ServicingTrip because out of fuel allows transition to OutOfService")
@@ -1652,9 +1519,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertNotEqual(vehicle.geoid, updated_vehicle.geoid, "should have moved")
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            ServicingTrip,
-            "should still be in a servicing state",
+            updated_vehicle.vehicle_state, ServicingTrip, "should still be in a servicing state",
         )
         self.assertLess(
             updated_vehicle.energy[EnergyType.ELECTRIC],
@@ -1662,9 +1527,7 @@ class TestVehicleState(TestCase):
             "should have less energy",
         )
         self.assertEqual(
-            updated_vehicle.vehicle_state.request,
-            request,
-            "should have passengers",
+            updated_vehicle.vehicle_state.request, request, "should have passengers",
         )
         self.assertEqual(
             entered_state.instance_id,
@@ -1691,9 +1554,7 @@ class TestVehicleState(TestCase):
 
         updated_vehicle = sim_updated.vehicles.get(vehicle.id)
         self.assertIsInstance(
-            updated_vehicle.vehicle_state,
-            Idle,
-            "vehicle should be in Idle state",
+            updated_vehicle.vehicle_state, Idle, "vehicle should be in Idle state",
         )
 
     def test_servicing_trip_enter_no_request(self):
@@ -1773,8 +1634,7 @@ class TestVehicleState(TestCase):
         s0 = mock_station()
         err, station = s0.checkout_charger(mock_dcfc_charger_id())
         self.assertIsNone(
-            err,
-            "test invariant failed (station should have charger checked out)",
+            err, "test invariant failed (station should have charger checked out)",
         )
         sim = mock_sim(vehicles=(vehicle,), stations=(station,))
         env = mock_env()
@@ -1790,9 +1650,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(error, "should have no errors")
         self.assertIsNotNone(updated_sim, "the sim should have been updated")
         self.assertEqual(
-            enqueued_count,
-            1,
-            "the station should also know 1 new vehicle is enqueued",
+            enqueued_count, 1, "the station should also know 1 new vehicle is enqueued",
         )
 
     def test_charge_queueing_exit(self):
@@ -1800,8 +1658,7 @@ class TestVehicleState(TestCase):
         s0 = mock_station()
         err, station = s0.checkout_charger(mock_dcfc_charger_id())
         self.assertIsNone(
-            err,
-            "test invariant failed (station should have charger checked out)",
+            err, "test invariant failed (station should have charger checked out)",
         )
         sim0 = mock_sim(vehicles=(vehicle,), stations=(station,))
         env = mock_env()
@@ -1820,22 +1677,14 @@ class TestVehicleState(TestCase):
         self.assertIsNone(err2, "there should be no error")
         self.assertIsNotNone(sim2, "exit should have succeeded")
         self.assertEqual(
-            enqueued_count,
-            0,
-            "the station should also know the vehicle was dequeued",
+            enqueued_count, 0, "the station should also know the vehicle was dequeued",
         )
 
     def test_charge_queueing_update(self):
         vehicle_charging = mock_vehicle_from_geoid(vehicle_id="charging")
         vehicle_queueing = mock_vehicle_from_geoid(vehicle_id="queueing")
         station = mock_station_from_geoid()
-        sim0 = mock_sim(
-            vehicles=(
-                vehicle_charging,
-                vehicle_queueing,
-            ),
-            stations=(station,),
-        )
+        sim0 = mock_sim(vehicles=(vehicle_charging, vehicle_queueing,), stations=(station,),)
         env = mock_env()
 
         charging_state = ChargingStation.build(
@@ -1875,13 +1724,7 @@ class TestVehicleState(TestCase):
         v_queueing = mock_vehicle_from_geoid(vehicle_id="queueing")
         charger_id = mock_dcfc_charger_id()
         station = mock_station(chargers={charger_id: 1})
-        sim0 = mock_sim(
-            vehicles=(
-                v_charging,
-                v_queueing,
-            ),
-            stations=(station,),
-        )
+        sim0 = mock_sim(vehicles=(v_charging, v_queueing,), stations=(station,),)
         env = mock_env()
 
         charging_state = ChargingStation.build(v_charging.id, station.id, charger_id)
@@ -1994,14 +1837,10 @@ class TestVehicleState(TestCase):
             "should be in a dispatch to request state",
         )
         self.assertEquals(
-            updated_r1.dispatched_vehicle,
-            vehicle.id,
-            "r1 should be assigned this vehicle",
+            updated_r1.dispatched_vehicle, vehicle.id, "r1 should be assigned this vehicle",
         )
         self.assertEquals(
-            updated_r2.dispatched_vehicle,
-            vehicle.id,
-            "r2 should be assigned this vehicle",
+            updated_r2.dispatched_vehicle, vehicle.id, "r2 should be assigned this vehicle",
         )
         self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
@@ -2115,12 +1954,10 @@ class TestVehicleState(TestCase):
             "vehicle should be in ServicingPoolingTrip state",
         )
         self.assertIsNone(
-            updated_request,
-            "request should no longer exist as it has been picked up",
+            updated_request, "request should no longer exist as it has been picked up",
         )
         self.assertIsNotNone(
-            boarded_request,
-            f"request {request.id} should have boarded the vehicle",
+            boarded_request, f"request {request.id} should have boarded the vehicle",
         )
         self.assertEquals(
             boarded_request.id,
@@ -2140,8 +1977,7 @@ class TestVehicleState(TestCase):
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNone(
-            updated_sim,
-            "no request at location should result in no update to sim",
+            updated_sim, "no request at location should result in no update to sim",
         )
 
     def test_dispatch_pooling_trip_enter_no_vehicle(self):
@@ -2210,12 +2046,7 @@ class TestVehicleState(TestCase):
         routes = (route,)
 
         next_state = ServicingPoolingTrip.build(
-            vehicle.id,
-            boarded_trip_plan,
-            boarded_reqs,
-            departure_times,
-            routes,
-            1,
+            vehicle.id, boarded_trip_plan, boarded_reqs, departure_times, routes, 1,
         )
         error, updated_sim = next_state.enter(disp_sim, env)
 
@@ -2267,9 +2098,7 @@ class TestVehicleState(TestCase):
         updated_vehicle = sim5.vehicles.get(vehicle.id)
         self.assertIsInstance(updated_vehicle.vehicle_state, Idle, "should be in an Idle state")
         self.assertEqual(
-            len(sim5.requests),
-            0,
-            "request should have been picked up and dropped off fully",
+            len(sim5.requests), 0, "request should have been picked up and dropped off fully",
         )
 
     def test_servicing_pooling_trip_update_picks_up_second_request(self):
@@ -2317,19 +2146,13 @@ class TestVehicleState(TestCase):
         veh_pooling = sim5.vehicles.get(v0.id)
         state_pooling = veh_pooling.vehicle_state
         self.assertEqual(
-            veh_pooling.geoid,
-            r1_src,
-            "should be at the pickup location for r1",
+            veh_pooling.geoid, r1_src, "should be at the pickup location for r1",
         )
         self.assertEqual(
-            len(state_pooling.boarded_requests),
-            2,
-            "should have 2 requests boarded",
+            len(state_pooling.boarded_requests), 2, "should have 2 requests boarded",
         )
         self.assertEqual(
-            state_pooling.trip_plan,
-            trip_plan[2:4],
-            "should have the correct remaining plan",
+            state_pooling.trip_plan, trip_plan[2:4], "should have the correct remaining plan",
         )
         # todo: check state of remaining route, should be r1_src -> r0_dst, r0_dst -> r1_dst
 
@@ -2383,23 +2206,17 @@ class TestVehicleState(TestCase):
         veh_pooling = sim6.vehicles.get(v0.id)
         state_pooling = veh_pooling.vehicle_state
         self.assertEqual(
-            veh_pooling.geoid,
-            r0_dst,
-            "should be at the dropoff location for r0",
+            veh_pooling.geoid, r0_dst, "should be at the dropoff location for r0",
         )
         self.assertEqual(
-            len(state_pooling.boarded_requests),
-            1,
-            "should have 1 requests still boarded",
+            len(state_pooling.boarded_requests), 1, "should have 1 requests still boarded",
         )
         self.assertIsNone(
             sim6.requests.get("r0"),
             "request 0 should have been dropped off and no longer be in the simulation",
         )
         self.assertEqual(
-            state_pooling.trip_plan,
-            trip_plan[3:4],
-            "should have the correct remaining plan",
+            state_pooling.trip_plan, trip_plan[3:4], "should have the correct remaining plan",
         )
         # todo: check state of remaining route, should be r0_dst -> r1_dst
 
@@ -2452,9 +2269,7 @@ class TestVehicleState(TestCase):
         """
         pass
 
-    def test_servicing_pooling_trip_exit_when_still_has_passengers_but_out_of_fuel(
-        self,
-    ):
+    def test_servicing_pooling_trip_exit_when_still_has_passengers_but_out_of_fuel(self,):
         """
         see above
         """
