@@ -6,7 +6,7 @@ from returns.unsafe import unsafe_perform_io
 import functools as ft
 
 
-def throw_on_failure(io_result: IOResult):
+def throw_on_failure(io_result):
     """
     helper that throws an io result if it contains a Failure
 

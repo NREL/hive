@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.model.roadnetwork.route import (
@@ -17,7 +17,6 @@ from nrel.hive.state.vehicle_state.vehicle_state import (
     VehicleState,
     VehicleStateInstanceId,
 )
-from nrel.hive.state.vehicle_state.vehicle_state_ops import move
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import StationId, VehicleId, ChargerId

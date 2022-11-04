@@ -65,6 +65,9 @@ def initialize_simulation(
             geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution
         )
     elif config.network.network_type == "osm_network":
+        if config.input_config.road_network_file is None:
+            raise IOError("Must supply a road network file when using the osm_network")
+
         road_network = OSMRoadNetwork(
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,

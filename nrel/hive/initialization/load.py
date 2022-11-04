@@ -33,11 +33,12 @@ def load_simulation(
     with scenario_file_path.open("r") as f:
         config_builder = yaml.safe_load(f)
 
-    try:
-        config = HiveConfig.build(scenario_file_path, config_builder)
-    except Exception as e:
+    config_or_error = HiveConfig.build(scenario_file_path, config_builder)
+    if isinstance(config_or_error, Exception):
         run_log.exception("attempted to load scenario config file but failed")
-        raise e
+        raise config_or_error
+    else:
+        config: HiveConfig = config_or_error
 
     if config.global_config.write_outputs:
         config.scenario_output_directory.mkdir()

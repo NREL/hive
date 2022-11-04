@@ -7,10 +7,10 @@ import logging
 
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import RequestId
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ def trip_plan_all_requests_allow_pooling(
 
     req_ids, _ = frozenset(zip(*trip_plan))
     req_ids_unique = frozenset(req_ids)
-    initial_errors = ((), ())
+    initial_errors: Tuple[Tuple[str, ...], Tuple[str, ...]] = ((), ())
     sim_error_req_ids, pool_error_req_ids = ft.reduce(_test_req, req_ids_unique, initial_errors)
     if len(sim_error_req_ids) > 0 and len(pool_error_req_ids) > 0:
         msg = f"reqs not in sim: {sim_error_req_ids}; reqs which don't allow pooling: {pool_error_req_ids}"

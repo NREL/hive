@@ -8,7 +8,7 @@ from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
-from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.util import (
     VehicleId,
     RequestId,
@@ -174,7 +174,7 @@ def begin_or_replan_dispatch_pooling_state(
 
             # todo: this should become a ServicingPoolingTrip instead
             #  - maybe we need a TripPhase.REPLANNING for the leg that is the interruption?
-            if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+            if isinstance(vehicle_state, ServicingPoolingTrip):
                 # already servicing pooling - copy over passenger state
                 next_state = DispatchPoolingTrip.build(
                     vehicle_id,

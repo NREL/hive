@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 import immutables
@@ -15,11 +15,9 @@ from nrel.hive.model.roadnetwork.route import (
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.runner.environment import Environment
-from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state import (
     vehicle_state_ops,
     dispatch_ops,
-    servicing_ops,
 )
 from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.state.vehicle_state.vehicle_state import (
@@ -102,15 +100,20 @@ class DispatchPoolingTrip(VehicleState):
         else:
             req_ids, _ = tuple(zip(*self.trip_plan))
             vehicle = sim.vehicles.get(self.vehicle_id)
+            if vehicle is None:
+                return (
+                    SimulationStateError(f"vehicle {self.vehicle_id} missing from simulation"),
+                    None,
+                )
             reqs_exist_and_match_membership = dispatch_ops.requests_exist_and_match_membership(
                 sim, vehicle, req_ids
             )
             first_req_id, first_phase = first_stop
             first_req = sim.requests.get(first_req_id)
-            is_valid = (
-                route_cooresponds_with_entities(self.route, vehicle.position, first_req.position)
-                if vehicle and first_req
-                else False
+            if first_req is None:
+                return None, None
+            is_valid = route_cooresponds_with_entities(
+                self.route, vehicle.position, first_req.position
             )
 
             context = f"vehicle {self.vehicle_id} entering dispatch pooling state"
@@ -124,15 +127,17 @@ class DispatchPoolingTrip(VehicleState):
                 log.debug(f"bad route to connect vehicle {vehicle.id} to request {first_req.id}")
                 return None, None
             else:
-                error, updated_sim = dispatch_ops.modify_vehicle_assignment(
+                veh_mod_error, updated_sim = dispatch_ops.modify_vehicle_assignment(
                     sim, self.vehicle_id, req_ids
                 )
-                if error:
+                if veh_mod_error:
                     response = SimulationStateError(
                         f"failure during DispatchPoolingTrip.enter for vehicle {self.vehicle_id}"
                     )
-                    response.__cause__ = error
+                    response.__cause__ = veh_mod_error
                     return response, None
+                elif updated_sim is None:
+                    return Exception("sim should not be none when no error exists"), None
                 else:
                     result = VehicleState.apply_new_vehicle_state(
                         updated_sim, self.vehicle_id, self

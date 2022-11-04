@@ -103,6 +103,8 @@ class DispatchTrip(VehicleState):
                 )
                 response.__cause__ = error
                 return response, None
+            elif updated_sim is None:
+                return Exception("simulation state should note be none if no error"), None
             else:
                 result = VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
                 return result
@@ -148,15 +150,20 @@ class DispatchTrip(VehicleState):
         :return: an exception due to failure or the next_state after finishing a task
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        if vehicle is None:
+            return (
+                SimulationStateError(f"vehicle {self.vehicle_id} does not exist in sim state"),
+                None,
+            )
         request = sim.requests.get(self.request_id)
-        if request and request.geoid != vehicle.geoid:
+        if request is not None and request.geoid != vehicle.geoid:
             locations = f"{request.geoid} != {vehicle.geoid}"
             message = f"vehicle {self.vehicle_id} ended dispatch trip to request {self.request_id} but locations do not match: {locations}. sim_time: {sim.sim_time}"
             return SimulationStateError(message), None
         elif not request:
             # request already got picked up or was cancelled; go an Idle state
-            next_state = Idle.build(self.vehicle_id)
-            return None, next_state
+            idle_next_state = Idle.build(self.vehicle_id)
+            return None, idle_next_state
         else:
             # request exists: pick up the trip and enter a ServicingTrip state
             route = sim.road_network.route(request.position, request.destination_position)
@@ -168,12 +175,12 @@ class DispatchTrip(VehicleState):
 
             # create the state (pooling, or, standard servicing trip, depending on the sitch)
             pooling_trip = vehicle.driver_state.allows_pooling and request.allows_pooling
-            next_state = (
+            pooling_next_state = (
                 ServicingPoolingTrip.build(
                     vehicle_id=vehicle.id,
                     trip_plan=trip_plan,
                     boarded_requests=immutables.Map({request.id: request}),
-                    departure_times=immutables.Map({request.id, departure_time}),
+                    departure_times=immutables.Map({request.id: departure_time}),
                     routes=(route,),
                     num_passengers=len(request.passengers),
                 )
@@ -185,7 +192,7 @@ class DispatchTrip(VehicleState):
                     route=route,
                 )
             )
-            return None, next_state
+            return None, pooling_next_state
 
     def _perform_update(
         self, sim: SimulationState, env: Environment

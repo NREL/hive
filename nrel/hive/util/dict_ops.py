@@ -5,8 +5,10 @@ from typing import NamedTuple, Tuple, Optional, TypeVar, Dict, FrozenSet, TYPE_C
 import h3
 import immutables
 
+
 if TYPE_CHECKING:
-    from nrel.hive.util.typealiases import GeoId
+    from nrel.hive.util.typealiases import EntityId, GeoId
+    from nrel.hive.model.entity import Entity
 
 
 class EntityUpdateResult(NamedTuple):
@@ -156,10 +158,10 @@ class DictOps:
     @classmethod
     def update_entity_dictionaries(
         cls,
-        updated_entity: V,
-        entities: immutables.Map[K, Tuple[V, ...]],
-        locations: immutables.Map[GeoId, Tuple[K, ...]],
-        search: immutables.Map[GeoId, Tuple[K, ...]],
+        updated_entity: Entity,
+        entities: immutables.Map[EntityId, Tuple[Entity, ...]],
+        locations: immutables.Map[GeoId, Tuple[Entity, ...]],
+        search: immutables.Map[GeoId, Tuple[Entity, ...]],
         sim_h3_search_resolution: int,
     ) -> EntityUpdateResult:
         """

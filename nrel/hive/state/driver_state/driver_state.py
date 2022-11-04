@@ -43,6 +43,12 @@ class DriverState(ABC):
         pass
 
     @abstractmethod
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        pass
+
+    @abstractmethod
     def generate_instruction(
         self,
         sim: SimulationState,

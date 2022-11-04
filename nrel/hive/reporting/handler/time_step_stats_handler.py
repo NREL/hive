@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from pandas import DataFrame
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, FrozenSet, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional
 
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
@@ -29,7 +29,7 @@ class TimeStepStatsHandler(Handler):
         self,
         config: HiveConfig,
         scenario_output_directory: Path,
-        fleet_ids: FrozenSet[MembershipId],
+        fleet_ids: FrozenSet[Optional[MembershipId]],
         file_name: Optional[str] = "time_step_stats",
     ):
         self.file_name = file_name
@@ -53,10 +53,12 @@ class TimeStepStatsHandler(Handler):
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
                 "fleet_time_step_stats/"
             )
-            self.fleets_data = {}
+            self.fleets_data: Dict[str, Dict[str, Any]] = {}
             for fleet_id in fleet_ids:
-                self.fleets_data[fleet_id] = []
-            self.fleets_data["none"] = []
+                if fleet_id is None:
+                    self.fleets_data["none"] = []
+                else:
+                    self.fleets_data[fleet_id] = []
         else:
             self.log_fleet_time_step_stats = False
 

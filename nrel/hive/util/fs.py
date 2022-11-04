@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import pkg_resources
 import yaml
@@ -108,7 +108,7 @@ def construct_asset_path(
 
 
 def construct_scenario_asset_path(
-    file: str, scenario_directory: str, default_directory_name: str
+    file: Union[str, Path], scenario_directory: Union[str, Path], default_directory_name: str
 ) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both

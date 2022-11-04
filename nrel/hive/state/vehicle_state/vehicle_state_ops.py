@@ -12,7 +12,6 @@ from nrel.hive.reporting.vehicle_event_ops import (
 )
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.out_of_service import OutOfService
-from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import StationId, ChargerId
 from nrel.hive.util.typealiases import VehicleId

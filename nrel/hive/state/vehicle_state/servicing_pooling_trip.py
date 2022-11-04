@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 import logging
-from typing import NamedTuple, Tuple, TYPE_CHECKING, Optional
+from typing import Tuple, TYPE_CHECKING, Optional
 from uuid import uuid4
 
 import immutables
@@ -16,9 +16,7 @@ from nrel.hive.state.vehicle_state import servicing_ops
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.servicing_ops import (
     get_active_pooling_trip,
-    pick_up_trip,
     update_active_pooling_trip,
-    ActivePoolingTrip,
 )
 from nrel.hive.state.vehicle_state.vehicle_state import (
     VehicleState,
@@ -137,11 +135,13 @@ class ServicingPoolingTrip(VehicleState):
                 sim, env, self.vehicle_id, first_req_id
             )
             if pickup_error:
-                result = SimulationStateError(
+                pool_pickup_error = SimulationStateError(
                     f"failed to pick up first trip in ServicingPoolingTrip {self}"
                 )
-                result.__cause__ = pickup_error
-                return result, None
+                pool_pickup_error.__cause__ = pickup_error
+                return pool_pickup_error, None
+            elif pickup_sim is None:
+                return None, None
             else:
                 # enter ServicingPoolingTrip state with first request boarded
                 vehicle_state_with_first_trip = replace(
@@ -234,6 +234,8 @@ class ServicingPoolingTrip(VehicleState):
                 )
             elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
                 return None, move_sim
+            elif not move_sim:
+                return None, None
             else:
                 # update the state of the pooling trip
                 result = update_active_pooling_trip(move_sim, env, self)

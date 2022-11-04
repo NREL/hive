@@ -106,6 +106,8 @@ class ChargeQueueing(VehicleState):
                     response.__cause__ = err2
                     return response, None
                 else:
+                    if updated_sim is None:
+                        return Exception("sim was none when error was not none"), None
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
     def update(

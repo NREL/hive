@@ -124,6 +124,8 @@ class ChargingStation(VehicleState):
                     )
                     response.__cause__ = error
                     return response, None
+                elif updated_sim is None:
+                    return None, None
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
@@ -181,9 +183,13 @@ class ChargingStation(VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not vehicle:
+            log.error(f"could not find vehicle {self.vehicle_id} in sim state")
             return False
         else:
             mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            if mechatronics is None:
+                log.error(f"could not find mechatronics {vehicle.mechatronics_id} in environemnt")
+                return False
             return mechatronics.is_full(vehicle)
 
     def _default_terminal_state(

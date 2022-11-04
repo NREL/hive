@@ -222,32 +222,35 @@ def instruct_vehicles_to_dispatch_to_station(
             # this could be removed if our nearest entity search also returned the best charger id
             # these both could return "None" but that shouldn't be possible if we found a nearest station
             if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
-                result = assignment_ops.nearest_shortest_queue_ranking(
+                queue_result = assignment_ops.nearest_shortest_queue_ranking(
                     veh, nearest_station, environment
                 )
-                if result is None:
+                if queue_result is None:
                     continue
                 else:
                     (
                         best_charger_id,
                         best_charger_rank,
-                    ) = result
+                    ) = queue_result
 
             else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
-                result = assignment_ops.shortest_time_to_charge_ranking(
+                time_result = assignment_ops.shortest_time_to_charge_ranking(
                     vehicle=veh,
                     station=nearest_station,
                     sim=simulation_state,
                     env=environment,
                     target_soc=target_soc,
                 )
-                if result is None:
+                if time_result is None:
                     continue
                 else:
                     (
                         best_charger_id,
                         best_charger_rank,
-                    ) = result
+                    ) = time_result
+
+            if best_charger_id is None:
+                continue
 
             instruction = DispatchStationInstruction(
                 vehicle_id=veh.id,

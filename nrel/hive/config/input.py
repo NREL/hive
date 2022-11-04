@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from pathlib import Path
-from typing import NamedTuple, Tuple, Dict, Optional
+from typing import NamedTuple, Tuple, Dict, Optional, Union
 
 from nrel.hive.config.config_builder import ConfigBuilder
 from nrel.hive.util import fs
@@ -37,7 +37,9 @@ class Input(NamedTuple):
         return "vehicles_file", "requests_file", "stations_file", "bases_file"
 
     @classmethod
-    def build(cls, config: Dict, scenario_file_path: Path, cache: Optional[Dict]) -> Input:
+    def build(
+        cls, config: Dict, scenario_file_path: Path, cache: Optional[Dict]
+    ) -> Union[Input, Exception]:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),

@@ -3,11 +3,10 @@ from dataclasses import dataclass
 
 from uuid import UUID
 
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod, ABC
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.state.entity_state import entity_state_ops
-from nrel.hive.state.entity_state.entity_state import EntityState
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError, StateTransitionError
@@ -26,7 +25,7 @@ class Mixin:
     instance_id: VehicleStateInstanceId
 
 
-class VehicleStateABC(EntityState):
+class VehicleStateABC(ABC):
     """
     a state representation along with methods for state transitions and discrete time step updates
 
@@ -165,6 +164,51 @@ class VehicleStateABC(EntityState):
         :param sim: the simulation state
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
+        """
+        pass
+
+    @abstractmethod
+    def update(
+        self,
+        sim: SimulationState,
+        env: Environment,
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        """
+        apply any effects due to an entity being advanced one discrete time unit in this EntityState
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or an optional updated simulation
+        """
+        pass
+
+    @abstractmethod
+    def enter(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        """
+        apply any effects due to an entity transitioning into this state
+
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or an optional updated simulation, or (None, None) if invalid
+        """
+        pass
+
+    @abstractmethod
+    def exit(
+        self,
+        next_state: VehicleState,
+        sim: SimulationState,
+        env: Environment,
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
+        """
+        apply any effects due to an entity transitioning out of this state
+
+        :param next_state the EntityState to transition to
+        :param sim: the simulation state
+        :param env: the simulation environment
+        :return: an exception due to failure or an optional updated simulation, or (None, None) if invalid
         """
         pass
 
