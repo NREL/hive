@@ -118,11 +118,13 @@ class Dispatcher(InstructionGenerator):
             fleet_ids = environment.fleet_ids
         else:
             fleet_ids = frozenset([None])
+        
+        initial_instructions: Tuple[DispatchTripInstruction, ...] = tuple()
 
         all_instructions = ft.reduce(
             _solve_assignment,
             fleet_ids,
-            (),
+            initial_instructions,
         )
 
         return self, all_instructions

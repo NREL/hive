@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from typing import Optional, NamedTuple, Dict, TYPE_CHECKING
+from dataclasses import dataclass, replace
 
 import h3
 
+from nrel.hive.model.entity import Entity
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -13,7 +15,8 @@ if TYPE_CHECKING:
     from nrel.hive.util.typealiases import *
 
 
-class Base(NamedTuple):
+@dataclass(frozen=True)
+class Base(Entity):
     """
     Represents a base within the simulation.
 
@@ -36,11 +39,11 @@ class Base(NamedTuple):
 
     id: BaseId
     position: EntityPosition
+    membership: Membership
+
     total_stalls: int
     available_stalls: int
     station_id: Optional[StationId]
-
-    membership: Membership = Membership
 
     @property
     def geoid(self):
@@ -58,7 +61,15 @@ class Base(NamedTuple):
     ):
 
         position = road_network.position_from_geoid(geoid)
-        return Base(id, position, stall_count, stall_count, station_id, membership)
+
+        return Base(
+            id=id,
+            position=position,
+            membership=membership,
+            total_stalls=stall_count,
+            available_stalls=stall_count,
+            station_id=station_id,
+        )
 
     @classmethod
     def from_row(
@@ -127,7 +138,7 @@ class Base(NamedTuple):
         if stalls < 1:
             return None
         else:
-            return self._replace(available_stalls=stalls - 1)
+            return replace(self, available_stalls=stalls - 1)
 
     def return_stall(self) -> Tuple[Optional[Exception], Optional[Base]]:
         """
@@ -144,7 +155,7 @@ class Base(NamedTuple):
                 None,
             )
         else:
-            return None, self._replace(available_stalls=stalls + 1)
+            return None, replace(self, available_stalls=stalls + 1)
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Base:
         """
@@ -153,7 +164,7 @@ class Base(NamedTuple):
         :param member_ids: a Tuple containing updated membership(s) of the base
         :return:
         """
-        return self._replace(membership=Membership.from_tuple(member_ids))
+        return replace(self, membership=Membership.from_tuple(member_ids))
 
     def add_membership(self, membership_id: MembershipId) -> Base:
         """
@@ -163,4 +174,4 @@ class Base(NamedTuple):
         :return: updated base
         """
         updated_membership = self.membership.add_membership(membership_id)
-        return self._replace(membership=updated_membership)
+        return replace(self, membership=updated_membership)

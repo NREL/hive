@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import (
         SimulationState,
     )
-    from nrel.hive.model.entity import Entity
+    from nrel.hive.model.entity import EntityABC
     from nrel.hive.model.base import Base
     from nrel.hive.model.request import Request
     from nrel.hive.model.station.station import Station
@@ -40,7 +40,7 @@ def tick(sim: SimulationState) -> SimulationState:
     return sim._replace(sim_time=sim.sim_time + sim.sim_timestep_duration_seconds)
 
 
-def add_entity(sim: SimulationState, entity: Entity) -> SimulationState:
+def add_entity(sim: SimulationState, entity: EntityABC) -> SimulationState:
     """
     helper for adding an entity to the simulation
 
@@ -53,7 +53,7 @@ def add_entity(sim: SimulationState, entity: Entity) -> SimulationState:
     return throw_or_return(add_entity_safe(sim, entity))
 
 
-def modify_entity(sim: SimulationState, entity: Entity) -> SimulationState:
+def modify_entity(sim: SimulationState, entity: EntityABC) -> SimulationState:
     """
     helper for modifying an entity in the simulation
 
@@ -66,7 +66,7 @@ def modify_entity(sim: SimulationState, entity: Entity) -> SimulationState:
     return throw_or_return(modify_entity_safe(sim, entity))
 
 
-def add_entities(sim: SimulationState, entities: Iterable[Entity]) -> SimulationState:
+def add_entities(sim: SimulationState, entities: Iterable[EntityABC]) -> SimulationState:
     """
     helper for adding multiple entities to the simulation
 
@@ -79,7 +79,7 @@ def add_entities(sim: SimulationState, entities: Iterable[Entity]) -> Simulation
     return throw_or_return(add_entities_safe(sim, entities))
 
 
-def modify_entities(sim: SimulationState, entities: Iterable[Entity]) -> SimulationState:
+def modify_entities(sim: SimulationState, entities: Iterable[EntityABC]) -> SimulationState:
     """
     helper for modifying multiple entities in the simulation
 
@@ -92,7 +92,7 @@ def modify_entities(sim: SimulationState, entities: Iterable[Entity]) -> Simulat
     return throw_or_return(modify_entities_safe(sim, entities))
 
 
-def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
+def add_entity_safe(sim: SimulationState, entity: EntityABC) -> ResultE[SimulationState]:
     """
     helper for adding a general entity to the simulation
 
@@ -114,7 +114,7 @@ def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationS
         return Failure(err)
 
 
-def add_entities_safe(sim: SimulationState, entities: Iterable[Entity]) -> ResultE[SimulationState]:
+def add_entities_safe(sim: SimulationState, entities: Iterable[EntityABC]) -> ResultE[SimulationState]:
     """
     helper for adding multiple general entities to the simulation
 
@@ -124,7 +124,7 @@ def add_entities_safe(sim: SimulationState, entities: Iterable[Entity]) -> Resul
     :return: the updated simulation state or an error
     """
 
-    def _add(entity: Entity):
+    def _add(entity: EntityABC):
         def _inner(sim: SimulationState) -> ResultE[SimulationState]:
             return add_entity_safe(sim, entity)
 
@@ -133,7 +133,7 @@ def add_entities_safe(sim: SimulationState, entities: Iterable[Entity]) -> Resul
     return apply_op_to_accumulator(_add, entities, sim)
 
 
-def modify_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationState]:
+def modify_entity_safe(sim: SimulationState, entity: EntityABC) -> ResultE[SimulationState]:
     """
     helper for modifying a general entity in the simulation
 
@@ -156,7 +156,7 @@ def modify_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[Simulati
 
 
 def modify_entities_safe(
-    sim: SimulationState, entities: Iterable[Entity]
+    sim: SimulationState, entities: Iterable[EntityABC]
 ) -> ResultE[SimulationState]:
     """
     helper for moidfying multiple general entities in the simulation
@@ -167,7 +167,7 @@ def modify_entities_safe(
     :return: the updated simulation state or an error
     """
 
-    def _mod(entity: Entity):
+    def _mod(entity: EntityABC):
         def _inner(sim: SimulationState) -> ResultE[SimulationState]:
             return modify_entity_safe(sim, entity)
 

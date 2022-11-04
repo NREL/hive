@@ -103,7 +103,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
                 new_sim = new_sim_or_error.unwrap()
                 report_data = {
                     "request_id": request.id,
-                    "departure_time": request.departure_time,
+                    "departure_time": str(request.departure_time),
                     "fleet_id": str(request.membership),
                 }
                 env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))

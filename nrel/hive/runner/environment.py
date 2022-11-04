@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, TYPE_CHECKING, FrozenSet
+from typing import NamedTuple, TYPE_CHECKING, FrozenSet, Optional
 
 from nrel.hive.reporting.reporter import Reporter
 
@@ -32,7 +32,7 @@ class Environment(NamedTuple):
     mechatronics: immutables.Map[MechatronicsId, MechatronicsInterface] = immutables.Map()
     chargers: immutables.Map[ChargerId, Charger] = immutables.Map()
     schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
-    fleet_ids: FrozenSet[MembershipId] = frozenset()
+    fleet_ids: FrozenSet[Optional[MembershipId]] = frozenset()
 
     reporter: Reporter = Reporter()
 

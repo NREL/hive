@@ -68,13 +68,15 @@ class UpdateRequestsFromFile(SimulationUpdateFunction):
             )
             if error:
                 raise error
+            if stepper is None:
+                raise ValueError("DictReaderStepper should have returned a non-null value")
         else:
             with req_path.open() as f:
                 # converting to tuple then back to iterator should bring the whole file into memory
-                reader = iter(tuple(DictReader(f)))
+                reader_iter = iter(tuple(DictReader(f)))
 
             stepper = DictReaderStepper.from_iterator(
-                reader, "departure_time", parser=SimTime.build
+                reader_iter, "departure_time", parser=SimTime.build
             )
 
         return UpdateRequestsFromFile(reader=stepper, rate_structure=rate_structure)
@@ -182,7 +184,7 @@ def update_requests_from_iterator(
                     log.warning(warning)
                     return sim
                 else:
-                    dep_t = sim_updated.requests.get(req.id).departure_time
+                    dep_t = req_in_sim.departure_time
                     report_data = {
                         "request_id": req.id,
                         "departure_time": dep_t,

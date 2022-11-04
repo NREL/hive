@@ -25,7 +25,7 @@ from nrel.hive.util.tuple_ops import TupleOps
 if TYPE_CHECKING:
     from nrel.hive.util.units import Ratio, Seconds
     from nrel.hive.util.typealiases import *
-    from nrel.hive.model.entity import Entity
+    from nrel.hive.model.entity import EntityABC
 
 
 log = logging.getLogger(__name__)
@@ -50,9 +50,9 @@ class AssignmentSolution(NamedTuple):
 
 
 def find_assignment(
-    assignees: Tuple[Entity, ...],
-    targets: Tuple[Entity, ...],
-    cost_fn: Callable[[Entity, Entity], float],
+    assignees: Tuple[EntityABC, ...],
+    targets: Tuple[EntityABC, ...],
+    cost_fn: Callable[[EntityABC, EntityABC], float],
 ) -> AssignmentSolution:
     """
 
@@ -96,7 +96,7 @@ def find_assignment(
         return solution
 
 
-def h3_distance_cost(a: Entity, b: Entity) -> float:
+def h3_distance_cost(a: EntityABC, b: EntityABC) -> float:
     """
     cost function based on the h3_distance between two entities
 
@@ -108,7 +108,7 @@ def h3_distance_cost(a: Entity, b: Entity) -> float:
     return distance
 
 
-def great_circle_distance_cost(a: Entity, b: Entity) -> float:
+def great_circle_distance_cost(a: EntityABC, b: EntityABC) -> float:
     """
     cost function based on the great circle distance between two entities.
     reverts h3 geoid to a lat/lon pair and calculates the haversine distance.
