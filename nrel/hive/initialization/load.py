@@ -19,7 +19,9 @@ from nrel.hive.state.simulation_state.simulation_state import SimulationState
 run_log = logging.getLogger(__name__)
 
 
-def load_simulation(scenario_file_path: Path,) -> Tuple[SimulationState, Environment]:
+def load_simulation(
+    scenario_file_path: Path,
+) -> Tuple[SimulationState, Environment]:
     """
     takes a scenario path and attempts to build all assets required to run a scenario
 

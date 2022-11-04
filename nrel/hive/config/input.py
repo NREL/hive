@@ -66,7 +66,10 @@ class Input(NamedTuple):
 
         # may be found in hive.resources
         mechatronics_file = fs.construct_asset_path(
-            d["mechatronics_file"], scenario_directory, "mechatronics", "mechatronics",
+            d["mechatronics_file"],
+            scenario_directory,
+            "mechatronics",
+            "mechatronics",
         )
 
         # optional files
@@ -108,7 +111,9 @@ class Input(NamedTuple):
         )
         demand_forecast_file = (
             fs.construct_scenario_asset_path(
-                d["demand_forecast_file"], scenario_directory, "demand_forecast",
+                d["demand_forecast_file"],
+                scenario_directory,
+                "demand_forecast",
             )
             if d.get("demand_forecast_file")
             else None
@@ -139,7 +144,10 @@ class Input(NamedTuple):
 
         # if cache provided, check the file has a correct md5 hash value
         if cache:
-            for (name, path,) in input.items():  # input_config.asdict(absolute_paths=True).items():
+            for (
+                name,
+                path,
+            ) in input.items():  # input_config.asdict(absolute_paths=True).items():
                 if path:
                     cls._check_md5_checksum(path, cache[name])
 

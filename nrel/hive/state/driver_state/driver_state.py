@@ -87,7 +87,10 @@ class DriverState(ABC):
 
     @classmethod
     def apply_new_driver_state(
-        mcs, sim: SimulationState, vehicle_id: VehicleId, new_state: DriverState,
+        mcs,
+        sim: SimulationState,
+        vehicle_id: VehicleId,
+        new_state: DriverState,
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         helper for updating a Vehicle with a new DriverState

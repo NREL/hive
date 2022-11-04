@@ -33,7 +33,9 @@ class ChargingFleetManager(InstructionGenerator):
     config: DispatcherConfig
 
     def generate_instructions(
-        self, simulation_state: SimulationState, environment: Environment,
+        self,
+        simulation_state: SimulationState,
+        environment: Environment,
     ) -> Tuple[ChargingFleetManager, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
@@ -77,7 +79,9 @@ class ChargingFleetManager(InstructionGenerator):
             ) >= range_remaining_km
             return is_charge_candidate
 
-        low_soc_vehicles = simulation_state.get_vehicles(filter_function=charge_candidate,)
+        low_soc_vehicles = simulation_state.get_vehicles(
+            filter_function=charge_candidate,
+        )
 
         # for each low_soc_vehicle that will conduct a refuel search, report the search event
         for v in low_soc_vehicles:

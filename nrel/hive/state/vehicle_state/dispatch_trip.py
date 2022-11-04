@@ -43,7 +43,12 @@ class DispatchTrip(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, request_id: RequestId, route: Route) -> DispatchTrip:
-        return cls(vehicle_id=vehicle_id, request_id=request_id, route=route, instance_id=uuid4(),)
+        return cls(
+            vehicle_id=vehicle_id,
+            request_id=request_id,
+            route=route,
+            instance_id=uuid4(),
+        )
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

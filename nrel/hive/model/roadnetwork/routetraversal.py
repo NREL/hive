@@ -106,7 +106,8 @@ def traverse(
 
         # function that steps through the route
         def _traverse(
-            acc: Tuple[Optional[Exception], Optional[RouteTraversal]], link: LinkTraversal,
+            acc: Tuple[Optional[Exception], Optional[RouteTraversal]],
+            link: LinkTraversal,
         ) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
             acc_failures, acc_traversal = acc
             if acc_traversal.no_time_left():

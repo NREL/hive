@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 
 
 def trip_plan_covers_previous(
-    previous_state: ServicingPoolingTrip, new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+    previous_state: ServicingPoolingTrip,
+    new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
 ) -> bool:
     """
     checks that the incoming trip plan covers the previous plan
@@ -34,7 +35,8 @@ def trip_plan_covers_previous(
 
 
 def trip_plan_ordering_is_valid(
-    new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...], previous_state: ServicingPoolingTrip,
+    new_trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+    previous_state: ServicingPoolingTrip,
 ) -> bool:
     """
     checks that the incoming trip plan has a logical pickup and dropoff ordering and that
@@ -55,7 +57,8 @@ def trip_plan_ordering_is_valid(
     # traverses the new trip plan, confirming that pickup and dropoff orders are correct,
     # and that, at the end, all trips are dropped off
     def _test(
-        acc: Tuple[bool, FrozenSet[str]], plan_step: Tuple[RequestId, TripPhase],
+        acc: Tuple[bool, FrozenSet[str]],
+        plan_step: Tuple[RequestId, TripPhase],
     ) -> Tuple[bool, FrozenSet[str]]:
         is_good, boarded = acc
         if not is_good:

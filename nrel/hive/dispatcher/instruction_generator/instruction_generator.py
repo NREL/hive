@@ -26,7 +26,9 @@ class InstructionGenerator(ABC):
 
     @abstractmethod
     def generate_instructions(
-        self, simulation_state: SimulationState, environment: Environment,
+        self,
+        simulation_state: SimulationState,
+        environment: Environment,
     ) -> Tuple[InstructionGenerator, Tuple[Instruction, ...]]:
         """
         generates vehicle instructions which can perform vehicle state transitions

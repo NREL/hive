@@ -32,7 +32,9 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
 
     @classmethod
     def build(
-        cls, sampled_requests: Tuple[Request, ...], rate_structure_file: Optional[str] = None,
+        cls,
+        sampled_requests: Tuple[Request, ...],
+        rate_structure_file: Optional[str] = None,
     ):
         """
         reads an optional rate_structure_file and builds a UpdateRequestsFromFile SimulationUpdateFunction

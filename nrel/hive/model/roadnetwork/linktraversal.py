@@ -36,7 +36,11 @@ class LinkTraversal(NamedTuple):
         if not distance_km:
             distance_km = H3Ops.great_circle_distance(start, end)
         return LinkTraversal(
-            link_id=link_id, start=start, end=end, distance_km=distance_km, speed_kmph=speed_kmph,
+            link_id=link_id,
+            start=start,
+            end=end,
+            distance_km=distance_km,
+            speed_kmph=speed_kmph,
         )
 
     @property
@@ -114,7 +118,9 @@ def traverse_up_to(
     elif link.start == link.end:
         # already done!
         result = LinkTraversalResult(
-            traversed=None, remaining=None, remaining_time_seconds=available_time_seconds,
+            traversed=None,
+            remaining=None,
+            remaining_time_seconds=available_time_seconds,
         )
         return None, result
     else:
@@ -143,6 +149,8 @@ def traverse_up_to(
             )
 
             result = LinkTraversalResult(
-                traversed=traversed, remaining=remaining, remaining_time_seconds=0,
+                traversed=traversed,
+                remaining=remaining,
+                remaining_time_seconds=0,
             )
             return None, result

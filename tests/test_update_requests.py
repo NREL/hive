@@ -13,13 +13,18 @@ class TestUpdateRequests(TestCase):
             180
         )  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
-        config = mock_config(start_time="2019-01-09T00:00:00", end_time="2019-01-10T00:00:00",)
+        config = mock_config(
+            start_time="2019-01-09T00:00:00",
+            end_time="2019-01-10T00:00:00",
+        )
         env = mock_env(config, fleet_ids=frozenset())
         req_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.requests",
+            "denver_demo_requests.csv",
         )
         rate_structure_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.service_prices",
+            "rate_structure.csv",
         )
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
@@ -37,13 +42,18 @@ class TestUpdateRequests(TestCase):
         )  # will pull in all requests with departure_time earlier than 720
         expected_reqs = 18
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
-        config = mock_config(start_time="2019-01-09T00:00:00", end_time="2019-01-10T00:00:00",)
+        config = mock_config(
+            start_time="2019-01-09T00:00:00",
+            end_time="2019-01-10T00:00:00",
+        )
         env = mock_env(config, fleet_ids=frozenset())
         req_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.requests",
+            "denver_demo_requests.csv",
         )
         rate_structure_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.service_prices",
+            "rate_structure.csv",
         )
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
@@ -60,20 +70,27 @@ class TestUpdateRequests(TestCase):
             720
         )  # will pull in all requests with departure_time earlier than 720
         sim = mock_sim(sim_time=sim_time, sim_timestep_duration_seconds=1)
-        config = mock_config(start_time="2019-01-09T00:00:00", end_time="2019-01-10T00:00:00",)
+        config = mock_config(
+            start_time="2019-01-09T00:00:00",
+            end_time="2019-01-10T00:00:00",
+        )
         env = mock_env(config, fleet_ids=frozenset())
         req_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.requests",
+            "denver_demo_requests.csv",
         )
         rate_structure_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.service_prices",
+            "rate_structure.csv",
         )
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         for req in result.requests.values():
             print(req)
             self.assertGreaterEqual(
-                req.value, 5, f"should be greater/equal than minimum price of 5",
+                req.value,
+                5,
+                f"should be greater/equal than minimum price of 5",
             )
 
     def test_update_lazy_file_reading(self):
@@ -84,13 +101,18 @@ class TestUpdateRequests(TestCase):
             180
         )  # will pull in all requests with departure_time earlier than 180
         sim = mock_sim(sim_time=sim_time)
-        config = mock_config(start_time="2019-01-09T00:00:00", end_time="2019-01-10T00:00:00",)
+        config = mock_config(
+            start_time="2019-01-09T00:00:00",
+            end_time="2019-01-10T00:00:00",
+        )
         env = mock_env(config, fleet_ids=frozenset())
         req_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.requests", "denver_demo_requests.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.requests",
+            "denver_demo_requests.csv",
         )
         rate_structure_file = resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown.service_prices", "rate_structure.csv",
+            "nrel.hive.resources.scenarios.denver_downtown.service_prices",
+            "rate_structure.csv",
         )
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file, lazy_file_reading=True)
         result, _ = fn.update(sim, env)

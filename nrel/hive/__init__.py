@@ -42,5 +42,7 @@ from rich.logging import RichHandler
 FORMAT = "%(message)s"
 rich_handler = RichHandler(markup=True, rich_tracebacks=True, show_time=False, show_path=False)
 logging.basicConfig(
-    level=logging.INFO, format=FORMAT, handlers=[rich_handler],
+    level=logging.INFO,
+    format=FORMAT,
+    handlers=[rich_handler],
 )

@@ -78,7 +78,9 @@ class TestStation(TestCase):
     def test_checkout_charger(self):
         error, updated_station = mock_station(
             chargers=immutables.Map({mock_dcfc_charger_id(): 1})
-        ).checkout_charger(mock_dcfc_charger_id(),)
+        ).checkout_charger(
+            mock_dcfc_charger_id(),
+        )
         self.assertIsNone(error, f"should be no error, found {error}")
 
         self.assertEqual(updated_station.get_available_chargers(mock_dcfc_charger_id()), 0)
@@ -143,7 +145,11 @@ class TestStation(TestCase):
 
     def test_enqueue_for_charger(self):
         station = mock_station(
-            chargers={mock_l1_charger_id(): 1, mock_l2_charger_id(): 1, mock_dcfc_charger_id(): 1,}
+            chargers={
+                mock_l1_charger_id(): 1,
+                mock_l2_charger_id(): 1,
+                mock_dcfc_charger_id(): 1,
+            }
         )
 
         err1, s1 = station.enqueue_for_charger(mock_dcfc_charger_id())

@@ -77,9 +77,10 @@ class VehicleStateABC(EntityState):
                 return err_res, None
             else:
                 # perform default state transition
-                (err2, updated_sim,) = entity_state_ops.transition_previous_to_next(
-                    sim, env, state, next_state
-                )
+                (
+                    err2,
+                    updated_sim,
+                ) = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
                 if err2 is not None:
                     state_type = state.vehicle_state_type
                     err_res = SimulationStateError(
@@ -106,7 +107,10 @@ class VehicleStateABC(EntityState):
 
     @classmethod
     def apply_new_vehicle_state(
-        mcs, sim: SimulationState, vehicle_id: VehicleId, new_state: VehicleState,
+        mcs,
+        sim: SimulationState,
+        vehicle_id: VehicleId,
+        new_state: VehicleState,
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         this default enter operation simply modifies the vehicle's stored state value

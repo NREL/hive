@@ -40,7 +40,9 @@ class StepSimulation(SimulationUpdateFunction):
     instruction_generator_order: Tuple[InstructionGeneratorId, ...]
 
     @property
-    def ordered_instruction_generators(self,) -> Tuple[InstructionGenerator, ...]:
+    def ordered_instruction_generators(
+        self,
+    ) -> Tuple[InstructionGenerator, ...]:
         instruction_generators = tuple(
             self.instruction_generators[ig_id] for ig_id in self.instruction_generator_order
         )
@@ -71,7 +73,9 @@ class StepSimulation(SimulationUpdateFunction):
         )
 
     def update(
-        self, simulation_state: SimulationState, env: Environment,
+        self,
+        simulation_state: SimulationState,
+        env: Environment,
     ) -> Tuple[SimulationState, StepSimulation]:
         """
         generates all instructions for this time step and then attempts to apply them to the SimulationState
@@ -118,7 +122,8 @@ class StepSimulation(SimulationUpdateFunction):
         return sim_next_time_step, updated_step_simulation
 
     def get_instruction_generator(
-        self, identifier: Union[InstructionGeneratorId, Type[InstructionGenerator]],
+        self,
+        identifier: Union[InstructionGeneratorId, Type[InstructionGenerator]],
     ) -> ResultE[InstructionGenerator]:
         """
         Get the instance of an internal instruction generator either by an id or the actual class type.

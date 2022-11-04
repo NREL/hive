@@ -22,7 +22,11 @@ class HumanUnavailableChargeParameters(NamedTuple):
 
     @classmethod
     def build(
-        cls, vehicle: Vehicle, home_base_id: BaseId, sim: SimulationState, env: Environment,
+        cls,
+        vehicle: Vehicle,
+        home_base_id: BaseId,
+        sim: SimulationState,
+        env: Environment,
     ) -> HumanUnavailableChargeParameters:
         """
         builds the parameters used to track our vehicle's need for charging. captures

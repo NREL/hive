@@ -169,7 +169,10 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                             distance_miles * M_TO_KM if distance_miles else default_distance_km
                         )
                         link = Link.build(link_id, src_geoid, dst_geoid, speed, distance)
-                        (add_link_error, updated_accumulator,) = accumulator.add_link(link)
+                        (
+                            add_link_error,
+                            updated_accumulator,
+                        ) = accumulator.add_link(link)
                         if add_link_error:
                             response = Exception(
                                 f"failure adding link while building OSMRoadNetworkLinkHelper"
@@ -193,6 +196,9 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             # construct the spatial index
             tree = cKDTree(accumulator.link_centroids)
             osm_road_network_links = OSMRoadNetworkLinkHelper(
-                accumulator.lookup, tree, accumulator.link_ids, len(accumulator.link_ids),
+                accumulator.lookup,
+                tree,
+                accumulator.link_ids,
+                len(accumulator.link_ids),
             )
             return None, osm_road_network_links

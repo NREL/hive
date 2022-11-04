@@ -29,7 +29,9 @@ class Update(NamedTuple):
 
     @classmethod
     def build(
-        cls, config: HiveConfig, instruction_generators: Tuple[InstructionGenerator, ...],
+        cls,
+        config: HiveConfig,
+        instruction_generators: Tuple[InstructionGenerator, ...],
     ) -> Update:
         """
         constructs the functionality to update the simulation each time step
@@ -111,4 +113,7 @@ def _apply_fn(p: UpdatePayload, fn: SimulationUpdateFunction) -> UpdatePayload:
     )
     updated_payload = p.runner_payload._replace(s=result)
 
-    return p._replace(runner_payload=updated_payload, updated_step_fns=next_update_fns,)
+    return p._replace(
+        runner_payload=updated_payload,
+        updated_step_fns=next_update_fns,
+    )

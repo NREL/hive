@@ -26,7 +26,10 @@ class ObjectIterator:
     """
 
     def __init__(
-        self, items: Tuple[Any, ...], step_attr_name: str, stop_condition: Callable,
+        self,
+        items: Tuple[Any, ...],
+        step_attr_name: str,
+        stop_condition: Callable,
     ):
         self._iterator = iter(items)
         self.step_attr_name = step_attr_name
@@ -170,7 +173,13 @@ class DictReaderStepper:
             f = open(file, "r")
             return (
                 None,
-                cls(csv.DictReader(f), f, step_column_name, initial_stop_condition, parser,),
+                cls(
+                    csv.DictReader(f),
+                    f,
+                    step_column_name,
+                    initial_stop_condition,
+                    parser,
+                ),
             )
         except Exception as e:
             return e, None

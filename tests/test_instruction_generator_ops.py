@@ -18,9 +18,15 @@ class TestInstructionGenerators(TestCase):
         """
         station = mock_station()
         ice_mechatronics = mock_ice()
-        vehicle = mock_vehicle(mechatronics=ice_mechatronics, soc=0.1,)
+        vehicle = mock_vehicle(
+            mechatronics=ice_mechatronics,
+            soc=0.1,
+        )
 
-        sim = mock_sim(vehicles=(vehicle,), stations=(station,),)
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+        )
         env = mock_env(mechatronics={ice_mechatronics.mechatronics_id: ice_mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(
@@ -45,9 +51,15 @@ class TestInstructionGenerators(TestCase):
         """
         station = mock_station()
         mechatronics = mock_ice()
-        vehicle = mock_vehicle(mechatronics=mechatronics, soc=0.1,)
+        vehicle = mock_vehicle(
+            mechatronics=mechatronics,
+            soc=0.1,
+        )
 
-        sim = mock_sim(vehicles=(vehicle,), stations=(station,),)
+        sim = mock_sim(
+            vehicles=(vehicle,),
+            stations=(station,),
+        )
         env = mock_env(mechatronics={mechatronics.mechatronics_id: mechatronics})
 
         instructions = instruct_vehicles_to_dispatch_to_station(

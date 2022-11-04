@@ -20,7 +20,9 @@ class TestRunCosim(TestCase):
         crank_result_1 = hive_cosim.crank(rp0, time_steps=time_steps)
         expected_time = rp0.s.sim_time + (time_steps * rp0.s.sim_timestep_duration_seconds)
         self.assertEqual(
-            crank_result_1.sim_time, expected_time, "expected sim time is incorrect",
+            crank_result_1.sim_time,
+            expected_time,
+            "expected sim time is incorrect",
         )
 
         # crank 5 more time steps
@@ -29,5 +31,7 @@ class TestRunCosim(TestCase):
             time_steps * rp0.s.sim_timestep_duration_seconds
         )
         self.assertEqual(
-            crank_result_2.sim_time, expected_time_2, "expected sim time is incorrect",
+            crank_result_2.sim_time,
+            expected_time_2,
+            "expected sim time is incorrect",
         )

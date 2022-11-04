@@ -193,7 +193,9 @@ def update_requests_from_iterator(
 
     # stream in all Requests that occur before the sim time of the provided SimulationState
     updated_sim = ft.reduce(
-        ft.partial(_update, env=env, rate_structure=rate_structure), it, initial_sim_state,
+        ft.partial(_update, env=env, rate_structure=rate_structure),
+        it,
+        initial_sim_state,
     )
 
     return updated_sim

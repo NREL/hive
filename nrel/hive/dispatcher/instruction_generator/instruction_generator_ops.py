@@ -50,9 +50,10 @@ class InstructionGenerationResult(NamedTuple):
         :param environment: the simulation environment
         :return: the updated accumulator
         """
-        (updated_gen, new_instructions,) = instruction_generator.generate_instructions(
-            simulation_state, environment
-        )
+        (
+            updated_gen,
+            new_instructions,
+        ) = instruction_generator.generate_instructions(simulation_state, environment)
 
         updated_instruction_stack = ft.reduce(
             lambda acc, i: DictOps.add_to_stack_dict(acc, i.vehicle_id, i),
@@ -78,7 +79,9 @@ class InstructionGenerationResult(NamedTuple):
         new_instructions = ft.reduce(
             lambda acc, v: (
                 v.driver_state.generate_instruction(
-                    simulation_state, environment, self.instruction_stack.get(v.id),
+                    simulation_state,
+                    environment,
+                    self.instruction_stack.get(v.id),
                 ),
             )
             + acc,
@@ -92,7 +95,9 @@ class InstructionGenerationResult(NamedTuple):
             self.instruction_stack,
         )
 
-        return self._replace(instruction_stack=updated_instruction_stack,)
+        return self._replace(
+            instruction_stack=updated_instruction_stack,
+        )
 
 
 def generate_instructions(
@@ -191,7 +196,10 @@ def instruct_vehicles_to_dispatch_to_station(
             # use the search-based metric which considers travel, queueing, and charging time
 
             distance_fn = assignment_ops.shortest_time_to_charge_distance(
-                vehicle=veh, sim=simulation_state, env=environment, target_soc=target_soc,
+                vehicle=veh,
+                sim=simulation_state,
+                env=environment,
+                target_soc=target_soc,
             )
 
         nearest_station = H3Ops.nearest_entity(
@@ -220,7 +228,10 @@ def instruct_vehicles_to_dispatch_to_station(
                 if result is None:
                     continue
                 else:
-                    (best_charger_id, best_charger_rank,) = result
+                    (
+                        best_charger_id,
+                        best_charger_rank,
+                    ) = result
 
             else:  # charging_search_type == ChargingSearchType.SHORTEST_TIME_TO_CHARGE:
                 result = assignment_ops.shortest_time_to_charge_ranking(
@@ -233,10 +244,15 @@ def instruct_vehicles_to_dispatch_to_station(
                 if result is None:
                     continue
                 else:
-                    (best_charger_id, best_charger_rank,) = result
+                    (
+                        best_charger_id,
+                        best_charger_rank,
+                    ) = result
 
             instruction = DispatchStationInstruction(
-                vehicle_id=veh.id, station_id=nearest_station.id, charger_id=best_charger_id,
+                vehicle_id=veh.id,
+                station_id=nearest_station.id,
+                charger_id=best_charger_id,
             )
 
             instructions = instructions + (instruction,)
@@ -275,7 +291,10 @@ def get_nearest_valid_station_distance(
         # use the search-based metric which considers travel, queueing, and charging time
 
         distance_fn = assignment_ops.shortest_time_to_charge_distance(
-            vehicle=vehicle, sim=simulation_state, env=environment, target_soc=target_soc,
+            vehicle=vehicle,
+            sim=simulation_state,
+            env=environment,
+            target_soc=target_soc,
         )
 
     nearest_station = H3Ops.nearest_entity(

@@ -217,7 +217,8 @@ class HumanUnavailable(DriverState):
                     else:
                         # we have charged to our charge target, or, have no charging target
                         instruction = DispatchBaseInstruction(
-                            self.attributes.vehicle_id, self.attributes.home_base_id,
+                            self.attributes.vehicle_id,
+                            self.attributes.home_base_id,
                         )
                         return instruction
                 else:
@@ -238,7 +239,8 @@ class HumanUnavailable(DriverState):
                 elif isinstance(my_vehicle.vehicle_state, Idle):
                     # finally, if we're at home and idling, we turn the vehicle off
                     return ReserveBaseInstruction(
-                        self.attributes.vehicle_id, self.attributes.home_base_id,
+                        self.attributes.vehicle_id,
+                        self.attributes.home_base_id,
                     )
                 else:
                     return None

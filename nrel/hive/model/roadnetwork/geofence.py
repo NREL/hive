@@ -31,7 +31,10 @@ class GeoFence(NamedTuple):
             )
         )
 
-        return GeoFence(geofence_set=geofence_set, h3_resolution=h3_resolution,)
+        return GeoFence(
+            geofence_set=geofence_set,
+            h3_resolution=h3_resolution,
+        )
 
     def contains(self, geoid: GeoId) -> bool:
         raise NotImplementedError("GeoFence is under construction, please don't use this method.")

@@ -36,35 +36,49 @@ class TestRouteTraversal(TestCase):
         test_link = links[0]
 
         error, result = traverse_up_to(
-            link=test_link, available_time_seconds=hours_to_seconds(0.5),
+            link=test_link,
+            available_time_seconds=hours_to_seconds(0.5),
         )
 
         traversed = result.traversed
         remaining = result.remaining
 
         self.assertEqual(
-            test_link.start, traversed.start, "Original link and traversed link should share start",
+            test_link.start,
+            traversed.start,
+            "Original link and traversed link should share start",
         )
         self.assertEqual(
-            test_link.end, remaining.end, "Original link and remaining link should share end",
+            test_link.end,
+            remaining.end,
+            "Original link and remaining link should share end",
         )
         self.assertEqual(
-            traversed.end, remaining.start, "Traversed end should match remaining start",
+            traversed.end,
+            remaining.start,
+            "Traversed end should match remaining start",
         )
 
     def test_traverse_up_to_no_split(self):
         links = mock_route()
         test_link = links[0]
 
-        error, result = traverse_up_to(link=test_link, available_time_seconds=hours_to_seconds(4),)
+        error, result = traverse_up_to(
+            link=test_link,
+            available_time_seconds=hours_to_seconds(4),
+        )
 
         traversed = result.traversed
         remaining = result.remaining
 
         self.assertEqual(
-            test_link.start, traversed.start, "Original link and traversed link should share start",
+            test_link.start,
+            traversed.start,
+            "Original link and traversed link should share start",
         )
         self.assertEqual(
-            test_link.end, traversed.end, "Original link and traversed link should share end",
+            test_link.end,
+            traversed.end,
+            "Original link and traversed link should share end",
         )
         self.assertIsNone(remaining, "There should be no remaining route")

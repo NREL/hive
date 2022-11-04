@@ -60,7 +60,9 @@ def sample_vehicles(
             :return: a function that adds vehicle i to the SimulationState
             """
 
-            def _inner(s: SimulationState,) -> Result[SimulationState, Exception]:
+            def _inner(
+                s: SimulationState,
+            ) -> Result[SimulationState, Exception]:
                 """
                 attempts to add the i'th vehicle to this simulation state
 
@@ -101,7 +103,9 @@ def sample_vehicles(
         # sample i vehicles, adding each to the sim
         # fail fast if an exception is encountered
         result: Result[SimulationState, Exception] = ft.reduce(
-            lambda acc, i: acc.bind(_add_sample(i)), range(offset, offset + count), Success(sim),
+            lambda acc, i: acc.bind(_add_sample(i)),
+            range(offset, offset + count),
+            Success(sim),
         )
 
         return result

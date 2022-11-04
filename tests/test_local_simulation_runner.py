@@ -34,11 +34,15 @@ class TestLocalSimulationRunner(TestCase):
         )
 
         self.assertEqual(
-            vehicle.geoid, req.destination, "Vehicle should be at request destination",
+            vehicle.geoid,
+            req.destination,
+            "Vehicle should be at request destination",
         )
 
         self.assertAlmostEqual(
-            0.56, result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km, places=1,
+            0.56,
+            result.s.vehicles[DefaultIds.mock_vehicle_id()].distance_traveled_km,
+            places=1,
         )
 
     def test_step(self):
@@ -68,5 +72,7 @@ class TestLocalSimulationRunner(TestCase):
         stepped = LocalSimulationRunner.step(runner_payload)
 
         self.assertEqual(
-            stepped, None, "we should not be able to step a simulation that has exceeded end_time",
+            stepped,
+            None,
+            "we should not be able to step a simulation that has exceeded end_time",
         )

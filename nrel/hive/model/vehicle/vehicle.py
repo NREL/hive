@@ -62,7 +62,10 @@ class Vehicle(Entity):
 
     @classmethod
     def from_row(
-        cls, row: Dict[str, str], road_network: RoadNetwork, environment: Environment,
+        cls,
+        row: Dict[str, str],
+        road_network: RoadNetwork,
+        environment: Environment,
     ) -> Vehicle:
         """
         reads a csv row from file to generate a Vehicle

@@ -36,7 +36,12 @@ class DispatchBase(VehicleState):
 
     @classmethod
     def build(cls, vehicle_id: VehicleId, base_id: BaseId, route: Route) -> DispatchBase:
-        return cls(vehicle_id=vehicle_id, base_id=base_id, route=route, instance_id=uuid4(),)
+        return cls(
+            vehicle_id=vehicle_id,
+            base_id=base_id,
+            route=route,
+            instance_id=uuid4(),
+        )
 
     @property
     def vehicle_state_type(cls) -> VehicleStateType:

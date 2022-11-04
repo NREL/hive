@@ -45,7 +45,10 @@ class CancelRequests(SimulationUpdateFunction):
                 return sim
             else:
                 # remove this request
-                (update_error, updated_sim,) = simulation_state_ops.remove_request(sim, request_id)
+                (
+                    update_error,
+                    updated_sim,
+                ) = simulation_state_ops.remove_request(sim, request_id)
 
                 # report either error or successful cancellation
                 if update_error:
@@ -55,7 +58,11 @@ class CancelRequests(SimulationUpdateFunction):
                     env.reporter.file_report(_gen_report(request_id, sim))
                     return updated_sim
 
-        updated = ft.reduce(_remove_from_sim, simulation_state.requests.keys(), simulation_state,)
+        updated = ft.reduce(
+            _remove_from_sim,
+            simulation_state.requests.keys(),
+            simulation_state,
+        )
 
         return updated, None
 

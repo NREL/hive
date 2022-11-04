@@ -25,7 +25,8 @@ class TabularPowertrain(Powertrain):
 
     @classmethod
     def from_data(
-        self, data: Dict[str, str],
+        self,
+        data: Dict[str, str],
     ):
         try:
             scale_factor = float(data["scale_factor"])
@@ -81,7 +82,9 @@ class TabularPowertrain(Powertrain):
         link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
 
         energy_per_distance = np.interp(
-            link_speed, self.consumption_speed, self.consumption_energy_per_distance,
+            link_speed,
+            self.consumption_speed,
+            self.consumption_energy_per_distance,
         )
         # link distance is in kilometers
         link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)

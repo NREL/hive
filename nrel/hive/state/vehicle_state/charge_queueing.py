@@ -114,7 +114,10 @@ class ChargeQueueing(VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def exit(
-        self, next_state: VehicleState, sim: SimulationState, env: "Environment",
+        self,
+        next_state: VehicleState,
+        sim: SimulationState,
+        env: "Environment",
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         """
         remove agent from queue before exiting this state

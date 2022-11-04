@@ -59,7 +59,11 @@ class Link(NamedTuple):
         if not distance_km:
             distance_km = H3Ops.great_circle_distance(start, end)
         return Link(
-            link_id=link_id, start=start, end=end, distance_km=distance_km, speed_kmph=speed_kmph,
+            link_id=link_id,
+            start=start,
+            end=end,
+            distance_km=distance_km,
+            speed_kmph=speed_kmph,
         )
 
     def update_speed(self, speed_kmph: Kmph) -> Link:
@@ -78,7 +82,13 @@ class Link(NamedTuple):
 
         :return: the new link traversal
         """
-        return LinkTraversal(self.link_id, self.start, self.end, self.distance_km, self.speed_kmph,)
+        return LinkTraversal(
+            self.link_id,
+            self.start,
+            self.end,
+            self.distance_km,
+            self.speed_kmph,
+        )
 
 
 def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:

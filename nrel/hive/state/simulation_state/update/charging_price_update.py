@@ -146,7 +146,8 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
 
 
 def _add_row_to_this_update(
-    acc: immutables.Map[str, immutables.Map[ChargerId, Currency]], row: Dict[str, str],
+    acc: immutables.Map[str, immutables.Map[ChargerId, Currency]],
+    row: Dict[str, str],
 ) -> immutables.Map[str, immutables.Map[ChargerId, Currency]]:
     """
     adds a single row to an accumulator that is storing only the most recently
@@ -213,7 +214,8 @@ def _update_station_prices(
 
 
 def _map_to_station_ids(
-    this_update: immutables.Map[str, immutables.Map[ChargerId, Currency]], sim: SimulationState,
+    this_update: immutables.Map[str, immutables.Map[ChargerId, Currency]],
+    sim: SimulationState,
 ) -> immutables.Map[StationId, immutables.Map[ChargerId, Currency]]:
     """
     in the case that updates are written by GeoId, map those to StationIds

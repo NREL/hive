@@ -131,7 +131,8 @@ def mock_geofence(geojson: Dict = mock_geojson(), resolution: H3Resolution = 10)
 
 def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
     return HaversineRoadNetwork(
-        geofence=mock_geofence(resolution=geofence_res), sim_h3_resolution=h3_res,
+        geofence=mock_geofence(resolution=geofence_res),
+        sim_h3_resolution=h3_res,
     )
 
 
@@ -158,7 +159,12 @@ def mock_base(
     membership: Membership = Membership(),
 ) -> Base:
     return Base.build(
-        base_id, h3.geo_to_h3(lat, lon, h3_res), road_network, station_id, stall_count, membership,
+        base_id,
+        h3.geo_to_h3(lat, lon, h3_res),
+        road_network,
+        station_id,
+        stall_count,
+        membership,
     )
 
 
@@ -224,10 +230,14 @@ def mock_station_from_geoid(
 
 
 def mock_rate_structure(
-    base_price: Currency = 2.2, price_per_mile: Currency = 1.6, minimum_price: Currency = 5,
+    base_price: Currency = 2.2,
+    price_per_mile: Currency = 1.6,
+    minimum_price: Currency = 5,
 ) -> RequestRateStructure:
     return RequestRateStructure(
-        base_price=base_price, price_per_mile=price_per_mile, minimum_price=minimum_price,
+        base_price=base_price,
+        price_per_mile=price_per_mile,
+        minimum_price=minimum_price,
     )
 
 
@@ -290,7 +300,10 @@ def mock_ev_powertrain(nominal_watt_hour_per_mile) -> TabularPowertrain:
         return TabularPowertrain.from_data(data=data)
 
 
-def mock_powercurve(nominal_max_charge_kw=50, battery_capacity_kwh=50,) -> TabularPowercurve:
+def mock_powercurve(
+    nominal_max_charge_kw=50,
+    battery_capacity_kwh=50,
+) -> TabularPowercurve:
     powercurve_file = resource_filename("nrel.hive.resources.powercurve", "normalized.yaml")
     with Path(powercurve_file).open() as f:
         data = yaml.safe_load(f)
@@ -330,7 +343,9 @@ def mock_ice_powertrain(nominal_miles_per_gallon) -> TabularPowertrain:
 
 
 def mock_ice(
-    tank_capacity_gallons=15, idle_gallons_per_hour=0.2, nominal_miles_per_gallon=30,
+    tank_capacity_gallons=15,
+    idle_gallons_per_hour=0.2,
+    nominal_miles_per_gallon=30,
 ) -> ICE:
     # source: https://www.energy.gov/eere/vehicles/
     #   fact-861-february-23-2015-idle-fuel-consumption-selected-gasoline-and-diesel-vehicles
@@ -481,7 +496,10 @@ def mock_config(
     test_output_directory = tempfile.TemporaryDirectory()
     conf_without_temp_dir = HiveConfig.build(
         Path(
-            resource_filename("nrel.hive.resources.scenarios.denver_downtown", "denver_demo.yaml",)
+            resource_filename(
+                "nrel.hive.resources.scenarios.denver_downtown",
+                "denver_demo.yaml",
+            )
         ),
         {
             "sim": {
@@ -657,19 +675,28 @@ def mock_dcfc_charger_id():
 
 def mock_l1_charger():
     return Charger(
-        mock_l1_charger_id(), energy_type=EnergyType.ELECTRIC, rate=3.3, units="kilowatts",
+        mock_l1_charger_id(),
+        energy_type=EnergyType.ELECTRIC,
+        rate=3.3,
+        units="kilowatts",
     )
 
 
 def mock_l2_charger():
     return Charger(
-        mock_l2_charger_id(), energy_type=EnergyType.ELECTRIC, rate=7.2, units="kilowatts",
+        mock_l2_charger_id(),
+        energy_type=EnergyType.ELECTRIC,
+        rate=7.2,
+        units="kilowatts",
     )
 
 
 def mock_dcfc_charger():
     return Charger(
-        mock_dcfc_charger_id(), energy_type=EnergyType.ELECTRIC, rate=50.0, units="kilowatts",
+        mock_dcfc_charger_id(),
+        energy_type=EnergyType.ELECTRIC,
+        rate=50.0,
+        units="kilowatts",
     )
 
 
@@ -678,5 +705,8 @@ def mock_gasoline_pump():
     gal_per_second = gal_per_minute / 60
 
     return Charger(
-        "gas_pump", energy_type=EnergyType.GASOLINE, rate=gal_per_second, units="gal_gasoline",
+        "gas_pump",
+        energy_type=EnergyType.GASOLINE,
+        rate=gal_per_second,
+        units="gal_gasoline",
     )

@@ -51,13 +51,22 @@ class TestChargingPriceUpdate(TestCase):
         # prices are set to bump at 28800 (8 am)
         stations = (
             mock_station(
-                "s1", 39.752233, -104.976061, chargers=immutables.Map({mock_dcfc_charger_id(): 10}),
+                "s1",
+                39.752233,
+                -104.976061,
+                chargers=immutables.Map({mock_dcfc_charger_id(): 10}),
             ),
             mock_station(
-                "s2", 39.759521, -104.97526, chargers=immutables.Map({mock_dcfc_charger_id(): 10}),
+                "s2",
+                39.759521,
+                -104.97526,
+                chargers=immutables.Map({mock_dcfc_charger_id(): 10}),
             ),
             mock_station(
-                "bs1", 39.754695, -104.988116, chargers=immutables.Map({mock_l2_charger_id(): 10}),
+                "bs1",
+                39.754695,
+                -104.988116,
+                chargers=immutables.Map({mock_l2_charger_id(): 10}),
             ),
         )
         sim = mock_sim(stations=stations, sim_time=36001)
@@ -105,17 +114,27 @@ class TestChargingPriceUpdate(TestCase):
                 }
             )
         )
-        sim = mock_sim(stations=(station,), sim_time=1, sim_timestep_duration_seconds=1,)
+        sim = mock_sim(
+            stations=(station,),
+            sim_time=1,
+            sim_timestep_duration_seconds=1,
+        )
         env = mock_env()
         fn = ChargingPriceUpdate.build(None, env.config.input_config.chargers_file)
         result, _ = fn.update(sim, env)
         prices = {c_id: cs.price_per_kwh for c_id, cs in result.stations[station.id].state.items()}
         self.assertEqual(
-            prices.get(mock_l1_charger_id()), 0.0, "LEVEL_1 charging should be free by default",
+            prices.get(mock_l1_charger_id()),
+            0.0,
+            "LEVEL_1 charging should be free by default",
         )
         self.assertEqual(
-            prices.get(mock_l2_charger_id()), 0.0, "LEVEL_2 charging should be free by default",
+            prices.get(mock_l2_charger_id()),
+            0.0,
+            "LEVEL_2 charging should be free by default",
         )
         self.assertEqual(
-            prices.get(mock_dcfc_charger_id()), 0.0, "DCFC charging should be free by default",
+            prices.get(mock_dcfc_charger_id()),
+            0.0,
+            "DCFC charging should be free by default",
         )

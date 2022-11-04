@@ -10,7 +10,9 @@ class TestICE(TestCase):
 
         full_vehicle, _ = ice.add_energy(vehicle, mock_gasoline_pump(), hours_to_seconds(10))
         self.assertAlmostEqual(
-            full_vehicle.energy[EnergyType.GASOLINE] / ice.tank_capacity_gallons, 1, places=2,
+            full_vehicle.energy[EnergyType.GASOLINE] / ice.tank_capacity_gallons,
+            1,
+            places=2,
         )
 
     def test_energy_gain_full_soc(self):
@@ -43,7 +45,9 @@ class TestICE(TestCase):
 
         moved_vehicle = ice.consume_energy(vehicle, route=test_route)
         self.assertAlmostEqual(
-            10 - moved_vehicle.energy[EnergyType.GASOLINE], expected_gal_gas, places=0,
+            10 - moved_vehicle.energy[EnergyType.GASOLINE],
+            expected_gal_gas,
+            places=0,
         )
 
     def test_remaining_range(self):
@@ -53,7 +57,9 @@ class TestICE(TestCase):
         remaining_range_km = ice.range_remaining_km(vehicle)
 
         self.assertAlmostEqual(
-            remaining_range_km, 100 * MILE_TO_KM, places=1,
+            remaining_range_km,
+            100 * MILE_TO_KM,
+            places=1,
         )
 
     def test_calc_required_soc(self):
@@ -62,5 +68,6 @@ class TestICE(TestCase):
         required_tank_capacity = ice.calc_required_soc(100 * MILE_TO_KM)
 
         self.assertEqual(
-            required_tank_capacity, 1.0,
+            required_tank_capacity,
+            1.0,
         )

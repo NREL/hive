@@ -152,7 +152,11 @@ def vehicle_charge_event(
     return report
 
 
-def report_pickup_request(vehicle: Vehicle, request: Request, next_sim: SimulationState,) -> Report:
+def report_pickup_request(
+    vehicle: Vehicle,
+    request: Request,
+    next_sim: SimulationState,
+) -> Report:
     """
     reports information about the marginal effect of a request pickup
 
@@ -167,7 +171,8 @@ def report_pickup_request(vehicle: Vehicle, request: Request, next_sim: Simulati
     geoid = vehicle.geoid
     lat, lon = h3.h3_to_geo(geoid)
     wait_time = time_diff(
-        request.departure_time.as_datetime_time(), event_sim_time.as_datetime_time(),
+        request.departure_time.as_datetime_time(),
+        event_sim_time.as_datetime_time(),
     )
 
     report_data = {
@@ -204,7 +209,8 @@ def report_dropoff_request(vehicle: Vehicle, sim: SimulationState, request: Requ
     # somewhat a hack, we just grab the membership from the first passenger
     membership = TupleOps.head(request.passengers).membership
     travel_time = time_diff(
-        request.departure_time.as_datetime_time(), sim.sim_time.as_datetime_time(),
+        request.departure_time.as_datetime_time(),
+        sim.sim_time.as_datetime_time(),
     )
 
     report_data = {

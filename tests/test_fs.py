@@ -24,12 +24,15 @@ class TestDictReaderStepper(TestCase):
                 os.chdir(child)
                 result = global_hive_config_search()
                 self.assertIsInstance(
-                    result, GlobalConfig, "should be a GlobalConfig class instance",
+                    result,
+                    GlobalConfig,
+                    "should be a GlobalConfig class instance",
                 )
                 self.assertFalse(
                     result.log_states,
                     "should have found the modified config in the parent directory",
                 )  # default is "True"
                 self.assertTrue(
-                    result.log_run, "should also contain keys from the default config",
+                    result.log_run,
+                    "should also contain keys from the default config",
                 )

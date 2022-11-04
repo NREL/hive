@@ -136,7 +136,9 @@ def get_position_for_phase(
 
 
 def begin_or_replan_dispatch_pooling_state(
-    sim: SimulationState, vehicle_id: VehicleId, trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
+    sim: SimulationState,
+    vehicle_id: VehicleId,
+    trip_plan: Tuple[Tuple[RequestId, TripPhase], ...],
 ) -> Tuple[Optional[Exception], Optional[DispatchPoolingTrip]]:
     """
     create a DispatchPoolingTrip state. if the vehicle is currently in a ServicingPoolingTrip

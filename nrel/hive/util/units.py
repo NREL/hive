@@ -63,12 +63,24 @@ KWH_TO_WH = 1 / WH_TO_KWH
 MilesPerGallon = float
 
 UNIT_CONVERSIONS: Dict[str, Dict[str, float]] = {
-    "mph": {"kmph": MPH_TO_KMPH,},
-    "kmph": {"mph": KMPH_TO_MPH,},
-    "mile": {"kilometer": M_TO_KM,},
-    "kilometer": {"mile": KM_TO_MILE,},
-    "watthour": {"kilowatthour": WH_TO_KWH,},
-    "kilowatthour": {"watthour": KWH_TO_WH,},
+    "mph": {
+        "kmph": MPH_TO_KMPH,
+    },
+    "kmph": {
+        "mph": KMPH_TO_MPH,
+    },
+    "mile": {
+        "kilometer": M_TO_KM,
+    },
+    "kilometer": {
+        "mile": KM_TO_MILE,
+    },
+    "watthour": {
+        "kilowatthour": WH_TO_KWH,
+    },
+    "kilowatthour": {
+        "watthour": KWH_TO_WH,
+    },
     "gal_gas": {},
 }
 

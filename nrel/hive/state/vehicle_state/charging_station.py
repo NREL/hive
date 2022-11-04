@@ -38,7 +38,10 @@ class ChargingStation(VehicleState):
 
     @classmethod
     def build(
-        cls, vehicle_id: VehicleId, station_id: StationId, charger_id: ChargerId,
+        cls,
+        vehicle_id: VehicleId,
+        station_id: StationId,
+        charger_id: ChargerId,
     ) -> ChargingStation:
         """
         build a charging station state
@@ -130,7 +133,10 @@ class ChargingStation(VehicleState):
         return VehicleState.default_update(sim, env, self)
 
     def exit(
-        self, next_state: VehicleState, sim: "SimulationState", env: "Environment",
+        self,
+        next_state: VehicleState,
+        sim: "SimulationState",
+        env: "Environment",
     ) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
         """
         exiting a charge event requires returning the charger_id to the station

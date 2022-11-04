@@ -110,7 +110,8 @@ def initialize_simulation_with_sampling(
     env = Environment(
         config=config,
         mechatronics=build_mechatronics_table(
-            config.input_config.mechatronics_file, config.input_config.scenario_directory,
+            config.input_config.mechatronics_file,
+            config.input_config.scenario_directory,
         ),
         chargers=build_chargers_table(config.input_config.chargers_file),
         schedules=schedules,
@@ -139,7 +140,10 @@ def initialize_simulation_with_sampling(
     return sim_w_vehicles, env
 
 
-def _build_bases(bases_file: str, simulation_state: SimulationState,) -> SimulationState:
+def _build_bases(
+    bases_file: str,
+    simulation_state: SimulationState,
+) -> SimulationState:
     """
     all your base are belong to us
 

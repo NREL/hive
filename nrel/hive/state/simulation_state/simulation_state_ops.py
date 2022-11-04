@@ -228,7 +228,9 @@ def remove_request_safe(sim: SimulationState, request_id: RequestId) -> ResultE[
         )
 
         updated_sim = sim._replace(
-            requests=updated_requests, r_locations=updated_r_locations, r_search=updated_r_search,
+            requests=updated_requests,
+            r_locations=updated_r_locations,
+            r_search=updated_r_search,
         )
 
         return Success(updated_sim)

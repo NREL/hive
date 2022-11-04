@@ -89,12 +89,17 @@ class TestSimulationState(TestCase):
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
 
         updated_veh = sim_updated.vehicles[veh.id]
         self.assertIsInstance(
-            updated_veh.vehicle_state, ReserveBase, "should be reserving at base",
+            updated_veh.vehicle_state,
+            ReserveBase,
+            "should be reserving at base",
         )
 
     def test_set_vehicle_instruction_base_no_base(self):
@@ -110,7 +115,10 @@ class TestSimulationState(TestCase):
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
 
         self.assertIsNone(sim_updated)
@@ -123,13 +131,18 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = ChargeStationInstruction(
-            vehicle_id=veh.id, station_id=sta.id, charger_id=mock_dcfc_charger_id(),
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger_id=mock_dcfc_charger_id(),
         )
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
 
         self.assertIsNotNone(sim_updated)
@@ -146,14 +159,19 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = ChargeStationInstruction(
-            vehicle_id=veh.id, station_id=sta.id, charger_id=mock_dcfc_charger_id(),
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger_id=mock_dcfc_charger_id(),
         )
 
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
 
         self.assertIsNone(sim_updated)
@@ -166,14 +184,19 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = ChargeStationInstruction(
-            vehicle_id=veh.id, station_id=sta.id, charger_id=mock_dcfc_charger_id(),
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger_id=mock_dcfc_charger_id(),
         )
 
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         sim_charging_veh = perform_vehicle_state_updates(sim_updated, env)
 
@@ -214,7 +237,10 @@ class TestSimulationState(TestCase):
         if e2:
             self.fail(e2.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
@@ -244,10 +270,14 @@ class TestSimulationState(TestCase):
         idle_veh = sim_idle.vehicles[veh.id]
 
         self.assertIsInstance(
-            idle_veh.vehicle_state, Idle, "Vehicle should have transitioned to idle.",
+            idle_veh.vehicle_state,
+            Idle,
+            "Vehicle should have transitioned to idle.",
         )
         self.assertEqual(
-            idle_veh.geoid, req.destination, "Vehicle should be at request destination.",
+            idle_veh.geoid,
+            req.destination,
+            "Vehicle should be at request destination.",
         )
         self.assertEqual(
             req.id not in sim_idle.requests,
@@ -265,13 +295,18 @@ class TestSimulationState(TestCase):
         env = mock_env()
 
         instruction = DispatchStationInstruction(
-            vehicle_id=veh.id, station_id=sta.id, charger_id=mock_dcfc_charger_id(),
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger_id=mock_dcfc_charger_id(),
         )
         error, instruction_result = instruction.apply_instruction(sim, env)
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
@@ -311,7 +346,10 @@ class TestSimulationState(TestCase):
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
@@ -350,7 +388,10 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
         sim_at_new_pos = perform_vehicle_state_updates(
@@ -363,10 +404,14 @@ class TestSimulationState(TestCase):
         veh_at_new_loc = sim_in_new_state.vehicles[veh.id]
 
         self.assertIsInstance(
-            veh_at_new_loc.vehicle_state, Idle, "Vehicle should have transitioned to IDLE",
+            veh_at_new_loc.vehicle_state,
+            Idle,
+            "Vehicle should have transitioned to IDLE",
         )
         self.assertEqual(
-            veh_at_new_loc.geoid, somewhere_else, "Vehicle should be located at somewhere_else",
+            veh_at_new_loc.geoid,
+            somewhere_else,
+            "Vehicle should be located at somewhere_else",
         )
 
     def test_terminal_state_charging(self):
@@ -375,7 +420,9 @@ class TestSimulationState(TestCase):
         sim = mock_sim(vehicles=(veh,), stations=(sta,))
 
         instruction = ChargeStationInstruction(
-            vehicle_id=veh.id, station_id=sta.id, charger_id=mock_dcfc_charger_id(),
+            vehicle_id=veh.id,
+            station_id=sta.id,
+            charger_id=mock_dcfc_charger_id(),
         )
         env = mock_env()
         error, instruction_result = instruction.apply_instruction(sim, env)
@@ -384,7 +431,10 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         # 10 hours should get us charged , and 1 more sim step of any size to transition vehicle state
         sim_charged = perform_vehicle_state_updates(
@@ -397,7 +447,9 @@ class TestSimulationState(TestCase):
         fully_charged_veh = sim_in_new_state.vehicles[veh.id]
 
         self.assertIsInstance(
-            fully_charged_veh.vehicle_state, Idle, "Vehicle should have transitioned to IDLE",
+            fully_charged_veh.vehicle_state,
+            Idle,
+            "Vehicle should have transitioned to IDLE",
         )
 
     def test_terminal_state_charging_base(self):
@@ -407,7 +459,9 @@ class TestSimulationState(TestCase):
         sim = mock_sim(vehicles=(veh,), stations=(sta,), bases=(bas,))
 
         instruction = ChargeBaseInstruction(
-            vehicle_id=veh.id, base_id=bas.id, charger_id=mock_dcfc_charger_id(),
+            vehicle_id=veh.id,
+            base_id=bas.id,
+            charger_id=mock_dcfc_charger_id(),
         )
         env = mock_env()
         error, instruction_result = instruction.apply_instruction(sim, env)
@@ -416,7 +470,10 @@ class TestSimulationState(TestCase):
 
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         # 10 hours should get us charged, and 1 more sim step of any size to transition vehicle state
         sim_charged = perform_vehicle_state_updates(
@@ -448,10 +505,14 @@ class TestSimulationState(TestCase):
         if error:
             self.fail(error.args)
         sim_error, sim_updated = entity_state_ops.transition_previous_to_next(
-            sim, env, instruction_result.prev_state, instruction_result.next_state,
+            sim,
+            env,
+            instruction_result.prev_state,
+            instruction_result.next_state,
         )
         self.assertIsNotNone(
-            sim_updated, "test invariant failed - should be able to reposition default vehicle",
+            sim_updated,
+            "test invariant failed - should be able to reposition default vehicle",
         )
 
         # one movement takes more energy than this agent has
@@ -459,20 +520,33 @@ class TestSimulationState(TestCase):
 
         veh_result = sim_out_of_order.vehicles.get(DefaultIds.mock_vehicle_id())
         self.assertIsNotNone(
-            veh_result, "stepped vehicle should have advanced the simulation state",
+            veh_result,
+            "stepped vehicle should have advanced the simulation state",
         )
         self.assertIsInstance(
-            veh_result.vehicle_state, OutOfService, "should have landed in out of service state",
+            veh_result.vehicle_state,
+            OutOfService,
+            "should have landed in out of service state",
         )
 
     def test_get_stations(self):
         sim = mock_sim(
             stations=(
                 mock_station(
-                    "s1", lat=0, lon=0, chargers=immutables.Map({mock_dcfc_charger_id(): 1},),
+                    "s1",
+                    lat=0,
+                    lon=0,
+                    chargers=immutables.Map(
+                        {mock_dcfc_charger_id(): 1},
+                    ),
                 ),
                 mock_station(
-                    "s2", lat=1, lon=1, chargers=immutables.Map({mock_l2_charger_id(): 1},),
+                    "s2",
+                    lat=1,
+                    lon=1,
+                    chargers=immutables.Map(
+                        {mock_l2_charger_id(): 1},
+                    ),
                 ),
             )
         )
@@ -489,10 +563,20 @@ class TestSimulationState(TestCase):
         sim = mock_sim(
             stations=(
                 mock_station(
-                    "s1", lat=0, lon=0, chargers=immutables.Map({mock_dcfc_charger_id(): 1},),
+                    "s1",
+                    lat=0,
+                    lon=0,
+                    chargers=immutables.Map(
+                        {mock_dcfc_charger_id(): 1},
+                    ),
                 ),
                 mock_station(
-                    "s2", lat=0, lon=0, chargers=immutables.Map({mock_l2_charger_id(): 1},),
+                    "s2",
+                    lat=0,
+                    lon=0,
+                    chargers=immutables.Map(
+                        {mock_l2_charger_id(): 1},
+                    ),
                 ),
             )
         )
@@ -545,7 +629,9 @@ class TestSimulationState(TestCase):
         )
 
         sorted_and_filtered_vehicles = sim.get_vehicles(
-            sort=True, sort_key=lambda v: v.energy[EnergyType.ELECTRIC], sort_reversed=True,
+            sort=True,
+            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
+            sort_reversed=True,
         )
 
         self.assertEqual(sorted_and_filtered_vehicles[0].id, "v1", "v1 has highest soc")

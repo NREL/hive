@@ -44,7 +44,8 @@ class TestRequest(TestCase):
         _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
         self.assertEqual(
-            req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
+            req.origin,
+            h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
         )
         self.assertEqual(
             req.destination,
@@ -64,7 +65,8 @@ class TestRequest(TestCase):
         _, req = Request.from_row(row, env, network)
         self.assertEqual(req.id, "1_a")
         self.assertEqual(
-            req.origin, h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
+            req.origin,
+            h3.geo_to_h3(31.2074449, 121.4294263, env.config.sim.sim_h3_resolution),
         )
         self.assertEqual(
             req.destination,
@@ -84,7 +86,10 @@ class TestRequest(TestCase):
             "departure_time": "01-09-2019 11:11:11",
             "passengers": "4",
         }
-        config = mock_config(start_time="2019-01-09T00:00:00", end_time="2019-01-10T00:00:00",)
+        config = mock_config(
+            start_time="2019-01-09T00:00:00",
+            end_time="2019-01-10T00:00:00",
+        )
         env = mock_env(config)
         network = mock_network()
         error, request = Request.from_row(row, env, network)

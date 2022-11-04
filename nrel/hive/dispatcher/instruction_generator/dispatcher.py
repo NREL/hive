@@ -32,7 +32,9 @@ class Dispatcher(InstructionGenerator):
     config: DispatcherConfig
 
     def generate_instructions(
-        self, simulation_state: SimulationState, environment: Environment,
+        self,
+        simulation_state: SimulationState,
+        environment: Environment,
     ) -> Tuple[Dispatcher, Tuple[Instruction, ...]]:
         """
         Generate fleet targets for the dispatcher to execute based on the simulation state.
@@ -46,7 +48,8 @@ class Dispatcher(InstructionGenerator):
         )
 
         def _solve_assignment(
-            inst_acc: Tuple[DispatchTripInstruction, ...], membership_id: Optional[MembershipId],
+            inst_acc: Tuple[DispatchTripInstruction, ...],
+            membership_id: Optional[MembershipId],
         ) -> Tuple[DispatchTripInstruction, ...]:
             def _is_valid_for_dispatch(vehicle: Vehicle) -> bool:
                 vehicle_state_str = vehicle.vehicle_state.__class__.__name__.lower()
@@ -101,10 +104,15 @@ class Dispatcher(InstructionGenerator):
 
             # select assignment of vehicles to requests
             solution = assignment_ops.find_assignment(
-                available_vehicles, unassigned_requests, assignment_ops.h3_distance_cost,
+                available_vehicles,
+                unassigned_requests,
+                assignment_ops.h3_distance_cost,
             )
             instructions = ft.reduce(
-                lambda acc, pair: (*acc, DispatchTripInstruction(pair[0], pair[1]),),
+                lambda acc, pair: (
+                    *acc,
+                    DispatchTripInstruction(pair[0], pair[1]),
+                ),
                 solution.solution,
                 inst_acc,
             )
@@ -118,6 +126,10 @@ class Dispatcher(InstructionGenerator):
 
         initial_instructions: Tuple[DispatchTripInstruction, ...] = tuple()
 
-        all_instructions = ft.reduce(_solve_assignment, fleet_ids, initial_instructions,)
+        all_instructions = ft.reduce(
+            _solve_assignment,
+            fleet_ids,
+            initial_instructions,
+        )
 
         return self, all_instructions

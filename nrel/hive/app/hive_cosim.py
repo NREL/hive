@@ -22,7 +22,8 @@ T = TypeVar("T", bound=InstructionGenerator)
 
 
 def load_scenario(
-    scenario_file: Path, custom_instruction_generators: Optional[Tuple[T, ...]] = None,
+    scenario_file: Path,
+    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
 ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state
