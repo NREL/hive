@@ -1,4 +1,4 @@
-# HIVE™ :honeybee:  
+# <img src="docs/source/images/hive-icon.png" alt="drawing" width="100"/>
 
 **H**ighly  
 **I**ntegrated  
