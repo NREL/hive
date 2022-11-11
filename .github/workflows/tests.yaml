@@ -28,6 +28,7 @@ jobs:
       - name: Install package 
         run: |
           pip install ".[dev]" 
+          mypy --install-types
 
       - name: Run mypy
         run: mypy . 
