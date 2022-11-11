@@ -20,7 +20,7 @@ class TestRequest(TestCase):
         d_lat=3,
         d_lon=4,
         h3_res=11,
-        departure_time=28800,
+        departure_time=SimTime(28800),
         passengers=2,
     )
 

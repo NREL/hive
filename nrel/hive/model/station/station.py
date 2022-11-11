@@ -232,6 +232,8 @@ class Station(Entity):
             error, updated_station = prev_station.append_chargers(charger_id, charger_count, env)
             if error is not None:
                 raise error
+            elif updated_station is None:
+                raise Exception("got error and no station")
             return updated_station
 
     def get_price(self, charger_id: ChargerId) -> Optional[Currency]:

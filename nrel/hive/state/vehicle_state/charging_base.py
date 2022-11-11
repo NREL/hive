@@ -96,6 +96,8 @@ class ChargingBase(VehicleState):
                 charger_err, charger = station.get_charger_instance(self.charger_id)
                 if charger_err is not None:
                     return charger_err, None
+                elif charger is None:
+                    return None, None
                 elif not mechatronics.valid_charger(charger):
                     msg = f"vehicle of type {vehicle.mechatronics_id} can't use charger; context: {context}"
                     return SimulationStateError(msg), None

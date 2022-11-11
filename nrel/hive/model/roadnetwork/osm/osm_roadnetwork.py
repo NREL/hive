@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import networkx as nx
 
 from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
-from nrel.hive.model.roadnetwork.link_id import extract_node_ids
+from nrel.hive.model.roadnetwork.link_id import extract_node_ids, NodeId
 from nrel.hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork_ops import (
     route_from_nx_path,
@@ -26,6 +26,7 @@ from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import LinkId
 from nrel.hive.util.typealiases import GeoId, H3Resolution
 from nrel.hive.util.units import Kmph, Kilometers
+from nrel.hive.model.roadnetwork.link_id import extract_node_ids
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +90,7 @@ class OSMRoadNetwork(RoadNetwork):
         elif missing_speed > 0:
             log.warning(
                 f"found {missing_speed} links in the road network that don't have speed information.\n"
-                f"hive will automatically set these to {self.default_speed_kmph} kmph."
+                f"hive will automatically set these to {default_speed_kmph} kmph."
             )
 
         # build tables on the network edges for spatial lookup and LinkId lookup
@@ -98,6 +99,8 @@ class OSMRoadNetwork(RoadNetwork):
         )
         if link_helper_error:
             raise link_helper_error
+        elif link_helper is None:
+            raise Exception("Was not able to build link helper")
         else:
             # finish constructing OSMRoadNetwork instance
             self.graph = graph
@@ -122,6 +125,10 @@ class OSMRoadNetwork(RoadNetwork):
         elif extract_dst_err:
             log.error(extract_dst_err)
             return empty_route()
+        elif src_nodes is None:
+            return empty_route()
+        elif dst_nodes is None:
+            return empty_route()
         else:
             _, origin_node_id = src_nodes
             destination_node_id, _ = dst_nodes
@@ -136,6 +143,8 @@ class OSMRoadNetwork(RoadNetwork):
                 log.error(
                     f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}"
                 )
+                return empty_route()
+            elif inner_link_path is None:
                 return empty_route()
             else:
                 # modify the start and end GeoIds based on the positions in the src/dst links

@@ -107,6 +107,8 @@ class ChargingStation(VehicleState):
             return SimulationStateError(msg), None
         elif charger_err is not None:
             return charger_err, None
+        elif charger is None:
+            return None, None
         elif not mechatronics.valid_charger(charger):
             msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
             return SimulationStateError(msg), None
@@ -169,6 +171,8 @@ class ChargingStation(VehicleState):
                 )
                 response.__cause__ = error
                 return response, None
+            elif updated_station is None:
+                return None, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(

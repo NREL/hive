@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import logging
+from pathlib import Path
 from typing import (
     Iterator,
     Dict,
@@ -13,6 +14,7 @@ from typing import (
     NamedTuple,
     Iterable,
     Generator,
+    Union,
 )
 
 from itertools import islice, tee
@@ -154,7 +156,7 @@ class DictReaderStepper:
     @classmethod
     def build(
         cls,
-        file: str,
+        file: Union[str, Path],
         step_column_name: str,
         initial_stop_condition: Callable = lambda x: x < 0,
         parser: Callable = lambda x: x,
@@ -169,8 +171,9 @@ class DictReaderStepper:
         :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
+        file = Path(file)
         try:
-            f = open(file, "r")
+            f = file.open("r")
             return (
                 None,
                 cls(

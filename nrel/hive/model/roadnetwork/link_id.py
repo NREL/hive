@@ -1,9 +1,8 @@
 from nrel.hive.util.typealiases import LinkId
-from typing import Optional, Tuple, TypeVar
+from typing import Optional, Tuple, Any
 from ast import literal_eval
-import re
 
-NodeId = TypeVar("NodeId")
+NodeId = Any 
 
 
 def create_link_id(src: int, dst: int) -> LinkId:
@@ -60,6 +59,9 @@ def reverse_link_id(
     if error:
         response = Exception(f"failure during link reversal for link {link_id}")
         response.__cause__ = error
+        return response, None
+    elif node_ids is None:
+        response = Exception(f"failure during link reversal for link {link_id}")
         return response, None
     else:
         src, dst = node_ids

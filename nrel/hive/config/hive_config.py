@@ -34,7 +34,7 @@ class HiveConfig(NamedTuple):
     def build(
         cls,
         scenario_file_path: Path,
-        config: Dict = None,
+        config: Optional[Dict] = None,
         output_suffix: Optional[str] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
     ) -> Union[Exception, HiveConfig]:
         """
@@ -55,7 +55,7 @@ class HiveConfig(NamedTuple):
     @classmethod
     def from_dict(
         cls, d: Dict, scenario_file_path: Path, output_suffix: Optional[str]
-    ) -> Union[Exception, HiveConfig]:
+    ) -> HiveConfig:
         # collect the global hive configuration
         global_config = fs.global_hive_config_search()
 
@@ -142,7 +142,7 @@ class HiveConfig(NamedTuple):
         out_dict["cache"] = cache
 
         for name, config in self._asdict().items():
-            if issubclass(config.__class__, Tuple):
+            if issubclass(config.__class__, tuple):
                 out_dict[name] = config.asdict()
             else:
                 out_dict[name] = config

@@ -74,6 +74,8 @@ class VehicleStateABC(ABC):
                 )
                 err_res.__cause__ = err1
                 return err_res, None
+            elif next_state is None:
+                return None, None
             else:
                 # perform default state transition
                 (

@@ -146,9 +146,3 @@ class ChargerState(NamedTuple):
             updated = self._replace(charger=self.charger._replace(rate=self.charger.rate * factor))
             return Success(updated)
 
-    def reset_charge_rate(self) -> ChargerState:
-        """
-        resets the charge rate to the factory charge rate
-        :return: updated charger state
-        """
-        return self._replace(current_charge_rate=self.charger.rate)

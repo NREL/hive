@@ -30,8 +30,8 @@ class Reporter:
     """
 
     def __init__(self):
-        self.reports: List[Report] = []
-        self.handlers: List[Handler] = []
+        self.reports = []
+        self.handlers = []
 
     def add_handler(self, handler: Handler):
         self.handlers.append(handler)

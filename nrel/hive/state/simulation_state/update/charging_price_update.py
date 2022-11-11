@@ -5,7 +5,7 @@ import functools as ft
 import logging
 from csv import DictReader
 from pathlib import Path
-from typing import Tuple, Optional, Dict
+from typing import Any, Tuple, Optional, Dict
 
 import immutables
 import h3
@@ -68,7 +68,8 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
                 }
                 return acc + (default_price,)
 
-            fallback_values = ft.reduce(create_default_price, table.keys(), ())
+            initial: Tuple[Dict, ...] = ()
+            fallback_values = ft.reduce(create_default_price, table.keys(), initial)
             stepper = DictReaderStepper.from_iterator(
                 iter(fallback_values), "time", parser=SimTime.build
             )
@@ -79,11 +80,15 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
                 raise IOError(f"{charging_price_file} is not a valid path to a request file")
             else:
                 if lazy_file_reading:
-                    error, stepper = DictReaderStepper.build(
+                    error, maybe_stepper = DictReaderStepper.build(
                         charging_path, "time", parser=SimTime.build
                     )
                     if error:
                         raise error
+                    elif maybe_stepper is None:
+                        raise Exception("Was not able to build DictReaderStepper")
+                    else:
+                        stepper = maybe_stepper
                 else:
                     with charging_path.open() as f:
                         reader = iter(tuple(DictReader(f)))
@@ -109,10 +114,11 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             return value < current_sim_time
 
         # parse the most recently available charger_id price data up to the current sim time
+        initial: immutables.Map[str, immutables.Map[ChargerId, Currency]] = immutables.Map()
         charger_update = ft.reduce(
             _add_row_to_this_update,
             self.reader.read_until_stop_condition(stop_condition),
-            immutables.Map(),
+            initial,
         )
 
         if len(charger_update) == 0:
@@ -202,12 +208,16 @@ def _update_station_prices(
         if error is not None:
             log.error(error)
             return simulation_state
+        elif updated_station is None:
+            return simulation_state
         else:
             error, updated_sim = simulation_state_ops.modify_station(
                 simulation_state, updated_station
             )
             if error:
                 log.error(error)
+                return simulation_state
+            elif updated_sim is None:
                 return simulation_state
             else:
                 return updated_sim
@@ -236,7 +246,7 @@ def _map_to_station_ids(
 
                 # find the set of all station search geoids corresponding with the
                 # provided station charge price geoid
-                search_geoids = (k,)
+                search_geoids: Tuple[Any, ...] = (k,)
                 if res > sim.sim_h3_search_resolution:
                     search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution),)
                 elif res < sim.sim_h3_search_resolution:
@@ -246,7 +256,7 @@ def _map_to_station_ids(
                     station_id
                     for search_geoid in search_geoids
                     if sim.s_search.get(search_geoid)
-                    for station_id in sim.s_search.get(search_geoid)
+                    for station_id in sim.s_search[search_geoid]
                 )
 
                 # all of these station ids should get entries managers the provided geoid

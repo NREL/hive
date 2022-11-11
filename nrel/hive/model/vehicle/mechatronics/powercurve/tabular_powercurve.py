@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Tuple
+from typing import TYPE_CHECKING, Optional, Dict, Tuple, Any
 
 import numpy as np
 
@@ -19,7 +19,7 @@ class TabularPowercurve(Powercurve):
 
     def __init__(
         self,
-        data: Dict[str, str],
+        data: Dict[str, Any],
         nominal_max_charge_kw: Optional[Kw] = None,
         battery_capacity_kwh: Optional[KwH] = None,
     ):
@@ -89,9 +89,9 @@ class TabularPowercurve(Powercurve):
         t = 0
         energy_kwh = start_soc
         while t < duration_seconds and energy_kwh < full_soc:
-            veh_kw_rate = np.interp(
+            veh_kw_rate = float(np.interp(
                 energy_kwh, self._charging_energy_kwh, self._charging_rate_kw
-            )  # kilowatt
+            ))  # kilowatt
             charge_power_kw = min(veh_kw_rate, power_kw)  # kilowatt
             kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours
 

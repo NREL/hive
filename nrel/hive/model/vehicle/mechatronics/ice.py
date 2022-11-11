@@ -68,14 +68,14 @@ class ICE(MechatronicsInterface):
         """
         return charger.energy_type == EnergyType.GASOLINE
 
-    def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
 
         :param percent_full:
         :return:
         """
-        return {EnergyType.GASOLINE: self.tank_capacity_gallons * percent_full}
+        return immutables.Map({EnergyType.GASOLINE: self.tank_capacity_gallons * percent_full})
 
     def range_remaining_km(self, vehicle: Vehicle) -> Kilometers:
         """

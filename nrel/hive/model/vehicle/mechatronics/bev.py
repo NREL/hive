@@ -48,7 +48,7 @@ class BEV(MechatronicsInterface):
         :param d: the dictionary to build from
         :return: the built Mechatronics object
         """
-        nominal_watt_hour_per_mile = float(d["nominal_watt_hour_per_mile"])
+        nominal_watt_hour_per_mile = d["nominal_watt_hour_per_mile"]
 
         # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
         updated_d = d.copy()
@@ -71,7 +71,7 @@ class BEV(MechatronicsInterface):
             idle_kwh_per_hour=idle_kwh_per_hour,
             powertrain=powertrain,
             powercurve=powercurve,
-            nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
+            nominal_watt_hour_per_mile=float(nominal_watt_hour_per_mile),
             charge_taper_cutoff_kw=charge_taper_cutoff_kw,
         )
 

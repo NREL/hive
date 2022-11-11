@@ -64,8 +64,8 @@ def global_hive_config_search() -> GlobalConfig:
 
 
 def construct_asset_path(
-    file: str,
-    scenario_directory: str,
+    file: Union[str, Path],
+    scenario_directory: Union[str, Path],
     default_directory_name: str,
     resources_subdirectory: str,
 ) -> str:
@@ -86,13 +86,14 @@ def construct_asset_path(
     :return: the path string if the file exists, otherwise None
     :raises: FileNotFoundError if asset is not found
     """
+    file = Path(file)
     try:
         result = construct_scenario_asset_path(file, scenario_directory, default_directory_name)
         return result
     except FileNotFoundError:
         # try the resources directory fallback
         fallback = pkg_resources.resource_filename(
-            f"nrel.hive.resources.{resources_subdirectory}", file
+            f"nrel.hive.resources.{resources_subdirectory}", str(file)
         )
         if Path(fallback).is_file():
             return fallback

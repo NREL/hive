@@ -20,8 +20,8 @@ class TestStepSimulationOps(TestCase):
             if err is not None:
                 self.fail(err)
 
-        vehicle1: Vehicle = sim.vehicles.get("1")
-        vehicle2: Vehicle = sim.vehicles.get("2")
+        vehicle1 = sim.vehicles["1"]
+        vehicle2 = sim.vehicles["2"]
 
         veh1_idle_time = vehicle1.vehicle_state.idle_duration
         veh2_idle_time = vehicle2.vehicle_state.idle_duration
@@ -63,8 +63,8 @@ class TestStepSimulationOps(TestCase):
             if err is not None:
                 self.fail(err)
 
-        vehicle1: Vehicle = sim.vehicles.get("1")
-        vehicle2: Vehicle = sim.vehicles.get("2")
+        vehicle1 = sim.vehicles["1"]
+        vehicle2 = sim.vehicles["2"]
 
         veh1_state = vehicle1.vehicle_state
         veh2_state = vehicle2.vehicle_state

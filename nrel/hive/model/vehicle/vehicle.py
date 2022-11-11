@@ -121,6 +121,11 @@ class Vehicle(Entity):
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_position = road_network.position_from_geoid(geoid)
 
+                if start_position is None:
+                    raise IOError(
+                        f"vehicle {vehicle_id} cannot be positioned on the road network; check the input lat/lon"
+                    )
+
                 return Vehicle(
                     id=vehicle_id,
                     mechatronics_id=mechatronics_id,

@@ -99,7 +99,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                     # we want to look up edges by their midpoint. that said, two edges will share the same
                     # endpoints, one for each direction. since these two edges would share the same midpoint,
                     # we aim here to make both centroids _just barely_ different by subtracting the midpoint index by 1.
-                    midpoint_h3_line_index = round(len(h3_line) / 2) if len(h3_line) > 0 else None
+                    midpoint_h3_line_index = round(len(h3_line) / 2)
                     src_oriented_midpoint_index = (
                         midpoint_h3_line_index - 1
                         if midpoint_h3_line_index > 0
@@ -129,6 +129,8 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
             acc_error, accumulator = acc
             if acc_error:
                 return acc
+            elif accumulator is None:
+                return acc
             else:
                 try:
                     src, dst, _ = link_tuple
@@ -148,6 +150,16 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                             f"failure getting node coordinates while building OSMRoadNetworkLinkHelper"
                         )
                         response.__cause__ = dst_coord_err
+                        return response, None
+                    elif src_coord is None:
+                        response = Exception(
+                            f"failure getting node coordinates while building OSMRoadNetworkLinkHelper"
+                        )
+                        return response, None
+                    elif dst_coord is None:
+                        response = Exception(
+                            f"failure getting node coordinates while building OSMRoadNetworkLinkHelper"
+                        )
                         return response, None
                     else:
                         src_lat, src_lon = src_coord
@@ -186,11 +198,14 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
 
         # process each link, building the collection of Links by LinkId, and
         # the collections which will be used to build a spatial index over the edge centroids
-        initial = None, Accumulator()
+        initial: Tuple[Optional[Exception], Optional[Accumulator]] = None, Accumulator()
         error, accumulator = ft.reduce(create_link_entry, graph.edges, initial)
         if error:
             response = Exception(f"failure building OSMRoadNetworkLinkHelper")
             response.__cause__ = error
+            return response, None
+        elif accumulator is None:
+            response = Exception(f"failure building OSMRoadNetworkLinkHelper")
             return response, None
         else:
             # construct the spatial index

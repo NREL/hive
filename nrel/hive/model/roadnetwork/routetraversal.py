@@ -85,7 +85,7 @@ class RouteTraversal(NamedTuple):
 
 def traverse(
     route_estimate: Route, duration_seconds: Seconds
-) -> Tuple[Optional[Exception], RouteTraversal]:
+) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
     """
     step through the route from the current agent position (assumed to be start.link_id) toward the destination
 
@@ -110,6 +110,11 @@ def traverse(
             link: LinkTraversal,
         ) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
             acc_failures, acc_traversal = acc
+            if acc_failures:
+                return acc
+            elif acc_traversal is None:
+                return acc
+
             if acc_traversal.no_time_left():
                 return acc_failures, acc_traversal.add_link_not_traversed(link)
             # traverse this link as far as we can go
@@ -118,12 +123,15 @@ def traverse(
                 response = Exception(f"failure during traverse")
                 response.__cause__ = error
                 return response, None
+            elif traverse_result is None:
+                response = Exception(f"failure during traverse")
+                return response, None
             else:
                 updated_experienced_route = acc_traversal.add_traversal(traverse_result)
                 return acc_failures, updated_experienced_route
 
         # initial search state has a route traversal and an Optional[Exception]
-        initial = (
+        initial: Tuple[Optional[Exception], Optional[RouteTraversal]] = (
             None,
             RouteTraversal(remaining_time_seconds=duration_seconds),
         )

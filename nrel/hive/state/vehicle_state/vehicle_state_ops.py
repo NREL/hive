@@ -195,6 +195,8 @@ def move(
     )
     if error:
         return error, None
+    elif traverse_result is None:
+        return None, None
 
     if not traverse_result.experienced_route:
         # vehicle did not traverse so we set an empty route

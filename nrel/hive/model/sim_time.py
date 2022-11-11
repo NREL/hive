@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import Union
 
 from nrel.hive.util.exception import TimeParseError
@@ -57,7 +57,7 @@ class SimTime(int):
     def __str__(self):
         return self.as_iso_time()
 
-    def as_datetime_time(self) -> datetime.time:
+    def as_datetime_time(self) -> time:
         return datetime.utcfromtimestamp(int(self)).time()
 
     def as_epoch_time(self) -> int:

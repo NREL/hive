@@ -46,6 +46,8 @@ def station_state_update(
         err, updated = op(charger_state)
         if err is not None:
             return err, None
+        elif updated is None:
+            return Exception("got no error and no station"), None
         else:
             updated_s = station.state.set(charger_id, updated)
             result = replace(station, state=updated_s)

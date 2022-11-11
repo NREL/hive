@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING, Tuple
+from typing import Iterable, Optional, TYPE_CHECKING, Tuple, cast
 
 import h3
+import immutables
 from returns.result import Success, Failure, ResultE
 
 from nrel.hive.model.sim_time import SimTime
@@ -100,13 +101,13 @@ def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationS
     :return: the updated simulation state or an error
     """
     if entity.__class__.__name__ == "Vehicle":
-        return add_vehicle_safe(sim, entity)
+        return add_vehicle_safe(sim, entity) #type: ignore
     if entity.__class__.__name__ == "Station":
-        return add_station_safe(sim, entity)
+        return add_station_safe(sim, entity) #type: ignore
     if entity.__class__.__name__ == "Base":
-        return add_base_safe(sim, entity)
+        return add_base_safe(sim, entity) #type: ignore
     if entity.__class__.__name__ == "Request":
-        return add_request_safe(sim, entity)
+        return add_request_safe(sim, entity) #type: ignore
     else:
         err = SimulationStateError(f"cannot add entity {entity} to simulation")
         return Failure(err)
@@ -141,13 +142,13 @@ def modify_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[Simulati
     :return: the updated simulation state or an error
     """
     if entity.__class__.__name__ == "Vehicle":
-        return modify_vehicle_safe(sim, entity)
+        return modify_vehicle_safe(sim, entity) #type: ignore
     if entity.__class__.__name__ == "Station":
-        return modify_station_safe(sim, entity)
+        return modify_station_safe(sim, entity) #type: ignore
     if entity.__class__.__name__ == "Base":
-        return modify_base_safe(sim, entity)
+        return modify_base_safe(sim, entity) #type: ignore
     if entity.__class__.__name__ == "Request":
-        return modify_request_safe(sim, entity)
+        return modify_request_safe(sim, entity) #type: ignore
     else:
         err = SimulationStateError(f"cannot modify entity {entity} to simulation")
         return Failure(err)
@@ -281,7 +282,7 @@ def modify_request_safe(sim: SimulationState, updated_request: Request) -> Resul
         )
 
         updated_sim = sim._replace(
-            requests=result.entities if result.entities else sim.requests,
+            requests=result.entities if result.entities else sim.requests, #type: ignore
             r_locations=result.locations if result.locations else sim.r_locations,
             r_search=result.search if result.search else sim.r_search,
         )
@@ -340,9 +341,9 @@ def modify_vehicle_safe(sim: SimulationState, updated_vehicle: Vehicle) -> Resul
     #   traveling between two protruding hexes. I think we can allow this since we guarantee that a request
     #   o-d pair will always be within the geofence.
     vehicle = sim.vehicles.get(updated_vehicle.id)
-    if not vehicle:
+    if vehicle is None:
         error = SimulationStateError(
-            f"cannot update vehicle {vehicle.id}, it was not already in the sim"
+            f"cannot update vehicle {updated_vehicle.id}, it was not already in the sim"
         )
         return Failure(error)
     elif not sim.road_network.geoid_within_geofence(updated_vehicle.geoid):
@@ -360,7 +361,7 @@ def modify_vehicle_safe(sim: SimulationState, updated_vehicle: Vehicle) -> Resul
         )
 
         updated_sim = sim._replace(
-            vehicles=updated_dictionaries.entities
+            vehicles=updated_dictionaries.entities #type: ignore 
             if updated_dictionaries.entities
             else sim.vehicles,
             v_locations=updated_dictionaries.locations

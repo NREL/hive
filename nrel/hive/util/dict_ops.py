@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Tuple, Optional, TypeVar, Dict, FrozenSet, TYPE_CHECKING
+from typing import NamedTuple, Tuple, Optional, TypeVar, FrozenSet, TYPE_CHECKING
 
 import h3
 import immutables
@@ -70,7 +70,7 @@ class DictOps:
         cls,
         xs: immutables.Map[str, FrozenSet[V]],
         collection_id: str,
-        obj_id: str,
+        obj_id: V,
     ) -> immutables.Map[str, FrozenSet[V]]:
         """
         updates Dicts that track collections of entities
@@ -88,8 +88,8 @@ class DictOps:
 
     @classmethod
     def add_to_stack_dict(
-        cls, xs: immutables.Map[str, Tuple[V]], collection_id: str, obj: V
-    ) -> immutables.Map[str, Tuple[V]]:
+        cls, xs: immutables.Map[str, Tuple[V, ...]], collection_id: str, obj: V
+    ) -> immutables.Map[str, Tuple[V, ...]]:
         """
         updates Dicts that hold a stack of entities;
         note that the head of the tuple represents the top of the stack; elements always get inserted into the head;
@@ -101,16 +101,16 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        stack = xs.get(collection_id, tuple())
+        stack = xs.get(collection_id, ())
         updated_stack = (obj,) + stack
         return xs.set(collection_id, updated_stack)
 
     @classmethod
     def pop_from_stack_dict(
         cls,
-        xs: immutables.Map[str, Tuple[V]],
+        xs: immutables.Map[str, Tuple[V, ...]],
         collection_id: str,
-    ) -> Tuple[Optional[V], immutables.Map[str, Tuple[V]]]:
+    ) -> Tuple[Optional[V], immutables.Map[str, Tuple[V, ...]]]:
         """
         pops an element from the stack and returns it;
         note that the head of the tuple represents the top of the stack; popped elements come from the tuple head;
@@ -122,7 +122,7 @@ class DictOps:
         :param obj_id:
         :return:
         """
-        stack = xs.get(collection_id, tuple())
+        stack = xs.get(collection_id, ())
         if stack:
             obj, updated_stack = stack[0], stack[1:]
         else:
@@ -160,8 +160,8 @@ class DictOps:
         cls,
         updated_entity: Entity,
         entities: immutables.Map[EntityId, Entity],
-        locations: immutables.Map[GeoId, FrozenSet[Entity]],
-        search: immutables.Map[GeoId, FrozenSet[Entity]],
+        locations: immutables.Map[GeoId, FrozenSet[EntityId]],
+        search: immutables.Map[GeoId, FrozenSet[EntityId]],
         sim_h3_search_resolution: int,
     ) -> EntityUpdateResult:
         """

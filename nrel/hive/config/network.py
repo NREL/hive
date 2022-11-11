@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union, Tuple
+from typing import NamedTuple, Dict, Optional, Tuple
 
 from nrel.hive.config.config_builder import ConfigBuilder
 
@@ -18,7 +18,7 @@ class Network(NamedTuple):
         return ()
 
     @classmethod
-    def build(cls, config: Dict = None) -> Union[Exception, Network]:
+    def build(cls, config: Optional[Dict] = None) -> Network:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),

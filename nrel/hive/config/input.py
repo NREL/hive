@@ -20,13 +20,13 @@ class Input(NamedTuple):
     stations_file: str
     mechatronics_file: str
     chargers_file: str
-    schedules_file: Optional[str]
-    road_network_file: Optional[str]
-    geofence_file: Optional[str]
-    rate_structure_file: Optional[str]
-    charging_price_file: Optional[str]
-    demand_forecast_file: Optional[str]
-    fleets_file: Optional[str]
+    schedules_file: Optional[str] = None
+    road_network_file: Optional[str] = None
+    geofence_file: Optional[str] = None
+    rate_structure_file: Optional[str] = None
+    charging_price_file: Optional[str] = None
+    demand_forecast_file: Optional[str] = None
+    fleets_file: Optional[str] = None
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -37,9 +37,7 @@ class Input(NamedTuple):
         return "vehicles_file", "requests_file", "stations_file", "bases_file"
 
     @classmethod
-    def build(
-        cls, config: Dict, scenario_file_path: Path, cache: Optional[Dict]
-    ) -> Union[Input, Exception]:
+    def build(cls, config: Dict, scenario_file_path: Path, cache: Optional[Dict]) -> Input:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
@@ -126,7 +124,7 @@ class Input(NamedTuple):
             else None
         )
 
-        input = {
+        input_config = {
             "scenario_directory": str(scenario_directory),
             "scenario_file": scenario_file,
             "vehicles_file": vehicles_file,
@@ -149,11 +147,27 @@ class Input(NamedTuple):
             for (
                 name,
                 path,
-            ) in input.items():  # input_config.asdict(absolute_paths=True).items():
+            ) in input_config.items():  # input_config.asdict(absolute_paths=True).items():
                 if path:
                     cls._check_md5_checksum(path, cache[name])
 
-        return Input(**input)
+        return Input(
+            scenario_directory=str(scenario_directory),
+            scenario_file=scenario_file,
+            vehicles_file=vehicles_file,
+            requests_file=requests_file,
+            bases_file=bases_file,
+            stations_file=stations_file,
+            schedules_file=schedules_file,
+            chargers_file=chargers_file,
+            mechatronics_file=mechatronics_file,
+            road_network_file=road_network_file,
+            geofence_file=geofence_file,
+            rate_structure_file=rate_structure_file,
+            charging_price_file=charging_price_file,
+            demand_forecast_file=demand_forecast_file,
+            fleets_file=fleets_file,
+        )
 
     @staticmethod
     def _check_md5_checksum(filepath: str, existing_md5_sum: str):

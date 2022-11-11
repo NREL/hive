@@ -31,7 +31,7 @@ i_map: immutables.Map[VehicleId, List[Instruction]] = immutables.Map()
 
 
 class InstructionGenerationResult(NamedTuple):
-    instruction_stack: immutables.Map[VehicleId, Tuple[Instruction]] = immutables.Map()
+    instruction_stack: immutables.Map[VehicleId, Tuple[Instruction, ...]] = immutables.Map()
     updated_instruction_generators: Tuple[InstructionGenerator, ...] = ()
 
     def apply_instruction_generator(

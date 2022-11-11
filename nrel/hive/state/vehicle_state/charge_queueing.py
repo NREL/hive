@@ -97,6 +97,8 @@ class ChargeQueueing(VehicleState):
             err1, updated_station = station.enqueue_for_charger(self.charger_id)
             if err1 is not None:
                 return err1, None
+            elif updated_station is None:
+                return None, None
             else:
                 err2, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                 if err2 is not None:
@@ -140,6 +142,8 @@ class ChargeQueueing(VehicleState):
             error, updated_station = station.dequeue_for_charger(self.charger_id)
             if error is not None:
                 return error, None
+            elif updated_station is None:
+                return None, None
             else:
                 error, updated_sim = simulation_state_ops.modify_station(sim, updated_station)
                 if error:
