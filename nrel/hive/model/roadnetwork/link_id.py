@@ -2,7 +2,7 @@ from nrel.hive.util.typealiases import LinkId
 from typing import Optional, Tuple, Any
 from ast import literal_eval
 
-NodeId = Any 
+NodeId = Any
 
 
 def create_link_id(src: int, dst: int) -> LinkId:

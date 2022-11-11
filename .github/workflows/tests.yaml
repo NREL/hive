@@ -29,6 +29,9 @@ jobs:
         run: |
           pip install ".[dev]" 
 
+      - name: Run mypy
+        run: mypy . 
+
       - name: Run black
         run: |
           black nrel tests --check

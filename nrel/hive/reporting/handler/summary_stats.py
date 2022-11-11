@@ -57,10 +57,8 @@ class SummaryStats:
             0.0,
         )
 
-        if self.requests > 0: 
-            requests_served_percent = (
-                1 - (self.cancelled_requests / self.requests)
-            )
+        if self.requests > 0:
+            requests_served_percent = 1 - (self.cancelled_requests / self.requests)
         else:
             requests_served_percent = 0.0
 
@@ -73,9 +71,7 @@ class SummaryStats:
             if state_count is None:
                 observed_pct = 0.0
             else:
-                observed_pct = (
-                    state_count / total_state_count 
-                )
+                observed_pct = state_count / total_state_count
             vkt = self.vkt.get(v, 0)
             data = {"observed_percent": observed_pct, "vkt": vkt}
             vehicle_state_output.update({v: data})

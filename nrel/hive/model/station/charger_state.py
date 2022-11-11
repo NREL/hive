@@ -145,4 +145,3 @@ class ChargerState(NamedTuple):
         else:
             updated = self._replace(charger=self.charger._replace(rate=self.charger.rate * factor))
             return Success(updated)
-

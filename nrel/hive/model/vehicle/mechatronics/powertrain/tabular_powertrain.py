@@ -81,11 +81,13 @@ class TabularPowertrain(Powertrain):
         # convert kilometers per hour to whatever units are used by this powertrain
         link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
 
-        energy_per_distance = float(np.interp(
-            link_speed,
-            self.consumption_speed,
-            self.consumption_energy_per_distance,
-        ))
+        energy_per_distance = float(
+            np.interp(
+                link_speed,
+                self.consumption_speed,
+                self.consumption_energy_per_distance,
+            )
+        )
         # link distance is in kilometers
         link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)
         energy = energy_per_distance * link_distance

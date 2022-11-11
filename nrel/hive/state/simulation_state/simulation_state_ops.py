@@ -101,13 +101,13 @@ def add_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[SimulationS
     :return: the updated simulation state or an error
     """
     if entity.__class__.__name__ == "Vehicle":
-        return add_vehicle_safe(sim, entity) #type: ignore
+        return add_vehicle_safe(sim, entity)  # type: ignore
     if entity.__class__.__name__ == "Station":
-        return add_station_safe(sim, entity) #type: ignore
+        return add_station_safe(sim, entity)  # type: ignore
     if entity.__class__.__name__ == "Base":
-        return add_base_safe(sim, entity) #type: ignore
+        return add_base_safe(sim, entity)  # type: ignore
     if entity.__class__.__name__ == "Request":
-        return add_request_safe(sim, entity) #type: ignore
+        return add_request_safe(sim, entity)  # type: ignore
     else:
         err = SimulationStateError(f"cannot add entity {entity} to simulation")
         return Failure(err)
@@ -142,13 +142,13 @@ def modify_entity_safe(sim: SimulationState, entity: Entity) -> ResultE[Simulati
     :return: the updated simulation state or an error
     """
     if entity.__class__.__name__ == "Vehicle":
-        return modify_vehicle_safe(sim, entity) #type: ignore
+        return modify_vehicle_safe(sim, entity)  # type: ignore
     if entity.__class__.__name__ == "Station":
-        return modify_station_safe(sim, entity) #type: ignore
+        return modify_station_safe(sim, entity)  # type: ignore
     if entity.__class__.__name__ == "Base":
-        return modify_base_safe(sim, entity) #type: ignore
+        return modify_base_safe(sim, entity)  # type: ignore
     if entity.__class__.__name__ == "Request":
-        return modify_request_safe(sim, entity) #type: ignore
+        return modify_request_safe(sim, entity)  # type: ignore
     else:
         err = SimulationStateError(f"cannot modify entity {entity} to simulation")
         return Failure(err)
@@ -282,7 +282,7 @@ def modify_request_safe(sim: SimulationState, updated_request: Request) -> Resul
         )
 
         updated_sim = sim._replace(
-            requests=result.entities if result.entities else sim.requests, #type: ignore
+            requests=result.entities if result.entities else sim.requests,  # type: ignore
             r_locations=result.locations if result.locations else sim.r_locations,
             r_search=result.search if result.search else sim.r_search,
         )
@@ -361,7 +361,7 @@ def modify_vehicle_safe(sim: SimulationState, updated_vehicle: Vehicle) -> Resul
         )
 
         updated_sim = sim._replace(
-            vehicles=updated_dictionaries.entities #type: ignore 
+            vehicles=updated_dictionaries.entities  # type: ignore
             if updated_dictionaries.entities
             else sim.vehicles,
             v_locations=updated_dictionaries.locations

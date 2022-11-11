@@ -11,7 +11,6 @@ from nrel.hive.util.typealiases import VehicleId, ScheduleId
 from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 
 
-
 def time_range_schedules_from_file(
     file: str,
 ) -> Map[ScheduleId, ScheduleFunction]:
@@ -74,5 +73,5 @@ def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
         within_scheduled_time = time_in_range(start_time, end_time, sim_time)
         return within_scheduled_time
 
-    updated_schedules = acc.set(schedule_id,  _schedule_fn)
+    updated_schedules = acc.set(schedule_id, _schedule_fn)
     return updated_schedules

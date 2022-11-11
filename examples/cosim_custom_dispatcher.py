@@ -57,9 +57,7 @@ def run():
         crank_result = hc.crank(rp, 10)
 
         # get dispatcher to update it
-        dispatcher = get_instruction_generator(
-            crank_result.runner_payload, CustomDispatcher
-        )
+        dispatcher = get_instruction_generator(crank_result.runner_payload, CustomDispatcher)
 
         # apply some change to the state of the dispatcher
         updated_dispatcher = dispatcher.new_random_state()

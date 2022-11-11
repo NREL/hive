@@ -89,9 +89,9 @@ class TabularPowercurve(Powercurve):
         t = 0
         energy_kwh = start_soc
         while t < duration_seconds and energy_kwh < full_soc:
-            veh_kw_rate = float(np.interp(
-                energy_kwh, self._charging_energy_kwh, self._charging_rate_kw
-            ))  # kilowatt
+            veh_kw_rate = float(
+                np.interp(energy_kwh, self._charging_energy_kwh, self._charging_rate_kw)
+            )  # kilowatt
             charge_power_kw = min(veh_kw_rate, power_kw)  # kilowatt
             kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours
 
