@@ -8,8 +8,6 @@ from typing import TYPE_CHECKING, Callable, Optional, Tuple, Dict
 
 import immutables
 
-from returns.result import ResultE, Success, Failure
-
 from nrel.hive.config import HiveConfig
 from nrel.hive.initialization.initialize_ops import (
     process_fleet_file,
@@ -30,7 +28,8 @@ from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
-    from nrel.hive.util.typealiases import MembershipMap
+    from nrel.hive.util.typealiases import MembershipMap, ScheduleId
+    from nrel.hive.model.vehicle.schedules import ScheduleFunction 
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ def initialize_simulation(
         if config.input_config.road_network_file is None:
             raise IOError("Must supply a road network file when using the osm_network")
 
-        road_network = OSMRoadNetwork(
+        road_network = OSMRoadNetwork( # type: ignore
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
             road_network_file=Path(config.input_config.road_network_file),
@@ -92,7 +91,7 @@ def initialize_simulation(
     fleet_ids = (
         read_fleet_ids_from_file(config.input_config.fleets_file)
         if config.input_config.fleets_file
-        else []
+        else frozenset() 
     )
 
     # read in fleet memberships for vehicles/stations/bases
@@ -113,7 +112,7 @@ def initialize_simulation(
     )
 
     if config.input_config.schedules_file is None:
-        schedules = immutables.Map()
+        schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
     else:
         schedules = build_schedules_table(
             config.sim.schedule_type, config.input_config.schedules_file
@@ -158,7 +157,7 @@ def initialize_simulation(
 
 def _build_vehicles(
     vehicles_file: str,
-    vehicle_member_ids: MembershipMap,
+    vehicle_member_ids: Optional[MembershipMap],
     simulation_state: SimulationState,
     environment: Environment,
     vehicle_filter: Callable[[Vehicle], bool],
@@ -192,12 +191,8 @@ def _build_vehicles(
     # open vehicles file and add each row
     with open(vehicles_file, "r", encoding="utf-8-sig") as vf:
         reader = csv.DictReader(vf)
-        vehicles = list(
-            filter(
-                lambda v: v is not None,
-                [_collect_vehicle(row) for row in reader],
-            )
-        )
+        vehicles_or_none = [_collect_vehicle(row) for row in reader]
+        vehicles = [v for v in vehicles_or_none if v is not None]
         sim_with_vehicles = simulation_state_ops.add_entities(simulation_state, vehicles)
 
     return sim_with_vehicles
@@ -205,7 +200,7 @@ def _build_vehicles(
 
 def _build_bases(
     bases_file: str,
-    base_member_ids: MembershipMap,
+    base_member_ids: Optional[MembershipMap],
     simulation_state: SimulationState,
     base_filter: Callable[[Base], bool],
 ) -> SimulationState:
@@ -234,7 +229,8 @@ def _build_bases(
     # add all bases from the base file
     with open(bases_file, "r", encoding="utf-8-sig") as bf:
         reader = csv.DictReader(bf)
-        bases = list(filter(lambda b: b is not None, [_collect_base(row) for row in reader]))
+        bases_or_none = [_collect_base(row) for row in reader]
+        bases = [b for b in bases_or_none if b is not None]
 
     sim_w_bases = simulation_state_ops.add_entities(simulation_state, bases)
 
@@ -266,29 +262,36 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                 home_base_membership_id = f"{v.id}_private_{home_base_id}"
                 updated_v = v.add_membership(home_base_membership_id)
                 updated_b = home_base.add_membership(home_base_membership_id)
-                station = sim.stations.get(home_base.station_id)
-                updated_s = station.add_membership(home_base_membership_id) if station else None
 
                 error_v, with_v = simulation_state_ops.modify_vehicle(acc, updated_v)
                 if error_v:
                     log.error(error_v)
+                    return acc
+                elif with_v is None:
                     return acc
                 else:
                     error_b, with_b = simulation_state_ops.modify_base(with_v, updated_b)
                     if error_b:
                         log.error(error_b)
                         return acc
+                    elif with_b is None:
+                        return acc
                     else:
-                        # bases are not required to have stations (they are optional)
-                        if not station:
+                        if home_base.station_id is None:
                             return with_b
                         else:
+                            station = sim.stations.get(home_base.station_id) 
+                            if station is None:
+                                return with_b 
+                            updated_s = station.add_membership(home_base_membership_id)
                             (
                                 error_s,
                                 with_s,
                             ) = simulation_state_ops.modify_station(with_b, updated_s)
                             if error_s:
                                 log.error(error_s)
+                                return acc
+                            elif with_s is None:
                                 return acc
                             else:
                                 return with_s
@@ -299,7 +302,7 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
 
 def _build_stations(
     stations_file: str,
-    station_member_ids: MembershipMap,
+    station_member_ids: Optional[MembershipMap],
     simulation_state: SimulationState,
     station_filter: Callable[[Station], bool],
     env: Environment,

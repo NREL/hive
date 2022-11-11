@@ -478,10 +478,10 @@ def mock_config(
     timestep_duration_seconds: Seconds = 1,
     sim_h3_location_resolution: int = 15,
     sim_h3_search_resolution: int = 9,
-    input: Dict = None,
+    input_config: Optional[Dict] = None,
 ) -> HiveConfig:
-    if not input:
-        input = {
+    if not input_config:
+        input_config = {
             "vehicles_file": "denver_demo_vehicles.csv",
             "requests_file": "denver_demo_requests.csv",
             "bases_file": "denver_demo_bases.csv",
@@ -510,7 +510,7 @@ def mock_config(
                 "sim_h3_search_resolution": sim_h3_search_resolution,
                 "sim_name": "test_sim",
             },
-            "input": input,
+            "input": input_config,
             "network": {},
             "dispatcher": {},
         },

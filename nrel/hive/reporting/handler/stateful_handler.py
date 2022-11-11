@@ -60,7 +60,6 @@ class StatefulHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()
-        self.log_file = None
 
     @staticmethod
     def driver_asdict(vehicle: Vehicle) -> dict:
@@ -86,9 +85,9 @@ class StatefulHandler(Handler):
         }
 
         # deconstruct energy source
-        for key, val in vehicle.energy.items():
-            new_key = "energy_" + key.name
-            output[new_key] = val
+        for energy_type, energy_val in vehicle.energy.items():
+            new_key = "energy_" + energy_type.name
+            output[new_key] = energy_val 
         # del (output['energy'])
 
         # deconstruct link

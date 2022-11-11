@@ -74,12 +74,14 @@ def complete_trip_phase(
     :return: an error, or, the updated simulation state
     """
 
-    vehicle_state = vehicle.vehicle_state
-    if not vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+    if not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
         return (
             Exception(f"vehicle state is not ServicingPoolingTrip but {type(vehicle_state)}"),
             None,
         )
+    else:
+        vehicle_state: ServicingPoolingTrip = vehicle.vehicle_state #type: ignore
+
     updated_trip_plan = TupleOps.tail(vehicle_state.trip_plan)
     updated_routes = TupleOps.tail(vehicle_state.routes)
     if active_trip.trip_phase == TripPhase.PICKUP:
@@ -163,7 +165,7 @@ def complete_trip_phase(
 def update_active_pooling_trip(
     sim: SimulationState,
     env: Environment,
-    vehicle_state: ServicingPoolingTrip,
+    vehicle_id: VehicleId,
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     helper to update the route of the leading trip when no route changes are required
@@ -171,8 +173,8 @@ def update_active_pooling_trip(
     :param vehicle_state:
     :return:
     """
-    context = f"updating active pooling trip for vehicle {vehicle_state.vehicle_id}"
-    vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
+    context = f"updating active pooling trip for vehicle {vehicle_id}"
+    vehicle = sim.vehicles.get(vehicle_id)
     if vehicle is None:
         return (
             SimulationStateError(f"vehicle not found; context: {context}"),
@@ -181,16 +183,16 @@ def update_active_pooling_trip(
     if not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
         return Exception("can only update vehicles in ServicingPoolingTrip states"), None
     else:
-        vehicle_state: ServicingPoolingTrip = vehicle.vehicle_state
+        pooling_state: ServicingPoolingTrip = vehicle.vehicle_state #type: ignore
 
-    current_route = vehicle_state.route
+    current_route = pooling_state.route
     if len(current_route) > 0:
         # vehicle still on current route, noop
         return None, sim
     else:
         # we reached the end of a route, so, we need to perform whatever trip phase
         # action is required and then update the vehicle state accordingly
-        err1, active_trip = get_active_pooling_trip(vehicle_state)
+        err1, active_trip = get_active_pooling_trip(pooling_state)
         if err1 is not None:
             response = SimulationStateError(
                 f"failure during update_active_pooling_trip for vehicle {vehicle.id}"

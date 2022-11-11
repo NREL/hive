@@ -11,8 +11,7 @@ from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHan
 if TYPE_CHECKING:
     from nrel.hive.model.membership import MembershipId
     from nrel.hive.runner.runner_payload import RunnerPayload
-    from nrel.hive.reporting.handler import Handler
-    from nrel.hive.config.global_config import GlobalConfig
+    from nrel.hive.reporting.handler.handler import Handler
 
 
 class Report(NamedTuple):

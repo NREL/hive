@@ -238,5 +238,5 @@ class ServicingPoolingTrip(VehicleState):
                 return None, None
             else:
                 # update the state of the pooling trip
-                result = update_active_pooling_trip(move_sim, env, self)
+                result = update_active_pooling_trip(move_sim, env, self.vehicle_id)
                 return result

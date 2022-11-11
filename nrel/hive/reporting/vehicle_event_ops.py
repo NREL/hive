@@ -49,14 +49,14 @@ def vehicle_move_event(
             f"Energy types do not match: {set(prev_vehicle.energy.keys())} != {set(next_vehicle.energy.keys())}"
         )
     elif len(next_vehicle.energy.keys()) > 1:
-        raise NotImplemented("hive doesn't currently support multiple energy types")
+        raise NotImplementedError("hive doesn't currently support multiple energy types")
     else:
         energy_units = list(next_vehicle.energy.keys())[0].units
 
     delta_energy = ft.reduce(
-        lambda acc, e_type: acc + next_vehicle.energy.get(e_type) - prev_vehicle.energy.get(e_type),
+        lambda acc, e_type: acc + next_vehicle.energy[e_type] - prev_vehicle.energy[e_type],
         next_vehicle.energy.keys(),
-        0,
+        0.0,
     )
 
     geoid = next_vehicle.geoid
@@ -230,7 +230,7 @@ def report_dropoff_request(vehicle: Vehicle, sim: SimulationState, request: Requ
 
 
 def construct_station_load_events(
-    reports: Tuple[Report], sim: SimulationState
+    reports: Tuple[Report, ...], sim: SimulationState
 ) -> Tuple[Report, ...]:
     """
     a station load report takes any vehicle charge events and attributes them to a
@@ -266,21 +266,21 @@ def construct_station_load_events(
 
             return updated_acc
 
-    def _to_reports(acc: immutables.Map[StationId, float]) -> Tuple[Report, ...]:
+    def _to_reports(acc: immutables.Map[StationId, Tuple[float, str]]) -> Tuple[Report, ...]:
         """
         transforms the accumulated values into Reports
         :return: a collection of STATION_LOAD_EVENT reports
         """
 
         def _cast_as_report(station_id: StationId):
-            energy, energy_units = acc.get(station_id)
+            energy, energy_units = acc[station_id]
             report = Report(
                 report_type=ReportType.STATION_LOAD_EVENT,
                 report={
                     "station_id": station_id,
-                    "sim_time_start": sim_time_start,
-                    "sim_time_end": sim_time_end,
-                    "energy": energy,
+                    "sim_time_start": str(sim_time_start),
+                    "sim_time_end": str(sim_time_end),
+                    "energy": str(energy),
                     "energy_units": energy_units,
                 },
             )
@@ -290,7 +290,9 @@ def construct_station_load_events(
         return these_reports
 
     # collect vehicle charge events
-    reported_charge_events_accumulator = ft.reduce(_add, reports, immutables.Map())
+    reported_charge_events_accumulator: immutables.Map[StationId, Tuple[float, str]] = ft.reduce(
+        _add, reports, immutables.Map()
+    )
 
     # create entries for stations with no charge events reported
     reported_stations: Set[StationId] = set(reported_charge_events_accumulator.keys())

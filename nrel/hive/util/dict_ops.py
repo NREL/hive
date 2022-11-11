@@ -12,9 +12,9 @@ if TYPE_CHECKING:
 
 
 class EntityUpdateResult(NamedTuple):
-    entities: Optional[Dict] = None
-    locations: Optional[Dict] = None
-    search: Optional[Dict] = None
+    entities: Optional[immutables.Map[EntityId, Entity]] = None
+    locations: Optional[immutables.Map[GeoId, FrozenSet[EntityId]]] = None
+    search: Optional[immutables.Map[GeoId, FrozenSet[EntityId]]] = None
 
 
 class DictOps:
@@ -159,9 +159,9 @@ class DictOps:
     def update_entity_dictionaries(
         cls,
         updated_entity: Entity,
-        entities: immutables.Map[EntityId, Tuple[Entity, ...]],
-        locations: immutables.Map[GeoId, Tuple[Entity, ...]],
-        search: immutables.Map[GeoId, Tuple[Entity, ...]],
+        entities: immutables.Map[EntityId, Entity],
+        locations: immutables.Map[GeoId, FrozenSet[Entity]],
+        search: immutables.Map[GeoId, FrozenSet[Entity]],
         sim_h3_search_resolution: int,
     ) -> EntityUpdateResult:
         """
