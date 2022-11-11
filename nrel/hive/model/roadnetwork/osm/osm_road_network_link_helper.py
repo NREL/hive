@@ -198,7 +198,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
 
         # process each link, building the collection of Links by LinkId, and
         # the collections which will be used to build a spatial index over the edge centroids
-        initial: Tuple[Optional[Exception], Optional[Accumulator]] = None, Accumulator()
+        initial: Tuple[Optional[Exception], Optional[Accumulator]] = (None, Accumulator())
         error, accumulator = ft.reduce(create_link_entry, graph.edges, initial)
         if error:
             response = Exception(f"failure building OSMRoadNetworkLinkHelper")
