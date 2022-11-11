@@ -87,7 +87,7 @@ class StatefulHandler(Handler):
         # deconstruct energy source
         for energy_type, energy_val in vehicle.energy.items():
             new_key = "energy_" + energy_type.name
-            output[new_key] = energy_val 
+            output[new_key] = energy_val
         # del (output['energy'])
 
         # deconstruct link

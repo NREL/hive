@@ -80,7 +80,7 @@ def complete_trip_phase(
             None,
         )
     else:
-        vehicle_state: ServicingPoolingTrip = vehicle.vehicle_state #type: ignore
+        vehicle_state: ServicingPoolingTrip = vehicle.vehicle_state  # type: ignore
 
     updated_trip_plan = TupleOps.tail(vehicle_state.trip_plan)
     updated_routes = TupleOps.tail(vehicle_state.routes)
@@ -183,7 +183,7 @@ def update_active_pooling_trip(
     if not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
         return Exception("can only update vehicles in ServicingPoolingTrip states"), None
     else:
-        pooling_state: ServicingPoolingTrip = vehicle.vehicle_state #type: ignore
+        pooling_state: ServicingPoolingTrip = vehicle.vehicle_state  # type: ignore
 
     current_route = pooling_state.route
     if len(current_route) > 0:

@@ -56,9 +56,9 @@ class TimeStepStatsHandler(Handler):
             self.fleets_data: Dict[str, List[Dict[str, Any]]] = {}
             for fleet_id in fleet_ids:
                 if fleet_id is None:
-                    self.fleets_data["none"] = [] 
+                    self.fleets_data["none"] = []
                 else:
-                    self.fleets_data[fleet_id] = [] 
+                    self.fleets_data[fleet_id] = []
         else:
             self.log_fleet_time_step_stats = False
 
@@ -184,7 +184,7 @@ class TimeStepStatsHandler(Handler):
 
             # get count of requests currently being serviced by a vehicle
             pooling_request_count = sum(
-                [len(v.vehicle_state.boarded_requests) for v in veh_pooling] #type: ignore
+                [len(v.vehicle_state.boarded_requests) for v in veh_pooling]  # type: ignore
             )
             stats_row["servicing_requests"] = (
                 veh_state_counts[VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
@@ -318,7 +318,7 @@ class TimeStepStatsHandler(Handler):
                 # get number of assigned requests in this fleet
                 assigned_requests = veh_state_counts_in_fleet[VehicleStateType.DISPATCH_TRIP.name]
                 assigned_pooling_requests = sum(
-                    [len(v.vehicle_state.trip_plan) for v in veh_dispatch_pooling_in_fleet] #type: ignore
+                    [len(v.vehicle_state.trip_plan) for v in veh_dispatch_pooling_in_fleet]  # type: ignore
                 )
                 fleet_stats_row["assigned_requests"] = assigned_requests + assigned_pooling_requests
 
@@ -331,7 +331,7 @@ class TimeStepStatsHandler(Handler):
                 # get count of requests currently being serviced by a vehicle
                 servicing_requests = veh_state_counts_in_fleet[VehicleStateType.SERVICING_TRIP.name]
                 servicing_pooling_requests = sum(
-                    [len(v.vehicle_state.boarded_requests) for v in veh_pooling_in_fleet] #type: ignore
+                    [len(v.vehicle_state.boarded_requests) for v in veh_pooling_in_fleet]  # type: ignore
                 )
                 fleet_stats_row["servicing_requests"] = (
                     servicing_requests + servicing_pooling_requests

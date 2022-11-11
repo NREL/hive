@@ -51,7 +51,6 @@ def charge(
 
     charger_err, charger = station.get_charger_instance(charger_id)
 
-
     if not vehicle:
         return (
             SimulationStateError(f"vehicle not found; context: {context}"),
@@ -182,7 +181,9 @@ def move(
         )
     elif not hasattr(vehicle.vehicle_state, "update_route"):
         return (
-            SimulationStateError(f"vehicle state does not have update_route method; context {context}"),
+            SimulationStateError(
+                f"vehicle state does not have update_route method; context {context}"
+            ),
             None,
         )
     else:
@@ -198,7 +199,7 @@ def move(
     if not traverse_result.experienced_route:
         # vehicle did not traverse so we set an empty route
         # ignore mypy error since we explicitly check for attribute above
-        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route()) #type: ignore
+        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route())  # type: ignore
         updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
     else:
         experienced_route = traverse_result.experienced_route
@@ -217,7 +218,7 @@ def move(
         ).tick_distance_traveled_km(step_distance_km)
 
         # ignore mypy error since we explicitly check for attribute above
-        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route) #type: ignore
+        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)  # type: ignore
         updated_vehicle = new_position_vehicle.modify_vehicle_state(new_route_state)
 
         report = vehicle_move_event(sim, vehicle, updated_vehicle, traverse_result, env)

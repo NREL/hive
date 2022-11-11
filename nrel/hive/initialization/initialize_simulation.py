@@ -29,7 +29,7 @@ from nrel.hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import MembershipMap, ScheduleId
-    from nrel.hive.model.vehicle.schedules import ScheduleFunction 
+    from nrel.hive.model.vehicle.schedules import ScheduleFunction
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def initialize_simulation(
         if config.input_config.road_network_file is None:
             raise IOError("Must supply a road network file when using the osm_network")
 
-        road_network = OSMRoadNetwork( # type: ignore
+        road_network = OSMRoadNetwork(  # type: ignore
             geofence=geofence,
             sim_h3_resolution=config.sim.sim_h3_resolution,
             road_network_file=Path(config.input_config.road_network_file),
@@ -91,7 +91,7 @@ def initialize_simulation(
     fleet_ids = (
         read_fleet_ids_from_file(config.input_config.fleets_file)
         if config.input_config.fleets_file
-        else frozenset() 
+        else frozenset()
     )
 
     # read in fleet memberships for vehicles/stations/bases
@@ -280,9 +280,9 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
                         if home_base.station_id is None:
                             return with_b
                         else:
-                            station = sim.stations.get(home_base.station_id) 
+                            station = sim.stations.get(home_base.station_id)
                             if station is None:
-                                return with_b 
+                                return with_b
                             updated_s = station.add_membership(home_base_membership_id)
                             (
                                 error_s,
