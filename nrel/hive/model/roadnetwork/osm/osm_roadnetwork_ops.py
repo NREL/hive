@@ -77,7 +77,7 @@ def route_from_nx_path(
                     return None, updated_links
 
         nx_path_adj_pairs = [(nx_path[i], nx_path[i + 1]) for i in range(0, len(nx_path) - 1)]
-        initial: Tuple[Optional[Exception], Optional[Tuple[LinkTraversal, ...]]] = None, ()
+        initial: Tuple[Optional[Exception], Optional[Tuple[LinkTraversal, ...]]] = (None, ())
         result = ft.reduce(_accumulate_links, nx_path_adj_pairs, initial)
         return result
 
