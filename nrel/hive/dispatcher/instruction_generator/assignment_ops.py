@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Tuple, Callable, NamedTuple, Dict, Optional
+from typing import Dict, Tuple, Callable, NamedTuple, Optional, TYPE_CHECKING
 
-import math
 import logging
 import h3
 import numpy as np
@@ -20,23 +19,18 @@ from nrel.hive.runner import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
 from nrel.hive.state.vehicle_state.charging_station import ChargingStation
-from nrel.hive.util import H3Ops, GeoId, Seconds, Ratio, TupleOps
-from nrel.hive.util.typealiases import ChargerId
+from nrel.hive.util.h3_ops import H3Ops
+from nrel.hive.util.tuple_ops import TupleOps
+
+if TYPE_CHECKING:
+    from nrel.hive.util.units import Ratio, Seconds
+    from nrel.hive.util.typealiases import *
+    from nrel.hive.model.entity import EntityABC
+
 
 log = logging.getLogger(__name__)
 
-EntityId = str
 MAX_DIST = 999999999.0
-
-
-class Entity:
-    """
-    this class is used as a type hint (duck-typing style) for the following functions
-    but is not intended to be implemented.
-    """
-
-    id: EntityId
-    geoid: GeoId
 
 
 class AssignmentSolution(NamedTuple):
@@ -56,9 +50,9 @@ class AssignmentSolution(NamedTuple):
 
 
 def find_assignment(
-    assignees: Tuple[Entity, ...],
-    targets: Tuple[Entity, ...],
-    cost_fn: Callable[[Entity, Entity], float],
+    assignees: Tuple[EntityABC, ...],
+    targets: Tuple[EntityABC, ...],
+    cost_fn: Callable[[EntityABC, EntityABC], float],
 ) -> AssignmentSolution:
     """
 
@@ -102,7 +96,7 @@ def find_assignment(
         return solution
 
 
-def h3_distance_cost(a: Entity, b: Entity) -> float:
+def h3_distance_cost(a: EntityABC, b: EntityABC) -> float:
     """
     cost function based on the h3_distance between two entities
 
@@ -114,7 +108,7 @@ def h3_distance_cost(a: Entity, b: Entity) -> float:
     return distance
 
 
-def great_circle_distance_cost(a: Entity, b: Entity) -> float:
+def great_circle_distance_cost(a: EntityABC, b: EntityABC) -> float:
     """
     cost function based on the great circle distance between two entities.
     reverts h3 geoid to a lat/lon pair and calculates the haversine distance.
@@ -154,7 +148,7 @@ def nearest_shortest_queue_distance(
 
 def nearest_shortest_queue_ranking(
     vehicle: Vehicle, station: Station, env: Environment, max_dist=999999999.0
-) -> Optional[Tuple[ChargerId, float]]:
+) -> Tuple[Optional[ChargerId], float]:
     """
     sort ordering that prioritizes short vehicle queues where possible, using h3_distance
     as the base distance metric and extending that value by the proportion of available chargers
@@ -167,12 +161,20 @@ def nearest_shortest_queue_ranking(
     """
 
     distance = h3.h3_distance(vehicle.geoid, station.geoid)
-    vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
 
     def _inner(
         acc: Tuple[Optional[ChargerId], float], charger_id: ChargerId
-    ) -> Tuple[ChargerId, float]:
+    ) -> Tuple[Optional[ChargerId], float]:
+        vehicle_mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        if vehicle_mechatronics is None:
+            log.error(f"mechatronics {vehicle.mechatronics_id} not found for vehicle {vehicle.id}")
+            return (None, 0.0)
+
         charger = env.chargers.get(charger_id)
+        if charger is None:
+            log.error(f"charger id {charger_id} not found in environment")
+            return (None, 0.0)
+
         total_chargers = station.get_total_chargers(charger_id)
         if (
             not vehicle_mechatronics.valid_charger(charger)
@@ -185,6 +187,10 @@ def nearest_shortest_queue_ranking(
         else:
             prev_best_charger_id, prev_best_distance_metric = acc
             enqueued_for_charger_id = station.enqueued_vehicle_count_for_charger(charger_id)
+            if enqueued_for_charger_id is None:
+                log.error(f"charger id {charger_id} not found at station {station.id}")
+                enqueued_for_charger_id = 0
+
             queue_factor = enqueued_for_charger_id / total_chargers
             this_distance_metric = distance + distance * queue_factor
             if prev_best_distance_metric < this_distance_metric:
@@ -194,7 +200,7 @@ def nearest_shortest_queue_ranking(
 
     # find the lowest nearest_shortest_queue distance metric
     # amongst the possible on-shift charging options at this station
-    initial = (None, max_dist)
+    initial: Tuple[Optional[str], float] = (None, max_dist)
     best_charger_id, best_charger_rank = ft.reduce(
         _inner, station.on_shift_access_chargers, initial
     )
@@ -221,7 +227,7 @@ def shortest_time_to_charge_distance(
     :return: the distance metric for this vehicle/station pair (lower is better)
     """
 
-    def fn(station: Station) -> Seconds:
+    def fn(station: Station) -> float:
         result = shortest_time_to_charge_ranking(sim, env, vehicle, station, target_soc)
         dist = 999999999.0 if result is None else result[1]
         return dist
@@ -291,8 +297,14 @@ def shortest_time_to_charge_ranking(
 
             return _time_to_full
 
-        def _sort_enqueue_time(v: Vehicle) -> float:
-            enqueue_time = v.vehicle_state.enqueue_time
+        def _sort_enqueue_time(v: Vehicle) -> int:
+            if isinstance(v.vehicle_state, ChargeQueueing):
+                enqueue_time = int(v.vehicle_state.enqueue_time)
+            else:
+                log.error(
+                    "calling _sort_enqueue_time on a vehicle state that is not ChargeQueueing"
+                )
+                enqueue_time = 0
             return enqueue_time
 
         def _greedy_assignment(
@@ -311,9 +323,14 @@ def shortest_time_to_charge_ranking(
             :param time_passed: the amount of time that has been estimated
             :return: the time in the future we should expect to begin charging, determined by a greedy assignment
             """
+            total_chargers = station.get_total_chargers(_charger_id)
+            if total_chargers is None:
+                log.error(f"charger id {_charger_id} not found at station {station.id}")
+                total_chargers = 0
+
             if len(_charging) == len(_enqueued) == 0:
                 return time_passed
-            elif len(_charging) < station.get_total_chargers(charger_id):
+            elif len(_charging) < total_chargers:
                 return time_passed
             else:
                 # advance time
@@ -325,7 +342,7 @@ def shortest_time_to_charge_ranking(
                 _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
                 _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
 
-                vacancies = station.get_total_chargers(_charger_id) - len(_charging_vacated)
+                vacancies = total_chargers - len(_charging_vacated)
                 if vacancies <= 0:
                     # no space for any changes from enqueued -> charging
                     return _greedy_assignment(
@@ -355,7 +372,7 @@ def shortest_time_to_charge_ranking(
             sort_key=_sort_enqueue_time,
         )
 
-        estimates = {}
+        estimates: Dict[ChargerId, int] = {}
         for charger_id in station.state.keys():
             charger_state = station.state.get(charger_id)
             charger = charger_state.charger if charger_state is not None else None
@@ -373,9 +390,21 @@ def shortest_time_to_charge_ranking(
                 sim.sim_timestep_duration_seconds,
             )
 
+            def _using_charger(charging_vehicle: Vehicle) -> bool:
+                if isinstance(charging_vehicle.vehicle_state, ChargingStation):
+                    if charging_vehicle.vehicle_state.charger_id == charger_id:
+                        return True
+                return False
+
+            def _waiting_for_charger(enqueued_vehicle: Vehicle) -> bool:
+                if isinstance(enqueued_vehicle.vehicle_state, ChargeQueueing):
+                    if enqueued_vehicle.vehicle_state.charger_id == charger_id:
+                        return True
+                return False
+
             # collect all estimated remaining charge times for charging vehicles and sort them
             charging = filter(
-                lambda v: v.vehicle_state.charger_id == charger_id,
+                _using_charger,
                 vehicles_at_station,
             )
             charging_time_to_full: Tuple[Seconds, ...] = tuple(
@@ -385,7 +414,7 @@ def shortest_time_to_charge_ranking(
             # collect estimated remaining charge times for vehicles enqueued for this charger
             # leave them sorted by enqueue time
             enqueued = filter(
-                lambda v: v.vehicle_state.charger_id == charger_id,
+                _waiting_for_charger,
                 vehicles_enqueued,
             )
             enqueued_time_to_full: Tuple[Seconds, ...] = tuple(
@@ -405,9 +434,9 @@ def shortest_time_to_charge_ranking(
             # there are no chargers the vehicle can use.
             return None
 
-        best_charger_id = min(estimates, key=estimates.get)
+        best_charger_id = min(estimates, key=estimates.__getitem__)
 
         # return the best "distance" aka shortest estimated time to finish charging
-        best_overall_time = estimates.get(best_charger_id)
+        best_overall_time = estimates[best_charger_id]
         dispatch_time_seconds = route_travel_time_seconds(route)
         return best_charger_id, dispatch_time_seconds + best_overall_time

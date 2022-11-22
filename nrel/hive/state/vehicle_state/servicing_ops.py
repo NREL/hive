@@ -12,18 +12,14 @@ from nrel.hive.reporting.vehicle_event_ops import (
     report_dropoff_request,
 )
 from nrel.hive.runner import Environment
+from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.simulation_state_ops import (
-    modify_vehicle,
-)
-from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
+from nrel.hive.state.simulation_state.simulation_state_ops import modify_vehicle
 from nrel.hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
-        ServicingPoolingTrip,
-    )
+    from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 
 
 class ActivePoolingTrip(NamedTuple):
@@ -78,7 +74,14 @@ def complete_trip_phase(
     :return: an error, or, the updated simulation state
     """
 
-    vehicle_state = vehicle.vehicle_state
+    if not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+        return (
+            Exception(f"vehicle state is not ServicingPoolingTrip but {type(vehicle_state)}"),
+            None,
+        )
+    else:
+        vehicle_state: ServicingPoolingTrip = vehicle.vehicle_state  # type: ignore
+
     updated_trip_plan = TupleOps.tail(vehicle_state.trip_plan)
     updated_routes = TupleOps.tail(vehicle_state.routes)
     if active_trip.trip_phase == TripPhase.PICKUP:
@@ -97,6 +100,8 @@ def complete_trip_phase(
                 )
                 response.__cause__ = err2
                 return response, None
+            elif sim2 is None:
+                return None, None
             else:
                 # add this request to the boarded vehicles
                 updated_boarded_requests = vehicle_state.boarded_requests.set(request.id, request)
@@ -118,7 +123,7 @@ def complete_trip_phase(
 
     elif active_trip.trip_phase == TripPhase.DROPOFF:
         # perform dropoff operation and update remaining route plan
-        request = vehicle.vehicle_state.boarded_requests.get(active_trip.request_id)
+        request = vehicle_state.boarded_requests.get(active_trip.request_id)
         if request is None:
             error = SimulationStateError(
                 f"request {active_trip.request_id} should have boarded pooling with vehicle {vehicle.id} but not found"
@@ -134,6 +139,8 @@ def complete_trip_phase(
                 )
                 response.__cause__ = err2
                 return response, None
+            elif sim2 is None:
+                return None, None
             else:
                 # remove this request from the boarded vehicles
                 updated_boarded_requests = vehicle_state.boarded_requests.delete(request.id)
@@ -158,7 +165,7 @@ def complete_trip_phase(
 def update_active_pooling_trip(
     sim: SimulationState,
     env: Environment,
-    vehicle_state: ServicingPoolingTrip,
+    vehicle_id: VehicleId,
 ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     helper to update the route of the leading trip when no route changes are required
@@ -166,27 +173,34 @@ def update_active_pooling_trip(
     :param vehicle_state:
     :return:
     """
-    context = f"updating active pooling trip for vehicle {vehicle_state.vehicle_id}"
-    vehicle = sim.vehicles.get(vehicle_state.vehicle_id)
+    context = f"updating active pooling trip for vehicle {vehicle_id}"
+    vehicle = sim.vehicles.get(vehicle_id)
     if vehicle is None:
         return (
             SimulationStateError(f"vehicle not found; context: {context}"),
             None,
         )
-    current_route = vehicle.vehicle_state.route
+    if not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+        return Exception("can only update vehicles in ServicingPoolingTrip states"), None
+    else:
+        pooling_state: ServicingPoolingTrip = vehicle.vehicle_state  # type: ignore
+
+    current_route = pooling_state.route
     if len(current_route) > 0:
         # vehicle still on current route, noop
         return None, sim
     else:
         # we reached the end of a route, so, we need to perform whatever trip phase
         # action is required and then update the vehicle state accordingly
-        err1, active_trip = get_active_pooling_trip(vehicle_state)
+        err1, active_trip = get_active_pooling_trip(pooling_state)
         if err1 is not None:
             response = SimulationStateError(
                 f"failure during update_active_pooling_trip for vehicle {vehicle.id}"
             )
             response.__cause__ = err1
             return response, None
+        elif active_trip is None:
+            return None, None
         else:
             result = complete_trip_phase(sim, env, vehicle, active_trip)
             return result
@@ -230,6 +244,8 @@ def pick_up_trip(
             response = SimulationStateError(f"failure during pick_up_trip for vehicle {vehicle.id}")
             response.__cause__ = mod_error
             return response, None
+        elif maybe_sim_with_vehicle is None:
+            return None, None
         else:
             try:
                 report = report_pickup_request(updated_vehicle, request, maybe_sim_with_vehicle)
@@ -276,43 +292,3 @@ def drop_off_trip(
         env.reporter.file_report(report)
 
         return None, sim
-
-
-def remove_completed_trip(
-    sim: SimulationState,
-    env: Environment,
-    vehicle_id: VehicleId,
-) -> Tuple[Optional[Exception], Optional[Tuple[SimulationState, int]]]:
-    """
-    removes the first trip from a ServicingPoolingTrip state, because
-    it has reached its destination.
-
-    :param sim: the simulation state
-    :param env: the simulation environment
-    :param vehicle_id: the vehicle to remove it's completed trip
-    :return: the updated simulation state along with the count of remaining trips
-    """
-    vehicle = sim.vehicles.get(vehicle_id)
-    state = vehicle.vehicle_state if vehicle else None
-    context = f"remove completed trip for vehicle {vehicle_id}"
-    if state is None:
-        error = SimulationStateError(f"vehicle not found in simulation state; context: {context}")
-        return error, None
-    elif not state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
-        error = SimulationStateError(
-            f"vehicle {vehicle_id} state not pooling but attempting to remove it's oldest pooling trip"
-        )
-        return error, None
-    elif len(state.trips) == 0:
-        error = SimulationStateError(
-            f"remove first trip called on vehicle with no trips; context: {context}"
-        )
-        return error, None
-    else:
-        vehicle = sim.vehicles.get(state.vehicle_id)
-        removed_trip_request_id, updated_trip_order = TupleOps.head_tail(state.trip_order)
-        updated_trips = state.trips.delete(removed_trip_request_id)
-        updated_state = replace(state, trip_order=updated_trip_order, trips=updated_trips)
-        updated_vehicle = vehicle.modify_vehicle_state(updated_state)
-        error, result = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
-        return error, (result, len(updated_trips))

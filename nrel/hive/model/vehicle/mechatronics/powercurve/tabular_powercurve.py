@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Tuple
+from typing import TYPE_CHECKING, Optional, Dict, Tuple, Any
 
 import numpy as np
 
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import (
-    Powercurve,
-)
+from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
 from nrel.hive.util.units import Seconds, SECONDS_TO_HOURS, Ratio
 
 if TYPE_CHECKING:
@@ -21,7 +19,7 @@ class TabularPowercurve(Powercurve):
 
     def __init__(
         self,
-        data: Dict[str, str],
+        data: Dict[str, Any],
         nominal_max_charge_kw: Optional[Kw] = None,
         battery_capacity_kwh: Optional[KwH] = None,
     ):
@@ -91,8 +89,8 @@ class TabularPowercurve(Powercurve):
         t = 0
         energy_kwh = start_soc
         while t < duration_seconds and energy_kwh < full_soc:
-            veh_kw_rate = np.interp(
-                energy_kwh, self._charging_energy_kwh, self._charging_rate_kw
+            veh_kw_rate = float(
+                np.interp(energy_kwh, self._charging_energy_kwh, self._charging_rate_kw)
             )  # kilowatt
             charge_power_kw = min(veh_kw_rate, power_kw)  # kilowatt
             kwh = charge_power_kw * (self.step_size_seconds * SECONDS_TO_HOURS)  # kilowatt-hours

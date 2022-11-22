@@ -9,6 +9,7 @@ from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.vehicle.vehicle import Vehicle
+from nrel.hive.model.membership import Membership
 from nrel.hive.runner import Environment
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
     AutonomousAvailable,
@@ -17,9 +18,7 @@ from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_driver_attr
     AutonomousDriverAttributes,
 )
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.simulation_state_ops import (
-    add_vehicle_safe,
-)
+from nrel.hive.state.simulation_state.simulation_state_ops import add_vehicle_safe
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.util import Ratio
 
@@ -70,6 +69,8 @@ def sample_vehicles(
                 :param s: the SimulationState to update
                 :return: the updated simulation state, or, an exception
                 """
+                if not mechatronics:
+                    return Failure(KeyError(f"mechatronics with id {mechatronics_id} not found"))
                 try:
                     vehicle_id = f"v{i}"
                     initial_soc = soc_sampling_function()
@@ -86,6 +87,7 @@ def sample_vehicles(
                         vehicle_state=vehicle_state,
                         driver_state=driver_state,
                         total_seats=total_seats,
+                        membership=Membership(),
                     )
                     add_result = add_vehicle_safe(s, vehicle)
                     return add_result
@@ -109,7 +111,7 @@ def sample_vehicles(
         return result
 
 
-def build_default_location_sampling_fn(seed: int = 0) -> Callable[[], Link]:
+def build_default_location_sampling_fn(seed: int = 0) -> Callable[[SimulationState], Link]:
     """
     constructs a link sampling function that uniformly samples from the provided base locations
 
@@ -125,6 +127,10 @@ def build_default_location_sampling_fn(seed: int = 0) -> Callable[[], Link]:
             raise NotImplementedError(
                 f"this sampling function is only implemented for the OSMRoadNetwork"
             )
+
+        if sim.road_network.link_helper is None:
+            raise Exception("Expected link helper on OSMRoadNetwork but found None")
+
         links = list(sim.road_network.link_helper.links.values())
         if len(links) == 0:
             raise AssertionError(f"must have at least one link to sample from")

@@ -1,8 +1,6 @@
 from unittest import TestCase
 
-from nrel.hive.state.simulation_state.update.update_requests_from_file import (
-    UpdateRequestsFromFile,
-)
+from nrel.hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
 from nrel.hive.resources.mock_lobster import *
 
 

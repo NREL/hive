@@ -7,9 +7,7 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import
 )
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.runner.environment import Environment
 

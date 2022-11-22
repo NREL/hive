@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import pkg_resources
 import yaml
@@ -14,15 +14,18 @@ def global_hive_config_search() -> GlobalConfig:
     """
     # this searches up the path to the root of the file system
     def _backprop_search(search_path: Path) -> Optional[Path]:
-        search_file = search_path.joinpath(".hive.yaml")
-        if search_file.is_file():
-            return search_file
-        else:
-            updated_search_path = search_path.parent
-            if updated_search_path == search_path:
-                return None
+        try:
+            search_file = search_path.joinpath(".hive.yaml")
+            if search_file.is_file():
+                return search_file
             else:
-                return _backprop_search(updated_search_path)
+                updated_search_path = search_path.parent
+                if updated_search_path == search_path:
+                    return None
+                else:
+                    return _backprop_search(updated_search_path)
+        except FileNotFoundError:
+            return None
 
     # load the default file to be merged with any found files
     default_global_config_file_path = pkg_resources.resource_filename(
@@ -33,11 +36,11 @@ def global_hive_config_search() -> GlobalConfig:
 
     # search up the directory tree for a config file
     try:
-        file_found_in_backprop = _backprop_search(Path.cwd())
-    except FileNotFoundError as f:
-        # when running tests on hive, it seems that cwd can be deleted
-        # here we simply drop the cwd backprop search in this case
-        file_found_in_backprop = None
+        cwd = Path.cwd()
+    except FileNotFoundError:
+        cwd = Path("~/")
+
+    file_found_in_backprop = _backprop_search(cwd)
 
     # check user home directory for a config file
     file_at_home_directory = Path.home().joinpath(".hive.yaml")
@@ -61,8 +64,8 @@ def global_hive_config_search() -> GlobalConfig:
 
 
 def construct_asset_path(
-    file: str,
-    scenario_directory: str,
+    file: Union[str, Path],
+    scenario_directory: Union[str, Path],
     default_directory_name: str,
     resources_subdirectory: str,
 ) -> str:
@@ -83,13 +86,14 @@ def construct_asset_path(
     :return: the path string if the file exists, otherwise None
     :raises: FileNotFoundError if asset is not found
     """
+    file = Path(file)
     try:
         result = construct_scenario_asset_path(file, scenario_directory, default_directory_name)
         return result
     except FileNotFoundError:
         # try the resources directory fallback
         fallback = pkg_resources.resource_filename(
-            f"nrel.hive.resources.{resources_subdirectory}", file
+            f"nrel.hive.resources.{resources_subdirectory}", str(file)
         )
         if Path(fallback).is_file():
             return fallback
@@ -105,7 +109,7 @@ def construct_asset_path(
 
 
 def construct_scenario_asset_path(
-    file: str, scenario_directory: str, default_directory_name: str
+    file: Union[str, Path], scenario_directory: Union[str, Path], default_directory_name: str
 ) -> str:
     """
     constructs the path to a scenario asset relative to a scenario directory. attempts to load at both

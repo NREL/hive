@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from nrel.hive.util import LinkId, GeoId
+from nrel.hive.util.typealiases import LinkId, GeoId
 
 
 class EntityPosition(NamedTuple):

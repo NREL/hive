@@ -8,9 +8,7 @@ from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
 import immutables
 
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
-    MechatronicsInterface,
-)
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from nrel.hive.model.vehicle.mechatronics.powertrain import build_powertrain
 from nrel.hive.util.typealiases import MechatronicsId
 from nrel.hive.util.units import *
@@ -19,9 +17,7 @@ if TYPE_CHECKING:
     from nrel.hive.model.energy.charger.charger import Charger
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.roadnetwork.route import Route
-    from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import (
-        Powertrain,
-    )
+    from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 
 log = logging.getLogger(__name__)
 
@@ -72,14 +68,14 @@ class ICE(MechatronicsInterface):
         """
         return charger.energy_type == EnergyType.GASOLINE
 
-    def initial_energy(self, percent_full: Ratio) -> Dict[EnergyType, float]:
+    def initial_energy(self, percent_full: Ratio) -> immutables.Map[EnergyType, float]:
         """
         return an energy dictionary from an initial soc
 
         :param percent_full:
         :return:
         """
-        return {EnergyType.GASOLINE: self.tank_capacity_gallons * percent_full}
+        return immutables.Map({EnergyType.GASOLINE: self.tank_capacity_gallons * percent_full})
 
     def range_remaining_km(self, vehicle: Vehicle) -> Kilometers:
         """

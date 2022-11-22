@@ -1,27 +1,21 @@
 from __future__ import annotations
 
 from typing import Dict
-from pathlib import Path
 
 import yaml
 
+from immutables import Map
+
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
-    MechatronicsInterface,
-)
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from nrel.hive.util import fs
 from nrel.hive.util.typealiases import MechatronicsId
-
-mechatronic_models = {
-    "bev": BEV,
-    "ice": ICE,
-}
 
 
 def build_mechatronics_table(
     mechatronics_file: str, scenario_directory: str
-) -> Dict[MechatronicsId, MechatronicsInterface]:
+) -> Map[MechatronicsId, MechatronicsInterface]:
     """
     constructs a dictionary containing all of the provided vehicle configurations where the key is the mechatronics ID
     and the contents are the appropriate mechatronics models with the desired attributes
@@ -34,7 +28,7 @@ def build_mechatronics_table(
     :raises Exception due to IOErrors, missing required parameters in the mechatronics yaml
     :raises Exception due to FileNotFoundErrors, missing the mechatronics, powertrain, or powercurve file(s)
     """
-    mechatronics = {}
+    mechatronics: Dict[str, MechatronicsInterface] = {}
     with open(mechatronics_file) as f:
         config_dict = yaml.safe_load(f)
         for mechatronics_id in config_dict:
@@ -44,10 +38,6 @@ def build_mechatronics_table(
                 mechatronics_type = config_dict[mechatronics_id]["mechatronics_type"]
             except KeyError:
                 raise IOError(f"could not find mechatronics_type in {mechatronics_id}")
-            try:
-                model = mechatronic_models[mechatronics_type]
-            except KeyError:
-                raise IOError(f"{mechatronics_type} not registered with hive")
 
             if "powertrain_file" in config_dict[mechatronics_id]:
                 powertrain_file = fs.construct_asset_path(
@@ -67,6 +57,13 @@ def build_mechatronics_table(
                 )
                 config_dict[mechatronics_id]["powercurve_file"] = powercurve_file
 
-            mechatronics[mechatronics_id] = model.from_dict(config_dict[mechatronics_id])
+            if mechatronics_type == "bev":
+                mechatronics[mechatronics_id] = BEV.from_dict(config_dict[mechatronics_id])
+            elif mechatronics_type == "ice":
+                mechatronics[mechatronics_id] = ICE.from_dict(config_dict[mechatronics_id])
+            else:
+                raise ValueError(
+                    f"got unexpected mechatronics type {mechatronics_type}; try `bev` or `ice`"
+                )
 
-    return mechatronics
+    return Map(mechatronics)

@@ -6,15 +6,12 @@ from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Tuple
 
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
-from nrel.hive.reporting.handler.time_step_stats_handler import (
-    TimeStepStatsHandler,
-)
+from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 
 if TYPE_CHECKING:
     from nrel.hive.model.membership import MembershipId
     from nrel.hive.runner.runner_payload import RunnerPayload
-    from nrel.hive.reporting.handler import Handler
-    from nrel.hive.config.global_config import GlobalConfig
+    from nrel.hive.reporting.handler.handler import Handler
 
 
 class Report(NamedTuple):
@@ -33,8 +30,8 @@ class Reporter:
     """
 
     def __init__(self):
-        self.reports: List[Report] = []
-        self.handlers: List[Handler] = []
+        self.reports = []
+        self.handlers = []
 
     def add_handler(self, handler: Handler):
         self.handlers.append(handler)

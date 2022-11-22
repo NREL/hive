@@ -72,7 +72,12 @@ def run() -> int:
     sim_args = [SimArgs(f, i) for i, f in enumerate(config.scenario_files)]
 
     # check to make sure we don't exceed system CPU
-    max_cpu = os.cpu_count()
+    os_cpu = os.cpu_count()
+
+    if os_cpu is None:
+        max_cpu = 1
+    else:
+        max_cpu = os_cpu
 
     if len(config.scenario_files) > max_cpu:
         cpu = max_cpu

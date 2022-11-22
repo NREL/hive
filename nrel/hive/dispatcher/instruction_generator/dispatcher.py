@@ -1,29 +1,26 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
+import logging
 import functools as ft
 from typing import Tuple, TYPE_CHECKING, Optional
 
 from nrel.hive.dispatcher.instruction_generator import assignment_ops
 from nrel.hive.state.vehicle_state.charging_base import ChargingBase
-from nrel.hive.util.typealiases import MembershipId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.dispatcher.instruction.instruction import Instruction
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.request.request import Request
     from nrel.hive.config.dispatcher_config import DispatcherConfig
+    from nrel.hive.util.typealiases import MembershipId
 
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
-from nrel.hive.dispatcher.instruction.instructions import (
-    DispatchTripInstruction,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.dispatcher.instruction.instructions import DispatchTripInstruction
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -67,6 +64,10 @@ class Dispatcher(InstructionGenerator):
                     return False
 
                 mechatronics = environment.mechatronics.get(vehicle.mechatronics_id)
+                if mechatronics is None:
+                    log.error(f"mechatonrics not found for vehicle {vehicle.id}")
+                    return False
+
                 range_remaining_km = mechatronics.range_remaining_km(vehicle)
 
                 # if we are at a base, do we have enough remaining range to leave the base?
@@ -82,7 +83,11 @@ class Dispatcher(InstructionGenerator):
 
             def _valid_request(r: Request) -> bool:
                 not_already_dispatched = not r.dispatched_vehicle
-                valid_access = r.membership.grant_access_to_membership_id(membership_id)
+                valid_access = (
+                    r.membership.grant_access_to_membership_id(membership_id)
+                    if membership_id is not None
+                    else True
+                )
                 return not_already_dispatched and valid_access
 
             # collect the vehicles and requests for the assignment algorithm
@@ -119,10 +124,12 @@ class Dispatcher(InstructionGenerator):
         else:
             fleet_ids = frozenset([None])
 
+        initial_instructions: Tuple[DispatchTripInstruction, ...] = tuple()
+
         all_instructions = ft.reduce(
             _solve_assignment,
             fleet_ids,
-            (),
+            initial_instructions,
         )
 
         return self, all_instructions

@@ -2,9 +2,7 @@ from unittest import TestCase
 
 from returns.result import Success
 
-from nrel.hive.state.simulation_state.update.cancel_requests import (
-    CancelRequests,
-)
+from nrel.hive.state.simulation_state.update.cancel_requests import CancelRequests
 from nrel.hive.resources.mock_lobster import *
 
 

@@ -8,9 +8,7 @@ from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
 import immutables
 
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
-    MechatronicsInterface,
-)
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
 from nrel.hive.model.vehicle.mechatronics.powercurve import build_powercurve
 from nrel.hive.model.vehicle.mechatronics.powertrain import build_powertrain
 from nrel.hive.util.typealiases import MechatronicsId
@@ -20,12 +18,8 @@ if TYPE_CHECKING:
     from nrel.hive.model.energy.charger import Charger
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.model.roadnetwork.route import Route
-    from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import (
-        Powertrain,
-    )
-    from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import (
-        Powercurve,
-    )
+    from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
+    from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
 
 log = logging.getLogger(__name__)
 
@@ -54,7 +48,7 @@ class BEV(MechatronicsInterface):
         :param d: the dictionary to build from
         :return: the built Mechatronics object
         """
-        nominal_watt_hour_per_mile = float(d["nominal_watt_hour_per_mile"])
+        nominal_watt_hour_per_mile = d["nominal_watt_hour_per_mile"]
 
         # set scale factor in config dict so the tabular powertrain can use it to scale the normalized lookup
         updated_d = d.copy()
@@ -77,7 +71,7 @@ class BEV(MechatronicsInterface):
             idle_kwh_per_hour=idle_kwh_per_hour,
             powertrain=powertrain,
             powercurve=powercurve,
-            nominal_watt_hour_per_mile=nominal_watt_hour_per_mile,
+            nominal_watt_hour_per_mile=float(nominal_watt_hour_per_mile),
             charge_taper_cutoff_kw=charge_taper_cutoff_kw,
         )
 

@@ -12,9 +12,7 @@ from typing import (
 
 import immutables
 
-from nrel.hive.state.simulation_state.at_location_response import (
-    AtLocationResponse,
-)
+from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
 from nrel.hive.model.membership import PUBLIC_MEMBERSHIP_ID
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import geo

@@ -1,7 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, replace
 
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+import logging
+
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.runner.environment import Environment
@@ -17,9 +19,9 @@ from nrel.hive.util.typealiases import VehicleId
 from nrel.hive.util.units import Seconds
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -63,7 +65,14 @@ class Idle(VehicleState):
         :return: True if we have run out of energy
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
+        if vehicle is None:
+            log.error(f"vehicle {self.vehicle_id} not found in sim")
+            return False
+
         mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        if mechatronics is None:
+            log.error(f"mechatronics {vehicle.mechatronics_id} not found in sim")
+            return False
         return not vehicle or mechatronics.is_empty(vehicle)
 
     def _default_terminal_state(
@@ -90,14 +99,15 @@ class Idle(VehicleState):
         :return: the sim state with vehicle moved
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
-        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         context = f"vehicle {self.vehicle_id} idling"
         if not vehicle:
             return (
                 SimulationStateError(f"vehicle not found; context: {context}"),
                 None,
             )
-        elif not mechatronics:
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+
+        if not mechatronics:
             return (
                 SimulationStateError(f"cannot find {vehicle.mechatronics_id} in environment"),
                 None,

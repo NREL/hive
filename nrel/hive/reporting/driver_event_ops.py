@@ -1,9 +1,12 @@
+from typing import TYPE_CHECKING
+
 import h3
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
-from nrel.hive.runner import Environment
 from nrel.hive.util import wkt
+from nrel.hive.runner import Environment
+from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from enum import Enum
 
 
@@ -13,7 +16,7 @@ class ScheduleEventType(Enum):
 
 
 def driver_schedule_event(
-    sim: "SimulationState",
+    sim: SimulationState,
     env: Environment,
     vehicle: Vehicle,
     schedule_event: ScheduleEventType,

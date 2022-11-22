@@ -1,9 +1,7 @@
 from unittest import TestCase
 from pathlib import Path
 
-from nrel.hive.model.vehicle.mechatronics.__init__ import (
-    build_mechatronics_table,
-)
+from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
 
 test_dir = Path(__file__).parent
 
@@ -28,7 +26,7 @@ class TestBuildMechatronicsTable(TestCase):
 
     def test_bad_type(self):
         self.assertRaises(
-            IOError,
+            ValueError,
             build_mechatronics_table,
             test_dir / "test_assets/mechatronics_bad_type.yaml",
             "hive.resources.scenarios.denver_downtown",

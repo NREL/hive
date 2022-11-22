@@ -9,7 +9,6 @@ from nrel.hive.util.exception import (
     H3Error,
 )
 from nrel.hive.util.h3_ops import H3Ops
-from nrel.hive.util.switch_case import SwitchCase
 from nrel.hive.util.dict_ops import DictOps
 from nrel.hive.util.tuple_ops import TupleOps
 from nrel.hive.util.typealiases import (

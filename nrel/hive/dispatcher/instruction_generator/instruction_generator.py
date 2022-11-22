@@ -4,9 +4,7 @@ from abc import abstractmethod, ABC
 from typing import Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.dispatcher.instruction.instruction import Instruction
 

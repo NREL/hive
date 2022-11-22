@@ -4,9 +4,8 @@ import logging
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import TYPE_CHECKING, Dict
-
-import numpy as np
+from typing import TYPE_CHECKING, Dict, Any
+from statistics import mean
 
 if TYPE_CHECKING:
     from nrel.hive.runner.runner_payload import RunnerPayload
@@ -30,7 +29,7 @@ class SummaryStats:
     station_revenue: float = 0
     fleet_revenue: float = 0
 
-    def compile_stats(self, rp: RunnerPayload) -> Dict[str, float]:
+    def compile_stats(self, rp: RunnerPayload) -> Dict[str, Any]:
         """
         computes all stats based on values accumulated throughout this run
         :return: a dictionary with stat values by key
@@ -39,9 +38,9 @@ class SummaryStats:
         sim_state = rp.s
         env = rp.e
 
-        self.mean_final_soc = np.mean(
+        self.mean_final_soc = mean(
             [
-                env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v)
+                env.mechatronics[v.mechatronics_id].fuel_source_soc(v)
                 for v in sim_state.vehicles.values()
             ]
         )
@@ -58,17 +57,21 @@ class SummaryStats:
             0.0,
         )
 
-        requests_served_percent = (
-            1 - (self.cancelled_requests / self.requests) if self.requests > 0 else 0
-        )
+        if self.requests > 0:
+            requests_served_percent = 1 - (self.cancelled_requests / self.requests)
+        else:
+            requests_served_percent = 0.0
+
         total_state_count = sum(self.state_count.values())
         total_vkt = sum(self.vkt.values())
         vehicle_state_output = {}
         vehicle_states_observed = set(self.state_count.keys()).union(self.vkt.keys())
         for v in vehicle_states_observed:
-            observed_pct = (
-                self.state_count.get(v) / total_state_count if self.state_count.get(v) else 0
-            )
+            state_count = self.state_count.get(v)
+            if state_count is None:
+                observed_pct = 0.0
+            else:
+                observed_pct = state_count / total_state_count
             vkt = self.vkt.get(v, 0)
             data = {"observed_percent": observed_pct, "vkt": vkt}
             vehicle_state_output.update({v: data})

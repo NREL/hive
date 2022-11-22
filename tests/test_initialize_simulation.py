@@ -1,9 +1,7 @@
 from unittest import TestCase
 
 from nrel.hive.config.network import Network
-from nrel.hive.initialization.initialize_simulation import (
-    initialize_simulation,
-)
+from nrel.hive.initialization.initialize_simulation import initialize_simulation
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
 )
@@ -25,14 +23,17 @@ class TestInitializeSimulation(TestCase):
         def filter_veh(v: Vehicle) -> bool:
             if v.id == "v1":
                 return False
+            return True
 
         def filter_base(b: Base) -> bool:
             if b.id == "b1":
                 return False
+            return True
 
         def filter_station(s: Station) -> bool:
             if s.id == "s1":
                 return False
+            return True
 
         sim, env = initialize_simulation(
             conf,

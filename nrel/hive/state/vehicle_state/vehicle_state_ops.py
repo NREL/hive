@@ -12,15 +12,12 @@ from nrel.hive.reporting.vehicle_event_ops import (
 )
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.out_of_service import OutOfService
-from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import StationId, ChargerId
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
 
@@ -41,13 +38,18 @@ def charge(
     :param charger_id: the charger_id we are using
     :return: an exception due to failure or an optional updated simulation
     """
+    context = f"vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
 
     vehicle = sim.vehicles.get(vehicle_id)
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
     station = sim.stations.get(station_id)
-    charger_err, charger = station.get_charger_instance(charger_id) if station is not None else None
+    if station is None:
+        return (
+            SimulationStateError(f"station not found; context {context}"),
+            None,
+        )
 
-    context = f"vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
+    charger_err, charger = station.get_charger_instance(charger_id)
 
     if not vehicle:
         return (
@@ -101,6 +103,8 @@ def charge(
             response = SimulationStateError(f"failure during charge for vehicle {vehicle.id}")
             response.__cause__ = veh_error
             return response, None
+        elif sim_with_vehicle is None:
+            return None, None
         else:
             report = vehicle_charge_event(
                 vehicle,
@@ -175,6 +179,13 @@ def move(
             SimulationStateError(f"vehicle state does not have route; context {context}"),
             None,
         )
+    elif not hasattr(vehicle.vehicle_state, "update_route"):
+        return (
+            SimulationStateError(
+                f"vehicle state does not have update_route method; context {context}"
+            ),
+            None,
+        )
     else:
         route = vehicle.vehicle_state.route
 
@@ -184,10 +195,13 @@ def move(
     )
     if error:
         return error, None
+    elif traverse_result is None:
+        return None, None
 
     if not traverse_result.experienced_route:
         # vehicle did not traverse so we set an empty route
-        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route())
+        # ignore mypy error since we explicitly check for attribute above
+        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route())  # type: ignore
         updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
     else:
         experienced_route = traverse_result.experienced_route
@@ -205,7 +219,8 @@ def move(
             position=vehicle_position
         ).tick_distance_traveled_km(step_distance_km)
 
-        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)
+        # ignore mypy error since we explicitly check for attribute above
+        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)  # type: ignore
         updated_vehicle = new_position_vehicle.modify_vehicle_state(new_route_state)
 
         report = vehicle_move_event(sim, vehicle, updated_vehicle, traverse_result, env)

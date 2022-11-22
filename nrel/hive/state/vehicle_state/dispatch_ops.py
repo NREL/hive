@@ -2,15 +2,13 @@ import functools as ft
 from typing import Tuple, Optional
 
 from nrel.hive.model.roadnetwork.route import Route
-from nrel.hive.model.roadnetwork.link import Link, EntityPosition
+from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.vehicle_state.dispatch_pooling_trip import (
-    DispatchPoolingTrip,
-)
-from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
+from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.util import (
     VehicleId,
     RequestId,
@@ -130,7 +128,7 @@ def get_position_for_phase(
     if req is None:
         return None
     elif trip_phase == TripPhase.PICKUP:
-        return req.origin_position
+        return req.position
     elif trip_phase == TripPhase.DROPOFF:
         return req.destination_position
     else:
@@ -176,7 +174,7 @@ def begin_or_replan_dispatch_pooling_state(
 
             # todo: this should become a ServicingPoolingTrip instead
             #  - maybe we need a TripPhase.REPLANNING for the leg that is the interruption?
-            if vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
+            if isinstance(vehicle_state, ServicingPoolingTrip):
                 # already servicing pooling - copy over passenger state
                 next_state = DispatchPoolingTrip.build(
                     vehicle_id,

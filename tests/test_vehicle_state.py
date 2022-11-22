@@ -1,10 +1,9 @@
+from dataclasses import replace
 from unittest import TestCase
 
 from nrel.hive.state.entity_state import entity_state_ops
 from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
-from nrel.hive.state.vehicle_state.dispatch_pooling_trip import (
-    DispatchPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
 from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.state.vehicle_state.out_of_service import OutOfService
 from nrel.hive.resources.mock_lobster import *
@@ -976,10 +975,11 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_trip_update_terminal(self):
         vehicle = mock_vehicle_from_geoid(geoid="8f268cdac30e2d3")
-        request = mock_request_from_geoids(
-            origin="8f268cdac30e2d3",
-            destination="8f268cdac70e2d3",
-        )._replace(  # a hack so we can test equality on this request later
+        request = replace(
+            mock_request_from_geoids(
+                origin="8f268cdac30e2d3",
+                destination="8f268cdac70e2d3",
+            ),
             dispatched_vehicle=vehicle.id,
             dispatched_vehicle_time=mock_sim().sim_time,
         )

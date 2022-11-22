@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import logging
+from multiprocessing.sharedctypes import Value
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
@@ -20,9 +21,7 @@ from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId
 
@@ -35,7 +34,7 @@ class AutonomousAvailable(DriverState):
     an autonomous driver that is available to work
     """
 
-    attributes: AutonomousDriverAttributes = AutonomousDriverAttributes
+    attributes: AutonomousDriverAttributes
 
     @property
     def schedule_id(cls) -> Optional[ScheduleId]:
@@ -61,6 +60,10 @@ class AutonomousAvailable(DriverState):
     ) -> Optional[Instruction]:
 
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
+
+        if my_vehicle is None:
+            log.error(f"vehicle {self.attributes.vehicle_id} not found for driver")
+            return None
 
         if isinstance(my_vehicle.vehicle_state, ReserveBase):
             return av_charge_base_instruction(my_vehicle, sim, env)

@@ -19,9 +19,7 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import
 )
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.simulation_update import (
-    SimulationUpdateFunction,
-)
+from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from nrel.hive.state.simulation_state.update.step_simulation_ops import (
     perform_vehicle_state_updates,
     apply_instructions,
@@ -78,7 +76,7 @@ class StepSimulation(SimulationUpdateFunction):
         self,
         simulation_state: SimulationState,
         env: Environment,
-    ) -> Tuple[SimulationState, Optional[StepSimulation]]:
+    ) -> Tuple[SimulationState, StepSimulation]:
         """
         generates all instructions for this time step and then attempts to apply them to the SimulationState
         upon completion, returns the modified simulation state along with any reports and additionally, returns

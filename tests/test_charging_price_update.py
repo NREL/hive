@@ -1,8 +1,6 @@
 from unittest import TestCase
 
-from nrel.hive.state.simulation_state.update.charging_price_update import (
-    ChargingPriceUpdate,
-)
+from nrel.hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
 from nrel.hive.resources.mock_lobster import *
 
 

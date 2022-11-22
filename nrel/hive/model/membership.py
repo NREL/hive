@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Tuple, NamedTuple, FrozenSet
+from typing import Tuple, NamedTuple, FrozenSet, TYPE_CHECKING
 
-from nrel.hive.util.typealiases import MembershipId
+if TYPE_CHECKING:
+    from nrel.hive.util.typealiases import MembershipId
 
 PUBLIC_MEMBERSHIP_ID = "public"
 

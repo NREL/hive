@@ -6,25 +6,13 @@ from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
 import immutables
 
 from nrel.hive.config import HiveConfig
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.cancel_requests import (
-    CancelRequests,
-)
-from nrel.hive.state.simulation_state.update.charging_price_update import (
-    ChargingPriceUpdate,
-)
-from nrel.hive.state.simulation_state.update.simulation_update import (
-    SimulationUpdateFunction,
-)
-from nrel.hive.state.simulation_state.update.step_simulation import (
-    StepSimulation,
-)
-from nrel.hive.state.simulation_state.update.update_requests_from_file import (
-    UpdateRequestsFromFile,
-)
+from nrel.hive.state.simulation_state.update.cancel_requests import CancelRequests
+from nrel.hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
+from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
+from nrel.hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
 
 if TYPE_CHECKING:
     from nrel.hive.runner import RunnerPayload

@@ -1,7 +1,7 @@
 import csv
 import functools as ft
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Tuple, Any
 
 import immutables
 from returns.io import IOResult, IOResultE
@@ -21,7 +21,7 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
     :return: nothing, or, any exception
     """
 
-    def _station_energy(station: Station) -> dict:
+    def _station_energy(station: Station) -> Dict[str, Any]:
         """
         get the Kw capacity of a given station
 
@@ -39,7 +39,7 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
         return {"station_id": station.id, "rate": rate}
 
     try:
-        result: Tuple[immutables.Map, ...] = ft.reduce(
+        result: Tuple[Dict[str, Any], ...] = ft.reduce(
             lambda acc, s: acc + (_station_energy(s),),
             sim.stations.values(),
             (),

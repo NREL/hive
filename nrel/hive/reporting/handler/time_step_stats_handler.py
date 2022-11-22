@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from pandas import DataFrame
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, FrozenSet, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional
 
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
@@ -29,7 +29,7 @@ class TimeStepStatsHandler(Handler):
         self,
         config: HiveConfig,
         scenario_output_directory: Path,
-        fleet_ids: FrozenSet[MembershipId],
+        fleet_ids: FrozenSet[Optional[MembershipId]],
         file_name: Optional[str] = "time_step_stats",
     ):
         self.file_name = file_name
@@ -41,7 +41,7 @@ class TimeStepStatsHandler(Handler):
 
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
-            self.data = []
+            self.data: List[Dict[str, Any]] = []
             self.time_step_stats_outpath = scenario_output_directory.joinpath(
                 f"{file_name}_all.csv"
             )
@@ -53,10 +53,12 @@ class TimeStepStatsHandler(Handler):
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
                 "fleet_time_step_stats/"
             )
-            self.fleets_data = {}
+            self.fleets_data: Dict[str, List[Dict[str, Any]]] = {}
             for fleet_id in fleet_ids:
-                self.fleets_data[fleet_id] = []
-            self.fleets_data["none"] = []
+                if fleet_id is None:
+                    self.fleets_data["none"] = []
+                else:
+                    self.fleets_data[fleet_id] = []
         else:
             self.log_fleet_time_step_stats = False
 
@@ -73,14 +75,12 @@ class TimeStepStatsHandler(Handler):
 
     def get_fleet_time_step_stats(
         self,
-    ) -> Optional[Map[MembershipId, DataFrame]]:
+    ) -> Map[MembershipId, DataFrame]:
         """
         return an immutable map of time step stat DataFrames by membership id.
 
         :return: the immutable map containing time step stats DataFrames by membership id
         """
-        if not self.log_fleet_time_step_stats:
-            return None
         result = Map(
             {
                 fleet_id: DataFrame(data) if len(data) > 0 else None
@@ -110,7 +110,7 @@ class TimeStepStatsHandler(Handler):
         )
 
         # sort reports by type
-        reports_by_type = {}
+        reports_by_type: Dict[ReportType, List[Report]] = {}
         for report in reports:
             if report.report_type not in reports_by_type.keys():
                 reports_by_type[report.report_type] = []
@@ -155,7 +155,7 @@ class TimeStepStatsHandler(Handler):
             if len(sim_state.get_vehicles()) > 0:
                 stats_row["avg_soc_percent"] = 100 * np.mean(
                     [
-                        env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v)
+                        env.mechatronics[v.mechatronics_id].fuel_source_soc(v)
                         for v in sim_state.get_vehicles()
                     ]
                 )
@@ -166,7 +166,7 @@ class TimeStepStatsHandler(Handler):
             if ReportType.VEHICLE_MOVE_EVENT in reports_by_type.keys():
                 stats_row["vkt"] = sum(
                     [
-                        me.report["distance_km"]
+                        float(me.report["distance_km"])
                         for me in reports_by_type[ReportType.VEHICLE_MOVE_EVENT]
                     ]
                 )
@@ -184,7 +184,7 @@ class TimeStepStatsHandler(Handler):
 
             # get count of requests currently being serviced by a vehicle
             pooling_request_count = sum(
-                [len(v.vehicle_state.boarded_requests) for v in veh_pooling]
+                [len(v.vehicle_state.boarded_requests) for v in veh_pooling]  # type: ignore
             )
             stats_row["servicing_requests"] = (
                 veh_state_counts[VehicleStateType.SERVICING_TRIP.name] + pooling_request_count
@@ -297,7 +297,7 @@ class TimeStepStatsHandler(Handler):
                 if len(veh_in_fleet) > 0:
                     fleet_stats_row["avg_soc_percent"] = 100 * np.mean(
                         [
-                            env.mechatronics.get(v.mechatronics_id).fuel_source_soc(v)
+                            env.mechatronics[v.mechatronics_id].fuel_source_soc(v)
                             for v in veh_in_fleet
                         ]
                     )
@@ -308,7 +308,7 @@ class TimeStepStatsHandler(Handler):
                 if ReportType.VEHICLE_MOVE_EVENT in requests_in_fleet.keys():
                     fleet_stats_row["vkt"] = sum(
                         [
-                            me.report["distance_km"]
+                            float(me.report["distance_km"])
                             for me in requests_in_fleet[ReportType.VEHICLE_MOVE_EVENT]
                         ]
                     )
@@ -318,7 +318,7 @@ class TimeStepStatsHandler(Handler):
                 # get number of assigned requests in this fleet
                 assigned_requests = veh_state_counts_in_fleet[VehicleStateType.DISPATCH_TRIP.name]
                 assigned_pooling_requests = sum(
-                    [len(v.vehicle_state.trip_plan) for v in veh_dispatch_pooling_in_fleet]
+                    [len(v.vehicle_state.trip_plan) for v in veh_dispatch_pooling_in_fleet]  # type: ignore
                 )
                 fleet_stats_row["assigned_requests"] = assigned_requests + assigned_pooling_requests
 
@@ -331,7 +331,7 @@ class TimeStepStatsHandler(Handler):
                 # get count of requests currently being serviced by a vehicle
                 servicing_requests = veh_state_counts_in_fleet[VehicleStateType.SERVICING_TRIP.name]
                 servicing_pooling_requests = sum(
-                    [len(v.vehicle_state.boarded_requests) for v in veh_pooling_in_fleet]
+                    [len(v.vehicle_state.boarded_requests) for v in veh_pooling_in_fleet]  # type: ignore
                 )
                 fleet_stats_row["servicing_requests"] = (
                     servicing_requests + servicing_pooling_requests

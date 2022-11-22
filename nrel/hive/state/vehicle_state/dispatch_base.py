@@ -21,9 +21,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import BaseId, VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -113,6 +111,9 @@ class DispatchBase(VehicleState):
         context = (
             f"vehicle {self.vehicle_id} entering terminal state for dispatch base at {self.base_id}"
         )
+        if not vehicle:
+            msg = f"vehicle not found; context: {context}"
+            return SimulationStateError(msg), None
         if not base:
             msg = f"base not found; context: {context}"
             return SimulationStateError(msg), None
@@ -122,10 +123,9 @@ class DispatchBase(VehicleState):
             return SimulationStateError(message), None
         else:
             if base.available_stalls > 0:
-                next_state = ReserveBase.build(self.vehicle_id, self.base_id)
+                return None, ReserveBase.build(self.vehicle_id, self.base_id)
             else:
-                next_state = Idle.build(self.vehicle_id)
-            return None, next_state
+                return None, Idle.build(self.vehicle_id)
 
     def _perform_update(
         self, sim: SimulationState, env: Environment

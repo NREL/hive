@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import logging
+from pathlib import Path
 from typing import (
     Iterator,
     Dict,
@@ -9,9 +10,11 @@ from typing import (
     Optional,
     Callable,
     Tuple,
+    Any,
     NamedTuple,
     Iterable,
     Generator,
+    Union,
 )
 
 from itertools import islice, tee
@@ -19,14 +22,14 @@ from itertools import islice, tee
 log = logging.getLogger(__name__)
 
 
-class NamedTupleIterator:
+class ObjectIterator:
     """
     iterator that deals with a set of named tuples
     """
 
     def __init__(
         self,
-        items: Tuple[NamedTuple, ...],
+        items: Tuple[Any, ...],
         step_attr_name: str,
         stop_condition: Callable,
     ):
@@ -153,7 +156,7 @@ class DictReaderStepper:
     @classmethod
     def build(
         cls,
-        file: str,
+        file: Union[str, Path],
         step_column_name: str,
         initial_stop_condition: Callable = lambda x: x < 0,
         parser: Callable = lambda x: x,
@@ -168,14 +171,18 @@ class DictReaderStepper:
         :param parser: an optional parameter for parsing the input_config value
         :return: a new reader or an exception
         """
+        file = Path(file)
         try:
-            f = open(file, "r")
-            return None, cls(
-                csv.DictReader(f),
-                f,
-                step_column_name,
-                initial_stop_condition,
-                parser,
+            f = file.open("r")
+            return (
+                None,
+                cls(
+                    csv.DictReader(f),
+                    f,
+                    step_column_name,
+                    initial_stop_condition,
+                    parser,
+                ),
             )
         except Exception as e:
             return e, None

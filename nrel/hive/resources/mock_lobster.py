@@ -1,57 +1,39 @@
-import functools as ft
-import math
 import tempfile
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union, Callable
 
 import h3
 import immutables
 import yaml
 from pkg_resources import resource_filename
 
-from returns.result import ResultE, Success, Failure
 
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
-from nrel.hive.dispatcher.forecaster.forecaster_interface import (
-    ForecasterInterface,
-)
+from nrel.hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
 from nrel.hive.dispatcher.instruction.instructions import *
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import (
-    ChargingFleetManager,
-)
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import Charger
 from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.request import Request, RequestRateStructure
 from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import (
-    HaversineRoadNetwork,
-)
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
-from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
-from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import (
-    MechatronicsInterface,
-)
-from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import (
-    TabularPowercurve,
-)
-from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import (
-    TabularPowertrain,
-)
+from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import TabularPowercurve
+from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from nrel.hive.model.vehicle.vehicle import Vehicle
-from nrel.hive.reporting.reporter import Reporter
+from nrel.hive.reporting.reporter import Reporter, Report
 from nrel.hive.runner.environment import Environment
 from nrel.hive.runner.runner_payload import RunnerPayload
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
@@ -70,15 +52,11 @@ from nrel.hive.state.driver_state.human_driver_state.human_driver_state import (
 )
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.step_simulation import (
-    StepSimulation,
-)
+from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
 from nrel.hive.state.simulation_state.update.update import Update
 from nrel.hive.state.vehicle_state.vehicle_state import VehicleState
-from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import *
-from nrel.hive.util.fp import throw_or_return
 
 
 class DefaultIds:
@@ -220,15 +198,6 @@ def mock_station(
         road_network=road_network,
         membership=membership,
     )
-    # return Station.build(
-    #     id=station_id,
-    #     geoid=h3.geo_to_h3(lat, lon, h3_res),
-    #     road_network=road_network,
-    #     charger=mock_l2_charger(),
-    #     charger_count=1,
-    #     on_shift_access=on_shift_access_chargers,
-    #     membership=membership
-    # ).add_charger(mock_dcfc_charger())
 
 
 def mock_station_from_geoid(
@@ -280,7 +249,7 @@ def mock_request(
     d_lon: float = -104.978,
     h3_res: int = 15,
     road_network: RoadNetwork = mock_network(),
-    departure_time: SimTime = 0,
+    departure_time: SimTime = SimTime(0),
     passengers: int = 1,
     fleet_id: Optional[MembershipId] = None,
     allows_pooling: bool = False,
@@ -411,6 +380,10 @@ def mock_vehicle(
         else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     )
     position = road_network.position_from_geoid(geoid)
+
+    if position is None:
+        raise ValueError(f"geoid {geoid} is outside of boundary of road network")
+
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
@@ -441,6 +414,10 @@ def mock_vehicle_from_geoid(
         else AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
     )
     position = mock_network().position_from_geoid(geoid)
+
+    if position is None:
+        raise ValueError(f"geoid {geoid} is outside of boundary of road network")
+
     return Vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
@@ -501,10 +478,10 @@ def mock_config(
     timestep_duration_seconds: Seconds = 1,
     sim_h3_location_resolution: int = 15,
     sim_h3_search_resolution: int = 9,
-    input: Dict = None,
+    input_config: Optional[Dict] = None,
 ) -> HiveConfig:
-    if not input:
-        input = {
+    if not input_config:
+        input_config = {
             "vehicles_file": "denver_demo_vehicles.csv",
             "requests_file": "denver_demo_requests.csv",
             "bases_file": "denver_demo_bases.csv",
@@ -533,11 +510,14 @@ def mock_config(
                 "sim_h3_search_resolution": sim_h3_search_resolution,
                 "sim_name": "test_sim",
             },
-            "input": input,
+            "input": input_config,
             "network": {},
             "dispatcher": {},
         },
     )
+    if isinstance(conf_without_temp_dir, Exception):
+        raise conf_without_temp_dir
+
     updated_global = conf_without_temp_dir.global_config._replace(
         output_base_directory=test_output_directory.name
     )
@@ -548,7 +528,7 @@ def mock_config(
 def mock_env(
     config: HiveConfig = mock_config(),
     mechatronics: Optional[Dict[MechatronicsId, MechatronicsInterface]] = None,
-    chargers: Optional[Dict[Charger, Charger]] = None,
+    chargers: Optional[Dict[ChargerId, Charger]] = None,
     schedules: Optional[Dict[ScheduleId, Callable[["SimulationState", VehicleId], bool]]] = None,
     fleet_ids: FrozenSet[MembershipId] = frozenset([DefaultIds.mock_membership_id()]),
 ) -> Environment:
@@ -558,11 +538,15 @@ def mock_env(
         }
 
     if chargers is None:
-        chargers = {
-            mock_l1_charger_id(): mock_l1_charger(),
-            mock_l2_charger_id(): mock_l2_charger(),
-            mock_dcfc_charger_id(): mock_dcfc_charger(),
-        }
+        env_chargers = immutables.Map(
+            {
+                mock_l1_charger_id(): mock_l1_charger(),
+                mock_l2_charger_id(): mock_l2_charger(),
+                mock_dcfc_charger_id(): mock_dcfc_charger(),
+            }
+        )
+    else:
+        env_chargers = immutables.Map(chargers)
 
     if schedules is None:
 
@@ -575,7 +559,7 @@ def mock_env(
         config=config,
         reporter=mock_reporter(),
         mechatronics=immutables.Map(mechatronics),
-        chargers=immutables.Map(chargers),
+        chargers=env_chargers,
         schedules=immutables.Map(schedules),
         fleet_ids=fleet_ids,
     )
@@ -588,70 +572,16 @@ def mock_reporter() -> Reporter:
         def __init__(self):
             super().__init__()
 
-        def flush(self, sim_state: SimulationState):
+        def flush(self, runner_payload: RunnerPayload):
             pass
 
-        def file_report(self, report: dict):
+        def file_report(self, report: Report):
             pass
 
         def close(self, runner_payload: RunnerPayload):
             pass
 
     return MockReporter()
-
-
-def mock_haversine_zigzag_route(
-    n: int = 3,
-    lat_step_size: int = 5,
-    lon_step_size: int = 5,
-    speed_kmph: Kmph = 40,
-    h3_res: int = 15,
-) -> Route:
-    """
-    "zigs" lat steps and "zags" lon steps. all your base belong to us.
-
-    :param n: number of steps
-
-    :param lat_step_size: lat-wise step size
-
-    :param lon_step_size: lon-wise step size
-
-    :param speed_kmph: road speed
-
-    :param h3_res: h3 resolution
-    :return: a route
-    """
-
-    def step(acc: Tuple[Link, ...], i: int) -> Tuple[Link, ...]:
-        """
-        constructs the next Link
-
-        :param acc: the route so far
-
-        :param i: what link we are making
-        :return: the route with another link added
-        """
-        lat_pos, lon_pos = (
-            math.floor(i / 2.0) * lat_step_size,
-            math.floor((i + 1) / 2.0) * lon_step_size,
-        )
-        lat_dest, lon_dest = (
-            math.floor((i + 1) / 2.0) * lat_step_size,
-            math.floor((i + 2) / 2.0) * lon_step_size,
-        )
-        start = h3.geo_to_h3(lat_pos, lon_pos, h3_res)
-        end = h3.geo_to_h3(lat_dest, lon_dest, h3_res)
-        distance_km = H3Ops.great_circle_distance(start, end)
-        link = Link(
-            link_id=f"link_{i}",
-            start=start,
-            end=end,
-            distance_km=distance_km,
-            speed_kmph=speed_kmph,
-        )
-        return acc + (link,)
-
-    return ft.reduce(step, range(0, n), ())
 
 
 def mock_route_from_geoids(src: GeoId, dst: GeoId, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
@@ -694,7 +624,7 @@ def mock_route(h3_res: int = 15, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
 
 
 def mock_forecaster(forecast: int = 1) -> ForecasterInterface:
-    class MockForecaster(NamedTuple, ForecasterInterface):
+    class MockForecaster(ForecasterInterface):
         def generate_forecast(
             self, simulation_state: SimulationState
         ) -> Tuple[ForecasterInterface, Forecast]:

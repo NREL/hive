@@ -45,15 +45,16 @@ def linestring_2d(points: Tuple[Tuple[float, float], ...], x_y_ordering: bool) -
     :param x_y_ordering: if the output should be reversed into (x, y) ordering
     :return: a wkt representation
     """
-    if not isinstance(points, Tuple) or len(points) == 0:
+    if not isinstance(points, tuple) or len(points) == 0:
         return polygon_empty()
     elif len(points) == 1:
         return point_2d(points[0], x_y_ordering)
     else:
+        initial: Tuple[str, ...] = tuple()
         pts_strings = ft.reduce(
             lambda acc, pair: acc + (f"{_point_to_string(pair, x_y_ordering)}",),
             points,
-            (),
+            initial,
         )
         inner_content = ", ".join(pts_strings)
         linestring = f"LINESTRING ({inner_content})"

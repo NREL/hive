@@ -56,4 +56,3 @@ class EventfulHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()
-        self.log_file = None

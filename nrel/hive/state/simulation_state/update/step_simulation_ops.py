@@ -6,12 +6,8 @@ import logging
 from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
-from nrel.hive.dispatcher.instruction.instruction_result import (
-    InstructionResult,
-)
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
@@ -23,10 +19,9 @@ from nrel.hive.util import TupleOps, SimulationStateError
 
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
-    from nrel.hive.util.typealiases import SimTime, VehicleId
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.model.sim_time import SimTime
+    from nrel.hive.util.typealiases import VehicleId
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +34,7 @@ def _instruction_to_report(i: Instruction, sim_time: SimTime) -> Report:
     return Report(ReportType.INSTRUCTION, i_dict)
 
 
-def log_instructions(instructions: Tuple[Instruction], env: Environment, sim_time: SimTime):
+def log_instructions(instructions: Tuple[Instruction, ...], env: Environment, sim_time: SimTime):
     for i in instructions:
         env.reporter.file_report(_instruction_to_report(i, sim_time))
 
@@ -68,11 +63,15 @@ def step_vehicle(
 
     if driver_error:
         return driver_error, None
+    if driver_sim is None:
+        return None, None
 
     vehicle_error, vehicle_sim = vehicle.vehicle_state.update(driver_sim, env)
 
     if vehicle_error:
         return vehicle_error, None
+    if vehicle_sim is None:
+        return None, None
 
     next_time_sim = tick(vehicle_sim)
 
@@ -145,14 +144,16 @@ def perform_vehicle_state_updates(
         sorted_charge_queueing_vehicles = tuple(
             sorted(
                 charge_queueing_vehicles,
-                key=lambda v: v.vehicle_state.enqueue_time,
+                key=lambda v: v.vehicle_state.enqueue_time
+                if isinstance(v.vehicle_state, ChargeQueueing)
+                else 0,
             )
         )
 
         return other_vehicles + sorted_charge_queueing_vehicles
 
     # why sort here? see _sort_by_vehicle_state for an explanation
-    vehicles = _sort_by_vehicle_state(simulation_state.vehicles.values())
+    vehicles = _sort_by_vehicle_state(tuple(simulation_state.vehicles.values()))
 
     next_state = ft.reduce(_step_vehicle, vehicles, simulation_state)
 
@@ -163,7 +164,7 @@ InstructionApplicationResult = Tuple[Optional[Exception], Optional[InstructionRe
 
 
 def apply_instructions(
-    sim: SimulationState, env: Environment, instructions: Tuple[Instruction]
+    sim: SimulationState, env: Environment, instructions: Tuple[Instruction, ...]
 ) -> SimulationState:
     """
     this helper function takes a map with one instruction per agent at most, and attempts to apply each
@@ -175,64 +176,37 @@ def apply_instructions(
     :return: the simulation state modified by all successful Instructions
     """
     # construct the vehicle state transitions
-    run_in_parallel = False  # env.config.system.local_parallelism > 1
 
-    if run_in_parallel:
-        # run in parallel
-        # todo: inject some means for parallel execution of the apply instruction operation
-        #   requires shared memory access to SimulationState and Environment,
-        #   and a serialization codec to ship Instructions and Instruction.apply_instruction remotely
-        instruction_results_and_errors, updated_sim = ((NotImplementedError, None),), sim
-    else:
-        # run in a synchronous loop
-        def apply_instructions(
-            acc: Tuple[Tuple[InstructionApplicationResult, ...], SimulationState],
-            i: Instruction,
-        ) -> Tuple[Tuple[InstructionApplicationResult, ...], SimulationState]:
-            results, inner_sim = acc
-            err, instruction_result = i.apply_instruction(inner_sim, env)
-            if err is not None:
-                log.error(err)
-                return acc
-            else:
-                updated_instructions = inner_sim.applied_instructions.update({i.vehicle_id: i})
-                updated_sim = inner_sim._replace(applied_instructions=updated_instructions)
-                return results + ((None, instruction_result),), updated_sim
-
-        instruction_results_and_errors, updated_sim = ft.reduce(
-            apply_instructions, instructions, ((), sim)
-        )
-
-    has_errors, no_errors = TupleOps.partition(
-        lambda t: t[0] is not None, instruction_results_and_errors
-    )
-    valid_instruction_results = map(lambda t: t[1], no_errors)
-    # report any errors from applying instructions
-    if len(has_errors) > 0:
-        # at least one failed
-        for err, _ in has_errors:
+    results: list[InstructionResult] = []
+    for instruction in instructions:
+        err, result = instruction.apply_instruction(sim, env)
+        if err is not None:
             log.error(err)
+            continue
+        if result is None:
+            log.error("this should not be none if error is not none")
+            continue
 
-    # update the simulation with each vehicle state transition in sequence
-    def _add_instruction(
-        s: SimulationState,
-        i: InstructionResult,
-    ) -> SimulationState:
-        (
-            update_error,
-            updated_sim,
-        ) = entity_state_ops.transition_previous_to_next(s, env, i.prev_state, i.next_state)
+        updated_instructions = sim.applied_instructions.update(
+            {instruction.vehicle_id: instruction}
+        )
+        sim = sim._replace(applied_instructions=updated_instructions)
+
+        results.append(result)
+
+    for instruction_result in results:
+        (update_error, updated_sim,) = entity_state_ops.transition_previous_to_next(
+            sim, env, instruction_result.prev_state, instruction_result.next_state
+        )
         if update_error:
             log.error(update_error)
-            return s
+            continue
         elif updated_sim is None:
-            return s
+            continue
         else:
-            return updated_sim
+            sim = updated_sim
 
-    result = ft.reduce(_add_instruction, valid_instruction_results, updated_sim)
-
-    return result
+    return sim
 
 
 class UserProvidedUpdateAccumulator(NamedTuple):

@@ -10,16 +10,12 @@ from nrel.hive.state.vehicle_state.repositioning import Repositioning
 
 if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.dispatcher.instruction.instruction import Instruction
     from nrel.hive.config.dispatcher_config import DispatcherConfig
 
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_dispatch_to_station,
     get_nearest_valid_station_distance,
@@ -60,6 +56,10 @@ class ChargingFleetManager(InstructionGenerator):
                 return False
 
             mechatronics = environment.mechatronics.get(v.mechatronics_id)
+            if mechatronics is None:
+                log.error(f"mechatronics {v.mechatronics_id} missing for vehicle {v.id}")
+                return False
+
             range_remaining_km = mechatronics.range_remaining_km(v)
             if range_remaining_km > environment.config.dispatcher.charging_range_km_soft_threshold:
                 # don't even check station distance if vehicle range is over soft threshold

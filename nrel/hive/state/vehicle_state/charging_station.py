@@ -18,9 +18,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import StationId, VehicleId, ChargerId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
 log = logging.getLogger(__name__)
@@ -109,6 +107,8 @@ class ChargingStation(VehicleState):
             return SimulationStateError(msg), None
         elif charger_err is not None:
             return charger_err, None
+        elif charger is None:
+            return None, None
         elif not mechatronics.valid_charger(charger):
             msg = f"vehicle {vehicle.id} of type {vehicle.mechatronics_id} can't use charger {charger.id}"
             return SimulationStateError(msg), None
@@ -126,6 +126,8 @@ class ChargingStation(VehicleState):
                     )
                     response.__cause__ = error
                     return response, None
+                elif updated_sim is None:
+                    return None, None
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
@@ -169,6 +171,8 @@ class ChargingStation(VehicleState):
                 )
                 response.__cause__ = error
                 return response, None
+            elif updated_station is None:
+                return None, None
             return simulation_state_ops.modify_station(sim, updated_station)
 
     def _has_reached_terminal_state_condition(
@@ -183,9 +187,13 @@ class ChargingStation(VehicleState):
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
         if not vehicle:
+            log.error(f"could not find vehicle {self.vehicle_id} in sim state")
             return False
         else:
             mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+            if mechatronics is None:
+                log.error(f"could not find mechatronics {vehicle.mechatronics_id} in environemnt")
+                return False
             return mechatronics.is_full(vehicle)
 
     def _default_terminal_state(

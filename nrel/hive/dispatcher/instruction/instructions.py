@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import logging
-from typing import NamedTuple, Optional, TYPE_CHECKING, Tuple, Union
+from typing import Optional, TYPE_CHECKING, Tuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
 from nrel.hive.dispatcher.instruction.instruction_ops import (
@@ -10,10 +10,8 @@ from nrel.hive.dispatcher.instruction.instruction_ops import (
     trip_plan_all_requests_allow_pooling,
     trip_plan_covers_previous,
 )
-from nrel.hive.dispatcher.instruction.instruction_result import (
-    InstructionResult,
-)
-from nrel.hive.model.roadnetwork.link import Link, EntityPosition
+from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
+from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.state.vehicle_state import dispatch_ops
 from nrel.hive.state.vehicle_state.charging_base import ChargingBase
@@ -24,17 +22,13 @@ from nrel.hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.repositioning import Repositioning
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
-from nrel.hive.state.vehicle_state.servicing_pooling_trip import (
-    ServicingPoolingTrip,
-)
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.util.exception import SimulationStateError, InstructionError
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.util.typealiases import (
         StationId,
         VehicleId,
@@ -42,7 +36,6 @@ if TYPE_CHECKING:
         BaseId,
         ChargerId,
         LinkId,
-        GeoId,
     )
     from nrel.hive.runner.environment import Environment
 
@@ -94,7 +87,7 @@ class DispatchTripInstruction(Instruction):
             )
         else:
             start = vehicle.position
-            end = request.origin_position
+            end = request.position
             route = sim_state.road_network.route(start, end)
             prev_state = vehicle.vehicle_state
             next_state = DispatchTrip.build(self.vehicle_id, self.request_id, route)
@@ -112,23 +105,33 @@ class DispatchPoolingTripInstruction(Instruction):
     ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
         # see https://github.com/NREL/hive/issues/9 for implementation plan
         vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if vehicle is None:
+            veh_error_msg = f"Vehicle {self.vehicle_id} not found in simulation"
+            return SimulationStateError(veh_error_msg), None
+
         v_state = vehicle.vehicle_state
+        if not isinstance(v_state, ServicingPoolingTrip):
+            msg = (
+                "DispatchPoolingTripInstruction can only be applied to ServicingPoolingTrip states"
+            )
+            error = InstructionError(msg)
+            return error, None
 
         req_allow_pooling_error_msg = trip_plan_all_requests_allow_pooling(
             sim_state, self.trip_plan
         )
         # seating_error = check_if_vehicle_has_seats(sim_state, vehicle, self.trip_plan)
 
-        if isinstance(v_state, ServicingPoolingTrip) and not trip_plan_covers_previous(
-            v_state, self.trip_plan
-        ):
+        if not trip_plan_covers_previous(v_state, self.trip_plan):
             msg = "DispatchPoolingTripInstruction updates an active pooling state but doesn't include all previous requests"
             error = InstructionError(msg)
             return error, None
+
         elif not trip_plan_ordering_is_valid(self.trip_plan, v_state):
             msg = f"DispatchPoolingTripInstruction trip order is unsound :{self.trip_plan}"
             error = InstructionError(msg)
             return error, None
+
         elif not vehicle.driver_state.allows_pooling:
             msg = f"attempting to assign a pooling trip to vehicle {self.vehicle_id} which does not allow pooling"
             error = InstructionError(msg)
@@ -147,11 +150,13 @@ class DispatchPoolingTripInstruction(Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            (error, next_state,) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
+            (disp_error, next_state,) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
                 sim_state, self.vehicle_id, self.trip_plan
             )
-            if error is not None:
-                return error, None
+            if disp_error is not None:
+                return disp_error, None
+            elif next_state is None:
+                return Exception("Next state should not be none"), None
             else:
                 return None, InstructionResult(vehicle.vehicle_state, next_state)
 

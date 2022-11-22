@@ -42,7 +42,7 @@ class TestSampleVehicles(TestCase):
         loc_fn = build_default_location_sampling_fn()
         soc_fn = build_default_soc_sampling_fn()
 
-        result: Result = sample_vehicles(
+        result = sample_vehicles(
             count=n,
             sim=sim,
             env=env,
@@ -87,7 +87,7 @@ class TestSampleVehicles(TestCase):
 
         soc_fn = build_default_soc_sampling_fn()
 
-        result: Result = sample_vehicles(
+        result = sample_vehicles(
             count=n,
             sim=sim,
             env=env,

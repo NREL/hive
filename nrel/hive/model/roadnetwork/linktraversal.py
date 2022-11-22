@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional, NamedTuple, Tuple
+from typing import Optional, NamedTuple, Tuple, TYPE_CHECKING
 
-from nrel.hive.util.h3_ops import H3Ops, LinkId, GeoId
+from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.units import Seconds, Kilometers, Kmph, hours_to_seconds
+
+if TYPE_CHECKING:
+    from nrel.hive.util.typealiases import LinkId, GeoId
 
 
 class LinkTraversal(NamedTuple):

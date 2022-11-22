@@ -2,12 +2,13 @@ import functools as ft
 from csv import DictReader
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from immutables import Map
 
 from nrel.hive.util.time_helpers import read_time_string, time_in_range
-from nrel.hive.util.typealiases import ScheduleFunction, ScheduleId, VehicleId
+from nrel.hive.util.typealiases import VehicleId, ScheduleId
+from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 
 
 def time_range_schedules_from_file(
@@ -55,7 +56,9 @@ def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
     :param row: the DictReader row of the time range file
     :return: the updated accumulator
     """
-    schedule_id = row.get("schedule_id")
+    schedule_id: Optional[ScheduleId] = row.get("schedule_id")
+    if schedule_id is None:
+        raise KeyError("must provide schedule id")
     start_time_string = row.get("start_time")
     if not start_time_string:
         raise KeyError("time range file missing start_time column or entry missing")
@@ -65,10 +68,10 @@ def read_time_range_row(acc: Map[ScheduleId, ScheduleFunction], row: Dict):
     start_time = read_time_string(start_time_string)
     end_time = read_time_string(end_time_string)
 
-    def _schedule_fn(sim: "SimulationState", vehicle_id: VehicleId) -> bool:
+    def _schedule_fn(sim, vehicle_id: VehicleId) -> bool:
         sim_time = datetime.utcfromtimestamp(sim.sim_time).time()
         within_scheduled_time = time_in_range(start_time, end_time, sim_time)
         return within_scheduled_time
 
-    updated_schedules = acc.update({schedule_id: _schedule_fn})
+    updated_schedules = acc.set(schedule_id, _schedule_fn)
     return updated_schedules

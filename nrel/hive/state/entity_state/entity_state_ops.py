@@ -1,17 +1,20 @@
 from __future__ import annotations
-from typing import Tuple, Optional
+from typing import Tuple, Optional, TYPE_CHECKING
 
-from nrel.hive.runner.environment import Environment
-from nrel.hive.state.entity_state.entity_state import EntityState
 from nrel.hive.util.exception import StateTransitionError
+
+if TYPE_CHECKING:
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
+    from nrel.hive.state.vehicle_state.vehicle_state import VehicleState
+    from nrel.hive.runner.environment import Environment
 
 
 def transition_previous_to_next(
-    sim: "SimulationState",
+    sim: SimulationState,
     env: Environment,
-    prev_state: EntityState,
-    next_state: EntityState,
-) -> Tuple[Optional[Exception], Optional["SimulationState"]]:
+    prev_state: VehicleState,
+    next_state: VehicleState,
+) -> Tuple[Optional[Exception], Optional[SimulationState]]:
     """
     exits the previous state and enters the next state
 

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict
+from typing import Dict
+from dataclasses import dataclass, replace
 
 import h3
 import immutables
 
+from nrel.hive.model.entity import Entity
 from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.entity_position import EntityPosition
@@ -17,7 +19,8 @@ from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import Kilometers, Currency
 
 
-class Vehicle(NamedTuple):
+@dataclass(frozen=True)
+class Vehicle(Entity):
     """
     Tuple that represents a vehicle in the simulation.
 
@@ -34,12 +37,14 @@ class Vehicle(NamedTuple):
     # core vehicle properties
     id: VehicleId
 
+    # location
+    position: EntityPosition
+
+    membership: Membership
+
     # mechatronic properties
     mechatronics_id: MechatronicsId
     energy: immutables.Map[EnergyType, float]
-
-    # location
-    position: EntityPosition
 
     # vehicle planning/operational properties
     vehicle_state: VehicleState
@@ -50,8 +55,6 @@ class Vehicle(NamedTuple):
     # vehicle analytical properties
     balance: Currency = 0.0
     distance_traveled_km: Kilometers = 0.0
-
-    membership: Membership = Membership()
 
     @property
     def geoid(self):
@@ -118,10 +121,16 @@ class Vehicle(NamedTuple):
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 start_position = road_network.position_from_geoid(geoid)
 
+                if start_position is None:
+                    raise IOError(
+                        f"vehicle {vehicle_id} cannot be positioned on the road network; check the input lat/lon"
+                    )
+
                 return Vehicle(
                     id=vehicle_id,
                     mechatronics_id=mechatronics_id,
                     energy=energy,
+                    membership=Membership(),
                     position=start_position,
                     vehicle_state=Idle.build(vehicle_id),
                     driver_state=driver_state,
@@ -142,7 +151,7 @@ class Vehicle(NamedTuple):
         :param energy:
         :return:
         """
-        return self._replace(energy=energy)
+        return replace(self, energy=energy)
 
     def modify_vehicle_state(self, vehicle_state: VehicleState) -> Vehicle:
         """
@@ -151,7 +160,7 @@ class Vehicle(NamedTuple):
         :param vehicle_state:
         :return:
         """
-        return self._replace(vehicle_state=vehicle_state)
+        return replace(self, vehicle_state=vehicle_state)
 
     def modify_driver_state(self, driver_state: DriverState) -> Vehicle:
         """
@@ -160,7 +169,7 @@ class Vehicle(NamedTuple):
         :param driver_state:
         :return:
         """
-        return self._replace(driver_state=driver_state)
+        return replace(self, driver_state=driver_state)
 
     def modify_position(self, position: EntityPosition) -> Vehicle:
         """
@@ -169,7 +178,7 @@ class Vehicle(NamedTuple):
         :param position:
         :return:
         """
-        return self._replace(position=position)
+        return replace(self, position=position)
 
     def send_payment(self, amount: Currency) -> Vehicle:
         """
@@ -178,7 +187,7 @@ class Vehicle(NamedTuple):
         :param amount: the amount to pay
         :return: the updated Vehicle
         """
-        return self._replace(balance=self.balance - amount)
+        return replace(self, balance=self.balance - amount)
 
     def receive_payment(self, amount: Currency) -> Vehicle:
         """
@@ -187,7 +196,7 @@ class Vehicle(NamedTuple):
         :param amount: the amount to be paid
         :return: the updated Vehicle
         """
-        return self._replace(balance=self.balance + amount)
+        return replace(self, balance=self.balance + amount)
 
     def tick_distance_traveled_km(self, delta_d_km: Kilometers) -> Vehicle:
         """
@@ -196,7 +205,7 @@ class Vehicle(NamedTuple):
         :param delta_d_km:
         :return:
         """
-        return self._replace(distance_traveled_km=self.distance_traveled_km + delta_d_km)
+        return replace(self, distance_traveled_km=self.distance_traveled_km + delta_d_km)
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """
@@ -205,7 +214,7 @@ class Vehicle(NamedTuple):
         :param member_ids: a Tuple containing updated membership(s) of the vehicle
         :return:
         """
-        return self._replace(membership=Membership.from_tuple(member_ids))
+        return replace(self, membership=Membership.from_tuple(member_ids))
 
     def add_membership(self, membership_id: MembershipId) -> Vehicle:
         """
@@ -215,4 +224,4 @@ class Vehicle(NamedTuple):
         :return:
         """
         updated_membership = self.membership.add_membership(membership_id)
-        return self._replace(membership=updated_membership)
+        return replace(self, membership=updated_membership)

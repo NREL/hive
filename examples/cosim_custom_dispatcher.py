@@ -7,9 +7,7 @@ from tqdm import tqdm
 
 from nrel.hive import package_root
 from nrel.hive.dispatcher.instruction.instructions import IdleInstruction
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
-    InstructionGenerator,
-)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.runner.runner_payload_ops import (
     get_instruction_generator,
     update_instruction_generator,
@@ -59,9 +57,7 @@ def run():
         crank_result = hc.crank(rp, 10)
 
         # get dispatcher to update it
-        dispatcher: CustomDispatcher = get_instruction_generator(
-            crank_result.runner_payload, CustomDispatcher
-        )
+        dispatcher = get_instruction_generator(crank_result.runner_payload, CustomDispatcher)
 
         # apply some change to the state of the dispatcher
         updated_dispatcher = dispatcher.new_random_state()

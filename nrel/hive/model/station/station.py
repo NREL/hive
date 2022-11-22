@@ -2,22 +2,21 @@ from __future__ import annotations
 
 from distutils.util import strtobool
 import functools as ft
-from typing import NamedTuple, Dict, Optional, Union
+from typing import Dict, Optional, Union
+from dataclasses import dataclass, replace
 
 import h3
 import immutables
 import logging
 
 from returns.result import ResultE, Success, Failure
-from nrel.hive.model.energy import charger
 
+from nrel.hive.model.entity import Entity
 from nrel.hive.runner.environment import Environment
 from nrel.hive.model.station.charger_state import ChargerState
-from nrel.hive.model.energy import EnergyType
 from nrel.hive.model.energy.charger import Charger
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.entity_position import EntityPosition
-from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.model.station.station_ops import (
     station_state_update,
@@ -33,7 +32,8 @@ from nrel.hive.util.validation import validate_fields
 log = logging.getLogger(__name__)
 
 
-class Station(NamedTuple):
+@dataclass(frozen=True)
+class Station(Entity):
     """
     A station that vehicles can use to refuel
 
@@ -56,10 +56,10 @@ class Station(NamedTuple):
 
     id: StationId
     position: EntityPosition
+    membership: Membership
     state: immutables.Map[ChargerId, ChargerState]
     on_shift_access_chargers: FrozenSet[ChargerId]
     balance: Currency = 0.0
-    membership: Membership = Membership()
 
     @property
     def geoid(self) -> GeoId:
@@ -161,7 +161,8 @@ class Station(NamedTuple):
 
         updated_station_state = self.state.update({charger_id: append_cs})
         updated_on_shift = self.on_shift_access_chargers.union([charger_id])
-        updated_station = self._replace(
+        updated_station = replace(
+            self,
             state=updated_station_state,
             on_shift_access_chargers=updated_on_shift,
         )
@@ -231,6 +232,8 @@ class Station(NamedTuple):
             error, updated_station = prev_station.append_chargers(charger_id, charger_count, env)
             if error is not None:
                 raise error
+            elif updated_station is None:
+                raise Exception("got error and no station")
             return updated_station
 
     def get_price(self, charger_id: ChargerId) -> Optional[Currency]:
@@ -362,7 +365,7 @@ class Station(NamedTuple):
         else:
             new_charger_state = new_charger_state_or_err.unwrap()
             new_state = self.state.set(charger_id, new_charger_state)
-            new_station = self._replace(state=new_state)
+            new_station = replace(self, state=new_state)
             return Success(new_station)
 
     def scale_charger_rate(self, charger_id: ChargerId, scale: float) -> ResultE[Station]:
@@ -387,7 +390,7 @@ class Station(NamedTuple):
         else:
             new_charger_state = new_charger_state_or_err.unwrap()
             new_state = self.state.set(charger_id, new_charger_state)
-            new_station = self._replace(state=new_state)
+            new_station = replace(self, state=new_state)
             return Success(new_station)
 
     def update_prices(self, new_prices: immutables.Map[ChargerId, Currency]) -> ErrorOr[Station]:
@@ -403,7 +406,7 @@ class Station(NamedTuple):
         :param currency_received: the currency received for a charge event
         :return: the updated Station
         """
-        return self._replace(balance=self.balance + currency_received)
+        return replace(self, balance=self.balance + currency_received)
 
     def enqueue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
@@ -452,7 +455,7 @@ class Station(NamedTuple):
         :param member_ids: a Tuple containing updated membership(s) of the station
         :return:
         """
-        return self._replace(membership=Membership.from_tuple(member_ids))
+        return replace(self, membership=Membership.from_tuple(member_ids))
 
     def add_membership(self, membership_id: MembershipId) -> Station:
         """
@@ -462,4 +465,4 @@ class Station(NamedTuple):
         :return: updated station
         """
         updated_membership = self.membership.add_membership(membership_id)
-        return self._replace(membership=updated_membership)
+        return replace(self, membership=updated_membership)

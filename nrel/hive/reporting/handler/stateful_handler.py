@@ -1,7 +1,7 @@
 import json
-import os
 from pathlib import Path
 from typing import List
+from dataclasses import asdict
 
 from nrel.hive.config.global_config import GlobalConfig
 from nrel.hive.model.station.station import Station
@@ -10,7 +10,6 @@ from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
 from nrel.hive.runner import RunnerPayload
-from nrel.hive.state.driver_state.driver_state import DriverState
 
 
 class StatefulHandler(Handler):
@@ -61,7 +60,6 @@ class StatefulHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         self.log_file.close()
-        self.log_file = None
 
     @staticmethod
     def driver_asdict(vehicle: Vehicle) -> dict:
@@ -87,9 +85,9 @@ class StatefulHandler(Handler):
         }
 
         # deconstruct energy source
-        for key, val in vehicle.energy.items():
-            new_key = "energy_" + key.name
-            output[new_key] = val
+        for energy_type, energy_val in vehicle.energy.items():
+            new_key = "energy_" + energy_type.name
+            output[new_key] = energy_val
         # del (output['energy'])
 
         # deconstruct link
@@ -102,7 +100,7 @@ class StatefulHandler(Handler):
 
     @staticmethod
     def station_asdict(station: Station) -> dict:
-        out_dict = station._asdict()
+        out_dict = asdict(station)
         del out_dict["id"]
         del out_dict["state"]
 

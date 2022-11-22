@@ -15,10 +15,8 @@ from nrel.hive.reporting.reporter import Report
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state import simulation_state_ops
-from nrel.hive.state.simulation_state.update.simulation_update import (
-    SimulationUpdateFunction,
-)
-from nrel.hive.util.iterators import NamedTupleIterator
+from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
+from nrel.hive.util.iterators import ObjectIterator
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +27,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
     injects requests into the simulation based on set of pre-sampled requests.
     """
 
-    request_iterator: NamedTupleIterator
+    request_iterator: ObjectIterator
     rate_structure: RequestRateStructure
 
     @classmethod
@@ -58,7 +56,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
         else:
             rate_structure = RequestRateStructure()
 
-        stepper = NamedTupleIterator(
+        stepper = ObjectIterator(
             items=sampled_requests,
             step_attr_name="departure_time",
             stop_condition=lambda dt: dt < 0,
@@ -103,7 +101,7 @@ class UpdateRequestsSampling(SimulationUpdateFunction):
                 new_sim = new_sim_or_error.unwrap()
                 report_data = {
                     "request_id": request.id,
-                    "departure_time": request.departure_time,
+                    "departure_time": str(request.departure_time),
                     "fleet_id": str(request.membership),
                 }
                 env.reporter.file_report(Report(ReportType.ADD_REQUEST_EVENT, report_data))

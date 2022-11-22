@@ -17,9 +17,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import BaseId, VehicleId, ChargerId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
 
 log = logging.getLogger(__name__)
@@ -98,6 +96,8 @@ class ChargingBase(VehicleState):
                 charger_err, charger = station.get_charger_instance(self.charger_id)
                 if charger_err is not None:
                     return charger_err, None
+                elif charger is None:
+                    return None, None
                 elif not mechatronics.valid_charger(charger):
                     msg = f"vehicle of type {vehicle.mechatronics_id} can't use charger; context: {context}"
                     return SimulationStateError(msg), None
@@ -120,6 +120,11 @@ class ChargingBase(VehicleState):
                             )
                             response.__cause__ = err1
                             return response, None
+                        elif sim2 is None:
+                            return (
+                                Exception("sim state should not be none if there was no error"),
+                                None,
+                            )
                         else:
                             err2, sim3 = simulation_state_ops.modify_station(sim2, updated_station)
                             if err2:
@@ -128,6 +133,11 @@ class ChargingBase(VehicleState):
                                 )
                                 response.__cause__ = err2
                                 return response, None
+                            elif sim3 is None:
+                                return (
+                                    Exception("sim state should not be none if there was no error"),
+                                    None,
+                                )
                             else:
                                 return VehicleState.apply_new_vehicle_state(
                                     sim3, self.vehicle_id, self
@@ -148,10 +158,16 @@ class ChargingBase(VehicleState):
         :param env: the simulation environment
         :return: an exception due to failure or an optional updated simulation
         """
+        context = f"vehicle {self.vehicle_id} exiting charging base state at base {self.base_id}"
         vehicle = sim.vehicles.get(self.vehicle_id)
         base = sim.bases.get(self.base_id)
+        if base is None:
+            return (
+                SimulationStateError(f"base not found; context: {context}"),
+                None,
+            )
+
         station = sim.stations.get(base.station_id) if base.station_id else None
-        context = f"vehicle {self.vehicle_id} exiting charging base state at base {self.base_id}"
 
         if not vehicle:
             return (
@@ -171,6 +187,8 @@ class ChargingBase(VehicleState):
                 )
                 response.__cause__ = err1
                 return response, None
+            elif updated_base is None:
+                return Exception("base should not be none if there was no error"), None
             else:
                 err2, sim2 = simulation_state_ops.modify_base(sim, updated_base)
                 if err2:
@@ -179,6 +197,8 @@ class ChargingBase(VehicleState):
                     )
                     response.__cause__ = err2
                     return response, None
+                elif sim2 is None:
+                    return Exception("sim should not be none if there was no error"), None
                 else:
                     err3, updated_station = station.return_charger(self.charger_id)
                     if err3:
@@ -187,6 +207,8 @@ class ChargingBase(VehicleState):
                         )
                         response.__cause__ = err3
                         return response, None
+                    elif updated_station is None:
+                        return Exception("station should not be none if there was no error"), None
                     return simulation_state_ops.modify_station(sim2, updated_station)
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:
@@ -198,8 +220,10 @@ class ChargingBase(VehicleState):
         :return: True if the vehicle is fully charged
         """
         vehicle = sim.vehicles.get(self.vehicle_id)
-        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
         if not vehicle:
+            return False
+        mechatronics = env.mechatronics.get(vehicle.mechatronics_id)
+        if mechatronics is None:
             return False
         else:
             return mechatronics.is_full(vehicle)

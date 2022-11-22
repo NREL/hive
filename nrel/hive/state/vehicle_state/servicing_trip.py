@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.model.request import Request
@@ -12,7 +12,6 @@ from nrel.hive.model.roadnetwork.route import (
 )
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.runner.environment import Environment
-from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.servicing_ops import (
     drop_off_trip,
@@ -28,9 +27,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import VehicleId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -97,7 +94,7 @@ class ServicingTrip(VehicleState):
         is_valid = (
             route_cooresponds_with_entities(
                 self.route,
-                request.origin_position,
+                request.position,
                 request.destination_position,
             )
             if vehicle and request
@@ -131,7 +128,7 @@ class ServicingTrip(VehicleState):
             log.warning(msg)
             return None, None
         elif not route_cooresponds_with_entities(
-            self.route, request.origin_position, request.destination_position
+            self.route, request.position, request.destination_position
         ):
             msg = f"vehicle {vehicle.id} attempting to service request {self.request.id} invalid route (doesn't match o/d of request)"
             log.warning(msg)
@@ -144,6 +141,8 @@ class ServicingTrip(VehicleState):
                 )
                 response.__cause__ = pickup_error
                 return response, None
+            elif pickup_sim is None:
+                return None, None
             else:
                 enter_result = VehicleState.apply_new_vehicle_state(
                     pickup_sim, self.vehicle_id, self
@@ -208,6 +207,8 @@ class ServicingTrip(VehicleState):
             )
             response.__cause__ = move_error
             return response, None
+        elif move_sim is None:
+            return None, None
 
         moved_vehicle = move_sim.vehicles.get(self.vehicle_id)
 
@@ -218,10 +219,14 @@ class ServicingTrip(VehicleState):
             )
         elif moved_vehicle.vehicle_state.vehicle_state_type == VehicleStateType.OUT_OF_SERVICE:
             return None, move_sim
-        elif len(moved_vehicle.vehicle_state.route) == 0:
-            # reached destination.
-            # let's drop the passengers off during this time step
-            result = drop_off_trip(move_sim, env, self.vehicle_id, self.request)
-            return result
+
+        if isinstance(moved_vehicle.vehicle_state, ServicingTrip):
+            if len(moved_vehicle.vehicle_state.route) == 0:
+                # reached destination.
+                # let's drop the passengers off during this time step
+                result = drop_off_trip(move_sim, env, self.vehicle_id, self.request)
+                return result
+            else:
+                return None, move_sim
         else:
             return None, move_sim

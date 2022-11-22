@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union, Tuple
+from typing import NamedTuple, Dict, Optional, Union, Tuple
 
 from nrel.hive.config.config_builder import ConfigBuilder
 from nrel.hive.model.vehicle.schedules.schedule_type import ScheduleType
@@ -31,7 +31,7 @@ class Sim(NamedTuple):
         )
 
     @classmethod
-    def build(cls, config: Dict = None) -> Union[IOError, Sim]:
+    def build(cls, config: Optional[Dict] = None) -> Sim:
         return ConfigBuilder.build(
             default_config=cls.default_config(),
             required_config=cls.required_config(),
@@ -40,14 +40,10 @@ class Sim(NamedTuple):
         )
 
     @classmethod
-    def from_dict(cls, d: Dict) -> Union[IOError, Sim]:
+    def from_dict(cls, d: Dict) -> Sim:
         start_time = SimTime.build(d["start_time"])
-        if isinstance(start_time, IOError):
-            return start_time
 
         end_time = SimTime.build(d["end_time"])
-        if isinstance(end_time, IOError):
-            return end_time
 
         schedule_type = ScheduleType.from_string(d["schedule_type"])
 

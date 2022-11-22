@@ -1,8 +1,6 @@
 from unittest import TestCase
 
-from nrel.hive.model.vehicle.schedules.time_range_schedule import (
-    time_range_schedules_from_string,
-)
+from nrel.hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_string
 from nrel.hive.resources.mock_lobster import *
 
 
@@ -21,9 +19,9 @@ class TestSchedules(TestCase):
         eleven_fifty_nine_fifty_nine = 86399
         # not_a_time = 87000  # todo: maybe worth adding a test for times outside of the day range?
 
-        first_shift_schedule_fn: ScheduleFunction = time_range_schedules.get("first")
-        second_shift_schedule_fn: ScheduleFunction = time_range_schedules.get("second")
-        third_shift_schedule_fn: ScheduleFunction = time_range_schedules.get("third")
+        first_shift_schedule_fn = time_range_schedules["first"]
+        second_shift_schedule_fn = time_range_schedules["second"]
+        third_shift_schedule_fn = time_range_schedules["third"]
         unused = DefaultIds.mock_vehicle_id()
 
         self.assertFalse(first_shift_schedule_fn(mock_sim(sim_time=eight_am), unused))

@@ -42,7 +42,15 @@ docs = [
     "myst-parser",
     "sphinx-autodoc-typehints",
 ]
-dev = ["nrel.hive[docs]", "pytest", "black", "mypy", "twine"]
+dev = [
+    "nrel.hive[docs]",
+    "pytest",
+    "black",
+    "mypy",
+    "twine",
+    "types-PyYAML",
+    "types-setuptools",
+]
 
 [project.urls]
 Homepage = "https://github.com/NREL/hive"

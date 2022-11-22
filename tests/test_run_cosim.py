@@ -1,9 +1,7 @@
 from unittest import TestCase
 
 from nrel.hive.app import hive_cosim
-from nrel.hive.reporting.handler.vehicle_charge_events_handler import (
-    VehicleChargeEventsHandler,
-)
+from nrel.hive.reporting.handler.vehicle_charge_events_handler import VehicleChargeEventsHandler
 from nrel.hive.resources.mock_lobster import mock_env, mock_sim, mock_update
 from nrel.hive.runner.runner_payload import RunnerPayload
 

@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from nrel.hive.resources.mock_lobster import *
+from nrel.hive.util.h3_ops import H3Ops
+from nrel.hive.util.fp import throw_or_return
 
 
 class TestH3Ops(TestCase):

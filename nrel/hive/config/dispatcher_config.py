@@ -3,9 +3,7 @@ from __future__ import annotations
 from typing import NamedTuple, Dict, Union, Tuple, Optional
 
 from nrel.hive.config.config_builder import ConfigBuilder
-from nrel.hive.dispatcher.instruction_generator.charging_search_type import (
-    ChargingSearchType,
-)
+from nrel.hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from nrel.hive.util.units import Ratio, Seconds, Kilometers
 
 
@@ -41,12 +39,12 @@ class DispatcherConfig(NamedTuple):
         )
 
     @classmethod
-    def from_dict(cls, d: Dict) -> Union[IOError, DispatcherConfig]:
+    def from_dict(cls, d: Dict) -> DispatcherConfig:
         try:
             d["valid_dispatch_states"] = tuple(s.lower() for s in d["valid_dispatch_states"])
             d["charging_search_type"] = ChargingSearchType.from_string(d["charging_search_type"])
         except ValueError:
-            return IOError("valid_dispatch_states and active_states must be in a list format")
+            raise IOError("valid_dispatch_states and active_states must be in a list format")
 
         return DispatcherConfig(**d)
 

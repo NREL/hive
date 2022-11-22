@@ -7,9 +7,7 @@ from typing import Tuple, Optional, NamedTuple
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.update.simulation_update import (
-    SimulationUpdateFunction,
-)
+from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from nrel.hive.util.typealiases import RequestId
 from nrel.hive.reporting.reporter import Report, ReportType
 
@@ -56,6 +54,8 @@ class CancelRequests(SimulationUpdateFunction):
                 if update_error:
                     log.error(update_error)
                     return sim
+                elif updated_sim is None:
+                    return sim
                 else:
                     env.reporter.file_report(_gen_report(request_id, sim))
                     return updated_sim
@@ -83,8 +83,8 @@ def _gen_report(r_id: RequestId, sim: SimulationState) -> Report:
     membership = str(req.membership) if req else ""
     report_data = {
         "request_id": r_id,
-        "departure_time": dep_t,
-        "cancel_time": sim_t,
+        "departure_time": str(dep_t),
+        "cancel_time": str(sim_t),
         "fleet_id": membership,
     }
     return Report(ReportType.CANCEL_REQUEST_EVENT, report_data)

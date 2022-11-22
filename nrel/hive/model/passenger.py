@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Optional
+from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass, replace
 
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.sim_time import SimTime
-from nrel.hive.util.typealiases import *
+
+if TYPE_CHECKING:
+    from nrel.hive.util.typealiases import *
 
 
-class Passenger(NamedTuple):
+@dataclass(frozen=True)
+class Passenger:
     """
     A tuple representing a passenger in the simulation.
 
@@ -44,7 +48,7 @@ class Passenger(NamedTuple):
         :param vehicle_id: vehicle id
         :return: updated Passenger
         """
-        return self._replace(vehicle_id=vehicle_id)
+        return replace(self, vehicle_id=vehicle_id)
 
 
 def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId:

@@ -1,14 +1,12 @@
 from dataclasses import dataclass
-from turtle import speed
-from typing import Dict
+from typing import Dict, Any
 
 import numpy as np
 
 from nrel.hive.model.roadnetwork.link import Link
+from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.model.roadnetwork.routetraversal import Route
-from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import (
-    Powertrain,
-)
+from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 from nrel.hive.util.units import valid_unit, get_unit_conversion
 
 
@@ -22,13 +20,13 @@ class TabularPowertrain(Powertrain):
     distance_units: str
     energy_units: str
 
-    consumption_speed: np.array
-    consumption_energy_per_distance: np.array
+    consumption_speed: np.ndarray
+    consumption_energy_per_distance: np.ndarray
 
     @classmethod
     def from_data(
         self,
-        data: Dict[str, str],
+        data: Dict[str, Any],
     ):
         try:
             scale_factor = float(data["scale_factor"])
@@ -72,7 +70,7 @@ class TabularPowertrain(Powertrain):
             consumption_energy_per_distance,
         )
 
-    def link_cost(self, link: Link) -> float:
+    def link_cost(self, link: LinkTraversal) -> float:
         """
         uses mph tabular value to calculate energy over a link
 
@@ -83,10 +81,12 @@ class TabularPowertrain(Powertrain):
         # convert kilometers per hour to whatever units are used by this powertrain
         link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
 
-        energy_per_distance = np.interp(
-            link_speed,
-            self.consumption_speed,
-            self.consumption_energy_per_distance,
+        energy_per_distance = float(
+            np.interp(
+                link_speed,
+                self.consumption_speed,
+                self.consumption_energy_per_distance,
+            )
         )
         # link distance is in kilometers
         link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)

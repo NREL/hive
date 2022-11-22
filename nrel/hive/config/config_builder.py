@@ -12,8 +12,8 @@ class ConfigBuilder:
         cls,
         default_config: Dict,
         required_config: Tuple[str, ...],
-        config_constructor: Callable[[Dict], Union[Exception, T]],
-        config: Dict = None,
+        config_constructor: Callable[[Dict], T],
+        config: Optional[Dict] = None,
     ) -> T:
         """
         constructs a Config from a configuration Dict

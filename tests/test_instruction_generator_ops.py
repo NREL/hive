@@ -3,9 +3,7 @@ from unittest import TestCase
 from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_dispatch_to_station,
 )
-from nrel.hive.dispatcher.instruction_generator.charging_search_type import (
-    ChargingSearchType,
-)
+from nrel.hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from nrel.hive.resources.mock_lobster import *
 
 

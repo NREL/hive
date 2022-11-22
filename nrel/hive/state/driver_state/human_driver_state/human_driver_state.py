@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
 from nrel.hive.dispatcher.instruction.instructions import (
@@ -35,9 +35,7 @@ from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import SimulationStateError, BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId
 
@@ -82,6 +80,7 @@ class HumanAvailable(DriverState):
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         if not my_vehicle:
             log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
+            return None
 
         state = my_vehicle.vehicle_state
 
@@ -97,8 +96,8 @@ class HumanAvailable(DriverState):
             # pastures
             if state.idle_duration > env.config.dispatcher.idle_time_out_seconds:
                 return human_look_for_requests(my_vehicle, sim)
-        else:
-            return None
+
+        return None
 
     def update(
         self, sim: SimulationState, env: Environment
@@ -194,6 +193,12 @@ class HumanUnavailable(DriverState):
         else:
             at_home = my_base.geoid == my_vehicle.geoid
             my_mechatronics = env.mechatronics.get(my_vehicle.mechatronics_id)
+
+            if my_mechatronics is None:
+                log.error(
+                    f"could not find mechatronics instance {my_vehicle.mechatronics_id} for vehicle {my_vehicle.id} in simulation"
+                )
+                return None
 
             if not at_home:
                 if isinstance(my_vehicle.vehicle_state, DispatchBase):

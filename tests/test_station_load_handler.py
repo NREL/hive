@@ -53,7 +53,7 @@ class TestStationLoadHandler(TestCase):
             "should have captured which station this happened at",
         )
         self.assertGreater(
-            r.report["energy"],
+            float(r.report["energy"]),
             0.0,
             "we should have captured the effect of 60 seconds of charge time",
         )

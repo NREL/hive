@@ -16,9 +16,7 @@ from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import VehicleId, BaseId
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +82,8 @@ class ReserveBase(VehicleState):
                     )
                     response.__cause__ = error
                     return response, None
+                elif updated_sim is None:
+                    return None, None
                 else:
                     return VehicleState.apply_new_vehicle_state(updated_sim, self.vehicle_id, self)
 
@@ -109,6 +109,8 @@ class ReserveBase(VehicleState):
                 )
                 response.__cause__ = error
                 return response, None
+            elif updated_base is None:
+                return None, None
             return simulation_state_ops.modify_base(sim, updated_base)
 
     def _has_reached_terminal_state_condition(self, sim: SimulationState, env: Environment) -> bool:

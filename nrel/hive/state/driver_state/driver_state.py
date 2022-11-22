@@ -7,9 +7,7 @@ from nrel.hive.util import SimulationStateError
 from nrel.hive.state.simulation_state import simulation_state_ops
 
 if TYPE_CHECKING:
-    from nrel.hive.state.simulation_state.simulation_state import (
-        SimulationState,
-    )
+    from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.runner.environment import Environment
     from nrel.hive.util.typealiases import ScheduleId, BaseId, VehicleId
     from nrel.hive.dispatcher.instruction.instruction import Instruction
@@ -42,6 +40,12 @@ class DriverState(ABC):
     @property
     @abstractmethod
     def home_base_id(cls) -> Optional[BaseId]:
+        pass
+
+    @abstractmethod
+    def update(
+        self, sim: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
         pass
 
     @abstractmethod
@@ -146,12 +150,10 @@ class DriverState(ABC):
         )
 
         if not schedule_id:
-            driver_state = AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
-            return driver_state
+            return AutonomousAvailable(AutonomousDriverAttributes(vehicle_id))
         else:
             if not base_id:
                 raise Exception("cannot build a vehicle with schedule but not a home base id")
-            driver_state = HumanUnavailable(
+            return HumanUnavailable(
                 HumanDriverAttributes(vehicle_id, schedule_id, base_id, allows_pooling)
             )
-            return driver_state

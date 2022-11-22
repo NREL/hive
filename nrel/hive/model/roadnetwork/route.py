@@ -1,5 +1,5 @@
 import functools as ft
-from typing import Tuple, Optional
+from typing import Any, Tuple, Optional
 
 import h3
 
@@ -26,7 +26,7 @@ def route_distance_km(route: Route) -> Kilometers:
     :rtype: :py:obj:`kilometers`
     :return: the distance in kilometers
     """
-    distance_km = 0
+    distance_km = 0.0
     for l in route:
         distance_km += l.distance_km
 
@@ -89,10 +89,11 @@ def to_linestring(route: Route, env: Environment) -> str:
         linestring = wkt.linestring_2d((src, dst), env.config.global_config.wkt_x_y_ordering)
         return linestring
     else:
+        inital: Tuple[Any, ...] = ()
         points = ft.reduce(
             lambda acc, l: acc + (h3.h3_to_geo(l.start), h3.h3_to_geo(l.end)),
             route,
-            (),
+            inital,
         )
         linestring = wkt.linestring_2d(points, env.config.global_config.wkt_x_y_ordering)
         return linestring
