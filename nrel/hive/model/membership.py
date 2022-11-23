@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 PUBLIC_MEMBERSHIP_ID = "public"
 
-USE_RUST = True 
+USE_RUST = False 
 
 
 if USE_RUST:
