@@ -8,22 +8,6 @@ from nrel.hive.resources.mock_lobster import *
 
 
 class TestSimulationState(TestCase):
-    def test_at_vehicle_geoid(self):
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.755, -104.976, 15)
-        veh = mock_vehicle_from_geoid(geoid=somewhere)
-        req = mock_request_from_geoids(origin=somewhere)
-        sta = mock_station_from_geoid(geoid=somewhere)
-        b = mock_base_from_geoid(geoid=somewhere_else)
-        sim = mock_sim(vehicles=(veh,), stations=(sta,), bases=(b,))
-        sim_with_request = simulation_state_ops.add_request_safe(sim, req).unwrap()
-
-        result = sim_with_request.at_geoid(veh.geoid)
-        self.assertIn(veh.id, result["vehicles"], "should have found this vehicle")
-        self.assertIn(req.id, result["requests"], "should have found this request")
-        self.assertIn(sta.id, result["station"], "should have found this station")
-        self.assertEqual(result["base"], frozenset(), "should not have found this base")
-
     def test_vehicle_at_request(self):
         somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         veh = mock_vehicle_from_geoid(geoid=somewhere)
