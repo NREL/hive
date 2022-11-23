@@ -7,13 +7,14 @@ if TYPE_CHECKING:
 
 PUBLIC_MEMBERSHIP_ID = "public"
 
-USE_RUST = False 
+USE_RUST = False
 
 
 if USE_RUST:
     from hive_core import Membership
 else:
-    class Membership(NamedTuple): #type: ignore
+
+    class Membership(NamedTuple):  # type: ignore
         """
         class representing a collection of membership ids.
         """
@@ -29,7 +30,9 @@ else:
             :return:
             """
             if any([m == PUBLIC_MEMBERSHIP_ID for m in member_ids]):
-                raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
+                raise TypeError(
+                    f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id"
+                )
             return Membership(frozenset(member_ids))
 
         @classmethod
@@ -41,7 +44,9 @@ else:
             :return:
             """
             if membership_id == PUBLIC_MEMBERSHIP_ID:
-                raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
+                raise TypeError(
+                    f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id"
+                )
             return Membership(frozenset((membership_id,)))
 
         @property
@@ -56,7 +61,9 @@ else:
             :return:
             """
             if membership_id == PUBLIC_MEMBERSHIP_ID:
-                raise TypeError(f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id")
+                raise TypeError(
+                    f"{PUBLIC_MEMBERSHIP_ID} is reserved, please use another membership id"
+                )
             new_member_ids = [m for m in self.memberships] + [membership_id]
             return self._replace(memberships=frozenset(new_member_ids))
 

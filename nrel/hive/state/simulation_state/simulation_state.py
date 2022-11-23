@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import (
     NamedTuple,
     Optional,
+    cast,
     Tuple,
     Callable,
     TYPE_CHECKING,
@@ -11,6 +12,8 @@ from typing import (
 
 import immutables
 
+from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
+from nrel.hive.model.membership import PUBLIC_MEMBERSHIP_ID
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import geo
 from nrel.hive.util.typealiases import (
@@ -19,6 +22,7 @@ from nrel.hive.util.typealiases import (
     BaseId,
     StationId,
     GeoId,
+    MembershipId,
 )
 
 if TYPE_CHECKING:
@@ -203,6 +207,28 @@ class SimulationState(NamedTuple):
             return tuple(sorted(requests, key=sort_key, reverse=sort_reversed))
         else:
             return tuple(requests)
+
+    def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
+        """
+        returns a dictionary with the list of ids found at this location for all entities
+        :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
+        :return: an Optional AtLocationResponse
+        """
+        vehicles = self.v_locations[geoid] if geoid in self.v_locations else frozenset()
+        requests = self.r_locations[geoid] if geoid in self.r_locations else frozenset()
+        station = self.s_locations[geoid] if geoid in self.s_locations else frozenset()
+        base = self.b_locations[geoid] if geoid in self.b_locations else frozenset()
+
+        result = cast(
+            AtLocationResponse,
+            {
+                "vehicles": vehicles,
+                "requests": requests,
+                "station": station,
+                "base": base,
+            },
+        )
+        return result
 
     def vehicle_at_request(
         self,
