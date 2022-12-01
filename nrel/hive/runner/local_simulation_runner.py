@@ -23,13 +23,11 @@ class LocalSimulationRunner(NamedTuple):
     def run(
         cls,
         runner_payload: RunnerPayload,
-        position: int = 0,
     ) -> RunnerPayload:
         """
         steps through time, running a simulation, and producing a simulation result
 
         :param runner_payload: the initial state of the simulation
-        :param position: position for tqdm
         :return: the final simulation state and dispatcher state
         """
 
@@ -38,8 +36,7 @@ class LocalSimulationRunner(NamedTuple):
                 int(runner_payload.e.config.sim.start_time),
                 int(runner_payload.e.config.sim.end_time),
                 runner_payload.e.config.sim.timestep_duration_seconds,
-            ),
-            position=position,
+            )
         )
 
         final_payload = ft.reduce(

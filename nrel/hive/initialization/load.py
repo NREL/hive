@@ -1,29 +1,42 @@
 import logging
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Iterable, Optional, Tuple, TypeVar
 
 import yaml
 
 from nrel.hive.config import HiveConfig
-from nrel.hive.runner.environment import Environment
+from nrel.hive.reporting import reporter_ops
 from nrel.hive.initialization.initialize_simulation import (
     default_init_functions,
     osm_init_function,
     initialize,
+    InitFunction,
 )
-from nrel.hive.state.simulation_state.simulation_state import SimulationState
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.util.fp import throw_on_failure
+from nrel.hive.runner.runner_payload import RunnerPayload
+from nrel.hive.state.simulation_state.update.update import Update
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 
-run_log = logging.getLogger(__name__)
+
+log = logging.getLogger(__name__)
+
+T = TypeVar("T", bound=InstructionGenerator)
 
 
 def load_simulation(
     scenario_file_path: Path,
-) -> Tuple[SimulationState, Environment]:
+    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
+    custom_init_functions: Optional[Iterable[InitFunction]] = None,
+) -> RunnerPayload:
     """
     takes a scenario path and attempts to build all assets required to run a scenario
 
     :param scenario_file_path: the path to the scenario file we are using
+    :param custom_instruction_generators: a set of user defined instruction generators to override the defaults
+    :param custom_init_functions: a set of user defined initialization functions to override the defaults
 
     :return: the assets required to run a scenario
     :raises: Exception if the scenario_path is not found or if other scenario files are not found or fail to parse
@@ -33,7 +46,7 @@ def load_simulation(
 
     config_or_error = HiveConfig.build(scenario_file_path, config_builder)
     if isinstance(config_or_error, Exception):
-        run_log.exception("attempted to load scenario config file but failed")
+        log.exception("attempted to load scenario config file but failed")
         raise config_or_error
     else:
         config: HiveConfig = config_or_error
@@ -41,10 +54,39 @@ def load_simulation(
     if config.global_config.write_outputs:
         config.scenario_output_directory.mkdir()
 
-    if config.network.network_type == "euclidean":
-        init_functions = default_init_functions()
+    if config.global_config.log_run:
+        run_log_path = os.path.join(config.scenario_output_directory, "run.log")
+        log_fh = logging.FileHandler(run_log_path)
+        formatter = logging.Formatter("[%(levelname)s] - %(name)s - %(message)s")
+        log_fh.setFormatter(formatter)
+        log.addHandler(log_fh)
+        log.info(
+            f"creating run log at {run_log_path} with log level {logging.getLevelName(log.getEffectiveLevel())}"
+        )
+
+    if custom_init_functions is not None:
+        # prefer the custom init functions
+        init_functions = custom_init_functions
     elif config.network.network_type == "osm_network":
         init_functions = [osm_init_function]
         init_functions.extend(default_init_functions())
+    else:
+        # just use defaults
+        init_functions = default_init_functions()
 
-    return initialize(config, init_functions)
+    sim, env = initialize(config, init_functions)
+
+    if config.global_config.log_station_capacities:
+        result = reporter_ops.log_station_capacities(sim, env)
+        throw_on_failure(result)
+
+    if custom_instruction_generators is None:
+        instruction_generators = (
+            ChargingFleetManager(env.config.dispatcher),
+            Dispatcher(env.config.dispatcher),
+        )
+        update = Update.build(env.config, instruction_generators)
+    else:
+        update = Update.build(env.config, custom_instruction_generators)
+
+    return RunnerPayload(sim, env, update)

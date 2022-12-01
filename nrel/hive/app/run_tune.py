@@ -60,16 +60,9 @@ class OptimizationWrapper(tune.Trainable):
         scenario_file = scenarios[config["scenario"]]
         log.info(f"setting up experiment with scenario {scenario_file}")
 
-        # TODO: update this load method with a the new sampling loader.
-        sim, env = load_simulation(fs.find_scenario(scenario_file))
+        rp = load_simulation(fs.find_scenario(scenario_file))
 
-        instruction_generators = (
-            ChargingFleetManager(env.config.dispatcher),
-            Dispatcher(env.config.dispatcher),
-        )
-
-        update = Update.build(env.config, instruction_generators)
-        self.initial_payload = RunnerPayload(sim, env, update)
+        self.initial_payload = rp 
 
     def _train(self) -> Dict[str, float]:
         sim_result = LocalSimulationRunner.run(self.initial_payload)
