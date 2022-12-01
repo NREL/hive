@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, TypeVar
+from typing import Iterable, Optional, Tuple, TypeVar, Union
 
 import yaml
 
@@ -19,6 +19,7 @@ from nrel.hive.runner.runner_payload import RunnerPayload
 from nrel.hive.state.simulation_state.update.update import Update
 from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
+from nrel.hive.util import fs
 
 
 log = logging.getLogger(__name__)
@@ -26,21 +27,15 @@ log = logging.getLogger(__name__)
 T = TypeVar("T", bound=InstructionGenerator)
 
 
-def load_simulation(
-    scenario_file_path: Path,
-    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
-    custom_init_functions: Optional[Iterable[InitFunction]] = None,
-) -> RunnerPayload:
-    """
-    takes a scenario path and attempts to build all assets required to run a scenario
-
-    :param scenario_file_path: the path to the scenario file we are using
-    :param custom_instruction_generators: a set of user defined instruction generators to override the defaults
-    :param custom_init_functions: a set of user defined initialization functions to override the defaults
-
-    :return: the assets required to run a scenario
-    :raises: Exception if the scenario_path is not found or if other scenario files are not found or fail to parse
-    """
+def load_config(
+    scenario_file: Union[Path, str],
+) -> HiveConfig:
+    try:
+        scenario_file_path = fs.find_scenario(str(scenario_file))
+    except FileNotFoundError as fe:
+        raise FileNotFoundError(
+            f"{repr(fe)}; please specify a path to a hive scenario file like denver_demo.yaml"
+        )
     with scenario_file_path.open("r") as f:
         config_builder = yaml.safe_load(f)
 
@@ -49,8 +44,24 @@ def load_simulation(
         log.exception("attempted to load scenario config file but failed")
         raise config_or_error
     else:
-        config: HiveConfig = config_or_error
+        return config_or_error
 
+
+def load_simulation(
+    config: HiveConfig,
+    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
+    custom_init_functions: Optional[Iterable[InitFunction]] = None,
+) -> RunnerPayload:
+    """
+    takes a hive config and attempts to build all assets required to run a scenario
+
+    :param config: the hive config 
+    :param custom_instruction_generators: a set of user defined instruction generators to override the defaults
+    :param custom_init_functions: a set of user defined initialization functions to override the defaults
+
+    :return: the assets required to run a scenario
+    :raises: Exception if the scenario_path is not found or if other scenario files are not found or fail to parse
+    """
     if config.global_config.write_outputs:
         config.scenario_output_directory.mkdir()
 

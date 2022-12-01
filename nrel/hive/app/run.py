@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Iterable, Optional, Tuple, TypeVar, Union
 import pkg_resources
 import yaml
 
-from nrel.hive.initialization.load import load_simulation
+from nrel.hive.initialization.load import load_simulation, load_config
 from nrel.hive.initialization.initialize_simulation import InitFunction
+from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.runner.local_simulation_runner import LocalSimulationRunner
-from nrel.hive.util import fs
 
 if TYPE_CHECKING:
     pass
@@ -36,7 +36,7 @@ T = TypeVar("T", bound=InstructionGenerator)
 
 
 def run_sim(
-    scenario_file: Union[str, Path],
+    config: HiveConfig,
     custom_instruction_generators: Optional[Tuple[T, ...]] = None,
     custom_init_functions: Optional[Iterable[InitFunction]] = None,
 ):
@@ -49,16 +49,10 @@ def run_sim(
 
     :return: 0 for success
     """
-    try:
-        scenario_path = fs.find_scenario(str(scenario_file))
-    except FileNotFoundError as fe:
-        log.error(
-            f"{repr(fe)}; please specify a path to a hive scenario file like denver_demo.yaml"
-        )
-        return 1
+    _welcome_to_hive()
 
     initial_payload = load_simulation(
-        scenario_path,
+        config,
         custom_instruction_generators=custom_instruction_generators,
         custom_init_functions=custom_init_functions,
     )
@@ -81,14 +75,14 @@ def run_sim(
     return 0
 
 
-def run() -> int:
+def run(
+    custom_instruction_generators: Optional[Tuple[T, ...]] = None,
+    custom_init_functions: Optional[Iterable[InitFunction]] = None,
+) -> int:
     """
     entry point for a hive application run
     :return: 0 if success, 1 if error
     """
-
-    _welcome_to_hive()
-
     # parse arguments
     try:
         args = parser.parse_args()
@@ -100,8 +94,10 @@ def run() -> int:
     # main application
     if args.defaults:
         print_defaults()
+    
+    config = load_config(args.scenario_file)
 
-    return run_sim(args.scenario_file)
+    return run_sim(config, custom_instruction_generators, custom_init_functions)
 
 
 def _welcome_to_hive():

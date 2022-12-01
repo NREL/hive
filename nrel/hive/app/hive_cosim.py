@@ -7,7 +7,7 @@ from pandas import DataFrame
 from tqdm import tqdm
 
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from nrel.hive.initialization.load import load_simulation
+from nrel.hive.initialization.load import load_simulation, load_config
 from nrel.hive.initialization.initialize_simulation import InitFunction
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.reporting.handler.vehicle_charge_events_handler import VehicleChargeEventsHandler
@@ -28,8 +28,9 @@ def load_scenario(
     :return: the initial simulation state payload
     :raises: Error when issues with files
     """
+    config = load_config(scenario_file)
     initial_payload = load_simulation(
-        scenario_file, custom_instruction_generators, custom_init_functions
+        config, custom_instruction_generators, custom_init_functions
     )
 
     # add a specialized Reporter handler that catches vehicle charge events

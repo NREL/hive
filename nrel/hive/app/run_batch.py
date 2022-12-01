@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, NamedTuple, List
 
 import yaml
 
+from nrel.hive.initialization.load import load_config
 from nrel.hive.app.run import run_sim
 from nrel.hive.util import fs
 
@@ -41,7 +42,8 @@ class SimArgs(NamedTuple):
 
 def safe_sim(sim_args: SimArgs) -> int:
     try:
-        return run_sim(sim_args.scenario_file)
+        config = load_config(sim_args.scenario_file)
+        return run_sim(config)
     except Exception:
         log.error(f"{sim_args.scenario_file} failed, see traceback:")
         log.error(traceback.format_exc())

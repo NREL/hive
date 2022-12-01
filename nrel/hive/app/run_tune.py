@@ -7,14 +7,10 @@ from typing import Dict
 import ray
 from ray import tune
 
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
-from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from nrel.hive.initialization.load import load_simulation
+from nrel.hive.initialization.load import load_simulation, load_config
 from nrel.hive.reporting.reporter import Reporter
 from nrel.hive.runner.local_simulation_runner import LocalSimulationRunner
 from nrel.hive.runner.runner_payload import RunnerPayload
-from nrel.hive.state.simulation_state.update.update import Update
-from nrel.hive.util import fs
 
 parser = argparse.ArgumentParser(description="run hive")
 parser.add_argument(
@@ -52,15 +48,16 @@ class OptimizationWrapper(tune.Trainable):
         print("VEHICLES ", payload.s.vehicles.values())
         return score
 
-    def _setup(self, config: Dict[str, int]):
+    def _setup(self, d: Dict[str, int]):
         scenarios = {
             1: "denver_demo.yaml",
             2: "denver_demo_constrained_charging.yaml",
         }
-        scenario_file = scenarios[config["scenario"]]
+        scenario_file = scenarios[d["scenario"]]
         log.info(f"setting up experiment with scenario {scenario_file}")
 
-        rp = load_simulation(fs.find_scenario(scenario_file))
+        config = load_config(scenario_file)
+        rp = load_simulation(config)
 
         self.initial_payload = rp 
 
