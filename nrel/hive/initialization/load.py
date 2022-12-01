@@ -6,14 +6,12 @@ from typing import Tuple
 import yaml
 
 from nrel.hive.config import HiveConfig
-from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
-from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
-from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
-from nrel.hive.reporting.handler.stats_handler import StatsHandler
-from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
-from nrel.hive.reporting.reporter import Reporter
 from nrel.hive.runner.environment import Environment
-from nrel.hive.initialization.initialize_simulation import initialize_simulation
+from nrel.hive.initialization.initialize_simulation import (
+    default_init_functions,
+    osm_init_function,
+    initialize,
+)
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 run_log = logging.getLogger(__name__)
@@ -43,29 +41,10 @@ def load_simulation(
     if config.global_config.write_outputs:
         config.scenario_output_directory.mkdir()
 
-    simulation_state, environment = initialize_simulation(config)
+    if config.network.network_type == "euclidean":
+        init_functions = default_init_functions()
+    elif config.network.network_type == "osm_network":
+        init_functions = [osm_init_function]
+        init_functions.extend(default_init_functions())
 
-    # configure reporting
-    reporter = Reporter()
-    if config.global_config.log_events:
-        reporter.add_handler(
-            EventfulHandler(config.global_config, config.scenario_output_directory)
-        )
-    if config.global_config.log_states:
-        reporter.add_handler(
-            StatefulHandler(config.global_config, config.scenario_output_directory)
-        )
-    if config.global_config.log_instructions:
-        reporter.add_handler(
-            InstructionHandler(config.global_config, config.scenario_output_directory)
-        )
-    if config.global_config.log_stats:
-        reporter.add_handler(StatsHandler())
-    if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:
-        reporter.add_handler(
-            TimeStepStatsHandler(config, config.scenario_output_directory, environment.fleet_ids)
-        )
-
-    environment_w_reporter = environment.set_reporter(reporter)
-
-    return simulation_state, environment_w_reporter
+    return initialize(config, init_functions)

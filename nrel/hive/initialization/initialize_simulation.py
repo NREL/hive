@@ -4,7 +4,7 @@ import csv
 import functools as ft
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Tuple, Dict
+from typing import TYPE_CHECKING, Callable, Iterable, Optional, Tuple, Dict
 
 import immutables
 
@@ -15,8 +15,12 @@ from nrel.hive.initialization.initialize_ops import (
 )
 from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
-from nrel.hive.model.roadnetwork.geofence import GeoFence
-from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
+from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
+from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
+from nrel.hive.reporting.handler.stats_handler import StatsHandler
+from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
+from nrel.hive.reporting.reporter import Reporter
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
@@ -28,87 +32,38 @@ from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
-    from nrel.hive.util.typealiases import MembershipMap, ScheduleId
+    from nrel.hive.util.typealiases import ScheduleId
     from nrel.hive.model.vehicle.schedules import ScheduleFunction
 
 log = logging.getLogger(__name__)
 
 
-def initialize_simulation(
-    config: HiveConfig,
-    vehicle_filter: Callable[[Vehicle], bool] = lambda v: True,
-    base_filter: Callable[[Base], bool] = lambda b: True,
-    station_filter: Callable[[Station], bool] = lambda s: True,
+InitFunction = Callable[[HiveConfig, SimulationState, Environment], SimulationState]
+
+
+def initialize(
+    config: HiveConfig, init_functions: Optional[Iterable[InitFunction]] = None
 ) -> Tuple[SimulationState, Environment]:
+    environment = initialize_environment(config)
+
+    if init_functions is None:
+        init_functions = default_init_functions()
+
+    simulation_state = initialize_simulation(config, environment, init_functions)
+
+    return simulation_state, environment
+
+
+def initialize_environment(config: HiveConfig) -> Environment:
     """
-    constructs a SimulationState from sets of vehicles, stations, and bases, along with a road network
+    Initialize the environment from the config
 
-    :param config: the configuration of this run
-    :param vehicle_filter: a function that returns True if a vehicle should be included in the simulation
-    :param base_filter: a function that returns True if a base should be included in the simulation
-    :param station_filter: a function that returns True if a station should be included in the simulation
-
-    :return: a SimulationState, or a SimulationStateError
-    :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
+    :param config: the hive config
     """
-
-    # deprecated geofence input
-    if config.input_config.geofence_file:
-        geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
-    else:
-        geofence = None
-
-    # set up road network based on user-configured road network type
-    if config.network.network_type == "euclidean":
-        road_network = HaversineRoadNetwork(
-            geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution
-        )
-    elif config.network.network_type == "osm_network":
-        if config.input_config.road_network_file is None:
-            raise IOError("Must supply a road network file when using the osm_network")
-
-        road_network = OSMRoadNetwork(  # type: ignore
-            geofence=geofence,
-            sim_h3_resolution=config.sim.sim_h3_resolution,
-            road_network_file=Path(config.input_config.road_network_file),
-            default_speed_kmph=config.network.default_speed_kmph,
-        )
-    else:
-        raise IOError(
-            f"road network type {config.network.network_type} not valid, must be one of {{euclidean|osm_network}}"
-        )
-
-    # initial sim state with road network and no entities
-    sim_initial = SimulationState(
-        road_network=road_network,
-        sim_time=config.sim.start_time,
-        sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
-        sim_h3_location_resolution=config.sim.sim_h3_resolution,
-        sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
-    )
-
-    # create simulation environment
     fleet_ids = (
         read_fleet_ids_from_file(config.input_config.fleets_file)
         if config.input_config.fleets_file
         else frozenset()
-    )
-
-    # read in fleet memberships for vehicles/stations/bases
-    vehicle_member_ids = (
-        process_fleet_file(config.input_config.fleets_file, "vehicles")
-        if config.input_config.fleets_file
-        else None
-    )
-    base_member_ids = (
-        process_fleet_file(config.input_config.fleets_file, "bases")
-        if config.input_config.fleets_file
-        else None
-    )
-    station_member_ids = (
-        process_fleet_file(config.input_config.fleets_file, "stations")
-        if config.input_config.fleets_file
-        else None
     )
 
     if config.input_config.schedules_file is None:
@@ -128,59 +83,113 @@ def initialize_simulation(
         schedules=schedules,
         fleet_ids=fleet_ids,
     )
+    # configure reporting
+    reporter = Reporter()
+    if config.global_config.log_events:
+        reporter.add_handler(
+            EventfulHandler(config.global_config, config.scenario_output_directory)
+        )
+    if config.global_config.log_states:
+        reporter.add_handler(
+            StatefulHandler(config.global_config, config.scenario_output_directory)
+        )
+    if config.global_config.log_instructions:
+        reporter.add_handler(
+            InstructionHandler(config.global_config, config.scenario_output_directory)
+        )
+    if config.global_config.log_stats:
+        reporter.add_handler(StatsHandler())
+    if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:
+        reporter.add_handler(
+            TimeStepStatsHandler(config, config.scenario_output_directory, env_initial.fleet_ids)
+        )
 
-    # populate simulation with entities
-    sim_with_vehicles = _build_vehicles(
-        config.input_config.vehicles_file,
-        vehicle_member_ids,
-        sim_initial,
-        env_initial,
-        vehicle_filter,
+    environment_w_reporter = env_initial.set_reporter(reporter)
+
+    return environment_w_reporter
+
+
+def initialize_simulation(
+    config: HiveConfig, environment: Environment, init_functions: Iterable[InitFunction]
+) -> SimulationState:
+    """
+    constructs a SimulationState from a set of init functions
+
+    :param config: the configuration of this run
+    :param environment: the environment of this run
+    :param init_functions: the initialization functions
+
+    :return: a SimulationState, or a SimulationStateError
+    :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
+    """
+    sim = SimulationState(
+        sim_time=config.sim.start_time,
+        sim_timestep_duration_seconds=config.sim.timestep_duration_seconds,
+        sim_h3_location_resolution=config.sim.sim_h3_resolution,
+        sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
     )
-    sim_with_bases = _build_bases(
-        config.input_config.bases_file,
-        base_member_ids,
-        sim_with_vehicles,
-        base_filter,
+
+    for init_function in init_functions:
+        sim = init_function(config, sim, environment)
+
+    return sim
+
+
+def default_init_functions() -> Iterable[InitFunction]:
+    return [vehicle_init_function, station_init_function, base_init_function]
+
+
+def osm_init_function(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+) -> SimulationState:
+    """
+    Initialize an OSMRoadNetwork and add to the simulation
+
+    :param config: the hive config
+    :param simulation_state: the partially-constructed simulation state
+    :param environment: the partially-constructed environment
+
+    :return: the SimulationState with the OSMRoadNetwork in it
+
+    :raises Exception: from IOErrors parsing the road network
+    """
+    if config.input_config.road_network_file is None:
+        raise IOError("Must supply a road network file when using the osm_network")
+
+    road_network = OSMRoadNetwork(  # type: ignore
+        sim_h3_resolution=config.sim.sim_h3_resolution,
+        road_network_file=Path(config.input_config.road_network_file),
+        default_speed_kmph=config.network.default_speed_kmph,
     )
-    sim_with_stations = _build_stations(
-        config.input_config.stations_file,
-        station_member_ids,
-        sim_with_bases,
-        station_filter,
-        env_initial,
-    )
-    sim_with_home_bases = _assign_private_memberships(sim_with_stations)
 
-    return sim_with_home_bases, env_initial
+    sim_w_osm = simulation_state._replace(road_network=road_network)
+
+    return sim_w_osm
 
 
-def _build_vehicles(
-    vehicles_file: str,
-    vehicle_member_ids: Optional[MembershipMap],
-    simulation_state: SimulationState,
-    environment: Environment,
-    vehicle_filter: Callable[[Vehicle], bool],
+def vehicle_init_function(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> SimulationState:
     """
     adds all vehicles from the provided vehicles file
 
-    :param vehicles_file: the file to load vehicles from
-    :param vehicle_member_ids: an immutables Map with all of the vehicle membership ids
+    :param config: the hive config
     :param simulation_state: the partially-constructed simulation state
     :param environment: the partially-constructed environment
-    :param vehicle_filter: a function that returns True if a vehicle should be filtered out of the simulation
 
     :return: the SimulationState with vehicles in it
     :raises Exception: from IOErrors parsing the vehicle, powertrain, or powercurve files
     """
+    vehicles_file = config.input_config.vehicles_file
+    vehicle_member_ids = (
+        process_fleet_file(config.input_config.fleets_file, "vehicles")
+        if config.input_config.fleets_file
+        else None
+    )
 
     def _collect_vehicle(row: Dict[str, str]) -> Optional[Vehicle]:
 
         veh = Vehicle.from_row(row, simulation_state.road_network, environment)
-
-        if not vehicle_filter(veh):
-            return None
 
         if vehicle_member_ids is not None:
             if veh.id in vehicle_member_ids:
@@ -198,11 +207,8 @@ def _build_vehicles(
     return sim_with_vehicles
 
 
-def _build_bases(
-    bases_file: str,
-    base_member_ids: Optional[MembershipMap],
-    simulation_state: SimulationState,
-    base_filter: Callable[[Base], bool],
+def base_init_function(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> SimulationState:
     """
     all your base are belong to us
@@ -215,11 +221,14 @@ def _build_bases(
     :return: the simulation state with all bases in it
     :raises Exception if a parse error in Base.from_row or any error adding the Base to the Sim
     """
+    base_member_ids = (
+        process_fleet_file(config.input_config.fleets_file, "bases")
+        if config.input_config.fleets_file
+        else None
+    )
 
     def _collect_base(row: Dict[str, str]) -> Optional[Base]:
         base = Base.from_row(row, simulation_state.road_network)
-        if not base_filter(base):
-            return None
 
         if base_member_ids is not None:
             if base.id in base_member_ids:
@@ -227,14 +236,16 @@ def _build_bases(
         return base
 
     # add all bases from the base file
-    with open(bases_file, "r", encoding="utf-8-sig") as bf:
+    with open(config.input_config.bases_file, "r", encoding="utf-8-sig") as bf:
         reader = csv.DictReader(bf)
         bases_or_none = [_collect_base(row) for row in reader]
         bases = [b for b in bases_or_none if b is not None]
 
     sim_w_bases = simulation_state_ops.add_entities(simulation_state, bases)
 
-    return sim_w_bases
+    sim_w_home_bases = _assign_private_memberships(sim_w_bases)
+
+    return sim_w_home_bases
 
 
 def _assign_private_memberships(sim: SimulationState) -> SimulationState:
@@ -300,31 +311,31 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
     return result
 
 
-def _build_stations(
-    stations_file: str,
-    station_member_ids: Optional[MembershipMap],
+def station_init_function(
+    config: HiveConfig,
     simulation_state: SimulationState,
-    station_filter: Callable[[Station], bool],
-    env: Environment,
+    environment: Environment,
 ) -> SimulationState:
     """
     all your station are belong to us
 
-    :param stations_file: the file with stations in it
-    :param station_member_ids: an immutables Map with all of the station membership ids
+    :param config: the hive config
     :param simulation_state: the partial simulation state
-    :param station_filter: a function that returns True if a station should be filtered out of the simulation
+    :param environment: the simulation environment
 
     :return: the resulting simulation state with all stations in it
     :raises Exception if parsing a Station row failed or adding a Station to the Simulation failed
     """
+    station_member_ids = (
+        process_fleet_file(config.input_config.fleets_file, "stations")
+        if config.input_config.fleets_file
+        else None
+    )
 
     def _add_row_unsafe(
         builder: immutables.Map[str, Station], row: Dict[str, str]
     ) -> immutables.Map[str, Station]:
-        station = Station.from_row(row, builder, simulation_state.road_network, env)
-        if not station_filter(station):
-            return builder
+        station = Station.from_row(row, builder, simulation_state.road_network, environment)
 
         if station_member_ids is not None:
             if station.id in station_member_ids:
@@ -334,7 +345,7 @@ def _build_stations(
         return updated_builder
 
     # grab all stations (some may exist on multiple rows)
-    with open(stations_file, "r", encoding="utf-8-sig") as bf:
+    with open(config.input_config.stations_file, "r", encoding="utf-8-sig") as bf:
         reader = csv.DictReader(bf)
         stations_builder: immutables.Map[str, Station] = ft.reduce(
             _add_row_unsafe, reader, immutables.Map()
