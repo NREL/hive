@@ -55,7 +55,7 @@ def load_simulation(
     """
     takes a hive config and attempts to build all assets required to run a scenario
 
-    :param config: the hive config 
+    :param config: the hive config
     :param custom_instruction_generators: a set of user defined instruction generators to override the defaults
     :param custom_init_functions: a set of user defined initialization functions to override the defaults
 

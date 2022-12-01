@@ -42,8 +42,7 @@ class SimArgs(NamedTuple):
 
 def safe_sim(sim_args: SimArgs) -> int:
     try:
-        config = load_config(sim_args.scenario_file)
-        return run_sim(config)
+        return run_sim(sim_args.scenario_file)
     except Exception:
         log.error(f"{sim_args.scenario_file} failed, see traceback:")
         log.error(traceback.format_exc())

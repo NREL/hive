@@ -61,3 +61,6 @@ hive-batch = "nrel.hive.app.run_batch:run"
 
 [tool.black]
 line-length = 100
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]

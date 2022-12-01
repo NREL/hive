@@ -59,7 +59,7 @@ class OptimizationWrapper(tune.Trainable):
         config = load_config(scenario_file)
         rp = load_simulation(config)
 
-        self.initial_payload = rp 
+        self.initial_payload = rp
 
     def _train(self) -> Dict[str, float]:
         sim_result = LocalSimulationRunner.run(self.initial_payload)

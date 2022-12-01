@@ -11,7 +11,6 @@ import yaml
 
 from nrel.hive.initialization.load import load_simulation, load_config
 from nrel.hive.initialization.initialize_simulation import InitFunction
-from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.runner.local_simulation_runner import LocalSimulationRunner
 
@@ -36,7 +35,7 @@ T = TypeVar("T", bound=InstructionGenerator)
 
 
 def run_sim(
-    config: HiveConfig,
+    scenario_file: Union[Path, str],
     custom_instruction_generators: Optional[Tuple[T, ...]] = None,
     custom_init_functions: Optional[Iterable[InitFunction]] = None,
 ):
@@ -50,6 +49,8 @@ def run_sim(
     :return: 0 for success
     """
     _welcome_to_hive()
+
+    config = load_config(scenario_file)
 
     initial_payload = load_simulation(
         config,
@@ -94,10 +95,8 @@ def run(
     # main application
     if args.defaults:
         print_defaults()
-    
-    config = load_config(args.scenario_file)
 
-    return run_sim(config, custom_instruction_generators, custom_init_functions)
+    return run_sim(args.scenario_file, custom_instruction_generators, custom_init_functions)
 
 
 def _welcome_to_hive():

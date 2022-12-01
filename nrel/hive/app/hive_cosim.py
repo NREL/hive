@@ -29,9 +29,7 @@ def load_scenario(
     :raises: Error when issues with files
     """
     config = load_config(scenario_file)
-    initial_payload = load_simulation(
-        config, custom_instruction_generators, custom_init_functions
-    )
+    initial_payload = load_simulation(config, custom_instruction_generators, custom_init_functions)
 
     # add a specialized Reporter handler that catches vehicle charge events
     initial_payload.e.reporter.add_handler(VehicleChargeEventsHandler())
