@@ -38,7 +38,9 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-InitFunction = Callable[[HiveConfig, SimulationState, Environment], SimulationState]
+InitFunction = Callable[
+    [HiveConfig, SimulationState, Environment], Tuple[SimulationState, Environment]
+]
 
 
 def initialize(
@@ -49,7 +51,7 @@ def initialize(
     if init_functions is None:
         init_functions = default_init_functions()
 
-    simulation_state = initialize_simulation(config, environment, init_functions)
+    simulation_state, environment = initialize_simulation(config, environment, init_functions)
 
     return simulation_state, environment
 
@@ -111,7 +113,7 @@ def initialize_environment(config: HiveConfig) -> Environment:
 
 def initialize_simulation(
     config: HiveConfig, environment: Environment, init_functions: Iterable[InitFunction]
-) -> SimulationState:
+) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState from a set of init functions
 
@@ -130,9 +132,9 @@ def initialize_simulation(
     )
 
     for init_function in init_functions:
-        sim = init_function(config, sim, environment)
+        sim, environment = init_function(config, sim, environment)
 
-    return sim
+    return sim, environment
 
 
 def default_init_functions() -> Iterable[InitFunction]:
@@ -141,7 +143,7 @@ def default_init_functions() -> Iterable[InitFunction]:
 
 def osm_init_function(
     config: HiveConfig, simulation_state: SimulationState, environment: Environment
-) -> SimulationState:
+) -> Tuple[SimulationState, Environment]:
     """
     Initialize an OSMRoadNetwork and add to the simulation
 
@@ -164,12 +166,12 @@ def osm_init_function(
 
     sim_w_osm = simulation_state._replace(road_network=road_network)
 
-    return sim_w_osm
+    return sim_w_osm, environment
 
 
 def vehicle_init_function(
     config: HiveConfig, simulation_state: SimulationState, environment: Environment
-) -> SimulationState:
+) -> Tuple[SimulationState, Environment]:
     """
     adds all vehicles from the provided vehicles file
 
@@ -204,12 +206,12 @@ def vehicle_init_function(
         vehicles = [v for v in vehicles_or_none if v is not None]
         sim_with_vehicles = simulation_state_ops.add_entities(simulation_state, vehicles)
 
-    return sim_with_vehicles
+    return sim_with_vehicles, environment
 
 
 def base_init_function(
     config: HiveConfig, simulation_state: SimulationState, environment: Environment
-) -> SimulationState:
+) -> Tuple[SimulationState, Environment]:
     """
     all your base are belong to us
 
@@ -245,7 +247,7 @@ def base_init_function(
 
     sim_w_home_bases = _assign_private_memberships(sim_w_bases)
 
-    return sim_w_home_bases
+    return sim_w_home_bases, environment
 
 
 def _assign_private_memberships(sim: SimulationState) -> SimulationState:
@@ -315,7 +317,7 @@ def station_init_function(
     config: HiveConfig,
     simulation_state: SimulationState,
     environment: Environment,
-) -> SimulationState:
+) -> Tuple[SimulationState, Environment]:
     """
     all your station are belong to us
 
@@ -352,4 +354,7 @@ def station_init_function(
         )
 
     # add all stations to the simulation once we know they are complete
-    return simulation_state_ops.add_entities(simulation_state, stations_builder.values())
+    return (
+        simulation_state_ops.add_entities(simulation_state, stations_builder.values()),
+        environment,
+    )
