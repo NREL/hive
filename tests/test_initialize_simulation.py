@@ -1,18 +1,20 @@
 from unittest import TestCase
 
 from nrel.hive.config.network import Network
-from nrel.hive.initialization.initialize_simulation import initialize_simulation
+from nrel.hive.initialization.initialize_simulation import initialize, default_init_functions
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
 )
 from nrel.hive.resources.mock_lobster import *
+
+import nrel.hive.state.simulation_state.simulation_state_ops as sso
 
 
 class TestInitializeSimulation(TestCase):
     def test_initialize_simulation(self):
         conf = mock_config().suppress_logging()
 
-        sim, env = initialize_simulation(conf)
+        sim, env = initialize(conf)
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
         self.assertEqual(len(sim.bases), 2, "should have loaded 1 base")
@@ -20,27 +22,28 @@ class TestInitializeSimulation(TestCase):
     def test_initialize_simulation_with_filtering(self):
         conf = mock_config().suppress_logging()
 
-        def filter_veh(v: Vehicle) -> bool:
-            if v.id == "v1":
-                return False
-            return True
+        def filter_veh(
+            conf: HiveConfig, sim: SimulationState, env: Environment
+        ) -> Tuple[SimulationState, Environment]:
+            sim_or_error = sso.remove_vehicle_safe(sim, "v1")
+            return sim_or_error.unwrap(), env
 
-        def filter_base(b: Base) -> bool:
-            if b.id == "b1":
-                return False
-            return True
+        def filter_base(
+            conf: HiveConfig, sim: SimulationState, env: Environment
+        ) -> Tuple[SimulationState, Environment]:
+            sim_or_error = sso.remove_base_safe(sim, "b1")
+            return sim_or_error.unwrap(), env
 
-        def filter_station(s: Station) -> bool:
-            if s.id == "s1":
-                return False
-            return True
+        def filter_station(
+            conf: HiveConfig, sim: SimulationState, env: Environment
+        ) -> Tuple[SimulationState, Environment]:
+            sim_or_error = sso.remove_station_safe(sim, "s1")
+            return sim_or_error.unwrap(), env
 
-        sim, env = initialize_simulation(
-            conf,
-            vehicle_filter=filter_veh,
-            base_filter=filter_base,
-            station_filter=filter_station,
-        )
+        init_funtions = default_init_functions()
+        init_funtions.extend([filter_veh, filter_base, filter_station])
+
+        sim, env = initialize(conf, init_functions=init_funtions)
 
         self.assertIsNone(sim.vehicles.get("v1"), "should not have loaded vehicle v1")
         self.assertIsNone(sim.bases.get("b1"), "should not have loaded base b1")

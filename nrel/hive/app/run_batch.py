@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, NamedTuple, List
 
 import yaml
 
+from nrel.hive.initialization.load import load_config
 from nrel.hive.app.run import run_sim
 from nrel.hive.util import fs
 
@@ -37,12 +38,11 @@ class BatchConfig(NamedTuple):
 
 class SimArgs(NamedTuple):
     scenario_file: Path
-    position: int
 
 
 def safe_sim(sim_args: SimArgs) -> int:
     try:
-        return run_sim(sim_args.scenario_file, sim_args.position)
+        return run_sim(sim_args.scenario_file)
     except Exception:
         log.error(f"{sim_args.scenario_file} failed, see traceback:")
         log.error(traceback.format_exc())
@@ -69,7 +69,7 @@ def run() -> int:
         d = yaml.safe_load(stream)
         config = BatchConfig.from_dict(d)
 
-    sim_args = [SimArgs(f, i) for i, f in enumerate(config.scenario_files)]
+    sim_args = [SimArgs(f) for f in config.scenario_files]
 
     # check to make sure we don't exceed system CPU
     os_cpu = os.cpu_count()
