@@ -9,9 +9,9 @@ from nrel.hive.util.units import Unit
 
 @dataclass(frozen=True)
 class PowertrainMixin:
-    speed_units: Unit 
-    distance_units: Unit 
-    energy_units: Unit 
+    speed_units: Unit
+    distance_units: Unit
+    energy_units: Unit
 
 
 class PowertrainABC(ABC):
