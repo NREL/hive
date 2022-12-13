@@ -117,10 +117,6 @@ UNIT_CONVERSIONS: Dict[Unit, Dict[Unit, float]] = {
 }
 
 
-def valid_unit(unit: str) -> bool:
-    return unit in UNIT_CONVERSIONS.keys()
-
-
 def get_unit_conversion(from_unit: Unit, to_unit: Unit) -> float:
     if from_unit == to_unit:
         return 1

@@ -6,7 +6,7 @@ import numpy as np
 from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.model.roadnetwork.routetraversal import Route
 from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
-from nrel.hive.util.units import Unit, valid_unit, get_unit_conversion
+from nrel.hive.util.units import Unit, get_unit_conversion
 
 
 @dataclass(frozen=True)
