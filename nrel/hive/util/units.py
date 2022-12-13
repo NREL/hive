@@ -8,7 +8,7 @@ class Unit(Enum):
     MPH = auto()
     KMPH = auto()
     MILES = auto()
-    KILOMTERS = auto()
+    KILOMETERS = auto()
     WATT_HOUR = auto()
     KILOWATT_HOUR = auto()
     GALLON_GASOLINE = auto()
@@ -23,7 +23,7 @@ class Unit(Enum):
         if s in ["mile", "miles", "mi"]:
             return Unit.MILES
         if s in ["kilometers", "kilometer", "km"]:
-            return Unit.KILOMTERS
+            return Unit.KILOMETERS
         if s in ["watthour", "watt-hour", "watt_hour", "wh"]:
             return Unit.WATT_HOUR
         if s in ["kilowatthour", "kilowatt-hour", "kilowatt_hour", "kwh"]:
@@ -103,9 +103,9 @@ UNIT_CONVERSIONS: Dict[Unit, Dict[Unit, float]] = {
         Unit.MPH: KMPH_TO_MPH,
     },
     Unit.MILES: {
-        Unit.KILOMTERS: M_TO_KM,
+        Unit.KILOMETERS: M_TO_KM,
     },
-    Unit.KILOMTERS: {
+    Unit.KILOMETERS: {
         Unit.MILES: KM_TO_MILE,
     },
     Unit.WATT_HOUR: {

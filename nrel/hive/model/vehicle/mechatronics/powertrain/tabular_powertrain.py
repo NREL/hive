@@ -42,9 +42,14 @@ class TabularPowertrain(Powertrain):
             if key not in data:
                 raise IOError(f"invalid input file for tabular power train model missing key {key}")
 
-        speed_units = Unit.from_string(data["speed_units"])
-        energy_units = Unit.from_string(data["energy_units"])
-        distance_units = Unit.from_string(data["distance_units"])
+        try:
+            speed_units = Unit.from_string(data["speed_units"])
+            energy_units = Unit.from_string(data["energy_units"])
+            distance_units = Unit.from_string(data["distance_units"])
+        except ValueError as e:
+            raise ValueError(
+                "Failed to parse incoming units when building TabularPowertrain"
+            ) from e
 
         # linear interpolation function approximation via these lookup values
         consumption_model = sorted(data["consumption_model"], key=lambda x: x["speed"])
@@ -81,7 +86,7 @@ class TabularPowertrain(Powertrain):
             )
         )
         # link distance is in kilometers
-        link_distance = link.distance_km * get_unit_conversion(Unit.KILOMTERS, self.distance_units)
+        link_distance = link.distance_km * get_unit_conversion(Unit.KILOMETERS, self.distance_units)
         energy = energy_per_distance * link_distance
         return energy
 
