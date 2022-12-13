@@ -151,7 +151,7 @@ class BEV(MechatronicsInterface):
         """
         energy_used = self.powertrain.energy_cost(route)
         energy_used_kwh = energy_used * get_unit_conversion(
-            self.powertrain.energy_units, "kilowatthour"
+            self.powertrain.energy_units, Unit.KILOWATT_HOUR 
         )
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)

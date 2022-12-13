@@ -1,7 +1,40 @@
-# Energy
+from __future__ import annotations
+
 from typing import Dict
+from enum import Enum, auto
 
 
+class Unit(Enum):
+    MPH = auto()
+    KMPH = auto()
+    MILES = auto()
+    KILOMTERS = auto()
+    WATT_HOUR = auto()
+    KILOWATT_HOUR = auto()
+    GALLON_GASOLINE = auto()
+
+    @classmethod
+    def from_string(cls, string: str) -> Unit:
+        s = string.strip().lower()
+        if s in ["mph", "miles_per_hour"]:
+            return Unit.MPH
+        if s in ["kmph", "kilomters_per_hour"]:
+            return Unit.KMPH
+        if s in ["mile", "miles", "mi"]:
+            return Unit.MILES
+        if s in ["kilometers", "kilometer", "km"]:
+            return Unit.KILOMTERS
+        if s in ["watthour", "watt-hour", "watt_hour", "wh"]:
+            return Unit.WATT_HOUR
+        if s in ["kilowatthour", "kilowatt-hour", "kilowatt_hour", "kwh"]:
+            return Unit.KILOWATT_HOUR
+        if s in ["gge", "gallon_gasoline", "gal_gas"]:
+            return Unit.GALLON_GASOLINE
+        else:
+            raise ValueError(f"Could not find unit from {string}")
+
+
+## TYPE ALIAS
 KwH = float  # kilowatt-hours
 J = float  # joules
 KwH_per_H = float
@@ -33,7 +66,7 @@ Currency = float  # an arbitrary currency type, reified in hiveconfig.scenario.c
 Percentage = float  # between 0-100
 Ratio = float  # between 0-1
 
-# Conversions
+## CONVERSIONS
 #    Time
 HOURS_TO_SECONDS = 3600
 
@@ -62,26 +95,25 @@ WH_TO_KWH = 0.001
 KWH_TO_WH = 1 / WH_TO_KWH
 MilesPerGallon = float
 
-UNIT_CONVERSIONS: Dict[str, Dict[str, float]] = {
-    "mph": {
-        "kmph": MPH_TO_KMPH,
+UNIT_CONVERSIONS: Dict[Unit, Dict[Unit, float]] = {
+    Unit.MPH: {
+        Unit.KMPH: MPH_TO_KMPH,
     },
-    "kmph": {
-        "mph": KMPH_TO_MPH,
+    Unit.KMPH: {
+        Unit.MPH: KMPH_TO_MPH,
     },
-    "mile": {
-        "kilometer": M_TO_KM,
+    Unit.MILES: {
+        Unit.KILOMTERS: M_TO_KM,
     },
-    "kilometer": {
-        "mile": KM_TO_MILE,
+    Unit.KILOMTERS: {
+        Unit.MILES: KM_TO_MILE,
     },
-    "watthour": {
-        "kilowatthour": WH_TO_KWH,
+    Unit.WATT_HOUR: {
+        Unit.KILOWATT_HOUR: WH_TO_KWH,
     },
-    "kilowatthour": {
-        "watthour": KWH_TO_WH,
+    Unit.KILOWATT_HOUR: {
+        Unit.WATT_HOUR: KWH_TO_WH,
     },
-    "gal_gas": {},
 }
 
 
@@ -89,12 +121,8 @@ def valid_unit(unit: str) -> bool:
     return unit in UNIT_CONVERSIONS.keys()
 
 
-def get_unit_conversion(from_unit: str, to_unit: str) -> float:
-    if not valid_unit(from_unit):
-        raise TypeError(f"{from_unit} not a recognized unit in hive")
-    elif not valid_unit(to_unit):
-        raise TypeError(f"{to_unit} not a recognized unit in hive")
-    elif from_unit == to_unit:
+def get_unit_conversion(from_unit: Unit, to_unit: Unit) -> float:
+    if from_unit == to_unit:
         return 1
 
     from_conversion = UNIT_CONVERSIONS.get(from_unit)

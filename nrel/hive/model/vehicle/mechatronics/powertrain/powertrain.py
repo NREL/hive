@@ -4,13 +4,14 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
 from nrel.hive.model.roadnetwork.route import Route
+from nrel.hive.util.units import Unit
 
 
 @dataclass(frozen=True)
 class PowertrainMixin:
-    speed_units: str
-    distance_units: str
-    energy_units: str
+    speed_units: Unit 
+    distance_units: Unit 
+    energy_units: Unit 
 
 
 class PowertrainABC(ABC):

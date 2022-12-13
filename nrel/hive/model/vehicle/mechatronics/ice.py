@@ -134,7 +134,7 @@ class ICE(MechatronicsInterface):
         """
         energy_used = self.powertrain.energy_cost(route)
         energy_used_gal_gas = energy_used * get_unit_conversion(
-            self.powertrain.energy_units, "gal_gas"
+            self.powertrain.energy_units, Unit.GALLON_GASOLINE 
         )
 
         vehicle_energy_gal_gas = vehicle.energy[EnergyType.GASOLINE]
