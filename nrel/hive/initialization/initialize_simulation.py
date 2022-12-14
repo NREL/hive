@@ -158,7 +158,7 @@ def osm_init_function(
     if config.input_config.road_network_file is None:
         raise IOError("Must supply a road network file when using the osm_network")
 
-    road_network = OSMRoadNetwork(  # type: ignore
+    road_network = OSMRoadNetwork.from_file(
         sim_h3_resolution=config.sim.sim_h3_resolution,
         road_network_file=Path(config.input_config.road_network_file),
         default_speed_kmph=config.network.default_speed_kmph,
