@@ -21,7 +21,6 @@ class RoadNetwork(ABC):
     """
 
     sim_h3_resolution: H3Resolution
-    geofence: Optional[GeoFence]
 
     @abstractmethod
     def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
