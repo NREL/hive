@@ -1,5 +1,7 @@
 from unittest import TestCase
-from nrel.hive.state.simulation_state.update.step_simulation_ops import perform_vehicle_state_updates 
+from nrel.hive.state.simulation_state.update.step_simulation_ops import (
+    perform_vehicle_state_updates,
+)
 from nrel.hive.resources.mock_lobster import *
 
 
@@ -15,7 +17,7 @@ class TestStepSimulationOps(TestCase):
         sim = mock_sim(vehicles=(vehicle1, vehicle2))
         env = mock_env()
 
-        sim = perform_vehicle_state_updates(sim, env) 
+        sim = perform_vehicle_state_updates(sim, env)
 
         vehicle1 = sim.vehicles["1"]
         vehicle2 = sim.vehicles["2"]
@@ -33,4 +35,3 @@ class TestStepSimulationOps(TestCase):
             60,
             "vehicle 2 should have idled for 1 time step (60 s)",
         )
-

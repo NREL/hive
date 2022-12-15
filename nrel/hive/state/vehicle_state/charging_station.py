@@ -195,7 +195,7 @@ class ChargingStation(VehicleState):
                 log.error(f"could not find mechatronics {vehicle.mechatronics_id} in environemnt")
                 return False
             is_full = mechatronics.is_full(vehicle)
-            return is_full 
+            return is_full
 
     def _default_terminal_state(
         self, sim: "SimulationState", env: Environment
