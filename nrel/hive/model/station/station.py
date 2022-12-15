@@ -266,7 +266,7 @@ class Station(Entity):
         else:
             return None, cs.charger
 
-    def get_available_chargers(self, charger_id: ChargerId) -> Optional[int]:
+    def get_available_chargers(self, charger_id: ChargerId) -> int:
         """
         gets the number of available chargers for a charger type at this station
 
@@ -274,8 +274,10 @@ class Station(Entity):
         :return: the number of available chargers of this charger type at this station
         """
         cs = self.state.get(charger_id)
-        chargers = cs.available_chargers if cs is not None else None
-        return chargers
+        if cs is None:
+            return 0
+        else:
+            return cs.available_chargers
 
     def get_total_chargers(self, charger_id: ChargerId) -> Optional[int]:
         """

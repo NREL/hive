@@ -6,7 +6,7 @@ from typing import Tuple, Optional, NamedTuple
 import h3
 import immutables
 from networkx import MultiDiGraph
-from scipy.spatial.ckdtree import cKDTree
+from scipy.spatial import cKDTree
 
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.link_id import create_link_id
