@@ -46,27 +46,37 @@ InitFunction = Callable[
 def initialize(
     config: HiveConfig, init_functions: Optional[Iterable[InitFunction]] = None
 ) -> Tuple[SimulationState, Environment]:
-    environment = initialize_environment(config)
-
     if init_functions is None:
         init_functions = default_init_functions()
 
-    simulation_state, environment = initialize_simulation(config, environment, init_functions)
+    simulation_state, environment = initialize_simulation(config, init_functions)
 
     return simulation_state, environment
 
 
-def initialize_environment(config: HiveConfig) -> Environment:
+def initialize_environment_fleets(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+) -> Tuple[SimulationState, Environment]:
     """
-    Initialize the environment from the config
-
-    :param config: the hive config
+    An initialization function to add fleets to the environment
     """
     fleet_ids = (
         read_fleet_ids_from_file(config.input_config.fleets_file)
         if config.input_config.fleets_file
         else frozenset()
     )
+
+    environment = environment._replace(fleet_ids=fleet_ids)
+
+    return simulation_state, environment
+
+
+def initialize_environment_schedules(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+) -> Tuple[SimulationState, Environment]:
+    """
+    An initialization function to add schedules to the environment
+    """
 
     if config.input_config.schedules_file is None:
         schedules: immutables.Map[ScheduleId, ScheduleFunction] = immutables.Map()
@@ -75,16 +85,43 @@ def initialize_environment(config: HiveConfig) -> Environment:
             config.sim.schedule_type, config.input_config.schedules_file
         )
 
-    env_initial = Environment(
-        config=config,
-        mechatronics=build_mechatronics_table(
-            config.input_config.mechatronics_file,
-            config.input_config.scenario_directory,
-        ),
-        chargers=build_chargers_table(config.input_config.chargers_file),
-        schedules=schedules,
-        fleet_ids=fleet_ids,
+    environment = environment._replace(schedules=schedules)
+
+    return simulation_state, environment
+
+
+def initialize_environment_mechatronics(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+) -> Tuple[SimulationState, Environment]:
+    """
+    An initialization function to add mechatronics to the environment
+    """
+    mechatronics_table = build_mechatronics_table(
+        config.input_config.mechatronics_file, config.input_config.scenario_directory
     )
+    environment = environment._replace(mechatronics=mechatronics_table)
+
+    return simulation_state, environment
+
+
+def initialize_environment_chargers(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+) -> Tuple[SimulationState, Environment]:
+    """
+    An initialization function to add chargers to the environment
+    """
+    chargers_table = build_chargers_table(config.input_config.chargers_file)
+    environment = environment._replace(chargers=chargers_table)
+
+    return simulation_state, environment
+
+
+def initialize_environment_reporting(
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+) -> Tuple[SimulationState, Environment]:
+    """
+    An initialization function to add reporting to the environment
+    """
     # configure reporting
     reporter = Reporter()
     if config.global_config.log_events:
@@ -103,25 +140,24 @@ def initialize_environment(config: HiveConfig) -> Environment:
         reporter.add_handler(StatsHandler())
     if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:
         reporter.add_handler(
-            TimeStepStatsHandler(config, config.scenario_output_directory, env_initial.fleet_ids)
+            TimeStepStatsHandler(config, config.scenario_output_directory, environment.fleet_ids)
         )
 
-    environment_w_reporter = env_initial.set_reporter(reporter)
+    environment = environment.set_reporter(reporter)
 
-    return environment_w_reporter
+    return simulation_state, environment
 
 
 def initialize_simulation(
-    config: HiveConfig, environment: Environment, init_functions: Iterable[InitFunction]
+    config: HiveConfig, init_functions: Iterable[InitFunction]
 ) -> Tuple[SimulationState, Environment]:
     """
     constructs a SimulationState from a set of init functions
 
     :param config: the configuration of this run
-    :param environment: the environment of this run
     :param init_functions: the initialization functions
 
-    :return: a SimulationState, or a SimulationStateError
+    :return: a SimulationState and an Environment or a SimulationStateError
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
     sim = SimulationState(
@@ -131,6 +167,8 @@ def initialize_simulation(
         sim_h3_search_resolution=config.sim.sim_h3_search_resolution,
     )
 
+    environment = Environment(config=config)
+
     for init_function in init_functions:
         sim, environment = init_function(config, sim, environment)
 
@@ -138,7 +176,19 @@ def initialize_simulation(
 
 
 def default_init_functions() -> Iterable[InitFunction]:
-    return [vehicle_init_function, station_init_function, base_init_function]
+    """
+    Returns the defaul initialization functions in the proper order.
+    """
+    return [
+        initialize_environment_fleets,
+        initialize_environment_schedules,
+        initialize_environment_mechatronics,
+        initialize_environment_chargers,
+        initialize_environment_reporting,
+        vehicle_init_function,
+        station_init_function,
+        base_init_function,
+    ]
 
 
 def osm_init_function(
