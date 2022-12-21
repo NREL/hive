@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Any, Callable, Dict, Optional
 
 import yaml
 
@@ -9,12 +9,17 @@ from immutables import Map
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
 from nrel.hive.model.vehicle.mechatronics.ice import ICE
 from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
+from nrel.hive.model.vehicle.mechatronics.powercurve.powercurve import Powercurve
+from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 from nrel.hive.util import fs
 from nrel.hive.util.typealiases import MechatronicsId
 
 
 def build_mechatronics_table(
-    mechatronics_file: str, scenario_directory: str
+    mechatronics_file: str,
+    scenario_directory: str,
+    custom_powertrain_constructor: Optional[Callable[[Dict[str, Any]], Powertrain]] = None,
+    custom_powercurve_constructor: Optional[Callable[[Dict[str, Any]], Powercurve]] = None,
 ) -> Map[MechatronicsId, MechatronicsInterface]:
     """
     constructs a dictionary containing all of the provided vehicle configurations where the key is the mechatronics ID
@@ -58,9 +63,15 @@ def build_mechatronics_table(
                 config_dict[mechatronics_id]["powercurve_file"] = powercurve_file
 
             if mechatronics_type == "bev":
-                mechatronics[mechatronics_id] = BEV.from_dict(config_dict[mechatronics_id])
+                mechatronics[mechatronics_id] = BEV.from_dict(
+                    config_dict[mechatronics_id],
+                    custom_powertrain_constructor,
+                    custom_powercurve_constructor,
+                )
             elif mechatronics_type == "ice":
-                mechatronics[mechatronics_id] = ICE.from_dict(config_dict[mechatronics_id])
+                mechatronics[mechatronics_id] = ICE.from_dict(
+                    config_dict[mechatronics_id], custom_powertrain_constructor
+                )
             else:
                 raise ValueError(
                     f"got unexpected mechatronics type {mechatronics_type}; try `bev` or `ice`"

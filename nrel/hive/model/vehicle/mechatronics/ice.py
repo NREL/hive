@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import logging
 
-from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
+from typing import Any, Callable, Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
 
 import immutables
 
@@ -35,7 +35,11 @@ class ICE(MechatronicsInterface):
     nominal_miles_per_gallon: MilesPerGallon
 
     @classmethod
-    def from_dict(cls, d: Dict) -> ICE:
+    def from_dict(
+        cls,
+        d: Dict,
+        custom_powertrain_constructor: Optional[Callable[[Dict[str, Any]], Powertrain]] = None,
+    ) -> ICE:
         """
         build from a dictionary
 
@@ -50,11 +54,16 @@ class ICE(MechatronicsInterface):
         updated_d = d.copy()
         updated_d["scale_factor"] = 1 / nominal_miles_per_gallon
 
+        if custom_powertrain_constructor is None:
+            powertrain = build_powertrain(updated_d)
+        else:
+            powertrain = custom_powertrain_constructor(updated_d)
+
         return ICE(
             mechatronics_id=updated_d["mechatronics_id"],
             tank_capacity_gallons=tank_capacity_gallons,
             idle_gallons_per_hour=idle_gallons_per_hour,
-            powertrain=build_powertrain(updated_d),
+            powertrain=powertrain,
             nominal_miles_per_gallon=nominal_miles_per_gallon,
         )
 
