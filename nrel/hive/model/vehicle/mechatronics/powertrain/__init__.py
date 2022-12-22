@@ -1,14 +1,15 @@
 from pathlib import Path
+from typing import Any, Dict, Type
 
 import yaml
 
 from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
 from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 
-powertrain_models = {"tabular": TabularPowertrain}
+DEFAULT_MODELS: Dict[str, Type[Powertrain]] = {"tabular": TabularPowertrain}
 
 
-def build_powertrain(config: dict) -> Powertrain:
+def build_powertrain(config: Dict[str, Any]) -> Powertrain:
     try:
         file = config["powertrain_file"]
     except KeyError:
@@ -23,9 +24,9 @@ def build_powertrain(config: dict) -> Powertrain:
 
         if not powertrain_type:
             raise KeyError(f"powertrain file {file} missing required 'type' field")
-        elif powertrain_type not in powertrain_models:
+        elif powertrain_type not in DEFAULT_MODELS:
             raise IOError(
-                f"PowerCurve with type {powertrain_type} is not recognized, must be one of {powertrain_models.keys()}"
+                f"PowerCurve with type {powertrain_type} is not recognized, must be one of {DEFAULT_MODELS.keys()}"
             )
         else:
-            return powertrain_models[powertrain_type].from_data(data=config)
+            return DEFAULT_MODELS[powertrain_type].from_data(data=config)
