@@ -238,9 +238,13 @@ class Request(Entity):
 
         :return: the updated request
         """
-        distance_km = road_network.distance_by_geoid_km(self.origin, self.destination)
-        distance_miles = distance_km * KM_TO_MILE
-        price = rate_structure.base_price + (rate_structure.price_per_mile * distance_miles)
+        if rate_structure.price_per_mile > 0:
+            distance_km = road_network.distance_by_geoid_km(self.origin, self.destination)
+            distance_miles = distance_km * KM_TO_MILE
+            distance_price = rate_structure.price_per_mile * distance_miles
+        else:
+            distance_price = 0
+        price = rate_structure.base_price + distance_price
         return replace(self, value=max(rate_structure.minimum_price, price))
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Request:

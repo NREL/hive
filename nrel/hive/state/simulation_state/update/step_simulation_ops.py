@@ -39,43 +39,15 @@ def log_instructions(instructions: Tuple[Instruction, ...], env: Environment, si
         env.reporter.file_report(_instruction_to_report(i, sim_time))
 
 
-def step_vehicle(
-    simulation_state: SimulationState, env: Environment, vehicle_id: VehicleId
-) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-    """
-    steps a single vehicle for a single simulation time step.
-
-    :param simulation_state: the simulation state
-    :param env: the simulation environment
-    :param vehicle_id: the vehicle to step
-
-    :return: the simulation state with the updated vehicle
-    """
-
-    vehicle = simulation_state.vehicles.get(vehicle_id)
-    if not vehicle:
-        err = SimulationStateError(
-            f"attempting to step vehicle {vehicle_id} but doesn't exist in this simulation state"
-        )
-        return err, None
-
-    driver_error, driver_sim = vehicle.driver_state.update(simulation_state, env)
-
-    if driver_error:
-        return driver_error, None
-    if driver_sim is None:
-        return None, None
-
-    vehicle_error, vehicle_sim = vehicle.vehicle_state.update(driver_sim, env)
-
-    if vehicle_error:
-        return vehicle_error, None
-    if vehicle_sim is None:
-        return None, None
-
-    next_time_sim = tick(vehicle_sim)
-
-    return None, next_time_sim
+def step_vehicle(s: SimulationState, env: Environment, vehicle: Vehicle) -> SimulationState:
+    error, updated_sim = vehicle.vehicle_state.update(s, env)
+    if error:
+        log.error(error)
+        return s
+    elif not updated_sim:
+        return s
+    else:
+        return updated_sim
 
 
 def perform_driver_state_updates(
@@ -115,16 +87,6 @@ def perform_vehicle_state_updates(
     :return: the sim after all vehicle update functions have been called
     """
 
-    def _step_vehicle(s: SimulationState, vehicle: Vehicle) -> SimulationState:
-        error, updated_sim = vehicle.vehicle_state.update(s, env)
-        if error:
-            log.error(error)
-            return simulation_state
-        elif not updated_sim:
-            return simulation_state
-        else:
-            return updated_sim
-
     def _sort_by_vehicle_state(vs: Tuple[Vehicle, ...]) -> Tuple[Vehicle, ...]:
         """
         a one-pass partitioning to place ChargeQueueing agents after their non-ChargeQueueing friends
@@ -155,9 +117,10 @@ def perform_vehicle_state_updates(
     # why sort here? see _sort_by_vehicle_state for an explanation
     vehicles = _sort_by_vehicle_state(tuple(simulation_state.vehicles.values()))
 
-    next_state = ft.reduce(_step_vehicle, vehicles, simulation_state)
+    for veh in vehicles:
+        simulation_state = step_vehicle(simulation_state, env, veh)
 
-    return next_state
+    return simulation_state
 
 
 InstructionApplicationResult = Tuple[Optional[Exception], Optional[InstructionResult]]

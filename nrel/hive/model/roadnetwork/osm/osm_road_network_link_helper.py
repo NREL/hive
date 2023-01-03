@@ -6,13 +6,13 @@ from typing import Tuple, Optional, NamedTuple
 import h3
 import immutables
 from networkx import MultiDiGraph
-from scipy.spatial.ckdtree import cKDTree
+from scipy.spatial import cKDTree
 
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.link_id import create_link_id
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork_ops import safe_get_node_coordinates
 from nrel.hive.util.typealiases import GeoId, LinkId
-from nrel.hive.util.units import M_TO_KM, Kmph, Kilometers
+from nrel.hive.util.units import M_TO_KM, Kmph
 
 
 class OSMRoadNetworkLinkHelper(NamedTuple):
@@ -62,14 +62,12 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
         graph: MultiDiGraph,
         sim_h3_resolution: int,
         default_speed_kmph: Kmph = 40.0,
-        default_distance_km: Kilometers = 0.01,
     ) -> Tuple[Optional[Exception], Optional[OSMRoadNetworkLinkHelper]]:
         """
         reads in the graph links from a networkx graph and builds a table with Links by LinkId
         :param graph: the input graph
         :param sim_h3_resolution: h3 resolution for entities in sim
         :param default_speed_kmph: default link speed for unlabeled links
-        :param default_distance_km: default link length for unlabeled links
         :return: either an error, or, the lookup table
         """
 
@@ -174,12 +172,12 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                             if data
                             else default_speed_kmph
                         )
-                        distance_miles = (
-                            data.get("length", default_distance_km) if data else default_distance_km
-                        )
-                        distance = (
-                            distance_miles * M_TO_KM if distance_miles else default_distance_km
-                        )
+                        distance_miles = data.get("length") if data else None
+                        if distance_miles is None:
+                            err = ValueError("Link must have distance")
+                            return err, None
+
+                        distance = distance_miles * M_TO_KM
                         link = Link.build(link_id, src_geoid, dst_geoid, speed, distance)
                         (
                             add_link_error,

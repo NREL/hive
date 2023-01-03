@@ -13,8 +13,8 @@ from typing import (
 import immutables
 
 from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
-from nrel.hive.model.membership import PUBLIC_MEMBERSHIP_ID
 from nrel.hive.model.sim_time import SimTime
+from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from nrel.hive.util import geo
 from nrel.hive.util.typealiases import (
     RequestId,
@@ -22,7 +22,6 @@ from nrel.hive.util.typealiases import (
     BaseId,
     StationId,
     GeoId,
-    MembershipId,
 )
 
 if TYPE_CHECKING:
@@ -44,13 +43,13 @@ class SimulationState(NamedTuple):
     """
 
     # road network representation
-    road_network: RoadNetwork
+    road_network: RoadNetwork = HaversineRoadNetwork()
 
     # simulation parameters
-    sim_time: SimTime
-    sim_timestep_duration_seconds: Seconds
-    sim_h3_location_resolution: int
-    sim_h3_search_resolution: int
+    sim_time: SimTime = SimTime(0)
+    sim_timestep_duration_seconds: Seconds = 60
+    sim_h3_location_resolution: int = 15
+    sim_h3_search_resolution: int = 7
 
     # objects of the simulation
     stations: immutables.Map[StationId, Station] = immutables.Map()

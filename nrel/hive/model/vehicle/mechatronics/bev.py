@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import logging
 
-from typing import Dict, NamedTuple, TYPE_CHECKING, Tuple
+from typing import Any, Callable, Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
 
 import immutables
 
@@ -41,11 +41,19 @@ class BEV(MechatronicsInterface):
     battery_full_threshold_kwh: KwH = 0.1
 
     @classmethod
-    def from_dict(cls, d: Dict[str, str]) -> BEV:
+    def from_dict(
+        cls,
+        d: Dict[str, str],
+        custom_powertrain_constructor: Optional[Callable[[Dict[str, Any]], Powertrain]] = None,
+        custom_powercurve_constructor: Optional[Callable[[Dict[str, Any]], Powercurve]] = None,
+    ) -> BEV:
         """
         build from a dictionary
 
         :param d: the dictionary to build from
+        :param custom_powertrain_constructor: An optional custom constuctor to build the Powertrain
+        :param custom_powercurve_constructor: An optional custom constuctor to build the Powercurve
+
         :return: the built Mechatronics object
         """
         nominal_watt_hour_per_mile = d["nominal_watt_hour_per_mile"]
@@ -61,8 +69,16 @@ class BEV(MechatronicsInterface):
         elif not updated_d.get("powercurve_file"):
             raise FileNotFoundError("missing powercurve file in mechatronics config")
 
-        powertrain = build_powertrain(updated_d)
-        powercurve = build_powercurve(updated_d)
+        if custom_powertrain_constructor is None:
+            powertrain = build_powertrain(updated_d)
+        else:
+            powertrain = custom_powertrain_constructor(updated_d)
+
+        if custom_powercurve_constructor is None:
+            powercurve = build_powercurve(updated_d)
+        else:
+            powercurve = custom_powercurve_constructor(updated_d)
+
         idle_kwh_per_hour = float(updated_d["idle_kwh_per_hour"])
         charge_taper_cutoff_kw = float(updated_d["charge_taper_cutoff_kw"])
         return BEV(
@@ -151,7 +167,7 @@ class BEV(MechatronicsInterface):
         """
         energy_used = self.powertrain.energy_cost(route)
         energy_used_kwh = energy_used * get_unit_conversion(
-            self.powertrain.energy_units, "kilowatthour"
+            self.powertrain.energy_units, Unit.KILOWATT_HOUR
         )
         vehicle_energy_kwh = vehicle.energy[EnergyType.ELECTRIC]
         new_energy_kwh = max(0.0, vehicle_energy_kwh - energy_used_kwh)

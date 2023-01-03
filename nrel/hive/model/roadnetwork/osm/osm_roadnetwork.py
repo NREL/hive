@@ -3,14 +3,15 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 import networkx as nx
 
 from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
-from nrel.hive.model.roadnetwork.link_id import extract_node_ids, NodeId
+from nrel.hive.model.roadnetwork.link_id import extract_node_ids
+from nrel.hive.model.roadnetwork.osm.osm_builders import osm_graph_from_polygon
 from nrel.hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork_ops import (
     route_from_nx_path,
@@ -39,23 +40,11 @@ class OSMRoadNetwork(RoadNetwork):
 
     def __init__(
         self,
-        road_network_file: Path,
-        geofence: Optional[GeoFence] = None,
+        graph: nx.MultiDiGraph,
         sim_h3_resolution: H3Resolution = 15,
         default_speed_kmph: Kmph = 40.0,
-        default_distance_km: Kilometers = 100,
     ):
         self.sim_h3_resolution = sim_h3_resolution
-        self.geofence = geofence
-
-        # read in the network file
-        if road_network_file.suffix == ".json":
-            with road_network_file.open("r") as f:
-                graph = nx.node_link_graph(json.load(f))
-        else:
-            raise TypeError(
-                f"road network file of type {road_network_file.suffix} not supported by OSMRoadNetwork."
-            )
 
         # validate network
 
@@ -95,7 +84,7 @@ class OSMRoadNetwork(RoadNetwork):
 
         # build tables on the network edges for spatial lookup and LinkId lookup
         link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(
-            graph, sim_h3_resolution, default_speed_kmph, default_distance_km
+            graph, sim_h3_resolution, default_speed_kmph
         )
         if link_helper_error:
             raise link_helper_error
@@ -106,9 +95,54 @@ class OSMRoadNetwork(RoadNetwork):
             self.graph = graph
             self.link_helper = link_helper
 
+    @classmethod
+    def from_polygon(
+        cls,
+        polygon,
+        sim_h3_resolution: H3Resolution = 15,
+        default_speed_kmph: Kmph = 40.0,
+    ) -> OSMRoadNetwork:
+        """
+        Build an OSMRoadNetwork from a shapely polygon
+
+        :param polygon: The polygon to build the road network from
+        :param sim_h3_resolution: The h3 resolution of the simulation
+        :param default_speed_kmph: The network will fill in missing speed values with this
+        """
+        graph = osm_graph_from_polygon(polygon)
+        return OSMRoadNetwork(graph, sim_h3_resolution, default_speed_kmph)
+
+    @classmethod
+    def from_file(
+        cls,
+        road_network_file: Union[Path, str],
+        sim_h3_resolution: H3Resolution = 15,
+        default_speed_kmph: Kmph = 40.0,
+    ) -> OSMRoadNetwork:
+        """
+        Build an OSMRoadNetwork from file
+        """
+        road_network_path = Path(road_network_file)
+        # read in the network file
+        if road_network_path.suffix == ".json":
+            with road_network_path.open("r") as f:
+                graph = nx.node_link_graph(json.load(f))
+            return OSMRoadNetwork(graph, sim_h3_resolution, default_speed_kmph)
+        else:
+            raise TypeError(
+                f"road network file of type {road_network_path.suffix} not supported by OSMRoadNetwork."
+            )
+
+    def to_file(self, file: Union[str, Path]):
+        path = Path(file)
+
+        with path.open("w") as f:
+            json.dump(nx.node_link_data(self.graph), f)
+
     def route(self, origin: EntityPosition, destination: EntityPosition) -> Route:
         """
         Returns a route containing road network links between the origin and destination geoids.
+
         :param origin: the origin Link
         :param destination: the destination Link
         :return: a route between the origin and destination on the OSM road network

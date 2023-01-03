@@ -53,16 +53,10 @@ def initialize_simulation_with_sampling(
     :raises Exception due to IOErrors, missing keys in DictReader rows, or parsing errors
     """
 
-    # deprecated geofence input
-    if config.input_config.geofence_file:
-        geofence = GeoFence.from_geojson_file(config.input_config.geofence_file)
-    else:
-        geofence = None
-
     # set up road network based on user-configured road network type
     if config.network.network_type == "euclidean":
         haversine_road_network = HaversineRoadNetwork(
-            geofence=geofence, sim_h3_resolution=config.sim.sim_h3_resolution
+            sim_h3_resolution=config.sim.sim_h3_resolution
         )
         sim_initial = SimulationState(
             road_network=haversine_road_network,
@@ -75,8 +69,7 @@ def initialize_simulation_with_sampling(
         if config.input_config.road_network_file is None:
             raise ValueError("road_network_file required for osm_network")
 
-        osm_road_network = OSMRoadNetwork(
-            geofence=geofence,
+        osm_road_network = OSMRoadNetwork.from_file(
             sim_h3_resolution=config.sim.sim_h3_resolution,
             road_network_file=Path(config.input_config.road_network_file),
             default_speed_kmph=config.network.default_speed_kmph,

@@ -47,13 +47,19 @@ class Sim(NamedTuple):
 
         schedule_type = ScheduleType.from_string(d["schedule_type"])
 
+        sim_h3_resolution = int(d["sim_h3_resolution"])
+        sim_h3_search_resolution = int(d["sim_h3_search_resolution"])
+
+        if sim_h3_search_resolution >= sim_h3_resolution:
+            raise ValueError("sim_h3_search_resolution must be less than sim_h3_resolution")
+
         return Sim(
             sim_name=d["sim_name"],
             timestep_duration_seconds=int(d["timestep_duration_seconds"]),
             start_time=start_time,
             end_time=end_time,
-            sim_h3_resolution=d["sim_h3_resolution"],
-            sim_h3_search_resolution=d["sim_h3_search_resolution"],
+            sim_h3_resolution=sim_h3_resolution,
+            sim_h3_search_resolution=sim_h3_search_resolution,
             request_cancel_time_seconds=int(d["request_cancel_time_seconds"]),
             schedule_type=schedule_type,
         )

@@ -12,9 +12,13 @@ from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError, StateTransitionError
 from nrel.hive.util.typealiases import VehicleId
 
+import logging
+
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
+
+log = logging.getLogger(__name__)
 
 VehicleStateInstanceId = UUID
 
@@ -69,6 +73,7 @@ class VehicleStateABC(ABC):
             err1, next_state = state._default_terminal_state(sim, env)
             if err1 is not None:
                 state_type = state.vehicle_state_type
+                log.error(err1)
                 err_res = SimulationStateError(
                     f"failure during default update of {state_type} state"
                 )
@@ -83,6 +88,7 @@ class VehicleStateABC(ABC):
                     updated_sim,
                 ) = entity_state_ops.transition_previous_to_next(sim, env, state, next_state)
                 if err2 is not None:
+                    log.error(err2)
                     state_type = state.vehicle_state_type
                     err_res = SimulationStateError(
                         f"failure during default update of {state_type} state"

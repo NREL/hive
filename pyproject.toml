@@ -66,3 +66,6 @@ line-length = 100
 where = ["."]  # list of folders that contain the packages (["."] by default)
 include = ["nrel*"]  # package names should match these glob patterns (["*"] by default)
 exclude = ["rust*"] 
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]

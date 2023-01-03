@@ -3,11 +3,10 @@ from typing import Dict, Any
 
 import numpy as np
 
-from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.model.roadnetwork.routetraversal import Route
 from nrel.hive.model.vehicle.mechatronics.powertrain.powertrain import Powertrain
-from nrel.hive.util.units import valid_unit, get_unit_conversion
+from nrel.hive.util.units import Unit, get_unit_conversion
 
 
 @dataclass(frozen=True)
@@ -16,9 +15,9 @@ class TabularPowertrain(Powertrain):
     builds a tabular, interpolated lookup model for energy consumption
     """
 
-    speed_units: str
-    distance_units: str
-    energy_units: str
+    speed_units: Unit
+    distance_units: Unit
+    energy_units: Unit
 
     consumption_speed: np.ndarray
     consumption_energy_per_distance: np.ndarray
@@ -43,16 +42,14 @@ class TabularPowertrain(Powertrain):
             if key not in data:
                 raise IOError(f"invalid input file for tabular power train model missing key {key}")
 
-        if not valid_unit(data["speed_units"]):
-            raise TypeError(f"{data['speed_units']} not a recognized unit in hive")
-        elif not valid_unit(data["distance_units"]):
-            raise TypeError(f"{data['distance_units']} not a recognized unit in hive")
-        elif not valid_unit(data["energy_units"]):
-            raise TypeError(f"{data['energy_units']} not a recognized unit in hive")
-
-        speed_units = data["speed_units"]
-        energy_units = data["energy_units"]
-        distance_units = data["distance_units"]
+        try:
+            speed_units = Unit.from_string(data["speed_units"])
+            energy_units = Unit.from_string(data["energy_units"])
+            distance_units = Unit.from_string(data["distance_units"])
+        except ValueError as e:
+            raise ValueError(
+                "Failed to parse incoming units when building TabularPowertrain"
+            ) from e
 
         # linear interpolation function approximation via these lookup values
         consumption_model = sorted(data["consumption_model"], key=lambda x: x["speed"])
@@ -79,7 +76,7 @@ class TabularPowertrain(Powertrain):
         :return: energy in units captured by self.energy_units
         """
         # convert kilometers per hour to whatever units are used by this powertrain
-        link_speed = link.speed_kmph * get_unit_conversion("kmph", self.speed_units)
+        link_speed = link.speed_kmph * get_unit_conversion(Unit.KMPH, self.speed_units)
 
         energy_per_distance = float(
             np.interp(
@@ -89,7 +86,7 @@ class TabularPowertrain(Powertrain):
             )
         )
         # link distance is in kilometers
-        link_distance = link.distance_km * get_unit_conversion("kilometer", self.distance_units)
+        link_distance = link.distance_km * get_unit_conversion(Unit.KILOMETERS, self.distance_units)
         energy = energy_per_distance * link_distance
         return energy
 
