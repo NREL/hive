@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use crate::geoid::Geoid;
 
 #[pyclass]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct EntityPosition {
     #[pyo3(get)]
-    link_id: String,
+    pub link_id: String,
     #[pyo3(get)]
-    geoid: Geoid,
+    pub geoid: Geoid,
 }
