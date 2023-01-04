@@ -4,78 +4,83 @@ from typing import Optional, NamedTuple, Tuple, TYPE_CHECKING
 
 from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.units import Seconds, Kilometers, Kmph, hours_to_seconds
+from nrel.hive.util.rust import USE_RUST
 
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import LinkId, GeoId
 
 
-class LinkTraversal(NamedTuple):
-    """
-    represents either an intention to traverse some or all of a link
-    or, an experience over some or all of a link
-    """
+if USE_RUST:
+    from hive_core import LinkTraversal
+else:
 
-    link_id: LinkId
-    start: GeoId
-    end: GeoId
-
-    distance_km: Kilometers
-
-    # TODO: this should come from the road network in real time to support variable link speeds
-    speed_kmph: Kmph
-
-    @classmethod
-    def build(
-        cls,
-        link_id: LinkId,
-        start: GeoId,
-        end: GeoId,
-        speed_kmph: Kmph,
-        distance_km: Optional[Kilometers] = None,
-    ) -> LinkTraversal:
-        if not distance_km:
-            distance_km = H3Ops.great_circle_distance(start, end)
-        return LinkTraversal(
-            link_id=link_id,
-            start=start,
-            end=end,
-            distance_km=distance_km,
-            speed_kmph=speed_kmph,
-        )
-
-    @property
-    def travel_time_seconds(self) -> Seconds:
-        return hours_to_seconds(self.distance_km / self.speed_kmph)
-
-    def update_start(self, new_start: GeoId) -> LinkTraversal:
+    class LinkTraversal(NamedTuple):  # type: ignore
         """
-        changes the start GeoId of the (experienced) LinkTraversal. used to set trip positions on
-        partially-traversed Links or to set a location of a stationary entity.
-
-        :param new_start: the new start GeoId (should be a position along the h3_line between
-                          Link.start and Link.end)
-
-        :return: the link with an updated start GeoId
+        represents either an intention to traverse some or all of a link
+        or, an experience over some or all of a link
         """
-        if new_start == self.start:
-            return self
-        else:
-            return self._replace(start=new_start)
 
-    def update_end(self, new_end: GeoId) -> LinkTraversal:
-        """
-        changes the end GeoId of the (experienced) LinkTraversal. used to set trip positions on
-        partially-traversed Links or to set a location of a stationary entity.
+        link_id: LinkId
+        start: GeoId
+        end: GeoId
 
-        :param new_end: the new end GeoId (should be a position along the h3_line between
-                          Link.start and Link.end)
+        distance_km: Kilometers
 
-        :return: the link with an updated end GeoId
-        """
-        if new_end == self.end:
-            return self
-        else:
-            return self._replace(end=new_end)
+        # TODO: this should come from the road network in real time to support variable link speeds
+        speed_kmph: Kmph
+
+        @classmethod
+        def build(
+            cls,
+            link_id: LinkId,
+            start: GeoId,
+            end: GeoId,
+            speed_kmph: Kmph,
+            distance_km: Optional[Kilometers] = None,
+        ) -> LinkTraversal:
+            if not distance_km:
+                distance_km = H3Ops.great_circle_distance(start, end)
+            return LinkTraversal(
+                link_id=link_id,
+                start=start,
+                end=end,
+                distance_km=distance_km,
+                speed_kmph=speed_kmph,
+            )
+
+        @property
+        def travel_time_seconds(self) -> Seconds:
+            return hours_to_seconds(self.distance_km / self.speed_kmph)
+
+        def update_start(self, new_start: GeoId) -> LinkTraversal:
+            """
+            changes the start GeoId of the (experienced) LinkTraversal. used to set trip positions on
+            partially-traversed Links or to set a location of a stationary entity.
+
+            :param new_start: the new start GeoId (should be a position along the h3_line between
+                            Link.start and Link.end)
+
+            :return: the link with an updated start GeoId
+            """
+            if new_start == self.start:
+                return self
+            else:
+                return self._replace(start=new_start)
+
+        def update_end(self, new_end: GeoId) -> LinkTraversal:
+            """
+            changes the end GeoId of the (experienced) LinkTraversal. used to set trip positions on
+            partially-traversed Links or to set a location of a stationary entity.
+
+            :param new_end: the new end GeoId (should be a position along the h3_line between
+                            Link.start and Link.end)
+
+            :return: the link with an updated end GeoId
+            """
+            if new_end == self.end:
+                return self
+            else:
+                return self._replace(end=new_end)
 
 
 class LinkTraversalResult(NamedTuple):
@@ -105,10 +110,10 @@ def traverse_up_to(
 
     :param available_time_seconds: the remaining time the agent has in this time step
     :return: the updated traversal, or, an exception.
-             on update, if there is any remaining traversal, return an updated Link.
-             if no traversal remains, return None.
-             regardless, return the agent's remaining time after traversing
-             if there was any error, return the exception instead.
+            on update, if there is any remaining traversal, return an updated Link.
+            if no traversal remains, return None.
+            regardless, return the agent's remaining time after traversing
+            if there was any error, return the exception instead.
     """
     if link is None:
         return (
