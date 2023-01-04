@@ -29,6 +29,7 @@ pub fn link_id_to_geoids(link_id: &LinkId) -> Result<(GeoidString, GeoidString)>
 #[pyclass]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct HaversineRoadNetwork {
+    #[pyo3(get)]
     sim_h3_resolution: usize,
 }
 
@@ -122,5 +123,9 @@ impl HaversineRoadNetwork {
             link_id: link.link_id,
             geoid: geoid,
         }
+    }
+
+    fn geoid_within_geofence(&self, _geoid: GeoidString) -> bool {
+        true
     }
 }
