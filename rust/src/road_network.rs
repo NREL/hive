@@ -56,15 +56,7 @@ impl HaversineRoadNetwork {
         }
 
         let link_id = geoid_string_to_link_id(&origin.geoid, &destination.geoid);
-        let link_dist_km = match h3_dist_km(&origin.geoid, &destination.geoid) {
-            Err(e) => {
-                return Err(PyValueError::new_err(format!(
-                    "Failure computing h3 distance: {}",
-                    e
-                )))
-            }
-            Ok(dist) => dist,
-        };
+        let link_dist_km = h3_dist_km(&origin.geoid, &origin.geoid)?;
 
         let link = LinkTraversal {
             link_id: link_id,
@@ -85,15 +77,7 @@ impl HaversineRoadNetwork {
     }
 
     fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
-        let (source, dest) = match link_id_to_geoids(&link_id) {
-            Ok((source, dest)) => (source, dest),
-            Err(e) => {
-                return Err(PyValueError::new_err(format!(
-                    "Error converting link id to geoid {}",
-                    e
-                )))
-            }
-        };
+        let (source, dest) = link_id_to_geoids(&link_id)?; 
         let dist_km = self.distance_by_geoid_km(source.clone(), dest.clone())?;
         let link = LinkTraversal {
             link_id: link_id,
