@@ -4,6 +4,7 @@ from typing import Tuple, NamedTuple, FrozenSet, TYPE_CHECKING
 
 from nrel.hive.util.rust import USE_RUST
 
+
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import MembershipId
 

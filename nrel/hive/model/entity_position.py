@@ -1,7 +1,9 @@
 from typing import NamedTuple
 
-from nrel.hive.util.rust import USE_RUST
+
 from nrel.hive.util.typealiases import LinkId, GeoId
+from nrel.hive.util.rust import USE_RUST
+
 
 if USE_RUST:
     from hive_core import EntityPosition
