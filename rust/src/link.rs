@@ -89,3 +89,25 @@ impl LinkTraversal {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_approx_eq::assert_approx_eq;
+
+    fn mock_link() -> LinkTraversal {
+        LinkTraversal {
+            link_id: "mock_link".to_string(),
+            start: "8f26dc934cccc69".to_string(),
+            end: "8f26dc934cc4cdb".to_string(),
+            distance_km: 0.14,
+            speed_kmph: 40.0,
+        }
+    }
+
+    #[test]
+    fn test_link_travel_time_seconds() {
+        let link = mock_link();
+        assert_approx_eq!(link.travel_time_seconds(), 12.6);
+    }
+}

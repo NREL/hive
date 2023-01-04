@@ -129,3 +129,31 @@ impl HaversineRoadNetwork {
         true
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn mock_network() -> HaversineRoadNetwork {
+        HaversineRoadNetwork { sim_h3_resolution: 15 }
+    }
+
+    #[test]
+    fn test_link_id_to_geoids()  {
+        let link_id = "geoid1-geoid2".to_string();
+        let (geoid1, geoid2) = link_id_to_geoids(&link_id).unwrap();
+        assert_eq!(geoid1.as_str(), "geoid1");
+        assert_eq!(geoid2.as_str(), "geoid2");
+    }
+
+    #[test]
+    fn test_position_from_geoid()  {
+        let network = mock_network();
+        let geoid = "8f26dc934cccc69".to_string();
+        let position = network.position_from_geoid(geoid);
+        assert_eq!(position.geoid.as_str(), "8f26dc934cccc69");
+        assert_eq!(position.link_id.as_str(), "8f26dc934cccc69-8f26dc934cccc69");
+
+    }
+
+}
