@@ -2,16 +2,17 @@ use pyo3::{prelude::*, types::PyType};
 
 use serde::{Deserialize, Serialize};
 
-use crate::geoid::Geoid;
+use crate::geoid::GeoidString;
+use crate::road_network::LinkId;
 use crate::utils::h3_dist_km;
 
 #[pyclass]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LinkTraversal {
     #[pyo3(get)]
-    pub link_id: String,
-    pub start: Geoid,
-    pub end: Geoid,
+    pub link_id: LinkId,
+    pub start: GeoidString,
+    pub end: GeoidString,
 
     pub distance_km: f64,
     pub speed_kmph: f64,
@@ -23,14 +24,14 @@ impl LinkTraversal {
     fn build(
         _: &PyType,
         link_id: String,
-        start: Geoid,
-        end: Geoid,
+        start: GeoidString,
+        end: GeoidString,
         speed_kmph: f64,
         distance_km: Option<f64>,
     ) -> PyResult<Self> {
         let dist = match distance_km {
             Some(d) => d,
-            None => h3_dist_km(start, end).unwrap(),
+            None => h3_dist_km(&start, &end).unwrap(),
         };
         Ok(LinkTraversal {
             link_id: link_id,

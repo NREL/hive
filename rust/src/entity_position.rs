@@ -1,13 +1,43 @@
-use pyo3::prelude::*;
+use std::collections::HashMap;
+
+use pyo3::{prelude::*, types::PyDict};
 use serde::{Deserialize, Serialize};
 
-use crate::geoid::Geoid;
+use crate::{geoid::GeoidString, road_network::LinkId};
 
 #[pyclass]
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct EntityPosition {
     #[pyo3(get)]
-    pub link_id: String,
+    pub link_id: LinkId,
     #[pyo3(get)]
-    pub geoid: Geoid,
+    pub geoid: GeoidString,
+}
+
+#[pymethods]
+impl EntityPosition {
+    #[new]
+    fn new(link_id: LinkId, geoid: GeoidString) -> PyResult<Self> {
+        Ok(EntityPosition {
+            link_id: link_id,
+            geoid: geoid,
+        })
+    }
+
+    fn _asdict(&self) -> HashMap<String, String> {
+        let mut dict = HashMap::new();
+        dict.insert("link_id".to_string(), self.link_id.to_owned());
+        dict.insert("geoid".to_string(), self.geoid.to_owned());
+        dict
+    }
+
+    pub fn copy(&self) -> Self {
+        self.clone()
+    }
+    pub fn __copy__(&self) -> Self {
+        self.clone()
+    }
+    pub fn __deepcopy__(&self, _memo: &PyDict) -> Self {
+        self.clone()
+    }
 }

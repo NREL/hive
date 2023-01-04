@@ -1,51 +1,48 @@
-use std::str::FromStr;
-
-use h3ron::H3Cell;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use serde::{Deserialize, Serialize};
 
 use anyhow::{anyhow, Result};
 
+pub type LinkId = String;
+
 use crate::{
-    entity_position::EntityPosition, geoid::Geoid, link::LinkTraversal, utils::h3_dist_km,
+    entity_position::EntityPosition, geoid::GeoidString, link::LinkTraversal, utils::h3_dist_km,
 };
 
 const AVG_SPEED_KMPH: f64 = 40.0;
 
-pub fn geoids_to_link_id(origin: Geoid, destination: Geoid) -> String {
-    format!(
-        "{}-{}",
-        origin.h3_cell.to_string(),
-        destination.h3_cell.to_string()
-    )
+pub fn geoid_string_to_link_id(origin: &GeoidString, destination: &GeoidString) -> LinkId {
+    format!("{}-{}", origin, destination)
 }
 
-pub fn link_id_to_geoids(link_id: &String) -> Result<(Geoid, Geoid)> {
+pub fn link_id_to_geoids(link_id: &LinkId) -> Result<(GeoidString, GeoidString)> {
     let ids: Vec<&str> = link_id.split("-").collect();
     if ids.len() != 2 {
         return Err(anyhow!("LinkId not in expected format of [Geoid]-[Geoid]"));
     } else {
         let start_str = ids[0];
-        let start_h3 = H3Cell::from_str(start_str)?;
-        let start = Geoid { h3_cell: start_h3 };
         let end_str = ids[1];
-        let end_h3 = H3Cell::from_str(end_str)?;
-        let end = Geoid { h3_cell: end_h3 };
-        return Ok((start, end));
+        return Ok((start_str.to_string(), end_str.to_string()));
     }
 }
 
 #[pyclass]
 #[derive(Clone, Serialize, Deserialize)]
-pub struct RoadNetwork {
+pub struct HaversineRoadNetwork {
     sim_h3_resolution: usize,
 }
 
 #[pymethods]
-impl RoadNetwork {
+impl HaversineRoadNetwork {
     #[new]
-    fn new(sim_h3_resolution: usize) -> PyResult<Self> {
-        Ok(RoadNetwork { sim_h3_resolution })
+    fn new(sim_h3_resolution: Option<usize>) -> PyResult<Self> {
+        let res = match sim_h3_resolution {
+            Some(res) => res,
+            None => 15,
+        };
+        Ok(HaversineRoadNetwork {
+            sim_h3_resolution: res,
+        })
     }
 
     fn route(
@@ -57,8 +54,8 @@ impl RoadNetwork {
             return Ok(Vec::new());
         }
 
-        let link_id = geoids_to_link_id(origin.geoid, destination.geoid);
-        let link_dist_km = match h3_dist_km(origin.geoid, destination.geoid) {
+        let link_id = geoid_string_to_link_id(&origin.geoid, &destination.geoid);
+        let link_dist_km = match h3_dist_km(&origin.geoid, &destination.geoid) {
             Err(e) => {
                 return Err(PyValueError::new_err(format!(
                     "Failure computing h3 distance: {}",
@@ -81,12 +78,12 @@ impl RoadNetwork {
         Ok(route)
     }
 
-    fn distance_by_geoid_km(&self, origin: Geoid, destination: Geoid) -> PyResult<f64> {
-        h3_dist_km(origin, destination)
+    fn distance_by_geoid_km(&self, origin: GeoidString, destination: GeoidString) -> PyResult<f64> {
+        h3_dist_km(&origin, &destination)
             .map_err(|e| PyValueError::new_err(format!("Failure computing h3 distance: {}", e)))
     }
 
-    fn link_from_link_id(&self, link_id: String) -> PyResult<LinkTraversal> {
+    fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
         let (source, dest) = match link_id_to_geoids(&link_id) {
             Ok((source, dest)) => (source, dest),
             Err(e) => {
@@ -96,7 +93,7 @@ impl RoadNetwork {
                 )))
             }
         };
-        let dist_km = self.distance_by_geoid_km(source, dest)?;
+        let dist_km = self.distance_by_geoid_km(source.clone(), dest.clone())?;
         let link = LinkTraversal {
             link_id: link_id,
             start: source,
@@ -107,15 +104,23 @@ impl RoadNetwork {
         Ok(link)
     }
 
-    fn link_from_geoid(&self, geoid: Geoid) -> LinkTraversal {
-        let link_id = geoids_to_link_id(geoid, geoid);
+    fn link_from_geoid(&self, geoid: GeoidString) -> LinkTraversal {
+        let link_id = geoid_string_to_link_id(&geoid, &geoid);
         let link = LinkTraversal {
             link_id: link_id,
-            start: geoid,
-            end: geoid,
+            start: geoid.clone(),
+            end: geoid.clone(),
             distance_km: 0.0,
             speed_kmph: 0.0,
         };
         link
+    }
+
+    fn position_from_geoid(&self, geoid: GeoidString) -> EntityPosition {
+        let link = self.link_from_geoid(geoid.clone());
+        EntityPosition {
+            link_id: link.link_id,
+            geoid: geoid,
+        }
     }
 }
