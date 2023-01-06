@@ -58,13 +58,13 @@ impl HaversineRoadNetwork {
         let link_id = geoid_string_to_link_id(&origin.geoid, &destination.geoid);
         let link_dist_km = h3_dist_km(&origin.geoid, &origin.geoid)?;
 
-        let link = LinkTraversal {
-            link_id: link_id,
-            start: origin.geoid,
-            end: destination.geoid,
-            distance_km: link_dist_km,
-            speed_kmph: AVG_SPEED_KMPH,
-        };
+        let link = LinkTraversal::new(
+            link_id,
+            origin.geoid,
+            destination.geoid,
+            link_dist_km,
+            AVG_SPEED_KMPH,
+        );
 
         let route = vec![link];
 
@@ -79,25 +79,25 @@ impl HaversineRoadNetwork {
     fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
         let (source, dest) = link_id_to_geoids(&link_id)?; 
         let dist_km = self.distance_by_geoid_km(source.clone(), dest.clone())?;
-        let link = LinkTraversal {
-            link_id: link_id,
-            start: source,
-            end: dest,
-            distance_km: dist_km,
-            speed_kmph: AVG_SPEED_KMPH,
-        };
+        let link = LinkTraversal::new( 
+            link_id,
+            source,
+            dest,
+            dist_km,
+            AVG_SPEED_KMPH,
+        );
         Ok(link)
     }
 
     fn link_from_geoid(&self, geoid: GeoidString) -> LinkTraversal {
         let link_id = geoid_string_to_link_id(&geoid, &geoid);
-        let link = LinkTraversal {
-            link_id: link_id,
-            start: geoid.clone(),
-            end: geoid.clone(),
-            distance_km: 0.0,
-            speed_kmph: 0.0,
-        };
+        let link = LinkTraversal::new( 
+            link_id,
+            geoid.clone(),
+            geoid.clone(),
+            0.0,
+            0.0,
+        );
         link
     }
 

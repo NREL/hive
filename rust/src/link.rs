@@ -1,20 +1,20 @@
-use pyo3::{prelude::*, types::PyType};
+use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
+use pyo3::exceptions::PyValueError;
+use pyo3::{prelude::*, types::PyType};
 
 use crate::geoid::GeoidString;
 use crate::road_network::LinkId;
 use crate::utils::h3_dist_km;
 
 #[pyclass]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct LinkTraversal {
     #[pyo3(get)]
     pub link_id: LinkId,
-    #[pyo3(get)]
-    pub start: GeoidString,
-    #[pyo3(get)]
-    pub end: GeoidString,
+
+    pub start: Arc<GeoidString>,
+    pub end: Arc<GeoidString>,
 
     #[pyo3(get)]
     pub distance_km: f64,
@@ -25,7 +25,7 @@ pub struct LinkTraversal {
 #[pymethods]
 impl LinkTraversal {
     #[new]
-    fn new(
+    pub fn new(
         link_id: String,
         start: GeoidString,
         end: GeoidString,
@@ -34,8 +34,8 @@ impl LinkTraversal {
     ) -> Self {
         LinkTraversal {
             link_id,
-            start,
-            end,
+            start: Arc::new(start),
+            end: Arc::new(end),
             distance_km,
             speed_kmph,
         }
@@ -51,15 +51,12 @@ impl LinkTraversal {
     ) -> PyResult<Self> {
         let dist = match distance_km {
             Some(d) => d,
-            None => h3_dist_km(&start, &end).unwrap(),
+            None => match h3_dist_km(&start, &end) {
+                Err(e) => return Err(PyValueError::new_err(e.to_string())),
+                Ok(d) => d,
+            },
         };
-        Ok(LinkTraversal {
-            link_id: link_id,
-            start: start,
-            end: end,
-            speed_kmph: speed_kmph,
-            distance_km: dist,
-        })
+        Ok(LinkTraversal::new(link_id, start, end, speed_kmph, dist))
     }
 
     #[getter]
@@ -69,24 +66,36 @@ impl LinkTraversal {
         time_seconds
     }
 
-    fn update_start(&self, new_start: GeoidString) -> Self {
-        LinkTraversal {
-            link_id: self.link_id.clone(),
-            start: new_start,
-            end: self.end.clone(),
-            distance_km: self.distance_km,
-            speed_kmph: self.speed_kmph,
-        }
+    #[getter]
+    fn start(&self) -> GeoidString {
+        self.start.to_string()
     }
 
-    fn update_end(&self, new_end: GeoidString) -> Self {
-        LinkTraversal {
-            link_id: self.link_id.clone(),
-            start: self.start.clone(),
-            end: new_end,
-            distance_km: self.distance_km,
-            speed_kmph: self.speed_kmph,
-        }
+    fn where_start(&self) {
+        println!("{:p}", self.start);
+    }
+
+    fn where_end(&self) {
+        println!("{:p}", self.end);
+    }
+
+    #[getter]
+    fn end(&self) -> GeoidString {
+        self.end.to_string()
+    }
+
+    fn update_start(&self, start: GeoidString) -> LinkTraversal {
+        let mut new_self = self.clone();
+        let new_start = Arc::make_mut(&mut new_self.start);
+        *new_start = start;
+        new_self
+    }
+
+    fn update_end(&self, end: GeoidString) -> LinkTraversal {
+        let mut new_self = self.clone();
+        let new_end = Arc::make_mut(&mut new_self.end);
+        *new_end = end;
+        new_self
     }
 }
 
@@ -96,13 +105,13 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
 
     fn mock_link() -> LinkTraversal {
-        LinkTraversal {
-            link_id: "mock_link".to_string(),
-            start: "8f26dc934cccc69".to_string(),
-            end: "8f26dc934cc4cdb".to_string(),
-            distance_km: 0.14,
-            speed_kmph: 40.0,
-        }
+        LinkTraversal::new(
+            "mock_link".to_string(),
+            "8f26dc934cccc69".to_string(),
+            "8f26dc934cc4cdb".to_string(),
+            0.14,
+            40.0,
+        )
     }
 
     #[test]
