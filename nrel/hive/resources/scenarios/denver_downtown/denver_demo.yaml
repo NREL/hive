@@ -28,7 +28,7 @@ sim:
 
 network:
   # (required) what type of network to use; options: osm_network | euclidean
-  network_type: osm_network
+  network_type: euclidean 
 
   # (optional) if no speed exists in the road network data input, we fill it in with this value;
   default_speed_kmph: 40.0
