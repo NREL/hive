@@ -30,13 +30,13 @@ pub fn link_id_to_geoids(link_id: &LinkId) -> Result<(GeoidString, GeoidString)>
 #[derive(Clone, Serialize, Deserialize)]
 pub struct HaversineRoadNetwork {
     #[pyo3(get)]
-    sim_h3_resolution: usize,
+    pub sim_h3_resolution: u8,
 }
 
 #[pymethods]
 impl HaversineRoadNetwork {
     #[new]
-    fn new(sim_h3_resolution: Option<usize>) -> PyResult<Self> {
+    pub fn new(sim_h3_resolution: Option<u8>) -> PyResult<Self> {
         let res = match sim_h3_resolution {
             Some(res) => res,
             None => 15,
@@ -46,7 +46,7 @@ impl HaversineRoadNetwork {
         })
     }
 
-    fn route(
+    pub fn route(
         &self,
         origin: EntityPosition,
         destination: EntityPosition,
@@ -71,12 +71,12 @@ impl HaversineRoadNetwork {
         Ok(route)
     }
 
-    fn distance_by_geoid_km(&self, origin: GeoidString, destination: GeoidString) -> PyResult<f64> {
+    pub fn distance_by_geoid_km(&self, origin: GeoidString, destination: GeoidString) -> PyResult<f64> {
         h3_dist_km(&origin, &destination)
             .map_err(|e| PyValueError::new_err(format!("Failure computing h3 distance: {}", e)))
     }
 
-    fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
+    pub fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
         let (source, dest) = link_id_to_geoids(&link_id)?; 
         let dist_km = self.distance_by_geoid_km(source.clone(), dest.clone())?;
         let link = LinkTraversal::new( 
@@ -89,7 +89,7 @@ impl HaversineRoadNetwork {
         Ok(link)
     }
 
-    fn link_from_geoid(&self, geoid: GeoidString) -> LinkTraversal {
+    pub fn link_from_geoid(&self, geoid: GeoidString) -> LinkTraversal {
         let link_id = geoid_string_to_link_id(&geoid, &geoid);
         let link = LinkTraversal::new( 
             link_id,
@@ -101,7 +101,7 @@ impl HaversineRoadNetwork {
         link
     }
 
-    fn position_from_geoid(&self, geoid: GeoidString) -> EntityPosition {
+    pub fn position_from_geoid(&self, geoid: GeoidString) -> EntityPosition {
         let link = self.link_from_geoid(geoid.clone());
         EntityPosition {
             link_id: link.link_id,
@@ -109,7 +109,7 @@ impl HaversineRoadNetwork {
         }
     }
 
-    fn geoid_within_geofence(&self, _geoid: GeoidString) -> bool {
+    pub fn geoid_within_geofence(&self, _geoid: GeoidString) -> bool {
         true
     }
 }

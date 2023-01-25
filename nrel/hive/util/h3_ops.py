@@ -95,7 +95,7 @@ class H3Ops:
                 ring = h3.k_ring(search_geoid, current_k)
 
                 # get all entities in this ring
-                found = (
+                found = list(
                     entity
                     for cell in ring
                     for entity in cls.get_entities_at_cell(cell, entity_search, entities)
