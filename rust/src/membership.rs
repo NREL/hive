@@ -17,6 +17,37 @@ pub struct Membership {
     memberships: HashSet<String>,
 }
 
+impl Default for Membership {
+    fn default() -> Self {
+        Membership {
+            memberships: HashSet::new(),
+        }
+    }
+}
+
+// TODO: eventually we'll move all the pymethods into here
+impl Membership {
+    pub fn _new(memberships: Option<HashSet<String>>) -> Result<Self, String> {
+        match memberships {
+            Some(m) => {
+                if m.iter().any(|m| m == &PUBLIC_MEMBERSHIP_ID) {
+                    return Err(format!(
+                        "{} is reserved, please use another membership id",
+                        PUBLIC_MEMBERSHIP_ID
+                    ));
+                }
+                Ok(Self { memberships: m })
+            }
+            None => Ok(Self {
+                memberships: HashSet::new(),
+            }),
+        }
+    }
+    pub fn _from_tuple(member_ids: Vec<String>) -> Result<Self, String> {
+        Membership::_new(Some(HashSet::from_iter(member_ids)))
+    }
+}
+
 #[pymethods]
 impl Membership {
     pub fn copy(&self) -> Self {
@@ -31,36 +62,24 @@ impl Membership {
 
     #[new]
     fn new(memberships: Option<HashSet<String>>) -> PyResult<Self> {
-        match memberships {
-            Some(m) => {
-                if m.iter().any(|m| m == &PUBLIC_MEMBERSHIP_ID) {
-                    return Err(PyValueError::new_err(format!(
-                        "{} is reserved, please use another membership id",
-                        PUBLIC_MEMBERSHIP_ID
-                    )));
-                }
-                Ok(Self { memberships: m })
-            }
-            None => Ok(Self {
-                memberships: HashSet::new(),
-            }),
-        }
+        Membership::_new(memberships).map_err(PyValueError::new_err)
     }
     #[classmethod]
-    fn from_tuple(_: &PyType, member_ids: Vec<String>) -> PyResult<Self> {
+    pub fn from_tuple(_: &PyType, member_ids: Vec<String>) -> PyResult<Self> {
         Self::new(Some(HashSet::from_iter(member_ids)))
     }
+
     #[classmethod]
-    fn single_membership(_: &PyType, membership_id: String) -> PyResult<Self> {
+    pub fn single_membership(_: &PyType, membership_id: String) -> PyResult<Self> {
         Self::new(Some(HashSet::from([membership_id])))
     }
 
     #[getter]
-    fn public(&self) -> bool {
+    pub fn public(&self) -> bool {
         self.memberships.is_empty()
     }
 
-    fn add_membership(&self, member_id: String) -> PyResult<Self> {
+    pub fn add_membership(&self, member_id: String) -> PyResult<Self> {
         if member_id == PUBLIC_MEMBERSHIP_ID {
             return Err(PyValueError::new_err(format!(
                 "{} is reserved, please use another membership id",
@@ -72,7 +91,7 @@ impl Membership {
         Self::new(Some(new_memberships))
     }
 
-    fn memberships_in_common(&self, other_membership: &Membership) -> HashSet<String> {
+    pub fn memberships_in_common(&self, other_membership: &Membership) -> HashSet<String> {
         let result: HashSet<_> = self
             .memberships
             .intersection(&other_membership.memberships)
@@ -81,7 +100,7 @@ impl Membership {
         result
     }
 
-    fn has_memberships_in_common(&self, other_membership: &Membership) -> bool {
+    pub fn has_memberships_in_common(&self, other_membership: &Membership) -> bool {
         !self
             .memberships
             .intersection(&other_membership.memberships)
@@ -89,15 +108,15 @@ impl Membership {
             .is_empty()
     }
 
-    fn grant_access_to_membership(&self, other_membership: &Membership) -> bool {
+    pub fn grant_access_to_membership(&self, other_membership: &Membership) -> bool {
         self.public() || self.has_memberships_in_common(other_membership)
     }
 
-    fn grant_access_to_membership_id(&self, member_id: String) -> bool {
+    pub fn grant_access_to_membership_id(&self, member_id: String) -> bool {
         self.public() || self.memberships.contains(&member_id)
     }
 
-    fn to_json(&self) -> Vec<String> {
+    pub fn to_json(&self) -> Vec<String> {
         self.memberships.iter().map(|mid| mid.clone()).collect()
     }
 }

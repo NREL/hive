@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use pyo3::{prelude::*, types::PyDict};
-use serde::{Deserialize, Serialize};
 
 use crate::{geoid::GeoidString, road_network::LinkId};
 
 #[pyclass]
-#[derive(PartialEq, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Clone)]
 pub struct EntityPosition {
     #[pyo3(get)]
     pub link_id: LinkId,
