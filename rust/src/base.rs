@@ -28,6 +28,26 @@ pub struct Base {
     station_id: Arc<Option<StationId>>,
 }
 
+impl Base {
+    pub fn new(
+        id: BaseId,
+        geoid: GeoidString,
+        road_network: HaversineRoadNetwork,
+        station_id: Option<StationId>,
+        stall_count: usize,
+        membership: Option<Membership>,
+    ) -> Self {
+        Base {
+            id: Arc::new(id),
+            position: Arc::new(road_network.position_from_geoid(geoid)),
+            membership: Arc::new(membership.unwrap_or_default()),
+            total_stalls: Arc::new(stall_count),
+            available_stalls: Arc::new(stall_count),
+            station_id: Arc::new(station_id),
+        }
+    }
+}
+
 #[pymethods]
 impl Base {
     pub fn copy(&self) -> Self {
@@ -81,18 +101,11 @@ impl Base {
         id: BaseId,
         geoid: GeoidString,
         road_network: HaversineRoadNetwork,
-        station_id: Option<StationId>,
         stall_count: usize,
+        station_id: Option<StationId>,
         membership: Option<Membership>,
     ) -> Self {
-        Base {
-            id: Arc::new(id),
-            position: Arc::new(road_network.position_from_geoid(geoid)),
-            membership: Arc::new(membership.unwrap_or_default()),
-            total_stalls: Arc::new(stall_count),
-            available_stalls: Arc::new(stall_count),
-            station_id: Arc::new(station_id),
-        }
+        Base::new(id, geoid, road_network, station_id, stall_count, membership)
     }
 
     #[classmethod]
@@ -101,43 +114,26 @@ impl Base {
         row: HashMap<String, String>,
         road_network: HaversineRoadNetwork,
     ) -> PyResult<Self> {
-        let base_id = match row.get(&"base_id".to_string()) {
-            Some(base_id) => base_id,
-            None => {
-                return Err(PyValueError::new_err(
-                    "cannot load base without a base_id value",
-                ))
-            }
-        }
-        .to_owned();
-        let lat_string = match row.get(&"lat".to_string()) {
-            Some(l) => l,
-            None => {
-                return Err(PyValueError::new_err(
-                    "cannot load base without a lat value",
-                ))
-            }
-        };
+        let base_id = row
+            .get(&"base_id".to_string())
+            .ok_or(PyValueError::new_err(
+                "cannot load base without a base_id value",
+            ))?;
+        let lat_string = row.get(&"lat".to_string()).ok_or(PyValueError::new_err(
+            "cannot load base without a lat value",
+        ))?;
         let lat = lat_string.parse().map_err(|e| PyValueError::new_err(e))?;
 
-        let lon_string = match row.get(&"lon".to_string()) {
-            Some(l) => l,
-            None => {
-                return Err(PyValueError::new_err(
-                    "cannot load base without a lon value",
-                ))
-            }
-        };
+        let lon_string = row.get(&"lon".to_string()).ok_or(PyValueError::new_err(
+            "cannot load base without a lon value",
+        ))?;
         let lon = lon_string.parse().map_err(|e| PyValueError::new_err(e))?;
+        let stall_count_string =
+            row.get(&"stall_count".to_string())
+                .ok_or(PyValueError::new_err(
+                    "cannot load base without a stall count value",
+                ))?;
 
-        let stall_count_string = match row.get(&"stall_count".to_string()) {
-            Some(sc) => sc,
-            None => {
-                return Err(PyValueError::new_err(
-                    "cannot load base without a stall_count value",
-                ))
-            }
-        };
         let stall_count = stall_count_string
             .parse::<usize>()
             .map_err(|e| PyValueError::new_err(e))?;
@@ -152,14 +148,14 @@ impl Base {
         }
         .to_string();
 
-        Ok(Base {
-            id: Arc::new(base_id),
-            position: Arc::new(road_network.position_from_geoid(h3cell.to_string())),
-            membership: Arc::new(Membership::default()),
-            total_stalls: Arc::new(stall_count),
-            available_stalls: Arc::new(stall_count),
-            station_id: Arc::new(Some(station_id)),
-        })
+        Ok(Base::new(
+            base_id.to_owned(),
+            h3cell.to_string(),
+            road_network,
+            Some(station_id),
+            stall_count,
+            Some(Membership::default()),
+        ))
     }
 
     pub fn has_available_stall(&self, membership: Membership) -> bool {
@@ -201,5 +197,44 @@ impl Base {
         let new_membership = Arc::make_mut(&mut new_self.membership);
         *new_membership = new_membership.add_membership(membership_id)?;
         Ok(new_self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use geo_types::coord;
+
+    use super::*;
+
+    fn mock_base() -> Base {
+        let mock_geoid = H3Cell::from_coordinate(coord! {x: 30.0, y: -100.0}, 15)
+            .unwrap()
+            .to_string();
+        let mock_network = HaversineRoadNetwork {
+            sim_h3_resolution: 15,
+        };
+        Base::new(
+            "mock_base".to_string(),
+            mock_geoid,
+            mock_network,
+            None,
+            5,
+            Some(Membership::default()),
+        )
+    }
+
+    #[test]
+    fn test_available_stalls() {
+        let mock_base = mock_base();
+        assert!(mock_base.has_available_stall(Membership::default()) == true)
+    }
+
+    #[test]
+    fn test_checkout_stall() {
+        let mock_base = mock_base();
+        match mock_base.checkout_stall() {
+            Some(base_less_stall) => assert!(base_less_stall.available_stalls() == 4),
+            None => panic!("base should not be None in this case"),
+        }
     }
 }
