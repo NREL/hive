@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nrel.hive"
-version = "1.0.0"
+version = "1.1.0"
 description = "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA."
 readme = "README.md"
 authors = [{ name = "National Renewable Energy Laboratory" }]
@@ -61,6 +61,11 @@ hive-batch = "nrel.hive.app.run_batch:run"
 
 [tool.black]
 line-length = 100
+
+[tool.setuptools.packages.find]
+where = ["."]  # list of folders that contain the packages (["."] by default)
+include = ["nrel*"]  # package names should match these glob patterns (["*"] by default)
+exclude = ["rust*"] 
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
