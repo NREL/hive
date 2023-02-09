@@ -103,7 +103,6 @@ def traverse(
     elif TupleOps.head(route_estimate).start == TupleOps.last(route_estimate).end:
         return None, RouteTraversal()
     else:
-
         # function that steps through the route
         def _traverse(
             acc: Tuple[Optional[Exception], Optional[RouteTraversal]],

@@ -4,7 +4,6 @@ from typing import *
 
 
 class ConfigBuilder:
-
     T = TypeVar("T")
 
     @classmethod

@@ -24,14 +24,12 @@ class InstructionHandler(Handler):
     """
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
-
         log_path = scenario_output_directory / "instruction.log"
         self.log_file = open(log_path, "a")
 
         self.global_config = global_config
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
-
         for report in reports:
             if (
                 report.report_type == ReportType.INSTRUCTION

@@ -76,7 +76,6 @@ class Station(Entity):
         membership: Membership,
         env: Environment,
     ):
-
         # TODO
         # problems with this
         # - mock_station code (and other code) can't call Station.build with a list of

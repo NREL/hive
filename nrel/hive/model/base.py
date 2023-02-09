@@ -59,7 +59,6 @@ class Base(Entity):
         stall_count: int,
         membership: Membership = Membership(),
     ):
-
         position = road_network.position_from_geoid(geoid)
         if position is None:
             raise ValueError("cannot position base on road network")

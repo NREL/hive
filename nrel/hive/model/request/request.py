@@ -170,7 +170,6 @@ class Request(Entity):
             request_id = row["request_id"]
             fleet_id = row.get("fleet_id")
             try:
-
                 o_lat, o_lon = float(row["o_lat"]), float(row["o_lon"])
                 d_lat, d_lon = float(row["d_lat"]), float(row["d_lon"])
                 o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)

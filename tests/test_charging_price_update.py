@@ -103,7 +103,6 @@ class TestChargingPriceUpdate(TestCase):
         fn.reader.close()
 
     def test_charge_price_default_price_is_zero(self):
-
         station = mock_station(
             chargers=immutables.Map(
                 {

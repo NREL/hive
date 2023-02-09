@@ -12,6 +12,7 @@ def global_hive_config_search() -> GlobalConfig:
     searches for the global hive config, and if found, loads it. if not, loads the default from nrel.hive.resources
     :return: global hive config
     """
+
     # this searches up the path to the root of the file system
     def _backprop_search(search_path: Path) -> Optional[Path]:
         try:

@@ -183,7 +183,6 @@ def instruct_vehicles_to_dispatch_to_station(
     instructions: Tuple[Instruction, ...] = ()
 
     for veh in vehicles:
-
         if len(instructions) >= n:
             break
 

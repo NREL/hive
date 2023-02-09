@@ -21,7 +21,6 @@ def driver_schedule_event(
     vehicle: Vehicle,
     schedule_event: ScheduleEventType,
 ) -> Report:
-
     lat, lon = h3.h3_to_geo(vehicle.geoid)
     point_wkt = wkt.point_2d((lat, lon), env.config.global_config.wkt_x_y_ordering)
     next_sim_time = sim.sim_time + sim.sim_timestep_duration_seconds

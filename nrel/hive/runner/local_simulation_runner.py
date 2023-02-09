@@ -61,7 +61,6 @@ class LocalSimulationRunner(NamedTuple):
 
 def _run_step_in_context(env: Environment) -> Callable:
     def _run_step(payload: RunnerPayload, t: int = -1) -> RunnerPayload:
-
         # applies the most recent version of each update function
         updated_payload = payload.u.apply_update(payload)
 

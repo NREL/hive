@@ -47,7 +47,6 @@ class Input(NamedTuple):
 
     @classmethod
     def from_dict(cls, d: Dict, scenario_file_path: Path, cache: Optional[Dict]) -> Input:
-
         # add the (required) directories which should contain
         scenario_directory = scenario_file_path.parent
         scenario_file = scenario_file_path.name

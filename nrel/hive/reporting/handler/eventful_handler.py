@@ -24,14 +24,12 @@ class EventfulHandler(Handler):
     """
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
-
         log_path = scenario_output_directory / "event.log"
         self.log_file = open(log_path, "a")
 
         self.global_config = global_config
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload):
-
         sim_state = runner_payload.s
 
         reports_not_instructions = tuple(

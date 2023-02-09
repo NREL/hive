@@ -93,7 +93,6 @@ class DictReaderIterator:
         return self
 
     def __next__(self):
-
         if self.history:
             # we stored an extra value from last time; return that
             value = self.parser(self.history[self.step_column_name])
