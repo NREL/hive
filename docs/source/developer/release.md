@@ -5,6 +5,10 @@
     - `docs/source/conf.py`
     - `pyproject.toml`
 
+1. Create a new branch and open a PR on GitHub which will run all actions
+
+1. Apply any fixes to make the actions pass 
+
 1. Build the wheel and source distributions:
 
     ```bash
@@ -29,3 +33,5 @@
     git tag -a v<major>.<minor>.<patch> -m "version <major>.<minor>.<patch>"
     git push origin <tagname>
     ```
+
+1. Merge PR 
