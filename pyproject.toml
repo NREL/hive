@@ -46,7 +46,7 @@ dev = [
     "nrel.hive[docs]",
     "pytest",
     "black",
-    "mypy<1",
+    "mypy",
     "twine",
     "types-PyYAML",
     "types-setuptools",

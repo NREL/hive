@@ -57,3 +57,6 @@ lazy_file_reading: False
 
 # If True, well know text inputs are read (X, Y) 
 wkt_x_y_ordering: True
+
+# If True, we print out more detail information in the logs 
+verbose: True
