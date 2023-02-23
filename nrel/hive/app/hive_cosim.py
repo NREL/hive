@@ -56,7 +56,7 @@ def crank(
     :param time_steps: the number of steps to take, using the timestep size set in the HiveConfig
     :param progress_bar: show a progress bar in the console
     :param flush_events: write all requested event logs to their file destinations
-    :param track_charge_events: track vehicle charge events 
+    :param track_charge_events: track vehicle charge events
 
     :return: the updated simulation state and all charge events that occurred
     """
@@ -85,7 +85,7 @@ def crank(
 
             updated_events = events + (new_events,)
         else:
-            updated_events = tuple(pd.DataFrame()) 
+            updated_events = tuple(pd.DataFrame())
 
         return rp1, updated_events
 
