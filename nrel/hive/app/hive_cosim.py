@@ -48,6 +48,7 @@ def crank(
     time_steps: int,
     progress_bar: bool = False,
     flush_events: bool = True,
+    track_charge_events: bool = False,
 ) -> CrankResult:
     """
     advances the previous HIVE state some number of time steps
@@ -55,6 +56,8 @@ def crank(
     :param time_steps: the number of steps to take, using the timestep size set in the HiveConfig
     :param progress_bar: show a progress bar in the console
     :param flush_events: write all requested event logs to their file destinations
+    :param track_charge_events: track vehicle charge events 
+
     :return: the updated simulation state and all charge events that occurred
     """
 
@@ -67,19 +70,22 @@ def crank(
         if flush_events:
             rp1.e.reporter.flush(rp1)
 
-        # output events
-        new_events = None
-        for handler in rp1.e.reporter.handlers:
-            if isinstance(handler, VehicleChargeEventsHandler):
-                new_events = handler.get_events()
-                handler.clear()
+        if track_charge_events:
+            # output events
+            new_events = None
+            for handler in rp1.e.reporter.handlers:
+                if isinstance(handler, VehicleChargeEventsHandler):
+                    new_events = handler.get_events()
+                    handler.clear()
 
-        if new_events is None:
-            raise SimulationStateError(
-                f"VehicleChargeEventsHandler missing from reporter in env {rp1.e}"
-            )
+            if new_events is None:
+                raise SimulationStateError(
+                    f"VehicleChargeEventsHandler missing from reporter in env {rp1.e}"
+                )
 
-        updated_events = events + (new_events,)
+            updated_events = events + (new_events,)
+        else:
+            updated_events = tuple(pd.DataFrame()) 
 
         return rp1, updated_events
 
