@@ -63,14 +63,14 @@ def crank(
 
     steps = tqdm(range(time_steps), position=0) if progress_bar else range(time_steps)
 
-    def run_step(acc: Tuple[RunnerPayload, Tuple[DataFrame, ...]], i: int):
+    def run_step(acc: Tuple[RunnerPayload, Optional[Tuple[DataFrame, ...]]], i: int):
         rp0, events = acc
         # regular step
         rp1 = rp0.u.apply_update(rp0)
         if flush_events:
             rp1.e.reporter.flush(rp1)
 
-        if track_charge_events:
+        if track_charge_events and events is not None:
             # output events
             new_events = None
             for handler in rp1.e.reporter.handlers:
@@ -85,13 +85,16 @@ def crank(
 
             updated_events = events + (new_events,)
         else:
-            updated_events = tuple(pd.DataFrame())
+            updated_events = None
 
         return rp1, updated_events
 
     initial = (runner_payload, ())
     next_state, unmerged_events = ft.reduce(run_step, steps, initial)
-    events = pd.concat(unmerged_events)
+    if unmerged_events is not None:
+        events = pd.concat(unmerged_events)
+    else:
+        events = pd.DataFrame()
     result = CrankResult(next_state, next_state.s.sim_time, events)
     return result
 
