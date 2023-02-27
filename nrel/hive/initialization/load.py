@@ -29,6 +29,7 @@ T = TypeVar("T", bound=InstructionGenerator)
 
 def load_config(
     scenario_file: Union[Path, str],
+    output_suffix: Optional[str] = None
 ) -> HiveConfig:
     try:
         scenario_file_path = fs.find_scenario(str(scenario_file))
@@ -39,7 +40,7 @@ def load_config(
     with scenario_file_path.open("r") as f:
         config_builder = yaml.safe_load(f)
 
-    config_or_error = HiveConfig.build(scenario_file_path, config_builder)
+    config_or_error = HiveConfig.build(scenario_file_path, config_builder, output_suffix)
     if isinstance(config_or_error, Exception):
         log.exception("attempted to load scenario config file but failed")
         raise config_or_error
