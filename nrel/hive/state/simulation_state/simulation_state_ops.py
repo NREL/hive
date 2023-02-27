@@ -450,7 +450,7 @@ def pop_vehicle_safe(
         if isinstance(remove_result, Failure):
             response = SimulationStateError(f"failure in pop_vehicle for vehicle {vehicle_id}")
             response.__cause__ = remove_result.failure()
-            return Failure(error)
+            return Failure(response)
         else:
             return Success((remove_result.unwrap(), vehicle))
 

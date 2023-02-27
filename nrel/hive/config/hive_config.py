@@ -35,7 +35,7 @@ class HiveConfig(NamedTuple):
         cls,
         scenario_file_path: Path,
         config: Optional[Dict] = None,
-        output_suffix: Optional[str] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+        output_suffix: Optional[str] = None,
     ) -> Union[Exception, HiveConfig]:
         """
         builds a hive config by reading from a scenario file. optionally append additional key/value
@@ -68,9 +68,12 @@ class HiveConfig(NamedTuple):
         root_logger = logging.getLogger("")
         root_logger.setLevel(global_config.log_level)
 
-        log.info(f"global hive configuration loaded from {global_config.global_settings_file_path}")
-        for k, v in global_config.asdict().items():
-            log.info(f"  {k}: {v}")
+        if global_config.verbose:
+            log.info(
+                f"global hive configuration loaded from {global_config.global_settings_file_path}"
+            )
+            for k, v in global_config.asdict().items():
+                log.info(f"  {k}: {v}")
 
         # start build using the Hive config defaults file
         defaults_file_str = pkg_resources.resource_filename(
@@ -98,11 +101,10 @@ class HiveConfig(NamedTuple):
             nconfig = Network.build(conf.get("network"))
             dconfig = DispatcherConfig.build(conf.get("dispatcher"))
 
-            scenario_name = (
-                sconfig.sim_name + "_" + output_suffix
-                if output_suffix is not None
-                else sconfig.sim_name
-            )
+            if output_suffix is None:
+                output_suffix = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+            scenario_name = sconfig.sim_name + "_" + output_suffix
             scenario_output_directory = Path(global_config.output_base_directory) / Path(
                 scenario_name
             )
@@ -116,9 +118,10 @@ class HiveConfig(NamedTuple):
                 scenario_output_directory=scenario_output_directory,
             )
 
-            log.info(f"output directory set to {hive_config.input_config.scenario_directory}")
-            log.info(f"hive config loaded from {str(scenario_file_path)}")
-            log.info(f"\n{yaml.dump(conf)}")
+            if global_config.verbose:
+                log.info(f"output directory set to {hive_config.input_config.scenario_directory}")
+                log.info(f"hive config loaded from {str(scenario_file_path)}")
+                log.info(f"\n{yaml.dump(conf)}")
 
             return hive_config
 

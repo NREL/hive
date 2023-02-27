@@ -40,7 +40,6 @@ def load_scenario(
 class CrankResult(NamedTuple):
     runner_payload: RunnerPayload
     sim_time: SimTime
-    charge_events: DataFrame
 
 
 def crank(
@@ -55,38 +54,23 @@ def crank(
     :param time_steps: the number of steps to take, using the timestep size set in the HiveConfig
     :param progress_bar: show a progress bar in the console
     :param flush_events: write all requested event logs to their file destinations
+
     :return: the updated simulation state and all charge events that occurred
     """
 
     steps = tqdm(range(time_steps), position=0) if progress_bar else range(time_steps)
 
-    def run_step(acc: Tuple[RunnerPayload, Tuple[DataFrame, ...]], i: int):
-        rp0, events = acc
+    def run_step(rp0: RunnerPayload, i: int):
         # regular step
         rp1 = rp0.u.apply_update(rp0)
         if flush_events:
             rp1.e.reporter.flush(rp1)
 
-        # output events
-        new_events = None
-        for handler in rp1.e.reporter.handlers:
-            if isinstance(handler, VehicleChargeEventsHandler):
-                new_events = handler.get_events()
-                handler.clear()
+        return rp1
 
-        if new_events is None:
-            raise SimulationStateError(
-                f"VehicleChargeEventsHandler missing from reporter in env {rp1.e}"
-            )
-
-        updated_events = events + (new_events,)
-
-        return rp1, updated_events
-
-    initial = (runner_payload, ())
-    next_state, unmerged_events = ft.reduce(run_step, steps, initial)
-    events = pd.concat(unmerged_events)
-    result = CrankResult(next_state, next_state.s.sim_time, events)
+    initial = runner_payload
+    next_state = ft.reduce(run_step, steps, initial)
+    result = CrankResult(next_state, next_state.s.sim_time)
     return result
 
 

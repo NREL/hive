@@ -76,7 +76,9 @@ def complete_trip_phase(
 
     if not vehicle.vehicle_state.vehicle_state_type == VehicleStateType.SERVICING_POOLING_TRIP:
         return (
-            Exception(f"vehicle state is not ServicingPoolingTrip but {type(vehicle_state)}"),
+            Exception(
+                f"vehicle state is not ServicingPoolingTrip but {type(vehicle.vehicle_state)}"
+            ),
             None,
         )
     else:
