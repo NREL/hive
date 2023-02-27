@@ -27,10 +27,7 @@ log = logging.getLogger(__name__)
 T = TypeVar("T", bound=InstructionGenerator)
 
 
-def load_config(
-    scenario_file: Union[Path, str],
-    output_suffix: Optional[str] = None
-) -> HiveConfig:
+def load_config(scenario_file: Union[Path, str], output_suffix: Optional[str] = None) -> HiveConfig:
     try:
         scenario_file_path = fs.find_scenario(str(scenario_file))
     except FileNotFoundError as fe:

@@ -21,7 +21,7 @@ def load_scenario(
     scenario_file: Path,
     custom_instruction_generators: Optional[Tuple[T, ...]] = None,
     custom_init_functions: Optional[Iterable[InitFunction]] = None,
-    output_suffix: Optional[str] = None
+    output_suffix: Optional[str] = None,
 ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state

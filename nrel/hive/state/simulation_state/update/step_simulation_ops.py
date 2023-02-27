@@ -158,10 +158,7 @@ def apply_instructions(
         results.append(result)
 
     for instruction_result in results:
-        (
-            update_error,
-            updated_sim,
-        ) = entity_state_ops.transition_previous_to_next(
+        (update_error, updated_sim,) = entity_state_ops.transition_previous_to_next(
             sim, env, instruction_result.prev_state, instruction_result.next_state
         )
         if update_error:
