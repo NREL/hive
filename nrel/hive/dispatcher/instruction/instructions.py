@@ -150,7 +150,10 @@ class DispatchPoolingTripInstruction(Instruction):
             error = InstructionError(msg)
             return error, None
         else:
-            (disp_error, next_state,) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
+            (
+                disp_error,
+                next_state,
+            ) = dispatch_ops.begin_or_replan_dispatch_pooling_state(
                 sim_state, self.vehicle_id, self.trip_plan
             )
             if disp_error is not None:
