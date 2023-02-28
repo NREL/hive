@@ -21,6 +21,7 @@ def load_scenario(
     scenario_file: Path,
     custom_instruction_generators: Optional[Tuple[T, ...]] = None,
     custom_init_functions: Optional[Iterable[InitFunction]] = None,
+    output_suffix: Optional[str] = None,
 ) -> RunnerPayload:
     """
     load a HIVE scenario from file and return the initial simulation state
@@ -28,7 +29,7 @@ def load_scenario(
     :return: the initial simulation state payload
     :raises: Error when issues with files
     """
-    config = load_config(scenario_file)
+    config = load_config(scenario_file, output_suffix)
     initial_payload = load_simulation(config, custom_instruction_generators, custom_init_functions)
 
     # add a specialized Reporter handler that catches vehicle charge events
