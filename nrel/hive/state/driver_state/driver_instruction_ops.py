@@ -89,9 +89,9 @@ def human_go_home(
     env: Environment,
 ) -> Optional[Instruction]:
     """
-    human drivers go home at the end of their shift.
-    edge case: vehicles may not have enough remaining range to
-    reach their home from their current location.
+    Human drivers go home at the end of their shift.
+    For drivers can't make it home without charging, or, drivers without home charging,
+    they charge at the end of the shift to the config.dispatcher.human_driver_off_shift_charge_target
 
     :param veh: the vehicle ending their shift
     :param home_base: the vehicle's home
@@ -107,43 +107,30 @@ def human_go_home(
     remaining_range = mechatronics.range_remaining_km(veh) if mechatronics else None
     if not remaining_range:
         return None
+
+    # lets check if the driver can make it home without running out of energy
+    required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
+    cant_make_it_home = required_range >= remaining_range
+
+    # lets also check if the driver if the driver has home charging
+    no_home_charging = (home_base.station_id is None) and (EnergyType.ELECTRIC in veh.energy)
+
+    if cant_make_it_home or no_home_charging:
+        # vehicle needs to charge on the way home
+        charge_instructions = instruct_vehicles_to_dispatch_to_station(
+            n=1,
+            max_search_radius_km=env.config.dispatcher.max_search_radius_km,
+            vehicles=(veh,),
+            simulation_state=sim,
+            environment=env,
+            target_soc=env.config.dispatcher.human_driver_off_shift_charge_target,
+            charging_search_type=env.config.dispatcher.charging_search_type,
+        )
+        return TupleOps.head_optional(charge_instructions)
     else:
-        required_range = sim.road_network.distance_by_geoid_km(veh.geoid, home_base.geoid)
-        if (home_base.station_id is None) and (EnergyType.ELECTRIC in veh.energy):
-            # no charger at home, need enough charge to make it to a station in the morning
-            required_range += get_nearest_valid_station_distance(
-                max_search_radius_km=env.config.dispatcher.max_search_radius_km,
-                vehicle=veh,
-                geoid=home_base.geoid,
-                simulation_state=sim,
-                environment=env,
-                target_soc=env.config.dispatcher.ideal_fastcharge_soc_limit,
-                charging_search_type=env.config.dispatcher.charging_search_type,
-            )
-
-            target_soc = mechatronics.calc_required_soc(
-                required_range + env.config.dispatcher.charging_range_km_threshold
-            )
-        else:
-            target_soc = env.config.dispatcher.ideal_fastcharge_soc_limit
-
-        if required_range < remaining_range:
-            # has enough remaining range to make it home sweet home (and possibly a station in the morning)
-            instruction = DispatchBaseInstruction(veh.id, home_base.id)
-            return instruction
-        else:
-            # needs to go charge on the way home
-            charge_instructions = instruct_vehicles_to_dispatch_to_station(
-                n=1,
-                max_search_radius_km=env.config.dispatcher.max_search_radius_km,
-                vehicles=(veh,),
-                simulation_state=sim,
-                environment=env,
-                target_soc=target_soc,
-                charging_search_type=env.config.dispatcher.charging_search_type,
-            )
-
-            return TupleOps.head_optional(charge_instructions)
+        # has enough remaining range to make it home sweet home
+        instruction = DispatchBaseInstruction(veh.id, home_base.id)
+        return instruction
 
 
 def human_look_for_requests(
