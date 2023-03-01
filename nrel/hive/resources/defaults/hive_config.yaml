@@ -22,6 +22,7 @@ dispatcher:
   charging_range_km_soft_threshold: 50          # ignore charging at stations when remaining range is greater than 50km
   base_charging_range_km_threshold: 100         # ignore base charging at bases more than 100 km away
   ideal_fastcharge_soc_limit: 0.8               # fast charging can finish when 80% state-of-charge is reached
+  human_driver_off_shift_charge_target: 1.0     # human drivers w/out home charging will charge to this SOC post shift 
   max_search_radius_km: 100.0                   # when searching, ignore entities that are further than 100km away
   valid_dispatch_states:                        # allow agents to service a trip coming only from these vehicle states
     - idle
