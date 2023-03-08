@@ -27,7 +27,7 @@ dependencies = [
     "PyYAML",
     "tqdm",
     "rich",
-    "h3>=3.7.1",
+    "h3 < 4",
     "scipy",
     "returns",
 ]
