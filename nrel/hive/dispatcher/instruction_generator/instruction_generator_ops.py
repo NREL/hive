@@ -183,7 +183,6 @@ def instruct_vehicles_to_dispatch_to_station(
     instructions: Tuple[Instruction, ...] = ()
 
     for veh in vehicles:
-        
         if len(instructions) >= n:
             break
 
@@ -290,7 +289,6 @@ def get_nearest_valid_station_distance(
     :param charging_search_type: the type of search to conduct
     :return: the distance in km to the nearest valid station
     """
-
 
     valid_stations = simulation_state.get_stations(
         filter_function=lambda s: s.membership.grant_access_to_membership(vehicle.membership)
