@@ -186,6 +186,12 @@ def instruct_vehicles_to_dispatch_to_station(
         if len(instructions) >= n:
             break
 
+        valid_stations = simulation_state.get_stations(
+            filter_function=lambda s: s.membership.grant_access_to_membership(veh.membership)
+        )
+        if len(valid_stations) == 0:
+            break
+
         if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
             # use the simple weighted euclidean distance ranking
 
@@ -203,7 +209,7 @@ def instruct_vehicles_to_dispatch_to_station(
 
         nearest_station = H3Ops.nearest_entity(
             geoid=veh.geoid,
-            entities=simulation_state.stations.values(),
+            entities=valid_stations,
             entity_search=simulation_state.s_search,
             sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
             max_search_distance_km=max_search_radius_km,
@@ -283,6 +289,12 @@ def get_nearest_valid_station_distance(
     :param charging_search_type: the type of search to conduct
     :return: the distance in km to the nearest valid station
     """
+
+    valid_stations = simulation_state.get_stations(
+        filter_function=lambda s: s.membership.grant_access_to_membership(vehicle.membership)
+    )
+    if len(valid_stations) == 0:
+        return 99999999999999
 
     if charging_search_type == ChargingSearchType.NEAREST_SHORTEST_QUEUE:
         # use the simple weighted euclidean distance ranking
