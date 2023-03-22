@@ -303,6 +303,18 @@ If you have found HIVE useful for your research, please cite our [technical repo
 }
 ```
 
+## Contributors
+
+HIVE is currently maintained by Nick Reinicke ([@nreinicke] (https://github.com/nreinicke)) and Rob Fitzgerald ([@robfitzgerald](https://github.com/robfitzgerald)). It would not be what it is today without the support of: 
+- Brennan Borlaug
+- Thomas Grushka
+- Jacob Holden
+- Joshua Hoshiko
+- Eleftheria Kontou
+- Matthew Moniot
+- Eric Wood
+- Clement Raimes
+
 ## Notice
 
 Copyright © 2022 Alliance for Sustainable Energy, LLC, Inc. All Rights Reserved
