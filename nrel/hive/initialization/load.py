@@ -91,8 +91,8 @@ def load_simulation(
 
     if custom_instruction_generators is None:
         instruction_generators = (
-            ChargingFleetManager(env.config.dispatcher),
             Dispatcher(env.config.dispatcher),
+            ChargingFleetManager(env.config.dispatcher),
         )
         update = Update.build(env.config, instruction_generators)
     else:
