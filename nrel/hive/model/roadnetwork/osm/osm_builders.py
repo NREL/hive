@@ -19,6 +19,7 @@ def osm_graph_from_polygon(polygon):
     G = ox.utils_graph.get_largest_component(G, strongly=True)
 
     G = ox.add_edge_speeds(G)
+    G = ox.add_edge_travel_times(G)
 
     # remove any unnecessary information
     for _, _, d in G.edges(data=True):
@@ -37,6 +38,10 @@ def osm_graph_from_polygon(polygon):
             del d["highway"]
         if "lanes" in d:
             del d["lanes"]
+        if "maxspeed" in d:
+            del d["maxspeed"]
+        if "ref" in d:
+            del d["ref"]
 
     for _, d in G.nodes(data=True):
         if "highway" in d:
