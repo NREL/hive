@@ -11,10 +11,25 @@ HIVE supports researchers who explore **Electric Vehicle (EV) fleet control**, *
 Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning.
 HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity energy estimation over arbitrary road networks and demand scenarios.
 
+For more information about HIVE, please visit the [HIVE website](https://www.nrel.gov/hive).
+
+For technical details about the HIVE platform, please see the [Technical Report](https://www.nrel.gov/docs/fy21osti/80682.pdf).
+
+For more documentation on how to use HIVE, please see the [HIVE documentation](https://nrelhive.readthedocs.io/en/latest/).
+
 ## Installation
 
 HIVE depends on a Python installation [3.7, 3.8, 3.9, 3.10] and the pip package manager ( [python.org](https://www.python.org/downloads/).
-In our installation example we use [conda](https://www.anaconda.com/products/distribution) | [miniconda](https://docs.conda.io/en/latest/miniconda.html) for managing a HIVE Python environment.
+In our installation example we use [conda](https://www.anaconda.com/products/distribution) |  for managing a HIVE Python environment.
+
+### (optional) set up a virtual environment using conda
+
+We recommend setting up a virtual environment to install HIVE.
+One way to do this is to use Anaconda:
+    1. Install [Anaconda](https://www.anaconda.com/products/distribution) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+    1. Open a terminal or Anaconda Prompt.
+    1. Create a new virtual environment: `conda create --name hive python=3.10`
+    1. Activate the virtual environment `conda activate hive`
 
 ### via pip
 
@@ -22,18 +37,8 @@ In our installation example we use [conda](https://www.anaconda.com/products/dis
 
 ### build from source
 
-Via conda, create a dedicated 'hive' Python environment:
-
-    > conda create -n hive python=3.8 
-    > conda activate hive
-
-to run tests, also install `pytest`:
-
-    > pip install pytest
-
-to load hive as a command line application along with all dependencies into your conda environment:
-
-    > git clone https://github.com/NREL/hive.git
+Clone the repository and install the code via pip:
+    > git clone <https://github.com/NREL/hive.git>
     > cd hive
     > pip install -e .
 
@@ -59,30 +64,7 @@ denver_demo_constrained_charging.yaml | default scenario with limited charging s
 denver_demo_fleets.yaml | default scenario with two competing TNC fleets
 manhattan.yaml | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset
 
-## Scenario configuration
-
-Scenarios are run by reading a YAML file describing the parameters of the simulation. The files list all scenario-specific parameters but can fall back to defaults set [here](https://github.com/NREL/hive/blob/main/nrel/hive/resources/defaults/hive_config.yaml).
-
-Scenario YAML files organize a list of resource files to use as input. If a file resource is listed which doesn't resolve to a local file path, HIVE will search for a default resource [here](nrel/hive/resources). By default, HIVE expects file resources stored in a directory matching their resource type. For example, using the [default Denver scenario](nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml):
-
-```yaml
-...
-input:
-  vehicles_file: denver_demo_vehicles.csv  # vehicles/denver_demo_vehicles.csv
-  requests_file: denver_demo_requests.csv  # requests/denver_demo_requests.csv
-  bases_file: denver_demo_bases.csv        # bases/denver_demo_bases.csv
-...
-```
-
-For a description of file contents and schemas, please read our [technical report](https://www.nrel.gov/docs/fy21osti/80682.pdf). Example scenario and resource data can be found [here](nrel/hive/resources).  
-
-## Global configuration
-
-Some values are set by a global configuration file with filename `.hive.yaml`.
-The defaults are set in the repo [here](nrel/hive/resources/defaults/.hive.yaml).
-If you want to override any entries in this file, you can create a new one by the same name `.hive.yaml` and place it in your working directory or a parent directory.
-Hive will also check your base user directory for this file (aka `~/.hive.yaml`).
-This can be useful if you would like to reduce the output files or change the default output base directory (for example, to something like `~/hive/output`).
+For more information on how to build your own scenario, please see the [HIVE documentation](https://nrelhive.readthedocs.io/en/latest/inputs.html).
 
 ## Dependencies
 
@@ -305,7 +287,8 @@ If you have found HIVE useful for your research, please cite our [technical repo
 
 ## Contributors
 
-HIVE is currently maintained by Nick Reinicke ([@nreinicke] (https://github.com/nreinicke)) and Rob Fitzgerald ([@robfitzgerald](https://github.com/robfitzgerald)). It would not be what it is today without the support of: 
+HIVE is currently maintained by Nick Reinicke ([@nreinicke] (<https://github.com/nreinicke>)) and Rob Fitzgerald ([@robfitzgerald](https://github.com/robfitzgerald)). It would not be what it is today without the support of:
+
 - Brennan Borlaug
 - Thomas Grushka
 - Jacob Holden
@@ -317,6 +300,6 @@ HIVE is currently maintained by Nick Reinicke ([@nreinicke] (https://github.com/
 
 ## Notice
 
-Copyright © 2022 Alliance for Sustainable Energy, LLC, Inc. All Rights Reserved
+Copyright © 2023 Alliance for Sustainable Energy, LLC, Inc. All Rights Reserved
 
 This computer software was produced by Alliance for Sustainable Energy, LLC under Contract No. DE-AC36-08GO28308 with the U.S. Department of Energy. For 5 years from the date permission to assert copyright was obtained, the Government is granted for itself and others acting on its behalf a nonexclusive, paid-up, irrevocable worldwide license in this software to reproduce, prepare derivative works, and perform publicly and display publicly, by or on behalf of the Government. There is provision for the possible extension of the term of this license. Subsequent to that period or any extension granted, the Government is granted for itself and others acting on its behalf a nonexclusive, paid-up, irrevocable worldwide license in this software to reproduce, prepare derivative works, distribute copies to the public, perform publicly and display publicly, and to permit others to do so. The specific term of the license can be identified by inquiry made to Contractor or DOE. NEITHER ALLIANCE FOR SUSTAINABLE ENERGY, LLC, THE UNITED STATES NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
