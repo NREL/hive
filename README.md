@@ -85,7 +85,7 @@ Beyond these, HIVE uses Uber H3, a geospatial index which HIVE uses for position
 
 ## Developer documentation
 
-Documentation can be found [here](https://readthedocs.org/nrel-hive).
+Documentation can be found [here](https://nrelhive.readthedocs.io/en/latest/developer/index.html).
 
 ## Why HIVE?
 
