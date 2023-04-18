@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nrel.hive"
-version = "1.2.1"
+version = "1.2.2"
 description = "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA."
 readme = "README.md"
 authors = [{ name = "National Renewable Energy Laboratory" }]

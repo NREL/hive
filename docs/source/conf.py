@@ -23,7 +23,7 @@ copyright = "2022, NREL"
 author = "NREL"
 
 # The full version, including alpha/beta/rc tags
-release = "v1.2.1"
+release = "v1.2.2"
 
 # -- General configuration ---------------------------------------------------
 
