@@ -39,11 +39,6 @@ In addition to the scenario config yaml file, each scenario has several other fi
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/fleets/README.md
 ```
 
-### Geofence
-
-```{include} ../../nrel/hive/resources/scenarios/denver_downtown/geofence/README.md
-```
-
 ### Mechatronics
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/mechatronics/README.md
@@ -76,7 +71,7 @@ In addition to the scenario config yaml file, each scenario has several other fi
 
 ### Vehicles
 
-```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/vehicles/README.md
 ```
 
 ## Global Config

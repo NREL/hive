@@ -1,4 +1,4 @@
-Charging prices can be specified in two different ways:
+Charging prices are specified in a csv file and can be specified two different ways:
 
 1. Price per station with the following fields:
     - `time`: the time when the price becomes valid (allows for varible price schemes) 

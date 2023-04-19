@@ -1,4 +1,4 @@
-Requests are specified as one request per line with the following fields:
+Requests are specified as one request per csv line with the following fields:
 
 - `request_id`: the unique request identifier
 - `o_lat`: the latitude of the request origin
