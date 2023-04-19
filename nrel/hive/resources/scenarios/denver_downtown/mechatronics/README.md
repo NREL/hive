@@ -2,7 +2,7 @@ Mechatronics refers to the vehicle level parameters and is specified with a yaml
 
 Each key in this file refers to a mechatronics id and each sub key is a specific parameter of that mechatronics type.
 
-For example, let’s say we have the mechatronics file:
+For example, let’s say we have this mechatronics file:
 
 
 ```yaml
