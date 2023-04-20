@@ -25,7 +25,6 @@ class Input(NamedTuple):
     geofence_file: Optional[str] = None
     rate_structure_file: Optional[str] = None
     charging_price_file: Optional[str] = None
-    demand_forecast_file: Optional[str] = None
     fleets_file: Optional[str] = None
 
     @classmethod
@@ -108,15 +107,6 @@ class Input(NamedTuple):
             if d.get("charging_price_file")
             else None
         )
-        demand_forecast_file = (
-            fs.construct_scenario_asset_path(
-                d["demand_forecast_file"],
-                scenario_directory,
-                "demand_forecast",
-            )
-            if d.get("demand_forecast_file")
-            else None
-        )
         fleets_file = (
             fs.construct_scenario_asset_path(d["fleets_file"], scenario_directory, "fleets")
             if d.get("fleets_file")
@@ -137,7 +127,6 @@ class Input(NamedTuple):
             "geofence_file": geofence_file,
             "rate_structure_file": rate_structure_file,
             "charging_price_file": charging_price_file,
-            "demand_forecast_file": demand_forecast_file,
             "fleets_file": fleets_file,
         }
 
@@ -164,7 +153,6 @@ class Input(NamedTuple):
             geofence_file=geofence_file,
             rate_structure_file=rate_structure_file,
             charging_price_file=charging_price_file,
-            demand_forecast_file=demand_forecast_file,
             fleets_file=fleets_file,
         )
 

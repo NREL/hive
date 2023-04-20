@@ -49,17 +49,11 @@ input:
   # (optional) only used with `network_type: osm_network`
   road_network_file: downtown_denver_network.json
 
-  # (optional) outline a geofence for control purposes
-  geofence_file: downtown_denver.geojson
-
   # (optional) defaults to zero cost if not specified
   rate_structure_file: rate_structure.csv
 
   # (optional) defaults to zero cost if not specified
   charging_price_file: denver_charging_prices_by_geoid.csv
-
-  # (optional) default is no demand forecasting
-  demand_forecast_file: denver_demand.csv
 
 dispatcher:
 

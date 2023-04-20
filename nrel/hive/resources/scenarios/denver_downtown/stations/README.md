@@ -1,4 +1,4 @@
-Stations are specified as one station per line in the file with the following fields:
+Stations are specified as one station per csv line in the file with the following fields:
 
 - `station_id`: a unique identifier for the station
 - `lat`: the latitude of the station location

@@ -4,7 +4,6 @@ input:
   geofence_file: null                           # default is to have no geofencing
   rate_structure_file: null                     # default is $0.00 for all services
   charging_price_file: null                     # default is $0.00 for any charging
-  demand_forecast_file: null                    # default is no demand forecasting
 sim:
   timestep_duration_seconds: 60                 # default is to advance time 1 minute between dispatcher updates
   sim_h3_resolution: 15                         # default is to store GeoIds at h3 resolution 15 (approx 1 meter hexes)

@@ -2,7 +2,7 @@ Fleets are specified with a yaml file.
 
 Each key represents the identifies of a fleet and then each sub key represents which entities are part of that fleet.
 
-For example, let's say we have the fleet file:
+For example, let's say we have this fleet file:
 
 ```yaml
 tnc_1:
