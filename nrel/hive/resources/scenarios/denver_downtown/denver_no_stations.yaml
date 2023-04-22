@@ -28,23 +28,23 @@ sim:
 
 network:
   # (required) what type of network to use; options: osm_network | euclidean
-  network_type: euclidean 
+  network_type: osm_network
 
   # (optional) if no speed exists in the road network data input, we fill it in with this value;
   default_speed_kmph: 40.0
 
 input:
   # (required)
-  vehicles_file: denver_demo_vehicles.csv
+  vehicles_file: denver_demo_vehicles_no_stations.csv
 
   # (required)
   requests_file: denver_demo_requests.csv
 
   # (required)
-  bases_file: denver_demo_bases.csv
+  bases_file: denver_demo_no_stations.csv
 
   # (required)
-  stations_file: denver_demo_stations.csv
+  stations_file: denver_demo_no_stations.csv
 
   # (optional) only used with `network_type: osm_network`
   road_network_file: downtown_denver_network.json
@@ -56,19 +56,16 @@ input:
   charging_price_file: denver_charging_prices_by_geoid.csv
 
 dispatcher:
-
-
-  # (optional) how often should we issue dispatching instructions?  
+  # (optional) how often should we issue dispatching instructions?
   default_update_interval_seconds: 600
 
-
-  # (optional) ingnore searching for any entity beyond this threshold  
+  # (optional) ingnore searching for any entity beyond this threshold
   max_search_radius_km: 100.0
 
   ## Parameters for the default matching dispatcher
 
-  # (optional) don't match requests to vehicles beyond this range 
-  matching_range_km_threshold: 20 
+  # (optional) don't match requests to vehicles beyond this range
+  matching_range_km_threshold: 20
 
   # (optional) which states will the default matching dispatcher consider valid?
   valid_dispatch_states:
@@ -77,23 +74,22 @@ dispatcher:
 
   ## Parameters for the default charging dispatcher
 
-  # (optional) how to search for stations? nearest_shortest_queue | shortest_time_to_charge 
-  charging_search_type: nearest_shortest_queue 
+  # (optional) how to search for stations? nearest_shortest_queue | shortest_time_to_charge
+  charging_search_type: nearest_shortest_queue
 
   # (optional) ignore charging at stations when remaining range is greater than this plus the nearest station distance
-  charging_range_km_threshold: 20               
+  charging_range_km_threshold: 20
 
-  # (optional) ignore charging at stations when remaining range is greater than this 
-  charging_range_km_soft_threshold: 50          
+  # (optional) ignore charging at stations when remaining range is greater than this
+  charging_range_km_soft_threshold: 50
 
-  # (optional) ignore base charging at bases more than this threshold 
-  base_charging_range_km_threshold: 100         
-
+  # (optional) ignore base charging at bases more than this threshold
+  base_charging_range_km_threshold: 100
 
   ## Parameters for the driver control
 
-  # (optional) SOC target for fast charging at a station 
+  # (optional) SOC target for fast charging at a station
   ideal_fastcharge_soc_limit: 0.8
 
-  # (optional) how long do drivers idle before returning to a base?  
+  # (optional) how long do drivers idle before returning to a base?
   idle_time_out_seconds: 1800

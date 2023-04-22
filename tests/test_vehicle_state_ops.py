@@ -43,7 +43,6 @@ class TestVehicleStateOps(TestCase):
         )
 
     def test_charge(self):
-
         state = ChargingBase.build(
             DefaultIds.mock_vehicle_id(),
             DefaultIds.mock_base_id(),
@@ -73,7 +72,6 @@ class TestVehicleStateOps(TestCase):
         )
 
     def test_charge_when_full(self):
-
         state = ChargingBase.build(
             DefaultIds.mock_vehicle_id(),
             DefaultIds.mock_base_id(),

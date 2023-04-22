@@ -1,4 +1,4 @@
-Vehicles are specified as one vehicle per line with the following fields:
+Vehicles are specified as one vehicle per csv line with the following fields:
 
 - `vehicle_id`: a unique id for the vehicle
 - `lat`: the latitude of the vehicle starting location

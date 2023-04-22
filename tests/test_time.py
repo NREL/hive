@@ -17,7 +17,6 @@ class TestUpdateRequests(TestCase):
         self.assertEqual(t4, time(hour=13, minute=0, second=0))
 
     def test_read_time_string_bad_time_values(self):
-
         with self.assertRaises(ValueError):
             read_time_string("24:00:00")
         with self.assertRaises(ValueError):

@@ -2,8 +2,9 @@
 
 ## Scenario Config
 
-The main simulation input is a yaml file that contains a bunch of parameters for running a scenario.
-On example of a scenario file can be found at `nrel.hive.resources.scenarios.denver_demo.yaml`:
+Scenarios are run by reading a YAML file describing the parameters of the simulation. The files list all scenario-specific parameters but can fall back to defaults set [here](https://github.com/NREL/hive/blob/main/nrel/hive/resources/defaults/hive_config.yaml).
+
+Scenario YAML files organize a list of resource files to use as input. If a file resource is listed which doesn't resolve to a local file path, HIVE will search for a default resource [here](nrel/hive/resources). By default, HIVE expects file resources stored in a directory matching their resource type.
 
 ```{note}
 some inputs in hive are optional and will fall back to defaults if not specified; here we will denote whether the
@@ -33,49 +34,44 @@ In addition to the scenario config yaml file, each scenario has several other fi
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/charging_prices/README.md
 ```
 
-### Fleets 
+### Fleets
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/fleets/README.md
 ```
 
-### Geofence 
-
-```{include} ../../nrel/hive/resources/scenarios/denver_downtown/geofence/README.md
-```
-
-### Mechatronics 
+### Mechatronics
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/mechatronics/README.md
 ```
 
-### Requests 
+### Requests
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/requests/README.md
 ```
 
-### Road Network 
+### Road Network
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/road_network/README.md
 ```
 
-### Service Prices 
+### Service Prices
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/service_prices/README.md
 ```
 
-### Stations 
+### Stations
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
 ```
 
-### Stations 
+### Stations
 
 ```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
 ```
 
-### Vehicles 
+### Vehicles
 
-```{include} ../../nrel/hive/resources/scenarios/denver_downtown/stations/README.md
+```{include} ../../nrel/hive/resources/scenarios/denver_downtown/vehicles/README.md
 ```
 
 ## Global Config

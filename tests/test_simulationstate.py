@@ -492,7 +492,6 @@ class TestSimulationState(TestCase):
         )
 
     def test_vehicle_runs_out_of_energy(self):
-
         low_energy_veh = mock_vehicle_from_geoid(soc=0.01)
         sim = mock_sim(vehicles=(low_energy_veh,), sim_timestep_duration_seconds=3600)
 

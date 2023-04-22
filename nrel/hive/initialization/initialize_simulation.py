@@ -275,7 +275,6 @@ def vehicle_init_function(
     )
 
     def _collect_vehicle(row: Dict[str, str]) -> Optional[Vehicle]:
-
         veh = Vehicle.from_row(row, simulation_state.road_network, environment)
 
         if vehicle_member_ids is not None:

@@ -74,7 +74,6 @@ class TabularPowercurve(Powercurve):
         power_kw: Kw,
         duration_seconds: Seconds = 1,  # seconds
     ) -> Tuple[KwH, Seconds]:
-
         """
         (estimated) energy rate due to fueling, based on an interpolated tabular lookup model
 

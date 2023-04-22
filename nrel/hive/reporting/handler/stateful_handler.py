@@ -18,7 +18,6 @@ class StatefulHandler(Handler):
     """
 
     def __init__(self, global_config: GlobalConfig, scenario_output_directory: Path):
-
         log_path = scenario_output_directory / "state.log"
         self.log_file = open(log_path, "a")
 

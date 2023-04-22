@@ -138,7 +138,6 @@ class ChargeQueueing(VehicleState):
                 None,
             )
         else:
-
             error, updated_station = station.dequeue_for_charger(self.charger_id)
             if error is not None:
                 return error, None

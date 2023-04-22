@@ -30,6 +30,8 @@ from nrel.hive.state.vehicle_state.charging_base import ChargingBase
 from nrel.hive.state.vehicle_state.charging_station import ChargingStation
 from nrel.hive.state.vehicle_state.dispatch_base import DispatchBase
 from nrel.hive.state.vehicle_state.dispatch_station import DispatchStation
+from nrel.hive.state.vehicle_state.out_of_service import OutOfService
+from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import SimulationStateError, BaseId
@@ -76,7 +78,6 @@ class HumanAvailable(DriverState):
         env: Environment,
         previous_instructions: Optional[Tuple[Instruction, ...]] = None,
     ) -> Optional[Instruction]:
-
         my_vehicle = sim.vehicles.get(self.attributes.vehicle_id)
         if not my_vehicle:
             log.error(f"could not find vehicle {self.attributes.vehicle_id} in simulation")
@@ -84,8 +85,14 @@ class HumanAvailable(DriverState):
 
         state = my_vehicle.vehicle_state
 
+        if isinstance(my_vehicle.vehicle_state, OutOfService):
+            # nothing we can do..
+            return None
+        elif isinstance(my_vehicle.vehicle_state, ServicingTrip):
+            # can't interrupt the trip so let's wait
+            return None
         # once the vehicle is available it should reposition to seek out requests.
-        if isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
+        elif isinstance(state, ReserveBase) or isinstance(state, ChargingBase):
             # if the driver is sitting at home we try to seek out requests
             return human_look_for_requests(my_vehicle, sim)
         elif isinstance(my_vehicle.vehicle_state, ChargingStation):
@@ -198,6 +205,13 @@ class HumanUnavailable(DriverState):
                 log.error(
                     f"could not find mechatronics instance {my_vehicle.mechatronics_id} for vehicle {my_vehicle.id} in simulation"
                 )
+                return None
+
+            if isinstance(my_vehicle.vehicle_state, OutOfService):
+                # nothing we can do..
+                return None
+            elif isinstance(my_vehicle.vehicle_state, ServicingTrip):
+                # can't interrupt the trip so let's wait
                 return None
 
             if not at_home:

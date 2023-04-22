@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 import functools as ft
 import logging
-from typing import Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
+from typing import List, Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
 from nrel.hive.dispatcher.instruction.instruction_result import InstructionResult
@@ -140,13 +140,13 @@ def apply_instructions(
     """
     # construct the vehicle state transitions
 
-    results: list[InstructionResult] = []
+    results: List[InstructionResult] = []
     for instruction in instructions:
-        err, result = instruction.apply_instruction(sim, env)
+        err, instruction_result = instruction.apply_instruction(sim, env)
         if err is not None:
             log.error(err)
             continue
-        if result is None:
+        if instruction_result is None:
             log.error("this should not be none if error is not none")
             continue
 
@@ -155,12 +155,13 @@ def apply_instructions(
         )
         sim = sim._replace(applied_instructions=updated_instructions)
 
-        results.append(result)
+        results.append(instruction_result)
 
     for instruction_result in results:
-        (update_error, updated_sim,) = entity_state_ops.transition_previous_to_next(
+        result = entity_state_ops.transition_previous_to_next(
             sim, env, instruction_result.prev_state, instruction_result.next_state
         )
+        update_error, updated_sim = result
         if update_error:
             log.error(update_error)
             continue

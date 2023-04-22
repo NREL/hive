@@ -24,6 +24,7 @@ class GlobalConfig(NamedTuple):
     log_fleet_time_step_stats: bool
     lazy_file_reading: bool
     wkt_x_y_ordering: bool
+    verbose: bool
 
     @classmethod
     def default_config(cls) -> Dict:
@@ -46,6 +47,7 @@ class GlobalConfig(NamedTuple):
             "log_fleet_time_step_stats",
             "lazy_file_reading",
             "wkt_x_y_ordering",
+            "verbose",
         )
 
     @classmethod

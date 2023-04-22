@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nrel.hive"
-version = "1.0.0"
+version = "1.2.2"
 description = "HIVE is a mobility services research platform developed by the Mobility and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA."
 readme = "README.md"
 authors = [{ name = "National Renewable Energy Laboratory" }]
@@ -27,7 +27,7 @@ dependencies = [
     "PyYAML",
     "tqdm",
     "rich",
-    "h3>=3.7.1",
+    "h3 < 4",
     "scipy",
     "returns",
 ]
@@ -45,7 +45,7 @@ docs = [
 dev = [
     "nrel.hive[docs]",
     "pytest",
-    "black",
+    "black==23.1.0",
     "mypy",
     "twine",
     "types-PyYAML",

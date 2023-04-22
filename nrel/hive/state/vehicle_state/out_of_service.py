@@ -45,7 +45,6 @@ class OutOfService(VehicleState):
     def enter(
         self, sim: SimulationState, env: Environment
     ) -> Tuple[Optional[Exception], Optional[SimulationState]]:
-
         new_state = VehicleState.apply_new_vehicle_state(sim, self.vehicle_id, self)
         return new_state
 

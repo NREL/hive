@@ -490,7 +490,6 @@ def mock_config(
             "rate_structure_file": "rate_structure.csv",
             "mechatronics_file": "mechatronics.yaml",
             "geofence_file": "downtown_denver.geojson",
-            "demand_forecast_file": "denver_demand.csv",
         }
     test_output_directory = tempfile.TemporaryDirectory()
     conf_without_temp_dir = HiveConfig.build(

@@ -131,7 +131,6 @@ class TimeStepStatsHandler(Handler):
             canceled_requests_count = 0
 
         if self.log_time_step_stats:
-
             # grab all vehicles that are pooling
             veh_pooling = sim_state.get_vehicles(
                 filter_function=lambda v: v.vehicle_state.vehicle_state_type

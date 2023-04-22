@@ -168,7 +168,9 @@ class OSMRoadNetwork(RoadNetwork):
             destination_node_id, _ = dst_nodes
 
             # node-oriented shortest path from the end of the origin link to the beginning of the destination link
-            nx_path = nx.shortest_path(self.graph, origin_node_id, destination_node_id)
+            nx_path = nx.shortest_path(
+                self.graph, origin_node_id, destination_node_id, weight="travel_time"
+            )
             link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)
 
             if link_path_error:

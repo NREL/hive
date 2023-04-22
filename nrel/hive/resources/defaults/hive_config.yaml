@@ -4,7 +4,6 @@ input:
   geofence_file: null                           # default is to have no geofencing
   rate_structure_file: null                     # default is $0.00 for all services
   charging_price_file: null                     # default is $0.00 for any charging
-  demand_forecast_file: null                    # default is no demand forecasting
 sim:
   timestep_duration_seconds: 60                 # default is to advance time 1 minute between dispatcher updates
   sim_h3_resolution: 15                         # default is to store GeoIds at h3 resolution 15 (approx 1 meter hexes)
@@ -22,6 +21,7 @@ dispatcher:
   charging_range_km_soft_threshold: 50          # ignore charging at stations when remaining range is greater than 50km
   base_charging_range_km_threshold: 100         # ignore base charging at bases more than 100 km away
   ideal_fastcharge_soc_limit: 0.8               # fast charging can finish when 80% state-of-charge is reached
+  human_driver_off_shift_charge_target: 1.0     # human drivers w/out home charging will charge to this SOC post shift 
   max_search_radius_km: 100.0                   # when searching, ignore entities that are further than 100km away
   valid_dispatch_states:                        # allow agents to service a trip coming only from these vehicle states
     - idle
