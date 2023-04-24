@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import functools as ft
+import logging
 from typing import Dict, Tuple, Callable, NamedTuple, Optional, TYPE_CHECKING
 
-import logging
 import h3
 import numpy as np
 from scipy.optimize import linear_sum_assignment

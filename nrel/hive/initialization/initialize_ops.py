@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import yaml
-import immutables
 from typing import TYPE_CHECKING, FrozenSet
+
+import immutables
+import yaml
 
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import EntityId, MembershipMap
