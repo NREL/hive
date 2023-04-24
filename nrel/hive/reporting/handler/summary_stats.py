@@ -88,7 +88,7 @@ class SummaryStats:
         for vehicle in rp.s.get_vehicles():
             total_vkwh_expended += vehicle.energy_expended.get(EnergyType.ELECTRIC, 0.0)
             total_vgge_expended += vehicle.energy_expended.get(EnergyType.GASOLINE, 0.0)
-        
+
         self.total_vkwh_expended = total_vkwh_expended
         self.total_vgge_expended = total_vgge_expended
 
@@ -139,10 +139,16 @@ class SummaryStats:
             table.add_row(f"Kilometers Traveled in State {s}", f"{round(v, 2)} km")
 
         table.add_row("Total kWh Expended By Vehicles", f"{round(self.total_vkwh_expended, 2)} kWh")
-        table.add_row("Total Gasoline Expended By Vehicles", f"{round(self.total_vgge_expended, 2)} Gal")
+        table.add_row(
+            "Total Gasoline Expended By Vehicles", f"{round(self.total_vgge_expended, 2)} Gal"
+        )
 
-        table.add_row("Total kWh Dispensed By Stations", f"{round(self.total_skwh_dispensed, 2)} kWh")
-        table.add_row("Total Gasoline Dispensed By Stations", f"{round(self.total_sgge_dispensed, 2)} Gal")
+        table.add_row(
+            "Total kWh Dispensed By Stations", f"{round(self.total_skwh_dispensed, 2)} kWh"
+        )
+        table.add_row(
+            "Total Gasoline Dispensed By Stations", f"{round(self.total_sgge_dispensed, 2)} Gal"
+        )
 
         table.add_row("Station Revenue", f"$ {round(self.station_revenue, 2)}")
         table.add_row("Fleet Revenue", f"$ {round(self.fleet_revenue, 2)}")
