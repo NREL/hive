@@ -74,8 +74,8 @@ class Reporter:
         self,
     ) -> Tuple[Optional[list[Dict[str, Any]]], Optional[Map[MembershipId, list[Dict[str, Any]]]]]:
         """
-        if a TimeStepStatsHandler exists, return the time step stats DataFrame and the fleet time step stats DataFrames
-        :return: the time step stats DataFrame and the fleet time step stats collection of DataFrames if they exist
+        if a TimeStepStatsHandler exists, return the time step stats and the fleet time step stats
+        :return: the time step stats and the fleet time step stats collection if they exist
         """
         time_step_stats, fleet_time_step_stats = None, None
         for handler in self.handlers:

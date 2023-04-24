@@ -75,9 +75,9 @@ class TimeStepStatsHandler(Handler):
         self,
     ) -> Map[MembershipId, List[Dict[str, Any]]]:
         """
-        return an immutable map of time step stat DataFrames by membership id.
+        return an immutable map of time step stat data by membership id.
 
-        :return: the immutable map containing time step stats DataFrames by membership id
+        :return: the immutable map containing time step stats data by membership id
         """
         result = Map(
             {
@@ -366,7 +366,7 @@ class TimeStepStatsHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         """
-        saves all time step stat DataFrames as csv files to the scenario output directory.
+        saves all time step stat data as csv files to the scenario output directory.
 
         :return:
         """
