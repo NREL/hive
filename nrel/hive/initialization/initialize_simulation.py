@@ -48,7 +48,7 @@ InitFunction = Callable[
 
 
 def initialize(
-        config: HiveConfig, init_functions: Optional[Iterable[InitFunction]] = None
+    config: HiveConfig, init_functions: Optional[Iterable[InitFunction]] = None
 ) -> Tuple[SimulationState, Environment]:
     """
     Initialize a simulation using a config object and a set of arbitrary initialization functions.
@@ -87,7 +87,7 @@ def initialize(
 
 
 def initialize_environment_fleets(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     An initialization function to add fleets to the environment
@@ -110,7 +110,7 @@ def initialize_environment_fleets(
 
 
 def initialize_environment_schedules(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     An initialization function to add schedules to the environment
@@ -135,7 +135,7 @@ def initialize_environment_schedules(
 
 
 def initialize_environment_mechatronics(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     An initialization function to add mechatronics to the environment
@@ -155,7 +155,7 @@ def initialize_environment_mechatronics(
 
 
 def initialize_environment_chargers(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     An initialization function to add chargers to the environment
@@ -173,7 +173,7 @@ def initialize_environment_chargers(
 
 
 def initialize_environment_reporting(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     An initialization function to add reporting to the environment
@@ -227,7 +227,7 @@ def default_init_functions() -> Iterable[InitFunction]:
 
 
 def osm_init_function(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     Initialize an OSMRoadNetwork and add to the simulation
@@ -241,28 +241,32 @@ def osm_init_function(
     :raises Exception: from IOErrors parsing the road network
     """
 
-    if config.input_config.road_network_file and os.path.exists(config.input_config.road_network_file):
+    if config.input_config.road_network_file:
         road_network = OSMRoadNetwork.from_file(
             sim_h3_resolution=config.sim.sim_h3_resolution,
-            road_network_file=Path(config.input_config.road_network_file),
+            road_network_file=config.input_config.road_network_file,
             default_speed_kmph=config.network.default_speed_kmph,
         )
-    elif config.input_config.geofence_file and os.path.exists(config.input_config.geofence_file):
+    elif config.input_config.geofence_file:
         try:
             import geopandas
         except ImportError as e:
-            raise ImportError("Must have geopandas installed if you want to load from geofence file") from e
+            raise ImportError(
+                "Must have geopandas installed if you want to load from geofence file"
+            ) from e
 
-        dF = geopandas.read_file(Path(config.input_config.geofence_file))
-        polygon_union = dF['geometry'].unary_union
+        dataframe = geopandas.read_file(config.input_config.geofence_file)
+        polygon_union = dataframe["geometry"].unary_union
 
         road_network = OSMRoadNetwork.from_polygon(
             sim_h3_resolution=config.sim.sim_h3_resolution,
             default_speed_kmph=config.network.default_speed_kmph,
-            polygon=polygon_union
+            polygon=polygon_union,
         )
     else:
-        raise IOError("Must supply a road network file when using the osm_network")
+        raise IOError(
+            "Must supply either a road network or geofence file when using the osm_network"
+        )
 
     sim_w_osm = simulation_state._replace(road_network=road_network)
 
@@ -270,7 +274,7 @@ def osm_init_function(
 
 
 def vehicle_init_function(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     adds all vehicles from the provided vehicles file
@@ -309,7 +313,7 @@ def vehicle_init_function(
 
 
 def base_init_function(
-        config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig, simulation_state: SimulationState, environment: Environment
 ) -> Tuple[SimulationState, Environment]:
     """
     all your base are belong to us
@@ -413,9 +417,9 @@ def _assign_private_memberships(sim: SimulationState) -> SimulationState:
 
 
 def station_init_function(
-        config: HiveConfig,
-        simulation_state: SimulationState,
-        environment: Environment,
+    config: HiveConfig,
+    simulation_state: SimulationState,
+    environment: Environment,
 ) -> Tuple[SimulationState, Environment]:
     """
     all your station are belong to us
@@ -434,7 +438,7 @@ def station_init_function(
     )
 
     def _add_row_unsafe(
-            builder: immutables.Map[str, Station], row: Dict[str, str]
+        builder: immutables.Map[str, Station], row: Dict[str, str]
     ) -> immutables.Map[str, Station]:
         station = Station.from_row(row, builder, simulation_state.road_network, environment)
 
