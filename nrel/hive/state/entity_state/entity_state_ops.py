@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.util.exception import StateTransitionError

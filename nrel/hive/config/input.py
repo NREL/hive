@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from pathlib import Path
-from typing import NamedTuple, Tuple, Dict, Optional, Union
+from typing import NamedTuple, Tuple, Dict, Optional
 
 from nrel.hive.config.config_builder import ConfigBuilder
 from nrel.hive.util import fs

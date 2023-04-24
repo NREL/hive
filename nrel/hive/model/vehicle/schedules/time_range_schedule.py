@@ -6,9 +6,9 @@ from typing import Dict, Optional
 
 from immutables import Map
 
+from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 from nrel.hive.util.time_helpers import read_time_string, time_in_range
 from nrel.hive.util.typealiases import VehicleId, ScheduleId
-from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 
 
 def time_range_schedules_from_file(

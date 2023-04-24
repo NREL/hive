@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING, Tuple, cast
+from typing import Iterable, Optional, TYPE_CHECKING, Tuple
 
 import h3
-import immutables
 from returns.result import Success, Failure, ResultE
 
 from nrel.hive.model.sim_time import SimTime

@@ -1,17 +1,16 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import functools as ft
-from typing import Tuple, Optional, NamedTuple
+import logging
+from dataclasses import dataclass
+from typing import Tuple, Optional
 
+from nrel.hive.reporting.reporter import Report, ReportType
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from nrel.hive.util.typealiases import RequestId
-from nrel.hive.reporting.reporter import Report, ReportType
-
-import logging
 
 log = logging.getLogger(__name__)
 

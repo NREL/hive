@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, NamedTuple, List
 
 import yaml
 
-from nrel.hive.initialization.load import load_config
 from nrel.hive.app.run import run_sim
 from nrel.hive.util import fs
 
