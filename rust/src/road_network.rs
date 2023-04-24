@@ -3,11 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use anyhow::{anyhow, Result};
 
-pub type LinkId = String;
-
-use crate::{
-    entity_position::EntityPosition, geoid::GeoidString, link::LinkTraversal, utils::h3_dist_km,
-};
+use crate::type_aliases::*;
+use crate::{entity_position::EntityPosition, link::LinkTraversal, utils::h3_dist_km};
 
 const AVG_SPEED_KMPH: f64 = 40.0;
 
@@ -71,33 +68,25 @@ impl HaversineRoadNetwork {
         Ok(route)
     }
 
-    pub fn distance_by_geoid_km(&self, origin: GeoidString, destination: GeoidString) -> PyResult<f64> {
+    pub fn distance_by_geoid_km(
+        &self,
+        origin: GeoidString,
+        destination: GeoidString,
+    ) -> PyResult<f64> {
         h3_dist_km(&origin, &destination)
             .map_err(|e| PyValueError::new_err(format!("Failure computing h3 distance: {}", e)))
     }
 
     pub fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
-        let (source, dest) = link_id_to_geoids(&link_id)?; 
+        let (source, dest) = link_id_to_geoids(&link_id)?;
         let dist_km = self.distance_by_geoid_km(source.clone(), dest.clone())?;
-        let link = LinkTraversal::new( 
-            link_id,
-            source,
-            dest,
-            dist_km,
-            AVG_SPEED_KMPH,
-        );
+        let link = LinkTraversal::new(link_id, source, dest, dist_km, AVG_SPEED_KMPH);
         Ok(link)
     }
 
     pub fn link_from_geoid(&self, geoid: GeoidString) -> LinkTraversal {
         let link_id = geoid_string_to_link_id(&geoid, &geoid);
-        let link = LinkTraversal::new( 
-            link_id,
-            geoid.clone(),
-            geoid.clone(),
-            0.0,
-            0.0,
-        );
+        let link = LinkTraversal::new(link_id, geoid.clone(), geoid.clone(), 0.0, 0.0);
         link
     }
 
@@ -119,11 +108,13 @@ mod tests {
     use super::*;
 
     fn mock_network() -> HaversineRoadNetwork {
-        HaversineRoadNetwork { sim_h3_resolution: 15 }
+        HaversineRoadNetwork {
+            sim_h3_resolution: 15,
+        }
     }
 
     #[test]
-    fn test_link_id_to_geoids()  {
+    fn test_link_id_to_geoids() {
         let link_id = "geoid1-geoid2".to_string();
         let (geoid1, geoid2) = link_id_to_geoids(&link_id).unwrap();
         assert_eq!(geoid1.as_str(), "geoid1");
@@ -131,13 +122,11 @@ mod tests {
     }
 
     #[test]
-    fn test_position_from_geoid()  {
+    fn test_position_from_geoid() {
         let network = mock_network();
         let geoid = "8f26dc934cccc69".to_string();
         let position = network.position_from_geoid(geoid);
         assert_eq!(position.geoid.as_str(), "8f26dc934cccc69");
         assert_eq!(position.link_id.as_str(), "8f26dc934cccc69-8f26dc934cccc69");
-
     }
-
 }

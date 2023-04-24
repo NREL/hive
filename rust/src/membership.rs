@@ -5,8 +5,9 @@ use pyo3::{
     prelude::*,
     types::{PyDict, PyType},
 };
-
 use serde::{Deserialize, Serialize};
+
+use crate::type_aliases::*;
 
 const PUBLIC_MEMBERSHIP_ID: &str = "public";
 
@@ -14,7 +15,7 @@ const PUBLIC_MEMBERSHIP_ID: &str = "public";
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Membership {
     #[pyo3(get)]
-    memberships: HashSet<String>,
+    memberships: HashSet<MembershipId>,
 }
 
 impl Default for Membership {
