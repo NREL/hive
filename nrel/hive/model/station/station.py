@@ -13,6 +13,7 @@ from returns.result import ResultE, Success, Failure
 
 from nrel.hive.model.entity import Entity
 from nrel.hive.runner.environment import Environment
+from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.model.station.charger_state import ChargerState
 from nrel.hive.model.energy.charger import Charger
 from nrel.hive.model.membership import Membership
@@ -58,6 +59,7 @@ class Station(Entity):
     position: EntityPosition
     membership: Membership
     state: immutables.Map[ChargerId, ChargerState]
+    energy_dispensed: immutables.Map[EnergyType, float]
     on_shift_access_chargers: FrozenSet[ChargerId]
     balance: Currency = 0.0
 
@@ -115,6 +117,7 @@ class Station(Entity):
             msg = f"internal error after building station chargers for station {id}"
             raise Exception(msg)
 
+        energy_dispensed = immutables.Map({energy_type: 0.0 for energy_type in EnergyType})
         position = road_network.position_from_geoid(geoid)
         if position is None:
             msg = (
@@ -122,10 +125,12 @@ class Station(Entity):
                 f"provided for station {id}"
             )
             raise H3Error(msg)
+
         return Station(
             id=id,
             position=position,
             state=charger_states,
+            energy_dispensed=energy_dispensed,
             on_shift_access_chargers=on_shift_access,
             membership=membership,
         )
@@ -408,6 +413,16 @@ class Station(Entity):
         :return: the updated Station
         """
         return replace(self, balance=self.balance + currency_received)
+
+    def tick_energy_dispensed(self, delta_energy: immutables.Map[EnergyType, float]) -> Station:
+        """
+        adds energy dispensed to vehicle
+
+        :param delta_energy: the energy dispensed for a charge event
+        :return: the updated Station
+        """
+        energy_dispensed = {k: self.energy_dispensed[k] + delta_energy.get(k, 0) for k in self.energy_dispensed.keys()}
+        return replace(self, energy_dispensed=energy_dispensed)
 
     def enqueue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
