@@ -2,7 +2,6 @@ from typing import Tuple, FrozenSet
 
 from immutables import Map
 
-
 # MODEL ID TYPES
 RequestId = str
 VehicleId = str

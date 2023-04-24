@@ -1,6 +1,7 @@
 from typing import List, Dict
 
 import pandas as pd
+
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report

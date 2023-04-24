@@ -1,6 +1,7 @@
-from nrel.hive.util.typealiases import LinkId
-from typing import Optional, Tuple, Any
 from ast import literal_eval
+from typing import Optional, Tuple, Any
+
+from nrel.hive.util.typealiases import LinkId
 
 NodeId = Any
 

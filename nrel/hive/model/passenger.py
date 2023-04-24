@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Optional, TYPE_CHECKING
 from dataclasses import dataclass, replace
+from typing import Optional, TYPE_CHECKING
 
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.sim_time import SimTime

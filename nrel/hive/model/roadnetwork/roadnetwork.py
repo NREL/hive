@@ -5,9 +5,8 @@ from typing import Optional
 
 import h3
 
-from nrel.hive.model.roadnetwork.link import Link
-from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util.typealiases import GeoId, H3Resolution, LinkId

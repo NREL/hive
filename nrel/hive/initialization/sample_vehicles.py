@@ -6,10 +6,10 @@ from typing import Callable
 from returns.result import Result, Failure, Success
 
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.vehicle.vehicle import Vehicle
-from nrel.hive.model.membership import Membership
 from nrel.hive.runner import Environment
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
     AutonomousAvailable,

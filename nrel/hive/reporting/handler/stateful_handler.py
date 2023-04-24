@@ -1,7 +1,7 @@
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import List
-from dataclasses import asdict
 
 from nrel.hive.config.global_config import GlobalConfig
 from nrel.hive.model.station.station import Station
