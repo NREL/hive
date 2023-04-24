@@ -62,14 +62,14 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> Optional[list[list[Union[str, float, int]]]]:
+    def get_time_step_stats(self) -> Optional[list[dict]]:
         """
         return a DataFrame of the time step level statistics.
 
         :return: the time step stats DataFrame
         """
 
-        return [step.values() for step in self.data]
+        return self.data
 
     def get_fleet_time_step_stats(
         self,
