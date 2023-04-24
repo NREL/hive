@@ -20,7 +20,7 @@ class TestSampleVehicles(TestCase):
 
         sample_requests = default_request_sampler(n, sim, env)
 
-        self.assertEquals(len(sample_requests), n, f"should have sampled {n} requests")
+        self.assertEqual(len(sample_requests), n, f"should have sampled {n} requests")
 
         for r in sample_requests:
             self.assertNotEqual(
@@ -97,4 +97,4 @@ class TestSampleVehicles(TestCase):
 
         with self.assertRaises(UnwrapFailedError):
             result.unwrap()
-        self.assertEquals(result._inner_value.args[0], failure_msg)
+        self.assertEqual(result._inner_value.args[0], failure_msg)
