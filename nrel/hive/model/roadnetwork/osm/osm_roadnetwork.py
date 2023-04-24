@@ -101,6 +101,7 @@ class OSMRoadNetwork(RoadNetwork):
         polygon,
         sim_h3_resolution: H3Resolution = 15,
         default_speed_kmph: Kmph = 40.0,
+        cache_dir=Path.home(),
     ) -> OSMRoadNetwork:
         """
         Build an OSMRoadNetwork from a shapely polygon
@@ -109,7 +110,7 @@ class OSMRoadNetwork(RoadNetwork):
         :param sim_h3_resolution: The h3 resolution of the simulation
         :param default_speed_kmph: The network will fill in missing speed values with this
         """
-        graph = osm_graph_from_polygon(polygon)
+        graph = osm_graph_from_polygon(polygon, cache_dir)
         return OSMRoadNetwork(graph, sim_h3_resolution, default_speed_kmph)
 
     @classmethod

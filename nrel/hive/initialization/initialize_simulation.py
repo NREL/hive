@@ -227,7 +227,10 @@ def default_init_functions() -> Iterable[InitFunction]:
 
 
 def osm_init_function(
-    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig,
+    simulation_state: SimulationState,
+    environment: Environment,
+    cache_dir=Path.home(),
 ) -> Tuple[SimulationState, Environment]:
     """
     Initialize an OSMRoadNetwork and add to the simulation
@@ -262,6 +265,7 @@ def osm_init_function(
             sim_h3_resolution=config.sim.sim_h3_resolution,
             default_speed_kmph=config.network.default_speed_kmph,
             polygon=polygon_union,
+            cache_dir=cache_dir,
         )
     else:
         raise IOError(
