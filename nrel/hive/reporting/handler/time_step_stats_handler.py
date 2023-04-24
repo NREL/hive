@@ -14,6 +14,7 @@ from pandas import DataFrame
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
+from nrel.hive.util.io import to_csv
 
 if TYPE_CHECKING:
     from nrel.hive.config import HiveConfig
@@ -84,7 +85,7 @@ class TimeStepStatsHandler(Handler):
         """
         result = Map(
             {
-                fleet_id: DataFrame(data) if len(data) > 0 else None
+                fleet_id: data if data else None
                 for fleet_id, data in self.fleets_data.items()
             }
         )
@@ -374,19 +375,18 @@ class TimeStepStatsHandler(Handler):
         :return:
         """
         if self.log_time_step_stats:
-            pd.DataFrame.to_csv(
+            to_csv(
                 self.get_time_step_stats(),
                 self.time_step_stats_outpath,
-                index=False,
             )
             log.info(f"time step stats written to {self.time_step_stats_outpath}")
 
         if self.log_fleet_time_step_stats:
             os.mkdir(self.fleets_timestep_stats_outpath)
-            for fleet_id, fleet_df in self.get_fleet_time_step_stats().items():
-                if fleet_df is not None:
+            for fleet_id, fleet_data in self.get_fleet_time_step_stats().items():
+                if fleet_data is not None:
                     outpath = self.fleets_timestep_stats_outpath.joinpath(
                         f"{self.file_name}_{fleet_id}.csv"
                     )
-                    pd.DataFrame.to_csv(fleet_df, outpath, index=False)
+                    to_csv(fleet_data, outpath)
                     log.info(f"fleet id: {fleet_id} time step stats written to {outpath}")
