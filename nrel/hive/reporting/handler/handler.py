@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
-
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from nrel.hive.reporting.reporter import Report
