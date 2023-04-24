@@ -151,7 +151,9 @@ class ICE(MechatronicsInterface):
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.GASOLINE: new_energy_gal_gas})
         )
-        updated_vehicle = vehicle.tick_energy_expended(immutables.Map({EnergyType.GASOLINE: vehicle_energy_gal_gas - new_energy_gal_gas}))
+        updated_vehicle = vehicle.tick_energy_expended(
+            immutables.Map({EnergyType.GASOLINE: vehicle_energy_gal_gas - new_energy_gal_gas})
+        )
         return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
@@ -170,7 +172,9 @@ class ICE(MechatronicsInterface):
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.GASOLINE: new_energy_gal_gas})
         )
-        updated_vehicle = vehicle.tick_energy_expended(immutables.Map({EnergyType.GASOLINE: vehicle_energy_gal_gas - new_energy_gal_gas}))
+        updated_vehicle = vehicle.tick_energy_expended(
+            immutables.Map({EnergyType.GASOLINE: vehicle_energy_gal_gas - new_energy_gal_gas})
+        )
 
         return updated_vehicle
 
@@ -199,6 +203,8 @@ class ICE(MechatronicsInterface):
         new_gal_gas = min(self.tank_capacity_gallons, pump_gal_gas)
 
         updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.GASOLINE: new_gal_gas}))
-        updated_vehicle = updated_vehicle.tick_energy_gained(immutables.Map({EnergyType.GASOLINE: new_gal_gas - start_gal_gas}))
+        updated_vehicle = updated_vehicle.tick_energy_gained(
+            immutables.Map({EnergyType.GASOLINE: new_gal_gas - start_gal_gas})
+        )
 
         return updated_vehicle, time_seconds

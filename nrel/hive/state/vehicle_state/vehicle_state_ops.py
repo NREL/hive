@@ -97,7 +97,9 @@ def charge(
         # perform updates
         updated_vehicle = charged_vehicle.send_payment(charging_price)
         updated_station = station.receive_payment(charging_price)
-        updated_station = updated_station.tick_energy_dispensed(immutables.Map({charger.energy_type: kwh_transacted}))
+        updated_station = updated_station.tick_energy_dispensed(
+            immutables.Map({charger.energy_type: kwh_transacted})
+        )
 
         veh_error, sim_with_vehicle = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
         if veh_error:
