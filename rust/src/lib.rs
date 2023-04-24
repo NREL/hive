@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+mod macros;
 mod type_aliases;
 
 pub mod base;
@@ -11,6 +12,11 @@ pub mod passenger;
 pub mod road_network;
 pub mod station;
 pub mod utils;
+
+// externs needed for imports to be available in macros
+pub extern crate derive_more;
+pub extern crate pyo3;
+pub extern crate serde;
 
 use base::Base;
 use entity_position::EntityPosition;

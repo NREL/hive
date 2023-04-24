@@ -28,10 +28,12 @@ impl Default for Membership {
 
 // TODO: eventually we'll move all the pymethods into here
 impl Membership {
-    pub fn _new(memberships: Option<HashSet<String>>) -> Result<Self, String> {
+    pub fn _new(memberships: Option<HashSet<MembershipId>>) -> Result<Self, String> {
         match memberships {
             Some(m) => {
-                if m.iter().any(|m| m == &PUBLIC_MEMBERSHIP_ID) {
+                if m.iter()
+                    .any(|m| m == &PUBLIC_MEMBERSHIP_ID.to_string().into())
+                {
                     return Err(format!(
                         "{} is reserved, please use another membership id",
                         PUBLIC_MEMBERSHIP_ID
@@ -44,7 +46,7 @@ impl Membership {
             }),
         }
     }
-    pub fn _from_tuple(member_ids: Vec<String>) -> Result<Self, String> {
+    pub fn _from_tuple(member_ids: Vec<MembershipId>) -> Result<Self, String> {
         Membership::_new(Some(HashSet::from_iter(member_ids)))
     }
 }
@@ -62,16 +64,16 @@ impl Membership {
     }
 
     #[new]
-    fn new(memberships: Option<HashSet<String>>) -> PyResult<Self> {
+    fn new(memberships: Option<HashSet<MembershipId>>) -> PyResult<Self> {
         Membership::_new(memberships).map_err(PyValueError::new_err)
     }
     #[classmethod]
-    pub fn from_tuple(_: &PyType, member_ids: Vec<String>) -> PyResult<Self> {
+    pub fn from_tuple(_: &PyType, member_ids: Vec<MembershipId>) -> PyResult<Self> {
         Self::new(Some(HashSet::from_iter(member_ids)))
     }
 
     #[classmethod]
-    pub fn single_membership(_: &PyType, membership_id: String) -> PyResult<Self> {
+    pub fn single_membership(_: &PyType, membership_id: MembershipId) -> PyResult<Self> {
         Self::new(Some(HashSet::from([membership_id])))
     }
 
@@ -80,8 +82,8 @@ impl Membership {
         self.memberships.is_empty()
     }
 
-    pub fn add_membership(&self, member_id: String) -> PyResult<Self> {
-        if member_id == PUBLIC_MEMBERSHIP_ID {
+    pub fn add_membership(&self, member_id: MembershipId) -> PyResult<Self> {
+        if member_id == PUBLIC_MEMBERSHIP_ID.to_string().into() {
             return Err(PyValueError::new_err(format!(
                 "{} is reserved, please use another membership id",
                 PUBLIC_MEMBERSHIP_ID
@@ -92,7 +94,7 @@ impl Membership {
         Self::new(Some(new_memberships))
     }
 
-    pub fn memberships_in_common(&self, other_membership: &Membership) -> HashSet<String> {
+    pub fn memberships_in_common(&self, other_membership: &Membership) -> HashSet<MembershipId> {
         let result: HashSet<_> = self
             .memberships
             .intersection(&other_membership.memberships)
@@ -113,11 +115,11 @@ impl Membership {
         self.public() || self.has_memberships_in_common(other_membership)
     }
 
-    pub fn grant_access_to_membership_id(&self, member_id: String) -> bool {
+    pub fn grant_access_to_membership_id(&self, member_id: MembershipId) -> bool {
         self.public() || self.memberships.contains(&member_id)
     }
 
-    pub fn to_json(&self) -> Vec<String> {
+    pub fn to_json(&self) -> Vec<MembershipId> {
         self.memberships.iter().map(|mid| mid.clone()).collect()
     }
 }
@@ -134,19 +136,19 @@ mod tests {
 
     fn membership_a() -> Membership {
         Membership {
-            memberships: HashSet::from(["a".to_string(), "b".to_string()]),
+            memberships: HashSet::from(["a".to_string().into(), "b".to_string().into()]),
         }
     }
 
     fn membership_b() -> Membership {
         Membership {
-            memberships: HashSet::from(["b".to_string(), "c".to_string()]),
+            memberships: HashSet::from(["b".to_string().into(), "c".to_string().into()]),
         }
     }
 
     fn membership_c() -> Membership {
         Membership {
-            memberships: HashSet::from(["x".to_string(), "y".to_string()]),
+            memberships: HashSet::from(["x".to_string().into(), "y".to_string().into()]),
         }
     }
 

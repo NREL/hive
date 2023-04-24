@@ -52,7 +52,7 @@ impl Passenger {
     }
 
     #[getter]
-    pub fn id(&self) -> BaseId {
+    pub fn id(&self) -> PassengerId {
         (*self.id).clone()
     }
 
@@ -71,7 +71,7 @@ impl Passenger {
         let locals = PyDict::new(py);
         let sim_time_mod = PyModule::import(py, "nrel.hive.model.sim_time")?;
         locals.set_item("SimTime", sim_time_mod.getattr("SimTime")?)?;
-        locals.set_item("departure_time", (*self.departure_time).clone())?;
+        locals.set_item("departure_time", (*self.departure_time).clone().into_py(py))?;
         py.eval("SimTime(departure_time)", None, Some(locals))
     }
 

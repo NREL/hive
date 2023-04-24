@@ -16,3 +16,4 @@ h3ron = { version = "0.16.0", features = ["use-serde", "parse"] }
 geo-types = "^0.7"
 serde = { version = "1.0.143", features = ["derive"] }
 pyo3 = { version = "0.18.0", features = ["extension-module", "anyhow"] }
+derive_more = "0.99.17"

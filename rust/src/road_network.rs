@@ -9,18 +9,21 @@ use crate::{entity_position::EntityPosition, link::LinkTraversal, utils::h3_dist
 const AVG_SPEED_KMPH: f64 = 40.0;
 
 pub fn geoid_string_to_link_id(origin: &GeoidString, destination: &GeoidString) -> LinkId {
-    format!("{}-{}", origin, destination)
+    format!("{}-{}", origin, destination).into()
 }
 
 pub fn link_id_to_geoids(link_id: &LinkId) -> Result<(GeoidString, GeoidString)> {
     let ids: Vec<&str> = link_id.split("-").collect();
-    if ids.len() != 2 {
-        return Err(anyhow!("LinkId not in expected format of [Geoid]-[Geoid]"));
+    return if ids.len() != 2 {
+        Err(anyhow!("LinkId not in expected format of [Geoid]-[Geoid]"))
     } else {
         let start_str = ids[0];
         let end_str = ids[1];
-        return Ok((start_str.to_string(), end_str.to_string()));
-    }
+        Ok((
+            GeoidString::from(start_str.to_string()),
+            GeoidString::from(end_str.to_string()),
+        ))
+    };
 }
 
 #[pyclass]
@@ -93,8 +96,8 @@ impl HaversineRoadNetwork {
     pub fn position_from_geoid(&self, geoid: GeoidString) -> EntityPosition {
         let link = self.link_from_geoid(geoid.clone());
         EntityPosition {
-            link_id: link.link_id,
-            geoid: geoid,
+            link_id: link.link_id.into(),
+            geoid: geoid.into(),
         }
     }
 
@@ -116,7 +119,7 @@ mod tests {
     #[test]
     fn test_link_id_to_geoids() {
         let link_id = "geoid1-geoid2".to_string();
-        let (geoid1, geoid2) = link_id_to_geoids(&link_id).unwrap();
+        let (geoid1, geoid2) = link_id_to_geoids(&link_id.into()).unwrap();
         assert_eq!(geoid1.as_str(), "geoid1");
         assert_eq!(geoid2.as_str(), "geoid2");
     }
@@ -125,7 +128,7 @@ mod tests {
     fn test_position_from_geoid() {
         let network = mock_network();
         let geoid = "8f26dc934cccc69".to_string();
-        let position = network.position_from_geoid(geoid);
+        let position = network.position_from_geoid(geoid.into());
         assert_eq!(position.geoid.as_str(), "8f26dc934cccc69");
         assert_eq!(position.link_id.as_str(), "8f26dc934cccc69-8f26dc934cccc69");
     }

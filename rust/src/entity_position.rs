@@ -26,9 +26,9 @@ impl EntityPosition {
     // the following methods are needed to support hive reporting
 
     fn _asdict(&self) -> HashMap<String, String> {
-        let mut dict = HashMap::new();
-        dict.insert("link_id".to_string(), self.link_id.to_owned());
-        dict.insert("geoid".to_string(), self.geoid.to_owned());
+        let mut dict: HashMap<String, String> = HashMap::new();
+        dict.insert("link_id".to_string(), self.link_id.to_owned().into());
+        dict.insert("geoid".to_string(), self.geoid.to_owned().into());
         dict
     }
 
