@@ -5,4 +5,5 @@ Developer Docs
    :maxdepth: 2
 
   release 
+  contributing
 
