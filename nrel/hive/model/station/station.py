@@ -11,6 +11,7 @@ import immutables
 from returns.result import ResultE, Success, Failure
 
 from nrel.hive.model.energy.charger import Charger
+from nrel.hive.model.energy.energytype import EnergyType
 from nrel.hive.model.entity import Entity
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.membership import Membership
