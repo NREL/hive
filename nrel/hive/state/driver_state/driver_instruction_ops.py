@@ -160,7 +160,7 @@ def human_look_for_requests(
                 key=lambda t: t[1],
                 reverse=True,
             )[0][0]
-        destination = h3.cellToCenterChild(best_search_hex, sim.sim_h3_location_resolution)
+        destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
         destination_link = sim.road_network.position_from_geoid(destination)
         return destination_link
 
