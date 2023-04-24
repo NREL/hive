@@ -153,111 +153,109 @@ Finally, after around 65 lines, it begins running the simulation with a progress
 After, it prints the summary stats to the console and exits (4).
 
 ```console
-INFO
-         ##     ##  ####  ##     ##  #######
-         ##     ##   ##   ##     ##  ##
-         #########   ##   ##     ##  ######
-         ##     ##   ##    ##   ##   ##
-         ##     ##  ####     ###     #######
-
-                         .' '.            __
-                .        .   .           (__\_
-                 .         .         . -{{_(|8)
-                   ' .  . ' ' .  . '     (__/
-
-/Users/nreinick/dev/repos/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
-INFO     global hive configuration loaded from /Users/nreinick/dev/repos/hive/nrel/hive/resources/defaults/.hive.yaml
-INFO       global_settings_file_path: /Users/nreinick/dev/repos/hive/nrel/hive/resources/defaults/.hive.yaml
-INFO       output_base_directory: .
-INFO       local_parallelism: 1
-INFO       local_parallelism_timeout_sec: 60
-INFO       log_run: True
-INFO       log_events: True
-INFO       log_states: True
-INFO       log_instructions: True
-INFO       log_stats: True
-INFO       log_level: INFO
-INFO       log_sim_config: {<ReportType.INSTRUCTION: 8>, <ReportType.VEHICLE_STATE: 2>, <ReportType.DRIVER_SCHEDULE_EVENT: 13>,
-         <ReportType.DRIVER_STATE: 3>, <ReportType.VEHICLE_CHARGE_EVENT: 9>, <ReportType.CANCEL_REQUEST_EVENT: 7>,
-         <ReportType.DROPOFF_REQUEST_EVENT: 6>, <ReportType.STATION_LOAD_EVENT: 11>, <ReportType.VEHICLE_MOVE_EVENT: 10>,
-         <ReportType.REFUEL_SEARCH_EVENT: 12>, <ReportType.STATION_STATE: 1>, <ReportType.PICKUP_REQUEST_EVENT: 5>,
-         <ReportType.ADD_REQUEST_EVENT: 4>}
-INFO       log_station_capacities: True
-INFO       log_time_step_stats: True
-INFO       log_fleet_time_step_stats: True
-INFO       lazy_file_reading: False
-INFO       wkt_x_y_ordering: True
-INFO     output directory set to /Users/nreinick/dev/repos/hive/nrel/hive/resources/scenarios/denver_downtown
-INFO     hive config loaded from /Users/nreinick/dev/repos/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
-INFO
-         dispatcher:
-           base_charging_range_km_threshold: 100
-           charging_range_km_soft_threshold: 50
-           charging_range_km_threshold: 20
-           charging_search_type: nearest_shortest_queue
-           default_update_interval_seconds: 600
-           ideal_fastcharge_soc_limit: 0.8
-           idle_time_out_seconds: 1800
-           matching_range_km_threshold: 20
-           max_search_radius_km: 100.0
-           valid_dispatch_states:
-           - Idle
-           - Repositioning
-         input:
-           bases_file: denver_demo_bases.csv
-           charging_price_file: denver_charging_prices_by_geoid.csv
-           demand_forecast_file: denver_demand.csv
-           geofence_file: downtown_denver.geojson
-           mechatronics_file: mechatronics.yaml
-           rate_structure_file: rate_structure.csv
-           requests_file: denver_demo_requests.csv
-           road_network_file: downtown_denver_network.json
-           stations_file: denver_demo_stations.csv
-           vehicles_file: denver_demo_vehicles.csv
-         network:
-           default_speed_kmph: 40.0
-           network_type: osm_network
-         sim:
-           end_time: '1970-01-02T00:00:00'
-           request_cancel_time_seconds: 600
-           schedule_type: time_range
-           sim_h3_resolution: 15
-           sim_h3_search_resolution: 7
-           sim_name: denver_demo
-           start_time: '1970-01-01T00:00:00'
-           timestep_duration_seconds: 60
-
-INFO     creating run log at denver_demo_2022-10-27_16-36-43/run.log with log level INFO
-INFO     running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00:
-100%|██████████████████████████████████████████████████████████████████████████████████████| 1440/1440 [00:09<00:00, 144.72it/s]
-INFO     done! time elapsed: 9.97 seconds
-INFO     96.84 %         Requests Served
-                        Summary Stats
+INFO                                                                                                                                                                                                                                          
+         ##     ##  ####  ##     ##  #######                                                                                                                                                                                                  
+         ##     ##   ##   ##     ##  ##                                                                                                                                                                                                       
+         #########   ##   ##     ##  ######                                                                                                                                                                                                   
+         ##     ##   ##    ##   ##   ##                                                                                                                                                                                                       
+         ##     ##  ####     ###     #######                                                                                                                                                                                                  
+                                                                                                                                                                                                                                              
+                         .' '.            __                                                                                                                                                                                                  
+                .        .   .           (__\_                                                                                                                                                                                                
+                 .         .         . -{{_(|8)                                                                                                                                                                                               
+                   ' .  . ' ' .  . '     (__/                                                                                                                                                                                                 
+                                                                                                                                                                                                                                              
+/home/cj/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
+INFO     global hive configuration loaded from /home/cj/hive/nrel/hive/resources/defaults/.hive.yaml                                                                                                                                          
+INFO       global_settings_file_path: /home/cj/hive/nrel/hive/resources/defaults/.hive.yaml                                                                                                                                                   
+INFO       output_base_directory: .                                                                                                                                                                                                           
+INFO       local_parallelism: 1                                                                                                                                                                                                               
+INFO       local_parallelism_timeout_sec: 60                                                                                                                                                                                                  
+INFO       log_run: True                                                                                                                                                                                                                      
+INFO       log_events: True                                                                                                                                                                                                                   
+INFO       log_states: True                                                                                                                                                                                                                   
+INFO       log_instructions: True                                                                                                                                                                                                             
+INFO       log_stats: True                                                                                                                                                                                                                    
+INFO       log_level: INFO                                                                                                                                                                                                                    
+INFO       log_sim_config: {<ReportType.INSTRUCTION: 8>, <ReportType.REFUEL_SEARCH_EVENT: 12>, <ReportType.VEHICLE_STATE: 2>, <ReportType.VEHICLE_MOVE_EVENT: 10>, <ReportType.ADD_REQUEST_EVENT: 4>, <ReportType.STATION_STATE: 1>,          
+         <ReportType.DRIVER_SCHEDULE_EVENT: 13>, <ReportType.DROPOFF_REQUEST_EVENT: 6>, <ReportType.PICKUP_REQUEST_EVENT: 5>, <ReportType.VEHICLE_CHARGE_EVENT: 9>, <ReportType.STATION_LOAD_EVENT: 11>, <ReportType.DRIVER_STATE: 3>,        
+         <ReportType.CANCEL_REQUEST_EVENT: 7>}                                                                                                                                                                                                
+INFO       log_station_capacities: True                                                                                                                                                                                                       
+INFO       log_time_step_stats: True                                                                                                                                                                                                          
+INFO       log_fleet_time_step_stats: True                                                                                                                                                                                                    
+INFO       lazy_file_reading: False                                                                                                                                                                                                           
+INFO       wkt_x_y_ordering: True                                                                                                                                                                                                             
+INFO       verbose: True                                                                                                                                                                                                                      
+INFO     output directory set to /home/cj/hive/nrel/hive/resources/scenarios/denver_downtown                                                                                                                                                  
+INFO     hive config loaded from /home/cj/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml                                                                                                                                 
+INFO                                                                                                                                                                                                                                          
+         dispatcher:                                                                                                                                                                                                                          
+           base_charging_range_km_threshold: 100                                                                                                                                                                                              
+           charging_range_km_soft_threshold: 50                                                                                                                                                                                               
+           charging_range_km_threshold: 20                                                                                                                                                                                                    
+           charging_search_type: nearest_shortest_queue                                                                                                                                                                                       
+           default_update_interval_seconds: 600                                                                                                                                                                                               
+           human_driver_off_shift_charge_target: 1.0                                                                                                                                                                                          
+           ideal_fastcharge_soc_limit: 0.8                                                                                                                                                                                                    
+           idle_time_out_seconds: 1800                                                                                                                                                                                                        
+           matching_range_km_threshold: 20                                                                                                                                                                                                    
+           max_search_radius_km: 100.0                                                                                                                                                                                                        
+           valid_dispatch_states:                                                                                                                                                                                                             
+           - Idle                                                                                                                                                                                                                             
+           - Repositioning                                                                                                                                                                                                                    
+         input:                                                                                                                                                                                                                               
+           bases_file: denver_demo_bases.csv                                                                                                                                                                                                  
+           charging_price_file: denver_charging_prices_by_geoid.csv                                                                                                                                                                           
+           geofence_file: null                                                                                                                                                                                                                
+           mechatronics_file: mechatronics.yaml                                                                                                                                                                                               
+           rate_structure_file: rate_structure.csv                                                                                                                                                                                            
+           requests_file: denver_demo_requests.csv                                                                                                                                                                                            
+           road_network_file: downtown_denver_network.json                                                                                                                                                                                    
+           stations_file: denver_demo_stations.csv                                                                                                                                                                                            
+           vehicles_file: denver_demo_vehicles.csv                                                                                                                                                                                            
+         network:                                                                                                                                                                                                                             
+           default_speed_kmph: 40.0                                                                                                                                                                                                           
+           network_type: osm_network                                                                                                                                                                                                          
+         sim:                                                                                                                                                                                                                                 
+           end_time: '1970-01-02T00:00:00'                                                                                                                                                                                                    
+           request_cancel_time_seconds: 600                                                                                                                                                                                                   
+           schedule_type: time_range                                                                                                                                                                                                          
+           sim_h3_resolution: 15                                                                                                                                                                                                              
+           sim_h3_search_resolution: 7                                                                                                                                                                                                        
+           sim_name: denver_demo                                                                                                                                                                                                              
+           start_time: '1970-01-01T00:00:00'                                                                                                                                                                                                  
+           timestep_duration_seconds: 60                                                                                                                                                                                                      
+                                                                                                                                                                                                                                              
+INFO     creating run log at denver_demo_2023-04-23_18-37-21/run.log with log level INFO                                                                                                                                                      
+INFO     running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00:                                                                                                                                                             
+INFO     done! time elapsed: 11.39 seconds                                                                                                                                                                                                    
+INFO     97.56 %         Requests Served                                                                                                                                                                                                      
+                        Summary Stats                        
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃ Stat                                         ┃ Value      ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ Mean Final SOC                               │ 51.1%      │
-│ Requests Served                              │ 96.84%     │
-│ Time in State Idle                           │ 28.03%     │
-│ Time in State DispatchBase                   │ 0.07%      │
-│ Time in State DispatchTrip                   │ 20.89%     │
-│ Time in State ChargingBase                   │ 3.62%      │
-│ Time in State ServicingTrip                  │ 27.51%     │
-│ Time in State ReserveBase                    │ 15.3%      │
-│ Time in State DispatchStation                │ 0.29%      │
-│ Time in State ChargingStation                │ 4.3%       │
+│ Mean Final SOC                               │ 48.82%     │
+│ Requests Served                              │ 97.56%     │
+│ Time in State Idle                           │ 30.22%     │
+│ Time in State DispatchBase                   │ 0.05%      │
+│ Time in State ChargingBase                   │ 4.34%      │
+│ Time in State DispatchTrip                   │ 19.07%     │
+│ Time in State ServicingTrip                  │ 24.68%     │
+│ Time in State ReserveBase                    │ 17.31%     │
+│ Time in State DispatchStation                │ 0.26%      │
+│ Time in State ChargingStation                │ 4.07%      │
 │ Time in State Repositioning                  │ 0.0%       │
-│ Total Kilometers Traveled                    │ 8032.26 km │
-│ Kilometers Traveled in State DispatchBase    │ 11.41 km   │
-│ Kilometers Traveled in State DispatchTrip    │ 3304.36 km │
-│ Kilometers Traveled in State ServicingTrip   │ 4665.25 km │
-│ Kilometers Traveled in State DispatchStation │ 50.54 km   │
-│ Kilometers Traveled in State Repositioning   │ 0.69 km    │
-│ Station Revenue                              │ $ 196.72   │
-│ Fleet Revenue                                │ $ 12017.56 │
+│ Total Kilometers Traveled                    │ 7971.91 km │
+│ Kilometers Traveled in State DispatchBase    │ 10.14 km   │
+│ Kilometers Traveled in State DispatchTrip    │ 3305.03 km │
+│ Kilometers Traveled in State ServicingTrip   │ 4606.57 km │
+│ Kilometers Traveled in State DispatchStation │ 49.41 km   │
+│ Kilometers Traveled in State Repositioning   │ 0.76 km    │
+│ Station Revenue                              │ $ 188.29   │
+│ Fleet Revenue                                │ $ 12092.5  │
 └──────────────────────────────────────────────┴────────────┘
-INFO     summary stats written to denver_demo_2022-10-27_16-36-43/summary_stats.json
-INFO     time step stats written to denver_demo_2022-10-27_16-36-43/time_step_stats_all.csv
+INFO     summary stats written to denver_demo_2023-04-23_18-37-21/summary_stats.json                                                                                                                                                          
+INFO     time step stats written to denver_demo_2023-04-23_18-37-21/time_step_stats_all.csv                                                                                                                                                   
 ```
 
 ## Roadmap
