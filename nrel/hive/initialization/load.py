@@ -6,21 +6,20 @@ from typing import Iterable, Optional, Tuple, TypeVar, Union
 import yaml
 
 from nrel.hive.config import HiveConfig
-from nrel.hive.reporting import reporter_ops
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.initialization.initialize_simulation import (
     default_init_functions,
     osm_init_function,
     initialize,
     InitFunction,
 )
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from nrel.hive.util.fp import throw_on_failure
+from nrel.hive.reporting import reporter_ops
 from nrel.hive.runner.runner_payload import RunnerPayload
 from nrel.hive.state.simulation_state.update.update import Update
-from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
-from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.util import fs
-
+from nrel.hive.util.fp import throw_on_failure
 
 log = logging.getLogger(__name__)
 
