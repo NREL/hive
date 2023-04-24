@@ -38,6 +38,7 @@ One way to do this is to use Anaconda:
 ### build from source
 
 Clone the repository and install the code via pip:
+
     > git clone <https://github.com/NREL/hive.git>
     > cd hive
     > pip install -e .
