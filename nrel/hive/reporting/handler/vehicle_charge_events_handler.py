@@ -38,13 +38,12 @@ class VehicleChargeEventsHandler(Handler):
                         f"unable to parse charge event from report {report}, missing entry for {e}"
                     )
 
-    def get_events(self):
+    def get_events(self) -> Dict[str, List]:
         """
         grabs the events as a pandas dataframe
         :return: a pandas dataframe containing charge events
         """
-        df = pd.DataFrame(data=self.events)
-        return df
+        return self.events
 
     def clear(self):
         """
