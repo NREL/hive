@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, Dict, TYPE_CHECKING
 from dataclasses import dataclass, replace
+from typing import Optional, Dict, TYPE_CHECKING
 
 import h3
 
 from nrel.hive.model.entity import Entity
+from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.passenger import Passenger, create_passenger_id
-from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util.exception import TimeParseError

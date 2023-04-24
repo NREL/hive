@@ -1,8 +1,8 @@
 import logging
 
 from nrel.hive.model.energy.charger import Charger
-from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.model.vehicle.mechatronics import MechatronicsInterface
+from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.util import Seconds, Ratio
 
 log = logging.getLogger(__file__)

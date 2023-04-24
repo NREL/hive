@@ -4,8 +4,8 @@ import logging
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import TYPE_CHECKING, Dict, Any
 from statistics import mean
+from typing import TYPE_CHECKING, Dict, Any
 
 if TYPE_CHECKING:
     from nrel.hive.runner.runner_payload import RunnerPayload

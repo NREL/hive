@@ -1,6 +1,3 @@
-from typing import TYPE_CHECKING
-
-
 def osm_graph_from_polygon(polygon):
     """
     builds a OSM networkx graph using a shapely polygon and the osmnx package

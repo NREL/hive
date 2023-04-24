@@ -1,23 +1,23 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import functools as ft
 import logging
 from csv import DictReader
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Tuple, Optional, Dict
 
-import immutables
 import h3
+import immutables
 
-from nrel.hive.model.energy.charger import Charger, build_chargers_table
+from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
-from nrel.hive.util.iterators import DictReaderStepper
 from nrel.hive.util import DictOps
+from nrel.hive.util.iterators import DictReaderStepper
 from nrel.hive.util.typealiases import StationId, ChargerId
 from nrel.hive.util.units import Currency
 

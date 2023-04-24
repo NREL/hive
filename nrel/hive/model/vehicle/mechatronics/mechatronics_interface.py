@@ -6,7 +6,7 @@ from typing import Dict, TYPE_CHECKING, Tuple
 
 import immutables
 
-from nrel.hive.model.energy import EnergyType, Charger
+from nrel.hive.model.energy import EnergyType
 
 if TYPE_CHECKING:
     from nrel.hive.util.units import Seconds, Ratio, Kilometers

@@ -1,9 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
-
-from typing import Any, Callable, Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, Callable, TYPE_CHECKING, Optional, Tuple
 
 import immutables
 
