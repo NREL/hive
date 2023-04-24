@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 import immutables
 from nrel.hive.model.entity_position import EntityPosition
-from nrel.hive.model.roadnetwork.route import Route, empty_route
+from nrel.hive.model.roadnetwork.route import empty_route
 from nrel.hive.model.roadnetwork.routetraversal import traverse, RouteTraversal
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.vehicle_event_ops import (

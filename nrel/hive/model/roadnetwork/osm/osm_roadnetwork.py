@@ -3,11 +3,10 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union
 
 import networkx as nx
 
-from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.link_id import extract_node_ids
@@ -27,7 +26,6 @@ from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import LinkId
 from nrel.hive.util.typealiases import GeoId, H3Resolution
 from nrel.hive.util.units import Kmph, Kilometers
-from nrel.hive.model.roadnetwork.link_id import extract_node_ids
 
 log = logging.getLogger(__name__)
 

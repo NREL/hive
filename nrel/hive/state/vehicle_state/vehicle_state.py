@@ -1,18 +1,16 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
-from uuid import UUID
-
+import logging
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from typing import Tuple, Optional, TYPE_CHECKING
+from uuid import UUID
 
 from nrel.hive.state.entity_state import entity_state_ops
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError, StateTransitionError
 from nrel.hive.util.typealiases import VehicleId
-
-import logging
 
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment

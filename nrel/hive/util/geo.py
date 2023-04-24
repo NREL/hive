@@ -2,7 +2,7 @@ from typing import Optional
 
 import h3
 
-from nrel.hive.util import GeoId, SimulationStateError
+from nrel.hive.util import GeoId
 
 
 def same_simulation_location(
