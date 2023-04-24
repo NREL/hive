@@ -13,6 +13,7 @@ def osm_graph_from_polygon(polygon):
         ) from e
 
     ox.settings.all_oneway = True
+    ox.settings.use_cache = False
 
     G = ox.graph_from_polygon(polygon, network_type="drive")
 
