@@ -220,7 +220,7 @@ class Vehicle(Entity):
         :param delta_energy:
         :return:
         """
-        energy_expended = {k: self.energy_expended[k] + delta_energy[k] for k in self.energy.keys()}
+        energy_expended = immutables.Map({k: self.energy_expended[k] + delta_energy[k] for k in self.energy.keys()})
         return replace(self, energy_expended=energy_expended)
 
     def tick_energy_gained(self, delta_energy: immutables.Map[EnergyType, float]) -> Vehicle:
