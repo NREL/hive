@@ -1,7 +1,8 @@
 use anyhow::Result;
 use h3ron::ToCoordinate;
 
-use crate::geoid::{Geoid, GeoidString};
+use crate::geoid::Geoid;
+use crate::type_aliases::*;
 
 const EARTH_RADIUS: f64 = 6371.0;
 

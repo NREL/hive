@@ -3,8 +3,7 @@ use std::sync::Arc;
 use pyo3::exceptions::PyValueError;
 use pyo3::{prelude::*, types::PyType};
 
-use crate::geoid::GeoidString;
-use crate::road_network::LinkId;
+use crate::type_aliases::*;
 use crate::utils::h3_dist_km;
 
 #[pyclass]

@@ -1,0 +1,16 @@
+pub type RequestId = String;
+pub type VehicleId = String;
+pub type StationId = String;
+pub type PowertrainId = String;
+pub type PowercurveId = String;
+pub type BaseId = String;
+pub type PassengerId = String;
+pub type VehicleTypeId = String;
+pub type MechatronicsId = String;
+pub type ChargerId = String;
+pub type MembershipId = String;
+pub type ScheduleId = String;
+pub type EntityId = String;
+pub type SimTime = usize;
+pub type GeoidString = String;
+pub type LinkId = String;

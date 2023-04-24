@@ -8,12 +8,10 @@ use pyo3::{
     types::{PyDict, PyType},
 };
 
+use crate::type_aliases::*;
 use crate::{
-    entity_position::EntityPosition, geoid::GeoidString, membership::Membership,
-    road_network::HaversineRoadNetwork, station::StationId,
+    entity_position::EntityPosition, membership::Membership, road_network::HaversineRoadNetwork,
 };
-
-pub type BaseId = String;
 
 #[pyclass]
 #[derive(Clone)]

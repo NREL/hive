@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use pyo3::{prelude::*, types::PyDict};
 
-use crate::{geoid::GeoidString, road_network::LinkId};
+use crate::type_aliases::*;
 
 #[pyclass]
 #[derive(PartialEq, Clone)]

@@ -5,7 +5,7 @@ use h3ron::H3Cell;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 
-pub type GeoidString = String;
+use crate::type_aliases::*;
 
 #[pyclass]
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]

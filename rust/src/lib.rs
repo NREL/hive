@@ -1,12 +1,14 @@
 use pyo3::prelude::*;
 
+mod type_aliases;
+
 pub mod base;
-pub mod station;
 pub mod entity_position;
 pub mod geoid;
 pub mod link;
 pub mod membership;
 pub mod road_network;
+pub mod station;
 pub mod utils;
 
 use base::Base;
