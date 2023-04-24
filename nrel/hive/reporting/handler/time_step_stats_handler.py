@@ -4,7 +4,7 @@ import logging
 import os
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional, Union
 
 import numpy as np
 from immutables import Map
@@ -62,14 +62,14 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> Optional[List[Dict[str, Any]]]:
+    def get_time_step_stats(self) -> Optional[list[list[Union[str, float, int]]]]:
         """
         return a DataFrame of the time step level statistics.
 
         :return: the time step stats DataFrame
         """
 
-        return self.data
+        return [step.values() for step in self.data]
 
     def get_fleet_time_step_stats(
         self,
