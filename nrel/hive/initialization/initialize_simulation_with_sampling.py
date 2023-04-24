@@ -16,9 +16,8 @@ from nrel.hive.initialization.sample_vehicles import (
 )
 from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
-from nrel.hive.model.roadnetwork.link import Link
-from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import Dict
 from dataclasses import dataclass, replace
+from typing import Dict
 
 import h3
 import immutables
 
-from nrel.hive.model.entity import Entity
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.membership import Membership
+from nrel.hive.model.entity import Entity
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.driver_state.driver_state import DriverState

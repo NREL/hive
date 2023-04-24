@@ -1,11 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import functools as ft
 import logging
 from csv import DictReader
+from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple, Tuple, Optional, Iterator, Dict
+from typing import Tuple, Optional, Iterator, Dict
 
 from returns.result import Failure
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
+from dataclasses import dataclass
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
@@ -30,10 +30,10 @@ from nrel.hive.state.vehicle_state.charging_base import ChargingBase
 from nrel.hive.state.vehicle_state.charging_station import ChargingStation
 from nrel.hive.state.vehicle_state.dispatch_base import DispatchBase
 from nrel.hive.state.vehicle_state.dispatch_station import DispatchStation
-from nrel.hive.state.vehicle_state.out_of_service import OutOfService
-from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.state.vehicle_state.idle import Idle
+from nrel.hive.state.vehicle_state.out_of_service import OutOfService
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
+from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.util import SimulationStateError, BaseId
 
 if TYPE_CHECKING:

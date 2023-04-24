@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict
 from enum import Enum, auto
+from typing import Dict
 
 
 class Unit(Enum):

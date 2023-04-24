@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from collections import Counter
-from immutables import Map
 import logging
-import numpy as np
 import os
-import pandas as pd
-from pandas import DataFrame
+from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional
+
+import numpy as np
+import pandas as pd
+from immutables import Map
+from pandas import DataFrame
 
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType

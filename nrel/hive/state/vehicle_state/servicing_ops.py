@@ -1,6 +1,6 @@
 from __future__ import annotations
-from dataclasses import replace
 
+from dataclasses import replace
 from typing import Optional, Tuple, TYPE_CHECKING, NamedTuple
 
 from nrel.hive.model.request import Request
@@ -12,10 +12,10 @@ from nrel.hive.reporting.vehicle_event_ops import (
     report_dropoff_request,
 )
 from nrel.hive.runner import Environment
-from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state.simulation_state_ops import modify_vehicle
+from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util import RequestId, TupleOps, SimulationStateError, VehicleId
 
 if TYPE_CHECKING:

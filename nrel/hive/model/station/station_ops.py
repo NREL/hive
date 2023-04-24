@@ -1,10 +1,9 @@
-from typing import Iterable, Optional, TypeVar, Callable, TYPE_CHECKING
+import functools as ft
 from dataclasses import replace
+from typing import Iterable, Optional, TypeVar, Callable, TYPE_CHECKING
 
 from nrel.hive.util.error_or_result import ErrorOr
 from nrel.hive.util.typealiases import *
-
-import functools as ft
 
 if TYPE_CHECKING:
     from nrel.hive.model.station.charger_state import ChargerState

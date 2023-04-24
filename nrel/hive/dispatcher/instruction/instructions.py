@@ -1,7 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
+from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING, Tuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction

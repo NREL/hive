@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, Optional
 
 import yaml
-
 from immutables import Map
 
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
