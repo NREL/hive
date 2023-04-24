@@ -420,10 +420,10 @@ class Station(Entity):
         :param delta_energy: the energy dispensed for a charge event
         :return: the updated Station
         """
-        energy_dispensed = {
+        energy_dispensed = immutables.Map({
             k: self.energy_dispensed[k] + delta_energy.get(k, 0)
             for k in self.energy_dispensed.keys()
-        }
+        })
         return replace(self, energy_dispensed=energy_dispensed)
 
     def enqueue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
