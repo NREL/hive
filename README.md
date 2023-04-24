@@ -19,7 +19,7 @@ For more documentation on how to use HIVE, please see the [HIVE documentation](h
 
 ## Installation
 
-HIVE depends on a Python installation [3.7, 3.8, 3.9, 3.10, 3.11] and the pip package manager ( [python.org](https://www.python.org/downloads/).
+HIVE depends on a Python installation [3.8, 3.9, 3.10, 3.11] and the pip package manager ( [python.org](https://www.python.org/downloads/).
 In our installation example we use [conda](https://www.anaconda.com/products/distribution) |  for managing a HIVE Python environment.
 
 ### (optional) set up a virtual environment using conda
