@@ -1,7 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass, replace
+
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from dataclasses import dataclass, replace
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.model.roadnetwork.route import (
@@ -9,13 +10,13 @@ from nrel.hive.model.roadnetwork.route import (
     route_cooresponds_with_entities,
 )
 from nrel.hive.runner.environment import Environment
+from nrel.hive.state.vehicle_state import vehicle_state_ops
+from nrel.hive.state.vehicle_state.idle import Idle
+from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.state.vehicle_state.vehicle_state import (
     VehicleState,
     VehicleStateInstanceId,
 )
-from nrel.hive.state.vehicle_state import vehicle_state_ops
-from nrel.hive.state.vehicle_state.idle import Idle
-from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
 from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import BaseId, VehicleId

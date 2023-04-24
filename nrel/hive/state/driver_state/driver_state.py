@@ -3,8 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from typing import Tuple, Optional, TYPE_CHECKING
 
-from nrel.hive.util import SimulationStateError
 from nrel.hive.state.simulation_state import simulation_state_ops
+from nrel.hive.util import SimulationStateError
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState

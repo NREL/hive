@@ -1,7 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
+from dataclasses import dataclass
 from typing import Tuple, TYPE_CHECKING
 
 from nrel.hive.reporting import instruction_generator_event_ops
