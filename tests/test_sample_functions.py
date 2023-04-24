@@ -20,7 +20,7 @@ class TestSampleVehicles(TestCase):
 
         sample_requests = default_request_sampler(n, sim, env)
 
-        self.assertEquals(len(sample_requests), n, f"should have sampled {n} requests")
+        self.assertEqual(len(sample_requests), n, f"should have sampled {n} requests")
 
         for r in sample_requests:
             self.assertNotEqual(
@@ -51,12 +51,12 @@ class TestSampleVehicles(TestCase):
         )
 
         def check_vehicle(v: Vehicle):
-            self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
-            self.assertEquals(
+            self.assertEqual(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
+            self.assertEqual(
                 v.energy.get(EnergyType.ELECTRIC),
                 env.mechatronics.get(mechatronics_id).battery_capacity_kwh,
             )
-            self.assertEquals(v.position, base.position)
+            self.assertEqual(v.position, base.position)
 
         self.assertEqual(len(result.unwrap().vehicles), n, f"should have {n} vehicles")
         map(check_vehicle, result.unwrap().vehicles.values())
@@ -97,4 +97,4 @@ class TestSampleVehicles(TestCase):
 
         with self.assertRaises(UnwrapFailedError):
             result.unwrap()
-        self.assertEquals(result._inner_value.args[0], failure_msg)
+        self.assertEqual(result._inner_value.args[0], failure_msg)
