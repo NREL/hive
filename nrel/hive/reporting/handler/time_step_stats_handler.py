@@ -7,9 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional
 
 import numpy as np
-import pandas as pd
 from immutables import Map
-from pandas import DataFrame
 
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
@@ -64,20 +62,18 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> Optional[DataFrame]:
+    def get_time_step_stats(self) -> Optional[List[Dict[str, Any]]]:
         """
         return a DataFrame of the time step level statistics.
 
         :return: the time step stats DataFrame
         """
-        if not self.log_time_step_stats:
-            return None
 
-        return DataFrame(self.data)
+        return self.data
 
     def get_fleet_time_step_stats(
         self,
-    ) -> Map[MembershipId, DataFrame]:
+    ) -> Map[MembershipId, List[Dict[str, Any]]]:
         """
         return an immutable map of time step stat DataFrames by membership id.
 

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, NamedTuple, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, NamedTuple, Optional, Tuple, Any
 
 from immutables import Map
-from pandas import DataFrame
 
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
 from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
@@ -73,7 +72,7 @@ class Reporter:
 
     def get_time_step_stats(
         self,
-    ) -> Tuple[Optional[DataFrame], Optional[Map[MembershipId, DataFrame]]]:
+    ) -> Tuple[Optional[list[Dict[str, Any]]], Optional[Map[MembershipId, list[Dict[str, Any]]]]]:
         """
         if a TimeStepStatsHandler exists, return the time step stats DataFrame and the fleet time step stats DataFrames
         :return: the time step stats DataFrame and the fleet time step stats collection of DataFrames if they exist
