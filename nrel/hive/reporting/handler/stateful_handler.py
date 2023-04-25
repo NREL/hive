@@ -1,7 +1,7 @@
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import List
-from dataclasses import asdict
 
 from nrel.hive.config.global_config import GlobalConfig
 from nrel.hive.model.station.station import Station
@@ -102,6 +102,7 @@ class StatefulHandler(Handler):
         out_dict = asdict(station)
         del out_dict["id"]
         del out_dict["state"]
+        del out_dict["energy_dispensed"]
 
         out_dict["station_id"] = station.id
         out_dict["memberships"] = str(station.membership)

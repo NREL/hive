@@ -1,10 +1,9 @@
 from immutables import Map
 
-from nrel.hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_file
-from nrel.hive.util.typealiases import ScheduleId
 from nrel.hive.model.vehicle.schedules.schedule import ScheduleFunction
 from nrel.hive.model.vehicle.schedules.schedule_type import ScheduleType
-
+from nrel.hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_file
+from nrel.hive.util.typealiases import ScheduleId
 
 # each is expected to be a one-argument function that takes a file path
 _constructors = {ScheduleType.TIME_RANGE: time_range_schedules_from_file}

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Optional, Union, Tuple
+from typing import NamedTuple, Dict, Optional, Tuple
 
 from nrel.hive.config.config_builder import ConfigBuilder
-from nrel.hive.model.vehicle.schedules.schedule_type import ScheduleType
 from nrel.hive.model.sim_time import SimTime
+from nrel.hive.model.vehicle.schedules.schedule_type import ScheduleType
 from nrel.hive.util.units import Seconds
+from nrel.hive.util import Ratio
 
 
 class Sim(NamedTuple):
@@ -17,6 +18,7 @@ class Sim(NamedTuple):
     sim_h3_search_resolution: int
     request_cancel_time_seconds: int
     schedule_type: ScheduleType
+    min_delta_energy_change: Ratio = 0.0001
 
     @classmethod
     def default_config(cls) -> Dict:

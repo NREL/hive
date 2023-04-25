@@ -4,7 +4,6 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from typing import Tuple
 
-
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.membership import Membership
 from nrel.hive.util.typealiases import MembershipId

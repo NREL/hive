@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING, Iterable, Optional, Tuple, TypeVar, Union
 import pkg_resources
 import yaml
 
-from nrel.hive.initialization.load import load_simulation, load_config
-from nrel.hive.initialization.initialize_simulation import InitFunction
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.initialization.initialize_simulation import InitFunction
+from nrel.hive.initialization.load import load_simulation, load_config
 from nrel.hive.runner.local_simulation_runner import LocalSimulationRunner
 from nrel.hive.util.rust import USE_RUST
 

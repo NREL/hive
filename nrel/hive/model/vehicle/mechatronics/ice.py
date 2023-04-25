@@ -1,9 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
-
-from typing import Any, Callable, Dict, NamedTuple, TYPE_CHECKING, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, Callable, TYPE_CHECKING, Optional, Tuple
 
 import immutables
 
@@ -151,6 +150,9 @@ class ICE(MechatronicsInterface):
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.GASOLINE: new_energy_gal_gas})
         )
+        updated_vehicle = vehicle.tick_energy_expended(
+            immutables.Map({EnergyType.GASOLINE: vehicle_energy_gal_gas - new_energy_gal_gas})
+        )
         return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
@@ -168,6 +170,9 @@ class ICE(MechatronicsInterface):
         new_energy_gal_gas = max(0.0, vehicle_energy_gal_gas - idle_energy_gal_gas)
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.GASOLINE: new_energy_gal_gas})
+        )
+        updated_vehicle = vehicle.tick_energy_expended(
+            immutables.Map({EnergyType.GASOLINE: vehicle_energy_gal_gas - new_energy_gal_gas})
         )
 
         return updated_vehicle
@@ -197,5 +202,8 @@ class ICE(MechatronicsInterface):
         new_gal_gas = min(self.tank_capacity_gallons, pump_gal_gas)
 
         updated_vehicle = vehicle.modify_energy(immutables.Map({EnergyType.GASOLINE: new_gal_gas}))
+        updated_vehicle = updated_vehicle.tick_energy_gained(
+            immutables.Map({EnergyType.GASOLINE: new_gal_gas - start_gal_gas})
+        )
 
         return updated_vehicle, time_seconds

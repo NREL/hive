@@ -1,9 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass, replace
 
 import logging
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
 import uuid
+from dataclasses import dataclass, replace
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops

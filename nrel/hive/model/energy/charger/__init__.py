@@ -1,6 +1,5 @@
 from csv import DictReader
 from pathlib import Path
-from typing import Dict
 
 from immutables import Map
 

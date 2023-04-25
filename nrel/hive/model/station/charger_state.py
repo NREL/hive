@@ -5,11 +5,10 @@ from typing import NamedTuple
 from returns.result import ResultE, Success, Failure
 
 from nrel.hive.model.energy.charger.charger import Charger
+from nrel.hive.util.error_or_result import ErrorOr
+from nrel.hive.util.exception import SimulationStateError
 from nrel.hive.util.typealiases import ChargerId
 from nrel.hive.util.units import Currency, KwH
-from nrel.hive.util.error_or_result import ErrorOr
-from nrel.hive.runner.environment import Environment
-from nrel.hive.util.exception import SimulationStateError
 
 
 class ChargerState(NamedTuple):

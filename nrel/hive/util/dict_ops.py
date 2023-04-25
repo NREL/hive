@@ -5,7 +5,6 @@ from typing import NamedTuple, Tuple, Optional, TypeVar, FrozenSet, TYPE_CHECKIN
 import h3
 import immutables
 
-
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import EntityId, GeoId
     from nrel.hive.model.entity import Entity

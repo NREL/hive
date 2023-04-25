@@ -1,8 +1,8 @@
 import functools as ft
 from typing import Tuple, Optional
 
-from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.state.simulation_state import simulation_state_ops

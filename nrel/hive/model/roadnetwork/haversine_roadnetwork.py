@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-import os
-
-from nrel.hive.model.roadnetwork.geofence import GeoFence
+import nrel.hive.model.roadnetwork.haversine_link_id_ops as h_ops
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
@@ -15,8 +14,6 @@ from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.typealiases import GeoId, LinkId, H3Resolution
 from nrel.hive.util.units import Kilometers
 from nrel.hive.util.rust import USE_RUST
-
-import nrel.hive.model.roadnetwork.haversine_link_id_ops as h_ops
 
 
 if USE_RUST:
