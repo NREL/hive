@@ -29,19 +29,19 @@ class TestSimulationStateOps(TestCase):
     def test_add_entities(self):
         sim = mock_sim()
 
-        reqs = [mock_request(i) for i in range(10)]
+        reqs = [mock_request(str(i)) for i in range(10)]
         sim_with_reqs = simulation_state_ops.add_entities_safe(sim, reqs).unwrap()
         self.assertEqual(len(sim_with_reqs.requests.values()), 10)
 
-        vehicles = [mock_vehicle(i) for i in range(10)]
+        vehicles = [mock_vehicle(str(i)) for i in range(10)]
         sim_with_vehicles = simulation_state_ops.add_entities_safe(sim, vehicles).unwrap()
         self.assertEqual(len(sim_with_vehicles.vehicles.values()), 10)
 
-        stations = [mock_station(i) for i in range(10)]
+        stations = [mock_station(str(i)) for i in range(10)]
         sim_with_stations = simulation_state_ops.add_entities_safe(sim, stations).unwrap()
         self.assertEqual(len(sim_with_stations.stations.values()), 10)
 
-        bases = [mock_base(i) for i in range(10)]
+        bases = [mock_base(str(i)) for i in range(10)]
         sim_with_bases = simulation_state_ops.add_entities_safe(sim, bases).unwrap()
         self.assertEqual(len(sim_with_bases.bases.values()), 10)
 

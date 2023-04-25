@@ -94,13 +94,14 @@ impl Base {
     }
 
     #[classmethod]
+    #[pyo3(signature = (id, geoid, road_network, station_id, stall_count, membership=Membership::default()))]
     pub fn build(
         _: &PyType,
         id: BaseId,
         geoid: GeoidString,
         road_network: HaversineRoadNetwork,
-        stall_count: usize,
         station_id: Option<StationId>,
+        stall_count: usize,
         membership: Option<Membership>,
     ) -> Self {
         Base::new(id, geoid, road_network, station_id, stall_count, membership)
@@ -140,17 +141,15 @@ impl Base {
             H3Cell::from_coordinate(coord! {x: lon, y: lat}, road_network.sim_h3_resolution)
                 .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
-        let station_id = match row.get("station_id") {
-            Some(sid) => sid,
-            None => "none",
-        }
-        .to_string();
+        let station_id = row.get("station_id")
+            .filter(|sid|  !sid.is_empty() && (sid != &"none"))
+            .map(|sid| StationId::from(sid.clone()));
 
         Ok(Base::new(
             base_id.to_owned().into(),
             h3cell.to_string().into(),
             road_network,
-            Some(station_id.into()),
+            station_id,
             stall_count,
             Some(Membership::default()),
         ))

@@ -56,7 +56,7 @@ impl HaversineRoadNetwork {
         }
 
         let link_id = geoid_string_to_link_id(&origin.geoid, &destination.geoid);
-        let link_dist_km = h3_dist_km(&origin.geoid, &origin.geoid)?;
+        let link_dist_km = h3_dist_km(&origin.geoid, &destination.geoid)?;
 
         let link = LinkTraversal::new(
             link_id,
