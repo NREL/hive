@@ -75,6 +75,8 @@ def sample_vehicles(
                     vehicle_id = f"v{i}"
                     initial_soc = soc_sampling_function()
                     energy = mechatronics.initial_energy(initial_soc)
+                    energy_expended = mechatronics.initial_energy(0)
+                    energy_gained = mechatronics.initial_energy(0)
                     link = location_sampling_function(s)
                     position = EntityPosition(link.link_id, link.start)
                     vehicle_state = Idle.build(vehicle_id)
@@ -83,6 +85,8 @@ def sample_vehicles(
                         id=vehicle_id,
                         mechatronics_id=mechatronics_id,
                         energy=energy,
+                        energy_expended=energy_expended,
+                        energy_gained=energy_gained,
                         position=position,
                         vehicle_state=vehicle_state,
                         driver_state=driver_state,

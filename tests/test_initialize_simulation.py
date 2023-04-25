@@ -1,7 +1,12 @@
-from unittest import TestCase
+import unittest
 
 from nrel.hive.config.network import Network
-from nrel.hive.initialization.initialize_simulation import initialize, default_init_functions
+from nrel.hive.initialization.load import load_simulation
+from nrel.hive.initialization.initialize_simulation import (
+    initialize,
+    default_init_functions,
+    osm_init_function,
+)
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
 )
@@ -10,7 +15,7 @@ from nrel.hive.resources.mock_lobster import *
 import nrel.hive.state.simulation_state.simulation_state_ops as sso
 
 
-class TestInitializeSimulation(TestCase):
+class TestInitializeSimulation(unittest.TestCase):
     def test_initialize_simulation(self):
         conf = mock_config().suppress_logging()
 
@@ -79,3 +84,34 @@ class TestInitializeSimulation(TestCase):
         self.assertEqual(len(sim.vehicles), 20, "should have loaded 20 vehicles")
         self.assertEqual(len(sim.stations), 4, "should have loaded 4 stations")
         self.assertEqual(len(sim.bases), 2, "should have loaded 2 bases")
+
+    @unittest.skip("makes API call to OpenStreetMaps via osmnx")
+    def test_initialize_simulation_load_from_geofence_file(self):
+        """Move this to long running if it gets to be out of hand"""
+        conf = (
+            mock_config()
+            ._replace(
+                network=Network(
+                    network_type="osm_network",
+                    default_speed_kmph=40,
+                )
+            )
+            .suppress_logging()
+        )
+
+        new_input = conf.input_config._replace(
+            geofence_file=Path(
+                resource_filename(
+                    "nrel.hive.resources.scenarios.denver_downtown.geofence",
+                    "downtown_denver.geojson",
+                )
+            ),
+            road_network_file=None,
+        )
+
+        conf = conf._replace(input_config=new_input)
+
+        runnerPayload = load_simulation(
+            config=conf,
+        )
+        self.assertIsNotNone(runnerPayload.s.road_network)
