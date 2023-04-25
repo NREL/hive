@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, time
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 from nrel.hive.util.exception import TimeParseError
 
+if TYPE_CHECKING:
+    import yaml
 
 class SimTime(int):
     ERROR_MSG = (
@@ -65,3 +67,7 @@ class SimTime(int):
 
     def as_iso_time(self) -> str:
         return datetime.utcfromtimestamp(int(self)).isoformat()
+
+    @staticmethod
+    def yaml_representer(dumper: yaml.Dumper, o: "SimTime"):
+        return dumper.represent_scalar(tag = 'tag:yaml.org,2002:str', value = o.as_iso_time())

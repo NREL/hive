@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    import yaml
 
 class ChargingSearchType(Enum):
     NEAREST_SHORTEST_QUEUE = 1
@@ -26,3 +29,7 @@ class ChargingSearchType(Enum):
             raise NameError(
                 f"charging search type {string} is not known, must be one of {valid_names}"
             )
+
+    @staticmethod
+    def yaml_representer(dumper: yaml.Dumper, o: "ChargingSearchType"):
+        return dumper.represent_scalar(tag = 'tag:yaml.org,2002:str', value = o.name.lower())
