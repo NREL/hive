@@ -4,7 +4,7 @@ import logging
 import os
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, Optional
 
 import numpy as np
 from immutables import Map
@@ -41,7 +41,7 @@ class TimeStepStatsHandler(Handler):
 
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
-            self.data: List[Dict[str, Any]] = []
+            self.data: list[dict[str, Any]] = []
             self.time_step_stats_outpath = scenario_output_directory.joinpath(
                 f"{file_name}_all.csv"
             )
@@ -53,7 +53,7 @@ class TimeStepStatsHandler(Handler):
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
                 "fleet_time_step_stats/"
             )
-            self.fleets_data: Dict[str, List[Dict[str, Any]]] = {}
+            self.fleets_data: dict[str, list[Dict[str, Any]]] = {}
             for fleet_id in fleet_ids:
                 if fleet_id is None:
                     self.fleets_data["none"] = []
@@ -73,7 +73,7 @@ class TimeStepStatsHandler(Handler):
 
     def get_fleet_time_step_stats(
         self,
-    ) -> Map[MembershipId, List[Dict[str, Any]]]:
+    ) -> Map[MembershipId, list[Dict[str, Any]]]:
         """
         return an immutable map of time step stat data by membership id.
 
@@ -87,7 +87,7 @@ class TimeStepStatsHandler(Handler):
         )
         return result
 
-    def handle(self, reports: List[Report], runner_payload: RunnerPayload):
+    def handle(self, reports: list[Report], runner_payload: RunnerPayload):
         """
         called at each log step. aggregates various statistics to the time bin level
 
@@ -108,7 +108,7 @@ class TimeStepStatsHandler(Handler):
         )
 
         # sort reports by type
-        reports_by_type: Dict[ReportType, List[Report]] = {}
+        reports_by_type: dict[ReportType, list[Report]] = {}
         for report in reports:
             if report.report_type not in reports_by_type.keys():
                 reports_by_type[report.report_type] = []
