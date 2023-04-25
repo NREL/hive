@@ -139,7 +139,9 @@ class TimeStepStatsHandler(Handler):
             )
 
             # count the number of vehicles in each vehicle state
-            veh_state_counts = Counter(v.vehicle_state.vehicle_state_type.name for v in sim_state.get_vehicles())
+            veh_state_counts = Counter(
+                v.vehicle_state.vehicle_state_type.name for v in sim_state.get_vehicles()
+            )
 
             stats_row = {
                 "time_step": time_step,
@@ -190,14 +192,18 @@ class TimeStepStatsHandler(Handler):
             for state in self.vehicle_state_names:
                 stats_row[f"vehicles_{state.lower()}"] = veh_state_counts[state]
 
-            available_driver_counts = Counter(v.driver_state.available for v in sim_state.get_vehicles())
+            available_driver_counts = Counter(
+                v.driver_state.available for v in sim_state.get_vehicles()
+            )
 
             stats_row["drivers_available"] = available_driver_counts[True]
             stats_row["drivers_unavailable"] = available_driver_counts[False]
 
             # count number of chargers in use by type
             if ReportType.VEHICLE_CHARGE_EVENT in reports_by_type.keys():
-                charger_counts = Counter(r.report["charger_id"] for r in reports_by_type[ReportType.VEHICLE_CHARGE_EVENT])
+                charger_counts = Counter(
+                    r.report["charger_id"] for r in reports_by_type[ReportType.VEHICLE_CHARGE_EVENT]
+                )
                 for charger in env.chargers.keys():
                     stats_row[f"charger_{charger.lower()}"] = charger_counts[charger]
             else:
@@ -266,7 +272,9 @@ class TimeStepStatsHandler(Handler):
                 )
 
                 # count the number of vehicles in each vehicle state in this fleet
-                veh_state_counts_in_fleet = Counter(v.vehicle_state.vehicle_state_type.name for v in veh_in_fleet)
+                veh_state_counts_in_fleet = Counter(
+                    v.vehicle_state.vehicle_state_type.name for v in veh_in_fleet
+                )
 
                 # create stats row with the time step
                 fleet_stats_row = {
@@ -323,13 +331,18 @@ class TimeStepStatsHandler(Handler):
                 for state in self.vehicle_state_names:
                     fleet_stats_row[f"vehicles_{state.lower()}"] = veh_state_counts_in_fleet[state]
 
-                available_driver_counts_in_fleet = Counter(v.driver_state.available for v in veh_in_fleet)
+                available_driver_counts_in_fleet = Counter(
+                    v.driver_state.available for v in veh_in_fleet
+                )
                 fleet_stats_row["drivers_available"] = available_driver_counts_in_fleet[True]
                 fleet_stats_row["drivers_unavailable"] = available_driver_counts_in_fleet[False]
 
                 # count number of chargers in use by type
                 if ReportType.VEHICLE_CHARGE_EVENT in requests_in_fleet.keys():
-                    charger_counts_in_fleet = Counter(r.report["charger_id"] for r in requests_in_fleet[ReportType.VEHICLE_CHARGE_EVENT])
+                    charger_counts_in_fleet = Counter(
+                        r.report["charger_id"]
+                        for r in requests_in_fleet[ReportType.VEHICLE_CHARGE_EVENT]
+                    )
                     for charger in env.chargers.keys():
                         fleet_stats_row[f"charger_{charger.lower()}"] = charger_counts_in_fleet[
                             charger
