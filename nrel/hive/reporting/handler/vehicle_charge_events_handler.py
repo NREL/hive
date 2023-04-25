@@ -1,7 +1,5 @@
 from typing import List, Dict
 
-import pandas as pd
-
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
@@ -38,13 +36,12 @@ class VehicleChargeEventsHandler(Handler):
                         f"unable to parse charge event from report {report}, missing entry for {e}"
                     )
 
-    def get_events(self):
+    def get_events(self) -> Dict[str, list]:
         """
         grabs the events as a pandas dataframe
         :return: a pandas dataframe containing charge events
         """
-        df = pd.DataFrame(data=self.events)
-        return df
+        return self.events
 
     def clear(self):
         """
