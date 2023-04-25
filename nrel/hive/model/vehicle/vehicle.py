@@ -221,7 +221,7 @@ class Vehicle(Entity):
         :return:
         """
         energy_expended = {k: self.energy_expended[k] + delta_energy[k] for k in self.energy.keys()}
-        return replace(self, energy_expended=energy_expended)
+        return replace(self, energy_expended=immutables.Map(energy_expended))
 
     def tick_energy_gained(self, delta_energy: immutables.Map[EnergyType, float]) -> Vehicle:
         """
@@ -231,7 +231,7 @@ class Vehicle(Entity):
         :return:
         """
         energy_gained = {k: self.energy_gained[k] + delta_energy[k] for k in self.energy.keys()}
-        return replace(self, energy_gained=energy_gained)
+        return replace(self, energy_gained=immutables.Map(energy_gained))
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """
