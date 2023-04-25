@@ -160,6 +160,7 @@ class HiveConfig(NamedTuple):
             log_run=False,
             log_states=False,
             log_events=False,
+            log_kepler=False,
             log_stats=False,
             log_station_capacities=False,
             log_instructions=False,

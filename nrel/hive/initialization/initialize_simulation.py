@@ -23,6 +23,7 @@ from nrel.hive.model.vehicle.schedules import build_schedules_table
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
 from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
+from nrel.hive.reporting.handler.kepler_handler import KeplerHandler
 from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
 from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
@@ -198,6 +199,8 @@ def initialize_environment_reporting(
         reporter.add_handler(
             InstructionHandler(config.global_config, config.scenario_output_directory)
         )
+    if config.global_config.log_kepler:
+        reporter.add_handler(KeplerHandler(config.scenario_output_directory))
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
     if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:

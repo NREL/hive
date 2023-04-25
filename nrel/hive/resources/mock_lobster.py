@@ -33,6 +33,7 @@ from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import T
 from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.reporter import Reporter, Report
+from nrel.hive.reporting.handler.kepler_feature import *
 from nrel.hive.runner.environment import Environment
 from nrel.hive.runner.runner_payload import RunnerPayload
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
