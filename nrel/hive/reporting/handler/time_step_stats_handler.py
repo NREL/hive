@@ -62,14 +62,14 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> HiveTabularDataDicts:
+    def get_time_step_stats(self) -> Optional[HiveTabularDataDicts]:
         """
         return a DataFrame of the time step level statistics.
 
         :return: the time step stats DataFrame
         """
 
-        return self.data
+        return self.data if self.data else None
 
     def get_fleet_time_step_stats(
         self,

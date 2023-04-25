@@ -72,7 +72,7 @@ class Reporter:
         return final_report
     def get_time_step_stats(
         self,
-    ) -> Tuple[HiveTabularDataDicts, Optional[Map[MembershipId, HiveTabularDataDicts]]]:
+    ) -> Tuple[Optional[HiveTabularDataDicts], Optional[Map[MembershipId, HiveTabularDataDicts]]]:
         """
         if a TimeStepStatsHandler exists, return the time step stats and the fleet time step stats
         :return: the time step stats and the fleet time step stats collection if they exist
