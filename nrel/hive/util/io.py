@@ -1,6 +1,6 @@
 import csv
 import pathlib
-from collections.abc import Sequence
+from typing import Sequence
 
 
 def to_csv(data: Sequence[Sequence[str]], path: pathlib.Path):
