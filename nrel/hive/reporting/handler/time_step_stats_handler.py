@@ -3,17 +3,17 @@ from __future__ import annotations
 import logging
 import os
 from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, FrozenSet, Optional, List
 
 import numpy as np
-import pandas as pd
 from immutables import Map
-from pandas import DataFrame
 
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
+from nrel.hive.util.io import to_csv, to_csv_dicts
 
 if TYPE_CHECKING:
     from nrel.hive.config import HiveConfig
@@ -42,7 +42,7 @@ class TimeStepStatsHandler(Handler):
 
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
-            self.data: List[Dict[str, Any]] = []
+            self.data: list = []
             self.time_step_stats_outpath = scenario_output_directory.joinpath(
                 f"{file_name}_all.csv"
             )
@@ -54,7 +54,7 @@ class TimeStepStatsHandler(Handler):
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
                 "fleet_time_step_stats/"
             )
-            self.fleets_data: Dict[str, List[Dict[str, Any]]] = {}
+            self.fleets_data: dict = {}
             for fleet_id in fleet_ids:
                 if fleet_id is None:
                     self.fleets_data["none"] = []
@@ -63,30 +63,25 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> Optional[DataFrame]:
+    def get_time_step_stats(self) -> list:
         """
         return a DataFrame of the time step level statistics.
 
         :return: the time step stats DataFrame
         """
-        if not self.log_time_step_stats:
-            return None
 
-        return DataFrame(self.data)
+        return self.data
 
     def get_fleet_time_step_stats(
         self,
-    ) -> Map[MembershipId, DataFrame]:
+    ) -> Map[MembershipId, Sequence]:
         """
-        return an immutable map of time step stat DataFrames by membership id.
+        return an immutable map of time step stat data by membership id.
 
-        :return: the immutable map containing time step stats DataFrames by membership id
+        :return: the immutable map containing time step stats data by membership id
         """
         result = Map(
-            {
-                fleet_id: DataFrame(data) if len(data) > 0 else None
-                for fleet_id, data in self.fleets_data.items()
-            }
+            {fleet_id: data if data else None for fleet_id, data in self.fleets_data.items()}
         )
         return result
 
@@ -356,24 +351,23 @@ class TimeStepStatsHandler(Handler):
 
     def close(self, runner_payload: RunnerPayload):
         """
-        saves all time step stat DataFrames as csv files to the scenario output directory.
+        saves all time step stat data as csv files to the scenario output directory.
 
         :return:
         """
         if self.log_time_step_stats:
-            pd.DataFrame.to_csv(
+            to_csv_dicts(
                 self.get_time_step_stats(),
                 self.time_step_stats_outpath,
-                index=False,
             )
             log.info(f"time step stats written to {self.time_step_stats_outpath}")
 
         if self.log_fleet_time_step_stats:
             os.mkdir(self.fleets_timestep_stats_outpath)
-            for fleet_id, fleet_df in self.get_fleet_time_step_stats().items():
-                if fleet_df is not None:
+            for fleet_id, fleet_data in self.get_fleet_time_step_stats().items():
+                if fleet_data is not None:
                     outpath = self.fleets_timestep_stats_outpath.joinpath(
                         f"{self.file_name}_{fleet_id}.csv"
                     )
-                    pd.DataFrame.to_csv(fleet_df, outpath, index=False)
+                    to_csv(fleet_data, outpath)
                     log.info(f"fleet id: {fleet_id} time step stats written to {outpath}")
