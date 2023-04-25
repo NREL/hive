@@ -103,7 +103,7 @@ def interpolate_between_geoids(a: GeoId, b: GeoId, ratio: Ratio) -> GeoId:
     :param ratio: The ratio from a->b
     :return: An interpolated GeoId
     """
-    line = h3.h3_line(a, b)
+    line = h3.grid_path_cells(a, b)
     index = int(len(line) * ratio)
 
     return line[index]

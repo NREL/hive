@@ -75,7 +75,7 @@ class RoadNetwork(ABC):
         if not link:
             return None
         else:
-            hexes_on_link = h3.h3_line(link.start, link.end)
+            hexes_on_link = h3.grid_path_cells(link.start, link.end)
             if geoid in hexes_on_link:
                 position = EntityPosition(link.link_id, geoid)
                 return position

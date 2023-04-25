@@ -92,7 +92,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                 :return: an error or updated accumulator
                 """
                 try:
-                    h3_line = h3.h3_line(link.start, link.end)
+                    h3_line = h3.grid_path_cells(link.start, link.end)
 
                     # we want to look up edges by their midpoint. that said, two edges will share the same
                     # endpoints, one for each direction. since these two edges would share the same midpoint,
