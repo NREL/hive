@@ -1,11 +1,11 @@
 import unittest
 
+from nrel.hive.app.hive_cosim import crank
 from nrel.hive.config.network import Network
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.initialization.initialize_simulation import (
     initialize,
     default_init_functions,
-    osm_init_function,
 )
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
@@ -53,6 +53,19 @@ class TestInitializeSimulation(unittest.TestCase):
         self.assertIsNone(sim.vehicles.get("v1"), "should not have loaded vehicle v1")
         self.assertIsNone(sim.bases.get("b1"), "should not have loaded base b1")
         self.assertIsNone(sim.stations.get("s1"), "should not have loaded station s1")
+
+    def test_load_simulation_with_custom_instruction_function(self):
+        conf = mock_config().suppress_logging()
+
+        def custom_instruction_function(
+            sim: SimulationState, env: Environment
+        ) -> Tuple[Instruction, ...]:
+            dummy_instructions = (IdleInstruction("v1"), IdleInstruction("v2"))
+            return dummy_instructions
+
+        rp = load_simulation(conf, custom_instruction_generators=[custom_instruction_function])
+
+        result = crank(rp, 1)
 
     def test_initialize_simulation_with_sampling(self):
         conf = (
