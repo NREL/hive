@@ -17,6 +17,7 @@ from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
 from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
 from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
+from nrel.hive.reporting.handler.kepler_handler import KeplerHandler
 from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
 from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
@@ -197,6 +198,10 @@ def initialize_environment_reporting(
     if config.global_config.log_instructions:
         reporter.add_handler(
             InstructionHandler(config.global_config, config.scenario_output_directory)
+        )
+    if config.global_config.log_kepler:
+        reporter.add_handler(
+            KeplerHandler(config.scenario_output_directory)
         )
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())

@@ -16,6 +16,7 @@ class GlobalConfig(NamedTuple):
     log_events: bool
     log_states: bool
     log_instructions: bool
+    log_kepler: bool
     log_stats: bool
     log_level: str
     log_sim_config: Set[ReportType]
@@ -40,6 +41,7 @@ class GlobalConfig(NamedTuple):
             "log_states",
             "log_events",
             "log_instructions",
+            "log_kepler",
             "log_stats",
             "log_level",
             "log_sim_config",

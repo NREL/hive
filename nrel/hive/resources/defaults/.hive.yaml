@@ -11,6 +11,9 @@ log_states: True
 # whether or not to log events when they occur (i.e. a charging event) 
 log_events: True
 
+# whether or not to log kepler.gl inputs
+log_kepler: False
+
 # whether or not to log issued instructions 
 log_instructions: True
 
