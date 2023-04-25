@@ -10,7 +10,12 @@ That module exposes a `crank` function that takes in a RunnerPayload and an inte
 
 ## Custom Control Logic
 
-Adding custom control logic can be done by creating a sub class for the `InstructionGenerator` class and overriding the `generate_instructions` method. You can then inject the control module into the simulation at load time using the `load_scenario` function and then, at crank step, you can optionally update your custom control object by getting it with the `get_instruction_generator` function, modifying it and putting it back into the simulation with `update_instruction_generator`.
+Adding custom control logic can be done in two ways:
+
+1. Creating a sub class for the `InstructionGenerator` class and overriding the `generate_instructions` method.
+1. Creating a function that takes in the simulation state and the environment and returning an instruction set.
+
+You can then inject the control module into the simulation at load time using the `load_scenario` function and then, at crank step, you can optionally update your custom control object by getting it with the `get_instruction_generator` function, modifying it and putting it back into the simulation with `update_instruction_generator`.
 
 ## Example
 
