@@ -71,7 +71,7 @@ class Reporter:
         return final_report
     def get_time_step_stats(
         self,
-    ) -> Tuple[Optional, Optional]:
+    ) -> Tuple[Optional[Any], Optional[Any]]:
         """
         if a TimeStepStatsHandler exists, return the time step stats and the fleet time step stats
         :return: the time step stats and the fleet time step stats collection if they exist
