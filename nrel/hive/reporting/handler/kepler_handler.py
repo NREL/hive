@@ -42,7 +42,7 @@ class KeplerHandler(Handler):
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload) -> None:
         """
-        Caputre the current states/locations of all vehicles and save in the in memory Dict and write complete trips to
+        Capture the current states/locations of all vehicles and save in the in memory Dict and write complete trips to
         the kepler.json file
         """
         sim_state = runner_payload.s
