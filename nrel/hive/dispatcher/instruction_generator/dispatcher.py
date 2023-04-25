@@ -1,8 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
-import logging
 import functools as ft
+import logging
+from dataclasses import dataclass
 from typing import Tuple, TYPE_CHECKING, Optional
 
 from nrel.hive.dispatcher.instruction_generator import assignment_ops

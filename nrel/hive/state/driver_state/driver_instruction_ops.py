@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from turtle import home
 from typing import Optional, TYPE_CHECKING, Tuple
 
 import h3
@@ -15,14 +14,13 @@ from nrel.hive.dispatcher.instruction.instructions import (
 )
 from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import (
     instruct_vehicles_to_dispatch_to_station,
-    get_nearest_valid_station_distance,
 )
-from nrel.hive.model.entity import Entity
-from nrel.hive.util import TupleOps, H3Ops
-from nrel.hive.state.vehicle_state.idle import Idle
-from nrel.hive.state.vehicle_state.charging_base import ChargingBase
-from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.model.energy.energytype import EnergyType
+from nrel.hive.model.entity import Entity
+from nrel.hive.state.vehicle_state.charging_base import ChargingBase
+from nrel.hive.state.vehicle_state.idle import Idle
+from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
+from nrel.hive.util import TupleOps, H3Ops
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState

@@ -1,8 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass, replace
 
 import logging
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
+from dataclasses import dataclass, replace
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 import immutables

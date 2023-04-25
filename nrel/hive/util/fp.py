@@ -1,9 +1,8 @@
+import functools as ft
 from typing import Any, Callable, Iterable, TypeVar
-from returns.io import IOResult
+
 from returns.result import ResultE, Success, Failure
 from returns.unsafe import unsafe_perform_io
-
-import functools as ft
 
 
 def throw_on_failure(io_result):

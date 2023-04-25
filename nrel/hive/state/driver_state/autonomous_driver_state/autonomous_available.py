@@ -1,8 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
-from multiprocessing.sharedctypes import Value
+from dataclasses import dataclass
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction

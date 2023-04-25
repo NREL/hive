@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Tuple, Set
 import h3
 import immutables
 
-from nrel.hive.model.energy import Charger
 import nrel.hive.model.roadnetwork.route as route
+from nrel.hive.model.energy import Charger
+from nrel.hive.model.roadnetwork.routetraversal import RouteTraversal
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.vehicle import Vehicle
-from nrel.hive.model.roadnetwork.routetraversal import RouteTraversal
 from nrel.hive.reporting.reporter import Report, ReportType
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
@@ -20,7 +20,6 @@ from nrel.hive.util.time_helpers import time_diff
 if TYPE_CHECKING:
     from nrel.hive.model.request.request import Request
     from nrel.hive.model.vehicle.mechatronics.mechatronics_interface import MechatronicsInterface
-    from nrel.hive.state.vehicle_state.vehicle_state_ops import MoveResult
 
 
 def vehicle_move_event(

@@ -1,15 +1,14 @@
 from __future__ import annotations
-from dataclasses import dataclass, replace
 
-import logging
 import inspect
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING, Type, Union
+import logging
+from dataclasses import dataclass, replace
+from typing import Tuple, TYPE_CHECKING, Type, Union
 
 import immutables
-
 from returns.result import ResultE, Failure, Success
-from nrel.hive.dispatcher.instruction.instruction import Instruction
 
+from nrel.hive.dispatcher.instruction.instruction import Instruction
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
     InstructionGenerator,
     InstructionGeneratorId,

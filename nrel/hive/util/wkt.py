@@ -1,6 +1,5 @@
-from typing import Tuple
-
 import functools as ft
+from typing import Tuple
 
 
 def polygon_empty() -> str:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import logging
+from itertools import islice, tee
 from pathlib import Path
 from typing import (
     Iterator,
@@ -11,13 +12,10 @@ from typing import (
     Callable,
     Tuple,
     Any,
-    NamedTuple,
     Iterable,
     Generator,
     Union,
 )
-
-from itertools import islice, tee
 
 log = logging.getLogger(__name__)
 
