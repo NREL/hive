@@ -1,8 +1,13 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple, Dict, Any
 import h3
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util.typealiases import *
+
+PROPERTY_TYPE = dict[str, VehicleId | str]
+COORD_TYPE = list[float | str]
+GEOMETRY_TYPE = dict[str, str | list[COORD_TYPE]]
 
 
 class KeplerFeature:
@@ -30,13 +35,13 @@ class KeplerFeature:
         """
         self.coords.append((geoid, timestamp))
 
-    def gen_json(self) -> Dict[str, Any]:
+    def gen_json(self) -> Dict[str, str | PROPERTY_TYPE | GEOMETRY_TYPE]:
         """
         Generates a json freindly dictionary for Kepler on the vehicle's trip
 
         :return: A dictionary on the vehicle's trip for Kepler
         """
-        log_dict = {
+        log_dict: dict[str, str | PROPERTY_TYPE | GEOMETRY_TYPE] = {
             "type": "Feature",
             "properties": {
                 "vehicle_id": self.id,
