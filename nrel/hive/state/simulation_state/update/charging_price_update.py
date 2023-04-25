@@ -242,7 +242,7 @@ def _map_to_station_ids(
         else:
             # k may be a geoid
             try:
-                res = h3.h3_get_resolution(k)
+                res = h3.get_resolution(k)
 
                 # find the set of all station search geoids corresponding with the
                 # provided station charge price geoid

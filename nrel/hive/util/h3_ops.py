@@ -78,7 +78,7 @@ class H3Ops:
         """
         if not entities:
             return None
-        geoid_res = h3.h3_get_resolution(geoid)
+        geoid_res = h3.get_resolution(geoid)
         if geoid_res < sim_h3_search_resolution:
             raise H3Error("search resolution must be less than geoid resolution")
 
@@ -223,7 +223,7 @@ class H3Ops:
             # find the point along the line
             start = h3.h3_to_geo(link.start)
             end = h3.h3_to_geo(link.end)
-            res = h3.h3_get_resolution(link.start)
+            res = h3.get_resolution(link.start)
             lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
             lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
             return h3.geo_to_h3(lat, lon, res)
