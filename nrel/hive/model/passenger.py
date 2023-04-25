@@ -6,49 +6,61 @@ from dataclasses import dataclass, replace
 
 from nrel.hive.model.membership import Membership
 from nrel.hive.model.sim_time import SimTime
+from nrel.hive.util.rust import USE_RUST
 
 if TYPE_CHECKING:
     from nrel.hive.util.typealiases import *
 
+if USE_RUST:
+    from hive_core import Resource as Passenger
+else:
 
-@dataclass(frozen=True)
-class Passenger:
-    """
-    A tuple representing a passenger in the simulation.
-
-
-    :param id: the unique id of the passenger
-    :type id: PassengerId
-
-    :param origin: the pickup location of the passenger
-    :type origin: GeoId
-
-    :param destination: the destination location of the passenger
-    :type destination: GeoId
-
-    :param departure_time: the departure time of the passenger
-    :type departure_time: SimTime
-
-    :param vehicle_id: id of the vehicle that the passenger is occupying
-    :type vehicle_id: Optional[VehicleId]
-    """
-
-    id: PassengerId
-    origin: GeoId
-    destination: GeoId
-    departure_time: SimTime
-    membership: Membership
-    vehicle_id: Optional[VehicleId] = None
-
-    def add_vehicle_id(self, vehicle_id: VehicleId) -> Passenger:
+    @dataclass(frozen=True)
+    class Passenger:  # type: ignore
         """
-        Assign a VehicleId to a passenger
+        A tuple {
+        Resource {
+            id: self.id.clone(),
+            origin: self.origin.clone(),
+            destination: self.destination.clone(),
+            departure_time: self.departure_time.clone(),
+            membership: self.membership.clone(),
+            vehicle_id: Arc::new(Some(vehicle_id)),
+        }} representing a passenger in the simulation.
 
 
-        :param vehicle_id: vehicle id
-        :return: updated Passenger
+        :param id: the unique id of the passenger
+        :type id: PassengerId
+
+        :param origin: the pickup location of the passenger
+        :type origin: GeoId
+
+        :param destination: the destination location of the passenger
+        :type destination: GeoId
+
+        :param departure_time: the departure time of the passenger
+        :type departure_time: SimTime
+
+        :param vehicle_id: id of the vehicle that the passenger is occupying
+        :type vehicle_id: Optional[VehicleId]
         """
-        return replace(self, vehicle_id=vehicle_id)
+
+        id: PassengerId
+        origin: GeoId
+        destination: GeoId
+        departure_time: SimTime
+        membership: Membership
+        vehicle_id: Optional[VehicleId] = None
+
+        def add_vehicle_id(self, vehicle_id: VehicleId) -> Passenger:
+            """
+            Assign a VehicleId to a passenger
+
+
+            :param vehicle_id: vehicle id
+            :return: updated Passenger
+            """
+            return replace(self, vehicle_id=vehicle_id)
 
 
 def create_passenger_id(request_id: RequestId, passenger_id: int) -> PassengerId:

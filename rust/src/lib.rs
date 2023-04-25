@@ -8,7 +8,7 @@ pub mod entity_position;
 pub mod geoid;
 pub mod link;
 pub mod membership;
-pub mod passenger;
+pub mod resource;
 pub mod road_network;
 pub mod station;
 pub mod utils;
@@ -23,7 +23,7 @@ use entity_position::EntityPosition;
 use geoid::Geoid;
 use link::LinkTraversal;
 use membership::Membership;
-use passenger::Passenger;
+use resource::Resource;
 use road_network::HaversineRoadNetwork;
 
 /// A Python module implemented in Rust.
@@ -35,6 +35,6 @@ fn hive_core(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<EntityPosition>()?;
     m.add_class::<LinkTraversal>()?;
     m.add_class::<Base>()?;
-    m.add_class::<Passenger>()?;
+    m.add_class::<Resource>()?;
     Ok(())
 }

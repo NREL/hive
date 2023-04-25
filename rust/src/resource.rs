@@ -1,16 +1,13 @@
 use std::sync::Arc;
 
-use pyo3::{
-    prelude::*,
-    types::{PyDict, PyType},
-};
+use pyo3::{prelude::*, types::PyDict};
 
 use crate::membership::Membership;
 use crate::type_aliases::*;
 
 #[pyclass]
 #[derive(Clone)]
-pub struct Passenger {
+pub struct Resource {
     id: Arc<PassengerId>,
     origin: Arc<GeoidString>,
     destination: Arc<GeoidString>,
@@ -19,7 +16,7 @@ pub struct Passenger {
     vehicle_id: Arc<Option<VehicleId>>,
 }
 
-impl Passenger {
+impl Resource {
     pub fn new(
         id: PassengerId,
         origin: GeoidString,
@@ -28,7 +25,7 @@ impl Passenger {
         membership: Option<Membership>,
         vehicle_id: Option<VehicleId>,
     ) -> Self {
-        Passenger {
+        Resource {
             id: Arc::new(id),
             origin: Arc::new(origin),
             destination: Arc::new(destination),
@@ -40,7 +37,7 @@ impl Passenger {
 }
 
 #[pymethods]
-impl Passenger {
+impl Resource {
     pub fn copy(&self) -> Self {
         self.clone()
     }
@@ -75,17 +72,18 @@ impl Passenger {
         py.eval("SimTime(departure_time)", None, Some(locals))
     }
 
+    #[getter]
     pub fn membership(&self) -> Membership {
         (*self.membership).clone()
     }
 
+    #[getter]
     pub fn vehicle_id(&self) -> Option<VehicleId> {
         (*self.vehicle_id).clone()
     }
 
-    #[classmethod]
-    pub fn build(
-        _cls: &PyType,
+    #[new]
+    fn py_new(
         id: PassengerId,
         origin: GeoidString,
         destination: GeoidString,
@@ -93,7 +91,7 @@ impl Passenger {
         membership: Option<Membership>,
         vehicle_id: Option<VehicleId>,
     ) -> Self {
-        Passenger::new(
+        Resource::new(
             id,
             origin,
             destination,
@@ -101,5 +99,16 @@ impl Passenger {
             membership,
             vehicle_id,
         )
+    }
+
+    pub fn add_vehicle_id(&self, vehicle_id: VehicleId) -> Self {
+        Resource {
+            id: self.id.clone(),
+            origin: self.origin.clone(),
+            destination: self.destination.clone(),
+            departure_time: self.departure_time.clone(),
+            membership: self.membership.clone(),
+            vehicle_id: Arc::new(Some(vehicle_id)),
+        }
     }
 }
