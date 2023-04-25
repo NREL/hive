@@ -5,7 +5,7 @@ import os
 from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, Optional, List
 
 import numpy as np
 from immutables import Map
@@ -88,7 +88,7 @@ class TimeStepStatsHandler(Handler):
         )
         return result
 
-    def handle(self, reports: list[Report], runner_payload: RunnerPayload):
+    def handle(self, reports: List[Report], runner_payload: RunnerPayload):
         """
         called at each log step. aggregates various statistics to the time bin level
 
@@ -109,7 +109,7 @@ class TimeStepStatsHandler(Handler):
         )
 
         # sort reports by type
-        reports_by_type: dict[ReportType, list[Report]] = {}
+        reports_by_type: Dict[ReportType, List[Report]] = {}
         for report in reports:
             if report.report_type not in reports_by_type.keys():
                 reports_by_type[report.report_type] = []
