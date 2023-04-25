@@ -19,6 +19,8 @@ from nrel.hive.dispatcher.instruction.instruction import Instruction
 import nrel.hive.app.hive_cosim as hc
 
 
+# you can provide custom control logic as a custom InstructionGenerator
+# this is useful if you need to save state with the controller
 @dataclass(frozen=True)
 class CustomDispatcher(InstructionGenerator):
     random_instructions: int
@@ -43,6 +45,17 @@ class CustomDispatcher(InstructionGenerator):
         return replace(self, random_instructions=new_r)
 
 
+# you can also provide custom control logic as a function
+# this is useful if you don't need to save state and want a simpler interface
+# the function must have the following signature:
+def custom_dispatcher_function(sim: SimulationState, env: Environment) -> Tuple[Instruction, ...]:
+    # tell all vehicles to idle
+    instructions = []
+    for vehicle in sim.get_vehicles():
+        instructions.append(IdleInstruction(vehicle.id))
+    return tuple(instructions)
+
+
 def run():
     denver_demo_path = (
         package_root() / "resources" / "scenarios" / "denver_downtown" / "denver_demo.yaml"
@@ -50,7 +63,10 @@ def run():
 
     dispatcher = CustomDispatcher.build(1)
 
-    rp = hc.load_scenario(denver_demo_path, custom_instruction_generators=tuple([dispatcher]))
+    rp = hc.load_scenario(
+        denver_demo_path,
+        custom_instruction_generators=tuple([dispatcher, custom_dispatcher_function]),
+    )
 
     for _ in tqdm(range(100)):
         # crank sim 10 time steps
