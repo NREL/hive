@@ -172,8 +172,8 @@ class Request(Entity):
             try:
                 o_lat, o_lon = float(row["o_lat"]), float(row["o_lon"])
                 d_lat, d_lon = float(row["d_lat"]), float(row["d_lon"])
-                o_geoid = h3.geo_to_h3(o_lat, o_lon, env.config.sim.sim_h3_resolution)
-                d_geoid = h3.geo_to_h3(d_lat, d_lon, env.config.sim.sim_h3_resolution)
+                o_geoid = h3.latlng_to_cell(o_lat, o_lon, env.config.sim.sim_h3_resolution)
+                d_geoid = h3.latlng_to_cell(d_lat, d_lon, env.config.sim.sim_h3_resolution)
 
                 try:
                     departure_time_result = SimTime.build(row["departure_time"])

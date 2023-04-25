@@ -529,8 +529,8 @@ class TestVehicleState(TestCase):
         self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_dispatch_base_update(self):
-        near = h3.geo_to_h3(39.7539, -104.974, 15)
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        near = h3.latlng_to_cell(39.7539, -104.974, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle_from_geoid(geoid=near)
         base = mock_base_from_geoid(geoid=omf_brewing)
         sim = mock_sim(vehicles=(vehicle,), bases=(base,))
@@ -617,7 +617,7 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_base_enter_route_with_bad_source(self):
         # omf brewing is not the same location as the vehicle
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         base = mock_base()
         sim = mock_sim(
@@ -634,7 +634,7 @@ class TestVehicleState(TestCase):
 
     def test_dispatch_base_enter_route_with_bad_destination(self):
         # omf brewing is not the same location as the base
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         base = mock_base()
         sim = mock_sim(
@@ -654,7 +654,7 @@ class TestVehicleState(TestCase):
     ####################################################################################################################
 
     def test_dispatch_station_enter(self):
-        outer_range_brewing = h3.geo_to_h3(39.5892193, -106.1011423, 15)
+        outer_range_brewing = h3.latlng_to_cell(39.5892193, -106.1011423, 15)
         vehicle = mock_vehicle()
         station = mock_station_from_geoid(geoid=outer_range_brewing)
         charger = mock_dcfc_charger_id()
@@ -732,8 +732,8 @@ class TestVehicleState(TestCase):
         self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_dispatch_station_update(self):
-        near = h3.geo_to_h3(39.7539, -104.974, 15)
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        near = h3.latlng_to_cell(39.7539, -104.974, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle_from_geoid(geoid=near)
         station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
@@ -833,7 +833,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_dispatch_station_enter_route_with_bad_source(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
@@ -850,8 +850,8 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     def test_dispatch_station_enter_route_with_bad_destination(self):
-        outer_range_brewing = h3.geo_to_h3(39.5892193, -106.1011423, 15)
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        outer_range_brewing = h3.latlng_to_cell(39.5892193, -106.1011423, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         station = mock_station_from_geoid(geoid=omf_brewing)
         charger = mock_dcfc_charger_id()
@@ -938,8 +938,8 @@ class TestVehicleState(TestCase):
         )
 
     def test_dispatch_trip_update(self):
-        near = h3.geo_to_h3(39.7539, -104.974, 15)
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        near = h3.latlng_to_cell(39.7539, -104.974, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request_from_geoids(origin=omf_brewing)
         sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle,)), request).unwrap()
@@ -1039,7 +1039,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_dispatch_trip_enter_route_with_bad_source(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
         sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle,)), request).unwrap()
@@ -1053,7 +1053,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     def test_dispatch_trip_enter_route_with_bad_destination(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
         sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle,)), request).unwrap()
@@ -1287,8 +1287,8 @@ class TestVehicleState(TestCase):
         self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_repositioning_update(self):
-        near = h3.geo_to_h3(39.7539, -104.974, 15)
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        near = h3.latlng_to_cell(39.7539, -104.974, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         sim = mock_sim(
             vehicles=(vehicle,),
@@ -1357,7 +1357,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_repositioning_enter_route_with_bad_source(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         sim = mock_sim(vehicles=(vehicle,))
         env = mock_env()
@@ -1627,8 +1627,8 @@ class TestVehicleState(TestCase):
         #                      "should have allowed exit of ServicingTrip because out of fuel allows transition to OutOfService")
 
     def test_servicing_trip_update(self):
-        near = h3.geo_to_h3(39.7539, -104.974, 15)
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        near = h3.latlng_to_cell(39.7539, -104.974, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         prev_state = DispatchTrip.build(
             DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), ()
         )
@@ -1729,7 +1729,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_servicing_trip_enter_route_with_bad_source(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         prev_state = DispatchTrip.build(
             DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), ()
         )
@@ -1745,7 +1745,7 @@ class TestVehicleState(TestCase):
         self.assertIsNotNone(enter_error, "an invalid route should return an error")
 
     def test_servicing_trip_enter_route_with_bad_destination(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         prev_state = DispatchTrip.build(
             DefaultIds.mock_vehicle_id(), DefaultIds.mock_request_id(), ()
         )
@@ -2047,8 +2047,8 @@ class TestVehicleState(TestCase):
         )
 
     def test_dispatch_pooling_trip_update(self):
-        near = h3.geo_to_h3(39.7539, -104.974, 15)
-        far = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        near = h3.latlng_to_cell(39.7539, -104.974, 15)
+        far = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle_from_geoid(geoid=near)
         request = mock_request_from_geoids(origin=far)
         sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle,)), request).unwrap()
@@ -2154,7 +2154,7 @@ class TestVehicleState(TestCase):
         self.assertIsInstance(enter_error, Exception, "should have exception")
 
     def test_dispatch_pooling_trip_enter_route_with_bad_source(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
         sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle,)), request).unwrap()
@@ -2168,7 +2168,7 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     def test_dispatch_pooling_trip_enter_route_with_bad_destination(self):
-        omf_brewing = h3.geo_to_h3(39.7608873, -104.9845391, 15)
+        omf_brewing = h3.latlng_to_cell(39.7608873, -104.9845391, 15)
         vehicle = mock_vehicle()
         request = mock_request()
         sim = simulation_state_ops.add_request_safe(mock_sim(vehicles=(vehicle,)), request).unwrap()

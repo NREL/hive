@@ -84,14 +84,14 @@ def to_linestring(route: Route, env: Environment) -> str:
         return wkt.polygon_empty()
     elif len(route) == 1:
         link = route[0]
-        src = h3.h3_to_geo(link.start)
-        dst = h3.h3_to_geo(link.end)
+        src = h3.cell_to_latlng(link.start)
+        dst = h3.cell_to_latlng(link.end)
         linestring = wkt.linestring_2d((src, dst), env.config.global_config.wkt_x_y_ordering)
         return linestring
     else:
         inital: Tuple[Any, ...] = ()
         points = ft.reduce(
-            lambda acc, l: acc + (h3.h3_to_geo(l.start), h3.h3_to_geo(l.end)),
+            lambda acc, l: acc + (h3.cell_to_latlng(l.start), h3.cell_to_latlng(l.end)),
             route,
             inital,
         )

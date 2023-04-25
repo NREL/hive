@@ -92,7 +92,7 @@ class H3Ops:
                 return None
             else:
                 # get the kth ring
-                ring = h3.k_ring(search_geoid, current_k)
+                ring = k_ring(search_geoid, current_k)
 
                 # get all entities in this ring
                 found = (
@@ -188,8 +188,8 @@ class H3Ops:
         """
         avg_earth_radius_km = 6371
 
-        lat1, lon1 = h3.h3_to_geo(a)
-        lat2, lon2 = h3.h3_to_geo(b)
+        lat1, lon1 = h3.latlng_to_cell(a)
+        lat2, lon2 = h3.latlng_to_cell(b)
 
         # convert all latitudes/longitudes from decimal degrees to radians
         lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
@@ -221,9 +221,9 @@ class H3Ops:
             return link.end
         else:
             # find the point along the line
-            start = h3.h3_to_geo(link.start)
-            end = h3.h3_to_geo(link.end)
+            start = h3.cell_to_latlng(link.start)
+            end = h3.cell_to_latlng(link.end)
             res = h3.get_resolution(link.start)
             lat = start[0] + ((end[0] - start[0]) * ratio_trip_experienced)
             lon = start[1] + ((end[1] - start[1]) * ratio_trip_experienced)
-            return h3.geo_to_h3(lat, lon, res)
+            return h3.latlng_to_cell(lat, lon, res)

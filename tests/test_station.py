@@ -16,7 +16,7 @@ class TestStation(TestCase):
 
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
-        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(37, 122, sim_h3_resolution)
 
         station = Station.from_row(row, {}, network, env)
 
@@ -38,7 +38,7 @@ class TestStation(TestCase):
         row1 = next(reader)
         row2 = next(reader)
         sim_h3_resolution = 15
-        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(37, 122, sim_h3_resolution)
 
         station = Station.from_row(row1, {}, network, env)
         builder = {station.id: station}
@@ -64,7 +64,7 @@ class TestStation(TestCase):
         row1 = next(reader)
         row2 = next(reader)
         sim_h3_resolution = 15
-        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(37, 122, sim_h3_resolution)
 
         station = Station.from_row(row1, {}, network, env)
         builder = {station.id: station}

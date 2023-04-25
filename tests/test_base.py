@@ -12,7 +12,7 @@ class TestBase(TestCase):
         network = mock_network()
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
-        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(37, 122, sim_h3_resolution)
 
         base = Base.from_row(row, network)
 
@@ -28,7 +28,7 @@ class TestBase(TestCase):
         network = mock_network()
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
-        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(37, 122, sim_h3_resolution)
 
         base = Base.from_row(row, network)
 
@@ -44,7 +44,7 @@ class TestBase(TestCase):
         network = mock_network()
         row = next(DictReader(source.split()))
         sim_h3_resolution = 15
-        expected_geoid = h3.geo_to_h3(37, 122, sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(37, 122, sim_h3_resolution)
 
         base = Base.from_row(row, network)
 

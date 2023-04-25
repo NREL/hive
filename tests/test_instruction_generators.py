@@ -7,9 +7,9 @@ class TestInstructionGenerators(TestCase):
     def test_dispatcher_match_vehicle(self):
         dispatcher = Dispatcher(mock_config().dispatcher)
 
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
-        far_from_somewhere = h3.geo_to_h3(39.755, -104.976, 15)
+        somewhere = h3.latlng_to_cell(39.7539, -104.974, 15)
+        near_to_somewhere = h3.latlng_to_cell(39.754, -104.975, 15)
+        far_from_somewhere = h3.latlng_to_cell(39.755, -104.976, 15)
 
         req = mock_request_from_geoids(origin=somewhere, fleet_id=DefaultIds.mock_membership_id())
         close_veh = mock_vehicle_from_geoid(
@@ -50,7 +50,7 @@ class TestInstructionGenerators(TestCase):
     def test_dispatcher_no_vehicles(self):
         dispatcher = Dispatcher(mock_config().dispatcher)
 
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere = h3.latlng_to_cell(39.7539, -104.974, 15)
 
         req = mock_request_from_geoids(origin=somewhere)
         sim = mock_sim(h3_location_res=9, h3_search_res=9)
@@ -67,8 +67,8 @@ class TestInstructionGenerators(TestCase):
     def test_charging_fleet_manager(self):
         charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
 
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.75, -104.976, 15)
+        somewhere = h3.latlng_to_cell(39.7539, -104.974, 15)
+        somewhere_else = h3.latlng_to_cell(39.75, -104.976, 15)
 
         veh = mock_vehicle_from_geoid(geoid=somewhere, soc=0.01)
 
@@ -99,11 +99,11 @@ class TestInstructionGenerators(TestCase):
     def test_charging_fleet_manager_queues(self):
         charging_fleet_manager = ChargingFleetManager(mock_config().dispatcher)
 
-        v_geoid = h3.geo_to_h3(39.0, -104.0, 15)
+        v_geoid = h3.latlng_to_cell(39.0, -104.0, 15)
         veh_low_battery = mock_vehicle_from_geoid(geoid=v_geoid, soc=0.01)
 
-        s1_geoid = h3.geo_to_h3(39.01, -104.0, 15)
-        s2_geoid = h3.geo_to_h3(39.015, -104.0, 15)  # slightly further away
+        s1_geoid = h3.latlng_to_cell(39.01, -104.0, 15)
+        s2_geoid = h3.latlng_to_cell(39.015, -104.0, 15)  # slightly further away
 
         # prepare the scenario where the closer station has no available chargers and one enqueued vehicle
         s1 = mock_station_from_geoid(

@@ -12,7 +12,7 @@ class TestVehicle(TestCase):
         row = next(DictReader(source.split()))
         road_network = mock_network()
         env = mock_env()
-        expected_geoid = h3.geo_to_h3(39.7539, -104.976, road_network.sim_h3_resolution)
+        expected_geoid = h3.latlng_to_cell(39.7539, -104.976, road_network.sim_h3_resolution)
 
         vehicle = Vehicle.from_row(row, road_network, env)
 

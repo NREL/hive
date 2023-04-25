@@ -6,8 +6,8 @@ from nrel.hive.resources.mock_lobster import *
 class TestHaversineRoadNetwork(TestCase):
     @skip("")
     def test_geoid_within_geofence(self):
-        somewhere_out_of_geofence = h3.geo_to_h3(0, 0, 15)
-        somewhere_within_geofence = h3.geo_to_h3(39.76138151, -104.982001, 15)
+        somewhere_out_of_geofence = h3.latlng_to_cell(0, 0, 15)
+        somewhere_within_geofence = h3.latlng_to_cell(39.76138151, -104.982001, 15)
 
         network = mock_network()
 
@@ -24,8 +24,8 @@ class TestHaversineRoadNetwork(TestCase):
         sim_h3_resolution = 15
         network = mock_network(h3_res=sim_h3_resolution)
 
-        origin = h3.geo_to_h3(37, 122, sim_h3_resolution)
-        destination = h3.geo_to_h3(37.01, 122, sim_h3_resolution)
+        origin = h3.latlng_to_cell(37, 122, sim_h3_resolution)
+        destination = h3.latlng_to_cell(37.01, 122, sim_h3_resolution)
         o = network.position_from_geoid(origin)
         d = network.position_from_geoid(destination)
         route = network.route(o, d)

@@ -22,7 +22,7 @@ def refuel_search_event(vehicle: Vehicle, sim: SimulationState, env: Environment
     :param env: the simulation environment
     :return: a report of this event
     """
-    lat, lon = h3.h3_to_geo(vehicle.geoid)
+    lat, lon = h3.cell_to_latlng(vehicle.geoid)
     point_wkt = wkt.point_2d((lat, lon), env.config.global_config.wkt_x_y_ordering)
     next_sim_time = sim.sim_time + sim.sim_timestep_duration_seconds
     report = Report(

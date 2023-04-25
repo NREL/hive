@@ -200,7 +200,7 @@ class Station(Entity):
         station_id = row["station_id"]
         try:
             lat, lon = float(row["lat"]), float(row["lon"])
-            geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+            geoid = h3.latlng_to_cell(lat, lon, road_network.sim_h3_resolution)
             charger_id: ChargerId = row["charger_id"]
             charger_count = int(float(row["charger_count"]))
             on_shift_access = bool(strtobool(row["on_shift_access"].lower()))

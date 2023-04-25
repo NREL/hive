@@ -60,7 +60,7 @@ def vehicle_move_event(
     )
 
     geoid = next_vehicle.geoid
-    lat, lon = h3.h3_to_geo(geoid)
+    lat, lon = h3.cell_to_latlng(geoid)
     geom = route.to_linestring(route_traversal.experienced_route, env)
     report_data = {
         "sim_time_start": sim_time_start,
@@ -127,7 +127,7 @@ def vehicle_charge_event(
     charging_price = energy_transacted * charger_price if charger_price is not None else 0.0
 
     geoid = next_vehicle.geoid
-    lat, lon = h3.h3_to_geo(geoid)
+    lat, lon = h3.cell_to_latlng(geoid)
 
     report_data = {
         "session_id": session_id,
@@ -169,7 +169,7 @@ def report_pickup_request(
     event_sim_time = next_sim.sim_time - next_sim.sim_timestep_duration_seconds
 
     geoid = vehicle.geoid
-    lat, lon = h3.h3_to_geo(geoid)
+    lat, lon = h3.cell_to_latlng(geoid)
     wait_time = time_diff(
         request.departure_time.as_datetime_time(),
         event_sim_time.as_datetime_time(),
@@ -205,7 +205,7 @@ def report_dropoff_request(vehicle: Vehicle, sim: SimulationState, request: Requ
     """
 
     geoid = vehicle.geoid
-    lat, lon = h3.h3_to_geo(geoid)
+    lat, lon = h3.cell_to_latlng(geoid)
     # somewhat a hack, we just grab the membership from the first passenger
     membership = TupleOps.head(request.passengers).membership
     travel_time = time_diff(

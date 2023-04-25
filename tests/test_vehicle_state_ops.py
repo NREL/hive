@@ -8,8 +8,8 @@ from nrel.hive.resources.mock_lobster import *
 
 class TestVehicleStateOps(TestCase):
     def test_move(self):
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
-        somewhere_else = h3.geo_to_h3(39.7579, -104.978, 15)
+        somewhere = h3.latlng_to_cell(39.7539, -104.974, 15)
+        somewhere_else = h3.latlng_to_cell(39.7579, -104.978, 15)
         sim = mock_sim(sim_timestep_duration_seconds=10)
         somewhere_link = sim.road_network.position_from_geoid(somewhere)
         somewhere_else_link = sim.road_network.position_from_geoid(somewhere_else)

@@ -38,7 +38,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
         :return: an error or the nearest link to this GeoId
         """
         try:
-            query = h3.h3_to_geo(geoid)
+            query = h3.cell_to_latlng(geoid)
             _, index_result = self.links_spatial_lookup.query(query)
             index = int(index_result)
             link_id = self.links_linkid_lookup[index] if 0 <= index < self.link_count else None
@@ -108,7 +108,7 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                         if src_oriented_midpoint_index
                         else link.start
                     )
-                    link_centroid_lat, link_centroid_lon = h3.h3_to_geo(midpoint_hex)
+                    link_centroid_lat, link_centroid_lon = h3.cell_to_latlng(midpoint_hex)
                     updated_acc = self._replace(
                         lookup=self.lookup.set(link.link_id, link),
                         link_ids=self.link_ids + (link.link_id,),
@@ -162,8 +162,8 @@ class OSMRoadNetworkLinkHelper(NamedTuple):
                     else:
                         src_lat, src_lon = src_coord
                         dst_lat, dst_lon = dst_coord
-                        src_geoid = h3.geo_to_h3(src_lat, src_lon, resolution=sim_h3_resolution)
-                        dst_geoid = h3.geo_to_h3(dst_lat, dst_lon, resolution=sim_h3_resolution)
+                        src_geoid = h3.latlng_to_cell(src_lat, src_lon, resolution=sim_h3_resolution)
+                        dst_geoid = h3.latlng_to_cell(dst_lat, dst_lon, resolution=sim_h3_resolution)
                         data = graph.get_edge_data(
                             src, dst, 0, None
                         )  # data index "0" as this uses networkx's multigraph implementation

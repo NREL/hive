@@ -6,8 +6,8 @@ from nrel.hive.resources.mock_lobster import *
 class TestOSMRoadNetwork(TestCase):
     @skip("")
     def test_geoid_within_geofence(self):
-        somewhere_out_of_geofence = h3.geo_to_h3(0, 0, 15)
-        somewhere_within_geofence = h3.geo_to_h3(39.76138151, -104.982001, 15)
+        somewhere_out_of_geofence = h3.latlng_to_cell(0, 0, 15)
+        somewhere_within_geofence = h3.latlng_to_cell(39.76138151, -104.982001, 15)
 
         network = mock_osm_network()
 
@@ -24,8 +24,8 @@ class TestOSMRoadNetwork(TestCase):
         o_lat, o_lon = (39.7481388, -104.9935966)
         d_lat, d_lon = (39.7613596, -104.981728)
 
-        origin = h3.geo_to_h3(o_lat, o_lon, sim_h3_resolution)
-        destination = h3.geo_to_h3(d_lat, d_lon, sim_h3_resolution)
+        origin = h3.latlng_to_cell(o_lat, o_lon, sim_h3_resolution)
+        destination = h3.latlng_to_cell(d_lat, d_lon, sim_h3_resolution)
 
         origin_position = network.position_from_geoid(origin)
         destination_position = network.position_from_geoid(destination)

@@ -118,7 +118,7 @@ class Vehicle(Entity):
                     vehicle_id, schedule_id, home_base_id, allows_pooling
                 )
 
-                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+                geoid = h3.latlng_to_cell(lat, lon, road_network.sim_h3_resolution)
                 start_position = road_network.position_from_geoid(geoid)
 
                 if start_position is None:

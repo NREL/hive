@@ -97,7 +97,7 @@ class Base(Entity):
             base_id = row["base_id"]
             try:
                 lat, lon = float(row["lat"]), float(row["lon"])
-                geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+                geoid = h3.latlng_to_cell(lat, lon, road_network.sim_h3_resolution)
                 stall_count = int(row["stall_count"])
 
                 # allow user to leave station_id blank or use the word "none" to signify no station at base

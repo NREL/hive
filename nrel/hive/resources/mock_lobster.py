@@ -94,11 +94,11 @@ class DefaultIds:
 
 
 def somewhere() -> GeoId:
-    return h3.geo_to_h3(39.7539, -104.974, 15)
+    return h3.latlng_to_cell(39.7539, -104.974, 15)
 
 
 def somewhere_else() -> GeoId:
-    return h3.geo_to_h3(39.7579, -104.978, 15)
+    return h3.latlng_to_cell(39.7579, -104.978, 15)
 
 
 def mock_geojson() -> Dict:
@@ -159,7 +159,7 @@ def mock_base(
 ) -> Base:
     return Base.build(
         base_id,
-        h3.geo_to_h3(lat, lon, h3_res),
+        h3.latlng_to_cell(lat, lon, h3_res),
         road_network,
         station_id,
         stall_count,
@@ -169,7 +169,7 @@ def mock_base(
 
 def mock_base_from_geoid(
     base_id: BaseId = DefaultIds.mock_base_id(),
-    geoid: GeoId = h3.geo_to_h3(39.7539, -104.9740, 15),
+    geoid: GeoId = h3.latlng_to_cell(39.7539, -104.9740, 15),
     station_id: Optional[StationId] = None,
     stall_count: int = 1,
     membership: Membership = Membership(),
@@ -188,7 +188,7 @@ def mock_station(
     road_network: RoadNetwork = mock_network(),
     membership: Membership = Membership(),
 ) -> Station:
-    hex = h3.geo_to_h3(lat, lon, h3_res)
+    hex = h3.latlng_to_cell(lat, lon, h3_res)
     return mock_station_from_geoid(
         station_id,
         geoid=hex,
@@ -201,7 +201,7 @@ def mock_station(
 
 def mock_station_from_geoid(
     station_id: StationId = DefaultIds.mock_station_id(),
-    geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
+    geoid: GeoId = h3.latlng_to_cell(39.7539, -104.974, 15),
     chargers=None,
     on_shift_access_chargers=None,
     road_network: RoadNetwork = mock_network(),
@@ -255,8 +255,8 @@ def mock_request(
 ) -> Request:
     return Request.build(
         request_id=request_id,
-        origin=h3.geo_to_h3(o_lat, o_lon, h3_res),
-        destination=h3.geo_to_h3(d_lat, d_lon, h3_res),
+        origin=h3.latlng_to_cell(o_lat, o_lon, h3_res),
+        destination=h3.latlng_to_cell(d_lat, d_lon, h3_res),
         road_network=road_network,
         departure_time=departure_time,
         passengers=passengers,
@@ -267,8 +267,8 @@ def mock_request(
 
 def mock_request_from_geoids(
     request_id: RequestId = DefaultIds.mock_request_id(),
-    origin: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
-    destination: GeoId = h3.geo_to_h3(39.7579, -104.978, 15),
+    origin: GeoId = h3.latlng_to_cell(39.7539, -104.974, 15),
+    destination: GeoId = h3.latlng_to_cell(39.7579, -104.978, 15),
     road_network: RoadNetwork = mock_network(),
     departure_time: SimTime = SimTime(0),
     passengers: int = 1,
@@ -372,7 +372,7 @@ def mock_vehicle(
     v_state = vehicle_state if vehicle_state else Idle.build(vehicle_id)
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
-    geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
+    geoid = h3.latlng_to_cell(lat, lon, road_network.sim_h3_resolution)
     d_state = (
         driver_state
         if driver_state
@@ -397,7 +397,7 @@ def mock_vehicle(
 
 def mock_vehicle_from_geoid(
     vehicle_id: VehicleId = DefaultIds.mock_vehicle_id(),
-    geoid: GeoId = h3.geo_to_h3(39.7539, -104.974, 15),
+    geoid: GeoId = h3.latlng_to_cell(39.7539, -104.974, 15),
     mechatronics: MechatronicsInterface = mock_bev(),
     vehicle_state: Optional[VehicleState] = None,
     soc: Ratio = 1,
@@ -596,20 +596,20 @@ def mock_graph_links(h3_res: int = 15, speed_kmph: Kmph = 1) -> Dict[str, Link]:
     links = {
         "1": Link.build(
             "1",
-            h3.geo_to_h3(37, 122, h3_res),
-            h3.geo_to_h3(37.008994, 122, h3_res),
+            h3.latlng_to_cell(37, 122, h3_res),
+            h3.latlng_to_cell(37.008994, 122, h3_res),
             speed_kmph=speed_kmph,
         ),
         "2": Link.build(
             "2",
-            h3.geo_to_h3(37.008994, 122, h3_res),
-            h3.geo_to_h3(37.017998, 122, h3_res),
+            h3.latlng_to_cell(37.008994, 122, h3_res),
+            h3.latlng_to_cell(37.017998, 122, h3_res),
             speed_kmph=speed_kmph,
         ),
         "3": Link.build(
             "3",
-            h3.geo_to_h3(37.017998, 122, h3_res),
-            h3.geo_to_h3(37.026992, 122, h3_res),
+            h3.latlng_to_cell(37.017998, 122, h3_res),
+            h3.latlng_to_cell(37.026992, 122, h3_res),
             speed_kmph=speed_kmph,
         ),
     }
