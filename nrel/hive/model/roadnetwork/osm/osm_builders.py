@@ -1,4 +1,7 @@
-def osm_graph_from_polygon(polygon):
+from typing import TYPE_CHECKING
+
+
+def osm_graph_from_polygon(polygon, cache_folder):
     """
     builds a OSM networkx graph using a shapely polygon and the osmnx package
     """
@@ -10,6 +13,7 @@ def osm_graph_from_polygon(polygon):
         ) from e
 
     ox.settings.all_oneway = True
+    ox.settings.cache_folder = cache_folder
 
     G = ox.graph_from_polygon(polygon, network_type="drive")
 

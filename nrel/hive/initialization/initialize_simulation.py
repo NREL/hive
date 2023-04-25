@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import csv
 import functools as ft
 import logging
@@ -36,7 +37,6 @@ if TYPE_CHECKING:
     from nrel.hive.model.vehicle.schedules import ScheduleFunction
 
 log = logging.getLogger(__name__)
-
 
 # All initialization functions must adhere to the following type signature.
 # These functions are called to initialize the simulation state and the environment
@@ -227,7 +227,10 @@ def default_init_functions() -> Iterable[InitFunction]:
 
 
 def osm_init_function(
-    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig,
+    simulation_state: SimulationState,
+    environment: Environment,
+    cache_dir=Path.home(),
 ) -> Tuple[SimulationState, Environment]:
     """
     Initialize an OSMRoadNetwork and add to the simulation
@@ -240,14 +243,34 @@ def osm_init_function(
 
     :raises Exception: from IOErrors parsing the road network
     """
-    if config.input_config.road_network_file is None:
-        raise IOError("Must supply a road network file when using the osm_network")
 
-    road_network = OSMRoadNetwork.from_file(
-        sim_h3_resolution=config.sim.sim_h3_resolution,
-        road_network_file=Path(config.input_config.road_network_file),
-        default_speed_kmph=config.network.default_speed_kmph,
-    )
+    if config.input_config.road_network_file:
+        road_network = OSMRoadNetwork.from_file(
+            sim_h3_resolution=config.sim.sim_h3_resolution,
+            road_network_file=config.input_config.road_network_file,
+            default_speed_kmph=config.network.default_speed_kmph,
+        )
+    elif config.input_config.geofence_file:
+        try:
+            import geopandas
+        except ImportError as e:
+            raise ImportError(
+                "Must have geopandas installed if you want to load from geofence file"
+            ) from e
+
+        dataframe = geopandas.read_file(config.input_config.geofence_file)
+        polygon_union = dataframe["geometry"].unary_union
+
+        road_network = OSMRoadNetwork.from_polygon(
+            sim_h3_resolution=config.sim.sim_h3_resolution,
+            default_speed_kmph=config.network.default_speed_kmph,
+            polygon=polygon_union,
+            cache_dir=cache_dir,
+        )
+    else:
+        raise IOError(
+            "Must supply either a road network or geofence file when using the osm_network"
+        )
 
     sim_w_osm = simulation_state._replace(road_network=road_network)
 
