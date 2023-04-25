@@ -286,6 +286,10 @@ def shortest_time_to_charge_ranking(
                 if not _mech or not _charger:
                     return 0
                 else:
+                    max_iter = (
+                        int(env.config.sim.end_time - sim.sim_time)
+                        / sim.sim_timestep_duration_seconds
+                    )
                     time_est = powercurve_ops.time_to_full(
                         v,
                         _mech,
@@ -293,6 +297,7 @@ def shortest_time_to_charge_ranking(
                         target_soc,
                         sim.sim_timestep_duration_seconds,
                         min_delta_energy_change=env.config.sim.min_delta_energy_change,
+                        max_iterations=int(max_iter),
                     )
                     return time_est
 
@@ -383,6 +388,9 @@ def shortest_time_to_charge_ranking(
                 continue
 
             # compute the charge time for the vehicle we are ranking
+            max_iter = (
+                int(env.config.sim.end_time - sim.sim_time) / sim.sim_timestep_duration_seconds
+            )
             this_vehicle_charge_time = powercurve_ops.time_to_full(
                 vehicle,
                 vehicle_mechatronics,
@@ -390,6 +398,7 @@ def shortest_time_to_charge_ranking(
                 target_soc,
                 sim.sim_timestep_duration_seconds,
                 min_delta_energy_change=env.config.sim.min_delta_energy_change,
+                max_iterations=int(max_iter),
             )
 
             def _using_charger(charging_vehicle: Vehicle) -> bool:
