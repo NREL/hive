@@ -24,8 +24,8 @@ impl Geoid {
 }
 
 impl Geoid {
-    pub fn from_string(string: String) -> Result<Self> {
-        let h3_cell = H3Cell::from_str(&string)?;
+    pub fn from_string(string: GeoidString) -> Result<Self> {
+        let h3_cell = H3Cell::from_str(string.as_str())?;
         Ok(Geoid { h3_cell })
     }
 }

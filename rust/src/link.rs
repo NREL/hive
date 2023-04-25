@@ -25,7 +25,7 @@ pub struct LinkTraversal {
 impl LinkTraversal {
     #[new]
     pub fn new(
-        link_id: String,
+        link_id: LinkId,
         start: GeoidString,
         end: GeoidString,
         distance_km: f64,
@@ -42,7 +42,7 @@ impl LinkTraversal {
     #[classmethod]
     fn build(
         _: &PyType,
-        link_id: String,
+        link_id: LinkId,
         start: GeoidString,
         end: GeoidString,
         speed_kmph: f64,
@@ -67,7 +67,7 @@ impl LinkTraversal {
 
     #[getter]
     fn start(&self) -> GeoidString {
-        self.start.to_string()
+        (*self.start).clone()
     }
 
     fn where_start(&self) {
@@ -80,7 +80,7 @@ impl LinkTraversal {
 
     #[getter]
     fn end(&self) -> GeoidString {
-        self.end.to_string()
+        (*self.end).clone()
     }
 
     fn update_start(&self, start: GeoidString) -> LinkTraversal {
@@ -105,9 +105,9 @@ mod tests {
 
     fn mock_link() -> LinkTraversal {
         LinkTraversal::new(
-            "mock_link".to_string(),
-            "8f26dc934cccc69".to_string(),
-            "8f26dc934cc4cdb".to_string(),
+            "mock_link".to_string().into(),
+            "8f26dc934cccc69".to_string().into(),
+            "8f26dc934cc4cdb".to_string().into(),
             0.14,
             40.0,
         )

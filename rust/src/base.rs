@@ -80,7 +80,7 @@ impl Base {
 
     #[getter]
     pub fn geoid(&self) -> GeoidString {
-        self.position.geoid.clone()
+        (*self.position).geoid.clone()
     }
 
     #[getter]
@@ -147,10 +147,10 @@ impl Base {
         .to_string();
 
         Ok(Base::new(
-            base_id.to_owned(),
-            h3cell.to_string(),
+            base_id.to_owned().into(),
+            h3cell.to_string().into(),
             road_network,
-            Some(station_id),
+            Some(station_id.into()),
             stall_count,
             Some(Membership::default()),
         ))
@@ -183,14 +183,14 @@ impl Base {
         }
     }
 
-    pub fn set_membership(&self, member_ids: Vec<String>) -> PyResult<Base> {
+    pub fn set_membership(&self, member_ids: Vec<MembershipId>) -> PyResult<Base> {
         let mut new_self = self.clone();
         let new_membership = Arc::make_mut(&mut new_self.membership);
         *new_membership = Membership::_from_tuple(member_ids).map_err(PyValueError::new_err)?;
         Ok(new_self)
     }
 
-    pub fn add_membership(&self, membership_id: String) -> PyResult<Base> {
+    pub fn add_membership(&self, membership_id: MembershipId) -> PyResult<Base> {
         let mut new_self = self.clone();
         let new_membership = Arc::make_mut(&mut new_self.membership);
         *new_membership = new_membership.add_membership(membership_id)?;
@@ -212,8 +212,8 @@ mod tests {
             sim_h3_resolution: 15,
         };
         Base::new(
-            "mock_base".to_string(),
-            mock_geoid,
+            "mock_base".to_string().into(),
+            mock_geoid.into(),
             mock_network,
             None,
             5,
