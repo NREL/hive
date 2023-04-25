@@ -1,0 +1,25 @@
+sim:
+  sim_name: manhattan_20k
+  timestep_duration_seconds: 60
+  request_cancel_time_seconds: 600
+  start_time: 0
+  end_time: 86400
+  sim_h3_search_resolution: 7  # around 12ish hexes covering manhattan
+network:
+  network_type: euclidean
+input:
+  vehicles_file: nyc_200.csv
+  requests_file: nyc_20k.csv
+  bases_file: nyc_bases.csv
+  stations_file: nyc_stations.csv
+  road_network_file: manhattan_network.json
+  rate_structure_file: rate_structure.csv
+  charging_price_file: nyc_fixed.csv
+dispatcher:
+  valid_dispatch_states:
+    - idle
+    - repositioning
+    - reservebase 
+    - chargingbase 
+
+

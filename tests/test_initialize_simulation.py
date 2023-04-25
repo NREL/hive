@@ -1,3 +1,4 @@
+import pytest
 import unittest
 
 from nrel.hive.config.network import Network
@@ -11,6 +12,7 @@ from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
 )
 from nrel.hive.resources.mock_lobster import *
+from nrel.hive.util.rust import USE_RUST
 
 import nrel.hive.state.simulation_state.simulation_state_ops as sso
 
@@ -54,6 +56,9 @@ class TestInitializeSimulation(unittest.TestCase):
         self.assertIsNone(sim.bases.get("b1"), "should not have loaded base b1")
         self.assertIsNone(sim.stations.get("s1"), "should not have loaded station s1")
 
+    @pytest.mark.skipif(
+        USE_RUST, reason="Rust does not support OSM network, which is required for sampling"
+    )
     def test_initialize_simulation_with_sampling(self):
         conf = (
             mock_config()

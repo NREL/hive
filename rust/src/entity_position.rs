@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pyo3::{prelude::*, types::PyDict};
+use pyo3::{class::basic::CompareOp, prelude::*, types::PyDict};
 
 use crate::type_aliases::*;
 
@@ -21,6 +21,14 @@ impl EntityPosition {
             link_id: link_id,
             geoid: geoid,
         })
+    }
+
+    fn __richcmp__(&self, other: &Self, op: CompareOp, py: Python<'_>) -> PyObject {
+        match op {
+            CompareOp::Eq => (self == other).into_py(py),
+            CompareOp::Ne => (self != other).into_py(py),
+            _ => py.NotImplemented(),
+        }
     }
 
     // the following methods are needed to support hive reporting

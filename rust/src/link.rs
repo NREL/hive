@@ -55,7 +55,7 @@ impl LinkTraversal {
                 Ok(d) => d,
             },
         };
-        Ok(LinkTraversal::new(link_id, start, end, speed_kmph, dist))
+        Ok(LinkTraversal::new(link_id, start, end, dist, speed_kmph))
     }
 
     #[getter]

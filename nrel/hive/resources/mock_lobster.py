@@ -128,9 +128,8 @@ def mock_geofence(geojson: Dict = mock_geojson(), resolution: H3Resolution = 10)
     return GeoFence.from_geojson(geojson, resolution)
 
 
-def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> RoadNetwork:
+def mock_network(h3_res: H3Resolution = 15) -> RoadNetwork:
     return HaversineRoadNetwork(
-        geofence=mock_geofence(resolution=geofence_res),
         sim_h3_resolution=h3_res,
     )
 
