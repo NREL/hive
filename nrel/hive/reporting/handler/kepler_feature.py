@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, TypedDict, NamedTuple
 import h3
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util.typealiases import *
@@ -8,6 +8,30 @@ from nrel.hive.util.typealiases import *
 PROPERTY_TYPE = dict[str, VehicleId | str]
 COORD_TYPE = list[float | str]
 GEOMETRY_TYPE = dict[str, str | list[COORD_TYPE]]
+
+
+class Property(TypedDict):
+    vehicle_id: VehicleId
+    vehicle_state: str
+    start_time: str
+
+
+class Coord(NamedTuple):
+    lon: float
+    lat: float
+    z: float
+    timestamp: str
+
+
+class Geometry(TypedDict):
+    type: str
+    coordinates: list[Coord]
+
+
+class Feature(TypedDict):
+    type: str
+    properties: Property
+    geometry: Geometry
 
 
 class KeplerFeature:
@@ -35,13 +59,13 @@ class KeplerFeature:
         """
         self.coords.append((geoid, timestamp))
 
-    def gen_json(self) -> Dict[str, str | PROPERTY_TYPE | GEOMETRY_TYPE]:
+    def gen_json(self) -> Feature:
         """
         Generates a json freindly dictionary for Kepler on the vehicle's trip
 
         :return: A dictionary on the vehicle's trip for Kepler
         """
-        log_dict: dict[str, str | PROPERTY_TYPE | GEOMETRY_TYPE] = {
+        log_dict: Feature = {
             "type": "Feature",
             "properties": {
                 "vehicle_id": self.id,
@@ -52,8 +76,10 @@ class KeplerFeature:
         }
         for geoid, timestamp in self.coords:
             lat, lon = h3.h3_to_geo(geoid)
+            assert isinstance(lat, float)
+            assert isinstance(lon, float)
             log_dict["geometry"]["coordinates"].append(
-                [lon, lat, 0, f"{timestamp.as_epoch_time():010}"]
+                Coord(lon, lat, 0, f"{timestamp.as_epoch_time():010}")
             )
 
         return log_dict
