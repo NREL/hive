@@ -104,7 +104,7 @@ def h3_distance_cost(a: EntityABC, b: EntityABC) -> float:
     :param b: another entity, expected to have a geoid
     :return: the h3_distance (number of cells between)
     """
-    distance = h3.h3_distance(a.geoid, b.geoid)
+    distance = h3.grid_distance(a.geoid, b.geoid)
     return distance
 
 
@@ -160,7 +160,7 @@ def nearest_shortest_queue_ranking(
     :return: the distance metric for this station, a function of it's queue sizes and h3 distance
     """
 
-    distance = h3.h3_distance(vehicle.geoid, station.geoid)
+    distance = h3.grid_distance(vehicle.geoid, station.geoid)
 
     def _inner(
         acc: Tuple[Optional[ChargerId], float], charger_id: ChargerId
