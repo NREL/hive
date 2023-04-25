@@ -84,7 +84,7 @@ class H3Ops:
 
         k_dist_km = h3.edge_length(sim_h3_search_resolution, unit="km") * 2  # kilometers
         max_k = ceil(max_search_distance_km / k_dist_km)
-        search_geoid = h3.h3_to_parent(geoid, sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(geoid, sim_h3_search_resolution)
 
         def _search(current_k: int = 0) -> Optional[Entity]:
             if current_k > max_k:

@@ -30,6 +30,6 @@ def same_simulation_location(
     elif override_resolution == sim_h3_resolution:
         return a == b
 
-    a_parent = h3.h3_to_parent(a, override_resolution)
-    b_parent = h3.h3_to_parent(b, override_resolution)
+    a_parent = h3.cell_to_parent(a, override_resolution)
+    b_parent = h3.cell_to_parent(b, override_resolution)
     return a_parent == b_parent

@@ -248,7 +248,7 @@ def _map_to_station_ids(
                 # provided station charge price geoid
                 search_geoids: Tuple[Any, ...] = (k,)
                 if res > sim.sim_h3_search_resolution:
-                    search_geoids = (h3.h3_to_parent(k, sim.sim_h3_search_resolution),)
+                    search_geoids = (h3.cell_to_parent(k, sim.sim_h3_search_resolution),)
                 elif res < sim.sim_h3_search_resolution:
                     search_geoids = tuple(h3.h3_to_children(k, sim.sim_h3_search_resolution))
 

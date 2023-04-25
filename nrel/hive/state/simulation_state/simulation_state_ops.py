@@ -190,7 +190,7 @@ def add_request_safe(sim: SimulationState, request: Request) -> ResultE[Simulati
             SimulationStateError(f"origin {request.origin} not within road network geofence")
         )
     else:
-        search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(request.geoid, sim.sim_h3_search_resolution)
 
         updated_sim = sim._replace(
             requests=DictOps.add_to_dict(sim.requests, request.id, request),
@@ -219,7 +219,7 @@ def remove_request_safe(sim: SimulationState, request_id: RequestId) -> ResultE[
         return Failure(error)
     else:
         request = sim.requests[request_id]
-        search_geoid = h3.h3_to_parent(request.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(request.geoid, sim.sim_h3_search_resolution)
         updated_requests = DictOps.remove_from_dict(sim.requests, request.id)
         updated_r_locations = DictOps.remove_from_collection_dict(
             sim.r_locations, request.geoid, request.id
@@ -315,7 +315,7 @@ def add_vehicle_safe(sim: SimulationState, vehicle: Vehicle) -> ResultE[Simulati
         )
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
         updated_v_locations = DictOps.add_to_collection_dict(
             sim.v_locations, vehicle.geoid, vehicle.id
         )
@@ -404,7 +404,7 @@ def remove_vehicle_safe(sim: SimulationState, vehicle_id: VehicleId) -> ResultE[
         return Failure(error)
     else:
         vehicle = sim.vehicles[vehicle_id]
-        search_geoid = h3.h3_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(vehicle.geoid, sim.sim_h3_search_resolution)
 
         updated_sim = sim._replace(
             vehicles=DictOps.remove_from_dict(sim.vehicles, vehicle_id),
@@ -481,7 +481,7 @@ def add_station_safe(sim: SimulationState, station: Station) -> ResultE[Simulati
         )
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(station.geoid, sim.sim_h3_search_resolution)
         updated_s_locations = DictOps.add_to_collection_dict(
             sim.s_locations, station.geoid, station.id
         )
@@ -508,7 +508,7 @@ def remove_station_safe(sim: SimulationState, station_id: StationId) -> ResultE[
         error = SimulationStateError(f"cannot remove station {station_id}, it does not exist")
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(station.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(station.geoid, sim.sim_h3_search_resolution)
         updated_s_locations = DictOps.remove_from_collection_dict(
             sim.s_locations, station.geoid, station_id
         )
@@ -592,7 +592,7 @@ def add_base_safe(sim: SimulationState, base: Base) -> ResultE[SimulationState]:
         )
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(base.geoid, sim.sim_h3_search_resolution)
         updated_b_locations = DictOps.add_to_collection_dict(sim.b_locations, base.geoid, base.id)
         updated_b_search = DictOps.add_to_collection_dict(sim.b_search, search_geoid, base.id)
 
@@ -618,7 +618,7 @@ def remove_base_safe(sim: SimulationState, base_id: BaseId) -> ResultE[Simulatio
         error = SimulationStateError(f"cannot remove base {base_id}, it does not exist")
         return Failure(error)
     else:
-        search_geoid = h3.h3_to_parent(base.geoid, sim.sim_h3_search_resolution)
+        search_geoid = h3.cell_to_parent(base.geoid, sim.sim_h3_search_resolution)
         updated_b_locations = DictOps.remove_from_collection_dict(
             sim.b_locations, base.geoid, base_id
         )

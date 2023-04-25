@@ -42,5 +42,5 @@ class GeoFence(NamedTuple):
         # if geoid_res < self.h3_resolution:
         #     raise H3Error('geofence resolution must be less than geoid resolution')
         #
-        # parent_geoid = h3.h3_to_parent(geoid, self.h3_resolution)
+        # parent_geoid = h3.cell_to_parent(geoid, self.h3_resolution)
         # return parent_geoid in self.geofence_set

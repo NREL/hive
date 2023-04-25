@@ -187,8 +187,8 @@ class DictOps:
             locations_removed, updated_entity.geoid, updated_entity.id
         )
 
-        old_search_geoid = h3.h3_to_parent(old_entity.geoid, sim_h3_search_resolution)
-        updated_search_geoid = h3.h3_to_parent(updated_entity.geoid, sim_h3_search_resolution)
+        old_search_geoid = h3.cell_to_parent(old_entity.geoid, sim_h3_search_resolution)
+        updated_search_geoid = h3.cell_to_parent(updated_entity.geoid, sim_h3_search_resolution)
 
         if old_search_geoid == updated_search_geoid:
             # no update to search location
