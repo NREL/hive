@@ -15,6 +15,7 @@ class TestDictReaderStepper(TestCase):
         self.assertIsInstance(result, GlobalConfig, "should be a GlobalConfig class instance")
 
     def test_global_hive_config_search_finds_parent(self):
+        original_dir = os.getcwd()
         with tempfile.TemporaryDirectory() as parent:
             root_path = Path(parent)
             parent_hive_file = root_path.joinpath(".hive.yaml")
@@ -36,3 +37,4 @@ class TestDictReaderStepper(TestCase):
                     result.log_run,
                     "should also contain keys from the default config",
                 )
+                os.chdir(original_dir)
