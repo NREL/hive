@@ -6,7 +6,7 @@ use crate::type_aliases::*;
 
 const EARTH_RADIUS: f64 = 6371.0;
 
-pub fn haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+pub fn haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> DistanceKm {
     let dlat = (lat2 - lat1).to_radians();
     let dlon = (lon2 - lon1).to_radians();
 
@@ -17,11 +17,14 @@ pub fn haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
 
     let distance = c * EARTH_RADIUS;
 
-    distance
+    distance.into()
 }
 
 /// Return the line distance between two Geoid strings
-pub fn h3_dist_km(origin_string: &GeoidString, destination_string: &GeoidString) -> Result<f64> {
+pub fn h3_dist_km(
+    origin_string: &GeoidString,
+    destination_string: &GeoidString,
+) -> Result<DistanceKm> {
     let origin = Geoid::from_string(origin_string.to_owned())?;
     let destination = Geoid::from_string(destination_string.to_owned())?;
     let origin_coord = origin.h3_cell.to_coordinate()?;

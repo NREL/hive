@@ -17,3 +17,4 @@ geo-types = "^0.7"
 serde = { version = "1.0.143", features = ["derive"] }
 pyo3 = { version = "0.18.0", features = ["extension-module", "anyhow"] }
 derive_more = "0.99.17"
+derive-alias = "0.1.0"

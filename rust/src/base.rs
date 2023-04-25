@@ -20,8 +20,8 @@ pub struct Base {
     position: Arc<EntityPosition>,
     membership: Arc<Membership>,
 
-    total_stalls: Arc<usize>,
-    available_stalls: Arc<usize>,
+    total_stalls: Arc<NumStalls>,
+    available_stalls: Arc<NumStalls>,
 
     station_id: Arc<Option<StationId>>,
 }
@@ -32,15 +32,15 @@ impl Base {
         geoid: GeoidString,
         road_network: HaversineRoadNetwork,
         station_id: Option<StationId>,
-        stall_count: usize,
+        stall_count: NumStalls,
         membership: Option<Membership>,
     ) -> Self {
         Base {
             id: Arc::new(id),
             position: Arc::new(road_network.position_from_geoid(geoid)),
             membership: Arc::new(membership.unwrap_or_default()),
-            total_stalls: Arc::new(stall_count),
-            available_stalls: Arc::new(stall_count),
+            total_stalls: Arc::new(stall_count.clone()),
+            available_stalls: Arc::new(stall_count.clone()),
             station_id: Arc::new(station_id),
         }
     }
@@ -84,13 +84,13 @@ impl Base {
     }
 
     #[getter]
-    pub fn total_stalls(&self) -> usize {
-        *self.total_stalls
+    pub fn total_stalls(&self) -> NumStalls {
+        (*self.total_stalls).clone()
     }
 
     #[getter]
-    pub fn available_stalls(&self) -> usize {
-        *self.available_stalls
+    pub fn available_stalls(&self) -> NumStalls {
+        (*self.available_stalls).clone()
     }
 
     #[classmethod]
@@ -101,7 +101,7 @@ impl Base {
         geoid: GeoidString,
         road_network: HaversineRoadNetwork,
         station_id: Option<StationId>,
-        stall_count: usize,
+        stall_count: NumStalls,
         membership: Option<Membership>,
     ) -> Self {
         Base::new(id, geoid, road_network, station_id, stall_count, membership)
@@ -141,8 +141,9 @@ impl Base {
             H3Cell::from_coordinate(coord! {x: lon, y: lat}, road_network.sim_h3_resolution)
                 .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
-        let station_id = row.get("station_id")
-            .filter(|sid|  !sid.is_empty() && (sid != &"none"))
+        let station_id = row
+            .get("station_id")
+            .filter(|sid| !sid.is_empty() && (sid != &"none"))
             .map(|sid| StationId::from(sid.clone()));
 
         Ok(Base::new(
@@ -150,34 +151,34 @@ impl Base {
             h3cell.to_string().into(),
             road_network,
             station_id,
-            stall_count,
+            stall_count.into(),
             Some(Membership::default()),
         ))
     }
 
     pub fn has_available_stall(&self, membership: Membership) -> bool {
-        *self.available_stalls > 0 && self.membership.grant_access_to_membership(&membership)
+        *self.available_stalls > 0.into() && self.membership.grant_access_to_membership(&membership)
     }
 
     pub fn checkout_stall(&self) -> Option<Base> {
-        if *self.available_stalls == 0 {
+        if *self.available_stalls == 0.into() {
             return None;
         } else {
             let mut new_self = self.clone();
             let new_stalls = Arc::make_mut(&mut new_self.available_stalls);
-            *new_stalls = *new_stalls - 1;
+            *new_stalls = (*new_stalls).clone() - 1.into();
             Some(new_self)
         }
     }
 
     pub fn return_stall(&self) -> (Option<PyErr>, Option<Base>) {
-        if (*self.available_stalls + 1) > *self.total_stalls {
+        if ((*self.available_stalls).clone() + 1.into()) > *self.total_stalls {
             let err = PyValueError::new_err("base already has max stalls");
             (Some(err), None)
         } else {
             let mut new_self = self.clone();
             let new_stalls = Arc::make_mut(&mut new_self.available_stalls);
-            *new_stalls = *new_stalls + 1;
+            *new_stalls = (*new_stalls).clone() + 1.into();
             (None, Some(new_self))
         }
     }
@@ -215,7 +216,7 @@ mod tests {
             mock_geoid.into(),
             mock_network,
             None,
-            5,
+            5.into(),
             Some(Membership::default()),
         )
     }
@@ -230,7 +231,7 @@ mod tests {
     fn test_checkout_stall() {
         let mock_base = mock_base();
         match mock_base.checkout_stall() {
-            Some(base_less_stall) => assert!(base_less_stall.available_stalls() == 4),
+            Some(base_less_stall) => assert!(base_less_stall.available_stalls() == 4.into()),
             None => panic!("base should not be None in this case"),
         }
     }

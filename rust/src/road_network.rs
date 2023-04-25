@@ -63,7 +63,7 @@ impl HaversineRoadNetwork {
             origin.geoid,
             destination.geoid,
             link_dist_km,
-            AVG_SPEED_KMPH,
+            AVG_SPEED_KMPH.into(),
         );
 
         let route = vec![link];
@@ -75,7 +75,7 @@ impl HaversineRoadNetwork {
         &self,
         origin: GeoidString,
         destination: GeoidString,
-    ) -> PyResult<f64> {
+    ) -> PyResult<DistanceKm> {
         h3_dist_km(&origin, &destination)
             .map_err(|e| PyValueError::new_err(format!("Failure computing h3 distance: {}", e)))
     }
@@ -83,13 +83,19 @@ impl HaversineRoadNetwork {
     pub fn link_from_link_id(&self, link_id: LinkId) -> PyResult<LinkTraversal> {
         let (source, dest) = link_id_to_geoids(&link_id)?;
         let dist_km = self.distance_by_geoid_km(source.clone(), dest.clone())?;
-        let link = LinkTraversal::new(link_id, source, dest, dist_km, AVG_SPEED_KMPH);
+        let link = LinkTraversal::new(link_id, source, dest, dist_km, AVG_SPEED_KMPH.into());
         Ok(link)
     }
 
     pub fn link_from_geoid(&self, geoid: GeoidString) -> LinkTraversal {
         let link_id = geoid_string_to_link_id(&geoid, &geoid);
-        let link = LinkTraversal::new(link_id, geoid.clone(), geoid.clone(), 0.0, 0.0);
+        let link = LinkTraversal::new(
+            link_id,
+            geoid.clone(),
+            geoid.clone(),
+            0.0.into(),
+            0.0.into(),
+        );
         link
     }
 

@@ -16,9 +16,9 @@ pub struct LinkTraversal {
     pub end: Arc<GeoidString>,
 
     #[pyo3(get)]
-    pub distance_km: f64,
+    pub distance_km: DistanceKm,
     #[pyo3(get)]
-    pub speed_kmph: f64,
+    pub speed_kmph: SpeedKmph,
 }
 
 #[pymethods]
@@ -28,8 +28,8 @@ impl LinkTraversal {
         link_id: LinkId,
         start: GeoidString,
         end: GeoidString,
-        distance_km: f64,
-        speed_kmph: f64,
+        distance_km: DistanceKm,
+        speed_kmph: SpeedKmph,
     ) -> Self {
         LinkTraversal {
             link_id,
@@ -45,8 +45,8 @@ impl LinkTraversal {
         link_id: LinkId,
         start: GeoidString,
         end: GeoidString,
-        speed_kmph: f64,
-        distance_km: Option<f64>,
+        speed_kmph: SpeedKmph,
+        distance_km: Option<DistanceKm>,
     ) -> PyResult<Self> {
         let dist = match distance_km {
             Some(d) => d,
@@ -60,7 +60,7 @@ impl LinkTraversal {
 
     #[getter]
     fn travel_time_seconds(&self) -> f64 {
-        let time_hours = self.distance_km / self.speed_kmph;
+        let time_hours = (*self.distance_km).clone() / self.speed_kmph.0;
         let time_seconds = time_hours * 3600.0;
         time_seconds
     }
@@ -108,8 +108,8 @@ mod tests {
             "mock_link".to_string().into(),
             "8f26dc934cccc69".to_string().into(),
             "8f26dc934cc4cdb".to_string().into(),
-            0.14,
-            40.0,
+            0.14.into(),
+            40.0.into(),
         )
     }
 
