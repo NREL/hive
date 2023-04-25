@@ -200,9 +200,7 @@ def initialize_environment_reporting(
             InstructionHandler(config.global_config, config.scenario_output_directory)
         )
     if config.global_config.log_kepler:
-        reporter.add_handler(
-            KeplerHandler(config.scenario_output_directory)
-        )
+        reporter.add_handler(KeplerHandler(config.scenario_output_directory))
     if config.global_config.log_stats:
         reporter.add_handler(StatsHandler())
     if config.global_config.log_time_step_stats or config.global_config.log_fleet_time_step_stats:
