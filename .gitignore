@@ -122,3 +122,7 @@ ENV/
 
 # sphinx documentation
 docs/build
+
+# logs for builtin simulations
+denver_demo_*
+manhattan_*
