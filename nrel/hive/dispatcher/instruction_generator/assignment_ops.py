@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import functools as ft
+import logging
 from typing import Dict, Tuple, Callable, NamedTuple, Optional, TYPE_CHECKING
 
-import logging
 import h3
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -292,6 +292,7 @@ def shortest_time_to_charge_ranking(
                         _charger,
                         target_soc,
                         sim.sim_timestep_duration_seconds,
+                        min_delta_energy_change=env.config.sim.min_delta_energy_change,
                     )
                     return time_est
 
@@ -388,6 +389,7 @@ def shortest_time_to_charge_ranking(
                 charger,
                 target_soc,
                 sim.sim_timestep_duration_seconds,
+                min_delta_energy_change=env.config.sim.min_delta_energy_change,
             )
 
             def _using_charger(charging_vehicle: Vehicle) -> bool:

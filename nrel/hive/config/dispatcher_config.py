@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Dict, Union, Tuple, Optional
+from typing import NamedTuple, Dict, Tuple, Optional
 
 from nrel.hive.config.config_builder import ConfigBuilder
 from nrel.hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType

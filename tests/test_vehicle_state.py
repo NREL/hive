@@ -34,7 +34,7 @@ class TestVehicleState(TestCase):
             ChargingStation,
             "should be in a charging state",
         )
-        self.assertEquals(
+        self.assertEqual(
             available_chargers,
             0,
             "should have claimed the only DCFC charger_id",
@@ -76,7 +76,7 @@ class TestVehicleState(TestCase):
             ChargingStation,
             "should still be in a charging state",
         )
-        self.assertEquals(
+        self.assertEqual(
             available_chargers,
             1,
             "should have returned the only DCFC charger_id",
@@ -132,7 +132,7 @@ class TestVehicleState(TestCase):
             Idle,
             "vehicle should be in idle state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_station.get_available_chargers(charger),
             1,
             "should have returned the charger_id",
@@ -254,7 +254,7 @@ class TestVehicleState(TestCase):
             ChargingBase,
             "should be in a charging state",
         )
-        self.assertEquals(
+        self.assertEqual(
             available_chargers,
             0,
             "should have claimed the only DCFC charger_id",
@@ -319,7 +319,7 @@ class TestVehicleState(TestCase):
             ChargingBase,
             "should still be in a charging state",
         )
-        self.assertEquals(
+        self.assertEqual(
             available_chargers,
             1,
             "should have returned the only DCFC charger_id",
@@ -377,7 +377,7 @@ class TestVehicleState(TestCase):
             ReserveBase,
             "vehicle should be in ReserveBase state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_base.available_stalls,
             0,
             "should have taken the only available stall",
@@ -496,7 +496,7 @@ class TestVehicleState(TestCase):
             DispatchBase,
             "should be in a dispatch to base state",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_dispatch_base_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
@@ -526,7 +526,7 @@ class TestVehicleState(TestCase):
         error, exited_sim = state.exit(Idle.build(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
-        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+        self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_dispatch_base_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -585,7 +585,7 @@ class TestVehicleState(TestCase):
             ReserveBase,
             "vehicle should be in ReserveBase state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_base.available_stalls,
             0,
             "should have taken the only available stall",
@@ -673,7 +673,7 @@ class TestVehicleState(TestCase):
             DispatchStation,
             "should be in a dispatch to station state",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_dispatch_station_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
@@ -729,7 +729,7 @@ class TestVehicleState(TestCase):
         error, exited_sim = state.exit(Idle.build(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
-        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+        self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_dispatch_station_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -799,7 +799,7 @@ class TestVehicleState(TestCase):
             ChargingStation,
             "vehicle should be in ChargingStation state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_station.get_available_chargers(charger),
             0,
             "should have taken the only available charger_id",
@@ -893,12 +893,12 @@ class TestVehicleState(TestCase):
             DispatchTrip,
             "should be in a dispatch to request state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_request.dispatched_vehicle,
             vehicle.id,
             "request should be assigned this vehicle",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_dispatch_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
@@ -1000,7 +1000,7 @@ class TestVehicleState(TestCase):
             ServicingTrip,
             "vehicle should be in ServicingTrip state",
         )
-        self.assertEquals(
+        self.assertEqual(
             request,
             updated_vehicle.vehicle_state.request,
             "passengers not picked up",
@@ -1105,7 +1105,7 @@ class TestVehicleState(TestCase):
         error, exited_sim = state.exit(Idle.build(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
-        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+        self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_idle_update(self):
         # should intially not be in an Idle state
@@ -1207,7 +1207,7 @@ class TestVehicleState(TestCase):
         error, exited_sim = state.exit(Idle.build(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
-        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+        self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_out_of_service_update(self):
         # should intially not be in an Idle state
@@ -1266,7 +1266,7 @@ class TestVehicleState(TestCase):
             Repositioning,
             "should be in a repositioning state",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_repositioning_exit(self):
         vehicle = mock_vehicle()
@@ -1284,7 +1284,7 @@ class TestVehicleState(TestCase):
         error, exited_sim = state.exit(Idle.build(vehicle.id), entered_sim, env)
 
         self.assertIsNone(error, "should have no errors")
-        self.assertEquals(entered_sim, exited_sim, "should see no change due to exit")
+        self.assertEqual(entered_sim, exited_sim, "should see no change due to exit")
 
     def test_repositioning_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -1533,7 +1533,7 @@ class TestVehicleState(TestCase):
             ServicingTrip,
             "should be in a ServicingTrip state",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_servicing_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
@@ -1953,12 +1953,12 @@ class TestVehicleState(TestCase):
             DispatchPoolingTrip,
             "should be in a dispatch to request state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_request.dispatched_vehicle,
             vehicle.id,
             "request should be assigned this vehicle",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_dispatch_pooling_trip_enter_two_requests(self):
         vehicle = mock_vehicle()
@@ -1990,17 +1990,17 @@ class TestVehicleState(TestCase):
             DispatchPoolingTrip,
             "should be in a dispatch to request state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_r1.dispatched_vehicle,
             vehicle.id,
             "r1 should be assigned this vehicle",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_r2.dispatched_vehicle,
             vehicle.id,
             "r2 should be assigned this vehicle",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
 
     def test_dispatch_pooling_trip_bad_membership(self):
         vehicle = mock_vehicle(membership=Membership.single_membership("uber"))
@@ -2119,7 +2119,7 @@ class TestVehicleState(TestCase):
             boarded_request,
             f"request {request.id} should have boarded the vehicle",
         )
-        self.assertEquals(
+        self.assertEqual(
             boarded_request.id,
             request.id,
             f"request {request.id} should have boarded the vehicle, found {boarded_request.id} instead",
@@ -2224,7 +2224,7 @@ class TestVehicleState(TestCase):
             ServicingPoolingTrip,
             "should be in a ServicingPoolingTrip state",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.routes), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.routes), 1, "should have a route")
 
     def test_servicing_pooling_trip_update_terminal(self):
         # 3 adjacent h3 cells, total trip distance is ~ 2 meters
@@ -2424,12 +2424,12 @@ class TestVehicleState(TestCase):
             DispatchPoolingTrip,
             "should be in a dispatch to request state",
         )
-        self.assertEquals(
+        self.assertEqual(
             updated_request.dispatched_vehicle,
             vehicle.id,
             "request should be assigned this vehicle",
         )
-        self.assertEquals(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
+        self.assertEqual(len(updated_vehicle.vehicle_state.route), 1, "should have a route")
         self.assertEqual(
             entered_state.instance_id,
             updated_vehicle.vehicle_state.instance_id,

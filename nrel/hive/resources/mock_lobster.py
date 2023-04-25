@@ -1,12 +1,11 @@
 import tempfile
 from pathlib import Path
-from typing import Dict, Union, Callable
+from typing import Union, Callable
 
 import h3
 import immutables
 import yaml
 from pkg_resources import resource_filename
-
 
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType

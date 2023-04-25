@@ -3,7 +3,6 @@ import functools as ft
 from pathlib import Path
 from typing import Dict, Tuple, Any
 
-import immutables
 from returns.io import IOResult, IOResultE
 
 from nrel.hive.model.station.station import Station

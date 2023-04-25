@@ -1,7 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass, replace
 
 import logging
+from dataclasses import dataclass, replace
 from typing import Tuple, TYPE_CHECKING, Optional
 from uuid import uuid4
 

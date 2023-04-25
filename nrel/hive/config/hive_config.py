@@ -5,7 +5,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import NamedTuple, Dict, Union, Tuple, Optional
+from typing import NamedTuple, Dict, Union, Optional
 
 import pkg_resources
 import yaml

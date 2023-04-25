@@ -1,8 +1,8 @@
 from __future__ import annotations
-from dataclasses import asdict
 
 import functools as ft
 import logging
+from dataclasses import asdict
 from typing import List, Tuple, Optional, TYPE_CHECKING, Callable, NamedTuple
 
 from nrel.hive.dispatcher.instruction.instruction import Instruction
@@ -13,15 +13,13 @@ from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
 from nrel.hive.state.entity_state import entity_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from nrel.hive.state.simulation_state.simulation_state_ops import tick
 from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
-from nrel.hive.util import TupleOps, SimulationStateError
+from nrel.hive.util import TupleOps
 
 if TYPE_CHECKING:
     from nrel.hive.runner.environment import Environment
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
     from nrel.hive.model.sim_time import SimTime
-    from nrel.hive.util.typealiases import VehicleId
 
 log = logging.getLogger(__name__)
 

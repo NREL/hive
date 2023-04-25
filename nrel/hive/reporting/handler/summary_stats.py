@@ -4,8 +4,8 @@ import logging
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import TYPE_CHECKING, Dict, Any
 from statistics import mean
+from typing import TYPE_CHECKING, Dict, Any
 from nrel.hive.model.energy.energytype import EnergyType
 
 if TYPE_CHECKING:

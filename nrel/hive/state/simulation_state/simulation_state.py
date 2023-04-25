@@ -12,9 +12,9 @@ from typing import (
 
 import immutables
 
-from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
-from nrel.hive.model.sim_time import SimTime
 from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
+from nrel.hive.model.sim_time import SimTime
+from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
 from nrel.hive.util import geo
 from nrel.hive.util.typealiases import (
     RequestId,

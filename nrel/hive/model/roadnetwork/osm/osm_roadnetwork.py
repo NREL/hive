@@ -3,11 +3,10 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union
 
 import networkx as nx
 
-from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.link_id import extract_node_ids
@@ -27,7 +26,6 @@ from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util import LinkId
 from nrel.hive.util.typealiases import GeoId, H3Resolution
 from nrel.hive.util.units import Kmph, Kilometers
-from nrel.hive.model.roadnetwork.link_id import extract_node_ids
 
 log = logging.getLogger(__name__)
 
@@ -101,6 +99,7 @@ class OSMRoadNetwork(RoadNetwork):
         polygon,
         sim_h3_resolution: H3Resolution = 15,
         default_speed_kmph: Kmph = 40.0,
+        cache_dir=Path.home(),
     ) -> OSMRoadNetwork:
         """
         Build an OSMRoadNetwork from a shapely polygon
@@ -109,7 +108,7 @@ class OSMRoadNetwork(RoadNetwork):
         :param sim_h3_resolution: The h3 resolution of the simulation
         :param default_speed_kmph: The network will fill in missing speed values with this
         """
-        graph = osm_graph_from_polygon(polygon)
+        graph = osm_graph_from_polygon(polygon, cache_dir)
         return OSMRoadNetwork(graph, sim_h3_resolution, default_speed_kmph)
 
     @classmethod

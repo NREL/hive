@@ -1,32 +1,30 @@
 from __future__ import annotations
 
-from distutils.util import strtobool
 import functools as ft
-from typing import Dict, Optional, Union
+import logging
 from dataclasses import dataclass, replace
+from distutils.util import strtobool
+from typing import Dict, Optional, Union
 
 import h3
 import immutables
-import logging
-
 from returns.result import ResultE, Success, Failure
 
-from nrel.hive.model.entity import Entity
-from nrel.hive.runner.environment import Environment
-from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.station.charger_state import ChargerState
 from nrel.hive.model.energy.charger import Charger
-from nrel.hive.model.membership import Membership
+from nrel.hive.model.entity import Entity
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
+from nrel.hive.model.station.charger_state import ChargerState
 from nrel.hive.model.station.station_ops import (
     station_state_update,
     station_state_optional_update,
     station_state_updates,
 )
+from nrel.hive.runner.environment import Environment
 from nrel.hive.util.error_or_result import ErrorOr
-from nrel.hive.util.typealiases import *
 from nrel.hive.util.exception import H3Error, SimulationStateError
+from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import Currency, KwH
 from nrel.hive.util.validation import validate_fields
 

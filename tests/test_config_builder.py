@@ -18,7 +18,7 @@ class TestConfigBuilder(TestCase):
             config=None,
         )
 
-        self.assertIsInstance(test_class, TestConfigBuilderAssets.TestClass)
+        self.assertIsInstance(test_class, TestConfigBuilderAssets.SampleClass)
         self.assertEqual(test_class.a, defaults["a"])
         self.assertEqual(test_class.b, defaults["b"])
 
@@ -40,7 +40,7 @@ class TestConfigBuilder(TestCase):
             config=config,
         )
 
-        self.assertIsInstance(test_class, TestConfigBuilderAssets.TestClass)
+        self.assertIsInstance(test_class, TestConfigBuilderAssets.SampleClass)
         self.assertEqual(test_class.a, config["a"])
         self.assertEqual(test_class.b, config["b"])
 
@@ -77,16 +77,16 @@ class TestConfigBuilder(TestCase):
             config=config,
         )
 
-        self.assertIsInstance(test_class, TestConfigBuilderAssets.TestClass)
+        self.assertIsInstance(test_class, TestConfigBuilderAssets.SampleClass)
         self.assertEqual(test_class.a, config["a"])
         self.assertEqual(test_class.b, config["b"])
 
 
 class TestConfigBuilderAssets:
-    class TestClass(NamedTuple):
+    class SampleClass(NamedTuple):
         a: int
         b: str
 
     @classmethod
     def constructor(cls, d: Dict):
-        return TestConfigBuilderAssets.TestClass(d["a"], d["b"])
+        return TestConfigBuilderAssets.SampleClass(d["a"], d["b"])
