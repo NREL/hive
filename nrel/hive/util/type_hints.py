@@ -1,5 +1,5 @@
-from collections.abc import Sequence
+from collections.abc import Iterable
 from typing import Union, Optional
 
-HiveTabularDataLists = Optional[Sequence[str]]
-HiveTabularDataDicts = Optional[Sequence[dict[str, Union[str, int, float]]]]
+HiveTabularDataLists = Optional[Iterable[str]]
+HiveTabularDataDicts = Optional[Iterable[dict[str, Union[str, int, float]]]]
