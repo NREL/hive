@@ -6,7 +6,7 @@ from typing import Union
 
 def to_csv(data: Sequence[Union[dict, list]], path: pathlib.Path):
     with open(path, 'w') as f:
-        if all(isinstance(row, dict) for row in data):
+        if isinstance(data[0], dict):
             writer = csv.DictWriter(f, fieldnames=[header for header in data[0].keys()])
             writer.writeheader()
         else:
