@@ -81,10 +81,7 @@ class TimeStepStatsHandler(Handler):
         :return: the immutable map containing time step stats data by membership id
         """
         result = Map(
-            {
-                fleet_id: data if data else None
-                for fleet_id, data in self.fleets_data.items()
-            }
+            {fleet_id: data if data else None for fleet_id, data in self.fleets_data.items()}
         )
         return result
 

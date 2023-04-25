@@ -69,6 +69,7 @@ class Reporter:
             if isinstance(handler, StatsHandler):
                 final_report = handler.get_stats(rp)
         return final_report
+
     def get_time_step_stats(
         self,
     ) -> Tuple[Optional[Any], Optional[Any]]:
