@@ -16,7 +16,6 @@ input:
   rate_structure_file: rate_structure.csv
   charging_price_file: nyc_fixed.csv
 dispatcher:
-  charging_search_type: shortest_time_to_charge
   valid_dispatch_states:
     - idle
     - repositioning
