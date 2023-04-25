@@ -22,7 +22,7 @@ class GeoFence(NamedTuple):
     @classmethod
     def from_geojson(cls, geojson: Dict, h3_resolution: H3Resolution = 10) -> GeoFence:
         geofence_set = frozenset(
-            h3.polyfill(
+            h3.polygon_to_cells(
                 geojson=geojson["features"][0]["geometry"]
                 if "features" in geojson
                 else geojson["geometry"],
