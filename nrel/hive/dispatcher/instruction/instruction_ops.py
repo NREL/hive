@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Tuple, Optional, FrozenSet, TYPE_CHECKING
 import functools as ft
-
 import logging
+from typing import Tuple, Optional, FrozenSet, TYPE_CHECKING
 
 from nrel.hive.model.vehicle.trip_phase import TripPhase
 from nrel.hive.model.vehicle.vehicle import RequestId

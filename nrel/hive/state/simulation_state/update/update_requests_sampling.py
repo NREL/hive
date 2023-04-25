@@ -1,11 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import functools as ft
 import logging
 from csv import DictReader
+from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple, Tuple, Optional
+from typing import Tuple, Optional
 
 from returns.result import Failure
 
@@ -13,8 +13,8 @@ from nrel.hive.model.request import RequestRateStructure, Request
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
 from nrel.hive.runner.environment import Environment
-from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state import simulation_state_ops
+from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction
 from nrel.hive.util.iterators import ObjectIterator
 

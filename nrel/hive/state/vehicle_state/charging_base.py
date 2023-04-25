@@ -1,8 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
-from typing import Tuple, Optional, NamedTuple, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.state.simulation_state import simulation_state_ops

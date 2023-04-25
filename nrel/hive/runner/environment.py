@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import NamedTuple, TYPE_CHECKING, FrozenSet, Optional
 
-from nrel.hive.reporting.reporter import Reporter
-
 import immutables
+
+from nrel.hive.reporting.reporter import Reporter
 
 if TYPE_CHECKING:
     from nrel.hive.model.energy.charger.charger import Charger

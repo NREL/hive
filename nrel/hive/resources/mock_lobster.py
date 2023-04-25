@@ -1,12 +1,11 @@
 import tempfile
 from pathlib import Path
-from typing import Dict, Union, Callable
+from typing import Union, Callable
 
 import h3
 import immutables
 import yaml
 from pkg_resources import resource_filename
-
 
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
@@ -372,6 +371,8 @@ def mock_vehicle(
     v_state = vehicle_state if vehicle_state else Idle.build(vehicle_id)
     road_network = mock_network(h3_res)
     initial_energy = mechatronics.initial_energy(soc)
+    energy_expended = mechatronics.initial_energy(0.0)
+    energy_gained = mechatronics.initial_energy(0.0)
     geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
     d_state = (
         driver_state
@@ -387,6 +388,8 @@ def mock_vehicle(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
+        energy_expended=energy_expended,
+        energy_gained=energy_gained,
         position=position,
         vehicle_state=v_state,
         driver_state=d_state,
@@ -407,6 +410,9 @@ def mock_vehicle_from_geoid(
 ) -> Vehicle:
     state = vehicle_state if vehicle_state else Idle.build(vehicle_id)
     initial_energy = mechatronics.initial_energy(soc)
+    energy_expended = mechatronics.initial_energy(0.0)
+    energy_gained = mechatronics.initial_energy(0.0)
+
     d_state = (
         driver_state
         if driver_state
@@ -421,6 +427,8 @@ def mock_vehicle_from_geoid(
         id=vehicle_id,
         mechatronics_id=mechatronics.mechatronics_id,
         energy=initial_energy,
+        energy_expended=energy_expended,
+        energy_gained=energy_gained,
         position=position,
         vehicle_state=state,
         driver_state=d_state,

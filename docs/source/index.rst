@@ -7,14 +7,14 @@ HIVE supports researchers who explore Electric Vehicle (EV) fleet control, Elect
 Out-of-the-box, it provides a baseline set of algorithms for fleet dispatch, but provides a testbed for exploring alternatives from leading research in model-predictive control (MPC) and deep reinforcement learning. 
 HIVE is designed to integrate with vehicle power and energy grid power models in real-time for accurate, high-fidelity energy estimation over arbitrary road networks and demand scenarios.
 
-Checkout the `README <https://github.com/NREL/hive>`_ for installation instructions.
-
 .. toctree::
    :maxdepth: 1 
-   
+
+   quick_start
    example
    inputs
    outputs
+   customize
    developer/index
 
 

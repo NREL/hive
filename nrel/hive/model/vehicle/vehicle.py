@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import Dict
 from dataclasses import dataclass, replace
+from typing import Dict
 
 import h3
 import immutables
 
-from nrel.hive.model.entity import Entity
 from nrel.hive.model.energy.energytype import EnergyType
-from nrel.hive.model.membership import Membership
+from nrel.hive.model.entity import Entity
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.driver_state.driver_state import DriverState
@@ -45,6 +45,8 @@ class Vehicle(Entity):
     # mechatronic properties
     mechatronics_id: MechatronicsId
     energy: immutables.Map[EnergyType, float]
+    energy_gained: immutables.Map[EnergyType, float]
+    energy_expended: immutables.Map[EnergyType, float]
 
     # vehicle planning/operational properties
     vehicle_state: VehicleState
@@ -101,6 +103,8 @@ class Vehicle(Entity):
                         f"was not able to find mechatronics '{mechatronics_id}' for vehicle {vehicle_id} in environment: found {found}"
                     )
                 energy = mechatronics.initial_energy(float(row["initial_soc"]))
+                energy_expended = mechatronics.initial_energy(0.0)
+                energy_gained = mechatronics.initial_energy(0.0)
 
                 schedule_id = row.get(
                     "schedule_id"
@@ -130,6 +134,8 @@ class Vehicle(Entity):
                     id=vehicle_id,
                     mechatronics_id=mechatronics_id,
                     energy=energy,
+                    energy_expended=energy_expended,
+                    energy_gained=energy_gained,
                     membership=Membership(),
                     position=start_position,
                     vehicle_state=Idle.build(vehicle_id),
@@ -206,6 +212,26 @@ class Vehicle(Entity):
         :return:
         """
         return replace(self, distance_traveled_km=self.distance_traveled_km + delta_d_km)
+
+    def tick_energy_expended(self, delta_energy: immutables.Map[EnergyType, float]) -> Vehicle:
+        """
+        adds energy expenditure to vehicle
+
+        :param delta_energy:
+        :return:
+        """
+        energy_expended = {k: self.energy_expended[k] + delta_energy[k] for k in self.energy.keys()}
+        return replace(self, energy_expended=immutables.Map(energy_expended))
+
+    def tick_energy_gained(self, delta_energy: immutables.Map[EnergyType, float]) -> Vehicle:
+        """
+        adds energy gain to vehicle
+
+        :param delta_energy:
+        :return:
+        """
+        energy_gained = {k: self.energy_gained[k] + delta_energy[k] for k in self.energy.keys()}
+        return replace(self, energy_gained=immutables.Map(energy_gained))
 
     def set_membership(self, member_ids: Tuple[str, ...]) -> Vehicle:
         """

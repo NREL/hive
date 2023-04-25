@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import csv
 import functools as ft
 import logging
@@ -15,6 +16,11 @@ from nrel.hive.initialization.initialize_ops import (
 )
 from nrel.hive.model.base import Base
 from nrel.hive.model.energy.charger import build_chargers_table
+from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
+from nrel.hive.model.station.station import Station
+from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
+from nrel.hive.model.vehicle.schedules import build_schedules_table
+from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.handler.eventful_handler import EventfulHandler
 from nrel.hive.reporting.handler.instruction_handler import InstructionHandler
 from nrel.hive.reporting.handler.kepler_handler import KeplerHandler
@@ -22,11 +28,6 @@ from nrel.hive.reporting.handler.stateful_handler import StatefulHandler
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
 from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 from nrel.hive.reporting.reporter import Reporter
-from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
-from nrel.hive.model.station.station import Station
-from nrel.hive.model.vehicle.mechatronics import build_mechatronics_table
-from nrel.hive.model.vehicle.schedules import build_schedules_table
-from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.runner.environment import Environment
 from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
@@ -37,7 +38,6 @@ if TYPE_CHECKING:
     from nrel.hive.model.vehicle.schedules import ScheduleFunction
 
 log = logging.getLogger(__name__)
-
 
 # All initialization functions must adhere to the following type signature.
 # These functions are called to initialize the simulation state and the environment
@@ -232,7 +232,10 @@ def default_init_functions() -> Iterable[InitFunction]:
 
 
 def osm_init_function(
-    config: HiveConfig, simulation_state: SimulationState, environment: Environment
+    config: HiveConfig,
+    simulation_state: SimulationState,
+    environment: Environment,
+    cache_dir=Path.home(),
 ) -> Tuple[SimulationState, Environment]:
     """
     Initialize an OSMRoadNetwork and add to the simulation
@@ -245,14 +248,34 @@ def osm_init_function(
 
     :raises Exception: from IOErrors parsing the road network
     """
-    if config.input_config.road_network_file is None:
-        raise IOError("Must supply a road network file when using the osm_network")
 
-    road_network = OSMRoadNetwork.from_file(
-        sim_h3_resolution=config.sim.sim_h3_resolution,
-        road_network_file=Path(config.input_config.road_network_file),
-        default_speed_kmph=config.network.default_speed_kmph,
-    )
+    if config.input_config.road_network_file:
+        road_network = OSMRoadNetwork.from_file(
+            sim_h3_resolution=config.sim.sim_h3_resolution,
+            road_network_file=config.input_config.road_network_file,
+            default_speed_kmph=config.network.default_speed_kmph,
+        )
+    elif config.input_config.geofence_file:
+        try:
+            import geopandas
+        except ImportError as e:
+            raise ImportError(
+                "Must have geopandas installed if you want to load from geofence file"
+            ) from e
+
+        dataframe = geopandas.read_file(config.input_config.geofence_file)
+        polygon_union = dataframe["geometry"].unary_union
+
+        road_network = OSMRoadNetwork.from_polygon(
+            sim_h3_resolution=config.sim.sim_h3_resolution,
+            default_speed_kmph=config.network.default_speed_kmph,
+            polygon=polygon_union,
+            cache_dir=cache_dir,
+        )
+    else:
+        raise IOError(
+            "Must supply either a road network or geofence file when using the osm_network"
+        )
 
     sim_w_osm = simulation_state._replace(road_network=road_network)
 

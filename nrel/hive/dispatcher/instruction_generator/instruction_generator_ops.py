@@ -10,8 +10,8 @@ from nrel.hive.dispatcher.instruction.instructions import *
 from nrel.hive.dispatcher.instruction_generator import assignment_ops
 from nrel.hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
 from nrel.hive.model.station.station import Station
-from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.dict_ops import DictOps
+from nrel.hive.util.h3_ops import H3Ops
 from nrel.hive.util.units import Kilometers
 
 log = logging.getLogger(__name__)

@@ -1,8 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
-
-from typing import NamedTuple, Tuple, Optional, TYPE_CHECKING
-
+from typing import Tuple, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from nrel.hive.runner.environment import Environment

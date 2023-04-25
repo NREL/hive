@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import NamedTuple, Tuple, TYPE_CHECKING, Callable, Optional
+from typing import NamedTuple, Tuple, TYPE_CHECKING
 
 import immutables
 
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
-from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state.update.cancel_requests import CancelRequests
 from nrel.hive.state.simulation_state.update.charging_price_update import ChargingPriceUpdate
 from nrel.hive.state.simulation_state.update.simulation_update import SimulationUpdateFunction

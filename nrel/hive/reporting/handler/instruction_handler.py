@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
-from nrel.hive.reporting import vehicle_event_ops
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 

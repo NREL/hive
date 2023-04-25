@@ -1,13 +1,13 @@
-from typing import TYPE_CHECKING
+from enum import Enum
 
 import h3
+
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
-from nrel.hive.util import wkt
 from nrel.hive.runner import Environment
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
-from enum import Enum
+from nrel.hive.util import wkt
 
 
 class ScheduleEventType(Enum):

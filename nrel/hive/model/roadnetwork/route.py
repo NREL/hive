@@ -4,7 +4,6 @@ from typing import Any, Tuple, Optional
 import h3
 
 from nrel.hive.model.entity_position import EntityPosition
-from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.runner import Environment
 from nrel.hive.util import TupleOps, wkt

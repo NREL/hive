@@ -6,10 +6,10 @@ from typing import Callable
 from returns.result import Result, Failure, Success
 
 from nrel.hive.model.entity_position import EntityPosition
+from nrel.hive.model.membership import Membership
 from nrel.hive.model.roadnetwork.link import Link
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.vehicle.vehicle import Vehicle
-from nrel.hive.model.membership import Membership
 from nrel.hive.runner import Environment
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
     AutonomousAvailable,
@@ -75,6 +75,8 @@ def sample_vehicles(
                     vehicle_id = f"v{i}"
                     initial_soc = soc_sampling_function()
                     energy = mechatronics.initial_energy(initial_soc)
+                    energy_expended = mechatronics.initial_energy(0)
+                    energy_gained = mechatronics.initial_energy(0)
                     link = location_sampling_function(s)
                     position = EntityPosition(link.link_id, link.start)
                     vehicle_state = Idle.build(vehicle_id)
@@ -83,6 +85,8 @@ def sample_vehicles(
                         id=vehicle_id,
                         mechatronics_id=mechatronics_id,
                         energy=energy,
+                        energy_expended=energy_expended,
+                        energy_gained=energy_gained,
                         position=position,
                         vehicle_state=vehicle_state,
                         driver_state=driver_state,

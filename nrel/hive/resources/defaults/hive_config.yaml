@@ -7,6 +7,7 @@ input:
 sim:
   timestep_duration_seconds: 60                 # default is to advance time 1 minute between dispatcher updates
   sim_h3_resolution: 15                         # default is to store GeoIds at h3 resolution 15 (approx 1 meter hexes)
+  min_delta_energy_change: 0.0001               # default minimal step size used in time to fill to prevent iter loops
                                                 # see https://github.com/uber/h3/blob/master/docs/core-library/restable.md
   sim_h3_search_resolution: 7                   # conduct bi-level search at h3 resolution 7
   request_cancel_time_seconds: 600              # requests are cancelled by default after 10 minutes of simulation wait time

@@ -1,15 +1,14 @@
 from typing import Iterable, Tuple, Type, Union
+
 from returns.result import ResultE, Success, Failure
 
-
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.model.entity import Entity
 from nrel.hive.runner.runner_payload import RunnerPayload
 from nrel.hive.state.simulation_state.simulation_state_ops import (
     modify_entities_safe as _modify_entities_safe,
 )
-
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.util.fp import throw_or_return
-from nrel.hive.model.entity import Entity
 
 
 def update_instruction_generator_safe(
