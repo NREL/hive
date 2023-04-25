@@ -173,6 +173,9 @@ class BEV(MechatronicsInterface):
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.ELECTRIC: new_energy_kwh})
         )
+        updated_vehicle = updated_vehicle.tick_energy_expended(
+            immutables.Map({EnergyType.ELECTRIC: vehicle_energy_kwh - new_energy_kwh})
+        )
         return updated_vehicle
 
     def idle(self, vehicle: Vehicle, time_seconds: Seconds) -> Vehicle:
@@ -190,6 +193,9 @@ class BEV(MechatronicsInterface):
         new_energy_kwh = max(0.0, vehicle_energy_kwh - idle_energy_kwh)
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.ELECTRIC: new_energy_kwh})
+        )
+        updated_vehicle = updated_vehicle.tick_energy_expended(
+            immutables.Map({EnergyType.ELECTRIC: vehicle_energy_kwh - new_energy_kwh})
         )
 
         return updated_vehicle
@@ -233,6 +239,9 @@ class BEV(MechatronicsInterface):
 
         updated_vehicle = vehicle.modify_energy(
             immutables.Map({EnergyType.ELECTRIC: new_energy_kwh})
+        )
+        updated_vehicle = updated_vehicle.tick_energy_gained(
+            immutables.Map({EnergyType.ELECTRIC: new_energy_kwh - start_energy_kwh})
         )
 
         return updated_vehicle, time_charging_seconds
