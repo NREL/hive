@@ -21,7 +21,17 @@ class TestKeplerFeature(TestCase):
         feature.add_coord(somewhere_else(), mock_sim().sim_time + 1)
 
         actual_dict = feature.gen_json()
-        expected_dict = {
+
+        # asserts are needed to get the TypeDict for the expected result to be happy
+        lat_1, lon_1 = h3.h3_to_geo(somewhere())
+        assert isinstance(lat_1, float)
+        assert isinstance(lon_1, float)
+
+        lat_2, lon_2 = h3.h3_to_geo(somewhere_else())
+        assert isinstance(lat_2, float)
+        assert isinstance(lon_2, float)
+
+        expected_dict: Feature = {
             "type": "Feature",
             "properties": {
                 "vehicle_id": DefaultIds.mock_vehicle_id(),
@@ -31,18 +41,18 @@ class TestKeplerFeature(TestCase):
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
-                    [
-                        h3.h3_to_geo(somewhere())[1],
-                        h3.h3_to_geo(somewhere())[0],
+                    Coord(
+                        lon_1,
+                        lat_1,
                         0,
                         f"{mock_sim().sim_time.as_epoch_time():010}",
-                    ],
-                    [
-                        h3.h3_to_geo(somewhere_else())[1],
-                        h3.h3_to_geo(somewhere_else())[0],
+                    ),
+                    Coord(
+                        lon_2,
+                        lat_2,
                         0,
                         f"{(mock_sim().sim_time + 1).as_epoch_time():010}",
-                    ],
+                    ),
                 ],
             },
         }
