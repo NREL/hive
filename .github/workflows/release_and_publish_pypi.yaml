@@ -23,9 +23,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.x'
+        python-version: '3.8'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -33,14 +33,18 @@ jobs:
     - name: Build package
       run: |
         python -m build
+    - name: Upload artifacts
+    - uses: actions/upload-artifact@v3
+      with:
+          path: ./dist/*
     - name: Upload to twine test
-      run: |
-        twine upload -r testpypi dist/* --verbose
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository-url: https://test.pypi.org/
     - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
