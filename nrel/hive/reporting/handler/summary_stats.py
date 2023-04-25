@@ -7,6 +7,8 @@ from functools import reduce
 from statistics import mean
 from typing import TYPE_CHECKING, Dict, Any
 
+from nrel.hive.model.energy.energytype import EnergyType
+
 if TYPE_CHECKING:
     from nrel.hive.runner.runner_payload import RunnerPayload
 

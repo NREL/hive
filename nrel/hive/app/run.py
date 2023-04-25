@@ -100,7 +100,7 @@ def run(
 
 
 def _welcome_to_hive():
-    welcome = """
+    welcome = r"""
 ##     ##  ####  ##     ##  #######
 ##     ##   ##   ##     ##  ##
 #########   ##   ##     ##  ######
