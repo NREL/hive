@@ -12,14 +12,14 @@ class KeplerFeature:
 
         :param id: The VehicleId of the vehicle
         :param state: The string value of the vehicle's state during creation
-        :param starttime: The SimTime object of when the vehicle was recorded to start the trip 
+        :param starttime: The SimTime object of when the vehicle was recorded to start the trip
         """
         self.id: VehicleId = id
         self.state: str = state
         self.starttime: SimTime = starttime
         self.coords: List[Tuple[GeoId, SimTime]] = []
-    
-    def add_coord(self, geoid:GeoId, timestamp:SimTime) -> None:
+
+    def add_coord(self, geoid: GeoId, timestamp: SimTime) -> None:
         """
         Adds a coordinate to the Vehicles list of coordinates while on the current trip
 
@@ -36,22 +36,23 @@ class KeplerFeature:
 
         :return: A dictionary on the vehicle's trip for Kepler
         """
-        log_dict = {"type": "Feature",
-                    "properties": {
-                        "vehicle_id": self.id,
-                        "vehicle_state": self.state,
-                        "start_time": self.starttime.as_epoch_time()
-                    },
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": []
-                    }}
+        log_dict = {
+            "type": "Feature",
+            "properties": {
+                "vehicle_id": self.id,
+                "vehicle_state": self.state,
+                "start_time": f"{self.starttime.as_epoch_time():010}",
+            },
+            "geometry": {"type": "LineString", "coordinates": []},
+        }
         for geoid, timestamp in self.coords:
             lat, lon = h3.h3_to_geo(geoid)
-            log_dict["geometry"]["coordinates"].append([lon, lat, 0, timestamp.as_epoch_time()])
+            log_dict["geometry"]["coordinates"].append(
+                [lon, lat, 0, f"{timestamp.as_epoch_time():010}"]
+            )
 
         return log_dict
-    
+
     def reset(self, state: str, starttime: SimTime) -> None:
         """
         Resets the vehicle's coordinate list so that the vehicle can start a new trip
@@ -64,4 +65,3 @@ class KeplerFeature:
         self.coords.clear()
         self.state = state
         self.starttime = starttime
-

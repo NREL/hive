@@ -5,24 +5,23 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict
 from nrel.hive.util.typealiases import *
 from nrel.hive.reporting.handler.handler import Handler
-from nrel.hive.reporting.handler.kepler_feautre import KeplerFeature
+from nrel.hive.reporting.handler.kepler_feature import KeplerFeature
 
 if TYPE_CHECKING:
     from nrel.hive.runner.runner_payload import RunnerPayload
     from nrel.hive.reporting.reporter import Report
 
-PREFIX = \
-"""
+PREFIX = """
 {
 "type": "FeatureCollection",
 "features": [
 """
 
-SUFIX = \
-"""
+SUFIX = """
 ]
 }
 """
+
 
 class KeplerHandler(Handler):
     """
@@ -52,9 +51,11 @@ class KeplerHandler(Handler):
             try:
                 kepler_feature = self.kepler_features[vehicle.id]
             except KeyError:
-                kepler_feature = KeplerFeature(vehicle.id, vehicle.vehicle_state.__class__.__name__, sim_state.sim_time)
+                kepler_feature = KeplerFeature(
+                    vehicle.id, vehicle.vehicle_state.__class__.__name__, sim_state.sim_time
+                )
                 self.kepler_features[vehicle.id] = kepler_feature
-        
+
             # A completed Kepler "Feature" happens when the vehicle changes states
             if kepler_feature.state != vehicle.vehicle_state.__class__.__name__:
                 if not self.first_feature:
@@ -64,8 +65,8 @@ class KeplerHandler(Handler):
                 json.dump(kepler_feature.gen_json(), self.log_file)
                 # clear out the old coordinates and start a new "Feature"
                 kepler_feature.reset(vehicle.vehicle_state.__class__.__name__, sim_state.sim_time)
-        
-            kepler_feature.add_stop(vehicle.geoid, sim_state.sim_time)
+
+            kepler_feature.add_coord(vehicle.geoid, sim_state.sim_time)
 
     def close(self, runner_payload: RunnerPayload) -> None:
         """
