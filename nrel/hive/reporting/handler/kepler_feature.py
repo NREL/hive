@@ -1,13 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any, TypedDict, NamedTuple
+from typing import List, Tuple, TypedDict, NamedTuple
 import h3
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.util.typealiases import *
-
-PROPERTY_TYPE = dict[str, VehicleId | str]
-COORD_TYPE = list[float | str]
-GEOMETRY_TYPE = dict[str, str | list[COORD_TYPE]]
 
 
 class Property(TypedDict):
