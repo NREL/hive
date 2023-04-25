@@ -21,7 +21,8 @@ class AnonGenerator(InstructionGenerator):
 
     @property
     def name(self) -> str:
-        return self.__class__.__name__
+        # return the name of the function
+        return self.instruction_function.__name__
 
     def generate_instructions(
         self,
