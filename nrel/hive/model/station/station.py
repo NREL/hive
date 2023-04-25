@@ -425,7 +425,7 @@ class Station(Entity):
             k: self.energy_dispensed[k] + delta_energy.get(k, 0)
             for k in self.energy_dispensed.keys()
         }
-        return replace(self, energy_dispensed=energy_dispensed)
+        return replace(self, energy_dispensed=immutables.Map(energy_dispensed))
 
     def enqueue_for_charger(self, charger_id: ChargerId) -> ErrorOr[Station]:
         """
