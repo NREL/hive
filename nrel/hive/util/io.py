@@ -1,16 +1,15 @@
 import csv
 import pathlib
+from collections.abc import Sequence
 
-from nrel.hive.util.type_hints import HiveTabularData, HiveTabularDataDicts
 
-
-def to_csv(data: HiveTabularData, path: pathlib.Path):
+def to_csv(data: Sequence[Sequence[str]], path: pathlib.Path):
     with open(path, 'w') as f:
         writer = csv.writer(f)
         writer.writerows(data)
 
-def to_csv_dicts(data: HiveTabularDataDicts, path: pathlib.Path):
+def to_csv_dicts(data: Sequence[dict], path: pathlib.Path):
     with open(path, 'w') as f:
-        writer = csv.DictWriter(f, fieldnames=[header for header in data[0].keys()])
+        writer = csv.DictWriter(f, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, FrozenSet, Optional
 
@@ -12,7 +13,7 @@ from immutables import Map
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
-from nrel.hive.util.io import to_csv, HiveTabularDataDicts, to_csv_dicts
+from nrel.hive.util.io import to_csv, to_csv_dicts
 
 if TYPE_CHECKING:
     from nrel.hive.config import HiveConfig
@@ -41,7 +42,7 @@ class TimeStepStatsHandler(Handler):
 
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
-            self.data: HiveTabularDataDicts = []
+            self.data: list = []
             self.time_step_stats_outpath = scenario_output_directory.joinpath(
                 f"{file_name}_all.csv"
             )
@@ -53,7 +54,7 @@ class TimeStepStatsHandler(Handler):
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
                 "fleet_time_step_stats/"
             )
-            self.fleets_data: dict[str, HiveTabularDataDicts] = {}
+            self.fleets_data: dict = {}
             for fleet_id in fleet_ids:
                 if fleet_id is None:
                     self.fleets_data["none"] = []
@@ -62,18 +63,18 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> Optional[HiveTabularDataDicts]:
+    def get_time_step_stats(self) -> list:
         """
         return a DataFrame of the time step level statistics.
 
         :return: the time step stats DataFrame
         """
 
-        return self.data if self.data else None
+        return self.data
 
     def get_fleet_time_step_stats(
         self,
-    ) -> Map[MembershipId, HiveTabularDataDicts]:
+    ) -> Map[MembershipId, Sequence]:
         """
         return an immutable map of time step stat data by membership id.
 

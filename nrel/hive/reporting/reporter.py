@@ -7,7 +7,6 @@ from immutables import Map
 from nrel.hive.reporting.handler.stats_handler import StatsHandler
 from nrel.hive.reporting.handler.time_step_stats_handler import TimeStepStatsHandler
 from nrel.hive.reporting.report_type import ReportType
-from nrel.hive.util.type_hints import HiveTabularDataDicts
 
 if TYPE_CHECKING:
     from nrel.hive.model.membership import MembershipId
@@ -72,7 +71,7 @@ class Reporter:
         return final_report
     def get_time_step_stats(
         self,
-    ) -> Tuple[Optional[HiveTabularDataDicts], Optional[Map[MembershipId, HiveTabularDataDicts]]]:
+    ) -> Tuple[Optional, Optional]:
         """
         if a TimeStepStatsHandler exists, return the time step stats and the fleet time step stats
         :return: the time step stats and the fleet time step stats collection if they exist

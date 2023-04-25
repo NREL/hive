@@ -5,7 +5,6 @@ from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.reporting.reporter import Report
 from nrel.hive.runner import RunnerPayload
 from nrel.hive.util import SimulationStateError
-from nrel.hive.util.type_hints import HiveData
 
 
 class VehicleChargeEventsHandler(Handler):
@@ -37,7 +36,7 @@ class VehicleChargeEventsHandler(Handler):
                         f"unable to parse charge event from report {report}, missing entry for {e}"
                     )
 
-    def get_events(self) -> Dict[str, list[HiveData]]:
+    def get_events(self) -> Dict[str, list]:
         """
         grabs the events as a pandas dataframe
         :return: a pandas dataframe containing charge events
