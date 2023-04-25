@@ -12,7 +12,7 @@ from immutables import Map
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.report_type import ReportType
 from nrel.hive.state.vehicle_state.vehicle_state_type import VehicleStateType
-from nrel.hive.util.io import to_csv
+from nrel.hive.util.io import to_csv, HiveTabularDataDicts, to_csv_dicts
 
 if TYPE_CHECKING:
     from nrel.hive.config import HiveConfig
@@ -41,7 +41,7 @@ class TimeStepStatsHandler(Handler):
 
         if config.global_config.log_time_step_stats:
             self.log_time_step_stats = True
-            self.data: list[dict[str, Any]] = []
+            self.data: HiveTabularDataDicts = []
             self.time_step_stats_outpath = scenario_output_directory.joinpath(
                 f"{file_name}_all.csv"
             )
@@ -53,7 +53,7 @@ class TimeStepStatsHandler(Handler):
             self.fleets_timestep_stats_outpath = scenario_output_directory.joinpath(
                 "fleet_time_step_stats/"
             )
-            self.fleets_data: dict[str, list[Dict[str, Any]]] = {}
+            self.fleets_data: dict[str, HiveTabularDataDicts] = {}
             for fleet_id in fleet_ids:
                 if fleet_id is None:
                     self.fleets_data["none"] = []
@@ -62,7 +62,7 @@ class TimeStepStatsHandler(Handler):
         else:
             self.log_fleet_time_step_stats = False
 
-    def get_time_step_stats(self) -> Optional[list[dict]]:
+    def get_time_step_stats(self) -> HiveTabularDataDicts:
         """
         return a DataFrame of the time step level statistics.
 
@@ -73,7 +73,7 @@ class TimeStepStatsHandler(Handler):
 
     def get_fleet_time_step_stats(
         self,
-    ) -> Map[MembershipId, list[Dict[str, Any]]]:
+    ) -> Map[MembershipId, HiveTabularDataDicts]:
         """
         return an immutable map of time step stat data by membership id.
 
@@ -371,7 +371,7 @@ class TimeStepStatsHandler(Handler):
         :return:
         """
         if self.log_time_step_stats:
-            to_csv(
+            to_csv_dicts(
                 self.get_time_step_stats(),
                 self.time_step_stats_outpath,
             )
