@@ -1,10 +1,10 @@
 import csv
 import pathlib
 
-from nrel.hive.util.type_hints import HiveTabularDataLists, HiveTabularDataDicts
+from nrel.hive.util.type_hints import HiveTabularData, HiveTabularDataDicts
 
 
-def to_csv(data: HiveTabularDataLists, path: pathlib.Path):
+def to_csv(data: HiveTabularData, path: pathlib.Path):
     with open(path, 'w') as f:
         writer = csv.writer(f)
         writer.writerows(data)
