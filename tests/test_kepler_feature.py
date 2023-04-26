@@ -39,7 +39,7 @@ class TestKeplerFeature(TestCase):
             "properties": {
                 "vehicle_id": DefaultIds.mock_vehicle_id(),
                 "vehicle_state": "Idle",
-                "start_time": f"{mock_sim().sim_time.as_epoch_time():010}",
+                "start_time": mock_sim().sim_time.as_epoch_time(),
             },
             "geometry": {
                 "type": "LineString",
@@ -48,13 +48,13 @@ class TestKeplerFeature(TestCase):
                         lon_1,
                         lat_1,
                         0,
-                        f"{mock_sim().sim_time.as_epoch_time():010}",
+                        mock_sim().sim_time.as_epoch_time(),
                     ),
                     Coord(
                         lon_2,
                         lat_2,
                         0,
-                        f"{(mock_sim().sim_time + 1).as_epoch_time():010}",
+                        (mock_sim().sim_time + 1).as_epoch_time(),
                     ),
                 ],
             },
