@@ -22,7 +22,6 @@ keywords = ["simulation", "transportation", "ride-sharing", "agent-based"]
 dependencies = [
     "immutables",
     "numpy",
-    "pandas",
     "networkx",
     "PyYAML",
     "tqdm",

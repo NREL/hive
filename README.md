@@ -1,9 +1,9 @@
 # <img src="docs/source/images/hive-icon.png" alt="drawing" width="100"/>
 
-**H**ighly  
-**I**ntegrated  
-**V**ehicle  
-**E**cosystem  
+**H**ighly
+**I**ntegrated
+**V**ehicle
+**E**cosystem
 
 HIVE™ is an open-source mobility services research platform developed by the Mobility, Behavior, and Advanced Powertrains (MBAP) group at the National Renewable Energy Laboratory in Golden, Colorado, USA.
 
@@ -20,7 +20,7 @@ For more documentation on how to use HIVE, please see the [HIVE documentation](h
 ## Installation
 
 HIVE depends on a Python installation [3.8, 3.9, 3.10, 3.11] and the pip package manager ( [python.org](https://www.python.org/downloads/).
-In our installation example we use [conda](https://www.anaconda.com/products/distribution) |  for managing a HIVE Python environment.
+In our installation example we use [conda](https://www.anaconda.com/products/distribution) | for managing a HIVE Python environment.
 
 ### (optional) set up a virtual environment using conda
 
@@ -62,13 +62,13 @@ if you want the program to use a file that is not built-in, provide a valid path
 
 The following built-in scenario files come out-of-the-box, and available directly by name:
 
-scenario | description
----------|------------
-denver_demo.yaml | default demo scenario with 20 vehicles and 2.5k requests synthesized with uniform time/location sampling
-denver_rl_toy.yaml | extremely simple scenario for testing RL
-denver_demo_constrained_charging.yaml | default scenario with limited charging supply
-denver_demo_fleets.yaml | default scenario with two competing TNC fleets
-manhattan.yaml | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset
+| scenario                              | description                                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| denver_demo.yaml                      | default demo scenario with 20 vehicles and 2.5k requests synthesized with uniform time/location sampling |
+| denver_rl_toy.yaml                    | extremely simple scenario for testing RL                                                                 |
+| denver_demo_constrained_charging.yaml | default scenario with limited charging supply                                                            |
+| denver_demo_fleets.yaml               | default scenario with two competing TNC fleets                                                           |
+| manhattan.yaml                        | larger test scenario with 200 vehicles and 20k requests sampled from the NY Taxi Dataset                 |
 
 For more information on how to build your own scenario, please see the [HIVE documentation](https://nrelhive.readthedocs.io/en/latest/inputs.html).
 
@@ -106,162 +106,56 @@ When the Mobility, Behavior, and Advanced Powertrains group began looking to ans
 
 HIVE is _not_ a fully-featured [Activity-Based Model](https://en.wikipedia.org/wiki/Transportation_forecasting#Activity-based_models), does _not_ simulate all vehicles on the network, and does not simulate congestion. It also assumes demand is fixed. If these assumptions are too strong for your research question, then one of the other mesoscopic models capable of ridehail simulation may be a more appropriate fit. The following (opinionated) chart attempts to compare features of HIVE against LBNL's BEAM and ANL's POLARIS models.
 
-| feature                                            | HIVE       | BEAM      | POLARIS |
-| -------------------------------------------------- | ---------- | --------- | ------- |
-| Agent-Based Ridehail Model                         | :honeybee: | :red_car: | :train: |
-| Designed for large-scale inputs                    | :honeybee: | :red_car: | :train: |
-| Integrates with NREL energy models                 | :honeybee: | :red_car: | :train: |
-| Charging infrastructure & charge events            | :honeybee: | :red_car: | :train: |
-| Service pricing and income model                   | :honeybee: | :red_car: | :train: |
-| Data-driven ridehail dispatcher                    | :honeybee: |           |         |
-| Does not require socio-demographic data            | :honeybee: |           |         |
-| Built-in example scenario                          | :honeybee: | :red_car: |         |
-| Written entirely in Python, installed via pip      | :honeybee: |           |         |
-| Activity-Based Demand Model                        |            | :red_car: | :train: |
-| Dynamic demand using behavioral models             |            | :red_car: | :train: |
-| Robust assignment of population demographics       |            | :red_car: | :train: |
-| Supports broad set of travel modes                 |            | :red_car: | :train: |
-| Endogenous traffic congestion modeling             |            | :red_car: | :train: |
+| feature                                       | HIVE       | BEAM      | POLARIS |
+| --------------------------------------------- | ---------- | --------- | ------- |
+| Agent-Based Ridehail Model                    | :honeybee: | :red_car: | :train: |
+| Designed for large-scale inputs               | :honeybee: | :red_car: | :train: |
+| Integrates with NREL energy models            | :honeybee: | :red_car: | :train: |
+| Charging infrastructure & charge events       | :honeybee: | :red_car: | :train: |
+| Service pricing and income model              | :honeybee: | :red_car: | :train: |
+| Data-driven ridehail dispatcher               | :honeybee: |           |         |
+| Does not require socio-demographic data       | :honeybee: |           |         |
+| Built-in example scenario                     | :honeybee: | :red_car: |         |
+| Written entirely in Python, installed via pip | :honeybee: |           |         |
+| Activity-Based Demand Model                   |            | :red_car: | :train: |
+| Dynamic demand using behavioral models        |            | :red_car: | :train: |
+| Robust assignment of population demographics  |            | :red_car: | :train: |
+| Supports broad set of travel modes            |            | :red_car: | :train: |
+| Endogenous traffic congestion modeling        |            | :red_car: | :train: |
 
 ## Looking at a default scenario
 
-![Map of Denver Downtown](docs/source/_static/denver_demo.jpg?raw=true)
+![Manhattan Animation](docs/source/images/manhattan.gif?raw=true)
 
-Running HIVE takes one argument, which is a configuration file. Hive comes packaged with a demo scenario for Downtown Denver, located at `hive/resources/scenarios/denver_demo.yaml`. This file names the inputs and the configuration Parameters for running HIVE.
+Running HIVE takes one argument, which is a configuration file. Hive comes packaged with a demo scenario for Manhattan, located at `hive/resources/scenarios/manhattan/manhattan.yaml`. This file names the inputs and the configuration Parameters for running HIVE.
 
-the Denver demo scenario is configured to log output to a folder named `denver_demo_outputs` which is also tagged with a timestamp. These output files can be parsed by Pandas (for Pandas > 0.19.0):
+One the scenario is finished, the console will indicate where the output files have been written and you can load them using pandas:
 
 ```python
 import pandas as pd
 # log files store JSON rows, like a document store
-output_file = "~/hive/output/denver_demo_2021-02-08_11-00-07/state.log"
+output_file = "manhattan_2021-02-08_11-00-07/state.log"
 pd.read_json(output_file, lines=True)
 ```
 
 By default, these outputs are generated:
 
-file name                        | file type | description
--------------------------------- | --------- | -----------
-\<config\>.yaml                  | YAML      | the input configuration serialized (can be read back by HIVE)
-run.log                          | text      | console log output
-event.log                        | JSON rows | events that occur, such as vehicle movement, pickup + dropoff events, etc
-instruction.log                  | JSON rows | instructions sent from dispatcher to drivers
-state.log                        | JSON rows | entity states at every time step
-station_capacities.csv           | CSV       | energy load capacity for each station
-summary_stats.json               | JSON      | summary stats as displayed in run.log but in JSON format
-time_step_stats_{$FLEET|all}.csv | CSV       | aggregated data across a fleet (or all fleets) by time step
+| file name               | file type | description                                                               |
+| ----------------------- | --------- | ------------------------------------------------------------------------- |
+| \<config\>.yaml         | YAML      | the input configuration serialized (can be read back by HIVE)             |
+| run.log                 | text      | console log output                                                        |
+| event.log               | JSON rows | events that occur, such as vehicle movement, pickup + dropoff events, etc |
+| instruction.log         | JSON rows | instructions sent from dispatcher to drivers                              |
+| state.log               | JSON rows | entity states at every time step                                          |
+| station_capacities.csv  | CSV       | energy load capacity for each station                                     |
+| summary_stats.json      | JSON      | summary stats as displayed in run.log but in JSON format                  |
+| time_step_stats_all.csv | CSV       | aggregated data across a fleet (or all fleets) by time step               |
 
 Running this scenario should also feed some logging into the console.
-First, HIVE announces where it is loading configuration from (1).
-It then dumps the global and scenario configuration to the console (2).
-Finally, after around 65 lines, it begins running the simulation with a progress bar (3).
-After, it prints the summary stats to the console and exits (4).
-
-```console
-INFO                                                                                                                                                                                                                                          
-         ##     ##  ####  ##     ##  #######                                                                                                                                                                                                  
-         ##     ##   ##   ##     ##  ##                                                                                                                                                                                                       
-         #########   ##   ##     ##  ######                                                                                                                                                                                                   
-         ##     ##   ##    ##   ##   ##                                                                                                                                                                                                       
-         ##     ##  ####     ###     #######                                                                                                                                                                                                  
-                                                                                                                                                                                                                                              
-                         .' '.            __                                                                                                                                                                                                  
-                .        .   .           (__\_                                                                                                                                                                                                
-                 .         .         . -{{_(|8)                                                                                                                                                                                               
-                   ' .  . ' ' .  . '     (__/                                                                                                                                                                                                 
-                                                                                                                                                                                                                                              
-/home/cj/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml
-INFO     global hive configuration loaded from /home/cj/hive/nrel/hive/resources/defaults/.hive.yaml                                                                                                                                          
-INFO       global_settings_file_path: /home/cj/hive/nrel/hive/resources/defaults/.hive.yaml                                                                                                                                                   
-INFO       output_base_directory: .                                                                                                                                                                                                           
-INFO       local_parallelism: 1                                                                                                                                                                                                               
-INFO       local_parallelism_timeout_sec: 60                                                                                                                                                                                                  
-INFO       log_run: True                                                                                                                                                                                                                      
-INFO       log_events: True                                                                                                                                                                                                                   
-INFO       log_states: True                                                                                                                                                                                                                   
-INFO       log_instructions: True                                                                                                                                                                                                             
-INFO       log_stats: True                                                                                                                                                                                                                    
-INFO       log_level: INFO                                                                                                                                                                                                                    
-INFO       log_sim_config: {<ReportType.INSTRUCTION: 8>, <ReportType.REFUEL_SEARCH_EVENT: 12>, <ReportType.VEHICLE_STATE: 2>, <ReportType.VEHICLE_MOVE_EVENT: 10>, <ReportType.ADD_REQUEST_EVENT: 4>, <ReportType.STATION_STATE: 1>,          
-         <ReportType.DRIVER_SCHEDULE_EVENT: 13>, <ReportType.DROPOFF_REQUEST_EVENT: 6>, <ReportType.PICKUP_REQUEST_EVENT: 5>, <ReportType.VEHICLE_CHARGE_EVENT: 9>, <ReportType.STATION_LOAD_EVENT: 11>, <ReportType.DRIVER_STATE: 3>,        
-         <ReportType.CANCEL_REQUEST_EVENT: 7>}                                                                                                                                                                                                
-INFO       log_station_capacities: True                                                                                                                                                                                                       
-INFO       log_time_step_stats: True                                                                                                                                                                                                          
-INFO       log_fleet_time_step_stats: True                                                                                                                                                                                                    
-INFO       lazy_file_reading: False                                                                                                                                                                                                           
-INFO       wkt_x_y_ordering: True                                                                                                                                                                                                             
-INFO       verbose: True                                                                                                                                                                                                                      
-INFO     output directory set to /home/cj/hive/nrel/hive/resources/scenarios/denver_downtown                                                                                                                                                  
-INFO     hive config loaded from /home/cj/hive/nrel/hive/resources/scenarios/denver_downtown/denver_demo.yaml                                                                                                                                 
-INFO                                                                                                                                                                                                                                          
-         dispatcher:                                                                                                                                                                                                                          
-           base_charging_range_km_threshold: 100                                                                                                                                                                                              
-           charging_range_km_soft_threshold: 50                                                                                                                                                                                               
-           charging_range_km_threshold: 20                                                                                                                                                                                                    
-           charging_search_type: nearest_shortest_queue                                                                                                                                                                                       
-           default_update_interval_seconds: 600                                                                                                                                                                                               
-           human_driver_off_shift_charge_target: 1.0                                                                                                                                                                                          
-           ideal_fastcharge_soc_limit: 0.8                                                                                                                                                                                                    
-           idle_time_out_seconds: 1800                                                                                                                                                                                                        
-           matching_range_km_threshold: 20                                                                                                                                                                                                    
-           max_search_radius_km: 100.0                                                                                                                                                                                                        
-           valid_dispatch_states:                                                                                                                                                                                                             
-           - Idle                                                                                                                                                                                                                             
-           - Repositioning                                                                                                                                                                                                                    
-         input:                                                                                                                                                                                                                               
-           bases_file: denver_demo_bases.csv                                                                                                                                                                                                  
-           charging_price_file: denver_charging_prices_by_geoid.csv                                                                                                                                                                           
-           geofence_file: null                                                                                                                                                                                                                
-           mechatronics_file: mechatronics.yaml                                                                                                                                                                                               
-           rate_structure_file: rate_structure.csv                                                                                                                                                                                            
-           requests_file: denver_demo_requests.csv                                                                                                                                                                                            
-           road_network_file: downtown_denver_network.json                                                                                                                                                                                    
-           stations_file: denver_demo_stations.csv                                                                                                                                                                                            
-           vehicles_file: denver_demo_vehicles.csv                                                                                                                                                                                            
-         network:                                                                                                                                                                                                                             
-           default_speed_kmph: 40.0                                                                                                                                                                                                           
-           network_type: osm_network                                                                                                                                                                                                          
-         sim:                                                                                                                                                                                                                                 
-           end_time: '1970-01-02T00:00:00'                                                                                                                                                                                                    
-           request_cancel_time_seconds: 600                                                                                                                                                                                                   
-           schedule_type: time_range                                                                                                                                                                                                          
-           sim_h3_resolution: 15                                                                                                                                                                                                              
-           sim_h3_search_resolution: 7                                                                                                                                                                                                        
-           sim_name: denver_demo                                                                                                                                                                                                              
-           start_time: '1970-01-01T00:00:00'                                                                                                                                                                                                  
-           timestep_duration_seconds: 60                                                                                                                                                                                                      
-                                                                                                                                                                                                                                              
-INFO     creating run log at denver_demo_2023-04-23_18-37-21/run.log with log level INFO                                                                                                                                                      
-INFO     running denver_demo for time 1970-01-01T00:00:00 to 1970-01-02T00:00:00:                                                                                                                                                             
-INFO     done! time elapsed: 11.39 seconds                                                                                                                                                                                                    
-INFO     97.56 %         Requests Served                                                                                                                                                                                                      
-                        Summary Stats                        
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃ Stat                                         ┃ Value      ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ Mean Final SOC                               │ 48.82%     │
-│ Requests Served                              │ 97.56%     │
-│ Time in State Idle                           │ 30.22%     │
-│ Time in State DispatchBase                   │ 0.05%      │
-│ Time in State ChargingBase                   │ 4.34%      │
-│ Time in State DispatchTrip                   │ 19.07%     │
-│ Time in State ServicingTrip                  │ 24.68%     │
-│ Time in State ReserveBase                    │ 17.31%     │
-│ Time in State DispatchStation                │ 0.26%      │
-│ Time in State ChargingStation                │ 4.07%      │
-│ Time in State Repositioning                  │ 0.0%       │
-│ Total Kilometers Traveled                    │ 7971.91 km │
-│ Kilometers Traveled in State DispatchBase    │ 10.14 km   │
-│ Kilometers Traveled in State DispatchTrip    │ 3305.03 km │
-│ Kilometers Traveled in State ServicingTrip   │ 4606.57 km │
-│ Kilometers Traveled in State DispatchStation │ 49.41 km   │
-│ Kilometers Traveled in State Repositioning   │ 0.76 km    │
-│ Station Revenue                              │ $ 188.29   │
-│ Fleet Revenue                                │ $ 12092.5  │
-└──────────────────────────────────────────────┴────────────┘
-INFO     summary stats written to denver_demo_2023-04-23_18-37-21/summary_stats.json                                                                                                                                                          
-INFO     time step stats written to denver_demo_2023-04-23_18-37-21/time_step_stats_all.csv                                                                                                                                                   
-```
+First, HIVE announces where it is loading configuration from.
+It then dumps the global and scenario configuration to the console.
+Finally, after around 65 lines, it begins running the simulation with a progress bar.
+After, it prints the summary stats to the console and exits.
 
 ## Roadmap
 

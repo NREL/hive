@@ -2,20 +2,20 @@ from __future__ import annotations
 from typing import List, Tuple, TypedDict, NamedTuple
 import h3
 from nrel.hive.model.sim_time import SimTime
-from nrel.hive.util.typealiases import *
+from nrel.hive.util.typealiases import VehicleId, GeoId
 
 
 class Property(TypedDict):
     vehicle_id: VehicleId
     vehicle_state: str
-    start_time: str
+    start_time: int
 
 
 class Coord(NamedTuple):
     lon: float
     lat: float
     z: float
-    timestamp: str
+    timestamp: int
 
 
 class Geometry(TypedDict):
@@ -65,7 +65,7 @@ class KeplerFeature:
             "properties": {
                 "vehicle_id": self.id,
                 "vehicle_state": self.state,
-                "start_time": f"{self.starttime.as_epoch_time():010}",
+                "start_time": self.starttime.as_epoch_time(),
             },
             "geometry": {"type": "LineString", "coordinates": []},
         }
@@ -74,7 +74,7 @@ class KeplerFeature:
             assert isinstance(lat, float)
             assert isinstance(lon, float)
             log_dict["geometry"]["coordinates"].append(
-                Coord(lon, lat, 0, f"{timestamp.as_epoch_time():010}")
+                Coord(lon, lat, 0, timestamp.as_epoch_time())
             )
 
         return log_dict
