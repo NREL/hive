@@ -1,4 +1,4 @@
-name: tests 
+name: tests
 
 on:
   push:
@@ -26,21 +26,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install package 
+      - name: Install package
         run: |
-          pip install ".[dev]" 
+          pip install ".[dev]"
 
       - name: Run mypy
-        run: mypy . --ignore-missing-imports 
+        run: mypy . --ignore-missing-imports
 
       - name: Run black
         run: |
           black nrel tests --check
 
-      - name: Python unit tests 
+      # Once all files have passed through pre-commit, the black check can be replaced by pre-commit:
+      # - name: Run pre-commit in CI
+      #   uses: pre-commit/action@v3.0.0
+
+      - name: Python unit tests
         run: |
-          pytest tests/ -v 
-      
+          pytest tests/ -v
+
       - name: HIVE Denver Demo test
         run: |
           hive denver_demo.yaml
