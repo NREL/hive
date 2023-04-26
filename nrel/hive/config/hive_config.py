@@ -68,9 +68,7 @@ class HiveConfig(NamedTuple):
         root_logger = logging.getLogger("")
         root_logger.setLevel(global_config.log_level)
 
-        log.info(
-            f"global hive configuration loaded from {global_config.global_settings_file_path}"
-        )
+        log.info(f"global hive configuration loaded from {global_config.global_settings_file_path}")
         for k, v in global_config.asdict().items():
             log.info(f"  {k}: {v}")
 
