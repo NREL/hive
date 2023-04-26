@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Optional, Dict, TYPE_CHECKING
+from typing import Optional, Dict, Tuple, TYPE_CHECKING
 
 import h3
 
@@ -12,7 +12,7 @@ from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.util.exception import SimulationStateError
 
 if TYPE_CHECKING:
-    from nrel.hive.util.typealiases import *
+    from nrel.hive.util.typealiases import BaseId, GeoId, MembershipId, StationId
 
 
 @dataclass(frozen=True)
@@ -100,11 +100,12 @@ class Base(Entity):
                 geoid = h3.geo_to_h3(lat, lon, road_network.sim_h3_resolution)
                 stall_count = int(row["stall_count"])
 
-                # allow user to leave station_id blank or use the word "none" to signify no station at base
+                # allow user to leave station_id blank or use the word "none" to signify
+                # no station at base
                 station_id_name = row["station_id"] if len(row["station_id"]) > 0 else "none"
                 station_id = None if station_id_name.lower() == "none" else station_id_name
 
-                # TODO: think about how to assing vehicles to bases based on fleet membership
+                # TODO: think about how to assign vehicles to bases based on fleet membership
 
                 return Base.build(
                     id=base_id,
@@ -114,10 +115,10 @@ class Base(Entity):
                     stall_count=stall_count,
                 )
 
-            except ValueError:
+            except ValueError as e:
                 raise IOError(
-                    f"unable to parse request {base_id} from row due to invalid value(s): {row}"
-                )
+                    f"unable to parse id {base_id} from row due to invalid value(s): {row}"
+                ) from e
 
     def has_available_stall(self, membership: Membership) -> bool:
         """
