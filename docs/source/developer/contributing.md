@@ -27,6 +27,12 @@ This simple guide will walk you through the process of contributing to HIVE.
 1. Click on the "Fork" button in the upper right corner. This creates a copy of the repository under your GitHub account.
 1. Clone your forked repository to your local machine by clicking the "Code" button and copying the URL. Then, open your terminal or command prompt and run git clone [URL], replacing [URL] with the copied URL.
 
+## Installing the development environment
+
+1. Create and activate a new virtual environment with the tool of your choice (e.g. `venv`, `conda`, `pipenv`, etc.).
+1. Install the package and dependencies by running `pip install -e ".[dev]"`. This will install the package in editable mode, so you can make changes to the code and see them reflected in your environment.
+1. Install the pre-commit hook by running `pre-commit install`. This will run the pre-commit checks before each commit, and will prevent you from committing code that doesn't pass the checks.
+
 ## Opening a Pull Request
 
 1. Create a new branch in your local repository by running git checkout -b [branch-name], replacing [branch-name] with a descriptive name for your changes.
