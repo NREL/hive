@@ -29,6 +29,8 @@ from nrel.hive.util.units import Kmph, Kilometers
 
 log = logging.getLogger(__name__)
 
+TIME_WEIGHT = "travel_time"
+
 
 class OSMRoadNetwork(RoadNetwork):
     """
@@ -63,21 +65,35 @@ class OSMRoadNetwork(RoadNetwork):
             raise TypeError("all node ids must be either an integer or a tuple of integers")
 
         #   check to make sure the graph has the right information on the links
-        missing_length = 0
         missing_speed = 0
-        for _, _, d in graph.edges(data=True):
+        missing_time = 0
+        for u, v, d in graph.edges(data=True):
             if "length" not in d:
-                missing_length += 1
+                raise Exception(
+                    "all links in the road network must have a 'length' edge "
+                    f"attribute but link {u} -> {v} does not have one."
+                )
             if "speed_kmph" not in d:
                 missing_speed += 1
-        if missing_length > 0:
-            raise Exception(
-                f"found {missing_length} links in the road network that don't have length information"
-            )
-        elif missing_speed > 0:
+                d["speed_kmph"] = default_speed_kmph
+            if TIME_WEIGHT not in d:
+                distance_km = d["length"] / 1000  # meters to kilometers
+                speed_kmph = d["speed_kmph"]
+                time_hours = distance_km / speed_kmph
+                time_seconds = time_hours * 3600
+                d[TIME_WEIGHT] = time_seconds
+                missing_time += 1
+
+        if missing_speed > 0:
             log.warning(
                 f"found {missing_speed} links in the road network that don't have speed information.\n"
                 f"hive will automatically set these to {default_speed_kmph} kmph."
+            )
+        elif missing_time > 0:
+            log.warning(
+                f"found {missing_time} links in the road network that don't have time information.\n"
+                f"hive will automatically set these to the time it takes to traverse the link at the speed "
+                f"specified in the 'speed_kmph' attribute."
             )
 
         # build tables on the network edges for spatial lookup and LinkId lookup
@@ -168,7 +184,7 @@ class OSMRoadNetwork(RoadNetwork):
 
             # node-oriented shortest path from the end of the origin link to the beginning of the destination link
             nx_path = nx.shortest_path(
-                self.graph, origin_node_id, destination_node_id, weight="travel_time"
+                self.graph, origin_node_id, destination_node_id, weight=TIME_WEIGHT
             )
             link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)
 
