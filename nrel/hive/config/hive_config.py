@@ -68,12 +68,11 @@ class HiveConfig(NamedTuple):
         root_logger = logging.getLogger("")
         root_logger.setLevel(global_config.log_level)
 
-        if global_config.verbose:
-            log.info(
-                f"global hive configuration loaded from {global_config.global_settings_file_path}"
-            )
-            for k, v in global_config.asdict().items():
-                log.info(f"  {k}: {v}")
+        log.info(
+            f"global hive configuration loaded from {global_config.global_settings_file_path}"
+        )
+        for k, v in global_config.asdict().items():
+            log.info(f"  {k}: {v}")
 
         # start build using the Hive config defaults file
         defaults_file_str = pkg_resources.resource_filename(
