@@ -25,11 +25,16 @@ In our installation example we use [conda](https://www.anaconda.com/products/dis
 ### (optional) set up a virtual environment using conda
 
 We recommend setting up a virtual environment to install HIVE.
+This helps avoiding conflicts with other Python dependencies.
+Conda compared to other virtualenv managers like Poetry or Pipenv can be better at managing projects such as this one that use large dependencies (such as SciPy).
 One way to do this is to use Anaconda:
-    1. Install [Anaconda](https://www.anaconda.com/products/distribution) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-    1. Open a terminal or Anaconda Prompt.
-    1. Create a new virtual environment: `conda create --name hive python=3.10`
-    1. Activate the virtual environment `conda activate hive`
+
+1. Install [Anaconda](https://www.anaconda.com/products/distribution) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+1. Open a terminal or Anaconda Prompt.
+1. Create a new virtual environment with the desired Python version: `conda create --name hive python=3.11`
+1. Activate the virtual environment `conda activate hive`
+1. Continue with the installation instructions below.
+   Now your dependencies will be stored within the new virtual environment.
 
 ### via pip
 
@@ -45,11 +50,11 @@ Clone the repository and install the code via pip:
 
 ## Run HIVE
 
-run a test of hive using a [built-in scenario](#built-in-scenarios):
+run a test of hive using a [built-in scenario](#built-in-scenarios), which are hardcoded:
 
     > hive denver_demo.yaml
 
-if you want the program to use a file outside of this location, provide a valid path:
+if you want the program to use a file that is not built-in, provide a valid path:
 
     > hive some_other_directory/my_scenario.yaml
 
