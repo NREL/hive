@@ -1,11 +1,11 @@
 import unittest
 
+from nrel.hive.app.hive_cosim import crank
 from nrel.hive.config.network import Network
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.initialization.initialize_simulation import (
     initialize,
     default_init_functions,
-    osm_init_function,
 )
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
@@ -53,6 +53,44 @@ class TestInitializeSimulation(unittest.TestCase):
         self.assertIsNone(sim.vehicles.get("v1"), "should not have loaded vehicle v1")
         self.assertIsNone(sim.bases.get("b1"), "should not have loaded base b1")
         self.assertIsNone(sim.stations.get("s1"), "should not have loaded station s1")
+
+    def test_load_simulation_with_custom_instruction_function(self):
+        conf = mock_config().suppress_logging()
+
+        dummy_instruction1 = IdleInstruction("v1")
+        dummy_instruction2 = IdleInstruction("v2")
+        dummy_instructions = (dummy_instruction1, dummy_instruction2)
+
+        def custom_instruction_function_1(
+            sim: SimulationState, env: Environment
+        ) -> Tuple[Instruction, ...]:
+            return tuple([dummy_instruction1])
+
+        def custom_instruction_function_2(
+            sim: SimulationState, env: Environment
+        ) -> Tuple[Instruction, ...]:
+            return tuple([dummy_instruction2])
+
+        rp = load_simulation(
+            conf,
+            custom_instruction_generators=[
+                custom_instruction_function_1,
+                custom_instruction_function_2,
+            ],
+        )
+
+        # crank the simulation for 2 steps to make sure we have the applied instructions in the result
+        result = crank(rp, 2)
+
+        applied_instructions = tuple(
+            sorted(
+                result.runner_payload.s.applied_instructions.values(), key=lambda i: i.vehicle_id
+            )
+        )
+
+        self.assertEqual(
+            dummy_instructions, applied_instructions, "should have applied the dummy instructions"
+        )
 
     def test_initialize_simulation_with_sampling(self):
         conf = (

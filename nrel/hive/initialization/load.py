@@ -8,7 +8,13 @@ import yaml
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
-from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
+from nrel.hive.dispatcher.instruction_generator.instruction_function import (
+    instruction_generator_from_function,
+    InstructionFunction,
+)
+from nrel.hive.dispatcher.instruction_generator.instruction_generator import (
+    InstructionGenerator,
+)
 from nrel.hive.initialization.initialize_simulation import (
     default_init_functions,
     osm_init_function,
@@ -23,7 +29,7 @@ from nrel.hive.util.fp import throw_on_failure
 
 log = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=InstructionGenerator)
+T = TypeVar("T", bound=Union[InstructionGenerator, InstructionFunction])
 
 
 def load_config(scenario_file: Union[Path, str], output_suffix: Optional[str] = None) -> HiveConfig:
@@ -95,6 +101,13 @@ def load_simulation(
         )
         update = Update.build(env.config, instruction_generators)
     else:
-        update = Update.build(env.config, custom_instruction_generators)
+        # map all instruction functions to generators
+        mapped_instruction_generators = tuple(
+            map(
+                lambda ig_or_if: instruction_generator_from_function(ig_or_if),
+                custom_instruction_generators,
+            )
+        )
+        update = Update.build(env.config, mapped_instruction_generators)
 
     return RunnerPayload(sim, env, update)
