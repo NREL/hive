@@ -2,7 +2,7 @@ from unittest import TestCase
 from csv import DictReader
 
 import h3
-from requests import Request
+from nrel.hive.model.request.request import Request
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.resources.mock_lobster import mock_config, mock_env, mock_network, mock_request
 

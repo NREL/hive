@@ -19,14 +19,13 @@ from nrel.hive.resources.mock_lobster import (
     mock_vehicle_from_geoid,
 )
 from nrel.hive.state.simulation_state import simulation_state_ops
-from nrel.hive.util import h3_ops
 
 
 class TestInstructionGenerators(TestCase):
     def test_dispatcher_match_vehicle(self):
         dispatcher = Dispatcher(mock_config().dispatcher)
 
-        somewhere = h3_ops.geo_to_h3(39.7539, -104.974, 15)
+        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
         far_from_somewhere = h3.geo_to_h3(39.755, -104.976, 15)
 
