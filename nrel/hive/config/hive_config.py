@@ -42,7 +42,7 @@ class HiveConfig(NamedTuple):
         pairs and modify the datetime convention for naming output directories.
         :param scenario_file_path: path to the file to load as a HiveConfig
         :param config: optional overrides to the default config values (Default: None)
-        :param output_suffix: directory name suffix to append to sim_name (by default, timestamp for now)
+        :param output_suffix: directory name suffix to append to sim_name (by default, timestamp)
         :return: a hive config or an error
         """
         return ConfigBuilder.build(
@@ -59,18 +59,15 @@ class HiveConfig(NamedTuple):
         # collect the global hive configuration
         global_config = fs.global_hive_config_search()
 
-        # i wish to make these comprehensive print-outs DEBUG-only, but, i am totally perplexed by Python Logging's
-        # behavior for setting log level
-        # https://stackoverflow.com/questions/43109355/logging-setlevel-is-being-ignored
-        # https://stackoverflow.com/questions/44312978/python-logger-is-not-printing-debug-messages-although-it-is-set-correctly
-
-        # logging.basicConfig(level=global_config.log_level)
         root_logger = logging.getLogger("")
         root_logger.setLevel(global_config.log_level)
 
-        log.info(f"global hive configuration loaded from {global_config.global_settings_file_path}")
-        for k, v in global_config.asdict().items():
-            log.info(f"  {k}: {v}")
+        if global_config.verbose:
+            log.info(
+                f"global hive configuration loaded from {global_config.global_settings_file_path}"
+            )
+            for k, v in global_config.asdict().items():
+                log.info(f"  {k}: {v}")
 
         # start build using the Hive config defaults file
         defaults_file_str = pkg_resources.resource_filename(
@@ -87,7 +84,6 @@ class HiveConfig(NamedTuple):
             conf["network"].update(d["network"])
             conf["dispatcher"].update(d["dispatcher"])
 
-            # is this still possible now with the default config loading from nrel.hive.resources.defaults?
             warn_missing_config_keys = ["input", "sim", "network"]
             for key in warn_missing_config_keys:
                 if key not in conf:
