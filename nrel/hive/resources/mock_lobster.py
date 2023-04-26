@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from typing import Union, Callable
+from typing import Dict, FrozenSet, Optional, Tuple, Union, Callable
 
 import h3
 import immutables
@@ -10,7 +10,6 @@ from pkg_resources import resource_filename
 from nrel.hive.config import HiveConfig
 from nrel.hive.dispatcher.forecaster.forecast import Forecast, ForecastType
 from nrel.hive.dispatcher.forecaster.forecaster_interface import ForecasterInterface
-from nrel.hive.dispatcher.instruction.instructions import *
 from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
 from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
@@ -22,8 +21,10 @@ from nrel.hive.model.request import Request, RequestRateStructure
 from nrel.hive.model.roadnetwork.geofence import GeoFence
 from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwork
 from nrel.hive.model.roadnetwork.link import Link
+from nrel.hive.model.roadnetwork.linktraversal import LinkTraversal
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork import OSMRoadNetwork
 from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
+from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.model.station.station import Station
 from nrel.hive.model.vehicle.mechatronics.bev import BEV
@@ -33,7 +34,6 @@ from nrel.hive.model.vehicle.mechatronics.powercurve.tabular_powercurve import T
 from nrel.hive.model.vehicle.mechatronics.powertrain.tabular_powertrain import TabularPowertrain
 from nrel.hive.model.vehicle.vehicle import Vehicle
 from nrel.hive.reporting.reporter import Reporter, Report
-from nrel.hive.reporting.handler.kepler_feature import *
 from nrel.hive.runner.environment import Environment
 from nrel.hive.runner.runner_payload import RunnerPayload
 from nrel.hive.state.driver_state.autonomous_driver_state.autonomous_available import (
@@ -54,9 +54,21 @@ from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.simulation_state import SimulationState
 from nrel.hive.state.simulation_state.update.step_simulation import StepSimulation
 from nrel.hive.state.simulation_state.update.update import Update
+from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.vehicle_state import VehicleState
-from nrel.hive.util.typealiases import *
-from nrel.hive.util.units import *
+from nrel.hive.util.typealiases import (
+    ChargerId,
+    RequestId,
+    VehicleId,
+    StationId,
+    BaseId,
+    MechatronicsId,
+    ScheduleId,
+    MembershipId,
+    GeoId,
+    H3Resolution,
+)
+from nrel.hive.util.units import Currency, Kmph, Ratio, Seconds
 
 
 class DefaultIds:
@@ -133,6 +145,117 @@ def mock_network(h3_res: H3Resolution = 15, geofence_res: H3Resolution = 10) -> 
     return HaversineRoadNetwork(
         geofence=mock_geofence(resolution=geofence_res),
         sim_h3_resolution=h3_res,
+    )
+
+
+def mock_osm_route() -> Route:
+    """A mock route taken from the mock osm network"""
+    return (
+        LinkTraversal(
+            link_id="176080957-176080956",
+            start="8f268cdacac236d",
+            end="8f268cdacace2db",
+            distance_km=0.10470500000000002,
+            speed_kmph=39.7,
+        ),
+        LinkTraversal(
+            link_id="176080956-176092324",
+            start="8f268cdacace2db",
+            end="8f268cdac375852",
+            distance_km=0.14674299999999998,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176092324-176092321",
+            start="8f268cdac375852",
+            end="8f268cdac354143",
+            distance_km=0.14593199999999998,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176092321-176092319",
+            start="8f268cdac354143",
+            end="8f268cdac2213b0",
+            distance_km=0.146583,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176092319-176092317",
+            start="8f268cdac2213b0",
+            end="8f268cdac200663",
+            distance_km=0.14668,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176092317-176092315",
+            start="8f268cdac200663",
+            end="8f268cdac21a99e",
+            distance_km=0.145991,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176092315-176084469",
+            start="8f268cdac21a99e",
+            end="8f268cdac28dc4b",
+            distance_km=0.146845,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176084469-659623106",
+            start="8f268cdac28dc4b",
+            end="8f268cda8924086",
+            distance_km=0.146254,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="659623106-3329646638",
+            start="8f268cda8924086",
+            end="8f268cda893178c",
+            distance_km=0.148035,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="3329646638-5063215690",
+            start="8f268cda893178c",
+            end="8f268cda8913d26",
+            distance_km=0.145185,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="5063215690-5313640931",
+            start="8f268cda8913d26",
+            end="8f268cda891e263",
+            distance_km=0.10451800000000001,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="5313640931-176100374",
+            start="8f268cda891e263",
+            end="8f268cda8826870",
+            distance_km=0.10771800000000001,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176100374-176104476",
+            start="8f268cda8826870",
+            end="8f268cda8821000",
+            distance_km=0.10456100000000002,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="176104476-637816565",
+            start="8f268cda8821000",
+            end="8f268cda882d781",
+            distance_km=0.10358000000000002,
+            speed_kmph=40.2,
+        ),
+        LinkTraversal(
+            link_id="637816565-279916144",
+            start="8f268cda882d781",
+            end="8f268cda8942091",
+            distance_km=0.146861,
+            speed_kmph=39.7,
+        ),
     )
 
 
@@ -592,7 +715,7 @@ def mock_reporter() -> Reporter:
 
 
 def mock_route_from_geoids(src: GeoId, dst: GeoId, speed_kmph: Kmph = 1) -> Tuple[Link, ...]:
-    link = Link.build("1", src, dst, speed_kmph=speed_kmph)
+    link = Link.build(f"{src}-{dst}", src, dst, speed_kmph=speed_kmph)
     return (link,)
 
 

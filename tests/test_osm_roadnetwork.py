@@ -1,6 +1,8 @@
 from unittest import TestCase, skip
 
-from nrel.hive.resources.mock_lobster import *
+import h3
+
+from nrel.hive.resources.mock_lobster import mock_osm_network
 
 
 class TestOSMRoadNetwork(TestCase):

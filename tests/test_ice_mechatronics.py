@@ -1,6 +1,8 @@
 from unittest import TestCase
+from nrel.hive.model.energy.energytype import EnergyType
 
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import mock_gasoline_pump, mock_ice, mock_route, mock_vehicle
+from nrel.hive.util.units import KM_TO_MILE, MILE_TO_KM, hours_to_seconds
 
 
 class TestICE(TestCase):

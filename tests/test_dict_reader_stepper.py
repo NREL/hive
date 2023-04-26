@@ -1,9 +1,10 @@
+from typing import Callable
 from unittest import TestCase
 
 from pkg_resources import resource_filename
 
 from nrel.hive.model.sim_time import SimTime
-from nrel.hive.util.iterators import *
+from nrel.hive.util.iterators import DictReaderStepper
 
 
 class TestDictReaderStepper(TestCase):

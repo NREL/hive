@@ -1,13 +1,32 @@
 from unittest import TestCase
+import h3
 
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.dispatcher.instruction.instructions import (
+    DispatchStationInstruction,
+    DispatchTripInstruction,
+)
+from nrel.hive.dispatcher.instruction_generator.charging_fleet_manager import ChargingFleetManager
+from nrel.hive.dispatcher.instruction_generator.dispatcher import Dispatcher
+from nrel.hive.resources.mock_lobster import (
+    DefaultIds,
+    mock_config,
+    mock_dcfc_charger_id,
+    mock_env,
+    mock_membership,
+    mock_request_from_geoids,
+    mock_sim,
+    mock_station_from_geoid,
+    mock_vehicle_from_geoid,
+)
+from nrel.hive.state.simulation_state import simulation_state_ops
+from nrel.hive.util import h3_ops
 
 
 class TestInstructionGenerators(TestCase):
     def test_dispatcher_match_vehicle(self):
         dispatcher = Dispatcher(mock_config().dispatcher)
 
-        somewhere = h3.geo_to_h3(39.7539, -104.974, 15)
+        somewhere = h3_ops.geo_to_h3(39.7539, -104.974, 15)
         near_to_somewhere = h3.geo_to_h3(39.754, -104.975, 15)
         far_from_somewhere = h3.geo_to_h3(39.755, -104.976, 15)
 
@@ -105,7 +124,8 @@ class TestInstructionGenerators(TestCase):
         s1_geoid = h3.geo_to_h3(39.01, -104.0, 15)
         s2_geoid = h3.geo_to_h3(39.015, -104.0, 15)  # slightly further away
 
-        # prepare the scenario where the closer station has no available chargers and one enqueued vehicle
+        # prepare the scenario where the closer station has no
+        # available chargers and one enqueued vehicle
         s1 = mock_station_from_geoid(
             station_id="s1",
             geoid=s1_geoid,

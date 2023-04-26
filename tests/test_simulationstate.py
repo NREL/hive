@@ -1,10 +1,42 @@
 from unittest import TestCase
 
+import h3
+import immutables
+from nrel.hive.dispatcher.instruction.instructions import (
+    ChargeBaseInstruction,
+    ChargeStationInstruction,
+    DispatchBaseInstruction,
+    DispatchStationInstruction,
+    DispatchTripInstruction,
+    RepositionInstruction,
+    ReserveBaseInstruction,
+)
+from nrel.hive.model.energy.energytype import EnergyType
+from nrel.hive.model.station.station import Station
+from nrel.hive.resources.mock_lobster import (
+    DefaultIds,
+    mock_base,
+    mock_base_from_geoid,
+    mock_dcfc_charger_id,
+    mock_env,
+    mock_l2_charger_id,
+    mock_request,
+    mock_request_from_geoids,
+    mock_sim,
+    mock_station,
+    mock_station_from_geoid,
+    mock_vehicle,
+    mock_vehicle_from_geoid,
+)
+
 from nrel.hive.state.entity_state import entity_state_ops
+from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.simulation_state.update.step_simulation import perform_vehicle_state_updates
+from nrel.hive.state.vehicle_state.charging_station import ChargingStation
+from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.out_of_service import OutOfService
+from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
-from nrel.hive.resources.mock_lobster import *
 
 
 class TestSimulationState(TestCase):
@@ -353,7 +385,8 @@ class TestSimulationState(TestCase):
         )
         self.assertIsNotNone(sim, "Vehicle should have set instruction.")
 
-        # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
+        # 1000 seconds should get us there, and 1 more sim step
+        # of any size to transition vehicle state
         sim_at_base = perform_vehicle_state_updates(
             sim_updated._replace(sim_timestep_duration_seconds=1000), env
         )
@@ -393,7 +426,8 @@ class TestSimulationState(TestCase):
             instruction_result.prev_state,
             instruction_result.next_state,
         )
-        # 1000 seconds should get us there, and 1 more sim step of any size to transition vehicle state
+        # 1000 seconds should get us there, and 1 more sim step of
+        # any size to transition vehicle state
         sim_at_new_pos = perform_vehicle_state_updates(
             sim_updated._replace(sim_timestep_duration_seconds=1000), env
         )
@@ -436,7 +470,8 @@ class TestSimulationState(TestCase):
             instruction_result.prev_state,
             instruction_result.next_state,
         )
-        # 10 hours should get us charged , and 1 more sim step of any size to transition vehicle state
+        # 10 hours should get us charged , and 1 more sim step
+        # of any size to transition vehicle state
         sim_charged = perform_vehicle_state_updates(
             sim_updated._replace(sim_timestep_duration_seconds=36000), env
         )
@@ -475,7 +510,8 @@ class TestSimulationState(TestCase):
             instruction_result.prev_state,
             instruction_result.next_state,
         )
-        # 10 hours should get us charged, and 1 more sim step of any size to transition vehicle state
+        # 10 hours should get us charged, and 1 more sim step
+        # of any size to transition vehicle state
         sim_charged = perform_vehicle_state_updates(
             sim_updated._replace(sim_timestep_duration_seconds=36000), env
         )

@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import functools as ft
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, Tuple
 
 from nrel.hive.model.roadnetwork.linktraversal import (
     LinkTraversalResult,
     LinkTraversal,
 )
 from nrel.hive.model.roadnetwork.linktraversal import traverse_up_to
+from nrel.hive.model.roadnetwork.roadnetwork import RoadNetwork
 from nrel.hive.model.roadnetwork.route import Route
 from nrel.hive.util import TupleOps
-from nrel.hive.util.typealiases import *
 from nrel.hive.util.units import Kilometers, Seconds
 
 
@@ -84,15 +84,17 @@ class RouteTraversal(NamedTuple):
 
 
 def traverse(
-    route_estimate: Route, duration_seconds: Seconds
+    route_estimate: Route, duration_seconds: Seconds, road_network: RoadNetwork
 ) -> Tuple[Optional[Exception], Optional[RouteTraversal]]:
     """
-    step through the route from the current agent position (assumed to be start.link_id) toward the destination
+    step through the route from the current agent position
+    (assumed to be start.link_id) toward the destination
 
 
     :param route_estimate: the current route estimate
-
     :param duration_seconds: size of the time step for this traversal, in seconds
+    :param road_network: the road network; used to get current travel times
+
     :return: a route experience and updated route estimate;
              or, nothing (None, Empty RouteTraversal) if the route is consumed.
              an exception is possible if the current step is not found on the link or
@@ -116,14 +118,25 @@ def traverse(
 
             if acc_traversal.no_time_left():
                 return acc_failures, acc_traversal.add_link_not_traversed(link)
+
+            # update the link traversal speed with a current speed from the road network
+            ground_truth_link = road_network.link_from_link_id(link.link_id)
+            if ground_truth_link is None:
+                response = Exception("failure during traverse")
+                response.__cause__ = Exception(f"link {link.link_id} not found in road network")
+                return response, None
+            updated_speed_link = link._replace(speed_kmph=ground_truth_link.speed_kmph)
+
             # traverse this link as far as we can go
-            error, traverse_result = traverse_up_to(link, acc_traversal.remaining_time_seconds)
+            error, traverse_result = traverse_up_to(
+                updated_speed_link, acc_traversal.remaining_time_seconds
+            )
             if error:
-                response = Exception(f"failure during traverse")
+                response = Exception("failure during traverse")
                 response.__cause__ = error
                 return response, None
             elif traverse_result is None:
-                response = Exception(f"failure during traverse")
+                response = Exception("failure during traverse")
                 return response, None
             else:
                 updated_experienced_route = acc_traversal.add_traversal(traverse_result)

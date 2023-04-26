@@ -2,8 +2,16 @@ from dataclasses import replace
 from unittest import TestCase
 
 from returns.result import Success
+from nrel.hive.model.entity_position import EntityPosition
 
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import (
+    mock_base,
+    mock_request,
+    mock_sim,
+    mock_station,
+    mock_vehicle,
+)
+from nrel.hive.state.simulation_state import simulation_state_ops
 
 
 class TestSimulationStateOps(TestCase):

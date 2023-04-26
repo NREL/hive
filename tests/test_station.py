@@ -1,9 +1,21 @@
 from csv import DictReader
 from unittest import TestCase
 
-from nrel.hive.resources.mock_lobster import *
+import h3
+import immutables
+
 
 from returns.result import Failure
+from nrel.hive.model.station.station import Station
+
+from nrel.hive.resources.mock_lobster import (
+    mock_dcfc_charger_id,
+    mock_env,
+    mock_l1_charger_id,
+    mock_l2_charger_id,
+    mock_network,
+    mock_station,
+)
 
 
 class TestStation(TestCase):

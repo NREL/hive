@@ -1,7 +1,14 @@
+from pathlib import Path
+from typing import Tuple
 import unittest
 
+from pkg_resources import resource_filename
+
 from nrel.hive.app.hive_cosim import crank
+from nrel.hive.config.hive_config import HiveConfig
 from nrel.hive.config.network import Network
+from nrel.hive.dispatcher.instruction.instruction import Instruction
+from nrel.hive.dispatcher.instruction.instructions import IdleInstruction
 from nrel.hive.initialization.load import load_simulation
 from nrel.hive.initialization.initialize_simulation import (
     initialize,
@@ -10,7 +17,9 @@ from nrel.hive.initialization.initialize_simulation import (
 from nrel.hive.initialization.initialize_simulation_with_sampling import (
     initialize_simulation_with_sampling,
 )
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import mock_config
+from nrel.hive.runner.environment import Environment
+from nrel.hive.state.simulation_state.simulation_state import SimulationState
 
 import nrel.hive.state.simulation_state.simulation_state_ops as sso
 
@@ -79,7 +88,8 @@ class TestInitializeSimulation(unittest.TestCase):
             ],
         )
 
-        # crank the simulation for 2 steps to make sure we have the applied instructions in the result
+        # crank the simulation for 2 steps to make sure we have the
+        # applied instructions in the result
         result = crank(rp, 2)
 
         applied_instructions = tuple(

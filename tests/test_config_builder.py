@@ -55,7 +55,7 @@ class TestConfigBuilder(TestCase):
         }
 
         with self.assertRaises(AttributeError):
-            test_class = ConfigBuilder.build(
+            ConfigBuilder.build(
                 default_config={},
                 required_config=required,
                 config_constructor=TestConfigBuilderAssets.constructor,

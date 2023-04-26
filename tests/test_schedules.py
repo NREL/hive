@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from nrel.hive.model.vehicle.schedules.time_range_schedule import time_range_schedules_from_string
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import DefaultIds, mock_sim
 
 
 class TestSchedules(TestCase):

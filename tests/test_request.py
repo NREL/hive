@@ -1,7 +1,10 @@
 from unittest import TestCase
 from csv import DictReader
 
-from nrel.hive.resources.mock_lobster import *
+import h3
+from requests import Request
+from nrel.hive.model.sim_time import SimTime
+from nrel.hive.resources.mock_lobster import mock_config, mock_env, mock_network, mock_request
 
 from nrel.hive.util.exception import TimeParseError
 
@@ -56,7 +59,8 @@ class TestRequest(TestCase):
         self.assertTrue(req.membership.public)
 
     def test_from_row_with_fleet_id(self):
-        source = """request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers,fleet_id
+        source = """
+        request_id,o_lat,o_lon,d_lat,d_lon,departure_time,cancel_time,passengers,fleet_id
         1_a,31.2074449,121.4294263,31.2109091,121.4532226,61200,61800,4,uber
         """
         row = next(DictReader(source.split()))
