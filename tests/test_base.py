@@ -1,7 +1,11 @@
 from csv import DictReader
 from unittest import TestCase
 
-from nrel.hive.resources.mock_lobster import *
+import h3
+import pytest
+
+from nrel.hive.resources.mock_lobster import mock_base, mock_network
+from nrel.hive.model.base import Base
 
 
 class TestBase(TestCase):
@@ -90,3 +94,15 @@ class TestBase(TestCase):
             frozenset(["fleet_1", "fleet_3"]),
             "should have membership for fleet_1 and fleet_3",
         )
+
+    def test_parse_error_raises(self):
+        source = """base_id,lat,lon,stall_count,station_id
+                            b1,thirtyseven,122,10,s1"""
+
+        network = mock_network()
+        row = next(DictReader(source.split()))
+
+        with pytest.raises(IOError, match="unable to parse id") as exc_info:
+            Base.from_row(row, network)
+
+        assert isinstance(exc_info.value.__cause__, ValueError)
