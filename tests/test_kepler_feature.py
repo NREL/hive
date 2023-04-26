@@ -1,6 +1,9 @@
 from unittest import TestCase
 
-from nrel.hive.resources.mock_lobster import *
+import h3
+
+from nrel.hive.resources.mock_lobster import DefaultIds, mock_sim, somewhere, somewhere_else
+from nrel.hive.reporting.handler.kepler_feature import Coord, Feature, KeplerFeature
 
 
 class TestKeplerFeature(TestCase):
@@ -13,7 +16,7 @@ class TestKeplerFeature(TestCase):
             feature.coords,
             "Coordinates were not added to the list of coords",
         )
-        self.assertEquals(1, len(feature.coords), "There should only be one coord in coords")
+        self.assertEqual(1, len(feature.coords), "There should only be one coord in coords")
 
     def test_gen_json(self):
         feature = KeplerFeature(DefaultIds.mock_vehicle_id(), "Idle", mock_sim().sim_time)
@@ -66,9 +69,9 @@ class TestKeplerFeature(TestCase):
 
         feature.reset("DispatchTrip", mock_sim().sim_time + 2)
 
-        self.assertEquals(0, len(feature.coords), "Reset did not delete the old coordinates")
-        self.assertEquals("DispatchTrip", feature.state, "State did not change in reset")
-        self.assertEquals(
+        self.assertEqual(0, len(feature.coords), "Reset did not delete the old coordinates")
+        self.assertEqual("DispatchTrip", feature.state, "State did not change in reset")
+        self.assertEqual(
             mock_sim().sim_time + 2, feature.starttime, "Start time did not get updated"
         )
-        self.assertEquals(DefaultIds.mock_vehicle_id(), feature.id, "ID should not change in reset")
+        self.assertEqual(DefaultIds.mock_vehicle_id(), feature.id, "ID should not change in reset")
