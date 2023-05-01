@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict
-from nrel.hive.util.typealiases import *
+from nrel.hive.util.typealiases import VehicleId
 from nrel.hive.reporting.handler.handler import Handler
 from nrel.hive.reporting.handler.kepler_feature import KeplerFeature
 
@@ -32,7 +32,8 @@ class KeplerHandler(Handler):
         """
         Create the Kepler Handler to generate a kepler.json file for Kepler.gl
 
-        :param scenario_output_directory: path to the output directory where kepler.json will be written
+        :param scenario_output_directory: path to the output directory
+            where kepler.json will be written
         """
         log_path = scenario_output_directory / "kepler.json"
         self.log_file = open(log_path, "a")
@@ -42,8 +43,8 @@ class KeplerHandler(Handler):
 
     def handle(self, reports: List[Report], runner_payload: RunnerPayload) -> None:
         """
-        Capture the current states/locations of all vehicles and save in the in memory Dict and write complete trips to
-        the kepler.json file
+        Capture the current states/locations of all vehicles and save in
+        the in memory Dict and write complete trips to the kepler.json file
         """
         sim_state = runner_payload.s
 

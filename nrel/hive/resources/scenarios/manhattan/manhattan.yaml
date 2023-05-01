@@ -2,8 +2,8 @@ sim:
   sim_name: manhattan_20k
   timestep_duration_seconds: 60
   request_cancel_time_seconds: 600
-  start_time: 0
-  end_time: 86400
+  start_time: "2014-12-21 00:00:00"
+  end_time: "2014-12-22 00:00:00"
   sim_h3_search_resolution: 7  # around 12ish hexes covering manhattan
 network:
   network_type: osm_network
@@ -19,7 +19,5 @@ dispatcher:
   valid_dispatch_states:
     - idle
     - repositioning
-    - reservebase 
-    - chargingbase 
-
-
+    - reservebase
+    - chargingbase
