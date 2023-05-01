@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Union
 
+import h3
 import networkx as nx
 
 from nrel.hive.model.entity_position import EntityPosition
@@ -23,9 +24,9 @@ from nrel.hive.model.roadnetwork.route import (
     empty_route,
 )
 from nrel.hive.model.sim_time import SimTime
-from nrel.hive.util import LinkId
+from nrel.hive.util import LinkId, H3Ops
 from nrel.hive.util.typealiases import GeoId, H3Resolution
-from nrel.hive.util.units import Kmph, Kilometers
+from nrel.hive.util.units import Hours, Kmph, Kilometers, SECONDS_IN_HOUR
 
 log = logging.getLogger(__name__)
 
@@ -86,25 +87,37 @@ class OSMRoadNetwork(RoadNetwork):
 
         if missing_speed > 0:
             log.warning(
-                f"found {missing_speed} links in the road network that don't have speed information.\n"
-                f"hive will automatically set these to {default_speed_kmph} kmph."
+                f"found {missing_speed} links in the road network that don't have speed "
+                f"information.\nhive will automatically set these to {default_speed_kmph} kmph."
             )
         elif missing_time > 0:
             log.warning(
-                f"found {missing_time} links in the road network that don't have time information.\n"
-                f"hive will automatically set these to the time it takes to traverse the link at the speed "
-                f"specified in the 'speed_kmph' attribute."
+                f"found {missing_time} links in the road network that don't have time information."
+                f"\nhive will automatically set these to the time it takes to traverse the link at "
+                "the speed specified in the 'speed_kmph' attribute."
             )
 
         # build tables on the network edges for spatial lookup and LinkId lookup
         link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(
             graph, sim_h3_resolution, default_speed_kmph
         )
+
+        for _, node_data in graph.nodes(data=True):
+            # Replace lat/lon with geoid
+            node_data["geoid"] = h3.geo_to_h3(
+                node_data.get("x", node_data.get("lat")),
+                node_data.get("y", node_data.get("lon")),
+                sim_h3_resolution,
+            )
+            for key in ["x", "y", "lat", "lon"]:
+                node_data.pop(key, None)
+
         if link_helper_error:
             raise link_helper_error
         elif link_helper is None:
             raise Exception("Was not able to build link helper")
         else:
+            self.min_speed_kmph: Kmph = min(link.speed_kmph for link in link_helper.links.values())
             # finish constructing OSMRoadNetwork instance
             self.graph = graph
             self.link_helper = link_helper
@@ -145,7 +158,8 @@ class OSMRoadNetwork(RoadNetwork):
             return OSMRoadNetwork(graph, sim_h3_resolution, default_speed_kmph)
         else:
             raise TypeError(
-                f"road network file of type {road_network_path.suffix} not supported by OSMRoadNetwork."
+                f"road network file of type {road_network_path.suffix} not supported by "
+                "OSMRoadNetwork."
             )
 
     def to_file(self, file: Union[str, Path]):
@@ -165,7 +179,15 @@ class OSMRoadNetwork(RoadNetwork):
         if origin == destination:
             return empty_route()
 
-        # start path search from the end of the origin link, terminate search at the start of the destination link
+        def _astar_cost_heuristic(source, dest) -> float:
+            dist: Kilometers = H3Ops.great_circle_distance(
+                self.graph.nodes[source]["geoid"], self.graph.nodes[dest]["geoid"]
+            )
+            time: Hours = dist / self.min_speed_kmph
+            return time * SECONDS_IN_HOUR
+
+        # start path search from the end of the origin link, terminate search at the start of the
+        # destination link
         extract_src_err, src_nodes = extract_node_ids(origin.link_id)
         extract_dst_err, dst_nodes = extract_node_ids(destination.link_id)
         if extract_src_err:
@@ -182,9 +204,14 @@ class OSMRoadNetwork(RoadNetwork):
             _, origin_node_id = src_nodes
             destination_node_id, _ = dst_nodes
 
-            # node-oriented shortest path from the end of the origin link to the beginning of the destination link
-            nx_path = nx.shortest_path(
-                self.graph, origin_node_id, destination_node_id, weight=TIME_WEIGHT
+            # node-oriented shortest path from the end of the origin link to the beginning of the
+            # destination link
+            nx_path = nx.astar_path(
+                self.graph,
+                origin_node_id,
+                destination_node_id,
+                heuristic=_astar_cost_heuristic,
+                weight=TIME_WEIGHT,
             )
             link_path_error, inner_link_path = route_from_nx_path(nx_path, self.link_helper.links)
 
@@ -192,7 +219,8 @@ class OSMRoadNetwork(RoadNetwork):
                 log.error(f"unable to build route from {origin} to {destination}")
                 log.error(link_path_error)
                 log.error(
-                    f"origin node {origin_node_id}, destination node {destination_node_id}, shortest path node list result: {nx_path}"
+                    f"origin node {origin_node_id}, destination node {destination_node_id}, "
+                    f"shortest path node list result: {nx_path}"
                 )
                 return empty_route()
             elif inner_link_path is None:
@@ -204,7 +232,8 @@ class OSMRoadNetwork(RoadNetwork):
                 )
                 if not resolved_route:
                     log.error(
-                        f"unable to resolve the route from/to/via:\n {origin}\n{destination}\n{inner_link_path}"
+                        f"unable to resolve the route from/to/via:\n"
+                        f"{origin}\n{destination}\n{inner_link_path}"
                     )
                     return empty_route()
                 else:
@@ -222,7 +251,8 @@ class OSMRoadNetwork(RoadNetwork):
         d = self.position_from_geoid(destination)
         if not o or not d:
             log.error(
-                f"failed finding nearest links to distance query between GeoIds {origin}, {destination}"
+                "failed finding nearest links to distance query between GeoIds "
+                f"{origin}, {destination}"
             )
             return 0.0
         else:
@@ -262,8 +292,8 @@ class OSMRoadNetwork(RoadNetwork):
         :return: True/False
         """
         return True
-        # TODO: the geofence is slated to be modified and so we're bypassing this check in the meantime.
-        #  we'll need to add it back once we update the geofence implementation.
+        # TODO: the geofence is slated to be modified and so we're bypassing this check in the
+        #  meantime. We'll need to add it back once we update the geofence implementation.
 
     def update(self, sim_time: SimTime) -> RoadNetwork:
         raise NotImplementedError("updates are not implemented")
