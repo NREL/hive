@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 import immutables
-from typing import FrozenSet
 
 from nrel.hive.util import DictOps
 

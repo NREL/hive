@@ -4,7 +4,13 @@ from nrel.hive.dispatcher.instruction_generator.instruction_generator_ops import
     instruct_vehicles_to_dispatch_to_station,
 )
 from nrel.hive.dispatcher.instruction_generator.charging_search_type import ChargingSearchType
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import (
+    mock_env,
+    mock_ice,
+    mock_sim,
+    mock_station,
+    mock_vehicle,
+)
 
 
 class TestInstructionGenerators(TestCase):
@@ -14,7 +20,7 @@ class TestInstructionGenerators(TestCase):
 
         here we create a simulation in which the chargers that exist in the sim can't be used by the
         vehicle; this edge case should not fail but rather result in zero instructions; given the
-        logic splits for each ChargingSearchType, we test ChargingSearchType.NEAREST_SHORTEST_QUEUE here
+        logic splits for each ChargingSearchType, we test ChargingSearchType.NEAREST_SHORTEST_QUEUE
         """
         station = mock_station()
         ice_mechatronics = mock_ice()
@@ -47,7 +53,7 @@ class TestInstructionGenerators(TestCase):
 
         here we create a simulation in which the chargers that exist in the sim can't be used by the
         vehicle; this edge case should not fail but rather result in zero instructions; given the
-        logic splits for each ChargingSearchType, we test ChargingSearchType.SHORTEST_TIME_TO_CHARGE here
+        logic splits for each ChargingSearchType, we test ChargingSearchType.SHORTEST_TIME_TO_CHARGE
         """
         station = mock_station()
         mechatronics = mock_ice()

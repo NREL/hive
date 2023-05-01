@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from returns.primitives.exceptions import UnwrapFailedError
-from returns.result import Result
 
 from nrel.hive.initialization.sample_requests import default_request_sampler
 from nrel.hive.initialization.sample_vehicles import (
@@ -9,7 +8,16 @@ from nrel.hive.initialization.sample_vehicles import (
     build_default_location_sampling_fn,
     build_default_soc_sampling_fn,
 )
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.model.energy.energytype import EnergyType
+from nrel.hive.model.roadnetwork.link import Link
+from nrel.hive.model.vehicle.vehicle import Vehicle
+from nrel.hive.resources.mock_lobster import (
+    DefaultIds,
+    mock_base,
+    mock_env,
+    mock_osm_network,
+    mock_sim,
+)
 
 
 class TestSampleVehicles(TestCase):
@@ -26,12 +34,13 @@ class TestSampleVehicles(TestCase):
             self.assertNotEqual(
                 r.origin,
                 r.destination,
-                f"request should not have equal origin and destination",
+                "request should not have equal origin and destination",
             )
 
     def test_sample_n_vehicles_default(self):
         """
-        samples 10 vehicles and expects them to be instantiated with full charge at the same base location
+        samples 10 vehicles and expects them to be instantiated
+        with full charge at the same base location
         """
         n = 10
         base = mock_base()
@@ -51,8 +60,8 @@ class TestSampleVehicles(TestCase):
         )
 
         def check_vehicle(v: Vehicle):
-            self.assertEquals(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
-            self.assertEquals(
+            self.assertEqual(v.mechatronics_id, DefaultIds.mock_mechatronics_bev_id())
+            self.assertEqual(
                 v.energy.get(EnergyType.ELECTRIC),
                 env.mechatronics.get(mechatronics_id).battery_capacity_kwh,
             )

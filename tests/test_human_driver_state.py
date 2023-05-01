@@ -1,7 +1,37 @@
 from unittest import TestCase
+from nrel.hive.dispatcher.instruction.instructions import (
+    ChargeBaseInstruction,
+    DispatchBaseInstruction,
+    IdleInstruction,
+    RepositionInstruction,
+    ReserveBaseInstruction,
+)
+from nrel.hive.state.driver_state.human_driver_state.human_driver_state import (
+    HumanAvailable,
+    HumanUnavailable,
+)
+from nrel.hive.state.simulation_state import simulation_state_ops
+from nrel.hive.state.vehicle_state.charging_station import ChargingStation
+from nrel.hive.state.vehicle_state.idle import Idle
+from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 
-from nrel.hive.resources.mock_lobster import *
 from nrel.hive.util.fp import throw_or_return
+from nrel.hive.resources.mock_lobster import (
+    DefaultIds,
+    mock_base,
+    mock_base_from_geoid,
+    mock_dcfc_charger_id,
+    mock_env,
+    mock_human_driver,
+    mock_request_from_geoids,
+    mock_sim,
+    mock_station,
+    mock_station_from_geoid,
+    mock_vehicle,
+    mock_vehicle_from_geoid,
+    somewhere,
+    somewhere_else,
+)
 
 
 def on_schedule(a, b):
@@ -202,7 +232,8 @@ class TestHumanDriverState(TestCase):
         sim = mock_sim(vehicles=(veh,))
         env = mock_env()
 
-        # the default soc limit for charging at a station is 0.8 so we should generate an idle instruction.
+        # the default soc limit for charging at a station is 0.8
+        # so we should generate an idle instruction.
         i = veh.driver_state.generate_instruction(sim, env)
 
         self.assertIsInstance(i, IdleInstruction)
@@ -218,7 +249,8 @@ class TestHumanDriverState(TestCase):
         sim = mock_sim(vehicles=(veh,), bases=(base,))
         env = mock_env()
 
-        # the driver is at home and idle so it should try to turn off (i.e. transition to ReserveBase).
+        # the driver is at home and idle so it should try to turn off
+        # (i.e. transition to ReserveBase).
         i = veh.driver_state.generate_instruction(sim, env)
 
         self.assertIsInstance(i, ReserveBaseInstruction)

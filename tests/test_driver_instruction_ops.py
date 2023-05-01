@@ -1,7 +1,17 @@
 from unittest import TestCase
+from nrel.hive.dispatcher.instruction.instructions import (
+    DispatchBaseInstruction,
+    DispatchStationInstruction,
+)
 
 from nrel.hive.state.driver_state.driver_instruction_ops import human_go_home
-from nrel.hive.resources.mock_lobster import *
+from nrel.hive.resources.mock_lobster import (
+    mock_base,
+    mock_env,
+    mock_sim,
+    mock_station,
+    mock_vehicle,
+)
 
 
 class TestDriverInstructionOps(TestCase):

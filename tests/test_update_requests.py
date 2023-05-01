@@ -1,7 +1,10 @@
 from unittest import TestCase
 
+from pkg_resources import resource_filename
+from nrel.hive.model.sim_time import SimTime
+from nrel.hive.resources.mock_lobster import mock_config, mock_env, mock_sim
+
 from nrel.hive.state.simulation_state.update.update_requests_from_file import UpdateRequestsFromFile
-from nrel.hive.resources.mock_lobster import *
 
 
 class TestUpdateRequests(TestCase):
@@ -90,7 +93,7 @@ class TestUpdateRequests(TestCase):
             self.assertGreaterEqual(
                 req.value,
                 5,
-                f"should be greater/equal than minimum price of 5",
+                "should be greater/equal than minimum price of 5",
             )
 
     def test_update_lazy_file_reading(self):

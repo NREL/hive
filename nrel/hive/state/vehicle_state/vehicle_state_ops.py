@@ -38,7 +38,9 @@ def charge(
     :param charger_id: the charger_id we are using
     :return: an exception due to failure or an optional updated simulation
     """
-    context = f"vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
+    context = f"""
+    vehicle {vehicle_id} attempting to charge at station {station_id} with charger {charger_id}"
+    """
 
     vehicle = sim.vehicles.get(vehicle_id)
     mechatronics = env.mechatronics.get(vehicle.mechatronics_id) if vehicle else None
@@ -142,7 +144,8 @@ def _go_out_of_service_on_empty(
     :return: an optional error, or an optional sim with the out of service vehicle
     """
     # TODO: ways we can improve this:
-    # - find the exact point in the route where a vehicle runs out of energy and move it there before transitioning
+    # - find the exact point in the route where a vehicle runs out of
+    #   energy and move it there before transitioning
     #   to out of service.
     # - report stranded passengers if we're servicing a trip when this happens.
     next_state = OutOfService.build(vehicle_id)
@@ -182,19 +185,13 @@ def move(
             SimulationStateError(f"vehicle state does not have route; context {context}"),
             None,
         )
-    elif not hasattr(vehicle.vehicle_state, "update_route"):
-        return (
-            SimulationStateError(
-                f"vehicle state does not have update_route method; context {context}"
-            ),
-            None,
-        )
     else:
         route = vehicle.vehicle_state.route
 
     error, traverse_result = traverse(
         route_estimate=route,
         duration_seconds=int(sim.sim_timestep_duration_seconds),
+        road_network=sim.road_network,
     )
     if error:
         return error, None
@@ -203,9 +200,17 @@ def move(
 
     if not traverse_result.experienced_route:
         # vehicle did not traverse so we set an empty route
-        # ignore mypy error since we explicitly check for attribute above
-        updated_vehicle_state = vehicle.vehicle_state.update_route(route=empty_route())  # type: ignore
-        updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
+        if not hasattr(vehicle.vehicle_state, "update_route"):
+            return (
+                SimulationStateError(
+                    f"vehicle state does not have update_route method; context {context}"
+                ),
+                None,
+            )
+        else:
+            er = empty_route()
+            updated_vehicle_state = vehicle.vehicle_state.update_route(route=er)
+            updated_vehicle = vehicle.modify_vehicle_state(updated_vehicle_state)
     else:
         experienced_route = traverse_result.experienced_route
         remaining_route = traverse_result.remaining_route
@@ -222,12 +227,19 @@ def move(
             position=vehicle_position
         ).tick_distance_traveled_km(step_distance_km)
 
-        # ignore mypy error since we explicitly check for attribute above
-        new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)  # type: ignore
-        updated_vehicle = new_position_vehicle.modify_vehicle_state(new_route_state)
+        if not hasattr(new_position_vehicle.vehicle_state, "update_route"):
+            return (
+                SimulationStateError(
+                    f"vehicle state does not have update_route method; context {context}"
+                ),
+                None,
+            )
+        else:
+            new_route_state = new_position_vehicle.vehicle_state.update_route(route=remaining_route)
+            updated_vehicle = new_position_vehicle.modify_vehicle_state(new_route_state)
 
-        report = vehicle_move_event(sim, vehicle, updated_vehicle, traverse_result, env)
-        env.reporter.file_report(report)
+            report = vehicle_move_event(sim, vehicle, updated_vehicle, traverse_result, env)
+            env.reporter.file_report(report)
 
     error, moved_sim = simulation_state_ops.modify_vehicle(sim, updated_vehicle)
     if error:

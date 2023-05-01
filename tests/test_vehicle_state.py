@@ -1,19 +1,48 @@
 from dataclasses import replace
 from unittest import TestCase
 
+import immutables
+import h3
+
+from nrel.hive.model.energy.energytype import EnergyType
+from nrel.hive.model.membership import Membership
+from nrel.hive.model.sim_time import SimTime
+from nrel.hive.model.vehicle.trip_phase import TripPhase
+from nrel.hive.resources.mock_lobster import (
+    DefaultIds,
+    mock_base,
+    mock_base_from_geoid,
+    mock_dcfc_charger_id,
+    mock_env,
+    mock_ice,
+    mock_l2_charger_id,
+    mock_request,
+    mock_request_from_geoids,
+    mock_route_from_geoids,
+    mock_sim,
+    mock_station,
+    mock_station_from_geoid,
+    mock_vehicle,
+    mock_vehicle_from_geoid,
+)
 from nrel.hive.state.entity_state import entity_state_ops
+from nrel.hive.state.simulation_state import simulation_state_ops
 from nrel.hive.state.vehicle_state.charge_queueing import ChargeQueueing
+from nrel.hive.state.vehicle_state.charging_base import ChargingBase
+from nrel.hive.state.vehicle_state.charging_station import ChargingStation
+from nrel.hive.state.vehicle_state.dispatch_base import DispatchBase
 from nrel.hive.state.vehicle_state.dispatch_pooling_trip import DispatchPoolingTrip
+from nrel.hive.state.vehicle_state.dispatch_station import DispatchStation
+from nrel.hive.state.vehicle_state.dispatch_trip import DispatchTrip
+from nrel.hive.state.vehicle_state.idle import Idle
+from nrel.hive.state.vehicle_state.repositioning import Repositioning
+from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
+from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.state.vehicle_state.servicing_trip import ServicingTrip
 from nrel.hive.state.vehicle_state.out_of_service import OutOfService
-from nrel.hive.resources.mock_lobster import *
 
 
 class TestVehicleState(TestCase):
-    ####################################################################################################################
-    # ChargingStation ##################################################################################################
-    ####################################################################################################################
-
     def test_charging_station_enter(self):
         vehicle = mock_vehicle()
         station = mock_station()
@@ -228,10 +257,6 @@ class TestVehicleState(TestCase):
             0,
             "second instruction should have claimed the only L2 charger_id",
         )
-
-    ####################################################################################################################
-    # ChargingBase #####################################################################################################
-    ####################################################################################################################
 
     def test_charging_base_enter(self):
         vehicle = mock_vehicle()
@@ -474,10 +499,6 @@ class TestVehicleState(TestCase):
             "second instruction should have claimed the only L2 charger_id",
         )
 
-    ####################################################################################################################
-    # DispatchBase #####################################################################################################
-    ####################################################################################################################
-
     def test_dispatch_base_enter(self):
         vehicle = mock_vehicle()
         base = mock_base()
@@ -648,10 +669,6 @@ class TestVehicleState(TestCase):
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
-
-    ####################################################################################################################
-    # DispatchStation ##################################################################################################
-    ####################################################################################################################
 
     def test_dispatch_station_enter(self):
         outer_range_brewing = h3.geo_to_h3(39.5892193, -106.1011423, 15)
@@ -867,12 +884,9 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(
             enter_sim,
-            "invalid route should have not changed sim state - station and route destination do not match",
+            "invalid route should have not changed sim state"
+            " - station and route destination do not match",
         )
-
-    ####################################################################################################################
-    # DispatchTrip #####################################################################################################
-    ####################################################################################################################
 
     def test_dispatch_trip_enter(self):
         vehicle = mock_vehicle()
@@ -1065,10 +1079,6 @@ class TestVehicleState(TestCase):
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
-    ####################################################################################################################
-    # Idle #############################################################################################################
-    ####################################################################################################################
-
     def test_idle_enter(self):
         # should intially not be in an Idle state
         vehicle = mock_vehicle().modify_vehicle_state(
@@ -1171,10 +1181,6 @@ class TestVehicleState(TestCase):
         )
         self.assertTrue(is_empty, "vehicle should have no energy")
 
-    ####################################################################################################################
-    # OutOfService #####################################################################################################
-    ####################################################################################################################
-
     def test_out_of_service_enter(self):
         # should intially not be in an Idle state
         vehicle = mock_vehicle(soc=0.0)
@@ -1242,10 +1248,6 @@ class TestVehicleState(TestCase):
         )
 
     # def test_out_of_service_update_terminal(self):  # there is no terminal state for OutOfService
-
-    ####################################################################################################################
-    # Repositioning ####################################################################################################
-    ####################################################################################################################
 
     def test_repositioning_enter(self):
         vehicle = mock_vehicle()
@@ -1367,12 +1369,7 @@ class TestVehicleState(TestCase):
         enter_error, enter_sim = state.enter(sim, env)
 
         self.assertIsNone(enter_error, "should be no error")
-        self.assertIsNone(
-            enter_sim, "invalid route should have not changed sim state"
-        )  ####################################################################################################################
-
-    # ReserveBase ######################################################################################################
-    ####################################################################################################################
+        self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
 
     def test_reserve_base_enter(self):
         vehicle = mock_vehicle()
@@ -1471,7 +1468,6 @@ class TestVehicleState(TestCase):
             vehicles=(vehicle,),
         )
         env = mock_env()
-        route = ()
 
         state = ReserveBase.build(vehicle.id, DefaultIds.mock_base_id())
         enter_error, _ = state.enter(sim, env)
@@ -1483,7 +1479,6 @@ class TestVehicleState(TestCase):
             bases=(base,),
         )
         env = mock_env()
-        route = ()
 
         state = ReserveBase.build(DefaultIds.mock_vehicle_id(), base.id)
         enter_error, _ = state.enter(sim, env)
@@ -1505,12 +1500,6 @@ class TestVehicleState(TestCase):
             entered_sim,
             "no stall failure should result in no SimulationState result",
         )
-
-    # def test_reserve_base_update_terminal(self):  # there is no terminal state for OutOfService
-
-    ####################################################################################################################
-    # ServicingTrip ####################################################################################################
-    ####################################################################################################################
 
     def test_servicing_trip_enter(self):
         prev_state = DispatchTrip.build(
@@ -1623,8 +1612,6 @@ class TestVehicleState(TestCase):
             OutOfService,
             "vehicle should be out of service",
         )
-        # self.assertIsNotNone(updated_sim,
-        #                      "should have allowed exit of ServicingTrip because out of fuel allows transition to OutOfService")
 
     def test_servicing_trip_update(self):
         near = h3.geo_to_h3(39.7539, -104.974, 15)
@@ -1760,10 +1747,6 @@ class TestVehicleState(TestCase):
         state = ServicingTrip.build(vehicle.id, request, sim.sim_time, route)
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNotNone(enter_error, "bad destination is a good reason to bork this sim")
-
-    ####################################################################################################################
-    # ChargeQueueing ###################################################################################################
-    ####################################################################################################################
 
     def test_charge_queueing_enter(self):
         vehicle = mock_vehicle()
@@ -1925,10 +1908,6 @@ class TestVehicleState(TestCase):
 
         self.assertIsNone(error, "should have no errors")
         self.assertIsNone(updated_sim, "should not have entered a queueing state")
-
-    ####################################################################################################################
-    # DispatchPoolingTrip ##############################################################################################
-    ####################################################################################################################
 
     def test_dispatch_pooling_trip_enter(self):
         vehicle = mock_vehicle()
@@ -2122,7 +2101,8 @@ class TestVehicleState(TestCase):
         self.assertEqual(
             boarded_request.id,
             request.id,
-            f"request {request.id} should have boarded the vehicle, found {boarded_request.id} instead",
+            f"request {request.id} should have boarded the vehicle, "
+            f"found {boarded_request.id} instead",
         )
 
     def test_dispatch_pooling_trip_enter_no_request(self):
@@ -2179,10 +2159,6 @@ class TestVehicleState(TestCase):
         enter_error, enter_sim = state.enter(sim, env)
         self.assertIsNone(enter_error, "should be no error")
         self.assertIsNone(enter_sim, "invalid route should have not changed sim state")
-
-    ####################################################################################################################
-    # ServicingPoolingTrip #############################################################################################
-    ####################################################################################################################
 
     def test_servicing_pooling_trip_enter(self):
         vehicle = mock_vehicle()
