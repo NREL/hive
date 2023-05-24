@@ -70,7 +70,7 @@ def perform_driver_state_updates(
         else:
             return updated_sim
 
-    next_state = ft.reduce(_step_drivers, simulation_state.vehicles.values(), simulation_state)
+    next_state = ft.reduce(_step_drivers, simulation_state.get_vehicles(), simulation_state)
     return next_state
 
 
@@ -113,7 +113,7 @@ def perform_vehicle_state_updates(
         return other_vehicles + sorted_charge_queueing_vehicles
 
     # why sort here? see _sort_by_vehicle_state for an explanation
-    vehicles = _sort_by_vehicle_state(tuple(simulation_state.vehicles.values()))
+    vehicles = _sort_by_vehicle_state(tuple(simulation_state.get_vehicles()))
 
     for veh in vehicles:
         simulation_state = step_vehicle(simulation_state, env, veh)

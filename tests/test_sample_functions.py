@@ -68,7 +68,7 @@ class TestSampleVehicles(TestCase):
             self.assertEquals(v.position, base.position)
 
         self.assertEqual(len(result.unwrap().vehicles), n, f"should have {n} vehicles")
-        map(check_vehicle, result.unwrap().vehicles.values())
+        map(check_vehicle, result.unwrap().get_vehicles())
 
     def test_sample_n_with_failure(self):
         """

@@ -295,7 +295,7 @@ def construct_station_load_events(
 
     # create entries for stations with no charge events reported
     reported_stations: Set[StationId] = set(reported_charge_events_accumulator.keys())
-    unreported_station_ids: Set[StationId] = set(sim.stations.keys()).difference(reported_stations)
+    unreported_station_ids: Set[StationId] = set(sim.get_station_ids()).difference(reported_stations)
     all_stations_accumulator = ft.reduce(
         lambda acc, id: acc.update({id: (0.0, "")}),
         unreported_station_ids,

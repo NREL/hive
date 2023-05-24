@@ -271,7 +271,7 @@ def av_dispatch_base_instruction(
 
         best_base = H3Ops.nearest_entity_by_great_circle_distance(
             geoid=veh.geoid,
-            entities=sim.bases.values(),
+            entities=sim.get_bases(),
             entity_search=sim.b_search,
             is_valid=valid_fn,
             sim_h3_search_resolution=sim.sim_h3_search_resolution,

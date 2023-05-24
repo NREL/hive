@@ -19,7 +19,7 @@ class TestUpdateRequestsSampling(TestCase):
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 5, "should have added 5 requests")
 
-        for r in result.requests.values():
+        for r in result.get_requests():
             self.assertNotEqual(
                 r.origin,
                 r.destination,
