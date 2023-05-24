@@ -74,10 +74,13 @@ class SimulationState(NamedTuple):
 
     def get_station_ids(self) -> Tuple[StationId, ...]:
         return tuple(sorted(self.stations.keys()))
+
     def get_vehicle_ids(self) -> Tuple[VehicleId, ...]:
         return tuple(sorted(self.vehicles.keys()))
+
     def get_base_ids(self) -> Tuple[BaseId, ...]:
         return tuple(sorted(self.bases.keys()))
+
     def get_request_ids(self) -> Tuple[RequestId, ...]:
         return tuple(sorted(self.requests.keys()))
 
@@ -220,7 +223,7 @@ class SimulationState(NamedTuple):
         """
         returns a dictionary with the list of ids found at this location for all entities
 
-        :deprecated: no longer used 
+        :deprecated: no longer used
         :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
         :return: an Optional AtLocationResponse
         """

@@ -140,7 +140,9 @@ class ChargingPriceUpdate(SimulationUpdateFunction):
             # apply update to all stations
             # if these updates are in the form of GeoIds, map them to StationIds
             as_station_updates = _map_to_station_ids(charger_update, sim_state)
-            station_ids_to_update = set(sim_state.get_station_ids()).union(as_station_updates.keys())
+            station_ids_to_update = set(sim_state.get_station_ids()).union(
+                as_station_updates.keys()
+            )
 
             # we are applying only the updates related to valid StationIds with updates
             result = ft.reduce(
