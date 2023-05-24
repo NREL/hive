@@ -19,7 +19,7 @@ class Sim(NamedTuple):
     request_cancel_time_seconds: int
     schedule_type: ScheduleType
     min_delta_energy_change: Ratio = 0.0001
-    seed: int = 0
+    seed: Optional[int] = 0
 
     @classmethod
     def default_config(cls) -> Dict:

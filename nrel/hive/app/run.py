@@ -54,8 +54,9 @@ def run_sim(
 
     config = load_config(scenario_file)
 
-    random.seed(config.sim.seed)
-    numpy.random.seed(config.sim.seed)
+    if config.sim.seed is not None:
+        random.seed(config.sim.seed)
+        numpy.random.seed(config.sim.seed)
 
     initial_payload = load_simulation(
         config,

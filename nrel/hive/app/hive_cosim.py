@@ -30,8 +30,9 @@ def load_scenario(
     """
     config = load_config(scenario_file, output_suffix)
 
-    random.seed(config.sim.seed)
-    numpy.random.seed(config.sim.seed)
+    if config.sim.seed is not None:
+        random.seed(config.sim.seed)
+        numpy.random.seed(config.sim.seed)
 
     initial_payload = load_simulation(config, custom_instruction_generators, custom_init_functions)
 
