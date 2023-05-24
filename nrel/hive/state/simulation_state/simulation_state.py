@@ -72,11 +72,20 @@ class SimulationState(NamedTuple):
     s_search: immutables.Map[GeoId, FrozenSet[StationId]] = immutables.Map()
     b_search: immutables.Map[GeoId, FrozenSet[BaseId]] = immutables.Map()
 
+    def get_station_ids(self) -> Tuple[StationId, ...]:
+        return tuple(sorted(self.stations.keys()))
+    def get_vehicle_ids(self) -> Tuple[VehicleId, ...]:
+        return tuple(sorted(self.vehicles.keys()))
+    def get_base_ids(self) -> Tuple[BaseId, ...]:
+        return tuple(sorted(self.bases.keys()))
+    def get_request_ids(self) -> Tuple[RequestId, ...]:
+        return tuple(sorted(self.requests.keys()))
+
     def get_stations(
         self,
         filter_function: Optional[Callable[[Station], bool]] = None,
-        sort: bool = False,
-        sort_key: Callable = lambda k: k,
+        sort: bool = True,
+        sort_key: Callable = lambda k: k.id,
         sort_reversed: bool = False,
     ) -> Tuple[Station, ...]:
         """
@@ -108,8 +117,8 @@ class SimulationState(NamedTuple):
     def get_bases(
         self,
         filter_function: Optional[Callable[[Base], bool]] = None,
-        sort: bool = False,
-        sort_key: Callable = lambda k: k,
+        sort: bool = True,
+        sort_key: Callable = lambda k: k.id,
         sort_reversed: bool = False,
     ) -> Tuple[Base, ...]:
         """
@@ -142,8 +151,8 @@ class SimulationState(NamedTuple):
     def get_vehicles(
         self,
         filter_function: Optional[Callable[[Vehicle], bool]] = None,
-        sort: bool = False,
-        sort_key: Callable = lambda k: k,
+        sort: bool = True,
+        sort_key: Callable = lambda k: k.id,
         sort_reversed: bool = False,
     ) -> Tuple[Vehicle, ...]:
         """
@@ -177,8 +186,8 @@ class SimulationState(NamedTuple):
     def get_requests(
         self,
         filter_function: Optional[Callable[[Request], bool]] = None,
-        sort: bool = False,
-        sort_key: Callable = lambda k: k,
+        sort: bool = True,
+        sort_key: Callable = lambda k: k.id,
         sort_reversed: bool = False,
     ) -> Tuple[Request, ...]:
         """
@@ -211,6 +220,7 @@ class SimulationState(NamedTuple):
         """
         returns a dictionary with the list of ids found at this location for all entities
 
+        :deprecated: no longer used 
         :param geoid: geoid to look up, should be at the self.sim_h3_location_resolution
         :return: an Optional AtLocationResponse
         """
