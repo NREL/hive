@@ -9,14 +9,6 @@ from nrel.hive.runner.runner_payload import RunnerPayload
 
 
 class TestRunCosim(TestCase):
-    
-    def test_roooga(self):
-        scenario = Path(resource_filename(
-            "nrel.hive.resources.scenarios.denver_downtown", 
-            "denver_demo.yaml"))
-        rp = hive_cosim.load_scenario(scenario)
-        result = hive_cosim.crank(rp, 1440)
-        print(f"final time: {result.runner_payload.s.sim_time}")
 
     def test_load_and_run_denver(self):
         # read scenario
