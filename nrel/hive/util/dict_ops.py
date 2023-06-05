@@ -1,6 +1,19 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterator, List, NamedTuple, Tuple, Optional, TypeVar, FrozenSet, TYPE_CHECKING, Hashable, Union
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    List,
+    NamedTuple,
+    Tuple,
+    Optional,
+    TypeVar,
+    FrozenSet,
+    TYPE_CHECKING,
+    Hashable,
+    Union,
+)
 
 import h3
 import immutables
@@ -9,7 +22,6 @@ if TYPE_CHECKING:
     from nrel.hive.util.typealiases import EntityId, GeoId
     from nrel.hive.model.entity import Entity
     from _typeshed import SupportsRichComparison
-
 
 
 class EntityUpdateResult(NamedTuple):
@@ -23,9 +35,11 @@ class DictOps:
     V = TypeVar("V")
 
     @classmethod
-    def iterate_vals(cls, xs: immutables.Map[K, V], key: Optional[Callable[[V], SupportsRichComparison]]=None) -> Tuple[V, ...]:
+    def iterate_vals(
+        cls, xs: immutables.Map[K, V], key: Optional[Callable[[V], SupportsRichComparison]] = None
+    ) -> Tuple[V, ...]:
         """
-        helper function for iterating on Maps in HIVE which sorts values by key unless a key function 
+        helper function for iterating on Maps in HIVE which sorts values by key unless a key function
         is provided. for all stateful Map collections that are being iterated on in HIVE, we need
         to sort them _somehow_ to guarantee deterministic runs.
 
@@ -34,7 +48,7 @@ class DictOps:
 
         :param xs: collection to iterate values of
         :type xs: immutables.Map[K, V]
-        :return: values of xs, sorted by key 
+        :return: values of xs, sorted by key
         :rtype: Tuple[V, ...]
         """
         # forcing ignore here after numerous attempts to set the bounds for K
@@ -47,17 +61,21 @@ class DictOps:
         else:
             vs = sorted(xs.values(), key=key)  # type: ignore
             return vs
-    
+
     @classmethod
-    def iterate_items(cls, xs: immutables.Map[K, V], key: Optional[Callable[[Tuple[K, V]], SupportsRichComparison]]=None) -> List[Tuple[K, V]]:
+    def iterate_items(
+        cls,
+        xs: immutables.Map[K, V],
+        key: Optional[Callable[[Tuple[K, V]], SupportsRichComparison]] = None,
+    ) -> List[Tuple[K, V]]:
         """
-        helper function for iterating on Maps in HIVE which sorts values by key unless a key function 
+        helper function for iterating on Maps in HIVE which sorts values by key unless a key function
         is provided. for all stateful Map collections that are being iterated on in HIVE, we need
         to sort them _somehow_ to guarantee deterministic runs.
 
         :param xs: collection to iterate values of
         :type xs: immutables.Map[K, V]
-        :return: values of xs, sorted by key 
+        :return: values of xs, sorted by key
         :rtype: Tuple[V, ...]
         """
         # forcing ignore here after numerous attempts to set the bounds for K
@@ -71,10 +89,10 @@ class DictOps:
 
     @classmethod
     def iterate_sim_coll(
-            cls,
-            collection: immutables.Map[K, V],
-            filter_function: Optional[Callable[[V], bool]] = None,
-            sort_key: Optional[Callable] = None
+        cls,
+        collection: immutables.Map[K, V],
+        filter_function: Optional[Callable[[V], bool]] = None,
+        sort_key: Optional[Callable] = None,
     ) -> Tuple[V, ...]:
         """
         helper to iterate through a collection on the SimulationState with optional
@@ -89,13 +107,12 @@ class DictOps:
         :return: _description_
         :rtype: Tuple[V, ...]
         """
-        
-        vals = DictOps.iterate_vals(collection, sort_key) 
+
+        vals = DictOps.iterate_vals(collection, sort_key)
         if filter_function:
             return tuple(filter(filter_function, vals))
         else:
             return vals
-
 
     @classmethod
     def add_to_dict(cls, xs: immutables.Map[K, V], obj_id: K, obj: V) -> immutables.Map[K, V]:

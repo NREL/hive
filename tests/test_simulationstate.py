@@ -632,9 +632,7 @@ class TestSimulationState(TestCase):
             )
         )
 
-        sorted_bases = sim.get_bases(
-            sort_key=lambda b: -b.total_stalls
-        )
+        sorted_bases = sim.get_bases(sort_key=lambda b: -b.total_stalls)
 
         self.assertEqual(sorted_bases[0].id, "b2", "base 2 has the most stalls")
 

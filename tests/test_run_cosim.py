@@ -9,7 +9,6 @@ from nrel.hive.runner.runner_payload import RunnerPayload
 
 
 class TestRunCosim(TestCase):
-
     def test_load_and_run_denver(self):
         # read scenario
         sim = mock_sim()

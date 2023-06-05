@@ -101,7 +101,7 @@ def perform_vehicle_state_updates(
             lambda v: isinstance(v.vehicle_state, ChargeQueueing), vs
         )
 
-        # sort queueing vehicles by enqueue time followed by id as a 
+        # sort queueing vehicles by enqueue time followed by id as a
         # deterministic tie-breaker via their VehicleId
         sorted_charge_queueing_vehicles = tuple(
             sorted(

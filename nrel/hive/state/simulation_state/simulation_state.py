@@ -90,14 +90,14 @@ class SimulationState(NamedTuple):
     def get_stations(
         self,
         filter_function: Optional[Callable[[Station], bool]] = None,
-        sort_key: Optional[Callable] = None
+        sort_key: Optional[Callable] = None,
     ) -> Tuple[Station, ...]:
         return DictOps.iterate_sim_coll(self.stations, filter_function, sort_key)
 
     def get_bases(
         self,
         filter_function: Optional[Callable[[Base], bool]] = None,
-        sort_key: Optional[Callable] = None
+        sort_key: Optional[Callable] = None,
     ) -> Tuple[Base, ...]:
         return DictOps.iterate_sim_coll(self.bases, filter_function, sort_key)
 

@@ -187,8 +187,6 @@ def _build_stations(
 
     # add all stations to the simulation once we know they are complete
     stations = DictOps.iterate_vals(stations_builder)
-    sim_with_stations = simulation_state_ops.add_entities(
-        simulation_state, stations
-    )
+    sim_with_stations = simulation_state_ops.add_entities(simulation_state, stations)
 
     return sim_with_stations
