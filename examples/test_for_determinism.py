@@ -6,6 +6,7 @@ import random
 import numpy
 import pandas
 import argparse
+import sys
 
 from nrel.hive.runner.local_simulation_runner import LocalSimulationRunner
 
@@ -63,12 +64,19 @@ if __name__ == "__main__":
         'total_kwh_dispensed',
         'total_gge_dispensed'
     ]
+    
+    print(f'testing for determinism between {args.iterations} runs')
+    exit_code = 0
     for col in test_cols:
         n = df[col].nunique()
         if n == 1:
             print(f'{col} is good, all values match')
         else:
+            exit_code = 1
             entries = '[' + ', '.join(df[col].unique()) + ']'
             print(f'{col} no good, has {n} unique entries (should be one): {entries}')
+    
     if args.outfile:
         df.to_csv(args.outfile)
+
+    sys.exit(exit_code)
