@@ -23,12 +23,14 @@ if __name__ == "__main__":
     iterations = args.iterations
     data: List[Dict] = []
     for i in range(iterations):
+        # set up config with scenario + limited (stats only) logging
         config_no_log = load_config(args.scenario).suppress_logging()
         config = config_no_log._replace(
             global_config=config_no_log.global_config._replace(
                 log_stats=True
             )
         )
+        # set random seed from Sim config
         if config.sim.seed is not None:
             random.seed(config.sim.seed)
             numpy.random.seed(config.sim.seed)
