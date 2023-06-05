@@ -96,9 +96,7 @@ class Dispatcher(InstructionGenerator):
             )
 
             unassigned_requests = simulation_state.get_requests(
-                sort=True,
-                sort_key=lambda r: r.value,
-                sort_reversed=True,
+                sort_key=lambda r: -r.value,
                 filter_function=_valid_request,
             )
 

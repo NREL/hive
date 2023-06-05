@@ -21,6 +21,7 @@ from nrel.hive.state.vehicle_state.charging_base import ChargingBase
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.util import TupleOps, H3Ops
+from nrel.hive.util.dict_ops import DictOps
 
 if TYPE_CHECKING:
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
@@ -238,7 +239,7 @@ def av_charge_base_instruction(
         return None
 
     # take the lowest power charger
-    charger: Charger = sorted(chargers, key=lambda c: c.rate)[0]
+    charger: Charger = sorted(chargers, key=lambda c: (c.rate, c.id))[0]
     return ChargeBaseInstruction(veh.id, my_base.id, charger.id)
 
 

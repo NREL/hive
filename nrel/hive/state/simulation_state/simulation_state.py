@@ -16,6 +16,7 @@ from nrel.hive.model.roadnetwork.haversine_roadnetwork import HaversineRoadNetwo
 from nrel.hive.model.sim_time import SimTime
 from nrel.hive.state.simulation_state.at_location_response import AtLocationResponse
 from nrel.hive.util import geo
+from nrel.hive.util.dict_ops import DictOps
 from nrel.hive.util.typealiases import (
     RequestId,
     VehicleId,
@@ -51,7 +52,9 @@ class SimulationState(NamedTuple):
     sim_h3_location_resolution: int = 15
     sim_h3_search_resolution: int = 7
 
-    # objects of the simulation
+    # objects of the simulation.
+    # note: if you need to iterate on these collections, prefer the get methods
+    # provided below which ensure entities are properly sorted.
     stations: immutables.Map[StationId, Station] = immutables.Map()
     bases: immutables.Map[BaseId, Base] = immutables.Map()
     vehicles: immutables.Map[VehicleId, Vehicle] = immutables.Map()
@@ -87,137 +90,30 @@ class SimulationState(NamedTuple):
     def get_stations(
         self,
         filter_function: Optional[Callable[[Station], bool]] = None,
-        sort: bool = True,
-        sort_key: Callable = lambda k: k.id,
-        sort_reversed: bool = False,
+        sort_key: Optional[Callable] = None
     ) -> Tuple[Station, ...]:
-        """
-        returns a tuple of stations.
-        users can pass an optional filter and sort function.
-
-
-        :param filter_function: function to filter results
-        :param sort: whether or not to sort the results
-        :param sort_key: the key to sort the results by
-        :param sort_reversed: the order of the resulting sort
-        :return: tuple of sorted and filtered stations
-        """
-        stations = self.stations.values()
-        if filter_function and sort:
-            return tuple(
-                filter(
-                    filter_function,
-                    sorted(stations, key=sort_key, reverse=sort_reversed),
-                )
-            )
-        elif filter_function:
-            return tuple(filter(filter_function, stations))
-        elif sort:
-            return tuple(sorted(stations, key=sort_key, reverse=sort_reversed))
-        else:
-            return tuple(stations)
+        return DictOps.iterate_sim_coll(self.stations, filter_function, sort_key)
 
     def get_bases(
         self,
         filter_function: Optional[Callable[[Base], bool]] = None,
-        sort: bool = True,
-        sort_key: Callable = lambda k: k.id,
-        sort_reversed: bool = False,
+        sort_key: Optional[Callable] = None
     ) -> Tuple[Base, ...]:
-        """
-        returns a tuple of bases.
-        users can pass an optional filter and sort function.
-
-
-        :param filter_function: function to filter results
-        :param sort: whether or not to sort the results
-        :param sort_key: the key to sort the results by
-        :param sort_reversed: the order of the resulting sort
-        :return: tuple of sorted and filtered bases
-        """
-        bases = self.bases.values()
-
-        if filter_function and sort:
-            return tuple(
-                filter(
-                    filter_function,
-                    sorted(bases, key=sort_key, reverse=sort_reversed),
-                )
-            )
-        elif filter_function:
-            return tuple(filter(filter_function, bases))
-        elif sort:
-            return tuple(sorted(bases, key=sort_key, reverse=sort_reversed))
-        else:
-            return tuple(bases)
+        return DictOps.iterate_sim_coll(self.bases, filter_function, sort_key)
 
     def get_vehicles(
         self,
         filter_function: Optional[Callable[[Vehicle], bool]] = None,
-        sort: bool = True,
-        sort_key: Callable = lambda k: k.id,
-        sort_reversed: bool = False,
+        sort_key: Optional[Callable] = None,
     ) -> Tuple[Vehicle, ...]:
-        """
-        returns a tuple of vehicles.
-        users can pass an optional filter and sort function.
-
-
-        :param filter_function: function to filter results
-        :param sort: whether or not to sort the results
-        :param sort_key: the key to sort the results by
-        :param sort_reversed: the order of the resulting sort
-        :return: tuple of sorted and filtered vehicles
-        """
-        vehicles = self.vehicles.values()
-
-        if filter_function and sort:
-            return tuple(
-                sorted(
-                    filter(filter_function, vehicles),
-                    key=sort_key,
-                    reverse=sort_reversed,
-                )
-            )
-        elif filter_function:
-            return tuple(filter(filter_function, vehicles))
-        elif sort:
-            return tuple(sorted(vehicles, key=sort_key, reverse=sort_reversed))
-        else:
-            return tuple(vehicles)
+        return DictOps.iterate_sim_coll(self.vehicles, filter_function, sort_key)
 
     def get_requests(
         self,
         filter_function: Optional[Callable[[Request], bool]] = None,
-        sort: bool = True,
-        sort_key: Callable = lambda k: k.id,
-        sort_reversed: bool = False,
+        sort_key: Optional[Callable] = None,
     ) -> Tuple[Request, ...]:
-        """
-        returns a tuple of requests.
-        users can pass an optional filter and sort function.
-
-
-        :param filter_function: function to filter results
-        :param sort: whether or not to sort the results
-        :param sort_key: the key to sort the results by
-        :param sort_reversed: the order of the resulting sort
-        :return: tuple of sorted and filtered requests
-        """
-        requests = self.requests.values()
-        if filter_function and sort:
-            return tuple(
-                filter(
-                    filter_function,
-                    sorted(requests, key=sort_key, reverse=sort_reversed),
-                )
-            )
-        elif filter_function:
-            return tuple(filter(filter_function, requests))
-        elif sort:
-            return tuple(sorted(requests, key=sort_key, reverse=sort_reversed))
-        else:
-            return tuple(requests)
+        return DictOps.iterate_sim_coll(self.requests, filter_function, sort_key)
 
     def at_geoid(self, geoid: GeoId) -> AtLocationResponse:
         """

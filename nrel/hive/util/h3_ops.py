@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING, FrozenSet, Iterable, Call
 import h3
 import immutables
 from math import radians, cos, sin, asin, sqrt, ceil
+from nrel.hive.util.dict_ops import DictOps
 
 from nrel.hive.util.exception import H3Error
 from nrel.hive.util.typealiases import EntityId, GeoId
@@ -148,7 +149,7 @@ class H3Ops:
         cls,
         geoid: GeoId,
         entities: Dict[EntityId, Entity],
-        entity_locations: Dict[GeoId, Tuple[EntityId, ...]],
+        entity_locations: immutables.Map[GeoId, Tuple[EntityId, ...]],
         is_valid: Callable = lambda x: True,
     ) -> Optional[Entity]:
         """
@@ -164,7 +165,7 @@ class H3Ops:
 
         best_dist_km = 1000000.0
         best_e = None
-        for e_geoid, e_ids in entity_locations.items():
+        for e_geoid, e_ids in DictOps.iterate_items(entity_locations):
             dist_km = cls.great_circle_distance(geoid, e_geoid)
             for e_id in e_ids:
                 if e_id not in entities:

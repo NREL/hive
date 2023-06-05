@@ -303,7 +303,7 @@ def shortest_time_to_charge_ranking(
 
             return _time_to_full
 
-        def _sort_enqueue_time(v: Vehicle) -> int:
+        def _sort_enqueue_time(v: Vehicle) -> Tuple[int, str]:
             if isinstance(v.vehicle_state, ChargeQueueing):
                 enqueue_time = int(v.vehicle_state.enqueue_time)
             else:
@@ -311,7 +311,7 @@ def shortest_time_to_charge_ranking(
                     "calling _sort_enqueue_time on a vehicle state that is not ChargeQueueing"
                 )
                 enqueue_time = 0
-            return enqueue_time
+            return (enqueue_time, v.id)
 
         def _greedy_assignment(
             _charging: Tuple[Seconds, ...],
@@ -374,7 +374,6 @@ def shortest_time_to_charge_ranking(
         vehicles_at_station = sim.get_vehicles(filter_function=_veh_at_station)
         vehicles_enqueued = sim.get_vehicles(
             filter_function=_veh_enqueued,
-            sort=True,
             sort_key=_sort_enqueue_time,
         )
 
