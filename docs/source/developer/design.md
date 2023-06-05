@@ -19,3 +19,10 @@ Deeper within HIVE, whenever the HAMT data structure is interacted with, we must
     - here, prefer `DictOps.iterate_vals()` or `DictOps.iterate_items()` which first sort by key
     - if key sorting is not preferred, write a specialized sort 
 
+When making a specialized sort function over a set of entities, consider bundling the cost value with the entity id. If two entities have the same value, the id can be used to "break the tie" in a deterministic way. Example:
+
+```python
+vs: List[Vehicle] = ... #
+sorted(vs, key=lambda v: v.distance_traveled_km)          # bad
+sorted(vs, key=lambda v: (v.distance_traveled_km, v.id))  # good
+```
