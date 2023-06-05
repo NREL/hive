@@ -70,14 +70,14 @@ def human_charge_at_home(
     chargers = tuple(
         filter(
             my_mechatronics.valid_charger,
-            [env.chargers[cid] for cid in my_station.state.keys()],
+            [env.chargers[cid] for cid in sorted(my_station.state.keys())],
         )
     )
     if not chargers:
         return None
     else:
         # take the lowest power charger
-        charger: Charger = sorted(chargers, key=lambda c: c.rate)[0]
+        charger: Charger = sorted(chargers, key=lambda c: (c.rate, c.id))[0]
         return ChargeBaseInstruction(veh.id, home_base.id, charger.id)
 
 
@@ -156,7 +156,7 @@ def human_look_for_requests(
             # find the most dense request search hex and sends vehicles to the center
             best_search_hex = sorted(
                 [(k, len(v)) for k, v in sim.r_search.items()],
-                key=lambda t: t[1],
+                key=lambda t: (t[1], t[0]),  # fallback to geoid (index 0) to break ties
                 reverse=True,
             )[0][0]
         destination = h3.h3_to_center_child(best_search_hex, sim.sim_h3_location_resolution)
@@ -231,7 +231,7 @@ def av_charge_base_instruction(
     chargers: Tuple[Charger, ...] = tuple(
         filter(
             my_mechatronics.valid_charger,
-            [cs.charger for cs in my_station.state.values()],
+            [cs.charger for cs in sorted(my_station.state.values(), key=lambda c: c.id)],
         )
     )
 

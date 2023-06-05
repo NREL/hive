@@ -378,7 +378,7 @@ def shortest_time_to_charge_ranking(
         )
 
         estimates: Dict[ChargerId, int] = {}
-        for charger_id in station.state.keys():
+        for charger_id in sorted(station.state.keys()):
             charger_state = station.state.get(charger_id)
             charger = charger_state.charger if charger_state is not None else None
 

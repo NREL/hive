@@ -50,6 +50,7 @@ def vehicle_move_event(
     elif len(next_vehicle.energy.keys()) > 1:
         raise NotImplementedError("hive doesn't currently support multiple energy types")
     else:
+        # assumes one energy type per vehicle (no PHEVs)
         energy_units = list(next_vehicle.energy.keys())[0].units
 
     delta_energy = ft.reduce(

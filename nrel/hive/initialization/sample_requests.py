@@ -67,6 +67,6 @@ def default_request_sampler(
 
         id_counter += 1
 
-    sorted_reqeusts = sorted(requests, key=lambda r: r.departure_time)
+    sorted_reqeusts = sorted(requests, key=lambda r: (r.departure_time, r.id))
 
     return tuple(sorted_reqeusts)
