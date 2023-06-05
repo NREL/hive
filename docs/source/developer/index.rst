@@ -6,4 +6,4 @@ Developer Docs
 
   release 
   contributing
-
+  design
