@@ -29,6 +29,7 @@ jobs:
       - name: Install package
         run: |
           pip install ".[dev]"
+          pip install pandas # determinism test dependency
 
       - name: Run mypy
         run: mypy . --ignore-missing-imports
@@ -44,10 +45,6 @@ jobs:
       - name: Python unit tests
         run: |
           pytest tests/ -v
-
-      # - name: HIVE Denver Demo test
-      #   run: |
-      #     hive denver_demo.yaml
 
       - name: HIVE determinism test
         run: |
