@@ -97,7 +97,7 @@ class StepSimulation(SimulationUpdateFunction):
 
         # pops the top instruction from the stack. this could be replaced with something like a priority queue
         final_instructions: Tuple[Instruction, ...] = ()
-        for vid in i_stack.keys():
+        for vid in sorted(i_stack.keys()):
             i, _ = DictOps.pop_from_stack_dict(i_stack, vid)
             if not i:
                 continue

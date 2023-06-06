@@ -40,7 +40,7 @@ def log_station_capacities(sim: SimulationState, env: Environment) -> IOResultE[
     try:
         result: Tuple[Dict[str, Any], ...] = ft.reduce(
             lambda acc, s: acc + (_station_energy(s),),
-            sim.stations.values(),
+            sim.get_stations(),
             (),
         )
 

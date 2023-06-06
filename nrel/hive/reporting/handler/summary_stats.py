@@ -48,19 +48,19 @@ class SummaryStats:
         self.mean_final_soc = mean(
             [
                 env.mechatronics[v.mechatronics_id].fuel_source_soc(v)
-                for v in sim_state.vehicles.values()
+                for v in sim_state.get_vehicles()
             ]
         )
 
         self.station_revenue = reduce(
             lambda income, station: income + station.balance,
-            sim_state.stations.values(),
+            sim_state.get_stations(),
             0.0,
         )
 
         self.fleet_revenue = reduce(
             lambda income, vehicle: income + vehicle.balance,
-            sim_state.vehicles.values(),
+            sim_state.get_vehicles(),
             0.0,
         )
 

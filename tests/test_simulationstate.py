@@ -632,9 +632,7 @@ class TestSimulationState(TestCase):
             )
         )
 
-        sorted_bases = sim.get_bases(
-            sort=True, sort_reversed=True, sort_key=lambda b: b.total_stalls
-        )
+        sorted_bases = sim.get_bases(sort_key=lambda b: -b.total_stalls)
 
         self.assertEqual(sorted_bases[0].id, "b2", "base 2 has the most stalls")
 
@@ -664,9 +662,7 @@ class TestSimulationState(TestCase):
         )
 
         sorted_and_filtered_vehicles = sim.get_vehicles(
-            sort=True,
-            sort_key=lambda v: v.energy[EnergyType.ELECTRIC],
-            sort_reversed=True,
+            sort_key=lambda v: -v.energy[EnergyType.ELECTRIC],
         )
 
         self.assertEqual(sorted_and_filtered_vehicles[0].id, "v1", "v1 has highest soc")
@@ -680,6 +676,6 @@ class TestSimulationState(TestCase):
         sim = simulation_state_ops.add_request_safe(sim, r2).unwrap()
         sim = simulation_state_ops.add_request_safe(sim, r1).unwrap()
 
-        sorted_requests = sim.get_requests(sort=True, sort_key=lambda r: r.departure_time)
+        sorted_requests = sim.get_requests(sort_key=lambda r: r.departure_time)
 
         self.assertEqual(sorted_requests[0].id, "r1", "r1 has lowest departure time")

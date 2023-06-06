@@ -32,7 +32,7 @@ class TestUpdateRequests(TestCase):
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 2, "should have added the reqs")
-        for req in result.requests.values():
+        for req in result.get_requests():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
 
     def test_update_some_aready_cancelled(self):
@@ -61,7 +61,7 @@ class TestUpdateRequests(TestCase):
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
         self.assertEqual(expected_reqs, len(result.requests), "should have added the reqs")
-        for req in result.requests.values():
+        for req in result.get_requests():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")
 
     def test_update_rate_structure(self):
@@ -88,7 +88,7 @@ class TestUpdateRequests(TestCase):
         )
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file)
         result, _ = fn.update(sim, env)
-        for req in result.requests.values():
+        for req in result.get_requests():
             print(req)
             self.assertGreaterEqual(
                 req.value,
@@ -120,5 +120,5 @@ class TestUpdateRequests(TestCase):
         fn = UpdateRequestsFromFile.build(req_file, rate_structure_file, lazy_file_reading=True)
         result, _ = fn.update(sim, env)
         self.assertEqual(len(result.requests), 2, "should have added the reqs")
-        for req in result.requests.values():
+        for req in result.get_requests():
             self.assertLess(req.departure_time, sim_time, f"should be less than {sim_time}")

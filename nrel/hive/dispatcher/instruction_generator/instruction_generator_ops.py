@@ -16,8 +16,6 @@ from nrel.hive.util.units import Kilometers
 
 log = logging.getLogger(__name__)
 
-random.seed(123)
-
 if TYPE_CHECKING:
     from nrel.hive.model.vehicle.vehicle import Vehicle
     from nrel.hive.state.simulation_state.simulation_state import SimulationState
@@ -85,7 +83,7 @@ class InstructionGenerationResult(NamedTuple):
                 ),
             )
             + acc,
-            simulation_state.vehicles.values(),
+            simulation_state.get_vehicles(),
             (),
         )
 
@@ -313,7 +311,7 @@ def get_nearest_valid_station_distance(
 
     nearest_station = H3Ops.nearest_entity(
         geoid=geoid,
-        entities=simulation_state.stations.values(),
+        entities=simulation_state.get_stations(),
         entity_search=simulation_state.s_search,
         sim_h3_search_resolution=simulation_state.sim_h3_search_resolution,
         max_search_distance_km=max_search_radius_km,

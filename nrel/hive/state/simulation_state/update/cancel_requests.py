@@ -61,7 +61,7 @@ class CancelRequests(SimulationUpdateFunction):
 
         updated = ft.reduce(
             _remove_from_sim,
-            simulation_state.requests.keys(),
+            simulation_state.get_request_ids(),
             simulation_state,
         )
 
