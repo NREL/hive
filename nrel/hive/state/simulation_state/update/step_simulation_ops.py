@@ -70,7 +70,7 @@ def perform_driver_state_updates(
         else:
             return updated_sim
 
-    next_state = ft.reduce(_step_drivers, simulation_state.vehicles.values(), simulation_state)
+    next_state = ft.reduce(_step_drivers, simulation_state.get_vehicles(), simulation_state)
     return next_state
 
 
@@ -101,18 +101,22 @@ def perform_vehicle_state_updates(
             lambda v: isinstance(v.vehicle_state, ChargeQueueing), vs
         )
 
+        # sort queueing vehicles by enqueue time followed by id as a
+        # deterministic tie-breaker via their VehicleId
         sorted_charge_queueing_vehicles = tuple(
             sorted(
                 charge_queueing_vehicles,
-                key=lambda v: v.vehicle_state.enqueue_time
+                key=lambda v: (v.vehicle_state.enqueue_time, v.id)
                 if isinstance(v.vehicle_state, ChargeQueueing)
-                else 0,
+                else (0, v.id),
             )
         )
+        sorted_other_vehicles = tuple(sorted(other_vehicles, key=lambda v: v.id))
+        return sorted_other_vehicles + sorted_charge_queueing_vehicles
 
-        return other_vehicles + sorted_charge_queueing_vehicles
-
-    # why sort here? see _sort_by_vehicle_state for an explanation
+    # why sort here? see _sort_by_vehicle_state (above) for an explanation
+    # this code doesn't use built-in sorting iterator methods because of the
+    # initial partitioning step required.
     vehicles = _sort_by_vehicle_state(tuple(simulation_state.vehicles.values()))
 
     for veh in vehicles:

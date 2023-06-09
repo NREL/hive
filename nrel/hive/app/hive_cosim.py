@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Iterable, Tuple, NamedTuple, Optional, TypeVar
 
 from tqdm import tqdm
+import random
+import numpy
 
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.initialization.initialize_simulation import InitFunction
@@ -27,6 +29,11 @@ def load_scenario(
     :raises: Error when issues with files
     """
     config = load_config(scenario_file, output_suffix)
+
+    if config.sim.seed is not None:
+        random.seed(config.sim.seed)
+        numpy.random.seed(config.sim.seed)
+
     initial_payload = load_simulation(config, custom_instruction_generators, custom_init_functions)
 
     # add a specialized Reporter handler that catches vehicle charge events

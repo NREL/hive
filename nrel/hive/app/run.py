@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Iterable, Optional, Tuple, TypeVar, Union
 
 import pkg_resources
 import yaml
+import random
+import numpy
 
 from nrel.hive.dispatcher.instruction_generator.instruction_generator import InstructionGenerator
 from nrel.hive.initialization.initialize_simulation import InitFunction
@@ -51,6 +53,10 @@ def run_sim(
     _welcome_to_hive()
 
     config = load_config(scenario_file)
+
+    if config.sim.seed is not None:
+        random.seed(config.sim.seed)
+        numpy.random.seed(config.sim.seed)
 
     initial_payload = load_simulation(
         config,

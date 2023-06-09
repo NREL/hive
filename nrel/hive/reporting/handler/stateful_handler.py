@@ -35,7 +35,7 @@ class StatefulHandler(Handler):
         sim_state = runner_payload.s
         if ReportType.DRIVER_STATE in self.global_config.log_sim_config:
             self._report_entities(
-                entities=sim_state.vehicles.values(),
+                entities=sim_state.get_vehicles(),
                 asdict=self.driver_asdict,
                 sim_time=sim_state.sim_time,
                 report_type=ReportType.DRIVER_STATE,
@@ -43,7 +43,7 @@ class StatefulHandler(Handler):
 
         if ReportType.VEHICLE_STATE in self.global_config.log_sim_config:
             self._report_entities(
-                entities=sim_state.vehicles.values(),
+                entities=sim_state.get_vehicles(),
                 asdict=self.vehicle_asdict,
                 sim_time=sim_state.sim_time,
                 report_type=ReportType.VEHICLE_STATE,
@@ -51,7 +51,7 @@ class StatefulHandler(Handler):
 
         if ReportType.STATION_STATE in self.global_config.log_sim_config:
             self._report_entities(
-                entities=sim_state.stations.values(),
+                entities=sim_state.get_stations(),
                 asdict=self.station_asdict,
                 sim_time=sim_state.sim_time,
                 report_type=ReportType.STATION_STATE,

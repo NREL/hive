@@ -2,23 +2,23 @@ name: tests
 
 on:
   push:
-      branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
   test:
-      if: github.event.pull_request.merged == false
-      runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false
+    runs-on: ubuntu-latest
 
-      strategy:
-        fail-fast: false
-        matrix:
-          python-version: ['3.8', '3.9', '3.10', '3.11']
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
-      env:
-        PYTHON: ${{ matrix.python-version }}
+    env:
+      PYTHON: ${{ matrix.python-version }}
 
-      steps:
+    steps:
       - uses: actions/checkout@v3
 
       - name: set up python ${{ matrix.python-version }}
@@ -29,6 +29,7 @@ jobs:
       - name: Install package
         run: |
           pip install ".[dev]"
+          pip install pandas # determinism test dependency
 
       - name: Run mypy
         run: mypy . --ignore-missing-imports
@@ -45,6 +46,6 @@ jobs:
         run: |
           pytest tests/ -v
 
-      - name: HIVE Denver Demo test
+      - name: HIVE determinism test
         run: |
-          hive denver_demo.yaml
+          python examples/test_for_determinism.py --iterations 2

@@ -68,7 +68,7 @@ class TestH3Ops(TestCase):
 
         nearest = H3Ops.nearest_entity_by_great_circle_distance(
             geoid=somewhere,
-            entities=tuple(sim_with_reqs.requests.values()),
+            entities=tuple(sim_with_reqs.get_requests()),
             entity_search=sim_with_reqs.r_search,
             sim_h3_search_resolution=sim_with_reqs.sim_h3_search_resolution,
         )

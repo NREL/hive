@@ -39,19 +39,19 @@ class TestSimulationStateOps(TestCase):
 
         reqs = [mock_request(i) for i in range(10)]
         sim_with_reqs = simulation_state_ops.add_entities_safe(sim, reqs).unwrap()
-        self.assertEqual(len(sim_with_reqs.requests.values()), 10)
+        self.assertEqual(len(sim_with_reqs.get_requests()), 10)
 
         vehicles = [mock_vehicle(i) for i in range(10)]
         sim_with_vehicles = simulation_state_ops.add_entities_safe(sim, vehicles).unwrap()
-        self.assertEqual(len(sim_with_vehicles.vehicles.values()), 10)
+        self.assertEqual(len(sim_with_vehicles.get_vehicles()), 10)
 
         stations = [mock_station(i) for i in range(10)]
         sim_with_stations = simulation_state_ops.add_entities_safe(sim, stations).unwrap()
-        self.assertEqual(len(sim_with_stations.stations.values()), 10)
+        self.assertEqual(len(sim_with_stations.get_stations()), 10)
 
         bases = [mock_base(i) for i in range(10)]
         sim_with_bases = simulation_state_ops.add_entities_safe(sim, bases).unwrap()
-        self.assertEqual(len(sim_with_bases.bases.values()), 10)
+        self.assertEqual(len(sim_with_bases.get_bases()), 10)
 
     def test_modify_entity(self):
         sim = mock_sim()
@@ -72,12 +72,12 @@ class TestSimulationStateOps(TestCase):
         stations = [mock_station(i) for i in range(10)]
         sim_w_stations = simulation_state_ops.add_entities(sim, stations)
 
-        updated_stations = [s.add_membership("test!") for s in sim_w_stations.stations.values()]
+        updated_stations = [s.add_membership("test!") for s in sim_w_stations.get_stations()]
 
         sim_w_new_stations = simulation_state_ops.modify_entities(sim_w_stations, updated_stations)
 
         self.assertTrue(
-            all(["test!" in s.membership.memberships for s in sim_w_new_stations.stations.values()])
+            all(["test!" in s.membership.memberships for s in sim_w_new_stations.get_stations()])
         )
 
     def test_add_request(self):

@@ -23,6 +23,7 @@ from nrel.hive.model.station.station_ops import (
     station_state_updates,
 )
 from nrel.hive.runner.environment import Environment
+from nrel.hive.util.dict_ops import DictOps
 from nrel.hive.util.error_or_result import ErrorOr
 from nrel.hive.util.exception import H3Error, SimulationStateError
 from nrel.hive.util.typealiases import *
@@ -109,7 +110,7 @@ class Station(Entity):
                     return None, updated_builder
 
         initial = None, immutables.Map[ChargerId, ChargerState]()
-        error, charger_states = ft.reduce(_chargers, chargers.items(), initial)
+        error, charger_states = ft.reduce(_chargers, DictOps.iterate_items(chargers), initial)
         if error is not None:
             raise error
         if charger_states is None:

@@ -118,7 +118,7 @@ class TimeStepStatsHandler(Handler):
         )
 
         # get number of active requests in this time step (unassigned)
-        active_requests_count = len(sim_state.get_requests()) - assigned_requests_count
+        active_requests_count = len(sim_state.requests) - assigned_requests_count
 
         # get number of canceled requests in this time step
         if ReportType.CANCEL_REQUEST_EVENT in reports_by_type.keys():
@@ -144,7 +144,7 @@ class TimeStepStatsHandler(Handler):
             }
 
             # get average SOC of vehicles
-            if len(sim_state.get_vehicles()) > 0:
+            if len(sim_state.vehicles) > 0:
                 stats_row["avg_soc_percent"] = 100 * np.mean(
                     [
                         env.mechatronics[v.mechatronics_id].fuel_source_soc(v)
