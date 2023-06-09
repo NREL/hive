@@ -37,12 +37,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
           path: ./dist/*
-    - name: Upload to twine test
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository-url: https://test.pypi.org/
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
