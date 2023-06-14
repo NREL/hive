@@ -96,7 +96,8 @@ class DictOps:
     ) -> Tuple[V, ...]:
         """
         helper to iterate through a collection on the SimulationState with optional
-        sort key function and filter function
+        sort key function and filter function. performs filter before sort if both
+        are provided.
 
         :param collection: collection on SimulationState
         :type collection: immutables.Map[K, V]
@@ -108,11 +109,12 @@ class DictOps:
         :rtype: Tuple[V, ...]
         """
 
-        vals = DictOps.iterate_vals(collection, sort_key)
         if filter_function:
-            return tuple(filter(filter_function, vals))
+            entities = immutables.Map({k: v for k, v in collection.items() if filter_function(v)})
         else:
-            return vals
+            entities = collection
+        vals = DictOps.iterate_vals(entities, sort_key)
+        return vals
 
     @classmethod
     def add_to_dict(cls, xs: immutables.Map[K, V], obj_id: K, obj: V) -> immutables.Map[K, V]:
