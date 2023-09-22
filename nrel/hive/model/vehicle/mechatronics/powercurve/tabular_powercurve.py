@@ -55,8 +55,14 @@ class TabularPowercurve(Powercurve):
         self.step_size_seconds = data["step_size_seconds"]  # seconds
 
         if self.energy_type is None:
+            pt = data.get("power_type")
+            if pt is None:
+                pt_msg = "no power_type argument"
+            else:
+                pt_msg = f"invalid energy type '{data['power_type']}'"
             raise AttributeError(
-                f"TabularPowercurve initialized with invalid energy type {self.energy_type}"
+                f"TabularPowercurve configuration has {pt_msg}; "
+                f"should be one of {{electric, gasoline}} "
             )
 
         charging_model = sorted(data["power_curve"], key=lambda x: x["energy_kwh"])
