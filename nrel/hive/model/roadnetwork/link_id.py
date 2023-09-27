@@ -1,6 +1,4 @@
-from ast import literal_eval
 from typing import Optional, Tuple, Any
-
 from nrel.hive.util.typealiases import LinkId
 
 NodeId = Any
@@ -39,8 +37,8 @@ def extract_node_ids(
         )
     else:
         try:
-            src = literal_eval(result[0])
-            dst = literal_eval(result[1])
+            src = str(result[0])
+            dst = str(result[1])
         except ValueError:
             return Exception(f"LinkId {link_id} cannot be parsed."), None
 
