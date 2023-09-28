@@ -10,7 +10,7 @@ import networkx as nx
 
 from nrel.hive.model.entity_position import EntityPosition
 from nrel.hive.model.roadnetwork.link import Link
-from nrel.hive.model.roadnetwork.link_id import extract_node_ids
+from nrel.hive.model.roadnetwork.link_id import extract_node_ids_int
 from nrel.hive.model.roadnetwork.osm.osm_builders import osm_graph_from_polygon
 from nrel.hive.model.roadnetwork.osm.osm_road_network_link_helper import OSMRoadNetworkLinkHelper
 from nrel.hive.model.roadnetwork.osm.osm_roadnetwork_ops import (
@@ -50,6 +50,7 @@ class OSMRoadNetwork(RoadNetwork):
         # validate network
 
         #   road network must be strongly connected
+        log.info(f"testing graph connectivity")
         if not nx.is_strongly_connected(graph):
             raise RuntimeError("Only strongly connected graphs are allowed.")
 
@@ -66,6 +67,7 @@ class OSMRoadNetwork(RoadNetwork):
             raise TypeError("all node ids must be either an integer or a tuple of integers")
 
         #   check to make sure the graph has the right information on the links
+        log.info(f"testing graph speed data")
         missing_speed = 0
         missing_time = 0
         for u, v, d in graph.edges(data=True):
@@ -98,6 +100,7 @@ class OSMRoadNetwork(RoadNetwork):
             )
 
         # build tables on the network edges for spatial lookup and LinkId lookup
+        log.info(f"building spatial index for graph")
         link_helper_error, link_helper = OSMRoadNetworkLinkHelper.build(
             graph, sim_h3_resolution, default_speed_kmph
         )
@@ -155,6 +158,7 @@ class OSMRoadNetwork(RoadNetwork):
         if road_network_path.suffix == ".json":
             with road_network_path.open("r") as f:
                 graph = nx.node_link_graph(json.load(f))
+                log.info(f"loaded graph with {len(graph.edges)} edges")
             return OSMRoadNetwork(graph, sim_h3_resolution, default_speed_kmph)
         else:
             raise TypeError(
@@ -188,8 +192,8 @@ class OSMRoadNetwork(RoadNetwork):
 
         # start path search from the end of the origin link, terminate search at the start of the
         # destination link
-        extract_src_err, src_nodes = extract_node_ids(origin.link_id)
-        extract_dst_err, dst_nodes = extract_node_ids(destination.link_id)
+        extract_src_err, src_nodes = extract_node_ids_int(origin.link_id)
+        extract_dst_err, dst_nodes = extract_node_ids_int(destination.link_id)
         if extract_src_err:
             log.error(extract_src_err)
             return empty_route()
