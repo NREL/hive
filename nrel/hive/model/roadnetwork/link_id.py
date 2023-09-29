@@ -45,9 +45,7 @@ def extract_node_ids(
         return None, (src, dst)
 
 
-def extract_node_ids_int(
-    link_id: LinkId
-) -> Tuple[Optional[Exception], Optional[Tuple[int, int]]]:
+def extract_node_ids_int(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[int, int]]]:
     """node ids can be strings for the haversine case but for networkx graphs they must be
     integers as they are treated as indices.
 
@@ -67,6 +65,7 @@ def extract_node_ids_int(
             return None, (src, dst)
         except ValueError as e:
             return e, None
+
 
 def reverse_link_id(
     link_id: LinkId,
