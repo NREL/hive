@@ -21,6 +21,7 @@ from nrel.hive.state.vehicle_state.dispatch_station import DispatchStation
 from nrel.hive.state.vehicle_state.dispatch_trip import DispatchTrip
 from nrel.hive.state.vehicle_state.idle import Idle
 from nrel.hive.state.vehicle_state.repositioning import Repositioning
+from nrel.hive.state.vehicle_state.out_of_service import OutOfService
 from nrel.hive.state.vehicle_state.reserve_base import ReserveBase
 from nrel.hive.state.vehicle_state.servicing_pooling_trip import ServicingPoolingTrip
 from nrel.hive.util.exception import SimulationStateError, InstructionError
@@ -340,4 +341,23 @@ class ReserveBaseInstruction(Instruction):
         prev_state = vehicle.vehicle_state
         next_state = ReserveBase.build(self.vehicle_id, self.base_id)
 
+        return None, InstructionResult(prev_state, next_state)
+
+
+@dataclass(frozen=True)
+class OutOfServiceInstruction(Instruction):
+    vehicle_id: VehicleId
+
+    def apply_instruction(
+        self, sim_state: SimulationState, env: Environment
+    ) -> Tuple[Optional[Exception], Optional[InstructionResult]]:
+        vehicle = sim_state.vehicles.get(self.vehicle_id)
+        if not vehicle:
+            msg = (
+                f"vehicle {self.vehicle_id} not found; context: applying out of service instruction"
+            )
+            return (SimulationStateError(msg), None)
+
+        prev_state = vehicle.vehicle_state
+        next_state = OutOfService.build(self.vehicle_id)
         return None, InstructionResult(prev_state, next_state)
