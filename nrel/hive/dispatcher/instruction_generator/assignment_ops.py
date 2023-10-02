@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools as ft
 import logging
 from typing import Dict, Tuple, Callable, NamedTuple, Optional, TYPE_CHECKING
-
+import sys
 import h3
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 MAX_DIST = 999999999.0
+MAX_TIME = 999999999.0
 
 
 class AssignmentSolution(NamedTuple):
@@ -279,8 +280,8 @@ def shortest_time_to_charge_ranking(
                 and v.vehicle_state.station_id == station.id
             )
 
-        def _time_to_full_by_charger_id(c: ChargerId):
-            def _time_to_full(v: Vehicle) -> Seconds:
+        def _simulate_charge_session(c: ChargerId):
+            def _sim(v: Vehicle) -> Seconds:
                 _mech = env.mechatronics.get(v.mechatronics_id)
                 _charger = env.chargers.get(c)
                 if not _mech or not _charger:
@@ -301,7 +302,7 @@ def shortest_time_to_charge_ranking(
                     )
                     return time_est
 
-            return _time_to_full
+            return _sim
 
         def _sort_enqueue_time(v: Vehicle) -> Tuple[int, str]:
             if isinstance(v.vehicle_state, ChargeQueueing):
@@ -314,61 +315,75 @@ def shortest_time_to_charge_ranking(
             return (enqueue_time, v.id)
 
         def _greedy_assignment(
-            _charging: Tuple[Seconds, ...],
-            _enqueued: Tuple[Seconds, ...],
-            _charger_id: ChargerId,
-            time_passed: Seconds = 0,
+            vehicles_at_station: Tuple[Vehicle, ...], charger_id: ChargerId
         ) -> Seconds:
             """
             computes the time estimated that a slot opens up for this vehicle to begin charging
-
 
             :param _charging: a sorted list of remaining charge time estimates
             :param _enqueued: a sorted list of charge time estimates for enqueued vehicles
             :param _charger_id: the id of the charger these vehicles are competing for
             :param time_passed: the amount of time that has been estimated
+            :param depth: recursion depth
             :return: the time in the future we should expect to begin charging, determined by a greedy assignment
             """
-            total_chargers = station.get_total_chargers(_charger_id)
+
+            def _using_charger(charging_vehicle: Vehicle) -> bool:
+                if isinstance(charging_vehicle.vehicle_state, ChargingStation):
+                    if charging_vehicle.vehicle_state.charger_id == charger_id:
+                        return True
+                return False
+
+            def _waiting_for_charger(enqueued_vehicle: Vehicle) -> bool:
+                if isinstance(enqueued_vehicle.vehicle_state, ChargeQueueing):
+                    if enqueued_vehicle.vehicle_state.charger_id == charger_id:
+                        return True
+                return False
+
+            # collect all estimated remaining charge times for charging vehicles and sort them
+            charge_times = list(
+                sorted(
+                    map(
+                        _simulate_charge_session(charger_id),
+                        filter(_using_charger, vehicles_at_station),
+                    )
+                )
+            )
+
+            # collect estimated remaining charge times for vehicles enqueued for this charger
+            # leave them sorted by enqueue time
+            enqueue_times = list(
+                map(
+                    _simulate_charge_session(charger_id),
+                    filter(_waiting_for_charger, vehicles_enqueued),
+                )
+            )
+
+            def _simulating():
+                return len(charge_times) > 0 and len(enqueue_times) > 0
+
+            total_chargers = station.get_total_chargers(charger_id)
             if total_chargers is None:
-                log.error(f"charger id {_charger_id} not found at station {station.id}")
-                total_chargers = 0
-
-            if len(_charging) == len(_enqueued) == 0:
-                return time_passed
-            elif len(_charging) < total_chargers:
-                return time_passed
+                log.warn(f"charger id {charger_id} not found at station {station.id}")
+                return 0
             else:
-                # advance time
-                next_released_charger_time = TupleOps.head(_charging)
+                time_passed = 0
+                while _simulating():
+                    # advance time
+                    next_delta = charge_times.pop(0)
+                    time_passed += next_delta
 
-                updated_time_passed = time_passed + next_released_charger_time
-
-                # remove charging agents who are done
-                _charging_time_advanced = map(lambda t: t - next_released_charger_time, _charging)
-                _charging_vacated = tuple(filter(lambda t: t > 0, _charging_time_advanced))
-
-                vacancies = total_chargers - len(_charging_vacated)
-                if vacancies <= 0:
-                    # no space for any changes from enqueued -> charging
-                    return _greedy_assignment(
-                        _charging=_charging_vacated,
-                        _enqueued=_enqueued,
-                        _charger_id=_charger_id,
-                        time_passed=updated_time_passed,
+                    # remove charging agents who are done, shift times by delta
+                    charging_times = list(
+                        filter(lambda t: t > 0, map(lambda t: t - next_delta, charge_times))
                     )
-                else:
-                    # dequeue longest-waiting agents
-                    _enqueued_to_dequeue = _enqueued[0:vacancies]
-                    _updated_enqueued = _enqueued[vacancies:]
-                    _updated_charging = tuple(sorted(_charging_vacated + _enqueued_to_dequeue))
+                    vacancies = (total_chargers - len(charging_times)) > 0
 
-                    return _greedy_assignment(
-                        _charging=_updated_charging,
-                        _enqueued=_updated_enqueued,
-                        _charger_id=_charger_id,
-                        time_passed=updated_time_passed,
-                    )
+                    if vacancies:
+                        # move enqueued vehicles into the station
+                        charging_times.extend(enqueue_times[0:vacancies])
+                        enqueue_times = enqueue_times[vacancies:]
+            return time_passed
 
         # collect all vehicles that are either charging or enqueued at this station
         vehicles_at_station = sim.get_vehicles(filter_function=_veh_at_station)
@@ -400,41 +415,8 @@ def shortest_time_to_charge_ranking(
                 max_iterations=int(max_iter),
             )
 
-            def _using_charger(charging_vehicle: Vehicle) -> bool:
-                if isinstance(charging_vehicle.vehicle_state, ChargingStation):
-                    if charging_vehicle.vehicle_state.charger_id == charger_id:
-                        return True
-                return False
-
-            def _waiting_for_charger(enqueued_vehicle: Vehicle) -> bool:
-                if isinstance(enqueued_vehicle.vehicle_state, ChargeQueueing):
-                    if enqueued_vehicle.vehicle_state.charger_id == charger_id:
-                        return True
-                return False
-
-            # collect all estimated remaining charge times for charging vehicles and sort them
-            charging = filter(
-                _using_charger,
-                vehicles_at_station,
-            )
-            charging_time_to_full: Tuple[Seconds, ...] = tuple(
-                sorted(map(_time_to_full_by_charger_id(charger_id), charging))
-            )
-
-            # collect estimated remaining charge times for vehicles enqueued for this charger
-            # leave them sorted by enqueue time
-            enqueued = filter(
-                _waiting_for_charger,
-                vehicles_enqueued,
-            )
-            enqueued_time_to_full: Tuple[Seconds, ...] = tuple(
-                map(_time_to_full_by_charger_id(charger_id), enqueued)
-            )
-
             # compute the estimated wait time to access a charger for the vehicle we are ranking
-            wait_estimate_for_charger = _greedy_assignment(
-                charging_time_to_full, enqueued_time_to_full, charger_id
-            )
+            wait_estimate_for_charger = _greedy_assignment(vehicles_at_station, charger_id)
 
             # combine wait time with charge time
             overall_time_est = this_vehicle_charge_time + wait_estimate_for_charger

@@ -4,7 +4,7 @@ sim:
   request_cancel_time_seconds: 600
   start_time: "2014-12-21 00:00:00"
   end_time: "2014-12-22 00:00:00"
-  sim_h3_search_resolution: 7  # around 12ish hexes covering manhattan
+  sim_h3_search_resolution: 7 # around 12ish hexes covering manhattan
 network:
   network_type: osm_network
 input:
@@ -16,6 +16,7 @@ input:
   rate_structure_file: rate_structure.csv
   charging_price_file: nyc_fixed.csv
 dispatcher:
+  charging_search_type: shortest_time_to_charge
   valid_dispatch_states:
     - idle
     - repositioning
