@@ -341,7 +341,7 @@ def mock_station_from_geoid(
         env = mock_env()
 
     return Station.build(
-        id=station_id,
+        station_id=station_id,
         geoid=geoid,
         road_network=road_network,
         chargers=chargers,

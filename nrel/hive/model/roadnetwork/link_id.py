@@ -1,6 +1,4 @@
-from ast import literal_eval
 from typing import Optional, Tuple, Any
-
 from nrel.hive.util.typealiases import LinkId
 
 NodeId = Any
@@ -39,12 +37,34 @@ def extract_node_ids(
         )
     else:
         try:
-            src = literal_eval(result[0])
-            dst = literal_eval(result[1])
+            src = str(result[0])
+            dst = str(result[1])
         except ValueError:
             return Exception(f"LinkId {link_id} cannot be parsed."), None
 
         return None, (src, dst)
+
+
+def extract_node_ids_int(link_id: LinkId) -> Tuple[Optional[Exception], Optional[Tuple[int, int]]]:
+    """node ids can be strings for the haversine case but for networkx graphs they must be
+    integers as they are treated as indices.
+
+    :param link_id: link id to read
+    :type link_id: LinkId
+    :return: _description_
+    :rtype: Tuple[Optional[Exception], Optional[Tuple[int, int]]]
+    """
+    err, ids = extract_node_ids(link_id)
+    if err is not None or ids is None:
+        return err, None
+    else:
+        try:
+            src_str, dst_str = ids
+            src = int(src_str)
+            dst = int(dst_str)
+            return None, (src, dst)
+        except ValueError as e:
+            return e, None
 
 
 def reverse_link_id(

@@ -70,7 +70,7 @@ class Station(Entity):
     @classmethod
     def build(
         cls,
-        id: StationId,
+        station_id: StationId,
         geoid: GeoId,
         road_network: RoadNetwork,
         chargers: immutables.Map[ChargerId, int],
@@ -100,7 +100,7 @@ class Station(Entity):
                 charger = env.chargers.get(charger_id)
                 if charger is None:
                     msg = (
-                        f"attempting to create station {id} with charger type {charger_id} "
+                        f"attempting to create station {station_id} with charger type {charger_id} "
                         f"but that charger type has not been defined for this scenario"
                     )
                     return TypeError(msg), None
@@ -114,7 +114,7 @@ class Station(Entity):
         if error is not None:
             raise error
         if charger_states is None:
-            msg = f"internal error after building station chargers for station {id}"
+            msg = f"internal error after building station chargers for station {station_id}"
             raise Exception(msg)
 
         energy_dispensed = immutables.Map({energy_type: 0.0 for energy_type in EnergyType})
@@ -122,12 +122,12 @@ class Station(Entity):
         if position is None:
             msg = (
                 "could not find a road network position matching the position "
-                f"provided for station {id}"
+                f"provided for station {station_id}"
             )
             raise H3Error(msg)
 
         return Station(
-            id=id,
+            id=station_id,
             position=position,
             state=charger_states,
             energy_dispensed=energy_dispensed,
@@ -222,7 +222,7 @@ class Station(Entity):
         elif station_id not in builder:
             # create this station
             return Station.build(
-                id=station_id,
+                station_id=station_id,
                 geoid=geoid,
                 road_network=road_network,
                 chargers=immutables.Map({charger_id: charger_count}),
