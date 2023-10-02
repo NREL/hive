@@ -151,8 +151,10 @@ class BEV(MechatronicsInterface):
         :param vehicle:
         :return:
         """
+        battery = vehicle.energy[EnergyType.ELECTRIC]
         full_kwh = self.battery_capacity_kwh - self.battery_full_threshold_kwh
-        return vehicle.energy[EnergyType.ELECTRIC] >= full_kwh
+        is_full = battery >= full_kwh
+        return is_full
 
     def consume_energy(self, vehicle: Vehicle, route: Route) -> Vehicle:
         """
