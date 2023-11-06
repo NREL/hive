@@ -51,6 +51,7 @@ dev = [
     "types-setuptools",
     "pre-commit",
 ]
+compass = ["nrel.routee.compass"]
 
 [project.urls]
 Homepage = "https://github.com/NREL/hive"
@@ -66,8 +67,10 @@ line-length = 100
 line-length = 100
 
 [tool.setuptools.packages.find]
-where = ["."]  # list of folders that contain the packages (["."] by default)
-include = ["nrel*"]  # package names should match these glob patterns (["*"] by default)
+where = ["."] # list of folders that contain the packages (["."] by default)
+include = [
+    "nrel*",
+] # package names should match these glob patterns (["*"] by default)
 exclude = ["rust*"]
 
 [tool.setuptools.package-data]
