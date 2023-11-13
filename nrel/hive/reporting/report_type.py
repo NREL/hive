@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import yaml
 
 
 class ReportType(Enum):
@@ -43,3 +47,15 @@ class ReportType(Enum):
             return values[s]
         except KeyError:
             raise KeyError(f"{s} not a valid report type.")
+
+    @staticmethod
+    def yaml_representer(dumper: yaml.Dumper, o: "ReportType"):
+        return dumper.represent_scalar(tag="tag:yaml.org,2002:str", value=o.name.lower())
+
+    def __lt__(self, other: "ReportType"):
+        """Allows sorting an iterable of ReportType, in particular for deterministic serialization of `set[ReportType]`"""
+        if not isinstance(other, ReportType):
+            raise TypeError(
+                f"'<' not supported between instances of {type(self)} and {type(other)}"
+            )
+        return self.name < other.name

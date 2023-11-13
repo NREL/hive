@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    import yaml
 
 class ScheduleType(Enum):
     TIME_RANGE = 0
@@ -24,3 +27,7 @@ class ScheduleType(Enum):
             raise NameError(
                 f"schedule type '{string}' is not known, must be one of {{{valid_names}}}"
             )
+        
+    @staticmethod
+    def yaml_representer(dumper: yaml.Dumper, o: "ScheduleType"):
+        return dumper.represent_scalar(tag = 'tag:yaml.org,2002:str', value = o.name.lower())

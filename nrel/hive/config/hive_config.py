@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import NamedTuple, Dict, Union, Optional
 
 import pkg_resources
-import yaml
 
 from nrel.hive.config.config_builder import ConfigBuilder
 from nrel.hive.config.dispatcher_config import DispatcherConfig
@@ -16,6 +15,7 @@ from nrel.hive.config.global_config import GlobalConfig
 from nrel.hive.config.input import Input
 from nrel.hive.config.network import Network
 from nrel.hive.config.sim import Sim
+from nrel.hive.custom_yaml import custom_yaml as yaml
 from nrel.hive.util import fs
 
 log = logging.getLogger(__name__)
